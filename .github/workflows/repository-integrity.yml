@@ -1,0 +1,18 @@
+name: Repository integrity
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  monorepo-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject nested repositories and submodules
+        run: ./tooling/check-repository-integrity.sh

@@ -1,0 +1,17 @@
+.DS_Store
+.idea/
+.vscode/
+node_modules/
+deps/
+_build/
+cover/
+dist/
+build/
+DerivedData/
+*.xcuserstate
+.env
+.env.*
+!.env.example
+tmp/
+log/
+
