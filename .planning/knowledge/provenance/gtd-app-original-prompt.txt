@@ -1,0 +1,61 @@
+gtd-app original prompt.txt
+---
+
+so i want to make a gtd app
+
+right now i'm using Things for mac
+
+i love everything about it, it's just that it doesn't work with my AI tooling. like u can't interact with it programatically that i can see
+
+i would make an elixir/phoenix version for server side and then iphone and mac apps to interface with it. possibly also web versions too and android if i wanted to commercialize this
+
+or we could make it opensource, and then if it gets popular/useful enough we charge for a hosted version
+
+we have a lot of great "DNA" of opensource projects u can see in ~/projects/exifcleaner especially very mature CI/CD, AI-driven development approach
+
+also a lot of opensoruce libs i have in hex.pm so in ~/projects i published them on hex.pm under szTheory which is my github username also
+
+u can scan all these codebases using subagents for context window efficiency onsider from all relevant technical/product lenses the takeaways, lessons learned best practices anti patterns footguns
+
+strong software architecture, swe principles, ci/cd automateion mindset automate the world shift left always  whenever possible
+
+then high quality design bar, graphic design/ui/ux/hig... native integration feel high quality oozing quality feels designed feels intentional
+
+whats the viabilty of this project
+
+look up Things especially
+
+and then all the other leaders in this category too, other GTD / todoist type apps i guess
+
+i really basically just want Things but with AI support tbh...
+
+so i guess MCP to like read your todos, check them off etc
+
+a lot of ppl use iphone's native todo thing i'd imagine now too..
+
+
+but yeah fan out consider similarly feedback/features of all these
+
+pros/cons/tradeoffs, look what ppl say online what they love/hate issues/favorite features etc etc synthesize this to start oan. gameplan
+
+ask me any levereage questions
+
+record all usefuil information in our folder ~/projects/gtd-app as like markdown or okf format, second brain / llmwiki style...
+
+with provenance etc so our high signal reserach/insights and preferences etc an be retained and rolled into using best practices of second brains...
+
+goal here is to start exploratory viability o this, getting a sense for scope etc
+
+i have cs backgroudn, swe background, some design/product and startup background
+
+so yeah fan out epxlore this ask me any hgih leverage Qs to focus this scope and get a sense of direction/intent
+
+always try to follow my intent here
+
+probably opensource is easiest, with ptoential for business opportunties? solopreneuer....
+
+i am good at devops/sre too so i want something lightweight hands off great defaults very apple/nintendo like in terms of desing (Things app pretty much does everything right but i need something for my own purposes which is more AI native Things is too constrainted in this workflow)
+
+i'm very advanced with AI, using it in claude code, for AI driven development, for building logos/designs/brand, writing content for marketing etc etc for everythign im very AI first and automation/code first, also have some art/design sense and i love high quality polish from all relevant technical/role/accountability-hat stakeholder sperspectives like technical/art/creative/product, user first ui/ux ettc etc domain driven design domain model (nouns/verbs/events) avoiding circular deps, a little ocpy and paste is better than another dep, DDD/hexagonal/clean design etc etc so just very technicall soundy best practices and great high quality product usability and also i love polish like microanimations (kowalski has literature on this ) and "game feel" "juice it or lose it" i have some of that sense from my video game development background also (i was semi-pro game dev) so yeah i'm also into design systems and scalablly doing them etc etc etc 
+
+that's just some context so explore this ask me Qs let's start planning this out fesaibilyt/exploratory study.... i will be developing it with GSD also get shit done (open gsd u can search it onlnie) it's basically a research-plan-implement system that breaks into milestones phases plans etc and has built in research/discusss and validate/verify steps etc....
