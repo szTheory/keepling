@@ -96,6 +96,7 @@
   "graphify": {
     "enabled": false
   },
+  "runtime": "codex",
   "resolve_model_ids": true,
   "model_policy": {
     "provider": "openai",
