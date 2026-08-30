@@ -16,26 +16,28 @@ Keepling is built as six vertical proof increments. Each phase produces observab
 4. Browser tests exercise real Phoenix/PostgreSQL happy, validation, stale, conflict, authentication-expired, empty, and retry states.
 5. Domain/application modules have no dependency on React, HTTP transport, MCP, or client persistence.
 6. Phase 1 proves the shared semantic boundary and web/API adapters for SRV-02; Electron, iPhone, and MCP adapter proofs remain assigned to Phases 3, 4, and 5.
-**Plans:** 17 plans
+**Plans:** 19 plans
 
 Plans:
 - [ ] 01-01-PLAN.md — Verify dependencies and gate the exact researched server runtimes.
-- [ ] 01-02-PLAN.md — Execute server/ExUnit/concurrency Wave 0.
-- [ ] 01-03-PLAN.md — Execute browser/contracts/Playwright Wave 0.
-- [ ] 01-04-PLAN.md — Prove the authenticated capture Walking Skeleton and exact replay.
-- [ ] 01-05-PLAN.md — Implement closed server authentication, recovery, sessions, and abuse controls.
-- [ ] 01-06-PLAN.md — Make login, recovery, reauthentication, logout, and Sessions reachable.
-- [ ] 01-07-PLAN.md — Deliver title/notes editing and explicit Inbox clarification.
-- [ ] 01-08-PLAN.md — Deliver stable-ID project/tag management and assignment.
-- [ ] 01-09-PLAN.md — Deliver safe, exact, paginated task activity.
-- [ ] 01-10-PLAN.md — Own temporal storage/contracts and date editing once.
-- [ ] 01-11-PLAN.md — Deliver timezone-correct lists, cursors, and Today ordering.
-- [ ] 01-12-PLAN.md — Deliver complete/reopen as a dedicated vertical slice.
-- [ ] 01-13-PLAN.md — Deliver Trash/restore as a dedicated vertical slice.
-- [ ] 01-14-PLAN.md — Deliver persisted semantic conflict resolution.
-- [ ] 01-15-PLAN.md — Deliver exact uncertain-delivery and auth-interruption recovery.
-- [ ] 01-16-PLAN.md — Deliver bounded semantic undo and persistent recovery.
-- [ ] 01-17-PLAN.md — Seal responsive/a11y and adversarial full-phase evidence.
+- [ ] 01-02-PLAN.md — Materialize the complete standalone Mix/OTP/config core and lockfile.
+- [ ] 01-03-PLAN.md — Materialize Phoenix Endpoint/web runtime and deterministic ExUnit/concurrency support.
+- [ ] 01-04-PLAN.md — Execute browser/contracts/Playwright Wave 0.
+- [ ] 01-05-PLAN.md — Prove the authenticated capture Walking Skeleton and exact replay.
+- [ ] 01-06-PLAN.md — Implement operator setup-token issuance, sole-account creation, and canonical account timezone.
+- [ ] 01-07-PLAN.md — Implement password authentication, one-use recovery, sessions, and abuse controls.
+- [ ] 01-08-PLAN.md — Make setup, login, recovery, reauthentication, logout, and Sessions reachable.
+- [ ] 01-09-PLAN.md — Deliver title/notes editing and explicit Inbox clarification.
+- [ ] 01-10-PLAN.md — Deliver stable-ID project/tag management and assignment.
+- [ ] 01-11-PLAN.md — Deliver safe, exact, paginated task activity.
+- [ ] 01-12-PLAN.md — Own temporal storage/contracts and date editing once.
+- [ ] 01-13-PLAN.md — Deliver timezone-correct lists, cursors, and Today ordering.
+- [ ] 01-14-PLAN.md — Deliver complete/reopen as a dedicated vertical slice.
+- [ ] 01-15-PLAN.md — Deliver Trash/restore as a dedicated vertical slice.
+- [ ] 01-16-PLAN.md — Deliver persisted semantic conflict resolution.
+- [ ] 01-17-PLAN.md — Deliver exact uncertain-delivery and auth-interruption recovery.
+- [ ] 01-18-PLAN.md — Deliver bounded semantic undo and persistent recovery.
+- [ ] 01-19-PLAN.md — Seal responsive/a11y and adversarial full-phase evidence.
 
 ### Phase 2: Synchronization and Replaceable Server
 **Goal:** Keepling has a formally tested offline synchronization contract and an always-on, recoverable reference deployment.
