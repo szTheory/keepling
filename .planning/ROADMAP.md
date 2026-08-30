@@ -19,7 +19,7 @@ Keepling is built as six vertical proof increments. Each phase produces observab
 **Plans:** 17 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Verify and pin every research-flagged dependency.
+- [ ] 01-01-PLAN.md — Verify dependencies and gate the exact researched server runtimes.
 - [ ] 01-02-PLAN.md — Execute server/ExUnit/concurrency Wave 0.
 - [ ] 01-03-PLAN.md — Execute browser/contracts/Playwright Wave 0.
 - [ ] 01-04-PLAN.md — Prove the authenticated capture Walking Skeleton and exact replay.
