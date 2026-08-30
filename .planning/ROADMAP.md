@@ -15,6 +15,16 @@ Keepling is built as six vertical proof increments. Each phase produces observab
 3. Duplicate mutation submission produces one durable effect and the same stable result.
 4. Browser tests exercise real Phoenix/PostgreSQL happy, validation, stale, conflict, authentication-expired, empty, and retry states.
 5. Domain/application modules have no dependency on React, HTTP transport, MCP, or client persistence.
+**Plans:** 7 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Prove the authenticated React → Phoenix → PostgreSQL Walking Skeleton and exact capture replay.
+- [ ] 01-02-PLAN.md — Complete the blocking-human package legitimacy gate before flagged dependency installation.
+- [ ] 01-03-PLAN.md — Deliver closed recovery, tracked sessions, reauthentication, logout, rate limits, and auth evidence.
+- [ ] 01-04-PLAN.md — Deliver explicit task clarification, projects/tags, and exact safe task activity.
+- [ ] 01-05-PLAN.md — Deliver account-timezone Today/Upcoming projections, cursors, ordering, and honest list states.
+- [ ] 01-06-PLAN.md — Deliver complete/reopen, Trash/restore, persisted conflicts, and uncertain-delivery recovery.
+- [ ] 01-07-PLAN.md — Deliver bounded undo, the approved responsive/a11y contract, and full adversarial phase evidence.
 
 ### Phase 2: Synchronization and Replaceable Server
 **Goal:** Keepling has a formally tested offline synchronization contract and an always-on, recoverable reference deployment.
