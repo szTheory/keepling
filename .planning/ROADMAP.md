@@ -7,7 +7,7 @@ Keepling is built as six vertical proof increments. Each phase produces observab
 ### Phase 1: One Trustworthy Task
 **Goal:** A user can authenticate and complete the core task lifecycle through a real React → Phoenix → PostgreSQL browser slice.
 **Mode:** mvp
-**Requirements:** GTD-01..07, SRV-01..03, WEB-01..02, QUAL-01
+**Requirements:** GTD-01..07, SRV-01, SRV-02 (semantic boundary + web/API proof), SRV-03, WEB-01..02, QUAL-01
 **UI hint:** yes
 **Success Criteria**:
 1. A user can capture, edit, place in Today, complete, reopen, trash, restore, and undo a task through the browser against PostgreSQL.
@@ -15,16 +15,27 @@ Keepling is built as six vertical proof increments. Each phase produces observab
 3. Duplicate mutation submission produces one durable effect and the same stable result.
 4. Browser tests exercise real Phoenix/PostgreSQL happy, validation, stale, conflict, authentication-expired, empty, and retry states.
 5. Domain/application modules have no dependency on React, HTTP transport, MCP, or client persistence.
-**Plans:** 7 plans
+6. Phase 1 proves the shared semantic boundary and web/API adapters for SRV-02; Electron, iPhone, and MCP adapter proofs remain assigned to Phases 3, 4, and 5.
+**Plans:** 17 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Prove the authenticated React → Phoenix → PostgreSQL Walking Skeleton and exact capture replay.
-- [ ] 01-02-PLAN.md — Complete the blocking-human package legitimacy gate before flagged dependency installation.
-- [ ] 01-03-PLAN.md — Deliver closed recovery, tracked sessions, reauthentication, logout, rate limits, and auth evidence.
-- [ ] 01-04-PLAN.md — Deliver explicit task clarification, projects/tags, and exact safe task activity.
-- [ ] 01-05-PLAN.md — Deliver account-timezone Today/Upcoming projections, cursors, ordering, and honest list states.
-- [ ] 01-06-PLAN.md — Deliver complete/reopen, Trash/restore, persisted conflicts, and uncertain-delivery recovery.
-- [ ] 01-07-PLAN.md — Deliver bounded undo, the approved responsive/a11y contract, and full adversarial phase evidence.
+- [ ] 01-01-PLAN.md — Verify and pin every research-flagged dependency.
+- [ ] 01-02-PLAN.md — Execute server/ExUnit/concurrency Wave 0.
+- [ ] 01-03-PLAN.md — Execute browser/contracts/Playwright Wave 0.
+- [ ] 01-04-PLAN.md — Prove the authenticated capture Walking Skeleton and exact replay.
+- [ ] 01-05-PLAN.md — Implement closed server authentication, recovery, sessions, and abuse controls.
+- [ ] 01-06-PLAN.md — Make login, recovery, reauthentication, logout, and Sessions reachable.
+- [ ] 01-07-PLAN.md — Deliver title/notes editing and explicit Inbox clarification.
+- [ ] 01-08-PLAN.md — Deliver stable-ID project/tag management and assignment.
+- [ ] 01-09-PLAN.md — Deliver safe, exact, paginated task activity.
+- [ ] 01-10-PLAN.md — Own temporal storage/contracts and date editing once.
+- [ ] 01-11-PLAN.md — Deliver timezone-correct lists, cursors, and Today ordering.
+- [ ] 01-12-PLAN.md — Deliver complete/reopen as a dedicated vertical slice.
+- [ ] 01-13-PLAN.md — Deliver Trash/restore as a dedicated vertical slice.
+- [ ] 01-14-PLAN.md — Deliver persisted semantic conflict resolution.
+- [ ] 01-15-PLAN.md — Deliver exact uncertain-delivery and auth-interruption recovery.
+- [ ] 01-16-PLAN.md — Deliver bounded semantic undo and persistent recovery.
+- [ ] 01-17-PLAN.md — Seal responsive/a11y and adversarial full-phase evidence.
 
 ### Phase 2: Synchronization and Replaceable Server
 **Goal:** Keepling has a formally tested offline synchronization contract and an always-on, recoverable reference deployment.
@@ -41,7 +52,7 @@ Plans:
 ### Phase 3: Mac Daily Loop
 **Goal:** Jon can dogfood the core loop in an always-open Electron Mac client, including durable offline work and process relaunch.
 **Mode:** mvp
-**Requirements:** MAC-01..05, QUAL-03..04
+**Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
 **Success Criteria**:
 1. The packaged Mac application supports quick capture, Inbox, Today, edit, complete/reopen, trash/restore, and undo with complete keyboard navigation.
@@ -53,7 +64,7 @@ Plans:
 ### Phase 4: Native iPhone Daily Loop
 **Goal:** Jon can dogfood the same trustworthy core loop through a native, platform-integrated SwiftUI iPhone client.
 **Mode:** mvp
-**Requirements:** IOS-01..04
+**Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
 **Success Criteria**:
 1. A physical iPhone supports capture, Inbox, Today, edit, complete/reopen, trash/restore, and undo with native touch and accessibility behavior.
@@ -65,7 +76,7 @@ Plans:
 ### Phase 5: Safe Agent Access
 **Goal:** External AI tools can use Keepling meaningfully without bypassing its authorization, domain rules, or recovery model.
 **Mode:** mvp
-**Requirements:** MCP-01..05
+**Requirements:** MCP-01..05, SRV-02 (MCP adapter proof)
 **UI hint:** yes
 **Success Criteria**:
 1. Representative MCP hosts can read bounded Inbox, Today, Upcoming, project, task, and search resources using least-privilege authorization.

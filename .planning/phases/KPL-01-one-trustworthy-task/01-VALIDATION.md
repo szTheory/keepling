@@ -9,88 +9,69 @@ created: 2026-08-30
 
 # Phase 1 — Validation Strategy
 
-> Per-phase validation contract for feedback sampling during execution.
-
----
-
 ## Test Infrastructure
 
 | Property | Value |
-|----------|-------|
-| **Framework** | ExUnit + StreamData; Ecto SQL Sandbox against real PostgreSQL; Vitest + Testing Library; Playwright + axe |
-| **Config file** | `apps/server/test/test_helper.exs`, `apps/web/vitest.config.ts`, and `apps/web/playwright.config.ts` — all installed in Wave 0 |
-| **Quick run command** | `cd apps/server && mix test --max-failures 1` or `pnpm --filter @keepling/web test --run` for the boundary changed by the task |
-| **Full suite command** | `cd apps/server && mix test && cd ../.. && pnpm contracts:check && pnpm --filter @keepling/web test --run && pnpm --filter @keepling/web test:e2e` |
-| **Estimated runtime** | To be measured after Wave 0; targeted task checks must remain below 30 seconds |
-
----
+|---|---|
+| Framework | ExUnit + StreamData; Ecto SQL Sandbox against real PostgreSQL; Vitest + Testing Library; Playwright + axe |
+| Config | `apps/server/test/test_helper.exs`, all support cases, `apps/web/vitest.config.ts`, `apps/web/src/test/setup.ts`, `apps/web/playwright.config.ts` |
+| Quick run | Narrow Mix/Vitest file for the task |
+| Full suite | `./tooling/test-phase-1.sh` |
+| Runtime | Measure during execution; narrow feedback target below 30 seconds |
 
 ## Sampling Rate
 
-- **After every task commit:** Run the narrow ExUnit test file/directory or Vitest file covering the changed behavior.
-- **After every plan wave:** Run the complete server and web unit suites, contract drift checks, and Playwright `@smoke` against real PostgreSQL.
-- **Before `$gsd-verify-work`:** Full server, contract, web, and browser suites must be green; visual and accessibility evidence must be reviewed.
-- **Max feedback latency:** 30 seconds for task-level checks; measure and record full-suite duration during Wave 0.
-
----
+- After every task commit: run the task's narrow automated check.
+- After every wave: run server, contracts, Vitest, and real-stack smoke lanes that exist at that wave.
+- Before verification: run `./tooling/test-phase-1.sh` plus end-of-phase human checks.
+- Missing/unavailable PostgreSQL or browser evidence is `human_needed`/blocked, never a pass.
 
 ## Per-Task Verification Map
 
-Plan and task identifiers are assigned by the planner. The behavior-to-command mapping below is mandatory input to those plans.
+| Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Automated Command | Status |
+|---|---|---:|---|---|---|---|---|
+| 01-02-T2 | 01-02 | 1 | SRV-02 | T-KPL01-03 | Inward semantic boundary and independent connections exist first | `cd apps/server && mix test test/architecture_test.exs` | ⬜ pending |
+| 01-03-T1 | 01-03 | 1 | WEB-01, WEB-02 | T-KPL01-04 | Vitest and real-stack Playwright configs load before feature use | `pnpm --filter @keepling/web test --run --passWithNoTests && pnpm --filter @keepling/web exec playwright test --list` | ⬜ pending |
+| 01-04-T2 | 01-04 | 2 | GTD-01, SRV-03 | T-KPL01-08 | Concurrent replay yields one stable capture | `cd apps/server && mix test test/keepling/adapters/postgres/idempotency_test.exs` | ⬜ pending |
+| 01-05-T1 | 01-05 | 3 | SRV-01 | T-KPL01-11..14 | Closed auth/recovery/session lifecycle and isolation | `cd apps/server && mix test test/keepling_web/auth_test.exs` | ⬜ pending |
+| 01-06-T2 | 01-06 | 4 | SRV-01, WEB-02 | T-KPL01-15..17 | Reachable login/recovery/session UI and auth interruption | `pnpm --filter @keepling/web test:e2e --grep @auth-recovery` | ⬜ pending |
+| 01-07-T1 | 01-07 | 5 | GTD-02 | T-KPL01-18..20 | Touched-field edit and clarification | `cd apps/server && mix test test/keepling/domain/edit_task_test.exs` | ⬜ pending |
+| 01-08-T1 | 01-08 | 6 | GTD-02 | T-KPL01-21..22 | Stable-ID organization and collisions | `cd apps/server && mix test test/keepling/domain/organization_test.exs` | ⬜ pending |
+| 01-09-T1 | 01-09 | 7 | SRV-03 | T-KPL01-23..24 | Atomic safe accepted activity | `cd apps/server && mix test test/keepling/application/activity_test.exs` | ⬜ pending |
+| 01-10-T1 | 01-10 | 8 | GTD-03 | T-KPL01-25..26 | Today intent/date truth across DST | `cd apps/server && mix test test/keepling/domain/task_dates_test.exs` | ⬜ pending |
+| 01-11-T1 | 01-11 | 9 | GTD-04 | T-KPL01-27..28 | Timezone views, cursor invalidation, reorder race | `cd apps/server && mix test test/keepling/adapters/postgres/task_views_test.exs` | ⬜ pending |
+| 01-12-T1 | 01-12 | 10 | GTD-05 | T-KPL01-29..30 | Complete/reopen independently classified and replay-safe | `cd apps/server && mix test test/keepling/application/task_lifecycle_test.exs` | ⬜ pending |
+| 01-13-T1 | 01-13 | 11 | GTD-06 | T-KPL01-31..32 | Trash/restore independently preserve canonical state | `cd apps/server && mix test test/keepling/application/trash_restore_test.exs` | ⬜ pending |
+| 01-14-T1 | 01-14 | 12 | SRV-03, WEB-02 | T-KPL01-33..35 | Persisted conflict and account isolation | `cd apps/server && mix test test/keepling/adapters/postgres/conflict_test.exs` | ⬜ pending |
+| 01-15-T2 | 01-15 | 13 | SRV-03, WEB-02 | T-KPL01-36..37 | Before/after-commit loss recovers same identity | `pnpm --filter @keepling/web test:e2e --grep @lifecycle-recovery` | ⬜ pending |
+| 01-16-T1 | 01-16 | 14 | GTD-07 | T-KPL01-38..40 | Undo owned, bounded, one-shot, exact revision | `cd apps/server && mix test test/keepling/application/undo_test.exs` | ⬜ pending |
+| 01-17-T2 | 01-17 | 15 | WEB-02 | T-KPL01-41 | Separate overflow and long-text visual/a11y evidence | `pnpm --filter @keepling/web test:e2e --grep @visual-contract` | ⬜ pending |
+| 01-17-T3 | 01-17 | 15 | WEB-01, QUAL-01 | T-KPL01-41..44 | Full lifecycle, sequences, telemetry, and threat gate | `./tooling/test-phase-1.sh` | ⬜ pending |
 
-| Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
-|---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| TBD | TBD | 0+ | GTD-01 | T-01 / T-03 | Stable identity and exactly-once capture under replay | domain + integration | `cd apps/server && mix test test/keepling/application/capture_task_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | GTD-02 | T-02 / T-03 | Closed touched-field edits preserve unrelated fields and validation failures preserve drafts | domain + component | `cd apps/server && mix test test/keepling/domain/edit_task_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | GTD-03 | T-02 | Today intent remains independent from deadline semantics | domain vectors | `cd apps/server && mix test test/keepling/domain/task_dates_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | GTD-04 | T-02 | Timezone and DST boundaries produce stable Today and Upcoming results | query integration | `cd apps/server && mix test test/keepling/adapters/postgres/task_views_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | GTD-05 | T-02 / T-03 | Complete and reopen are idempotent, revision-aware transitions | domain + integration | `cd apps/server && mix test test/keepling/application/task_lifecycle_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | GTD-06 | T-02 / T-03 | Trash and restore retain fields and history without hard deletion | domain + integration | `cd apps/server && mix test test/keepling/application/trash_restore_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | GTD-07 | T-02 / T-03 | Undo is owned, bounded, one-shot, revision-aware, and replay-safe | domain + integration | `cd apps/server && mix test test/keepling/application/undo_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | SRV-01 | T-01 / T-04 / T-05 | Closed setup, hashed sessions, CSRF/origin protection, expiry, revocation, recovery, and account isolation | ConnCase + integration + E2E | `cd apps/server && mix test test/keepling_web/auth_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | SRV-02 | T-02 / T-06 | HTTP reaches the same semantic application command boundary without adapter bypass | architecture + contract | `cd apps/server && mix test test/architecture_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | SRV-03 | T-02 / T-03 | Duplicate, mismatched, concurrent, rejected, and response-loss mutations have stable outcomes | PostgreSQL concurrency + fault injection | `cd apps/server && mix test test/keepling/adapters/postgres/idempotency_test.exs` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | WEB-01 | T-01 / T-02 / T-03 | Authenticated browser performs the full lifecycle against Phoenix and PostgreSQL | Playwright system | `pnpm --filter @keepling/web test:e2e --grep @smoke` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | WEB-02 | T-01 / T-03 / T-04 | Empty, loading, validation, auth-expired, stale, conflict, retry, and uncertain-delivery states preserve intent and focus | component + E2E | `pnpm --filter @keepling/web test --run` | ❌ W0 | ⬜ pending |
-| TBD | TBD | 0+ | QUAL-01 | T-01..T-06 | Long sequences, concurrency, persistence, contract, browser, accessibility, and telemetry boundaries have deterministic proof | all layers | `cd apps/server && mix test && cd ../.. && pnpm contracts:check && pnpm --filter @keepling/web test --run && pnpm --filter @keepling/web test:e2e` | ❌ W0 | ⬜ pending |
+## Wave 0 Requirements and Ordering
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
-
-Threat references are provisional planning labels. The planner must replace or align them with each PLAN.md `<threat_model>` block.
-
----
-
-## Wave 0 Requirements
-
-- [ ] `apps/server/test/test_helper.exs` and support cases — ExUnit, SQL Sandbox, deterministic clock/ID generators, and independent-connection concurrency helpers.
-- [ ] `apps/server/test/keepling/**` and `apps/server/test/keepling_web/**` — initial domain, application, persistence, authentication, HTTP, architecture, and telemetry-redaction test scaffolds.
-- [ ] `packages/contracts/` — OpenAPI 3.1 source, JSON schemas, golden vectors, TypeScript generation, and drift check.
-- [ ] `apps/web/vitest.config.ts` and `apps/web/src/test/setup.ts` — Vitest, Testing Library, jsdom, and accessible interaction helpers.
-- [ ] `apps/web/playwright.config.ts` — real Phoenix/PostgreSQL orchestration, deterministic seeded data, response-loss/fault control, trace, screenshot, and axe evidence.
-- [ ] Root scripts coordinate native Mix and pnpm commands without Nx or Turborepo.
-- [ ] Measure task-check and full-suite runtimes; replace the estimates above with observed values.
-
----
+- [ ] Plan 01-01 resolves package legitimacy before any flagged install.
+- [ ] Plan 01-02 creates `test_helper.exs`, DataCase, ConnCase, Clock, and ConcurrencyCase before Plan 01-04 uses them.
+- [ ] Plan 01-03 creates Vitest config/setup before any component test command.
+- [ ] Plan 01-03 creates Playwright config/stack orchestration before the tracer E2E command.
+- [ ] Plan 01-03 creates OpenAPI generation/drift and native root scripts before later contract/full-suite commands.
+- [ ] No test command references a file/config/helper created in the same or a later task before its creation step.
 
 ## Manual-Only Verifications
 
-| Behavior | Requirement | Why Manual | Test Instructions |
-|----------|-------------|------------|-------------------|
-| Screen-reader announcements and focus recovery across capture, row removal, validation, conflict, authentication expiry, and uncertain delivery | WEB-02, QUAL-01 | Automated accessibility rules cannot prove announcement timing, reading order, or restored focus quality | Exercise the approved UI-SPEC flows with VoiceOver and keyboard-only input; record route, state, expected announcement, actual announcement, and restored focus target. |
-| Reflow, zoom, forced colors, reduced motion, and representative responsive states | WEB-02, QUAL-01 | Visual snapshots do not establish usability or platform accessibility behavior | Review 320, 768, 1024, and 1440px at light/dark, 200% zoom, forced colors, and Reduce Motion using deterministic fixtures for populated, empty, long-content, conflict, auth-expired, and uncertain-delivery states. |
-| Authentication recovery preserves dirty drafts without ambiguous replay | SRV-01, WEB-02 | Automated coverage is required, but final interaction trust and recovery copy need human judgment | Expire a session before submission and after an accepted-but-response-lost mutation; reauthenticate and verify the draft, mutation identity, state language, and final outcome remain intelligible and correct. |
-
----
+| Behavior | Requirement | Instructions |
+|---|---|---|
+| Screen-reader announcements and focus recovery across capture, validation, conflict, auth expiry, uncertain delivery, pagination, lifecycle, undo, sessions | WEB-02, QUAL-01 | Use VoiceOver and keyboard; record route/state, expected/actual announcement, and final focus. |
+| Reflow, themes, zoom, forced colors, motion | WEB-02, QUAL-01 | Review 320/768/1024/1440, light/dark, 200% zoom, forced colors, Reduce Motion with deterministic fixtures. |
+| Password manager and recovery trust | SRV-01, WEB-02 | Verify paste, AutoFill, reveal, one-use recovery, and both auth-expiry timings without secret disclosure. |
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or explicit Wave 0 dependencies.
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify.
-- [ ] Wave 0 covers all missing references.
-- [ ] No watch-mode flags.
-- [ ] Task-level feedback latency is below 30 seconds.
-- [ ] Real PostgreSQL tests prove concurrency and before/after-commit response loss.
+- [ ] Every task has an automated verify and no watch flags.
+- [ ] Wave 0 prerequisites execute before dependent verification.
+- [ ] Narrow feedback is measured below 30 seconds or split further.
+- [ ] Real PostgreSQL proves concurrency and before/after-commit loss.
 - [ ] Visual, keyboard, VoiceOver, reflow, forced-colors, and Reduce Motion evidence is recorded.
-- [ ] `nyquist_compliant: true` is set in frontmatter after validation.
+- [ ] `nyquist_compliant: true` and `wave_0_complete: true` are set only from fresh passing evidence.
 
 **Approval:** pending

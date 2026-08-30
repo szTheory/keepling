@@ -113,14 +113,15 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GTD-01..07, SRV-01..03, WEB-01..02, QUAL-01 | Phase 1 | Pending |
+| GTD-01..07, SRV-01, SRV-03, WEB-01..02, QUAL-01 | Phase 1 | Pending |
+| SRV-02 shared semantic boundary + web/API adapter proof | Phase 1 | Pending partial proof |
 | SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05 | Phase 2 | Pending |
-| MAC-01..05, QUAL-03..04 | Phase 3 | Pending |
-| IOS-01..04 | Phase 4 | Pending |
-| MCP-01..05 | Phase 5 | Pending |
+| MAC-01..05, QUAL-03..04, SRV-02 Electron adapter proof | Phase 3 | Pending |
+| IOS-01..04, SRV-02 iPhone adapter proof | Phase 4 | Pending |
+| MCP-01..05, SRV-02 MCP adapter proof and cross-adapter completion | Phase 5 | Pending |
 | DATA-01, QUAL-03..05 and cross-client release evidence | Phase 6 | Pending |
 
-Some quality requirements intentionally receive initial implementation in an earlier phase and final cross-product verification in Phase 6; the canonical ownership phase is the first listed phase.
+Some quality requirements intentionally receive initial implementation in an earlier phase and final cross-product verification in Phase 6; the canonical ownership phase is the first listed phase. SRV-02 is intentionally proven incrementally: Phase 1 establishes the invariant-owning semantic boundary and web/API adapter, while Phases 3–5 add Electron, iPhone, and MCP adapter proofs. It is not complete until the Phase 5 cross-adapter proof passes.
 
 **Coverage:**
 

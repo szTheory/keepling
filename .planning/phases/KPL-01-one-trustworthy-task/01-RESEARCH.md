@@ -576,44 +576,26 @@ The planner should keep each feature slice vertical through domain → transacti
 | A9 | The proposed phase decomposition is the most efficient dependency order. | Likely Planning Decomposition | Planner may merge/split waves based on repository state, while preserving the tracer-first dependency chain. |
 | A10 | Keep Ecto changesets at the persistence boundary and product invariants in pure domain decisions. | Pattern 1 | A different implementation can preserve the dependency direction, but using changesets as the public domain API would couple layers. |
 | A11 | Build the deterministic fault harness with injected clocks/IDs, process barriers, captured telemetry, and test-only response-drop controls. | Validation Architecture / Security | Poor isolation could make tests flaky or accidentally expose fault controls in production. |
-| A12 | Default account-timezone selection/change behavior is setup-time/operator-only until product scope says otherwise. | Open Question 2 | A required browser settings flow would add contract/UI work. |
-| A13 | Retain authenticated terminal semantic receipts for the account lifetime in Phase 1; do not receipt unauthenticated/undecodable requests. | Open Question 5 | Different retention/classification changes replay guarantees, privacy exposure, and schema cleanup. |
-| A14 | Sign/MAC opaque cursor payloads in addition to account-scoped server queries. | Open Question 6 | Encryption or server-side cursor state could be selected instead, but unsigned client-editable payloads need equivalent integrity checks. |
+| A12 | RESOLVED: explicit setup-time IANA timezone; operator-mediated changes never rewrite dates. | Open Questions (RESOLVED) 2 | Later browser settings may call the same setting seam without changing stored dates. |
+| A13 | RESOLVED: retain authenticated/authorized/structurally valid terminal semantic receipts for account lifetime; exclude pre-auth/CSRF/malformed/unauthorized traffic. | Open Questions (RESOLVED) 5 | A later purge policy must delete stored response bodies consistently. |
+| A14 | RESOLVED: HMAC-authenticated, account-scoped, versioned cursor payloads with per-view revisions. | Open Questions (RESOLVED) 6 | Rule changes invalidate old cursors explicitly without data migration. |
 | A15 | Persist hashes, not raw setup/recovery/session/undo bearer secrets, and use constant-time comparison. | Security checklist | Exact hash/keying strategy must be specified and rotated safely. |
-| A16 | Enforce measured body/field/query bounds and database timeouts to limit resource exhaustion. | Threat Patterns | Exact limits remain unresolved and could reject legitimate long content if chosen arbitrarily. |
-| A17 | Initially offer undo for complete/reopen, trash/restore, clarify/return, plan/unplan, and saved detail edits. | Open Question 3 | The product may choose a smaller or larger supported matrix; contracts and activity copy depend on the decision. |
+| A16 | RESOLVED: versioned title/notes/organization/session-label bounds plus measured password/body/query timeouts. | Open Questions (RESOLVED) 1 | Later changes use explicit contract versions and expand/migrate/contract. |
+| A17 | RESOLVED: undo saved details, clarify/return, plan/unplan, complete/reopen, and Trash/restore; exclude reorder and organization commands. | Open Questions (RESOLVED) 3 | The matrix is additive/versioned so later support can expand compatibly. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **What are the exact bounded field limits and name-equivalence rules?**
-   - What we know: Password length must be bounded and measured; long task content and Unicode wrapping are required UI test cases. [VERIFIED: 01-CONTEXT.md D-46; 01-UI-SPEC.md:313-316]
-   - What's unclear: Maximum title/notes/project/tag lengths, Unicode normalization, trimming, empty/whitespace behavior, and case-insensitive active-name collision semantics are not locked.
-   - Recommendation: Decide these before contract/schema migrations and encode them as shared golden vectors; do not infer product limits from UI fixtures.
+1. **Field limits and name equivalence — resolved.** Task titles are 1–512 Unicode scalar values after outer-whitespace trim; notes are 0–50,000 scalar values and otherwise preserved as plain text. Project/tag/session labels are 1–200 scalar values after outer-whitespace trim. Active organization-name collision uses a versioned derived key: Unicode NFC, outer trim, then Unicode case-fold; display form is preserved. Password upper bound and Argon2id cost remain measured on the reference VM as explicitly allowed by the agent-discretion boundary. Bounds and equivalence versions are contract constants/golden vectors; later changes use expand, migrate, age out, contract. This makes the decision costly, not one-way. [VERIFIED: D-46 and compatibility constraint] [ASSUMED: task/organization limits]
 
-2. **Which IANA account timezone is the initial configured value, and how can the operator change it?**
-   - What we know: Exactly one deliberately configured IANA timezone is canonical and changing it never rewrites dates. [VERIFIED: 01-CONTEXT.md D-05]
-   - What's unclear: Bootstrap source/default and whether Phase 1 exposes a browser settings control or only operator configuration.
-   - Recommendation: Require explicit setup-time selection and keep change support operator-only unless UI scope says otherwise; never silently use deployment/device timezone. [ASSUMED]
+2. **Initial account timezone and change path — resolved.** Setup requires an explicit valid IANA timezone; there is no deployment/device-derived default. Phase 1 changes are operator-mediated, validate an IANA name, and never rewrite stored civil dates. The setting is reversible because a later change affects subsequent account-day interpretation only. [VERIFIED: D-05]
 
-3. **What is the exact supported-undo command matrix?**
-   - What we know: Consequential commands “may” return a 24-hour handle, and undo mechanics are fully specified. [VERIFIED: 01-CONTEXT.md D-40..D-42]
-   - What's unclear: Whether Phase 1 includes handles for edits, clarify, plan/unplan, reorder, project/tag changes, completion, Trash, restore, and organization commands.
-   - Recommendation: Lock a matrix before schema/vector work; minimally cover complete/reopen, trash/restore, clarify/return, plan/unplan, and saved detail edits if product trust copy exposes them. [ASSUMED]
+3. **Supported undo matrix — resolved.** Saved detail edits, clarify/return, plan/unplan, complete/reopen, and Trash/restore may return a handle. Reorder and project/tag management do not. The matrix is versioned and additive: later commands may gain handles without changing existing stored task data or invalidating old consumers, so the initial selection is costly rather than one-way. [VERIFIED: D-40..D-44] [ASSUMED: matrix selection]
 
-4. **How does a task with past `planned_on` and current/future `deadline_on` map to Overdue vs Today, and where does a task appear if one reason is Today and the other is Upcoming?**
-   - What we know: Both reasons must remain explicit; Upcoming can contain a task already in Today for another reason. [VERIFIED: 01-CONTEXT.md D-06,D-23]
-   - What's unclear: Section precedence and precise reason-copy combinations for every date pair.
-   - Recommendation: Create a complete two-date/account-day truth table before query SQL and UI rendering.
+4. **Temporal classification — resolved.** Today eligibility is independently true for every planned/deadline date on or before account day. Past planned intent appears in Overdue with `Planned overdue`; past deadline appears with `Overdue deadline`; equal/today reasons appear in Today; combined reasons remain combined. Upcoming independently includes the next future relevant date, so a task may be in Today for a past/today reason and Upcoming for a later deadline. The full date-pair/DST truth table is versioned; changing classification requires a contract/vector version but no stored-date migration. [VERIFIED: D-04..D-07,D-23]
 
-5. **Which exact terminal results are retained in mutation receipts, and for how long?**
-   - What we know: Stable result/error replay and account-lifetime activity are locked; later purge must include stored response bodies. [VERIFIED: 01-CONTEXT.md D-32,D-63]
-   - What's unclear: Phase 1 receipt retention/storage-body normalization and how unauthenticated/structurally invalid requests are classified.
-   - Recommendation: Retain authenticated terminal semantic results for the account lifetime in Phase 1 and exclude pre-auth/undecodable traffic from the receipt table. [ASSUMED]
+5. **Terminal receipt classes and retention — resolved.** After authentication, authorization/account scoping, and structural decoding establish receipt ownership, retain accepted results, `already_satisfied`/typed no-change results, invariant/validation rejections, stale outcomes, and persisted conflicts for the account lifetime in Phase 1. Pre-authentication, CSRF/origin/host, malformed JSON/schema, and unauthorized/not-found probes are not receipted. A fingerprint mismatch returns stable `mutation_identity_reused` from the existing receipt without overwriting it. Infrastructure failure is not terminal unless a terminal receipt committed; after-commit response loss recovers that stored result. Later permanent purge must remove receipt bodies consistently with D-63. [VERIFIED: D-31,D-32,D-35,D-38,D-63]
 
-6. **What are the exact keyset cursor invalidation rules?**
-   - What we know: Cursors bind account, complete unique sort tuple, and relevant view/order revision; stale cursors fail explicitly. [VERIFIED: 01-CONTEXT.md D-26,D-60]
-   - What's unclear: Which query changes increment each view revision and whether ordinary inserts invalidate Inbox/activity cursors.
-   - Recommendation: Define per-view revision ownership and golden vectors before encoding opaque cursors; sign/MAC the encoded payload and never accept account identity from it without session scoping. [ASSUMED]
+6. **Cursor invalidation — resolved.** Every opaque cursor is HMAC-authenticated and session-account scoped, contains the complete unique keyset tuple and a versioned view revision, and never supplies authorization. A membership-affecting accepted command bumps each affected task-view revision; Today moves additionally bump its scoped order revision; insertion invalidates an older page cursor rather than claiming gap-free continuation; activity uses a separate activity-view revision and cursor. Any mismatch returns the locked stale/refresh action. Cursor payload versioning allows rules to change by invalidating cursors without data migration, so the choice is costly rather than one-way. [VERIFIED: D-22,D-26,D-60]
 
 ## Environment Availability
 
