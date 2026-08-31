@@ -3,16 +3,114 @@
  * Do not make direct changes to the file.
  */
 
-export type paths = Record<string, never>;
+export interface paths {
+    readonly "/commands/capture-task": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Capture one titled task into explicit Inbox state */
+        readonly post: operations["captureTask"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/inbox": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Read active Inbox tasks newest first */
+        readonly get: operations["getInbox"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/mutations/{mutation_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Look up the exact stored terminal result by mutation identity */
+        readonly get: operations["getMutation"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/session": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Read the authenticated browser bootstrap */
+        readonly get: operations["getSession"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/test/session": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Authenticate the seeded account in an isolated test runtime */
+        readonly post: operations["createTestSession"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+}
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        readonly CaptureTaskCommand: {
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly title: string;
+            /** @constant */
+            readonly version: 1;
+        };
         readonly CommandAcknowledgement: {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             /** @enum {string} */
             readonly outcome: "accepted" | "already_satisfied";
             readonly revision: components["schemas"]["Revision"];
+            readonly snapshot: components["schemas"]["TaskSnapshot"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
             readonly warnings: readonly components["schemas"]["Warning"][];
+        };
+        readonly InboxResponse: {
+            readonly tasks: readonly components["schemas"]["TaskSnapshot"][];
         };
         /**
          * Format: uuid
@@ -31,16 +129,158 @@ export interface components {
         };
         /** Format: int64 */
         readonly Revision: number;
+        readonly SessionResponse: {
+            readonly csrf_token: string;
+        };
+        /** Format: uuid */
+        readonly TaskIdentity: string;
+        readonly TaskSnapshot: {
+            /** Format: date-time */
+            readonly captured_at: string;
+            readonly id: components["schemas"]["TaskIdentity"];
+            /** @constant */
+            readonly inbox_state: "inbox";
+            readonly revision: components["schemas"]["Revision"];
+            readonly title: string;
+        };
         readonly Warning: {
             readonly code: string;
             readonly message: string;
         };
     };
-    responses: never;
+    responses: {
+        /** @description Closed RFC 9457 problem */
+        readonly ProblemResponse: {
+            headers: {
+                readonly [name: string]: unknown;
+            };
+            content: {
+                readonly "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+    };
     parameters: never;
     requestBodies: never;
     headers: never;
     pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+    readonly captureTask: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["CaptureTaskCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored mutation acknowledgement */
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly getInbox: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Authoritative Inbox projection */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["InboxResponse"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly getMutation: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly mutation_id: components["schemas"]["MutationIdentity"];
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Stored accepted acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly getSession: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Authenticated browser bootstrap */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly createTestSession: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Test browser session created */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+            readonly 404: components["responses"]["ProblemResponse"];
+        };
+    };
+}

@@ -19,7 +19,7 @@ test('@skeleton captures one authenticated task and reloads it from PostgreSQL',
   const title = 'Keep the exact capture acknowledgement'
   const capture = page.getByLabel('What do you want to keep?')
 
-  await expect(page.getByRole('heading', { name: 'Inbox' })).toBeVisible()
+  await expect(page.getByRole('heading', { exact: true, name: 'Inbox' })).toBeVisible()
   await expect(page.getByText('Destination: Inbox')).toBeVisible()
   await capture.fill(title)
 

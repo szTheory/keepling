@@ -3,14 +3,130 @@ info:
   title: Keepling API
   version: 0.1.0
   description: >-
-    Versioned same-origin transport primitives for Keepling semantic commands.
-    Domain and persistence representations remain separate from this contract.
+    Versioned same-origin transport for Keepling semantic commands. Domain,
+    persistence, generated wire, and browser view representations remain separate.
 servers:
   - url: /api/v1
     description: Same-origin Keepling API
-paths: {}
+paths:
+  /test/session:
+    post:
+      operationId: createTestSession
+      summary: Authenticate the seeded account in an isolated test runtime
+      responses:
+        '200':
+          description: Test browser session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+  /session:
+    get:
+      operationId: getSession
+      summary: Read the authenticated browser bootstrap
+      responses:
+        '200':
+          description: Authenticated browser bootstrap
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+  /inbox:
+    get:
+      operationId: getInbox
+      summary: Read active Inbox tasks newest first
+      responses:
+        '200':
+          description: Authoritative Inbox projection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InboxResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/capture-task:
+    post:
+      operationId: captureTask
+      summary: Capture one titled task into explicit Inbox state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaptureTaskCommand'
+      responses:
+        '201':
+          description: Exact stored mutation acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /mutations/{mutation_id}:
+    get:
+      operationId: getMutation
+      summary: Look up the exact stored terminal result by mutation identity
+      parameters:
+        - in: path
+          name: mutation_id
+          required: true
+          schema:
+            $ref: '#/components/schemas/MutationIdentity'
+      responses:
+        '200':
+          description: Stored accepted acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
 components:
+  responses:
+    ProblemResponse:
+      description: Closed RFC 9457 problem
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
   schemas:
+    CaptureTaskCommand:
+      type: object
+      additionalProperties: false
+      required:
+        - mutation_id
+        - task_id
+        - title
+        - version
+      properties:
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 512
+        version:
+          type: integer
+          const: 1
     CommandAcknowledgement:
       type: object
       additionalProperties: false
@@ -18,6 +134,8 @@ components:
         - mutation_id
         - outcome
         - revision
+        - snapshot
+        - task_id
         - warnings
       properties:
         mutation_id:
@@ -29,10 +147,24 @@ components:
             - already_satisfied
         revision:
           $ref: '#/components/schemas/Revision'
+        snapshot:
+          $ref: '#/components/schemas/TaskSnapshot'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
         warnings:
           type: array
           items:
             $ref: '#/components/schemas/Warning'
+    InboxResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - tasks
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskSnapshot'
     MutationIdentity:
       type: string
       format: uuid
@@ -69,6 +201,40 @@ components:
       type: integer
       format: int64
       minimum: 1
+    SessionResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - csrf_token
+      properties:
+        csrf_token:
+          type: string
+          minLength: 1
+    TaskIdentity:
+      type: string
+      format: uuid
+    TaskSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - captured_at
+        - id
+        - inbox_state
+        - revision
+        - title
+      properties:
+        captured_at:
+          type: string
+          format: date-time
+        id:
+          $ref: '#/components/schemas/TaskIdentity'
+        inbox_state:
+          type: string
+          const: inbox
+        revision:
+          $ref: '#/components/schemas/Revision'
+        title:
+          type: string
     Warning:
       type: object
       additionalProperties: false

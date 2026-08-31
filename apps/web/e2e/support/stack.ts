@@ -243,7 +243,7 @@ const start = async () => {
     const targetPort = apiRequest ? phoenixPort : vitePort
     const upstream = request(
       {
-        headers: { ...incoming.headers, host: `${host}:${String(targetPort)}` },
+        headers: incoming.headers,
         host,
         method: incoming.method,
         path: incoming.url,
