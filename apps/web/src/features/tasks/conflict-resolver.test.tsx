@@ -27,6 +27,14 @@ const jsonResponse = (body: unknown, status = 200) =>
     status,
   })
 
+const deferred = <Value,>() => {
+  let resolve!: (value: Value) => void
+  const promise = new Promise<Value>((resolvePromise) => {
+    resolve = resolvePromise
+  })
+  return { promise, resolve }
+}
+
 const activityResponse = () =>
   jsonResponse({ account_timezone: 'America/New_York', items: [], next_cursor: null })
 
@@ -94,6 +102,62 @@ afterEach(() => {
 })
 
 describe('inline task conflict resolution', () => {
+  it('freezes the dispatched selection until its deferred response settles', async () => {
+    const response = deferred<Response>()
+    const bodies: string[] = []
+    const fetchMock = vi.fn<typeof fetch>(async (_input, init) => {
+      bodies.push(String(init?.body))
+      return response.promise
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAcknowledged = vi.fn()
+    const onKeepEditing = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <ConflictResolver
+        conflict={{
+          fields: conflictProblem().conflict.fields as TaskConflict['fields'],
+          id: conflictProblem().conflict.id,
+          latestRevision: 2,
+        }}
+        csrfToken="csrf"
+        onAcknowledged={onAcknowledged}
+        onKeepEditing={onKeepEditing}
+        taskId={task.id}
+      />,
+    )
+
+    const mine = screen.getByRole('button', { name: 'Use mine for Title' })
+    const current = screen.getByRole('button', { name: 'Use current for Title' })
+    const keepEditing = screen.getByRole('button', { name: 'Keep editing' })
+    const save = screen.getByRole('button', { name: 'Save resolution' })
+
+    await user.click(mine)
+    await user.click(save)
+
+    expect(mine).toBeDisabled()
+    expect(current).toBeDisabled()
+    expect(keepEditing).toBeDisabled()
+    expect(save).toBeDisabled()
+    await user.click(current)
+    await user.click(keepEditing)
+    await user.click(save)
+    expect(mine).toHaveAttribute('aria-pressed', 'true')
+    expect(current).toHaveAttribute('aria-pressed', 'false')
+    expect(onKeepEditing).not.toHaveBeenCalled()
+    expect(bodies).toHaveLength(1)
+
+    const request = JSON.parse(bodies[0] ?? '{}') as { mutation_id: string }
+    response.resolve(jsonResponse(acknowledgement(request.mutation_id)))
+
+    await waitFor(() => expect(onAcknowledged).toHaveBeenCalledOnce())
+    expect(onAcknowledged).toHaveBeenCalledWith(
+      expect.objectContaining({ snapshot: expect.objectContaining({ title: 'My title' }) }),
+    )
+    expect(bodies).toHaveLength(1)
+  })
+
   it('renders long hostile values as affected plain text with an accessible six-line disclosure', async () => {
     const longMine = Array.from({ length: 8 }, (_, index) => `Mine ${index + 1}`).join('\n')
     const longCurrent = '<img src=x onerror="window.conflictRan=true">\n' + longMine
