@@ -12,6 +12,7 @@ import {
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
+import { authenticationRecoveryFor } from '@/commands/submission'
 
 type QuickCaptureProps = {
   csrfToken: string
@@ -89,14 +90,15 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
         : await captureTask(current.captureCommand, activeCsrfToken)
       await reconcile(acknowledgement, current, activeCsrfToken)
     } catch (error) {
-      if (
-        error instanceof KeeplingApiError &&
-        error.problem.code === 'authentication_required' &&
-        onAuthenticationRequired
-      ) {
+      const authentication =
+        error instanceof KeeplingApiError
+          ? authenticationRecoveryFor(error.problem.code)
+          : null
+      if (authentication && onAuthenticationRequired) {
         setStatus({ kind: 'authentication-required' })
         onAuthenticationRequired(
           {
+            authentication,
             kind: 'not-submitted',
             mutationId: (current.planCommand ?? current.captureCommand).mutationId,
           },
@@ -118,14 +120,15 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
       const activeCommand = current.planCommand ?? current.captureCommand
       await reconcile(await getMutation(activeCommand.mutationId), current, _activeCsrfToken)
     } catch (error) {
-      if (
-        error instanceof KeeplingApiError &&
-        error.problem.code === 'authentication_required' &&
-        onAuthenticationRequired
-      ) {
+      const authentication =
+        error instanceof KeeplingApiError
+          ? authenticationRecoveryFor(error.problem.code)
+          : null
+      if (authentication && onAuthenticationRequired) {
         setStatus({ kind: 'authentication-required' })
         onAuthenticationRequired(
           {
+            authentication,
             kind: 'submitted-unknown',
             mutationId: (current.planCommand ?? current.captureCommand).mutationId,
           },

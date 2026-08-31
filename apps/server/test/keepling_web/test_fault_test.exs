@@ -58,6 +58,7 @@ defmodule KeeplingWeb.TestFaultTest do
     assert conn.halted
     assert conn.status == 401
     assert conn.resp_body =~ ~s("code":"authentication_required")
+    assert conn.resp_body =~ ~s("recovery_action":"sign_in")
     refute conn.resp_body =~ @credential
   end
 
@@ -67,6 +68,7 @@ defmodule KeeplingWeb.TestFaultTest do
 
     assert response.status == 401
     assert response.resp_body =~ ~s("code":"authentication_required")
+    assert response.resp_body =~ ~s("recovery_action":"sign_in")
     refute response.resp_body =~ @credential
   end
 

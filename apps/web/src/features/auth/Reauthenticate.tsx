@@ -4,8 +4,16 @@ import { KeeplingApiError, reauthenticate } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
 
 type InterruptedIntent =
-  | { kind: 'not-submitted'; mutationId: string }
-  | { kind: 'submitted-unknown'; mutationId: string }
+  | {
+      authentication: 'reauthenticate' | 'sign_in'
+      kind: 'not-submitted'
+      mutationId: string
+    }
+  | {
+      authentication: 'reauthenticate' | 'sign_in'
+      kind: 'submitted-unknown'
+      mutationId: string
+    }
 
 type ReauthenticateProps = {
   csrfToken: string
@@ -53,7 +61,7 @@ function Reauthenticate({ csrfToken, interruption, onAuthenticated }: Reauthenti
       <p className="mt-2 text-sm text-muted-foreground">
         {interruption.kind === 'submitted-unknown'
           ? 'The submitted change will be checked with its original identity.'
-          : 'The change has not been submitted yet.'}
+          : 'Keepling will continue with the original mutation identity.'}
       </p>
       <form className="mt-5 space-y-4" onSubmit={(event) => void submit(event)}>
         <div className="space-y-2">

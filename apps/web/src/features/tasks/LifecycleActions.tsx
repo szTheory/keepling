@@ -106,6 +106,7 @@ function LifecycleActions({
     }
     onAuthenticationRequired(
       {
+        authentication: exact.snapshot.authentication,
         kind: exact.snapshot.operation === 'lookup' ? 'submitted-unknown' : 'not-submitted',
         mutationId: submission.mutationId,
       },

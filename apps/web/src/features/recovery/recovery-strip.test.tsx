@@ -166,7 +166,7 @@ describe('persistent semantic recovery', () => {
         jsonResponse(
           {
             code: 'authentication_required',
-            recovery_action: 'reauthenticate',
+            recovery_action: 'sign_in',
             retryable: true,
             status: 401,
             title: 'Authentication required',
@@ -206,7 +206,11 @@ describe('persistent semantic recovery', () => {
       InterruptedIntent,
       (csrfToken: string) => Promise<void>,
     ]
-    expect(intent).toEqual({ kind: 'not-submitted', mutationId: firstIdentity.mutation_id })
+    expect(intent).toEqual({
+      authentication: 'sign_in',
+      kind: 'not-submitted',
+      mutationId: firstIdentity.mutation_id,
+    })
 
     await resume('rotated-csrf')
 
@@ -225,7 +229,7 @@ describe('persistent semantic recovery', () => {
       jsonResponse(
         {
           code: 'authentication_required',
-          recovery_action: 'reauthenticate',
+          recovery_action: 'sign_in',
           retryable: true,
           status: 401,
           title: 'Authentication required',

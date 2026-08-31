@@ -1,11 +1,40 @@
+import { spawnSync } from 'node:child_process'
+import { randomBytes } from 'node:crypto'
+import { userInfo } from 'node:os'
+import { resolve } from 'node:path'
 import process from 'node:process'
 
 import { expect, test, type Page, type Route } from '@playwright/test'
 
 const faultToken = process.env.KEEPLING_TEST_FAULT_TOKEN
+const repositoryRoot = resolve(import.meta.dirname, '../../..')
+const runtimePreflight = resolve(repositoryRoot, 'tooling/runtime-preflight.sh')
+const postgresPort = process.env.KEEPLING_E2E_POSTGRES_PORT ?? '55432'
+const databaseUrl = `ecto://${encodeURIComponent(userInfo().username)}@127.0.0.1:${postgresPort}/keepling_e2e`
+const continuationPassword = 'phase one continuation password'
 
 if (!faultToken || faultToken.length < 32) {
   throw new Error('KEEPLING_TEST_FAULT_TOKEN must be a per-run high-entropy value')
+}
+
+const setAccountPassword = () => {
+  const environment = {
+    ...process.env,
+    KEEPLING_TEST_DATABASE_URL: databaseUrl,
+    KEEPLING_TEST_SECRET_KEY_BASE:
+      process.env.KEEPLING_TEST_SECRET_KEY_BASE ?? randomBytes(64).toString('hex'),
+    MIX_ENV: 'test',
+  }
+  const code = [
+    `hash = Argon2.hash_pwd_salt(${JSON.stringify(continuationPassword)})`,
+    'Ecto.Adapters.SQL.query!(Keepling.Repo, "UPDATE accounts SET password_hash = $1", [hash])',
+  ].join('; ')
+  const result = spawnSync(
+    runtimePreflight,
+    ['--exec', '--', 'sh', '-c', `cd apps/server && mix run -e '${code}'`],
+    { cwd: repositoryRoot, encoding: 'utf8', env: environment },
+  )
+  if (result.status !== 0) throw new Error(`${result.stdout}\n${result.stderr}`)
 }
 
 const authenticate = async (page: Page, baseURL: string | undefined) => {
@@ -176,37 +205,39 @@ test('@lifecycle-recovery preserves the stored identity when authentication inte
   })
 })
 
-test('@lifecycle-recovery continues exact undo through reauthentication', async ({
+test('@lifecycle-recovery continues exact undo through a real login after session revocation', async ({
   baseURL,
   page,
 }) => {
+  setAccountPassword()
   const { csrf_token: csrfToken } = await authenticate(page, baseURL)
   await captureTask(page, 'Undo survives reauthentication', false)
 
   const bodies: string[] = []
-  let armed = true
   await page.route('**/api/v1/commands/undo-task', async (route) => {
     bodies.push(route.request().postData() ?? '')
-    if (armed) {
-      armed = false
-      await route.continue({
-        headers: faultHeaders(route, 'authentication_before_acceptance'),
-      })
-    } else {
-      await route.continue()
-    }
+    await route.continue()
   })
-  await page.route('**/api/v1/reauthenticate', async (route) => {
-    await route.fulfill({
-      contentType: 'application/json',
-      json: { csrf_token: csrfToken, status: 'reauthenticated' },
-      status: 200,
-    })
+
+  const sessionsResponse = await page.request.get('/api/v1/sessions')
+  expect(sessionsResponse.ok()).toBe(true)
+  const sessions = (await sessionsResponse.json()) as {
+    sessions: Array<{ current: boolean; id: string }>
+  }
+  const currentSession = sessions.sessions.find((session) => session.current)
+  expect(currentSession).toBeTruthy()
+  const revoked = await page.request.delete(`/api/v1/sessions/${currentSession!.id}`, {
+    headers: {
+      origin: new URL(baseURL!).origin,
+      'x-csrf-token': csrfToken,
+    },
   })
+  expect(revoked.ok()).toBe(true)
 
   await page.getByRole('button', { name: 'Undo Today planning' }).click()
   await expect(page.getByRole('button', { name: 'Sign in and continue' })).toBeVisible()
-  await page.getByRole('textbox', { exact: true, name: 'Password' }).fill('test-only continuation')
+  await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
+  await page.getByLabel('Session label').fill('Continued browser')
   await page.getByRole('button', { name: 'Sign in and continue' }).click()
 
   await expect(page.getByText('Change undone.')).toBeVisible()

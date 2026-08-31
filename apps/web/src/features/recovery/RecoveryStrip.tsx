@@ -8,6 +8,7 @@ import {
   type UndoSubmission,
 } from '@/api/keepling'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
+import { authenticationRecoveryFor } from '@/commands/submission'
 
 type RecoveryStripProps = {
   availability: UndoAvailability
@@ -70,10 +71,14 @@ function RecoveryStrip({
         setState({ copy: noChangeCopy(result.result), kind: 'settled' })
       }
     } catch (error: unknown) {
-      if (error instanceof KeeplingApiError && error.problem.code === 'authentication_required') {
+      const authentication =
+        error instanceof KeeplingApiError
+          ? authenticationRecoveryFor(error.problem.code)
+          : null
+      if (authentication) {
         setState({ kind: 'authentication-required' })
         onAuthenticationRequired?.(
-          { kind: 'not-submitted', mutationId: submission.mutationId },
+          { authentication, kind: 'not-submitted', mutationId: submission.mutationId },
           (nextCsrfToken) => submit(nextCsrfToken),
         )
       } else {

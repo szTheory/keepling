@@ -392,6 +392,7 @@ function OrganizationManager({
       if (onAuthenticationRequired) {
         onAuthenticationRequired(
           {
+            authentication: state.authentication,
             kind: state.operation === 'lookup' ? 'submitted-unknown' : 'not-submitted',
             mutationId: action.submission.mutationId,
           },

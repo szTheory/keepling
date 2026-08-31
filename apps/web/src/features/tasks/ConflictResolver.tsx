@@ -10,6 +10,7 @@ import {
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
+import { authenticationRecoveryFor } from '@/commands/submission'
 
 type ConflictResolverProps = {
   conflict: TaskConflict
@@ -126,10 +127,11 @@ function ConflictResolver({
     } catch (error) {
       if (!(error instanceof KeeplingApiError)) {
         setState({ kind: 'unknown' })
-      } else if (error.problem.code === 'authentication_required') {
+      } else if (authenticationRecoveryFor(error.problem.code)) {
+        const authentication = authenticationRecoveryFor(error.problem.code)!
         setState({ kind: 'authentication' })
         onAuthenticationRequired?.(
-          { kind: 'not-submitted', mutationId: current.mutationId },
+          { authentication, kind: 'not-submitted', mutationId: current.mutationId },
           (nextCsrfToken) => deliver(current, nextCsrfToken),
         )
       } else if (error.problem.code === 'task_conflict_stale') {

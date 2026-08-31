@@ -89,17 +89,25 @@ function AppRoutes({
     return <RecoveryReset onAuthenticated={handleAuthenticated} token={recoveryToken} />
   }
 
-  if (interruption && csrfToken) {
+  const withInterruption = (content: ReactNode) => {
+    if (!interruption || !csrfToken) return content
+
+    const finish = (nextCsrfToken: string) => onReauthenticated(interruption, nextCsrfToken)
+
     return (
       <>
-        {authenticatedContent}
+        {content}
         <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 px-4 py-16">
           <div className="mx-auto max-w-2xl">
-            <Reauthenticate
-              csrfToken={csrfToken}
-              interruption={interruption}
-              onAuthenticated={onReauthenticated}
-            />
+            {interruption.authentication === 'sign_in' ? (
+              <LoginForm continuation onAuthenticated={finish} />
+            ) : (
+              <Reauthenticate
+                csrfToken={csrfToken}
+                interruption={interruption}
+                onAuthenticated={onReauthenticated}
+              />
+            )}
           </div>
         </div>
       </>
@@ -120,41 +128,41 @@ function AppRoutes({
     return <LoginForm onAuthenticated={handleAuthenticated} />
   }
 
-  if (pathname === '/today' && csrfToken) return <TaskList csrfToken={csrfToken} view="today" />
-  if (pathname === '/upcoming' && csrfToken) return <TaskList csrfToken={csrfToken} view="upcoming" />
-  if (pathname === '/completed' && csrfToken) return <TaskList csrfToken={csrfToken} view="completed" />
-  if (pathname === '/inbox' && csrfToken) return <TaskList csrfToken={csrfToken} view="inbox" />
+  if (pathname === '/today' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} view="today" />)
+  if (pathname === '/upcoming' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} view="upcoming" />)
+  if (pathname === '/completed' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} view="completed" />)
+  if (pathname === '/inbox' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} view="inbox" />)
   if (pathname === '/trash' && csrfToken) return <TrashList csrfToken={csrfToken} />
 
   if (pathname === '/projects' && csrfToken) {
-    return (
+    return withInterruption(
       <OrganizationManager
         csrfToken={csrfToken}
         kind="project"
         onAuthenticationRequired={onAuthenticationRequired}
-      />
+      />,
     )
   }
 
   if (pathname === '/tags' && csrfToken) {
-    return (
+    return withInterruption(
       <OrganizationManager
         csrfToken={csrfToken}
         kind="tag"
         onAuthenticationRequired={onAuthenticationRequired}
-      />
+      />,
     )
   }
 
   const assignmentMatch = pathname.match(/^\/tasks\/([^/]+)\/organizations$/)
   const assignmentTaskId = decodeRoutePart(assignmentMatch?.[1])
   if (assignmentTaskId && csrfToken) {
-    return <OrganizationFields csrfToken={csrfToken} taskId={assignmentTaskId} />
+    return withInterruption(<OrganizationFields csrfToken={csrfToken} taskId={assignmentTaskId} />)
   }
 
   const taskId = routeToken(pathname, '/tasks/')
   if (taskId && csrfToken) {
-    return (
+    return withInterruption(
       <>
         {authenticatedContent ? <div className="hidden lg:block">{authenticatedContent}</div> : null}
         <div className="min-h-screen bg-card [&>main]:!static [&>main]:!min-h-0 [&>main]:!min-w-0 [&>main]:!w-auto [&>main]:!overflow-visible [&>main]:!border-0 lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:w-[calc(100%-41.5rem)] lg:min-w-[30rem] lg:overflow-y-auto lg:border-l lg:border-border">
@@ -167,15 +175,15 @@ function AppRoutes({
           />
           <ActivityList taskId={taskId} />
         </div>
-      </>
+      </>,
     )
   }
 
-  return authenticatedContent ?? (
+  return withInterruption(authenticatedContent ?? (
     <main className="p-6" id="main-content">
       <h1 className="text-[1.75rem] font-semibold">Keepling</h1>
     </main>
-  )
+  ))
 }
 
 export default AppRoutes

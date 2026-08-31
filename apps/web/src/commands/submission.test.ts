@@ -130,12 +130,10 @@ describe('exact submission recovery', () => {
       .mockRejectedValueOnce(authenticationRequired)
       .mockResolvedValueOnce({ mutationId: 'mutation-1', taskId: 'task-1' })
     const submission = createExactSubmission({
-      classifyError: (error) => ({
-        kind:
-          error === authenticationRequired
-            ? ('authentication_required' as const)
-            : ('unknown' as const),
-      }),
+      classifyError: (error) =>
+        error === authenticationRequired
+          ? ({ authentication: 'sign_in', kind: 'authentication_required' } as const)
+          : ({ kind: 'unknown' } as const),
       lookup,
       matchesAcknowledgement: (acknowledgement: TestAcknowledgement) =>
         acknowledgement.mutationId === request.mutationId &&
@@ -147,6 +145,7 @@ describe('exact submission recovery', () => {
     await submission.submit('csrf-expired')
     await submission.check('csrf-expired')
     expect(submission.snapshot).toMatchObject({
+      authentication: 'sign_in',
       kind: 'authentication_required',
       operation: 'lookup',
       request,
@@ -166,12 +165,10 @@ describe('exact submission recovery', () => {
       .mockRejectedValueOnce(authenticationRequired)
       .mockResolvedValueOnce({ mutationId: 'mutation-1', taskId: 'task-1' })
     const submission = createExactSubmission({
-      classifyError: (error) => ({
-        kind:
-          error === authenticationRequired
-            ? ('authentication_required' as const)
-            : ('unknown' as const),
-      }),
+      classifyError: (error) =>
+        error === authenticationRequired
+          ? ({ authentication: 'reauthenticate', kind: 'authentication_required' } as const)
+          : ({ kind: 'unknown' } as const),
       lookup: vi.fn(),
       matchesAcknowledgement: (acknowledgement: TestAcknowledgement) =>
         acknowledgement.mutationId === request.mutationId &&
@@ -182,6 +179,7 @@ describe('exact submission recovery', () => {
 
     await submission.submit('csrf-expired')
     expect(submission.snapshot).toMatchObject({
+      authentication: 'reauthenticate',
       kind: 'authentication_required',
       operation: 'send',
       request,
@@ -214,7 +212,12 @@ describe('exact submission recovery', () => {
       MutationRecoveryPanel({
         onCheck,
         onSignIn,
-        state: { kind: 'authentication_required', operation: 'lookup', request: taskRequest },
+        state: {
+          authentication: 'sign_in',
+          kind: 'authentication_required',
+          operation: 'lookup',
+          request: taskRequest,
+        },
       }),
     )
     expect(

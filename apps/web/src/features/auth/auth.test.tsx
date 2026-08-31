@@ -131,6 +131,7 @@ describe('reauthentication interruption', () => {
     )
     vi.stubGlobal('fetch', fetchMock)
     const interruption = {
+      authentication: 'reauthenticate',
       kind: 'submitted-unknown',
       mutationId: 'original-mutation-identity',
     } satisfies InterruptedIntent
@@ -157,6 +158,44 @@ describe('reauthentication interruption', () => {
       expect(onAuthenticated).toHaveBeenCalledWith(interruption, 'new-csrf'),
     )
     expect(onAuthenticated.mock.calls[0]?.[0]).toBe(interruption)
+  })
+
+  it('uses the real login flow for an invalid session while retaining mounted work', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({ csrf_token: 'new-session-csrf', status: 'authenticated' }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const interruption = {
+      authentication: 'sign_in',
+      kind: 'submitted-unknown',
+      mutationId: 'retained-mutation',
+    } satisfies InterruptedIntent
+    const onReauthenticated = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <AppRoutes
+        authenticated
+        authenticatedContent={<p>Retained exact submission</p>}
+        csrfToken="expired-csrf"
+        interruption={interruption}
+        onReauthenticated={onReauthenticated}
+      />,
+    )
+
+    expect(screen.getByText('Retained exact submission')).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible()
+    await user.type(screen.getByLabelText('Password'), 'account password')
+    await user.type(screen.getByLabelText('Session label'), 'Restored browser')
+    await user.click(screen.getByRole('button', { name: 'Sign in and continue' }))
+
+    await waitFor(() =>
+      expect(onReauthenticated).toHaveBeenCalledWith(interruption, 'new-session-csrf'),
+    )
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/login',
+      expect.objectContaining({ method: 'POST' }),
+    )
   })
 })
 
@@ -332,6 +371,7 @@ describe('capture authentication recovery', () => {
       (csrfToken: string) => Promise<void>,
     ]
     expect(intent.kind).toBe('not-submitted')
+    expect(intent.authentication).toBe('sign_in')
     expect(draft).toHaveValue('Keep this exact draft')
     const firstRequest = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as {
       mutation_id: string
@@ -396,6 +436,7 @@ describe('capture authentication recovery', () => {
       (csrfToken: string) => Promise<void>,
     ]
     expect(intent.kind).toBe('submitted-unknown')
+    expect(intent.authentication).toBe('sign_in')
     if (intent.kind !== 'submitted-unknown') throw new Error('Expected submitted-unknown intent')
     expect(fetchMock.mock.calls[1]?.[0]).toBe(`/api/v1/mutations/${intent.mutationId}`)
 

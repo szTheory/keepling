@@ -1,11 +1,18 @@
 type SubmissionErrorClassification<Rejection> =
-  | { kind: 'authentication_required' }
+  | { authentication: AuthenticationRecovery; kind: 'authentication_required' }
   | { kind: 'conflict'; rejection: Rejection }
   | { kind: 'not_found' }
   | { kind: 'rejected'; rejection: Rejection }
   | { kind: 'unknown' }
 
 type RecoveryOperation = 'lookup' | 'send'
+type AuthenticationRecovery = 'reauthenticate' | 'sign_in'
+
+const authenticationRecoveryFor = (code: string): AuthenticationRecovery | null => {
+  if (code === 'authentication_required') return 'sign_in'
+  if (code === 'recent_authentication_required') return 'reauthenticate'
+  return null
+}
 
 type ExactSubmissionState<Request, Acknowledgement, Rejection> =
   | { kind: 'not_submitted'; request: Request }
@@ -13,6 +20,7 @@ type ExactSubmissionState<Request, Acknowledgement, Rejection> =
   | { kind: 'unknown'; request: Request }
   | {
       kind: 'authentication_required'
+      authentication: AuthenticationRecovery
       operation: RecoveryOperation
       request: Request
     }
@@ -94,6 +102,7 @@ class ExactSubmission<Request, Acknowledgement, Rejection> {
 
       if (classification.kind === 'authentication_required') {
         this.#setState({
+          authentication: classification.authentication,
           kind: 'authentication_required',
           operation,
           request: this.#options.request,
@@ -140,9 +149,8 @@ const classifyKeeplingError = (
 ): SubmissionErrorClassification<KeeplingApiError> => {
   if (!(error instanceof KeeplingApiError)) return { kind: 'unknown' }
   if (error.problem.status >= 500) return { kind: 'unknown' }
-  if (error.problem.code === 'authentication_required') {
-    return { kind: 'authentication_required' }
-  }
+  const authentication = authenticationRecoveryFor(error.problem.code)
+  if (authentication) return { authentication, kind: 'authentication_required' }
   if (error.problem.code === 'mutation_not_found') return { kind: 'not_found' }
   if (error.conflict || error.problem.code.endsWith('_conflict')) {
     return { kind: 'conflict', rejection: error }
@@ -165,9 +173,15 @@ const createTaskSubmission = (
     send: submitPreparedTaskCommand,
   })
 
-export { classifyKeeplingError, createExactSubmission, createTaskSubmission }
+export {
+  authenticationRecoveryFor,
+  classifyKeeplingError,
+  createExactSubmission,
+  createTaskSubmission,
+}
 export type {
   ExactSubmission,
+  AuthenticationRecovery,
   ExactSubmissionOptions,
   ExactSubmissionState,
   SubmissionErrorClassification,

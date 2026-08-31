@@ -83,7 +83,7 @@ if Mix.env() == :test do
       |> put_resp_content_type("application/problem+json")
       |> resp(
         401,
-        ~s({"type":"about:blank","title":"Authentication required","status":401,"code":"authentication_required","retryable":true,"recovery_action":"reauthenticate"})
+        ~s({"type":"about:blank","title":"Authentication required","status":401,"code":"authentication_required","retryable":true,"recovery_action":"sign_in"})
       )
     end
 
