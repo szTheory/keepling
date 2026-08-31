@@ -8,13 +8,11 @@ import {
 } from 'react'
 
 import {
-  KeeplingApiError,
-  clarifyTask,
-  editTask,
-  editTaskDates,
   getInbox,
-  getMutation,
   getTaskActivity,
+  prepareClarifyTask,
+  prepareEditTask,
+  prepareEditTaskDates,
   type BrowserTask,
   type CommandAcknowledgement,
   type EditTaskSubmission,
@@ -24,7 +22,9 @@ import {
   type TaskConflict,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
+import { createTaskSubmission, type TaskSubmissionState } from '@/commands/submission'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
+import MutationRecoveryPanel from '@/features/recovery/MutationRecoveryPanel'
 import ConflictResolver from '@/features/tasks/ConflictResolver'
 
 type TaskEditorProps = {
@@ -56,13 +56,10 @@ type Submission = {
 }
 
 type CommandState =
-  | { kind: 'authentication-required' }
   | { conflict: TaskConflict; kind: 'conflict' }
   | { kind: 'idle' }
   | { kind: 'problem'; message: string }
   | { kind: 'saved'; message: string }
-  | { kind: 'submitting' }
-  | { kind: 'unknown' }
 
 type FieldErrors = Partial<Record<keyof Draft, string>>
 
@@ -87,6 +84,7 @@ function TaskEditor({
   })
   const [commandState, setCommandState] = useState<CommandState>({ kind: 'idle' })
   const [submission, setSubmission] = useState<Submission | null>(null)
+  const [recoveryState, setRecoveryState] = useState<TaskSubmissionState | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null)
   const titleRef = useRef<HTMLInputElement>(null)
@@ -97,6 +95,7 @@ function TaskEditor({
   const saveRef = useRef<HTMLButtonElement>(null)
   const currentPath = useRef(`${window.location.pathname}${window.location.search}`)
   const allowNavigation = useRef(false)
+  const exactSubmission = useRef<ReturnType<typeof createTaskSubmission> | null>(null)
 
   useEffect(() => {
     let active = true
@@ -270,7 +269,9 @@ function TaskEditor({
     activeCsrfToken: string,
   ) => {
     if (acknowledgement.mutationId !== current.command.mutationId) {
-      setCommandState({ kind: 'unknown' })
+      setRecoveryState((state) =>
+        state ? { kind: 'unknown', request: state.request } : state,
+      )
       return
     }
 
@@ -296,6 +297,8 @@ function TaskEditor({
     }
 
     setSubmission(null)
+    exactSubmission.current = null
+    setRecoveryState(null)
     setFieldErrors({})
     setLoadState((state) => ({
       accountTimezone: state.kind === 'ready' ? state.accountTimezone : 'UTC',
@@ -319,90 +322,88 @@ function TaskEditor({
     }
   }
 
-  const deliver = async (current: Submission, activeCsrfToken = csrfToken) => {
-    setSubmission(current)
-    setCommandState({ kind: 'submitting' })
-
-    try {
-      let acknowledgement: CommandAcknowledgement
-      if (current.commandKind === 'dates') {
-        acknowledgement = await editTaskDates(
-          current.command as EditTaskDatesSubmission,
-          activeCsrfToken,
-        )
+  const settleSubmission = async (
+    exact: ReturnType<typeof createTaskSubmission>,
+    current: Submission,
+    activeCsrfToken: string,
+  ) => {
+    const state = exact.snapshot
+    if (state.kind === 'acknowledged') {
+      await reconcile(state.acknowledgement, current, activeCsrfToken)
+    } else if (state.kind === 'conflict') {
+      setSubmission(null)
+      exactSubmission.current = null
+      setRecoveryState(null)
+      if (state.rejection.conflict) {
+        setCommandState({ conflict: state.rejection.conflict, kind: 'conflict' })
       } else {
-        acknowledgement =
-          current.action === 'clarify'
-            ? await clarifyTask(current.command as EditTaskSubmission, activeCsrfToken)
-            : await editTask(current.command as EditTaskSubmission, activeCsrfToken)
+        setCommandState({ kind: 'problem', message: state.rejection.message })
       }
-      await reconcile(acknowledgement, current, activeCsrfToken)
-    } catch (error) {
+    } else if (state.kind === 'rejected') {
+      setSubmission(null)
+      exactSubmission.current = null
+      setRecoveryState(null)
+      const errors: FieldErrors = {}
       if (
-        error instanceof KeeplingApiError &&
-        error.problem.code === 'authentication_required' &&
-        onAuthenticationRequired
+        state.rejection.problem.code === 'title_required' ||
+        state.rejection.problem.code === 'title_too_long'
       ) {
-        setCommandState({ kind: 'authentication-required' })
-        onAuthenticationRequired(
-          { kind: 'not-submitted', mutationId: current.command.mutationId },
-          (nextCsrfToken) => deliver(current, nextCsrfToken),
-        )
-      } else if (error instanceof KeeplingApiError && error.problem.code === 'task_edit_conflict') {
-        setSubmission(null)
-        if (error.conflict) {
-          setCommandState({ conflict: error.conflict, kind: 'conflict' })
-        } else {
-          setCommandState({ kind: 'problem', message: error.message })
-        }
-      } else if (error instanceof KeeplingApiError) {
-        setSubmission(null)
-        const errors: FieldErrors = {}
-        if (error.problem.code === 'title_required' || error.problem.code === 'title_too_long') {
-          errors.title = error.message
-        }
-        if (error.problem.code === 'notes_too_long') errors.notes = error.message
-        setFieldErrors(errors)
-        if (errors.title) titleRef.current?.focus()
-        else if (errors.notes) notesRef.current?.focus()
-        setCommandState({ kind: 'problem', message: error.message })
-      } else {
-        setCommandState({ kind: 'unknown' })
+        errors.title = state.rejection.message
       }
+      if (state.rejection.problem.code === 'notes_too_long') {
+        errors.notes = state.rejection.message
+      }
+      setFieldErrors(errors)
+      if (errors.title) titleRef.current?.focus()
+      else if (errors.notes) notesRef.current?.focus()
+      setCommandState({ kind: 'problem', message: state.rejection.message })
     }
   }
 
-  const checkSubmission = async (current: Submission, _activeCsrfToken = csrfToken) => {
-    setCommandState({ kind: 'submitting' })
+  const deliver = async (current: Submission, activeCsrfToken = csrfToken) => {
+    setSubmission(current)
+    setCommandState({ kind: 'idle' })
+    const request =
+      current.commandKind === 'dates'
+        ? prepareEditTaskDates(current.command as EditTaskDatesSubmission)
+        : current.action === 'clarify'
+          ? prepareClarifyTask(current.command as EditTaskSubmission)
+          : prepareEditTask(current.command as EditTaskSubmission)
+    const exact = createTaskSubmission(request, setRecoveryState)
+    exactSubmission.current = exact
+    await exact.submit(activeCsrfToken)
+    await settleSubmission(exact, current, activeCsrfToken)
+  }
 
-    try {
-      await reconcile(
-        await getMutation(current.command.mutationId),
-        current,
-        _activeCsrfToken,
-      )
-    } catch (error) {
-      if (
-        error instanceof KeeplingApiError &&
-        error.problem.code === 'authentication_required' &&
-        onAuthenticationRequired
-      ) {
-        setCommandState({ kind: 'authentication-required' })
-        onAuthenticationRequired(
-          { kind: 'submitted-unknown', mutationId: current.command.mutationId },
-          (nextCsrfToken) => checkSubmission(current, nextCsrfToken),
-        )
-      } else if (error instanceof KeeplingApiError && error.problem.code !== 'mutation_not_found') {
-        setSubmission(null)
-        setCommandState({ kind: 'problem', message: error.message })
-      } else {
-        setCommandState({ kind: 'unknown' })
-      }
+  const checkSubmission = async (current: Submission, activeCsrfToken = csrfToken) => {
+    const exact = exactSubmission.current
+    if (!exact) return
+    await exact.check(activeCsrfToken)
+    await settleSubmission(exact, current, activeCsrfToken)
+  }
+
+  const requestAuthentication = () => {
+    const exact = exactSubmission.current
+    if (
+      !exact ||
+      exact.snapshot.kind !== 'authentication_required' ||
+      !onAuthenticationRequired ||
+      !submission
+    ) {
+      return
     }
+    const intent: InterruptedIntent = {
+      kind: exact.snapshot.operation === 'lookup' ? 'submitted-unknown' : 'not-submitted',
+      mutationId: submission.command.mutationId,
+    }
+    onAuthenticationRequired(intent, async (nextCsrfToken) => {
+      await exact.resumeAfterAuthentication(nextCsrfToken)
+      await settleSubmission(exact, submission, nextCsrfToken)
+    })
   }
 
   const submit = async (action: Submission['action'], navigateAfter?: string) => {
-    if (!acceptedTask || commandState.kind === 'submitting' || !validate()) return
+    if (!acceptedTask || recoveryState?.kind === 'in_flight' || !validate()) return
     const hasDetails = Object.keys(changedValues.fields).length > 0
     const hasDates = Object.keys(changedDateValues.fields).length > 0
     if (action === 'edit' && !hasDetails && !hasDates) {
@@ -695,7 +696,7 @@ function TaskEditor({
 
           <div className="flex flex-wrap gap-3">
             <Button disabled={!dirty || locked} ref={saveRef} type="submit">
-              {commandState.kind === 'submitting' ? 'Saving…' : 'Save changes'}
+              {recoveryState?.kind === 'in_flight' ? 'Saving…' : 'Save changes'}
             </Button>
             {loadState.task.inboxState === 'inbox' ? (
               <Button
@@ -718,19 +719,11 @@ function TaskEditor({
             {commandState.message}
           </p>
         ) : null}
-        {commandState.kind === 'unknown' ? (
-          <div className="mt-6 rounded-lg border border-border p-4" role="status">
-            <p>Checking whether your change was saved…</p>
-            <Button className="mt-3" onClick={() => submission && void checkSubmission(submission)} variant="outline">
-              Check again
-            </Button>
-          </div>
-        ) : null}
-        {commandState.kind === 'authentication-required' ? (
-          <div className="mt-6 rounded-lg border border-border p-4" role="status">
-            Sign in again to finish saving. Your changes are still here.
-          </div>
-        ) : null}
+        <MutationRecoveryPanel
+          onCheck={() => submission && void checkSubmission(submission)}
+          onSignIn={requestAuthentication}
+          state={recoveryState}
+        />
         {commandState.kind === 'problem' && !firstError ? (
           <div className="mt-6 rounded-lg border border-border p-4" role="alert">
             {commandState.message}

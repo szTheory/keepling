@@ -254,6 +254,13 @@ type ReturnToInboxSubmission = {
 
 type LifecycleSubmission = ReturnToInboxSubmission
 
+type PreparedTaskCommand = {
+  readonly body: string
+  readonly mutationId: string
+  readonly path: string
+  readonly taskId: string
+}
+
 type OrganizationAssignmentValues = {
   projectId: string | null
   tagIds: readonly string[]
@@ -729,6 +736,38 @@ const taskEditCommand = (submission: EditTaskSubmission): WireEditTaskCommand =>
   version: 1,
 })
 
+const prepareTaskCommand = <RequestBody>(
+  path: string,
+  command: RequestBody,
+  mutationId: string,
+  taskId: string,
+): PreparedTaskCommand =>
+  Object.freeze({
+    body: JSON.stringify(command),
+    mutationId,
+    path,
+    taskId,
+  })
+
+const submitPreparedTaskCommand = async (
+  request: PreparedTaskCommand,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> =>
+  mapAcknowledgement(
+    await readJson<WireCommandAcknowledgement>(
+      await fetch(request.path, {
+        body: request.body,
+        credentials: 'same-origin',
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        method: 'POST',
+      }),
+    ),
+  )
+
 const submitTaskCommand = async <RequestBody>(
   path: string,
   command: RequestBody,
@@ -742,10 +781,22 @@ const editTask = async (
   submission: EditTaskSubmission,
   csrfToken: string,
 ): Promise<CommandAcknowledgement> =>
-  submitTaskCommand<WireEditTaskCommand>(
+  submitPreparedTaskCommand(
+    prepareTaskCommand(
+      '/api/v1/commands/edit-task',
+      taskEditCommand(submission),
+      submission.mutationId,
+      submission.taskId,
+    ),
+    csrfToken,
+  )
+
+const prepareEditTask = (submission: EditTaskSubmission): PreparedTaskCommand =>
+  prepareTaskCommand(
     '/api/v1/commands/edit-task',
     taskEditCommand(submission),
-    csrfToken,
+    submission.mutationId,
+    submission.taskId,
   )
 
 const resolveTaskConflict = async (
@@ -798,6 +849,38 @@ const editTaskDates = async (
   return submitTaskCommand('/api/v1/commands/edit-task-dates', command, csrfToken)
 }
 
+const prepareEditTaskDates = (submission: EditTaskDatesSubmission): PreparedTaskCommand => {
+  const command: WireEditTaskDatesRequest = {
+    base_values: {
+      ...(submission.baseValues.deadlineOn !== undefined
+        ? { deadline_on: submission.baseValues.deadlineOn }
+        : {}),
+      ...(submission.baseValues.plannedOn !== undefined
+        ? { planned_on: submission.baseValues.plannedOn }
+        : {}),
+    },
+    expected_revision: submission.expectedRevision,
+    fields: {
+      ...(submission.fields.deadlineOn !== undefined
+        ? { deadline_on: submission.fields.deadlineOn }
+        : {}),
+      ...(submission.fields.plannedOn !== undefined
+        ? { planned_on: submission.fields.plannedOn }
+        : {}),
+    },
+    mutation_id: submission.mutationId,
+    task_id: submission.taskId,
+    version: 1,
+  }
+
+  return prepareTaskCommand(
+    '/api/v1/commands/edit-task-dates',
+    command,
+    submission.mutationId,
+    submission.taskId,
+  )
+}
+
 const planningCommand = (submission: PlanningSubmission): WirePlanForTodayRequest => ({
   base_planned_on: submission.basePlannedOn,
   expected_revision: submission.expectedRevision,
@@ -828,6 +911,14 @@ const clarifyTask = async (
     csrfToken,
   )
 
+const prepareClarifyTask = (submission: EditTaskSubmission): PreparedTaskCommand =>
+  prepareTaskCommand(
+    '/api/v1/commands/clarify-task',
+    taskEditCommand(submission),
+    submission.mutationId,
+    submission.taskId,
+  )
+
 const returnToInbox = async (
   submission: ReturnToInboxSubmission,
   csrfToken: string,
@@ -848,6 +939,17 @@ const lifecycleCommand = (submission: LifecycleSubmission): WireTaskLifecycleCom
   task_id: submission.taskId,
   version: 1,
 })
+
+const prepareLifecycleTask = (
+  action: 'complete' | 'reopen',
+  submission: LifecycleSubmission,
+): PreparedTaskCommand =>
+  prepareTaskCommand(
+    `/api/v1/commands/${action}-task`,
+    lifecycleCommand(submission),
+    submission.mutationId,
+    submission.taskId,
+  )
 
 const completeTask = async (
   submission: LifecycleSubmission,
@@ -1022,7 +1124,12 @@ export {
   unplanTask,
   trashTask,
   planForToday,
+  prepareClarifyTask,
+  prepareEditTask,
+  prepareEditTaskDates,
+  prepareLifecycleTask,
   moveTodayTask,
+  submitPreparedTaskCommand,
   type AssignTaskOrganizationsSubmission,
   type ActivityChange,
   type AuthenticationTransition,
@@ -1039,6 +1146,7 @@ export {
   type EditTaskDatesSubmission,
   type LifecycleSubmission,
   type PlanningSubmission,
+  type PreparedTaskCommand,
   type Problem,
   type OrganizationAcknowledgement,
   type OrganizationAssignmentValues,
