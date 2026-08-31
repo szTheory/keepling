@@ -114,6 +114,48 @@ describe('uncertain session administration', () => {
     expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'PATCH')).toHaveLength(1)
   })
 
+  it('retains an uncertain rename across authentication expiry and reconciles only inventory', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(sessionsResponse())
+      .mockResolvedValueOnce(jsonResponse(problem(), 503))
+      .mockResolvedValueOnce(jsonResponse(problem('authentication_required', 401), 401))
+      .mockResolvedValueOnce(
+        sessionsResponse([currentSession, { ...otherSession, label: 'Travel phone' }]),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <SessionList
+        csrfToken="csrf"
+        hasDirtyWork={false}
+        onAuthenticationRequired={onAuthenticationRequired}
+        onLoggedOut={vi.fn()}
+      />,
+    )
+
+    const label = await screen.findByLabelText('Label for Phone')
+    await user.clear(label)
+    await user.type(label, 'Travel phone')
+    await user.click(screen.getByRole('button', { name: 'Save label for Phone' }))
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { kind: string; mutationId: string },
+      () => Promise<void>,
+    ]
+    expect(intent).toMatchObject({
+      kind: 'read',
+      mutationId: 'sessions:reconcile:rename:session-other',
+    })
+    await resume()
+
+    expect(await screen.findByText('Session label changed to Travel phone.')).toBeVisible()
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'PATCH')).toHaveLength(1)
+  })
+
   it('proves an after-commit revocation from absence without retrying DELETE', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

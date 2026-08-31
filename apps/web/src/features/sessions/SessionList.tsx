@@ -83,7 +83,10 @@ function SessionList({
     setState({ kind: 'ready', sessions })
   }
 
-  const reconcile = async (action: SessionRecovery) => {
+  const reconcile = async (
+    action: SessionRecovery,
+    allowAuthenticationRecovery = true,
+  ) => {
     setRecovery({ ...action, status: 'checking' })
     setMessage('')
 
@@ -126,8 +129,27 @@ function SessionList({
       } else {
         setRecovery({ ...action, status: 'unknown' })
       }
-    } catch {
+    } catch (error) {
       setRecovery({ ...action, status: 'unknown' })
+      if (
+        error instanceof KeeplingApiError &&
+        error.problem.code === 'authentication_required'
+      ) {
+        if (allowAuthenticationRecovery && onAuthenticationRequired) {
+          onAuthenticationRequired(
+            {
+              authentication: 'sign_in',
+              kind: 'read',
+              mutationId: `sessions:reconcile:${action.action}:${action.sessionId}`,
+            },
+            async () => {
+              await reconcile(action, false)
+            },
+          )
+          return
+        }
+        if (!allowAuthenticationRecovery) throw error
+      }
     }
   }
 
