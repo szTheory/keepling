@@ -162,7 +162,7 @@ describe('reauthentication interruption', () => {
 
 describe('session administration', () => {
   it('routes Settings/Sessions with editable labels and exact revocation choices', async () => {
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const path = String(input)
       if (path === '/api/v1/sessions' && init?.method === undefined) {
         return jsonResponse({
@@ -241,7 +241,7 @@ describe('session administration', () => {
 
 describe('capture authentication recovery', () => {
   it('replays the exact capture after a before-acceptance disconnect and missing receipt', async () => {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       const call = fetchMock.mock.calls.length
       if (call === 1) throw new TypeError('connection lost before acceptance')
       if (call === 2) {
