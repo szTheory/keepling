@@ -87,7 +87,7 @@ describe('routed task lists', () => {
       const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
         const path = String(input)
         if (path.startsWith('/api/v1/views/inbox?')) return inboxResponse.promise
-        if (path.startsWith('/api/v1/today?')) return todayResponse.promise
+        if (path.startsWith('/api/v1/today?')) return (await todayResponse.promise).clone()
         if (path === '/api/v1/commands/move-today-task') {
           const request = JSON.parse(String(init?.body)) as Record<string, unknown>
           commandBodies.push(request)
