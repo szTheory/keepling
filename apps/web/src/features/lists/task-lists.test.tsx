@@ -290,7 +290,7 @@ describe('routed task lists', () => {
     await waitFor(() => expect(appended).toHaveFocus())
   })
 
-  it('looks up a lost Today move response by exact identity before any resend', async () => {
+  it('globally locks Today moves and looks up the original identity after response loss', async () => {
     let stored: { mutation_id: string; order_revision: number; task_id: string } | null = null
     const commandBodies: string[] = []
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
@@ -328,12 +328,23 @@ describe('routed task lists', () => {
     await user.click(screen.getByRole('button', { name: 'Move later “Call dentist”' }))
 
     expect(await screen.findByText('Checking whether your change was saved…')).toBeInTheDocument()
+    const moveButtons = screen.getAllByRole('button', { name: /Move (earlier|later)/ })
+    expect(moveButtons).not.toHaveLength(0)
+    for (const button of moveButtons) expect(button).toBeDisabled()
+
+    screen.getByRole('button', { name: 'Move earlier “Send invoice”' }).click()
+    expect(commandBodies).toHaveLength(1)
+
+    const originalMutationId = (
+      JSON.parse(commandBodies[0] ?? '{}') as { mutation_id: string }
+    ).mutation_id
     await user.click(screen.getByRole('button', { name: 'Check again' }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     expect(commandBodies).toHaveLength(1)
-    const mutationId = (JSON.parse(commandBodies[0] ?? '{}') as { mutation_id: string }).mutation_id
-    expect(fetchMock.mock.calls[2]?.[0]).toBe(`/api/v1/today/mutations/${mutationId}`)
+    expect(fetchMock.mock.calls[2]?.[0]).toBe(
+      `/api/v1/today/mutations/${originalMutationId}`,
+    )
   })
 
   it('retains an after-commit authentication response until exact Today reconciliation', async () => {
