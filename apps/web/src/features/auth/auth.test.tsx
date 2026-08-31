@@ -172,7 +172,7 @@ describe('reauthentication interruption', () => {
     expect(background).toHaveFocus()
   })
 
-  it('drains continuations registered and replaced while a drain is active', async () => {
+  it('defers continuations registered and replaced during a drain until the next rotation', async () => {
     vi.stubGlobal(
       'fetch',
       vi.fn().mockResolvedValue(
@@ -233,10 +233,63 @@ describe('reauthentication interruption', () => {
     await user.click(screen.getByRole('button', { name: 'Register during drain' }))
     releaseFirst()
 
+    await waitFor(() => expect(screen.getByText('read:first')).toBeVisible())
+    expect(differentResume).not.toHaveBeenCalled()
+    expect(replacementResume).not.toHaveBeenCalled()
+    expect(firstResume).toHaveBeenCalledOnce()
+
+    await user.click(screen.getByRole('button', { name: 'Complete authentication' }))
     await waitFor(() => expect(differentResume).toHaveBeenCalledOnce())
     await waitFor(() => expect(replacementResume).toHaveBeenCalledOnce())
-    expect(firstResume).toHaveBeenCalledOnce()
     await waitFor(() => expect(screen.getByText('settled')).toBeVisible())
+  })
+
+  it('attempts a self-replacing authentication continuation only once per rotation', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({ csrf_token: 'initial-csrf', status: 'authenticated' }),
+      ),
+    )
+    const intent = {
+      authentication: 'sign_in',
+      kind: 'read',
+      mutationId: 'read:repeated-authentication',
+    } satisfies InterruptedIntent
+    let registerReplacement!: () => void
+    const replacementResume = vi.fn().mockRejectedValue(new Error('authentication required'))
+    const firstResume = vi.fn(async () => {
+      registerReplacement()
+      throw new Error('authentication required')
+    })
+
+    function Harness() {
+      const auth = useAuth()
+      registerReplacement = () => auth.beginReauthentication(intent, replacementResume)
+      return (
+        <>
+          <button onClick={() => auth.beginReauthentication(intent, firstResume)} type="button">
+            Register continuation
+          </button>
+          <button
+            onClick={() => void auth.completeReauthentication(intent, 'rotated-csrf')}
+            type="button"
+          >
+            Complete authentication
+          </button>
+          <output>{auth.interruption?.mutationId ?? 'settled'}</output>
+        </>
+      )
+    }
+
+    const user = userEvent.setup()
+    render(<AuthProvider><Harness /></AuthProvider>)
+    await user.click(screen.getByRole('button', { name: 'Register continuation' }))
+    await user.click(screen.getByRole('button', { name: 'Complete authentication' }))
+
+    await waitFor(() => expect(firstResume).toHaveBeenCalledOnce())
+    expect(replacementResume).not.toHaveBeenCalled()
+    expect(screen.getByText('read:repeated-authentication')).toBeVisible()
   })
 
   it('drains keyed continuations once and keeps a failed resume visibly retryable', async () => {

@@ -103,6 +103,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
     if (drainRef.current) return drainRef.current
 
     const generation = generationRef.current
+    const lastEligibleContinuation = continuationGenerationRef.current
     setContinuationError(false)
 
     const drain = (async () => {
@@ -111,7 +112,9 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
       while (generation === generationRef.current) {
         const pending = [...resumesRef.current.entries()].filter(
-          ([, continuation]) => !attempted.has(continuation.generation),
+          ([, continuation]) =>
+            continuation.generation <= lastEligibleContinuation &&
+            !attempted.has(continuation.generation),
         )
         if (pending.length === 0) break
         pending.forEach(([, continuation]) => attempted.add(continuation.generation))

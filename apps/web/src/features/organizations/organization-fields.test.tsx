@@ -430,6 +430,54 @@ describe('organization management routes', () => {
     expect(screen.getByDisplayValue(kind === 'project' ? 'Home' : 'Errand')).toBeVisible()
   })
 
+  it('stops after one resumed organization action when authentication is required again', async () => {
+    let commandCount = 0
+    let lookupCount = 0
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input)
+      if (path === '/api/v1/organizations') return jsonResponse({ organizations })
+      if (path === '/api/v1/commands/create-organization') {
+        commandCount += 1
+        return jsonResponse(problem('authentication_required', 'Sign in again.', {
+          recovery_action: 'sign_in',
+          status: 401,
+        }), 401)
+      }
+      if (path.startsWith('/api/v1/mutations/')) {
+        lookupCount += 1
+        return jsonResponse(problem('authentication_required', 'Sign in again.', {
+          recovery_action: 'sign_in',
+          status: 401,
+        }), 401)
+      }
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <OrganizationManager
+        csrfToken="expired-csrf"
+        kind="project"
+        onAuthenticationRequired={onAuthenticationRequired}
+      />,
+    )
+
+    await user.type(await screen.findByLabelText('New project name'), 'Garden')
+    await user.click(screen.getByRole('button', { name: 'Create project' }))
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [, resume] = onAuthenticationRequired.mock.calls[0] as [
+      unknown,
+      (csrfToken: string) => Promise<void>,
+    ]
+
+    await expect(resume('still-rejected-csrf')).rejects.toThrow('Authentication is still required')
+    expect(onAuthenticationRequired).toHaveBeenCalledOnce()
+    expect(commandCount).toBe(1)
+    expect(lookupCount).toBe(1)
+  })
+
   it('reconciles accepted response loss for create, rename, archive, and unarchive by exact identity', async () => {
     const stored = new Map<string, Record<string, unknown>>()
     const commandBodies = new Map<string, string[]>()

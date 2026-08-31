@@ -228,6 +228,37 @@ describe('uncertain session administration', () => {
     expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'PATCH')).toHaveLength(1)
   })
 
+  it('stops after one resumed session reconciliation when authentication is required again', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(sessionsResponse())
+      .mockResolvedValueOnce(jsonResponse(problem('recent_authentication_required', 401), 401))
+      .mockResolvedValueOnce(jsonResponse(problem('authentication_required', 401), 401))
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <SessionList
+        csrfToken="csrf"
+        hasDirtyWork={false}
+        onAuthenticationRequired={onAuthenticationRequired}
+        onLoggedOut={vi.fn()}
+      />,
+    )
+
+    const label = await screen.findByLabelText('Label for Phone')
+    await user.clear(label)
+    await user.type(label, 'Travel phone')
+    await user.click(screen.getByRole('button', { name: 'Save label for Phone' }))
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [, resume] = onAuthenticationRequired.mock.calls[0] as [unknown, () => Promise<void>]
+
+    await expect(resume()).rejects.toMatchObject({ problem: { code: 'authentication_required' } })
+    expect(onAuthenticationRequired).toHaveBeenCalledOnce()
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'PATCH')).toHaveLength(1)
+  })
+
   it('proves an after-commit revocation from absence without retrying DELETE', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

@@ -465,7 +465,11 @@ function OrganizationManager({
     setBusyId(null)
   }
 
-  const settle = async (action: OrganizationAction, exact: OrganizationExactSubmission) => {
+  const settle = async (
+    action: OrganizationAction,
+    exact: OrganizationExactSubmission,
+    allowAuthenticationRecovery = true,
+  ) => {
     const state = exact.snapshot
 
     if (state.kind === 'acknowledged') {
@@ -485,7 +489,7 @@ function OrganizationManager({
 
     if (state.kind === 'authentication_required') {
       setBusyId(null)
-      if (onAuthenticationRequired) {
+      if (allowAuthenticationRecovery && onAuthenticationRequired) {
         onAuthenticationRequired(
           {
             authentication: state.authentication,
@@ -495,9 +499,11 @@ function OrganizationManager({
           async (nextCsrfToken) => {
             setBusyId(action.type === 'create' ? 'create' : action.submission.organizationId)
             await exact.resumeAfterAuthentication(nextCsrfToken)
-            await settle(action, exact)
+            await settle(action, exact, false)
           },
         )
+      } else if (!allowAuthenticationRecovery) {
+        throw new Error('Authentication is still required after resuming the organization action.')
       }
       return
     }
