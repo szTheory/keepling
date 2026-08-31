@@ -1,0 +1,90 @@
+import Config
+
+environment = config_env()
+
+fetch_required! = fn key ->
+  case System.fetch_env(key) do
+    {:ok, value} when value != "" ->
+      value
+
+    _ ->
+      raise "configuration error in #{environment}: #{key} is required"
+  end
+end
+
+positive_integer! = fn key, default ->
+  value = System.get_env(key, default)
+
+  case Integer.parse(value) do
+    {integer, ""} when integer > 0 ->
+      integer
+
+    _ ->
+      raise "configuration error in #{environment}: #{key} must be a positive integer"
+  end
+end
+
+enabled? = fn key ->
+  case System.get_env(key) do
+    nil -> false
+    value when value in ["false", "0"] -> false
+    value when value in ["true", "1"] -> true
+    _ -> raise "configuration error in #{environment}: #{key} must be true, false, 1, or 0"
+  end
+end
+
+{database_url_key, secret_key_base_key} =
+  case environment do
+    :dev -> {"KEEPLING_DEV_DATABASE_URL", "KEEPLING_DEV_SECRET_KEY_BASE"}
+    :test -> {"KEEPLING_TEST_DATABASE_URL", "KEEPLING_TEST_SECRET_KEY_BASE"}
+    :prod -> {"DATABASE_URL", "SECRET_KEY_BASE"}
+  end
+
+database_url = fetch_required!.(database_url_key)
+secret_key_base = fetch_required!.(secret_key_base_key)
+
+if byte_size(secret_key_base) < 64 do
+  raise "configuration error in #{environment}: #{secret_key_base_key} must be at least 64 bytes"
+end
+
+database_socket_options = if enabled?.("ECTO_IPV6"), do: [:inet6], else: []
+
+config :keepling, Keepling.Repo,
+  url: database_url,
+  pool_size: positive_integer!.("POOL_SIZE", "10"),
+  socket_options: database_socket_options
+
+endpoint_ipv6? = enabled?.("PHX_IPV6")
+
+endpoint_ip =
+  case {environment, endpoint_ipv6?} do
+    {:prod, false} -> {0, 0, 0, 0}
+    {:prod, true} -> {0, 0, 0, 0, 0, 0, 0, 0}
+    {_, false} -> {127, 0, 0, 1}
+    {_, true} -> {0, 0, 0, 0, 0, 0, 0, 1}
+  end
+
+default_http_port = if environment == :test, do: "4002", else: "4000"
+
+endpoint_url =
+  if environment == :prod do
+    [
+      host: fetch_required!.("PHX_HOST"),
+      port: positive_integer!.("PHX_URL_PORT", "443"),
+      scheme: "https"
+    ]
+  else
+    [
+      host: "localhost",
+      port: positive_integer!.("PHX_URL_PORT", default_http_port),
+      scheme: "http"
+    ]
+  end
+
+config :keepling, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+
+config :keepling, KeeplingWeb.Endpoint,
+  server: enabled?.("PHX_SERVER"),
+  url: endpoint_url,
+  http: [ip: endpoint_ip, port: positive_integer!.("PORT", default_http_port)],
+  secret_key_base: secret_key_base
