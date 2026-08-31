@@ -213,6 +213,51 @@ defmodule KeeplingWeb.AuthLifecycleTest do
     end
   end
 
+  test "browser recovery consumes the one-use token, replaces the password, and signs in", %{
+    conn: conn
+  } do
+    assert {:ok, issued} = Accounts.issue_recovery_token(now: DateTime.utc_now())
+    replacement = "new browser supplied password manager value"
+
+    recovered =
+      conn
+      |> trusted_request()
+      |> post("/api/v1/recovery", %{
+        "client_kind" => "web",
+        "label" => "Recovered browser",
+        "password" => replacement,
+        "token" => issued.token,
+        "version" => 1
+      })
+
+    assert %{"csrf_token" => csrf_token, "status" => "recovery_complete"} =
+             json_response(recovered, 200)
+
+    assert is_binary(csrf_token) and csrf_token != ""
+
+    assert %{"sessions" => [%{"current" => true, "label" => "Recovered browser"}]} =
+             recovered
+             |> recycle()
+             |> get("/api/v1/sessions")
+             |> json_response(200)
+
+    assert login(build_conn(), @password, "Old password") |> response(401)
+    assert login(build_conn(), replacement, "New password") |> response(200)
+
+    replay =
+      build_conn()
+      |> trusted_request()
+      |> post("/api/v1/recovery", %{
+        "client_kind" => "web",
+        "label" => "Replay",
+        "password" => "another replacement password value",
+        "token" => issued.token,
+        "version" => 1
+      })
+
+    assert %{"code" => "recovery_unavailable"} = json_response(replay, 422)
+  end
+
   defp login(conn, password, label) do
     conn
     |> trusted_request()
