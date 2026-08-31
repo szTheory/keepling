@@ -147,7 +147,7 @@ describe('reauthentication interruption', () => {
     )
 
     expect(screen.getByRole('alert')).toHaveTextContent(
-      'Sign in again to finish saving. Your changes are still here.',
+      'Sign in again. Keepling will check the original change before continuing.',
     )
     expect(screen.getByText('The submitted change will be checked with its original identity.')).toBeVisible()
     expect(screen.getByLabelText('Password')).toHaveFocus()
@@ -348,6 +348,9 @@ describe('capture authentication recovery', () => {
       .mockResolvedValueOnce(
         jsonResponse(problem('authentication_required', 'Sign in again.', 401), 401),
       )
+      .mockResolvedValueOnce(
+        jsonResponse(problem('mutation_not_found', 'Mutation not found', 404), 404),
+      )
     vi.stubGlobal('fetch', fetchMock)
     const onAuthenticationRequired = vi.fn()
     const onCaptured = vi.fn()
@@ -370,7 +373,7 @@ describe('capture authentication recovery', () => {
       InterruptedIntent,
       (csrfToken: string) => Promise<void>,
     ]
-    expect(intent.kind).toBe('not-submitted')
+    expect(intent.kind).toBe('submitted-unknown')
     expect(intent.authentication).toBe('sign_in')
     expect(draft).toHaveValue('Keep this exact draft')
     const firstRequest = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as {
@@ -399,10 +402,14 @@ describe('capture authentication recovery', () => {
     )
     await resume('renewed-csrf')
 
-    const retryRequest = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)) as {
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      `/api/v1/mutations/${firstRequest.mutation_id}`,
+    )
+    const retryRequest = JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body)) as {
       mutation_id: string
     }
     expect(retryRequest.mutation_id).toBe(firstRequest.mutation_id)
+    expect(fetchMock.mock.calls[2]?.[1]?.body).toBe(fetchMock.mock.calls[0]?.[1]?.body)
     await waitFor(() => expect(onCaptured).toHaveBeenCalledOnce())
   })
 

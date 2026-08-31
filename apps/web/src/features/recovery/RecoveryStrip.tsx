@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 
 import {
   KeeplingApiError,
+  getMutation,
   undoTask,
   type UndoAvailability,
   type UndoResult,
@@ -51,6 +52,47 @@ function RecoveryStrip({
   const [state, setState] = useState<RecoveryState>({ kind: 'available' })
   const submissionRef = useRef<UndoSubmission | null>(null)
 
+  const settleAcknowledgement = (acknowledgement: Awaited<ReturnType<typeof getMutation>>) => {
+    onSettled({ acknowledgement, kind: 'acknowledged' })
+    setState({ copy: 'Change undone.', kind: 'settled' })
+  }
+
+  const requestAuthentication = (
+    authentication: 'reauthenticate' | 'sign_in',
+    submission: UndoSubmission,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => {
+    setState({ kind: 'authentication-required' })
+    onAuthenticationRequired?.(
+      { authentication, kind: 'submitted-unknown', mutationId: submission.mutationId },
+      resume,
+    )
+  }
+
+  const reconcile = async (submission: UndoSubmission, activeCsrfToken: string) => {
+    setState({ kind: 'uncertain' })
+    try {
+      settleAcknowledgement(await getMutation(submission.mutationId))
+    } catch (error: unknown) {
+      const authentication =
+        error instanceof KeeplingApiError
+          ? authenticationRecoveryFor(error.problem.code)
+          : null
+      if (authentication) {
+        requestAuthentication(authentication, submission, (nextCsrfToken) =>
+          reconcile(submission, nextCsrfToken),
+        )
+      } else if (
+        error instanceof KeeplingApiError &&
+        error.problem.code === 'mutation_not_found'
+      ) {
+        await submit(activeCsrfToken)
+      } else {
+        setState({ kind: 'uncertain' })
+      }
+    }
+  }
+
   const submit = async (activeCsrfToken = csrfToken) => {
     const submission =
       submissionRef.current ??
@@ -76,10 +118,10 @@ function RecoveryStrip({
           ? authenticationRecoveryFor(error.problem.code)
           : null
       if (authentication) {
-        setState({ kind: 'authentication-required' })
-        onAuthenticationRequired?.(
-          { authentication, kind: 'not-submitted', mutationId: submission.mutationId },
-          (nextCsrfToken) => submit(nextCsrfToken),
+        requestAuthentication(
+          authentication,
+          submission,
+          (nextCsrfToken) => reconcile(submission, nextCsrfToken),
         )
       } else {
         setState({ kind: 'uncertain' })
@@ -97,7 +139,7 @@ function RecoveryStrip({
         {state.kind === 'submitting' ? <p>Applying undo…</p> : null}
         {state.kind === 'uncertain' ? <p>Checking whether undo was applied…</p> : null}
         {state.kind === 'authentication-required' ? (
-          <p>Sign in to continue undo. Nothing was changed.</p>
+          <p>Sign in to continue. Keepling will check whether undo was applied.</p>
         ) : null}
         {state.kind === 'settled' ? <p>{state.copy}</p> : null}
       </div>
@@ -115,7 +157,10 @@ function RecoveryStrip({
       {state.kind === 'uncertain' ? (
         <button
           className="min-h-11 shrink-0 font-semibold text-primary underline underline-offset-4"
-          onClick={() => void submit()}
+          onClick={() => {
+            const submission = submissionRef.current
+            if (submission) void reconcile(submission, csrfToken)
+          }}
           type="button"
         >
           Check again

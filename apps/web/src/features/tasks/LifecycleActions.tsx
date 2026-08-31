@@ -90,7 +90,7 @@ function LifecycleActions({
   const check = async () => {
     const exact = exactSubmission.current
     if (!exact || !submission) return
-    await exact.retry(csrfToken)
+    await exact.check(csrfToken)
     await settle(exact)
   }
 

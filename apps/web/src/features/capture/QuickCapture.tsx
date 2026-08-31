@@ -99,10 +99,10 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
         onAuthenticationRequired(
           {
             authentication,
-            kind: 'not-submitted',
+            kind: 'submitted-unknown',
             mutationId: (current.planCommand ?? current.captureCommand).mutationId,
           },
-          (nextCsrfToken) => deliver(current, nextCsrfToken),
+          (nextCsrfToken) => checkSubmission(current, nextCsrfToken),
         )
       } else if (error instanceof KeeplingApiError) {
         setSubmission(current.planCommand ? current : null)
@@ -253,7 +253,7 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
 
       {status.kind === 'authentication-required' ? (
         <div className="mt-4 rounded-lg border border-border bg-card p-4" role="status">
-          Sign in again to finish saving. Your changes are still here.
+          Sign in again. Keepling will check whether this task was saved.
         </div>
       ) : null}
     </section>

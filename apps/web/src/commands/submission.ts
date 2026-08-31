@@ -104,7 +104,7 @@ class ExactSubmission<Request, Acknowledgement, Rejection> {
         this.#setState({
           authentication: classification.authentication,
           kind: 'authentication_required',
-          operation,
+          operation: 'lookup',
           request: this.#options.request,
         })
       } else if (classification.kind === 'conflict') {

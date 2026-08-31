@@ -114,10 +114,27 @@ describe('task lifecycle actions', () => {
     )
   })
 
-  it('retries an unknown outcome with the same mutation identity', async () => {
+  it('checks an unknown outcome before replaying the same mutation identity', async () => {
+    let firstBody = ''
     const fetchMock = vi
       .fn<typeof fetch>()
-      .mockRejectedValueOnce(new TypeError('response lost'))
+      .mockImplementationOnce(async (_input, init) => {
+        firstBody = String(init?.body)
+        throw new TypeError('response lost')
+      })
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            code: 'mutation_not_found',
+            recovery_action: 'retry_exact_mutation',
+            retryable: true,
+            status: 404,
+            title: 'Mutation not found',
+            type: '/problems/mutation_not_found',
+          },
+          404,
+        ),
+      )
       .mockImplementationOnce(async (_input, init) => {
         const request = JSON.parse(String(init?.body))
         return jsonResponse(acknowledgement(request.mutation_id))
@@ -133,11 +150,13 @@ describe('task lifecycle actions', () => {
     await user.click(screen.getByRole('button', { name: 'Check again' }))
 
     await waitFor(() => expect(onAcknowledged).toHaveBeenCalledTimes(1))
-    expect(fetchMock.mock.calls[0]?.[1]?.body).toBe(fetchMock.mock.calls[1]?.[1]?.body)
+    const request = JSON.parse(firstBody) as { mutation_id: string }
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(`/api/v1/mutations/${request.mutation_id}`)
+    expect(fetchMock.mock.calls[2]?.[1]?.body).toBe(firstBody)
   })
 
   it.each([
-    ['authentication_required', 401, 'Sign in again to finish saving. Your changes are still here.'],
+    ['authentication_required', 401, 'Sign in again. Keepling will check whether your change was saved.'],
     ['task_lifecycle_conflict', 409, 'This task changed somewhere else. Review the current task before trying again.'],
     ['unexpected_problem', 422, 'Couldn’t complete this task. Nothing was changed.'],
   ])('shows an honest %s recovery state', async (code, status, message) => {

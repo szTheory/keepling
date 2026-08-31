@@ -549,7 +549,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
               {moveError === 'stale'
                 ? 'Today changed elsewhere. Refresh the list before moving this task.'
                 : moveError === 'authentication'
-                  ? 'Sign in again to finish saving. Your changes are still here.'
+                  ? 'Sign in again. Keepling will check whether the Today order was saved.'
                   : moveError === 'unknown'
                     ? 'Checking whether your change was saved…'
                   : 'Couldn’t move this task. Nothing was changed.'}

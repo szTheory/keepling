@@ -218,6 +218,9 @@ describe('organization assignment fields', () => {
             )
           : jsonResponse(acceptedAssignment(body))
       }
+      if (path.startsWith('/api/v1/mutations/')) {
+        return jsonResponse(problem('mutation_not_found', 'Mutation not found', { status: 404 }), 404)
+      }
       throw new Error(`Unexpected request ${path}`)
     })
     vi.stubGlobal('fetch', fetchMock)
@@ -237,7 +240,7 @@ describe('organization assignment fields', () => {
       { authentication: string; kind: string; mutationId: string },
       (csrfToken: string) => Promise<void>,
     ]
-    expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'not-submitted' })
+    expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'submitted-unknown' })
     await resume('new-session-csrf')
 
     expect(await screen.findByRole('status')).toHaveTextContent('Task assignments saved.')
@@ -266,6 +269,7 @@ describe('organization assignment fields', () => {
             )
           : jsonResponse(stored)
       }
+      if (path.startsWith('/api/v1/mutations/')) return jsonResponse(stored)
       throw new Error(`Unexpected request ${path}`)
     })
     vi.stubGlobal('fetch', fetchMock)
@@ -285,8 +289,7 @@ describe('organization assignment fields', () => {
     await resume('new-session-csrf')
 
     expect(await screen.findByRole('status')).toHaveTextContent('Task assignments saved.')
-    expect(bodies).toHaveLength(2)
-    expect(bodies[1]).toBe(bodies[0])
+    expect(bodies).toHaveLength(1)
   })
 
   it('looks up an accepted assignment receipt after response loss without resending', async () => {

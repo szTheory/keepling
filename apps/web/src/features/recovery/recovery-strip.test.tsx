@@ -80,6 +80,19 @@ describe('persistent semantic recovery', () => {
     const fetchMock = vi
       .spyOn(globalThis, 'fetch')
       .mockImplementationOnce(() => jsonResponse({ code: 'service_unavailable', title: 'Unavailable' }, 503))
+      .mockImplementationOnce(() =>
+        jsonResponse(
+          {
+            code: 'mutation_not_found',
+            recovery_action: 'retry_exact_mutation',
+            retryable: true,
+            status: 404,
+            title: 'Mutation not found',
+            type: '/problems/mutation_not_found',
+          },
+          404,
+        ),
+      )
       .mockImplementationOnce((_input, init) => {
         const request = JSON.parse(String(init?.body)) as Record<string, unknown>
         return jsonResponse({
@@ -98,12 +111,13 @@ describe('persistent semantic recovery', () => {
     expect(await screen.findByText('Checking whether undo was applied…')).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Check again' }))
 
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
     const first = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as Record<string, unknown>
-    const second = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)) as Record<string, unknown>
+    const replay = JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body)) as Record<string, unknown>
 
-    expect(second.mutation_id).toBe(first.mutation_id)
-    expect(second.handle).toBe(first.handle)
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(`/api/v1/mutations/${String(first.mutation_id)}`)
+    expect(replay.mutation_id).toBe(first.mutation_id)
+    expect(replay.handle).toBe(first.handle)
     expect(await screen.findByText('Change undone.')).toBeVisible()
     expect(document.body).not.toHaveTextContent(availability().handle)
   })
@@ -156,7 +170,7 @@ describe('persistent semantic recovery', () => {
     expect(document.activeElement).toBe(input)
   })
 
-  it('continues the exact undo through reauthentication with rotated CSRF state', async () => {
+  it('checks the exact undo receipt before resending after authentication', async () => {
     const user = userEvent.setup()
     const onAuthenticationRequired = vi.fn()
 
@@ -173,6 +187,19 @@ describe('persistent semantic recovery', () => {
             type: '/problems/authentication_required',
           },
           401,
+        ),
+      )
+      .mockImplementationOnce(() =>
+        jsonResponse(
+          {
+            code: 'mutation_not_found',
+            recovery_action: 'retry_exact_mutation',
+            retryable: true,
+            status: 404,
+            title: 'Mutation not found',
+            type: '/problems/mutation_not_found',
+          },
+          404,
         ),
       )
       .mockImplementationOnce((_input, init) => {
@@ -197,7 +224,9 @@ describe('persistent semantic recovery', () => {
     )
     await user.click(screen.getByRole('button', { name: 'Undo completion' }))
 
-    expect(await screen.findByText('Sign in to continue undo. Nothing was changed.')).toBeVisible()
+    expect(
+      await screen.findByText('Sign in to continue. Keepling will check whether undo was applied.'),
+    ).toBeVisible()
     await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
 
     const firstRequest = String(fetchMock.mock.calls[0]?.[1]?.body)
@@ -208,14 +237,17 @@ describe('persistent semantic recovery', () => {
     ]
     expect(intent).toEqual({
       authentication: 'sign_in',
-      kind: 'not-submitted',
+      kind: 'submitted-unknown',
       mutationId: firstIdentity.mutation_id,
     })
 
     await resume('rotated-csrf')
 
-    expect(String(fetchMock.mock.calls[1]?.[1]?.body)).toBe(firstRequest)
-    expect(fetchMock.mock.calls[1]?.[1]?.headers).toMatchObject({
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      `/api/v1/mutations/${firstIdentity.mutation_id}`,
+    )
+    expect(String(fetchMock.mock.calls[2]?.[1]?.body)).toBe(firstRequest)
+    expect(fetchMock.mock.calls[2]?.[1]?.headers).toMatchObject({
       'x-csrf-token': 'rotated-csrf',
     })
     expect(await screen.findByText('Change undone.')).toBeVisible()
@@ -242,7 +274,9 @@ describe('persistent semantic recovery', () => {
     render(<RecoveryStrip availability={availability()} csrfToken="csrf" onSettled={vi.fn()} />)
     await user.click(screen.getByRole('button', { name: 'Undo completion' }))
 
-    expect(await screen.findByText('Sign in to continue undo. Nothing was changed.')).toBeVisible()
+    expect(
+      await screen.findByText('Sign in to continue. Keepling will check whether undo was applied.'),
+    ).toBeVisible()
     expect(screen.queryByRole('link', { name: 'Sign in' })).not.toBeInTheDocument()
   })
 })

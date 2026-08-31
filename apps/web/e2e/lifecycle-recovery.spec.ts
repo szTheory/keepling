@@ -145,8 +145,7 @@ test('@lifecycle-recovery reconciles one stored result after an after-commit dis
   await page.getByRole('button', { name: 'Check again' }).click()
 
   await expect(page.getByRole('button', { name: `Reopen “${title}”` })).toBeVisible()
-  expect(bodies).toHaveLength(2)
-  expect(bodies[1]).toBe(bodies[0])
+  expect(bodies).toHaveLength(1)
   const replay = await page.request.get(`/api/v1/mutations/${request.mutation_id}`)
   expect(await replay.json()).toEqual(await stored.json())
 })
@@ -174,7 +173,7 @@ test('@lifecycle-recovery preserves identity when authentication interrupts befo
 
   await page.getByRole('button', { name: `Complete “${title}”` }).click()
   await expect(
-    page.getByText('Sign in again to finish saving. Your changes are still here.'),
+    page.getByText('Sign in again. Keepling will check whether your change was saved.'),
   ).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign in and continue' })).toBeVisible()
 
@@ -215,7 +214,7 @@ test('@lifecycle-recovery preserves the stored identity when authentication inte
 
   await page.getByRole('button', { name: `Complete “${title}”` }).click()
   await expect(
-    page.getByText('Sign in again to finish saving. Your changes are still here.'),
+    page.getByText('Sign in again. Keepling will check whether your change was saved.'),
   ).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign in and continue' })).toBeVisible()
 
@@ -233,8 +232,7 @@ test('@lifecycle-recovery preserves the stored identity when authentication inte
   await page.getByRole('button', { name: 'Sign in and continue' }).click()
 
   await expect(page.getByRole('button', { name: `Reopen “${title}”` })).toBeVisible()
-  expect(bodies).toHaveLength(2)
-  expect(bodies[1]).toBe(bodies[0])
+  expect(bodies).toHaveLength(1)
 })
 
 test('@lifecycle-recovery continues exact undo through a real login after session revocation', async ({

@@ -57,7 +57,7 @@ function Reauthenticate({ csrfToken, interruption, onAuthenticated }: Reauthenti
       <h2 className="text-xl font-semibold" id="reauthentication-heading">
         Authentication required
       </h2>
-      <p className="mt-2">Sign in again to finish saving. Your changes are still here.</p>
+      <p className="mt-2">Sign in again. Keepling will check the original change before continuing.</p>
       <p className="mt-2 text-sm text-muted-foreground">
         {interruption.kind === 'submitted-unknown'
           ? 'The submitted change will be checked with its original identity.'

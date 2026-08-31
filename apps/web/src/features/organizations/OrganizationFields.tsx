@@ -633,7 +633,7 @@ function OrganizationManager({
 
         {submissionState?.kind === 'authentication_required' ? (
           <p className="mt-6 rounded-lg border p-4" role="status">
-            Sign in again to finish the organization change. Nothing was discarded.
+            Sign in again. Keepling will check whether the organization change was saved.
           </p>
         ) : null}
 

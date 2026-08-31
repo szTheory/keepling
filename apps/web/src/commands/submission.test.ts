@@ -158,8 +158,9 @@ describe('exact submission recovery', () => {
     expect(submission.snapshot.kind).toBe('acknowledged')
   })
 
-  it('reauthenticates a not-submitted request then sends the unchanged bytes', async () => {
+  it('checks a receipt after send-time authentication before sending unchanged bytes', async () => {
     const authenticationRequired = new Error('authentication required')
+    const notFound = new Error('not found')
     const send = vi
       .fn()
       .mockRejectedValueOnce(authenticationRequired)
@@ -168,8 +169,10 @@ describe('exact submission recovery', () => {
       classifyError: (error) =>
         error === authenticationRequired
           ? ({ authentication: 'reauthenticate', kind: 'authentication_required' } as const)
-          : ({ kind: 'unknown' } as const),
-      lookup: vi.fn(),
+          : error === notFound
+            ? ({ kind: 'not_found' } as const)
+            : ({ kind: 'unknown' } as const),
+      lookup: vi.fn().mockRejectedValue(notFound),
       matchesAcknowledgement: (acknowledgement: TestAcknowledgement) =>
         acknowledgement.mutationId === request.mutationId &&
         acknowledgement.taskId === request.taskId,
@@ -181,7 +184,7 @@ describe('exact submission recovery', () => {
     expect(submission.snapshot).toMatchObject({
       authentication: 'reauthenticate',
       kind: 'authentication_required',
-      operation: 'send',
+      operation: 'lookup',
       request,
     })
 
@@ -221,7 +224,7 @@ describe('exact submission recovery', () => {
       }),
     )
     expect(
-      screen.getByText('Sign in again to finish saving. Your changes are still here.'),
+      screen.getByText('Sign in again. Keepling will check whether your change was saved.'),
     ).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Sign in and continue' }))
     expect(onSignIn).toHaveBeenCalledOnce()

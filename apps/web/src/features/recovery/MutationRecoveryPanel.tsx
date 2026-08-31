@@ -22,7 +22,7 @@ function MutationRecoveryPanel({ onCheck, onSignIn, state }: MutationRecoveryPan
   if (state?.kind === 'authentication_required') {
     return (
       <div className="mt-6 rounded-lg border border-border p-4" role="alert">
-        <p>Sign in again to finish saving. Your changes are still here.</p>
+        <p>Sign in again. Keepling will check whether your change was saved.</p>
         <Button className="mt-3" onClick={onSignIn} variant="outline">
           Sign in and continue
         </Button>

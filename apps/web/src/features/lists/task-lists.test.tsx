@@ -268,6 +268,7 @@ describe('routed task lists', () => {
             )
           : jsonResponse(stored)
       }
+      if (path.startsWith('/api/v1/today/mutations/')) return jsonResponse(stored)
       throw new Error(`Unexpected request ${path}`)
     })
     vi.stubGlobal('fetch', fetchMock)
@@ -288,8 +289,7 @@ describe('routed task lists', () => {
     await resume('new-session-csrf')
 
     await waitFor(() => expect(screen.getByText('Today order updated.')).toBeInTheDocument())
-    expect(bodies).toHaveLength(2)
-    expect(bodies[1]).toBe(bodies[0])
+    expect(bodies).toHaveLength(1)
   })
 
   it('routes authenticated Today, Upcoming, and Completed views through their facades', async () => {
