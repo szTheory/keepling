@@ -20,10 +20,23 @@ const serverRoot = join(repositoryRoot, 'apps/server')
 const webRoot = join(repositoryRoot, 'apps/web')
 const runtimePreflight = join(repositoryRoot, 'tooling/runtime-preflight.sh')
 const host = process.env.KEEPLING_E2E_HOST ?? '127.0.0.1'
-const publicPort = Number(process.env.KEEPLING_E2E_PORT ?? '4173')
-const vitePort = Number(process.env.KEEPLING_E2E_VITE_PORT ?? '4174')
-const phoenixPort = Number(process.env.KEEPLING_E2E_PHOENIX_PORT ?? '4002')
-const postgresPort = Number(process.env.KEEPLING_E2E_POSTGRES_PORT ?? '55432')
+
+if (host !== '127.0.0.1') {
+  throw new Error('Keepling test services must bind only to 127.0.0.1')
+}
+
+const configuredPort = (name: string, fallback: string) => {
+  const value = Number(process.env[name] ?? fallback)
+  if (!Number.isInteger(value) || value < 1024 || value > 65_535) {
+    throw new Error(`${name} must be an integer from 1024 through 65535`)
+  }
+  return value
+}
+
+const publicPort = configuredPort('KEEPLING_E2E_PORT', '4173')
+const vitePort = configuredPort('KEEPLING_E2E_VITE_PORT', '4174')
+const phoenixPort = configuredPort('KEEPLING_E2E_PHOENIX_PORT', '4002')
+const postgresPort = configuredPort('KEEPLING_E2E_POSTGRES_PORT', '55432')
 const testFaultToken = process.env.KEEPLING_TEST_FAULT_TOKEN
 
 if (!testFaultToken || testFaultToken.length < 32) {
