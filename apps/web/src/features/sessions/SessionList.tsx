@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import {
   KeeplingApiError,
+  getSession,
   listSessions,
   logout,
   revokeSession,
@@ -23,6 +24,26 @@ type SessionListProps = {
 
 type Confirmation = { kind: 'logout'; session: BrowserSession } | { kind: 'revoke'; session: BrowserSession }
 
+type SessionRecovery =
+  | {
+      action: 'rename'
+      intendedLabel: string
+      previousLabel: string
+      sessionId: string
+      status: 'checking' | 'unknown'
+    }
+  | {
+      action: 'revoke'
+      label: string
+      sessionId: string
+      status: 'checking' | 'unknown'
+    }
+  | {
+      action: 'logout'
+      sessionId: string
+      status: 'checking' | 'unknown'
+    }
+
 const clientKind = (kind: BrowserSession['clientKind']) =>
   ({ electron: 'Electron', iphone: 'iPhone', mcp: 'MCP', web: 'Web' })[kind]
 
@@ -35,6 +56,9 @@ const exactCreatedTime = (value: string) =>
     timeStyle: 'short',
     timeZone: 'UTC',
   }).format(new Date(value)) + ' UTC'
+
+const isUncertainFailure = (error: unknown) =>
+  !(error instanceof KeeplingApiError) || error.problem.status >= 500
 
 function SessionList({
   csrfToken,
@@ -51,14 +75,67 @@ function SessionList({
   const [draftLabels, setDraftLabels] = useState<Record<string, string>>({})
   const [busySessionId, setBusySessionId] = useState<string | null>(null)
   const [confirmation, setConfirmation] = useState<Confirmation | null>(null)
+  const [recovery, setRecovery] = useState<SessionRecovery | null>(null)
   const [message, setMessage] = useState('')
+
+  const replaceSessions = (sessions: readonly BrowserSession[]) => {
+    setDraftLabels(Object.fromEntries(sessions.map((session) => [session.id, session.label])))
+    setState({ kind: 'ready', sessions })
+  }
+
+  const reconcile = async (action: SessionRecovery) => {
+    setRecovery({ ...action, status: 'checking' })
+    setMessage('')
+
+    if (action.action === 'logout') {
+      try {
+        await getSession()
+        setRecovery(null)
+        setMessage('This browser is still signed in.')
+      } catch (error) {
+        if (
+          error instanceof KeeplingApiError &&
+          error.problem.code === 'authentication_required'
+        ) {
+          setRecovery(null)
+          onLoggedOut()
+          return
+        }
+        setRecovery({ ...action, status: 'unknown' })
+      }
+      return
+    }
+
+    try {
+      const sessions = await listSessions()
+      replaceSessions(sessions)
+      const authoritative = sessions.find((session) => session.id === action.sessionId)
+
+      if (action.action === 'revoke') {
+        setRecovery(null)
+        setMessage(authoritative ? `${action.label} remains active.` : `${action.label} revoked.`)
+        return
+      }
+
+      if (authoritative?.label === action.intendedLabel) {
+        setRecovery(null)
+        setMessage(`Session label changed to ${action.intendedLabel}.`)
+      } else if (authoritative?.label === action.previousLabel) {
+        setRecovery(null)
+        setMessage(`${action.previousLabel} was not renamed. The existing label is unchanged.`)
+      } else {
+        setRecovery({ ...action, status: 'unknown' })
+      }
+    } catch {
+      setRecovery({ ...action, status: 'unknown' })
+    }
+  }
 
   const retryLoad = async () => {
     setState({ kind: 'loading' })
     try {
       const sessions = await listSessions()
-      setDraftLabels(Object.fromEntries(sessions.map((session) => [session.id, session.label])))
-      setState({ kind: 'ready', sessions })
+      replaceSessions(sessions)
     } catch (error) {
       setState({ kind: 'error' })
       if (
@@ -70,10 +147,7 @@ function SessionList({
           { authentication: 'sign_in', kind: 'read', mutationId: 'sessions:list' },
           async () => {
             const sessions = await listSessions()
-            setDraftLabels(
-              Object.fromEntries(sessions.map((session) => [session.id, session.label])),
-            )
-            setState({ kind: 'ready', sessions })
+            replaceSessions(sessions)
           },
         )
       }
@@ -85,8 +159,7 @@ function SessionList({
     void listSessions()
       .then((sessions) => {
         if (!active) return
-        setDraftLabels(Object.fromEntries(sessions.map((session) => [session.id, session.label])))
-        setState({ kind: 'ready', sessions })
+        replaceSessions(sessions)
       })
       .catch((error: unknown) => {
         if (!active) return
@@ -100,10 +173,7 @@ function SessionList({
             { authentication: 'sign_in', kind: 'read', mutationId: 'sessions:list' },
             async () => {
               const sessions = await listSessions()
-              setDraftLabels(
-                Object.fromEntries(sessions.map((session) => [session.id, session.label])),
-              )
-              setState({ kind: 'ready', sessions })
+              replaceSessions(sessions)
             },
           )
         }
@@ -146,7 +216,17 @@ function SessionList({
         )
         return
       }
-      setMessage(`Couldn’t rename ${session.label}. The existing label is unchanged.`)
+      if (isUncertainFailure(error)) {
+        await reconcile({
+          action: 'rename',
+          intendedLabel: nextLabel,
+          previousLabel: session.label,
+          sessionId: session.id,
+          status: 'checking',
+        })
+      } else {
+        setMessage(`Couldn’t rename ${session.label}. The existing label is unchanged.`)
+      }
     } finally {
       setBusySessionId(null)
     }
@@ -184,10 +264,23 @@ function SessionList({
         )
         return
       }
-      setMessage(
-        `Couldn’t revoke ${session.label}. The session remains active.`,
-      )
-      setConfirmation(null)
+      if (isUncertainFailure(error)) {
+        const action: SessionRecovery = confirmation.kind === 'logout'
+          ? { action: 'logout', sessionId: session.id, status: 'checking' }
+          : {
+              action: 'revoke',
+              label: session.label,
+              sessionId: session.id,
+              status: 'checking',
+            }
+        setConfirmation(null)
+        await reconcile(action)
+      } else {
+        setMessage(
+          `Couldn’t revoke ${session.label}. The session remains active.`,
+        )
+        setConfirmation(null)
+      }
     } finally {
       setBusySessionId(null)
     }
@@ -210,6 +303,32 @@ function SessionList({
 
   return (
     <>
+      {recovery ? (
+        <div className="mb-4 rounded-lg border border-border bg-card p-4" role="status">
+          <p>
+            {recovery.status === 'checking'
+              ? 'Checking the authoritative session state…'
+              : recovery.action === 'rename'
+                ? `Keepling could not confirm whether ${recovery.previousLabel} was renamed.`
+                : recovery.action === 'revoke'
+                  ? `Keepling could not confirm whether ${recovery.label} was revoked.`
+                  : 'Keepling could not confirm whether this browser was logged out.'}
+          </p>
+          {recovery.status === 'unknown' ? (
+            <Button
+              className="mt-3 min-h-11"
+              onClick={() => void reconcile(recovery)}
+              variant="outline"
+            >
+              {recovery.action === 'rename'
+                ? 'Check rename again'
+                : recovery.action === 'revoke'
+                  ? 'Check revocation again'
+                  : 'Check logout again'}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
       {state.sessions.length === 0 ? (
         <p role="status">No active sessions were returned. Sign in again before retrying.</p>
       ) : (
@@ -247,6 +366,7 @@ function SessionList({
                   </div>
                   <Button
                     className="min-h-11"
+                    disabled={recovery !== null}
                     onClick={() =>
                       setConfirmation({ kind: session.current ? 'logout' : 'revoke', session })
                     }
@@ -265,6 +385,7 @@ function SessionList({
                       className="min-h-11 w-full rounded-lg border border-input bg-card px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       id={`session-label-${session.id}`}
                       maxLength={200}
+                      disabled={recovery !== null}
                       onChange={(event) =>
                         setDraftLabels((labels) => ({ ...labels, [session.id]: event.target.value }))
                       }
@@ -276,6 +397,7 @@ function SessionList({
                     className="min-h-11"
                     disabled={
                       busySessionId === session.id ||
+                      recovery !== null ||
                       draftLabel.trim() === '' ||
                       draftLabel.trim() === session.label
                     }
@@ -312,11 +434,16 @@ function SessionList({
                   : 'The current browser will need to sign in again. Saved tasks will remain in Keepling.'}
             </p>
             <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <Button onClick={() => setConfirmation(null)} ref={keepActiveRef} variant="outline">
+              <Button
+                disabled={recovery !== null}
+                onClick={() => setConfirmation(null)}
+                ref={keepActiveRef}
+                variant="outline"
+              >
                 {confirmation.kind === 'revoke' ? 'Keep session active' : 'Stay here'}
               </Button>
               <Button
-                disabled={busySessionId === confirmation.session.id}
+                disabled={busySessionId === confirmation.session.id || recovery !== null}
                 onClick={() => void confirmAction()}
                 variant="destructive"
               >
