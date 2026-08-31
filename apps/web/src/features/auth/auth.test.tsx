@@ -152,8 +152,9 @@ describe('reauthentication interruption', () => {
     )
 
     const dialog = screen.getByRole('dialog', { name: 'Authentication recovery' })
-    expect(background).toHaveAttribute('inert')
-    expect(background).toHaveAttribute('aria-hidden', 'true')
+    const retainedContent = background.closest('[data-auth-recovery-content="true"]')
+    expect(retainedContent).toHaveAttribute('inert')
+    expect(retainedContent).toHaveAttribute('aria-hidden', 'true')
     expect(dialog).toContainElement(document.activeElement as HTMLElement)
 
     await userEvent.setup().tab({ shift: true })
@@ -166,8 +167,8 @@ describe('reauthentication interruption', () => {
         csrfToken="csrf"
       />,
     )
-    expect(background).not.toHaveAttribute('inert')
-    expect(background).not.toHaveAttribute('aria-hidden')
+    expect(retainedContent).not.toHaveAttribute('inert')
+    expect(retainedContent).not.toHaveAttribute('aria-hidden')
     expect(background).toHaveFocus()
   })
 

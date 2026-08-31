@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import LoginForm from '@/features/auth/LoginForm'
 import Reauthenticate, { type InterruptedIntent } from '@/features/auth/Reauthenticate'
@@ -64,15 +64,19 @@ function InterruptionBoundary({
   interrupted: boolean
   overlay: ReactNode
 }) {
-  useLayoutEffect(() => {
-    const root = document.getElementById('root')
-    if (!root || !interrupted) return
-    const overlayElement = root.querySelector<HTMLElement>('[data-auth-recovery-overlay="true"]')
-    if (!overlayElement) return
+  const boundaryRef = useRef<HTMLDivElement>(null)
 
-    const retainedElements = [...root.children].filter(
-      (element) => !(element instanceof HTMLElement && element.dataset.authRecoveryOverlay === 'true'),
+  useLayoutEffect(() => {
+    if (!interrupted) return
+    const contentElement = boundaryRef.current?.querySelector<HTMLElement>(
+      '[data-auth-recovery-content="true"]',
     )
+    const overlayElement = boundaryRef.current?.querySelector<HTMLElement>(
+      '[data-auth-recovery-overlay="true"]',
+    )
+    if (!contentElement || !overlayElement) return
+
+    const retainedElements = [contentElement]
     const previousValues = retainedElements.map((element) => ({
       ariaHidden: element.getAttribute('aria-hidden'),
       inert: element.getAttribute('inert'),
@@ -127,10 +131,10 @@ function InterruptionBoundary({
   }, [interrupted])
 
   return (
-    <>
-      {children}
+    <div className="contents" ref={boundaryRef}>
+      <div className="contents" data-auth-recovery-content="true">{children}</div>
       {overlay}
-    </>
+    </div>
   )
 }
 
