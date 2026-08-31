@@ -131,7 +131,9 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
           },
           (nextCsrfToken) => checkSubmission(current, nextCsrfToken),
         )
-      } else if (error instanceof KeeplingApiError && error.problem.code !== 'mutation_not_found') {
+      } else if (error instanceof KeeplingApiError && error.problem.code === 'mutation_not_found') {
+        await deliver(current, _activeCsrfToken)
+      } else if (error instanceof KeeplingApiError) {
         setStatus({ kind: 'problem', message: error.message })
       } else {
         setStatus({ kind: 'unknown' })

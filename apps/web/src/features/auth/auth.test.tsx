@@ -240,6 +240,69 @@ describe('session administration', () => {
 })
 
 describe('capture authentication recovery', () => {
+  it('replays the exact capture after a before-acceptance disconnect and missing receipt', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const call = fetchMock.mock.calls.length
+      if (call === 1) throw new TypeError('connection lost before acceptance')
+      if (call === 2) {
+        return jsonResponse(problem('mutation_not_found', 'Mutation not found', 404), 404)
+      }
+
+      const request = JSON.parse(String(init?.body)) as {
+        mutation_id: string
+        task_id: string
+        title: string
+      }
+      return jsonResponse(
+        {
+          mutation_id: request.mutation_id,
+          outcome: 'accepted',
+          revision: 1,
+          snapshot: {
+            captured_at: '2026-08-30T20:00:00Z',
+            id: request.task_id,
+            inbox_state: 'inbox',
+            revision: 1,
+            title: request.title,
+          },
+          task_id: request.task_id,
+          warnings: [],
+        },
+        201,
+      )
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onCaptured = vi.fn()
+    const user = userEvent.setup()
+
+    render(<QuickCapture csrfToken="csrf" onCaptured={onCaptured} />)
+
+    await user.type(screen.getByLabelText('What do you want to keep?'), 'Replay exactly once')
+    await user.click(screen.getByRole('button', { name: 'Add task' }))
+    await user.click(await screen.findByRole('button', { name: 'Check again' }))
+
+    await waitFor(() => expect(onCaptured).toHaveBeenCalledOnce())
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+
+    const firstRequest = String(fetchMock.mock.calls[0]?.[1]?.body)
+    const replayRequest = String(fetchMock.mock.calls[2]?.[1]?.body)
+    expect(replayRequest).toBe(firstRequest)
+
+    const firstIdentity = JSON.parse(firstRequest) as {
+      mutation_id: string
+      task_id: string
+    }
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(
+      `/api/v1/mutations/${firstIdentity.mutation_id}`,
+    )
+    expect(onCaptured).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mutationId: firstIdentity.mutation_id,
+        taskId: firstIdentity.task_id,
+      }),
+    )
+  })
+
   it('preserves the draft and mutation identity when authentication expires before acceptance', async () => {
     const fetchMock = vi
       .fn()
