@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-10-PLAN.md
-last_updated: "2026-08-31T04:26:16.639Z"
+stopped_at: Completed KPL-01-11-PLAN.md
+last_updated: "2026-08-31T04:52:05.889Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase KPL-01 execution started
-state_head: 8129e1bd92408d88f19e78c2781d043ccd95d50a
+state_head: f0d113611f49a0ee00488e150f07864fb03f777d
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 10
+  completed_plans: 11
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 11 of 19
+Plan: 12 of 19
 Total Plans in Phase: 19
 Status: Executing Phase KPL-01
 Last activity: 2026-08-30 — Phase KPL-01 execution started
@@ -75,6 +75,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01]: Projects and tags use stable opaque IDs with versioned normalized active-name uniqueness; display names remain mutable projections.
 - [Phase 01]: Task organization writes carry stable IDs and base values; account-scoped server locks own validation, merge, revision, and exact acknowledgement.
 - [Phase 01]: Archived organizations remain visible and removable in historical assignments but cannot receive new assignments.
+- [Phase 01]: Accepted task activity is canonical account-lifetime user data committed atomically but represented separately from task state, receipts, recovery metadata, and telemetry.
+- [Phase 01]: Activity cursors bind account, task, full newest-first keyset, and activity-view revision so projected-label changes fail explicitly stale.
+- [Phase 01]: Task history renders generated closed DTOs as untrusted React text with exact account-zone time and technical identifiers only in disclosures.
 
 ### Retained Research
 
@@ -102,8 +105,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T04:26:16.632Z
-**Stopped at:** Completed KPL-01-10-PLAN.md
+**Last session:** 2026-08-31T04:52:05.881Z
+**Stopped at:** Completed KPL-01-11-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -120,3 +123,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P08 | 20min | 2 tasks | 13 files |
 | Phase KPL-01 P09 | 16min | 2 tasks | 15 files |
 | Phase KPL-01 P10 | 23min | 2 tasks | 14 files |
+| Phase KPL-01 P11 | 21min | 2 tasks | 13 files |
