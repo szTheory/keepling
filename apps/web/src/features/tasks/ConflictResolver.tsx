@@ -116,7 +116,14 @@ function ConflictResolver({
     [conflict.fields, selections],
   )
 
+  const exactState = exactSubmission.current?.snapshot.kind
+  const resolutionLocked =
+    exactState === 'in_flight' ||
+    exactState === 'unknown' ||
+    exactState === 'authentication_required'
+
   const choose = (field: TaskConflictField['field'], selection: 'current' | 'mine') => {
+    if (resolutionLocked) return
     setSelections((current) => ({ ...current, [field]: selection }))
     exactSubmission.current?.fence()
     exactSubmission.current = null
@@ -237,6 +244,7 @@ function ConflictResolver({
                   className={`min-h-11 rounded-lg border-2 px-3 text-sm font-semibold ${
                     selection === 'mine' ? 'border-primary' : 'border-border'
                   }`}
+                  disabled={resolutionLocked}
                   onClick={() => choose(field.field, 'mine')}
                   type="button"
                 >
@@ -247,6 +255,7 @@ function ConflictResolver({
                   className={`min-h-11 rounded-lg border-2 px-3 text-sm font-semibold ${
                     selection === 'current' ? 'border-primary' : 'border-border'
                   }`}
+                  disabled={resolutionLocked}
                   onClick={() => choose(field.field, 'current')}
                   type="button"
                 >
@@ -287,11 +296,11 @@ function ConflictResolver({
       ) : null}
 
       <div className="mt-5 flex flex-wrap gap-3">
-        <Button disabled={!complete || state.kind === 'pending'} onClick={resolve} type="button">
+        <Button disabled={!complete || resolutionLocked} onClick={resolve} type="button">
           {state.kind === 'pending' ? 'Saving resolution…' : 'Save resolution'}
         </Button>
         <Button
-          disabled={state.kind === 'pending'}
+          disabled={resolutionLocked}
           onClick={() => onKeepEditing(conflict.fields[0]!.field)}
           type="button"
           variant="outline"

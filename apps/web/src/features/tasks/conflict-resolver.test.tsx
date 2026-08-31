@@ -312,6 +312,10 @@ describe('inline task conflict resolution', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(
       'Checking whether your resolution was saved…',
     )
+    expect(screen.getByRole('button', { name: 'Use mine for Title' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Use current for Title' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Keep editing' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Save resolution' })).toBeDisabled()
 
     const firstBody = String(
       fetchMock.mock.calls.filter(
@@ -425,6 +429,10 @@ describe('inline task conflict resolution', () => {
     await user.click(screen.getByRole('button', { name: 'Use mine for Title' }))
     await user.click(screen.getByRole('button', { name: 'Save resolution' }))
     await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    expect(screen.getByRole('button', { name: 'Use mine for Title' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Use current for Title' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Keep editing' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Save resolution' })).toBeDisabled()
     const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
       { authentication: string; kind: string; mutationId: string },
       (csrfToken: string) => Promise<void>,
