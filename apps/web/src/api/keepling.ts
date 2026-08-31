@@ -671,6 +671,16 @@ const getInbox = async (): Promise<readonly BrowserTask[]> => {
   return response.tasks.map(mapTask)
 }
 
+const getTask = async (taskId: string): Promise<BrowserTask> =>
+  mapTask(
+    await readJson<components['schemas']['TaskSnapshot']>(
+      await fetch(`/api/v1/tasks/${encodeURIComponent(taskId)}`, {
+        credentials: 'same-origin',
+        headers: { accept: 'application/json' },
+      }),
+    ),
+  )
+
 const getTrash = async (): Promise<readonly BrowserTask[]> => {
   const response = await readJson<WireTrashResponse>(
     await fetch('/api/v1/trash', {
@@ -1193,6 +1203,7 @@ export {
   getSession,
   getTrash,
   getTaskActivity,
+  getTask,
   getTaskView,
   editTask,
   listSessions,

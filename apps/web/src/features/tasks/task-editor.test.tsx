@@ -46,7 +46,8 @@ const acknowledgement = (overrides: Partial<typeof task> = {}) => {
   }
 }
 
-const inboxResponse = () => jsonResponse({ tasks: [task] })
+const taskResponse = () => jsonResponse(task)
+const taskPath = `/api/v1/tasks/${task.id}`
 
 const activityResponse = () =>
   jsonResponse({
@@ -143,7 +144,7 @@ describe('canonical task editor', () => {
   it('edits planned date and deadline separately with account-zone help and the locked warning', async () => {
     let resolveDates: ((response: Response) => void) | undefined
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
-      if (String(input) === '/api/v1/inbox') return Promise.resolve(inboxResponse())
+      if (String(input) === taskPath) return Promise.resolve(taskResponse())
       if (String(input).startsWith(`/api/v1/tasks/${task.id}/activity?`)) {
         return Promise.resolve(activityResponse())
       }
@@ -212,7 +213,7 @@ describe('canonical task editor', () => {
 
   it('preserves invalid civil-date text and focuses it without submitting', async () => {
     const fetchMock = vi.fn((input: RequestInfo | URL) => {
-      if (String(input) === '/api/v1/inbox') return Promise.resolve(inboxResponse())
+      if (String(input) === taskPath) return Promise.resolve(taskResponse())
       if (String(input).startsWith(`/api/v1/tasks/${task.id}/activity?`)) {
         return Promise.resolve(activityResponse())
       }
@@ -241,7 +242,7 @@ describe('canonical task editor', () => {
     let resolveDates: ((response: Response) => void) | undefined
     const fetchMock = vi.fn((...args: [RequestInfo | URL, RequestInit?]) => {
       const [input] = args
-      if (String(input) === '/api/v1/inbox') return Promise.resolve(inboxResponse())
+      if (String(input) === taskPath) return Promise.resolve(taskResponse())
       if (String(input).startsWith(`/api/v1/tasks/${task.id}/activity?`)) {
         return Promise.resolve(activityResponse())
       }
@@ -331,7 +332,7 @@ describe('canonical task editor', () => {
   it('sends only touched notes with their base value and never saves on blur', async () => {
     let resolveSave: ((response: Response) => void) | undefined
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
-      if (String(input) === '/api/v1/inbox') return Promise.resolve(inboxResponse())
+      if (String(input) === taskPath) return Promise.resolve(taskResponse())
       if (String(input).startsWith(`/api/v1/tasks/${task.id}/activity?`)) {
         return Promise.resolve(activityResponse())
       }
@@ -398,7 +399,7 @@ describe('canonical task editor', () => {
   it('waits for exact acknowledgement before Save & move leaves Inbox', async () => {
     let resolveClarify: ((response: Response) => void) | undefined
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
-      if (String(input) === '/api/v1/inbox') return Promise.resolve(inboxResponse())
+      if (String(input) === taskPath) return Promise.resolve(taskResponse())
       if (String(input).startsWith(`/api/v1/tasks/${task.id}/activity?`)) {
         return Promise.resolve(activityResponse())
       }
@@ -451,8 +452,8 @@ describe('canonical task editor', () => {
 
   it('preserves every field, links the summary, and focuses the first invalid field', async () => {
     const fetchMock = vi.fn((input: RequestInfo | URL) =>
-      String(input) === '/api/v1/inbox'
-        ? Promise.resolve(inboxResponse())
+      String(input) === taskPath
+        ? Promise.resolve(taskResponse())
         : Promise.resolve(activityResponse()),
     )
     vi.stubGlobal('fetch', fetchMock)
@@ -481,8 +482,8 @@ describe('canonical task editor', () => {
 
   it('offers Save, Discard, and Stay for dirty navigation and scopes beforeunload', async () => {
     const fetchMock = vi.fn((input: RequestInfo | URL) =>
-      String(input) === '/api/v1/inbox'
-        ? Promise.resolve(inboxResponse())
+      String(input) === taskPath
+        ? Promise.resolve(taskResponse())
         : Promise.resolve(activityResponse()),
     )
     vi.stubGlobal('fetch', fetchMock)
@@ -515,8 +516,8 @@ describe('canonical task editor', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn((input: RequestInfo | URL) =>
-        String(input) === '/api/v1/inbox'
-          ? Promise.resolve(inboxResponse())
+        String(input) === taskPath
+          ? Promise.resolve(taskResponse())
           : Promise.resolve(activityResponse()),
       ),
     )
@@ -537,8 +538,8 @@ describe('canonical task editor', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn((input: RequestInfo | URL) =>
-        String(input) === '/api/v1/inbox'
-          ? Promise.resolve(jsonResponse({ tasks: [hostileTask] }))
+        String(input) === taskPath
+          ? Promise.resolve(jsonResponse(hostileTask))
           : Promise.resolve(activityResponse()),
       ),
     )
@@ -555,8 +556,8 @@ describe('canonical task editor', () => {
     vi.stubGlobal(
       'fetch',
       vi.fn((input: RequestInfo | URL) =>
-        String(input) === '/api/v1/inbox'
-          ? Promise.resolve(inboxResponse())
+        String(input) === taskPath
+          ? Promise.resolve(taskResponse())
           : Promise.resolve(activityResponse()),
       ),
     )

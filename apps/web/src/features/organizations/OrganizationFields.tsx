@@ -5,7 +5,7 @@ import {
   archiveOrganization,
   assignTaskOrganizations,
   createOrganization,
-  getInbox,
+  getTask,
   getOrganizations,
   renameOrganization,
   unarchiveOrganization,
@@ -58,14 +58,9 @@ function OrganizationFields({ csrfToken, taskId }: OrganizationFieldsProps) {
   useEffect(() => {
     let active = true
 
-    void Promise.all([getInbox(), getOrganizations()])
-      .then(([tasks, organizations]) => {
+    void Promise.all([getTask(taskId), getOrganizations()])
+      .then(([task, organizations]) => {
         if (!active) return
-        const task = tasks.find((candidate) => candidate.id === taskId)
-        if (!task) {
-          setLoadState({ kind: 'error' })
-          return
-        }
         setLoadState({ kind: 'ready', organizations, task })
         setDraft(taskAssignment(task))
       })

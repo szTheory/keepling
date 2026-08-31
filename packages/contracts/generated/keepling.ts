@@ -534,6 +534,26 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/tasks/{task_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /**
+         * Read one authoritative editable task snapshot
+         * @description Trashed tasks are intentionally not exposed by this editable-task endpoint.
+         */
+        readonly get: operations["getTask"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/tasks/{task_id}/activity": {
         readonly parameters: {
             readonly query?: never;
@@ -2056,6 +2076,30 @@ export interface operations {
             readonly 400: components["responses"]["ProblemResponse"];
             readonly 422: components["responses"]["ProblemResponse"];
             readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly getTask: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly task_id: components["schemas"]["TaskIdentity"];
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Authoritative task snapshot independent of list membership */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["TaskSnapshot"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
         };
     };
     readonly listTaskActivity: {

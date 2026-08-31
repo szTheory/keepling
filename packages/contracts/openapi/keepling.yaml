@@ -233,6 +233,28 @@ paths:
                 $ref: '#/components/schemas/InboxResponse'
         '401':
           $ref: '#/components/responses/ProblemResponse'
+  /tasks/{task_id}:
+    get:
+      operationId: getTask
+      summary: Read one authoritative editable task snapshot
+      description: Trashed tasks are intentionally not exposed by this editable-task endpoint.
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskIdentity'
+      responses:
+        '200':
+          description: Authoritative task snapshot independent of list membership
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskSnapshot'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
   /views/inbox:
     get:
       operationId: getInboxView

@@ -8,7 +8,7 @@ import {
 } from 'react'
 
 import {
-  getInbox,
+  getTask,
   getTaskActivity,
   prepareClarifyTask,
   prepareEditTask,
@@ -100,14 +100,9 @@ function TaskEditor({
   useEffect(() => {
     let active = true
 
-    void Promise.all([getInbox(), getTaskActivity(taskId)])
-      .then(([tasks, activity]) => {
+    void Promise.all([getTask(taskId), getTaskActivity(taskId)])
+      .then(([task, activity]) => {
         if (!active) return
-        const task = tasks.find((candidate) => candidate.id === taskId)
-        if (!task) {
-          setLoadState({ kind: 'error' })
-          return
-        }
         setLoadState({ accountTimezone: activity.accountTimezone, kind: 'ready', task })
         setDraft({
           deadlineOn: task.deadlineOn ?? '',

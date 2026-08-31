@@ -54,6 +54,29 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
   end
 
   @impl true
+  def get_task(%{account_id: account_id}, task_id) do
+    case SQL.query(
+           Repo,
+           """
+           SELECT id, title, notes, inbox_state, revision, captured_at,
+                  planned_on, deadline_on, completed_at, trashed_at
+           FROM tasks
+           WHERE account_id = $1 AND id = $2 AND trashed_at IS NULL
+           """,
+           [account_id, Ecto.UUID.dump!(task_id)]
+         ) do
+      {:ok, %{rows: [row]}} ->
+        {:ok, task_body_from_row(row, account_id, Repo)}
+
+      {:ok, %{rows: []}} ->
+        {:error, :not_found}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  end
+
+  @impl true
   def list_inbox(%{account_id: account_id}) do
     case SQL.query(
            Repo,

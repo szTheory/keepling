@@ -86,14 +86,37 @@ test('@phase1-lifecycle traverses the complete real-stack browser lifecycle', as
   })
   expect(await mismatchResponse.json()).toEqual(await plannedResponse.json())
 
+  const clarifyResponse = await command(page, baseURL, csrfToken, 'clarify-task', {
+    base_values: {},
+    expected_revision: planned.revision,
+    fields: {},
+    mutation_id: randomUUID(),
+    task_id: captured.task_id,
+    version: 1,
+  })
+  expect(clarifyResponse.ok()).toBe(true)
+
   await page.goto('/today')
   await expect(page.getByRole('heading', { level: 1, name: 'Today' })).toBeVisible()
-  await expect(page.getByRole('listitem').filter({ hasText: originalTitle })).toBeVisible()
+  const clarifiedRow = page.getByRole('listitem').filter({ hasText: originalTitle })
+  await expect(clarifiedRow).toBeVisible()
+  await clarifiedRow.getByRole('link').click()
+  await expect(page.getByRole('heading', { name: 'Edit task' })).toBeVisible()
+  await expect(page.getByLabel('Title')).toHaveValue(originalTitle)
+
+  await page.goto('/today')
   const completeResponsePromise = page.waitForResponse((response) => response.url().endsWith('/commands/complete-task'))
   await page.getByRole('button', { name: `Complete “${originalTitle}”` }).click()
   const completed = (await (await completeResponsePromise).json()) as { revision: number }
-  await expect(page.getByRole('button', { name: `Reopen “${originalTitle}”` })).toBeVisible()
 
+  await page.goto('/completed')
+  const completedRow = page.getByRole('listitem').filter({ hasText: originalTitle })
+  await expect(completedRow).toBeVisible()
+  await completedRow.getByRole('link').click()
+  await expect(page.getByRole('heading', { name: 'Edit task' })).toBeVisible()
+  await expect(page.getByLabel('Title')).toHaveValue(originalTitle)
+
+  await page.goto('/completed')
   const reopenResponsePromise = page.waitForResponse((response) => response.url().endsWith('/commands/reopen-task'))
   await page.getByRole('button', { name: `Reopen “${originalTitle}”` }).click()
   const reopened = (await (await reopenResponsePromise).json()) as { revision: number }

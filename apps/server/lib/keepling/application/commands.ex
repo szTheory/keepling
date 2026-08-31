@@ -9,6 +9,7 @@ defmodule Keepling.Application.Commands do
     @moduledoc "Persistence/query port interpreted by an outward adapter."
 
     @callback execute(map(), map(), function()) :: tuple()
+    @callback get_task(map(), String.t()) :: tuple()
     @callback list_inbox(map()) :: tuple()
     @callback list_trash(map()) :: tuple()
     @callback list_organizations(map()) :: tuple()
@@ -130,6 +131,9 @@ defmodule Keepling.Application.Commands do
 
   @spec list_inbox(map(), module()) :: tuple()
   def list_inbox(context, port), do: port.list_inbox(context)
+
+  @spec get_task(map(), String.t(), module()) :: tuple()
+  def get_task(context, task_id, port), do: port.get_task(context, task_id)
 
   @spec list_trash(map(), module()) :: tuple()
   def list_trash(context, port), do: port.list_trash(context)

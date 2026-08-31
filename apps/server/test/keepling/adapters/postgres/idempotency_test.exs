@@ -138,6 +138,85 @@ defmodule Keepling.Adapters.Postgres.IdempotencyTest do
     assert %{activities: 0, receipts: 1, tasks: 0} == stored_counts(account_id)
   end
 
+  test "authoritative lookup is account scoped, includes clarified and completed tasks, and excludes Trash",
+       %{account_id: account_id} do
+    accepted_at = ~U[2026-08-30 20:05:00.000000Z]
+    task_id = Ecto.UUID.generate()
+    context = context(account_id, accepted_at)
+
+    capture = %{
+      mutation_id: Ecto.UUID.generate(),
+      task_id: task_id,
+      title: "Authoritative detail",
+      type: :capture_task,
+      version: 1
+    }
+
+    assert {:ok, %{body: %{"revision" => 1}}} =
+             with_connection(fn _backend_pid ->
+               Commands.dispatch(capture, context, CommandStore)
+             end)
+
+    clarify = %{
+      base_values: %{},
+      expected_revision: 1,
+      fields: %{},
+      mutation_id: Ecto.UUID.generate(),
+      task_id: task_id,
+      type: :clarify_task,
+      version: 1
+    }
+
+    assert {:ok, %{body: %{"revision" => 2}}} =
+             with_connection(fn _backend_pid ->
+               Commands.dispatch(clarify, context, CommandStore)
+             end)
+
+    complete = %{
+      expected_revision: 2,
+      mutation_id: Ecto.UUID.generate(),
+      task_id: task_id,
+      type: :complete_task,
+      version: 1
+    }
+
+    assert {:ok, %{body: %{"revision" => 3}}} =
+             with_connection(fn _backend_pid ->
+               Commands.dispatch(complete, context, CommandStore)
+             end)
+
+    assert {:ok, %{id: ^task_id, inbox_state: "clarified", revision: 3}} =
+             with_connection(fn _backend_pid ->
+               Commands.get_task(context, task_id, CommandStore)
+             end)
+
+    other_account_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
+    other_context = context(other_account_id, accepted_at)
+
+    assert {:error, :not_found} =
+             with_connection(fn _backend_pid ->
+               Commands.get_task(other_context, task_id, CommandStore)
+             end)
+
+    trash = %{
+      expected_revision: 3,
+      mutation_id: Ecto.UUID.generate(),
+      task_id: task_id,
+      type: :trash_task,
+      version: 1
+    }
+
+    assert {:ok, %{body: %{"revision" => 4}}} =
+             with_connection(fn _backend_pid ->
+               Commands.dispatch(trash, context, CommandStore)
+             end)
+
+    assert {:error, :not_found} =
+             with_connection(fn _backend_pid ->
+               Commands.get_task(context, task_id, CommandStore)
+             end)
+  end
+
   defp insert_account do
     account_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
     now = ~U[2026-08-30 19:59:00.000000Z]

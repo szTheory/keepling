@@ -83,7 +83,7 @@ describe('organization assignment fields', () => {
   it('submits one project and many tags by stable ID while retaining archived history', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const path = String(input)
-      if (path === '/api/v1/inbox') return jsonResponse({ tasks: [task] })
+      if (path === `/api/v1/tasks/${taskId}`) return jsonResponse(task)
       if (path === '/api/v1/organizations') return jsonResponse({ organizations })
       if (path === '/api/v1/commands/assign-task-organizations') {
         const request = JSON.parse(String(init?.body)) as { mutation_id: string }
@@ -150,7 +150,7 @@ describe('organization assignment fields', () => {
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
         const path = String(input)
-        if (path === '/api/v1/inbox') return jsonResponse({ tasks: [task] })
+        if (path === `/api/v1/tasks/${taskId}`) return jsonResponse(task)
         if (path === '/api/v1/organizations') return jsonResponse({ organizations })
         if (path === '/api/v1/commands/assign-task-organizations') {
           return jsonResponse(

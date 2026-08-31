@@ -23,6 +23,17 @@ defmodule KeeplingWeb.CommandController do
     end
   end
 
+  def task(conn, %{"task_id" => task_id}) do
+    with {:ok, _uuid} <- Ecto.UUID.cast(task_id),
+         {:ok, task} <- Commands.get_task(context(conn), task_id, CommandStore) do
+      json(conn, task)
+    else
+      :error -> task_not_found(conn)
+      {:error, :not_found} -> task_not_found(conn)
+      {:error, :infrastructure_failure} -> infrastructure_problem(conn)
+    end
+  end
+
   def trash(conn, _params) do
     case Commands.list_trash(context(conn), CommandStore) do
       {:ok, tasks} -> json(conn, %{tasks: tasks})
@@ -612,6 +623,18 @@ defmodule KeeplingWeb.CommandController do
       nil,
       true,
       "retry_original_mutation"
+    )
+  end
+
+  defp task_not_found(conn) do
+    problem(
+      conn,
+      404,
+      "task_not_found",
+      "Task not found",
+      "This task is unavailable or is in Trash.",
+      false,
+      "return_to_task_list"
     )
   end
 
