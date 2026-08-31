@@ -275,11 +275,13 @@ function RoutedApp() {
         ) : undefined
       }
       csrfToken={authenticatedState?.csrfToken}
+      continuationError={auth.continuationError}
       interruption={auth.interruption}
       onAcknowledged={handleTaskAcknowledged}
       onAuthenticated={auth.acceptAuthentication}
       onAuthenticationRequired={auth.beginReauthentication}
       onReauthenticated={auth.completeReauthentication}
+      onRetryContinuations={auth.retryContinuations}
     />
   )
 }

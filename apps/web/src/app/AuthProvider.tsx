@@ -26,7 +26,9 @@ type AuthContextValue = {
   ) => void
   clearAuthentication: () => void
   completeReauthentication: (intent: InterruptedIntent, csrfToken: string) => Promise<void>
+  continuationError: boolean
   interruption: InterruptedIntent | null
+  retryContinuations: () => Promise<void>
   state: AuthenticationState
 }
 
@@ -35,12 +37,15 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthenticationState>({ kind: 'loading' })
   const [interruption, setInterruption] = useState<InterruptedIntent | null>(null)
+  const [continuationError, setContinuationError] = useState(false)
   const resumesRef = useRef(
     new Map<
       string,
       { intent: InterruptedIntent; resume: (csrfToken: string) => Promise<void> }
     >(),
   )
+  const drainRef = useRef<Promise<void> | null>(null)
+  const generationRef = useRef(0)
 
   useEffect(() => {
     let active = true
@@ -63,6 +68,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
   const acceptAuthentication = useCallback((csrfToken: string) => {
     setState({ csrfToken, kind: 'authenticated' })
+    setContinuationError(false)
     setInterruption(null)
   }, [])
 
@@ -76,25 +82,53 @@ function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const clearAuthentication = useCallback(() => {
+    generationRef.current += 1
     resumesRef.current.clear()
+    drainRef.current = null
+    setContinuationError(false)
     setInterruption(null)
     setState({ kind: 'unauthenticated' })
+  }, [])
+
+  const drainContinuations = useCallback((csrfToken: string): Promise<void> => {
+    if (drainRef.current) return drainRef.current
+
+    const generation = generationRef.current
+    const pending = [...resumesRef.current.entries()]
+    setContinuationError(false)
+
+    const drain = Promise.allSettled(
+      pending.map(([, continuation]) => continuation.resume(csrfToken)),
+    )
+      .then((outcomes) => {
+        if (generation !== generationRef.current) return
+        pending.forEach(([key], index) => {
+          if (outcomes[index]?.status === 'fulfilled') resumesRef.current.delete(key)
+        })
+        const failed = outcomes.some((outcome) => outcome.status === 'rejected')
+        setContinuationError(failed)
+        setInterruption(resumesRef.current.values().next().value?.intent ?? null)
+      })
+      .finally(() => {
+        if (drainRef.current === drain) drainRef.current = null
+      })
+
+    drainRef.current = drain
+    return drain
   }, [])
 
   const completeReauthentication = useCallback(
     async (_intent: InterruptedIntent, csrfToken: string) => {
       setState({ csrfToken, kind: 'authenticated' })
-      const pending = [...resumesRef.current.entries()]
-      const outcomes = await Promise.allSettled(
-        pending.map(([, continuation]) => continuation.resume(csrfToken)),
-      )
-      pending.forEach(([key], index) => {
-        if (outcomes[index]?.status === 'fulfilled') resumesRef.current.delete(key)
-      })
-      setInterruption(resumesRef.current.values().next().value?.intent ?? null)
+      await drainContinuations(csrfToken)
     },
-    [],
+    [drainContinuations],
   )
+
+  const retryContinuations = useCallback(async () => {
+    if (state.kind !== 'authenticated') return
+    await drainContinuations(state.csrfToken)
+  }, [drainContinuations, state])
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -102,7 +136,9 @@ function AuthProvider({ children }: { children: ReactNode }) {
       beginReauthentication,
       clearAuthentication,
       completeReauthentication,
+      continuationError,
       interruption,
+      retryContinuations,
       state,
     }),
     [
@@ -110,7 +146,9 @@ function AuthProvider({ children }: { children: ReactNode }) {
       beginReauthentication,
       clearAuthentication,
       completeReauthentication,
+      continuationError,
       interruption,
+      retryContinuations,
       state,
     ],
   )

@@ -12,10 +12,12 @@ import TaskList from '@/features/lists/TaskList'
 import TrashList from '@/features/lists/TrashList'
 import TaskEditor from '@/features/tasks/TaskEditor'
 import type { CommandAcknowledgement } from '@/api/keepling'
+import { Button } from '@/components/ui/button'
 
 type AppRoutesProps = {
   authenticated: boolean
   authenticatedContent?: ReactNode
+  continuationError?: boolean
   csrfToken?: string
   interruption?: InterruptedIntent | null
   onAcknowledged?: (acknowledgement: CommandAcknowledgement) => void
@@ -25,6 +27,7 @@ type AppRoutesProps = {
     resume: (csrfToken: string) => Promise<void>,
   ) => void
   onReauthenticated?: (interruption: InterruptedIntent, csrfToken: string) => void
+  onRetryContinuations?: () => Promise<void>
 }
 
 const routeToken = (pathname: string, prefix: string) => {
@@ -55,12 +58,14 @@ const navigate = (pathname: string) => {
 function AppRoutes({
   authenticated,
   authenticatedContent,
+  continuationError = false,
   csrfToken,
   interruption,
   onAcknowledged = () => undefined,
   onAuthenticated = () => undefined,
   onAuthenticationRequired,
   onReauthenticated = () => undefined,
+  onRetryContinuations = async () => undefined,
 }: AppRoutesProps) {
   const [locationKey, setLocationKey] = useState(
     `${window.location.pathname}${window.location.search}`,
@@ -99,7 +104,28 @@ function AppRoutes({
         {content}
         <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 px-4 py-16">
           <div className="mx-auto max-w-2xl">
-            {interruption.authentication === 'sign_in' ? (
+            {continuationError ? (
+              <section
+                aria-labelledby="continuation-error-heading"
+                className="rounded-lg border border-border bg-card p-6"
+                role="alert"
+              >
+                <h2 className="text-xl font-semibold" id="continuation-error-heading">
+                  Recovery needs another try
+                </h2>
+                <p className="mt-2">
+                  Couldn’t finish restoring everything. Your work is still here.
+                </p>
+                <Button
+                  className="mt-5 min-h-11"
+                  onClick={() => void onRetryContinuations()}
+                  type="button"
+                  variant="outline"
+                >
+                  Try continuing again
+                </Button>
+              </section>
+            ) : interruption.authentication === 'sign_in' ? (
               <LoginForm continuation onAuthenticated={finish} />
             ) : (
               <Reauthenticate
