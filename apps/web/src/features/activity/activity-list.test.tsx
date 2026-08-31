@@ -82,6 +82,85 @@ afterEach(() => {
 })
 
 describe('task activity', () => {
+  it('resumes the exact expired initial read without collapsing into a generic error', async () => {
+    const authenticationProblem = {
+      code: 'authentication_required',
+      detail: 'Sign in again.',
+      recovery_action: 'sign_in',
+      retryable: true,
+      status: 401,
+      title: 'Authentication required',
+      type: '/problems/authentication_required',
+    }
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(authenticationProblem, 401))
+      .mockResolvedValueOnce(jsonResponse(page([item], null)))
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+
+    render(
+      <ActivityList
+        onAuthenticationRequired={onAuthenticationRequired}
+        taskId={taskId}
+      />,
+    )
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { authentication: string; kind: string; mutationId: string },
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'read' })
+    await resume('rotated-csrf')
+
+    expect(activitySentence('You updated task details.')).toBeVisible()
+    expect(screen.queryByText('Couldn’t load activity. Your tasks weren’t changed.')).not.toBeInTheDocument()
+  })
+
+  it('resumes the exact expired cursor read while retaining the last accepted page', async () => {
+    const authenticationProblem = {
+      code: 'authentication_required',
+      detail: 'Sign in again.',
+      recovery_action: 'reauthenticate',
+      retryable: true,
+      status: 401,
+      title: 'Authentication required',
+      type: '/problems/authentication_required',
+    }
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(page([item], 'retained-cursor')))
+      .mockResolvedValueOnce(jsonResponse(authenticationProblem, 401))
+      .mockResolvedValueOnce(jsonResponse(page([captured], null)))
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <ActivityList
+        onAuthenticationRequired={onAuthenticationRequired}
+        taskId={taskId}
+      />,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Load earlier activity' }))
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    expect(activitySentence('You updated task details.')).toBeVisible()
+    const [, resume] = onAuthenticationRequired.mock.calls[0] as [
+      unknown,
+      (csrfToken: string) => Promise<void>,
+    ]
+    await resume('rotated-csrf')
+
+    expect(activitySentence('You captured this task.')).toBeVisible()
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      `/api/v1/tasks/${taskId}/activity?limit=20&cursor=retained-cursor`,
+      expect.objectContaining({ credentials: 'same-origin' }),
+    )
+  })
+
   it('renders hostile changes as compact plain text with exact zoned time and disclosures', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(page([item], null))))
     const user = userEvent.setup()

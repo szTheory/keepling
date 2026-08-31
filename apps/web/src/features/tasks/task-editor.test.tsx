@@ -62,6 +62,52 @@ afterEach(() => {
 })
 
 describe('canonical task editor', () => {
+  it('registers the exact expired task-detail read and resumes it in place', async () => {
+    const authenticationProblem = {
+      code: 'authentication_required',
+      detail: 'Sign in again.',
+      recovery_action: 'sign_in',
+      retryable: true,
+      status: 401,
+      title: 'Authentication required',
+      type: '/problems/authentication_required',
+    }
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input)
+      if (path === taskPath) {
+        return fetchMock.mock.calls.filter(([candidate]) => String(candidate) === taskPath).length === 1
+          ? jsonResponse(authenticationProblem, 401)
+          : taskResponse()
+      }
+      if (path.startsWith(`/api/v1/tasks/${task.id}/activity?`)) return activityResponse()
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+
+    render(
+      <TaskEditor
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        onNavigate={vi.fn()}
+        taskId={task.id}
+      />,
+    )
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    expect(screen.queryByText('Couldn’t load this task. Your tasks weren’t changed.')).not.toBeInTheDocument()
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { authentication: string; kind: string; mutationId: string },
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'read' })
+
+    await resume('rotated-csrf')
+
+    expect(await screen.findByLabelText('Title')).toHaveValue(task.title)
+    expect(window.location.pathname).toBe('/')
+  })
+
   it('keeps Inbox explicit and plans an opted-in capture only after exact capture acknowledgement', async () => {
     let resolvePlan: ((response: Response) => void) | undefined
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
