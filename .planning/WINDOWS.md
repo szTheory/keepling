@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 21
+open_count: 24
 waived_count: 0
 fixed_count: 0
-total_count: 21
-last_updated: 2026-08-31T14:01:34.566Z
+total_count: 24
+last_updated: 2026-08-31T16:02:33.734Z
 ---
 
 # Broken Windows Ledger
@@ -36,6 +36,9 @@ last_updated: 2026-08-31T14:01:34.566Z
 | 19 | KPL-01 | deviation | apps/web/src/commands/submission.ts |  | Added explicit direct same-ID retry semantics required by lifecycle recovery | open |  | 2026-08-31T14:01:34.378Z |  |
 | 20 | KPL-01 | deviation | apps/web/src/commands/submission.ts |  | Classified infrastructure 5xx as unknown delivery rather than terminal rejection | open |  | 2026-08-31T14:01:34.472Z |  |
 | 21 | KPL-01 | deviation | apps/server/lib/keepling_web/controllers/test_fault_controller.ex |  | Halted authentication-before-acceptance injection before command dispatch | open |  | 2026-08-31T14:01:34.566Z |  |
+| 22 | KPL-01 | deviation | apps/web/src/index.css |  | Resolved the 1024px wide-shell overflow seam with a compact list column | open |  | 2026-08-31T16:02:33.525Z |  |
+| 23 | KPL-01 | deviation | apps/web/src/features/tasks/TaskEditor.tsx |  | Reconciled mounted editor state immediately after semantic undo acknowledgement | open |  | 2026-08-31T16:02:33.629Z |  |
+| 24 | KPL-01 | deviation | tooling/test-phase-1.sh |  | Pinned disposable migration, compile, and ExUnit lanes to MIX_ENV=test | open |  | 2026-08-31T16:02:33.734Z |  |
 
 ````json
 [
@@ -289,6 +292,42 @@ last_updated: 2026-08-31T14:01:34.566Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-31T14:01:34.566Z",
+    "resolved_at": null
+  },
+  {
+    "id": 22,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/web/src/index.css",
+    "line": null,
+    "description": "Resolved the 1024px wide-shell overflow seam with a compact list column",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T16:02:33.525Z",
+    "resolved_at": null
+  },
+  {
+    "id": 23,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/web/src/features/tasks/TaskEditor.tsx",
+    "line": null,
+    "description": "Reconciled mounted editor state immediately after semantic undo acknowledgement",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T16:02:33.629Z",
+    "resolved_at": null
+  },
+  {
+    "id": 24,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "tooling/test-phase-1.sh",
+    "line": null,
+    "description": "Pinned disposable migration, compile, and ExUnit lanes to MIX_ENV=test",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T16:02:33.734Z",
     "resolved_at": null
   }
 ]

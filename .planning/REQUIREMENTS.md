@@ -113,7 +113,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GTD-01..07, SRV-01, SRV-03, WEB-01..02, QUAL-01 | Phase 1 | Pending |
+| GTD-01..07, SRV-01, SRV-03, WEB-01..02, QUAL-01 | Phase 1 | Complete |
 | SRV-02 shared semantic boundary + web/API adapter proof | Phase 1 | Pending partial proof |
 | SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05 | Phase 2 | Pending |
 | MAC-01..05, QUAL-03..04, SRV-02 Electron adapter proof | Phase 3 | Pending |
