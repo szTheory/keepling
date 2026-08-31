@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-06-PLAN.md
-last_updated: "2026-08-31T02:33:25.490Z"
+stopped_at: Completed KPL-01-07-PLAN.md
+last_updated: "2026-08-31T03:10:15.959Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase KPL-01 execution started
-state_head: 3e1c7c8d1d2c658f6cf9c8fe5b51f2130ec5cdee
+state_head: 98919b68ce602db4ed65bdbfba307a38bcb0f555
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 6
+  completed_plans: 7
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 7 of 19
+Plan: 8 of 19
 Total Plans in Phase: 19
 Status: Executing Phase KPL-01
 Last activity: 2026-08-30 — Phase KPL-01 execution started
@@ -62,6 +62,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01]: Setup capabilities are 32 random bytes, valid for 60–3600 seconds, persisted only as SHA-256 hashes, and serialized through one locked account_setup singleton row.
 - [Phase 01]: Account timezone changes update only the account setting and three affected view revisions, while closed timezone_changed facts remain separate from task activity.
 - [Phase 01]: Tzdata uses its pinned vendored IANA snapshot with automatic network updates disabled; Keepling starts no remote timezone updater and has no Hackney call path.
+- [Phase 01]: Browser sessions use opaque random credentials stored only as SHA-256 hashes; login, recovery, and reauthentication rotate cookie and CSRF state.
+- [Phase 01]: Recovery is an operator-issued hash-only one-use capability whose serialized consumption replaces the password and revokes prior sessions.
+- [Phase 01]: Authentication limiting uses supervised isolated flow/account/source digests with identifier-free allow-listed audit and telemetry facts.
 
 ### Retained Research
 
@@ -89,8 +92,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T02:33:25.482Z
-**Stopped at:** Completed KPL-01-06-PLAN.md
+**Last session:** 2026-08-31T03:10:15.945Z
+**Stopped at:** Completed KPL-01-07-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -103,3 +106,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P03 | 8min | 2 tasks | 15 files |
 | Phase KPL-01 P05 | 26min | 2 tasks | 20 files |
 | Phase KPL-01 P06 | 17min | 2 tasks | 16 files |
+| Phase KPL-01 P07 | 31min | 2 tasks | 15 files |
