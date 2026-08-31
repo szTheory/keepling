@@ -80,6 +80,27 @@ afterEach(() => {
 })
 
 describe('organization assignment fields', () => {
+  const acceptedAssignment = (body: string) => {
+    const request = JSON.parse(body) as { mutation_id: string }
+    return {
+      mutation_id: request.mutation_id,
+      outcome: 'accepted',
+      revision: 4,
+      snapshot: {
+        ...task,
+        project: { archived: false, id: activeProjectId, name: 'Home' },
+        revision: 4,
+      },
+      task_id: taskId,
+      warnings: [],
+    }
+  }
+
+  const beginAssignment = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.selectOptions(await screen.findByRole('combobox', { name: 'Project' }), activeProjectId)
+    await user.click(screen.getByRole('button', { name: 'Save assignments' }))
+  }
+
   it('submits one project and many tags by stable ID while retaining archived history', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const path = String(input)
@@ -176,6 +197,157 @@ describe('organization assignment fields', () => {
       'Task assignments changed elsewhere',
     )
     expect(project).toHaveValue(activeProjectId)
+  })
+
+  it('retains exact bytes through before-acceptance authentication and continuation', async () => {
+    const bodies: string[] = []
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input)
+      if (path === `/api/v1/tasks/${taskId}`) return jsonResponse(task)
+      if (path === '/api/v1/organizations') return jsonResponse({ organizations })
+      if (path === '/api/v1/commands/assign-task-organizations') {
+        const body = String(init?.body)
+        bodies.push(body)
+        return bodies.length === 1
+          ? jsonResponse(
+              problem('authentication_required', 'Authentication required', {
+                recovery_action: 'sign_in',
+                status: 401,
+              }),
+              401,
+            )
+          : jsonResponse(acceptedAssignment(body))
+      }
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <OrganizationFields
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        taskId={taskId}
+      />,
+    )
+
+    await beginAssignment(user)
+    await user.click(await screen.findByRole('button', { name: 'Sign in and continue' }))
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { authentication: string; kind: string; mutationId: string },
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'not-submitted' })
+    await resume('new-session-csrf')
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Task assignments saved.')
+    expect(bodies).toHaveLength(2)
+    expect(bodies[1]).toBe(bodies[0])
+  })
+
+  it('reconciles an after-commit authentication replacement with the original identity', async () => {
+    const bodies: string[] = []
+    let stored: ReturnType<typeof acceptedAssignment> | null = null
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input)
+      if (path === `/api/v1/tasks/${taskId}`) return jsonResponse(task)
+      if (path === '/api/v1/organizations') return jsonResponse({ organizations })
+      if (path === '/api/v1/commands/assign-task-organizations') {
+        const body = String(init?.body)
+        bodies.push(body)
+        stored ??= acceptedAssignment(body)
+        return bodies.length === 1
+          ? jsonResponse(
+              problem('authentication_required', 'Authentication required', {
+                recovery_action: 'sign_in',
+                status: 401,
+              }),
+              401,
+            )
+          : jsonResponse(stored)
+      }
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+    render(
+      <OrganizationFields
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        taskId={taskId}
+      />,
+    )
+
+    await beginAssignment(user)
+    await user.click(await screen.findByRole('button', { name: 'Sign in and continue' }))
+    const [, resume] = onAuthenticationRequired.mock.calls[0] as [unknown, (csrf: string) => Promise<void>]
+    await resume('new-session-csrf')
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Task assignments saved.')
+    expect(bodies).toHaveLength(2)
+    expect(bodies[1]).toBe(bodies[0])
+  })
+
+  it('looks up an accepted assignment receipt after response loss without resending', async () => {
+    const bodies: string[] = []
+    let stored: ReturnType<typeof acceptedAssignment> | null = null
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input)
+      if (path === `/api/v1/tasks/${taskId}`) return jsonResponse(task)
+      if (path === '/api/v1/organizations') return jsonResponse({ organizations })
+      if (path === '/api/v1/commands/assign-task-organizations') {
+        const body = String(init?.body)
+        bodies.push(body)
+        stored = acceptedAssignment(body)
+        throw new TypeError('response lost after acceptance')
+      }
+      if (path.startsWith('/api/v1/mutations/')) return jsonResponse(stored)
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(<OrganizationFields csrfToken="csrf" taskId={taskId} />)
+
+    await beginAssignment(user)
+    await user.click(await screen.findByRole('button', { name: 'Check again' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Task assignments saved.')
+    expect(bodies).toHaveLength(1)
+    const mutationId = (JSON.parse(bodies[0] ?? '{}') as { mutation_id: string }).mutation_id
+    expect(fetchMock.mock.calls.some(([input]) =>
+      String(input) === `/api/v1/mutations/${mutationId}`,
+    )).toBe(true)
+  })
+
+  it('checks a 5xx unknown receipt before replaying the immutable assignment bytes', async () => {
+    const bodies: string[] = []
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input)
+      if (path === `/api/v1/tasks/${taskId}`) return jsonResponse(task)
+      if (path === '/api/v1/organizations') return jsonResponse({ organizations })
+      if (path === '/api/v1/commands/assign-task-organizations') {
+        const body = String(init?.body)
+        bodies.push(body)
+        return bodies.length === 1
+          ? jsonResponse(problem('service_unavailable', 'Service unavailable', { status: 503 }), 503)
+          : jsonResponse(acceptedAssignment(body))
+      }
+      if (path.startsWith('/api/v1/mutations/')) {
+        return jsonResponse(problem('mutation_not_found', 'Mutation not found', { status: 404 }), 404)
+      }
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(<OrganizationFields csrfToken="csrf" taskId={taskId} />)
+
+    await beginAssignment(user)
+    await user.click(await screen.findByRole('button', { name: 'Check again' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Task assignments saved.')
+    expect(bodies).toHaveLength(2)
+    expect(bodies[1]).toBe(bodies[0])
   })
 })
 

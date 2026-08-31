@@ -1079,11 +1079,9 @@ const undoTask = async (
   return mapUndoResult(body as WireUndoResult)
 }
 
-const assignTaskOrganizations = async (
+const assignmentCommand = (
   submission: AssignTaskOrganizationsSubmission,
-  csrfToken: string,
-): Promise<CommandAcknowledgement> => {
-  const command: WireAssignTaskOrganizationsCommand = {
+): WireAssignTaskOrganizationsCommand => ({
     base_values: {
       project_id: submission.baseValues.projectId,
       tag_ids: submission.baseValues.tagIds,
@@ -1096,10 +1094,23 @@ const assignTaskOrganizations = async (
     mutation_id: submission.mutationId,
     task_id: submission.taskId,
     version: 1,
-  }
+  })
 
-  return submitTaskCommand('/api/v1/commands/assign-task-organizations', command, csrfToken)
-}
+const prepareAssignTaskOrganizations = (
+  submission: AssignTaskOrganizationsSubmission,
+): PreparedTaskCommand =>
+  prepareTaskCommand(
+    '/api/v1/commands/assign-task-organizations',
+    assignmentCommand(submission),
+    submission.mutationId,
+    submission.taskId,
+  )
+
+const assignTaskOrganizations = async (
+  submission: AssignTaskOrganizationsSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> =>
+  submitPreparedTaskCommand(prepareAssignTaskOrganizations(submission), csrfToken)
 
 const createOrganization = async (
   submission: CreateOrganizationSubmission,
@@ -1237,6 +1248,7 @@ export {
   undoTask,
   planForToday,
   prepareClarifyTask,
+  prepareAssignTaskOrganizations,
   prepareEditTask,
   prepareEditTaskDates,
   prepareLifecycleTask,

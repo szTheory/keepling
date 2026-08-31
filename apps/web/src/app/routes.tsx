@@ -157,7 +157,13 @@ function AppRoutes({
   const assignmentMatch = pathname.match(/^\/tasks\/([^/]+)\/organizations$/)
   const assignmentTaskId = decodeRoutePart(assignmentMatch?.[1])
   if (assignmentTaskId && csrfToken) {
-    return withInterruption(<OrganizationFields csrfToken={csrfToken} taskId={assignmentTaskId} />)
+    return withInterruption(
+      <OrganizationFields
+        csrfToken={csrfToken}
+        onAuthenticationRequired={onAuthenticationRequired}
+        taskId={assignmentTaskId}
+      />,
+    )
   }
 
   const taskId = routeToken(pathname, '/tasks/')

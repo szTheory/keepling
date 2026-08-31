@@ -3,12 +3,12 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import {
   KeeplingApiError,
   archiveOrganization,
-  assignTaskOrganizations,
   createOrganization,
   getOrganizationMutation,
   getTask,
   getOrganizations,
   renameOrganization,
+  prepareAssignTaskOrganizations,
   unarchiveOrganization,
   type AssignTaskOrganizationsSubmission,
   type BrowserOrganization,
@@ -22,13 +22,20 @@ import { Button } from '@/components/ui/button'
 import {
   classifyKeeplingError,
   createExactSubmission,
+  createTaskSubmission,
   type ExactSubmission,
   type ExactSubmissionState,
+  type TaskSubmissionState,
 } from '@/commands/submission'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
+import MutationRecoveryPanel from '@/features/recovery/MutationRecoveryPanel'
 
 type OrganizationFieldsProps = {
   csrfToken: string
+  onAuthenticationRequired?: (
+    intent: InterruptedIntent,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => void
   taskId: string
 }
 
@@ -89,7 +96,7 @@ type AssignmentState =
   | { kind: 'problem'; message: string }
   | { kind: 'saved' }
   | { kind: 'submitting' }
-  | { kind: 'unknown' }
+  | { kind: 'recovering' }
 
 const taskAssignment = (task: BrowserTask): AssignmentDraft => ({
   projectId: task.project?.id ?? null,
@@ -117,12 +124,16 @@ const submitOrganizationAction = (
   }
 }
 
-function OrganizationFields({ csrfToken, taskId }: OrganizationFieldsProps) {
+function OrganizationFields({
+  csrfToken,
+  onAuthenticationRequired,
+  taskId,
+}: OrganizationFieldsProps) {
   const [loadState, setLoadState] = useState<LoadState>({ kind: 'loading' })
   const [draft, setDraft] = useState<AssignmentDraft>({ projectId: null, tagIds: [] })
   const [assignmentState, setAssignmentState] = useState<AssignmentState>({ kind: 'idle' })
-  const [pendingSubmission, setPendingSubmission] =
-    useState<AssignTaskOrganizationsSubmission | null>(null)
+  const [recoveryState, setRecoveryState] = useState<TaskSubmissionState | null>(null)
+  const exactSubmission = useRef<ReturnType<typeof createTaskSubmission> | null>(null)
 
   useEffect(() => {
     let active = true
@@ -155,51 +166,94 @@ function OrganizationFields({ csrfToken, taskId }: OrganizationFieldsProps) {
       (organization.assignable || acceptedTask?.tags.some((tag) => tag.id === organization.id)),
   )
 
-  const deliver = async (submission: AssignTaskOrganizationsSubmission) => {
-    setPendingSubmission(submission)
-    setAssignmentState({ kind: 'submitting' })
+  const settle = async (exact: ReturnType<typeof createTaskSubmission>) => {
+    const state = exact.snapshot
 
-    try {
-      const acknowledgement = await assignTaskOrganizations(submission, csrfToken)
-      if (acknowledgement.mutationId !== submission.mutationId) {
-        setAssignmentState({ kind: 'unknown' })
-        return
-      }
-
-      setPendingSubmission(null)
+    if (state.kind === 'acknowledged') {
+      exactSubmission.current = null
+      setRecoveryState(null)
       setLoadState((current) =>
         current.kind === 'ready'
-          ? { ...current, task: acknowledgement.snapshot }
+          ? { ...current, task: state.acknowledgement.snapshot }
           : current,
       )
-      setDraft(taskAssignment(acknowledgement.snapshot))
+      setDraft(taskAssignment(state.acknowledgement.snapshot))
       setAssignmentState({ kind: 'saved' })
-    } catch (error) {
-      if (error instanceof KeeplingApiError && error.problem.code === 'task_assignment_conflict') {
-        setPendingSubmission(null)
-        setAssignmentState({ kind: 'conflict', message: error.message })
-      } else if (error instanceof KeeplingApiError) {
-        setPendingSubmission(null)
-        setAssignmentState({ kind: 'problem', message: error.message })
-      } else {
-        setAssignmentState({ kind: 'unknown' })
-      }
+      return
     }
+
+    if (state.kind === 'unknown' || state.kind === 'authentication_required') {
+      setAssignmentState({ kind: 'recovering' })
+      return
+    }
+
+    if (state.kind !== 'conflict' && state.kind !== 'rejected') return
+    exactSubmission.current = null
+    setRecoveryState(null)
+    setAssignmentState(
+      state.rejection.problem.code === 'task_assignment_conflict'
+        ? { kind: 'conflict', message: state.rejection.message }
+        : { kind: 'problem', message: state.rejection.message },
+    )
+  }
+
+  const deliver = async (
+    submission: AssignTaskOrganizationsSubmission,
+    activeCsrfToken = csrfToken,
+  ) => {
+    const exact = createTaskSubmission(
+      prepareAssignTaskOrganizations(submission),
+      setRecoveryState,
+    )
+    exactSubmission.current = exact
+    setAssignmentState({ kind: 'submitting' })
+    await exact.submit(activeCsrfToken)
+    await settle(exact)
+  }
+
+  const checkPending = async () => {
+    const exact = exactSubmission.current
+    if (!exact) return
+    setAssignmentState({ kind: 'submitting' })
+    await exact.check(csrfToken)
+    await settle(exact)
+  }
+
+  const requestAuthentication = () => {
+    const exact = exactSubmission.current
+    if (
+      !exact ||
+      exact.snapshot.kind !== 'authentication_required' ||
+      !onAuthenticationRequired
+    ) {
+      return
+    }
+    const { authentication, operation, request } = exact.snapshot
+    onAuthenticationRequired(
+      {
+        authentication,
+        kind: operation === 'lookup' ? 'submitted-unknown' : 'not-submitted',
+        mutationId: request.mutationId,
+      },
+      async (nextCsrfToken) => {
+        setAssignmentState({ kind: 'submitting' })
+        await exact.resumeAfterAuthentication(nextCsrfToken)
+        await settle(exact)
+      },
+    )
   }
 
   const save = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!acceptedTask || assignmentState.kind === 'submitting') return
+    if (!acceptedTask || exactSubmission.current || assignmentState.kind === 'submitting') return
 
-    const submission =
-      pendingSubmission ??
-      ({
+    const submission = {
         baseValues: taskAssignment(acceptedTask),
         expectedRevision: acceptedTask.revision,
         fields: { projectId: draft.projectId, tagIds: draft.tagIds.toSorted() },
         mutationId: crypto.randomUUID(),
         taskId: acceptedTask.id,
-      } satisfies AssignTaskOrganizationsSubmission)
+      } satisfies AssignTaskOrganizationsSubmission
 
     void deliver(submission)
   }
@@ -247,7 +301,7 @@ function OrganizationFields({ csrfToken, taskId }: OrganizationFieldsProps) {
             </label>
             <select
               className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              disabled={assignmentState.kind === 'submitting'}
+              disabled={assignmentState.kind === 'submitting' || assignmentState.kind === 'recovering'}
               id="task-project"
               onChange={(event) =>
                 setDraft((current) => ({ ...current, projectId: event.target.value || null }))
@@ -276,7 +330,7 @@ function OrganizationFields({ csrfToken, taskId }: OrganizationFieldsProps) {
                       aria-label={`${tag.name}${tag.archived ? ' — Archived' : ''}`}
                       checked={selected}
                       className="size-5 accent-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      disabled={assignmentState.kind === 'submitting'}
+                      disabled={assignmentState.kind === 'submitting' || assignmentState.kind === 'recovering'}
                       onChange={(event) => toggleTag(tag.id, event.target.checked)}
                       type="checkbox"
                     />
@@ -297,17 +351,14 @@ function OrganizationFields({ csrfToken, taskId }: OrganizationFieldsProps) {
               {assignmentState.message}
             </p>
           ) : null}
-          {assignmentState.kind === 'unknown' ? (
-            <div className="rounded-lg border p-4" role="status">
-              <p>Checking whether your change was saved…</p>
-              <Button className="mt-3 min-h-11" onClick={() => pendingSubmission && void deliver(pendingSubmission)} type="button" variant="outline">
-                Check again
-              </Button>
-            </div>
-          ) : null}
+          <MutationRecoveryPanel
+            onCheck={() => void checkPending()}
+            onSignIn={requestAuthentication}
+            state={recoveryState}
+          />
           {assignmentState.kind === 'saved' ? <p role="status">Task assignments saved.</p> : null}
 
-          <Button className="min-h-11" disabled={assignmentState.kind === 'submitting'} type="submit">
+          <Button className="min-h-11" disabled={assignmentState.kind === 'submitting' || assignmentState.kind === 'recovering'} type="submit">
             {assignmentState.kind === 'submitting' ? 'Saving…' : 'Save assignments'}
           </Button>
         </form>
