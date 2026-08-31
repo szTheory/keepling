@@ -20,6 +20,7 @@ type LifecycleReconciliation = {
 
 type LifecycleActionsProps = {
   csrfToken: string
+  disabled?: boolean
   onAcknowledged: (result: LifecycleReconciliation) => void | Promise<void>
   onAuthenticationRequired?: (
     intent: InterruptedIntent,
@@ -32,6 +33,7 @@ type RecoveryState = 'conflict' | 'generic' | null
 
 function LifecycleActions({
   csrfToken,
+  disabled = false,
   onAcknowledged,
   onAuthenticationRequired,
   task,
@@ -131,7 +133,7 @@ function LifecycleActions({
       <button
         aria-label={`${pending ? pendingLabel : label} “${task.title}”`}
         className="min-h-11 px-2 text-sm font-semibold text-primary underline motion-reduce:transition-none"
-        disabled={pending}
+        disabled={disabled || pending}
         onClick={begin}
         type="button"
       >
@@ -142,6 +144,7 @@ function LifecycleActions({
           <p>{recoveryMessage}</p>
           <button
             className="min-h-11 font-semibold text-primary underline"
+            disabled={disabled}
             onClick={begin}
             type="button"
           >

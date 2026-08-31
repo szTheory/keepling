@@ -247,26 +247,34 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
         try {
           setState({ kind: 'ready', page: await getTaskView(view) })
         } catch {
-          setState({
-            kind: 'ready',
-            page: {
-              ...state.page,
-              items: swap(state.page.items, request.taskId, request.direction),
-              nextCursor: null,
-              orderRevision: result.acknowledgement.orderRevision,
-            },
-          })
+          setState((current) =>
+            current.kind === 'ready'
+              ? {
+                  kind: 'ready',
+                  page: {
+                    ...current.page,
+                    items: swap(current.page.items, request.taskId, request.direction),
+                    nextCursor: null,
+                    orderRevision: result.acknowledgement.orderRevision,
+                  },
+                }
+              : current,
+          )
           setLoadMoreError('background')
         }
       } else {
-        setState({
-          kind: 'ready',
-          page: {
-            ...state.page,
-            items: swap(state.page.items, request.taskId, request.direction),
-            orderRevision: result.acknowledgement.orderRevision,
-          },
-        })
+        setState((current) =>
+          current.kind === 'ready'
+            ? {
+                kind: 'ready',
+                page: {
+                  ...current.page,
+                  items: swap(current.page.items, request.taskId, request.direction),
+                  orderRevision: result.acknowledgement.orderRevision,
+                },
+              }
+            : current,
+        )
       }
       exactMove.current = null
       setMoveSubmissionState(null)
@@ -448,6 +456,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
           {csrfToken ? (
             <LifecycleActions
               csrfToken={csrfToken}
+              disabled={moveLocked}
               onAcknowledged={reconcileLifecycle}
               onAuthenticationRequired={onAuthenticationRequired}
               task={task}
@@ -561,7 +570,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
         {updating ? <p className="mt-4" role="status">Updating…</p> : null}
 
         {state.kind === 'ready' && state.page.nextCursor && !loadMoreError ? (
-          <button className="mt-6 min-h-11 font-semibold text-primary underline" disabled={updating} onClick={() => void loadMore()} type="button">
+          <button className="mt-6 min-h-11 font-semibold text-primary underline" disabled={moveLocked || updating} onClick={() => void loadMore()} type="button">
             Load more tasks
           </button>
         ) : null}

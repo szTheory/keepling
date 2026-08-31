@@ -154,6 +154,11 @@ describe('routed task lists', () => {
     for (const button of screen.getAllByRole('button', { name: /Move (earlier|later)/ })) {
       expect(button).toBeDisabled()
     }
+    expect(screen.getByRole('button', { name: 'Complete “Call dentist”' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Complete “Call dentist”' }))
+    expect(
+      fetchMock.mock.calls.filter(([url]) => String(url) === '/api/v1/commands/complete-task'),
+    ).toHaveLength(0)
     expect(within(list).getAllByRole('link').map((link) => link.textContent)).toEqual([
       'Call dentist',
       'Send invoice',
