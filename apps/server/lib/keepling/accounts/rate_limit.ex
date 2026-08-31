@@ -14,7 +14,7 @@ defmodule Keepling.Accounts.RateLimit do
   alias Keepling.Repo
 
   @clean_period_ms :timer.minutes(5)
-  @flows [:setup, :login, :recovery]
+  @flows [:setup, :login, :recovery, :reauthentication]
 
   @default_policies %{
     setup: %{
@@ -31,18 +31,34 @@ defmodule Keepling.Accounts.RateLimit do
       account: {:timer.minutes(15), 5},
       source: {:timer.minutes(15), 20},
       max_backoff_ms: :timer.minutes(15)
+    },
+    reauthentication: %{
+      account: {:timer.minutes(5), 5},
+      source: {:timer.minutes(5), 25},
+      max_backoff_ms: :timer.minutes(5)
     }
   }
 
   @spec clean_period_ms() :: pos_integer()
   def clean_period_ms, do: @clean_period_ms
 
-  @spec admit(:setup | :login | :recovery, :inet.ip_address(), keyword()) ::
+  @spec admit(:setup | :login | :recovery | :reauthentication, :inet.ip_address(), keyword()) ::
           :ok | {:error, :rate_limited, pos_integer()}
   def admit(flow, source, opts \\ []) when flow in @flows do
+    admit(flow, :closed_personal_account, source, opts)
+  end
+
+  @spec admit(
+          :setup | :login | :recovery | :reauthentication,
+          binary() | atom(),
+          :inet.ip_address(),
+          keyword()
+        ) :: :ok | {:error, :rate_limited, pos_integer()}
+  def admit(flow, account_scope, source, opts) when flow in @flows do
     policy = Keyword.get(opts, :policy, configured_policy(flow))
 
-    with :ok <- hit_bucket(account_bucket(flow), policy.account, policy.max_backoff_ms),
+    with :ok <-
+           hit_bucket(account_bucket(flow, account_scope), policy.account, policy.max_backoff_ms),
          :ok <- hit_bucket(source_bucket(flow, source), policy.source, policy.max_backoff_ms) do
       :ok
     else
@@ -54,7 +70,10 @@ defmodule Keepling.Accounts.RateLimit do
     end
   end
 
-  @spec emit_decision(:setup | :login | :recovery, :accepted | :invalid | :limited) :: :ok
+  @spec emit_decision(
+          :setup | :login | :recovery | :reauthentication,
+          :accepted | :invalid | :limited
+        ) :: :ok
   def emit_decision(flow, outcome)
       when flow in @flows and outcome in [:accepted, :invalid, :limited] do
     :telemetry.execute(
@@ -83,8 +102,8 @@ defmodule Keepling.Accounts.RateLimit do
     end
   end
 
-  defp account_bucket(flow) do
-    {"#{flow}:account", digest(:closed_personal_account)}
+  defp account_bucket(flow, account_scope) do
+    {"#{flow}:account", digest(account_scope)}
   end
 
   defp source_bucket(flow, source) do

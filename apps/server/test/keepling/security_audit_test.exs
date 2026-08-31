@@ -69,7 +69,7 @@ defmodule Keepling.SecurityAuditTest do
 
     assert :ok = RateLimit.admit(:recovery, source_two, policy: source_limited_policy)
 
-    serialized_entries = RateLimit |> :ets.tab2list() |> inspect(limit: :infinity)
+    flow_entries = RateLimit |> :ets.tab2list() |> inspect(limit: :infinity)
 
     for namespace <- [
           "setup:account",
@@ -79,11 +79,57 @@ defmodule Keepling.SecurityAuditTest do
           "recovery:account",
           "recovery:source"
         ] do
-      assert serialized_entries =~ namespace
+      assert flow_entries =~ namespace
     end
 
-    refute serialized_entries =~ "192.0.2.9"
-    refute serialized_entries =~ "198.51.100.19"
+    clear_rate_limit_table()
+
+    account_limited_policy = %{
+      account: {60_000, 1},
+      source: {60_000, 10},
+      max_backoff_ms: 60_000
+    }
+
+    account_one = Ecto.UUID.generate() |> Ecto.UUID.dump!()
+    account_two = Ecto.UUID.generate() |> Ecto.UUID.dump!()
+
+    assert :ok =
+             RateLimit.admit(:reauthentication, account_one, source_one,
+               policy: account_limited_policy
+             )
+
+    assert {:error, :rate_limited, _backoff} =
+             RateLimit.admit(:reauthentication, account_one, source_two,
+               policy: account_limited_policy
+             )
+
+    assert :ok =
+             RateLimit.admit(:reauthentication, account_two, source_two,
+               policy: account_limited_policy
+             )
+
+    clear_rate_limit_table()
+
+    assert :ok =
+             RateLimit.admit(:reauthentication, account_one, source_one,
+               policy: source_limited_policy
+             )
+
+    assert {:error, :rate_limited, _backoff} =
+             RateLimit.admit(:reauthentication, account_two, source_one,
+               policy: source_limited_policy
+             )
+
+    reauthentication_entries = RateLimit |> :ets.tab2list() |> inspect(limit: :infinity)
+
+    for namespace <- ["reauthentication:account", "reauthentication:source"] do
+      assert reauthentication_entries =~ namespace
+    end
+
+    refute flow_entries =~ "192.0.2.9"
+    refute flow_entries =~ "198.51.100.19"
+    refute reauthentication_entries =~ "192.0.2.9"
+    refute reauthentication_entries =~ "198.51.100.19"
   end
 
   @tag rate_limit: true
@@ -168,6 +214,37 @@ defmodule Keepling.SecurityAuditTest do
     assert invalid.resp_body == limited.resp_body
   end
 
+  @tag rate_limit: true
+  test "limited and invalid reauthentication responses are identical", %{conn: conn} do
+    Application.put_env(:keepling, :rate_limit_policy, %{reauthentication: @fast_policy})
+
+    signed_in = login(conn, @password)
+    csrf = json_response(signed_in, 200)["csrf_token"]
+
+    invalid =
+      signed_in
+      |> recycle()
+      |> mutation_request(csrf)
+      |> post("/api/v1/reauthenticate", %{
+        "password" => "incorrect password value",
+        "version" => 1
+      })
+
+    limited =
+      signed_in
+      |> recycle()
+      |> mutation_request(csrf)
+      |> post("/api/v1/reauthenticate", %{
+        "password" => "another incorrect password value",
+        "version" => 1
+      })
+
+    assert invalid.status == 401
+    assert limited.status == 401
+    assert invalid.resp_body == limited.resp_body
+    assert json_response(limited, 401)["code"] == "authentication_failed"
+  end
+
   test "every cookie-authenticated mutation enforces both CSRF and origin", %{conn: conn} do
     signed_in = login(conn, @password)
     csrf = json_response(signed_in, 200)["csrf_token"]
@@ -229,6 +306,13 @@ defmodule Keepling.SecurityAuditTest do
   defp dispatch_mutation(conn, :post, path, body), do: post(conn, path, body)
   defp dispatch_mutation(conn, :patch, path, body), do: patch(conn, path, body)
   defp dispatch_mutation(conn, :delete, path, _body), do: delete(conn, path)
+
+  defp mutation_request(conn, csrf_token) do
+    conn
+    |> trusted_request()
+    |> enforce_csrf()
+    |> put_req_header("x-csrf-token", csrf_token)
+  end
 
   defp trusted_request(conn) do
     conn = %{

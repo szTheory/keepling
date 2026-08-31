@@ -109,19 +109,33 @@ defmodule KeeplingWeb.AuthController do
   end
 
   def reauthenticate(conn, params) do
-    with {:ok, password} <- decode_reauthentication(params),
+    with :ok <-
+           RateLimit.admit(
+             :reauthentication,
+             conn.assigns.current_account_id,
+             conn.remote_ip,
+             []
+           ),
+         {:ok, password} <- decode_reauthentication(params),
          :ok <- Accounts.reauthenticate(conn.assigns.current_account_id, password),
          {:ok, session} <-
            Accounts.rotate_session(
              conn.assigns.current_account_id,
              conn.assigns.current_session_id
            ) do
+      RateLimit.emit_decision(:reauthentication, :accepted)
       authenticated(conn, session, "recently_authenticated")
     else
-      {:error, :invalid_request} -> invalid_request(conn)
-      {:error, :authentication_failed} -> authentication_failed(conn)
-      {:error, :session_unavailable} -> authentication_failed(conn)
-      {:error, :infrastructure_failure} -> infrastructure_problem(conn, "retry_reauthentication")
+      {:error, :rate_limited, _retry_after_ms} ->
+        authentication_failed(conn)
+
+      {:error, reason}
+      when reason in [:invalid_request, :authentication_failed, :session_unavailable] ->
+        RateLimit.emit_decision(:reauthentication, :invalid)
+        authentication_failed(conn)
+
+      {:error, :infrastructure_failure} ->
+        infrastructure_problem(conn, "retry_reauthentication")
     end
   end
 
