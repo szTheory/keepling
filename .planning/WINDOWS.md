@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 5
+open_count: 9
 waived_count: 0
 fixed_count: 0
-total_count: 5
-last_updated: 2026-08-31T01:31:44.083Z
+total_count: 9
+last_updated: 2026-08-31T02:10:59.498Z
 ---
 
 # Broken Windows Ledger
@@ -20,6 +20,10 @@ last_updated: 2026-08-31T01:31:44.083Z
 | 3 | 01 | deviation | apps/web/e2e/support/stack.ts |  | Disposable trust-auth PostgreSQL now rejects every non-loopback bind | open |  | 2026-08-31T01:19:02.349Z |  |
 | 4 | KPL-01 | deviation | apps/server/priv/repo/migrations/.formatter.exs |  | Retained the Phoenix generator migration formatter marker so the planned Mix test alias can run before migrations exist | open |  | 2026-08-31T01:31:44.014Z |  |
 | 5 | KPL-01 | deviation | apps/server/test/architecture_test.exs |  | Corrected architecture-test formatting found by the plan-level Mix formatter gate | open |  | 2026-08-31T01:31:44.083Z |  |
+| 6 | KPL-01 | deviation | apps/web/e2e/support/stack.ts |  | Made the real-stack E2E lifecycle executable before RED | open |  | 2026-08-31T02:10:59.290Z |  |
+| 7 | KPL-01 | deviation | apps/server/priv/repo/seeds.exs |  | Added an explicitly test-only closed-account seed | open |  | 2026-08-31T02:10:59.359Z |  |
+| 8 | KPL-01 | deviation | apps/web/src/index.css |  | Applied the approved accessible capture baseline | open |  | 2026-08-31T02:10:59.428Z |  |
+| 9 | KPL-01 | deviation | apps/server/lib/keepling/adapters/postgres/command_store.ex |  | Corrected double-encoded JSONB terminal results | open |  | 2026-08-31T02:10:59.498Z |  |
 
 ````json
 [
@@ -81,6 +85,54 @@ last_updated: 2026-08-31T01:31:44.083Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-31T01:31:44.083Z",
+    "resolved_at": null
+  },
+  {
+    "id": 6,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/web/e2e/support/stack.ts",
+    "line": null,
+    "description": "Made the real-stack E2E lifecycle executable before RED",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T02:10:59.290Z",
+    "resolved_at": null
+  },
+  {
+    "id": 7,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/server/priv/repo/seeds.exs",
+    "line": null,
+    "description": "Added an explicitly test-only closed-account seed",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T02:10:59.359Z",
+    "resolved_at": null
+  },
+  {
+    "id": 8,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/web/src/index.css",
+    "line": null,
+    "description": "Applied the approved accessible capture baseline",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T02:10:59.428Z",
+    "resolved_at": null
+  },
+  {
+    "id": 9,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/server/lib/keepling/adapters/postgres/command_store.ex",
+    "line": null,
+    "description": "Corrected double-encoded JSONB terminal results",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T02:10:59.498Z",
     "resolved_at": null
   }
 ]

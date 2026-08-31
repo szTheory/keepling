@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-03-PLAN.md
-last_updated: "2026-08-31T01:31:55.602Z"
+stopped_at: Completed KPL-01-05-PLAN.md
+last_updated: "2026-08-31T02:11:14.077Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase KPL-01 execution started
-state_head: c26a2ff390fb4a687fc9410a0b35339e4bdd3949
+state_head: 3b5a5372ecd1ff1e00eefe4236a05065eb92a6a7
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 5 of 19
+Plan: 6 of 19
 Total Plans in Phase: 19
 Status: Executing Phase KPL-01
 Last activity: 2026-08-30 — Phase KPL-01 execution started
@@ -56,6 +56,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01]: The OTP composition root starts Repo first and Endpoint last, retaining DNSCluster and Phoenix.PubSub without outward imports in semantic domain/application roots.
 - [Phase 01]: Concurrency tests use per-process unboxed SQL Sandbox checkouts, PostgreSQL backend PIDs, and an explicit reusable barrier.
 - [Phase 01]: Deterministic command tests thread an immutable clock and preselected identities explicitly through each scenario.
+- [Phase 01]: Capture fingerprints use canonical semantic fields, including the trimmed title, while mutation identity remains the account-scoped receipt key.
+- [Phase 01]: Terminal acknowledgements and activity field deltas are persisted as native JSONB values so first delivery, lookup, and replay preserve one closed shape.
+- [Phase 01]: Mutation lookup returns the original terminal HTTP status and the generated/browser contracts expose acknowledgement warnings and terminal problems.
 
 ### Retained Research
 
@@ -83,8 +86,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T01:31:55.595Z
-**Stopped at:** Completed KPL-01-03-PLAN.md
+**Last session:** 2026-08-31T02:11:14.070Z
+**Stopped at:** Completed KPL-01-05-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -95,3 +98,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P02 | 8min | 2 tasks | 13 files |
 | Phase KPL-01 P04 | 10min | 2 tasks | 13 files |
 | Phase KPL-01 P03 | 8min | 2 tasks | 15 files |
+| Phase KPL-01 P05 | 26min | 2 tasks | 20 files |
