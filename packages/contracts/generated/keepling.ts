@@ -38,6 +38,40 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/login": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Authenticate the closed personal account and rotate browser session state */
+        readonly post: operations["login"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/logout": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Revoke the current server session and clear browser authentication state */
+        readonly post: operations["logout"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/mutations/{mutation_id}": {
         readonly parameters: {
             readonly query?: never;
@@ -49,6 +83,40 @@ export interface paths {
         readonly get: operations["getMutation"];
         readonly put?: never;
         readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/reauthenticate": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Refresh the recent-auth window and rotate browser credential and CSRF state */
+        readonly post: operations["reauthenticate"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/recovery": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Consume a one-use operator capability and set a browser-supplied password */
+        readonly post: operations["recoverAccount"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -70,6 +138,43 @@ export interface paths {
         readonly options?: never;
         readonly head?: never;
         readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/sessions": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List active account sessions with current and coarse activity markers */
+        readonly get: operations["listSessions"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/sessions/{session_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly session_id: components["schemas"]["SessionIdentity"];
+            };
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        /** Revoke one account-scoped session after recent authentication */
+        readonly delete: operations["revokeSession"];
+        readonly options?: never;
+        readonly head?: never;
+        /** Change one account-scoped session label */
+        readonly patch: operations["updateSession"];
         readonly trace?: never;
     };
     readonly "/setup": {
@@ -110,6 +215,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        readonly AuthTransitionResponse: {
+            readonly csrf_token: string;
+            /** @enum {string} */
+            readonly status: "authenticated" | "recently_authenticated" | "recovery_complete";
+        };
         readonly CaptureTaskCommand: {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly task_id: components["schemas"]["TaskIdentity"];
@@ -129,6 +239,15 @@ export interface components {
         readonly InboxResponse: {
             readonly tasks: readonly components["schemas"]["TaskSnapshot"][];
         };
+        readonly LoginRequest: {
+            /** @constant */
+            readonly client_kind: "web";
+            readonly label: components["schemas"]["SessionLabel"];
+            /** Format: password */
+            readonly password: string;
+            /** @constant */
+            readonly version: 1;
+        };
         /**
          * Format: uuid
          * @description Client-generated identity retained across exact retries.
@@ -144,10 +263,42 @@ export interface components {
             /** Format: uri-reference */
             readonly type: string;
         };
+        readonly ReauthenticationRequest: {
+            /** Format: password */
+            readonly password: string;
+            /** @constant */
+            readonly version: 1;
+        };
+        readonly RecoveryRequest: {
+            /** @constant */
+            readonly client_kind: "web";
+            readonly label: components["schemas"]["SessionLabel"];
+            /** Format: password */
+            readonly password: string;
+            readonly token: string;
+            /** @constant */
+            readonly version: 1;
+        };
         /** Format: int64 */
         readonly Revision: number;
+        /** Format: uuid */
+        readonly SessionIdentity: string;
+        readonly SessionLabel: string;
+        readonly SessionMutationResponse: {
+            readonly label?: components["schemas"]["SessionLabel"];
+            /** @enum {string} */
+            readonly status: "session_updated" | "session_revoked" | "signed_out";
+        };
         readonly SessionResponse: {
             readonly csrf_token: string;
+        };
+        readonly SessionsResponse: {
+            readonly sessions: readonly components["schemas"]["TrackedSession"][];
+        };
+        readonly SessionUpdateRequest: {
+            readonly label: components["schemas"]["SessionLabel"];
+            /** @constant */
+            readonly version: 1;
         };
         readonly SetupRequest: {
             /** Format: password */
@@ -177,6 +328,21 @@ export interface components {
             readonly inbox_state: "inbox";
             readonly revision: components["schemas"]["Revision"];
             readonly title: string;
+        };
+        readonly TrackedSession: {
+            /** @enum {string} */
+            readonly client_kind: "web" | "electron" | "iphone" | "mcp";
+            /** @enum {string} */
+            readonly coarse_activity: "active_now" | "today" | "earlier";
+            /** Format: date-time */
+            readonly created_at: string;
+            readonly current: boolean;
+            readonly id: components["schemas"]["SessionIdentity"];
+            readonly label: components["schemas"]["SessionLabel"];
+        };
+        readonly VersionedAuthRequest: {
+            /** @constant */
+            readonly version: 1;
         };
         readonly Warning: {
             readonly code: string;
@@ -252,6 +418,61 @@ export interface operations {
             readonly 401: components["responses"]["ProblemResponse"];
         };
     };
+    readonly login: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Browser session established with fresh CSRF state */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuthTransitionResponse"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly logout: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["VersionedAuthRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Current session revoked */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["SessionMutationResponse"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly getMutation: {
         readonly parameters: {
             readonly query?: never;
@@ -279,6 +500,61 @@ export interface operations {
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };
+    readonly reauthenticate: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["ReauthenticationRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Recent-auth window refreshed */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuthTransitionResponse"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly recoverAccount: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["RecoveryRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Password replaced and a fresh browser session established */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["AuthTransitionResponse"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly getSession: {
         readonly parameters: {
             readonly query?: never;
@@ -298,6 +574,85 @@ export interface operations {
                 };
             };
             readonly 401: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly listSessions: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Active session inventory */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["SessionsResponse"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly revokeSession: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly session_id: components["schemas"]["SessionIdentity"];
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Session revoked */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["SessionMutationResponse"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly updateSession: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly session_id: components["schemas"]["SessionIdentity"];
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["SessionUpdateRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Session label updated */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["SessionMutationResponse"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
         };
     };
     readonly completeSetup: {

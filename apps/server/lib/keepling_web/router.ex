@@ -16,6 +16,10 @@ defmodule KeeplingWeb.Router do
     plug KeeplingWeb.Auth, :require_trusted_origin
   end
 
+  pipeline :recent_auth do
+    plug KeeplingWeb.Auth, :require_recent_auth
+  end
+
   pipeline :test_fixture do
     plug KeeplingWeb.Auth, :require_test_fixture
     plug :protect_from_forgery
@@ -36,9 +40,17 @@ defmodule KeeplingWeb.Router do
   end
 
   scope "/api/v1", KeeplingWeb do
+    pipe_through [:api, :mutation]
+
+    post "/login", AuthController, :login
+    post "/recovery", AuthController, :recovery
+  end
+
+  scope "/api/v1", KeeplingWeb do
     pipe_through [:api, :authenticated]
 
     get "/session", CommandController, :session
+    get "/sessions", AuthController, :sessions
     get "/inbox", CommandController, :inbox
     get "/mutations/:mutation_id", CommandController, :mutation
   end
@@ -47,5 +59,14 @@ defmodule KeeplingWeb.Router do
     pipe_through [:api, :authenticated, :mutation]
 
     post "/commands/capture-task", CommandController, :capture_task
+    post "/reauthenticate", AuthController, :reauthenticate
+    post "/logout", AuthController, :logout
+    patch "/sessions/:id", AuthController, :update_session
+  end
+
+  scope "/api/v1", KeeplingWeb do
+    pipe_through [:api, :authenticated, :mutation, :recent_auth]
+
+    delete "/sessions/:id", AuthController, :revoke_session
   end
 end

@@ -4,6 +4,7 @@ defmodule KeeplingWeb.Auth do
   import Plug.Conn
 
   alias Ecto.Adapters.SQL
+  alias Keepling.Accounts
   alias Keepling.Repo
 
   @session_key :session_credential
@@ -12,36 +13,42 @@ defmodule KeeplingWeb.Auth do
 
   def call(conn, :load_session), do: load_session(conn)
   def call(conn, :require_authenticated), do: require_authenticated(conn)
+  def call(conn, :require_recent_auth), do: require_recent_auth(conn)
   def call(conn, :require_trusted_origin), do: require_trusted_origin(conn)
   def call(conn, :require_test_fixture), do: require_test_fixture(conn)
+
+  def establish_session(conn, session) do
+    Plug.CSRFProtection.delete_csrf_token()
+
+    conn
+    |> configure_session(renew: true)
+    |> put_session(@session_key, session.credential)
+    |> assign_session(session)
+  end
+
+  def initialize_csrf(conn) do
+    conn
+    |> put_private(:plug_skip_csrf_protection, true)
+    |> Plug.CSRFProtection.call(Plug.CSRFProtection.init([]))
+  end
+
+  def clear_session(conn) do
+    Plug.CSRFProtection.delete_csrf_token()
+
+    conn
+    |> delete_session(@session_key)
+    |> configure_session(drop: true)
+  end
 
   def sign_in_test_account(conn) do
     with %{rows: [[account_id]]} <-
            SQL.query!(Repo, "SELECT id FROM accounts WHERE singleton_key = TRUE", []),
-         credential <- random_credential(),
-         credential_hash <- hash(credential),
-         session_id <- Ecto.UUID.generate(),
-         now <- DateTime.utc_now(),
-         expires_at <- DateTime.add(now, 3_600, :second),
-         {:ok, _result} <-
-           SQL.query(
-             Repo,
-             """
-             INSERT INTO sessions (
-               id, account_id, credential_hash, created_at, expires_at, inserted_at, updated_at
-             )
-             VALUES ($1, $2, $3, $4, $5, $4, $4)
-             """,
-             [Ecto.UUID.dump!(session_id), account_id, credential_hash, now, expires_at]
+         {:ok, session} <-
+           Accounts.create_session(account_id,
+             label: "Test browser",
+             client_kind: "web"
            ) do
-      Plug.CSRFProtection.delete_csrf_token()
-
-      signed_in_conn =
-        conn
-        |> configure_session(renew: true)
-        |> put_session(@session_key, credential)
-        |> assign(:current_account_id, account_id)
-
+      signed_in_conn = establish_session(conn, session)
       {:ok, signed_in_conn, Plug.CSRFProtection.get_csrf_token()}
     else
       _ -> {:error, :fixture_unavailable}
@@ -50,40 +57,58 @@ defmodule KeeplingWeb.Auth do
 
   defp load_session(conn) do
     with credential when is_binary(credential) <- get_session(conn, @session_key),
-         credential_hash <- hash(credential),
-         %{rows: [[account_id]]} <-
-           SQL.query!(
-             Repo,
-             """
-             SELECT account_id
-             FROM sessions
-             WHERE credential_hash = $1 AND revoked_at IS NULL AND expires_at > NOW()
-             """,
-             [credential_hash]
-           ) do
-      assign(conn, :current_account_id, account_id)
+         {:ok, session} <- Accounts.authenticate_session(credential) do
+      assign_session(conn, session)
     else
       _ -> conn
     end
+  end
+
+  defp assign_session(conn, session) do
+    conn
+    |> assign(:current_account_id, session.account_id)
+    |> assign(:current_session_id, session.session_id)
+    |> assign(:recently_authenticated?, Map.get(session, :recently_authenticated?, true))
   end
 
   defp require_authenticated(%{assigns: %{current_account_id: _account_id}} = conn), do: conn
 
   defp require_authenticated(conn) do
     conn
+    |> authentication_problem(
+      "authentication_required",
+      "Authentication required",
+      "sign_in"
+    )
+    |> halt()
+  end
+
+  defp require_recent_auth(%{assigns: %{recently_authenticated?: true}} = conn), do: conn
+
+  defp require_recent_auth(conn) do
+    conn
+    |> authentication_problem(
+      "recent_authentication_required",
+      "Recent authentication required",
+      "reauthenticate"
+    )
+    |> halt()
+  end
+
+  defp authentication_problem(conn, code, title, recovery_action) do
+    conn
     |> put_resp_content_type("application/problem+json")
     |> send_resp(
       401,
       Jason.encode!(%{
-        code: "authentication_required",
-        recovery_action: "sign_in",
+        code: code,
+        recovery_action: recovery_action,
         retryable: false,
         status: 401,
-        title: "Authentication required",
-        type: "/problems/authentication_required"
+        title: title,
+        type: "/problems/#{code}"
       })
     )
-    |> halt()
   end
 
   defp require_trusted_origin(conn) do
@@ -121,10 +146,4 @@ defmodule KeeplingWeb.Auth do
     )
     |> halt()
   end
-
-  defp random_credential do
-    32 |> :crypto.strong_rand_bytes() |> Base.url_encode64(padding: false)
-  end
-
-  defp hash(value), do: :crypto.hash(:sha256, value)
 end

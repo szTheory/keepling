@@ -16,6 +16,14 @@ defmodule Keepling.Accounts do
   @maximum_setup_ttl_seconds 3_600
   @minimum_password_bytes 12
   @maximum_password_bytes 1_024
+  @default_idle_ttl_seconds 30 * 24 * 60 * 60
+  @default_absolute_ttl_seconds 180 * 24 * 60 * 60
+  @default_recent_auth_ttl_seconds 15 * 60
+  @default_recovery_ttl_seconds 15 * 60
+  @minimum_recovery_ttl_seconds 60
+  @maximum_recovery_ttl_seconds 3_600
+  @session_activity_write_interval_seconds 60 * 60
+  @client_kinds ["web", "electron", "iphone", "mcp"]
 
   @spec issue_setup_token(keyword()) ::
           {:ok, %{token: String.t(), expires_at: DateTime.t()}}
@@ -81,6 +89,413 @@ defmodule Keepling.Accounts do
 
   def consume_setup(_params), do: {:error, :setup_unavailable}
 
+  @doc """
+  Authenticates the closed account and issues one opaque, hash-stored session.
+
+  Failure is deliberately generic: callers cannot distinguish a missing account
+  from a wrong password.
+  """
+  @spec login(String.t(), keyword()) ::
+          {:ok, map()} | {:error, :authentication_failed | :infrastructure_failure}
+  def login(password, opts \\ [])
+
+  def login(password, opts) when is_binary(password) do
+    now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
+
+    case SQL.query(
+           Repo,
+           "SELECT id, password_hash FROM accounts WHERE singleton_key = TRUE",
+           []
+         ) do
+      {:ok, %{rows: [[account_id, password_hash]]}} ->
+        if login_password_valid?(password) and Argon2.verify_pass(password, password_hash) do
+          case create_session(account_id, Keyword.put(opts, :now, now)) do
+            {:ok, _session} = result ->
+              record_security_audit(account_id, "login_succeeded", now)
+              result
+
+            {:error, _reason} ->
+              {:error, :infrastructure_failure}
+          end
+        else
+          Argon2.no_user_verify()
+          record_security_audit(account_id, "login_failed", now)
+          {:error, :authentication_failed}
+        end
+
+      {:ok, %{rows: []}} ->
+        Argon2.no_user_verify()
+        {:error, :authentication_failed}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  def login(_password, _opts) do
+    Argon2.no_user_verify()
+    {:error, :authentication_failed}
+  end
+
+  @doc "Creates a tracked session for an already authenticated account."
+  @spec create_session(binary(), keyword()) :: {:ok, map()} | {:error, atom()}
+  def create_session(account_id, opts \\ []) when is_binary(account_id) do
+    with {:ok, session_params} <- session_params(opts),
+         {:ok, session} <-
+           Repo.transact(fn repo ->
+             {:ok, insert_session(repo, account_id, session_params)}
+           end) do
+      {:ok, session}
+    else
+      {:error, reason} when reason in [:invalid_label, :invalid_client_kind, :invalid_expiry] ->
+        {:error, reason}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  @doc "Resolves and coarsely refreshes one active opaque session credential."
+  @spec authenticate_session(String.t(), keyword()) ::
+          {:ok, map()} | {:error, :authentication_required | :infrastructure_failure}
+  def authenticate_session(credential, opts \\ [])
+
+  def authenticate_session(credential, opts) when is_binary(credential) do
+    now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
+    credential_hash = hash_token(credential)
+
+    case Repo.transact(fn repo ->
+           case SQL.query!(
+                  repo,
+                  """
+                  SELECT id, account_id, label, client_kind, created_at, last_seen_at,
+                         idle_ttl_seconds, expires_at, absolute_expires_at,
+                         recent_auth_expires_at
+                  FROM sessions
+                  WHERE credential_hash = $1
+                    AND revoked_at IS NULL
+                    AND expires_at > $2
+                    AND absolute_expires_at > $2
+                  FOR UPDATE
+                  """,
+                  [credential_hash, now]
+                ).rows do
+             [row] -> {:ok, refresh_session(repo, row, now)}
+             [] -> {:error, :authentication_required}
+           end
+         end) do
+      {:ok, session} -> {:ok, session}
+      {:error, :authentication_required} -> {:error, :authentication_required}
+      {:error, _reason} -> {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  def authenticate_session(_credential, _opts), do: {:error, :authentication_required}
+
+  @doc "Verifies the account password without creating another session."
+  @spec reauthenticate(binary(), String.t(), keyword()) ::
+          :ok | {:error, :authentication_failed | :infrastructure_failure}
+  def reauthenticate(account_id, password, opts \\ [])
+
+  def reauthenticate(account_id, password, opts)
+      when is_binary(account_id) and is_binary(password) do
+    now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
+
+    case SQL.query(Repo, "SELECT password_hash FROM accounts WHERE id = $1", [account_id]) do
+      {:ok, %{rows: [[password_hash]]}} ->
+        if login_password_valid?(password) and Argon2.verify_pass(password, password_hash) do
+          record_security_audit(account_id, "reauthenticated", now)
+          :ok
+        else
+          Argon2.no_user_verify()
+          record_security_audit(account_id, "login_failed", now)
+          {:error, :authentication_failed}
+        end
+
+      {:ok, %{rows: []}} ->
+        Argon2.no_user_verify()
+        {:error, :authentication_failed}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  def reauthenticate(_account_id, _password, _opts), do: {:error, :authentication_failed}
+
+  @doc "Rotates the raw credential and recent-auth state without changing session identity."
+  @spec rotate_session(binary(), binary(), keyword()) :: {:ok, map()} | {:error, atom()}
+  def rotate_session(account_id, session_id, opts \\ [])
+      when is_binary(account_id) and is_binary(session_id) do
+    now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
+    policy = session_policy(opts)
+    credential = random_token()
+    credential_hash = hash_token(credential)
+    idle_expires_at = DateTime.add(now, policy.idle_ttl_seconds, :second)
+    recent_auth_expires_at = DateTime.add(now, policy.recent_auth_ttl_seconds, :second)
+
+    case SQL.query(
+           Repo,
+           """
+           UPDATE sessions
+           SET credential_hash = $3,
+               idle_ttl_seconds = $4,
+               expires_at = LEAST($5, absolute_expires_at),
+               last_seen_at = $6,
+               recent_authenticated_at = $6,
+               recent_auth_expires_at = $7,
+               updated_at = $6
+           WHERE id = $1 AND account_id = $2 AND revoked_at IS NULL
+           RETURNING label, client_kind, created_at, absolute_expires_at
+           """,
+           [
+             session_id,
+             account_id,
+             credential_hash,
+             policy.idle_ttl_seconds,
+             idle_expires_at,
+             now,
+             recent_auth_expires_at
+           ]
+         ) do
+      {:ok, %{rows: [[label, client_kind, created_at, absolute_expires_at]]}} ->
+        {:ok,
+         session_result(
+           session_id,
+           account_id,
+           credential,
+           label,
+           client_kind,
+           as_utc(created_at),
+           now,
+           min_datetime(idle_expires_at, as_utc(absolute_expires_at)),
+           as_utc(absolute_expires_at),
+           recent_auth_expires_at
+         )}
+
+      {:ok, %{rows: []}} ->
+        {:error, :session_unavailable}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  end
+
+  @doc "Lists active sessions with only user-visible, coarsened metadata."
+  @spec list_sessions(binary(), binary(), keyword()) :: {:ok, [map()]} | {:error, atom()}
+  def list_sessions(account_id, current_session_id, opts \\ []) do
+    now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
+
+    case SQL.query(
+           Repo,
+           """
+           SELECT id, label, client_kind, created_at, COALESCE(last_seen_at, created_at)
+           FROM sessions
+           WHERE account_id = $1 AND revoked_at IS NULL
+             AND expires_at > $2 AND absolute_expires_at > $2
+           ORDER BY created_at DESC, id DESC
+           """,
+           [account_id, now]
+         ) do
+      {:ok, %{rows: rows}} ->
+        {:ok,
+         Enum.map(rows, fn [id, label, client_kind, created_at, last_seen_at] ->
+           %{
+             id: uuid_string(id),
+             label: label,
+             client_kind: client_kind,
+             created_at: created_at |> as_utc() |> DateTime.to_iso8601(),
+             coarse_activity: coarse_activity(as_utc(last_seen_at), now),
+             current: id == current_session_id
+           }
+         end)}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  end
+
+  @doc "Changes one session label through the account-scoped application seam."
+  def rename_session(account_id, session_id, label, opts \\ []) do
+    now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
+
+    with {:ok, session_id} <- dump_uuid(session_id),
+         {:ok, label} <- valid_session_label(label),
+         {:ok, %{num_rows: 1}} <-
+           SQL.query(
+             Repo,
+             """
+             UPDATE sessions SET label = $3, updated_at = $4
+             WHERE id = $1 AND account_id = $2 AND revoked_at IS NULL
+             """,
+             [session_id, account_id, label, now]
+           ) do
+      {:ok, %{status: "session_updated", label: label}}
+    else
+      :error -> {:error, :session_unavailable}
+      {:error, :invalid_label} -> {:error, :invalid_label}
+      {:ok, %{num_rows: 0}} -> {:error, :session_unavailable}
+      {:error, _reason} -> {:error, :infrastructure_failure}
+    end
+  end
+
+  @doc "Revokes one account-scoped session. Recent-auth is enforced by the caller boundary."
+  def revoke_session(account_id, session_id, opts \\ []) do
+    now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
+
+    with {:ok, session_id} <- dump_uuid(session_id),
+         {:ok, %{num_rows: 1}} <-
+           SQL.query(
+             Repo,
+             """
+             UPDATE sessions SET revoked_at = $3, updated_at = $3
+             WHERE id = $1 AND account_id = $2 AND revoked_at IS NULL
+             """,
+             [session_id, account_id, now]
+           ) do
+      record_security_audit(account_id, "session_revoked", now)
+      {:ok, %{status: "session_revoked"}}
+    else
+      :error -> {:error, :session_unavailable}
+      {:ok, %{num_rows: 0}} -> {:error, :session_unavailable}
+      {:error, _reason} -> {:error, :infrastructure_failure}
+    end
+  end
+
+  @doc "Revokes the current session for logout."
+  def logout(account_id, session_id, opts \\ []) do
+    now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
+
+    case SQL.query(
+           Repo,
+           """
+           UPDATE sessions SET revoked_at = $3, updated_at = $3
+           WHERE id = $1 AND account_id = $2 AND revoked_at IS NULL
+           """,
+           [session_id, account_id, now]
+         ) do
+      {:ok, _result} ->
+        record_security_audit(account_id, "logout", now)
+        :ok
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  end
+
+  @doc "Issues one short-lived recovery capability and persists only its hash."
+  @spec issue_recovery_token(keyword()) ::
+          {:ok, %{token: String.t(), expires_at: DateTime.t()}}
+          | {:error, :invalid_ttl | :account_unavailable | :infrastructure_failure}
+  def issue_recovery_token(opts \\ []) do
+    now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
+    ttl_seconds = Keyword.get(opts, :ttl_seconds, @default_recovery_ttl_seconds)
+
+    with true <-
+           is_integer(ttl_seconds) and ttl_seconds >= @minimum_recovery_ttl_seconds and
+             ttl_seconds <= @maximum_recovery_ttl_seconds,
+         token <- random_token(),
+         token_hash <- hash_token(token),
+         expires_at <- DateTime.add(now, ttl_seconds, :second),
+         {:ok, account_id} <-
+           Repo.transact(fn repo ->
+             case SQL.query!(
+                    repo,
+                    "SELECT id FROM accounts WHERE singleton_key = TRUE FOR UPDATE",
+                    []
+                  ).rows do
+               [[account_id]] ->
+                 SQL.query!(
+                   repo,
+                   """
+                   INSERT INTO account_recovery (
+                     account_id, token_hash, issued_at, expires_at, consumed_at,
+                     inserted_at, updated_at
+                   )
+                   VALUES ($1, $2, $3, $4, NULL, $3, $3)
+                   ON CONFLICT (account_id) DO UPDATE
+                   SET token_hash = EXCLUDED.token_hash,
+                       issued_at = EXCLUDED.issued_at,
+                       expires_at = EXCLUDED.expires_at,
+                       consumed_at = NULL,
+                       updated_at = EXCLUDED.updated_at
+                   """,
+                   [account_id, token_hash, now, expires_at]
+                 )
+
+                 {:ok, account_id}
+
+               [] ->
+                 {:error, :account_unavailable}
+             end
+           end) do
+      record_security_audit(account_id, "recovery_issued", now)
+      {:ok, %{token: token, expires_at: expires_at}}
+    else
+      false -> {:error, :invalid_ttl}
+      {:error, :account_unavailable} -> {:error, :account_unavailable}
+      {:error, _reason} -> {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  @doc "Consumes a recovery capability once, replaces the password, and rotates all sessions."
+  @spec consume_recovery(map()) :: {:ok, map()} | {:error, atom()}
+  def consume_recovery(params) when is_map(params) do
+    with {:ok, token} <- required_binary(params, :token),
+         {:ok, password} <- valid_password(params),
+         {:ok, accepted_at} <- recovery_accepted_at(params),
+         {:ok, label} <- valid_session_label(Map.get(params, :label, "Browser")),
+         {:ok, client_kind} <- valid_client_kind(Map.get(params, :client_kind, "web")),
+         password_hash <- Argon2.hash_pwd_salt(password),
+         token_hash <- hash_token(token),
+         {:ok, result} <-
+           Repo.transact(fn repo ->
+             {:ok,
+              consume_recovery_locked(
+                repo,
+                token_hash,
+                password_hash,
+                accepted_at,
+                label,
+                client_kind
+              )}
+           end) do
+      result
+    else
+      {:error, reason}
+      when reason in [
+             :invalid_password,
+             :invalid_label,
+             :invalid_client_kind,
+             :recovery_unavailable
+           ] ->
+        {:error, reason}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  def consume_recovery(_params), do: {:error, :recovery_unavailable}
+
   @spec change_timezone(String.t(), keyword()) ::
           {:ok,
            %{
@@ -138,6 +553,333 @@ defmodule Keepling.Accounts do
   end
 
   def valid_timezone?(_timezone), do: false
+
+  defp session_params(opts) do
+    policy = session_policy(opts)
+    now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
+
+    with {:ok, label} <- valid_session_label(Keyword.get(opts, :label, "Browser")),
+         {:ok, client_kind} <- valid_client_kind(Keyword.get(opts, :client_kind, "web")),
+         true <-
+           Enum.all?(
+             [
+               policy.idle_ttl_seconds,
+               policy.absolute_ttl_seconds,
+               policy.recent_auth_ttl_seconds
+             ],
+             &(is_integer(&1) and &1 > 0)
+           ),
+         true <- policy.absolute_ttl_seconds > 0 do
+      {:ok,
+       %{
+         absolute_expires_at: DateTime.add(now, policy.absolute_ttl_seconds, :second),
+         client_kind: client_kind,
+         created_at: now,
+         idle_expires_at: DateTime.add(now, policy.idle_ttl_seconds, :second),
+         idle_ttl_seconds: policy.idle_ttl_seconds,
+         label: label,
+         recent_auth_expires_at: DateTime.add(now, policy.recent_auth_ttl_seconds, :second)
+       }}
+    else
+      false -> {:error, :invalid_expiry}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp session_policy(opts) do
+    configured = Application.get_env(:keepling, :authentication, [])
+
+    %{
+      idle_ttl_seconds:
+        Keyword.get(
+          opts,
+          :idle_ttl_seconds,
+          Keyword.get(configured, :idle_ttl_seconds, @default_idle_ttl_seconds)
+        ),
+      absolute_ttl_seconds:
+        Keyword.get(
+          opts,
+          :absolute_ttl_seconds,
+          Keyword.get(configured, :absolute_ttl_seconds, @default_absolute_ttl_seconds)
+        ),
+      recent_auth_ttl_seconds:
+        Keyword.get(
+          opts,
+          :recent_auth_ttl_seconds,
+          Keyword.get(
+            configured,
+            :recent_auth_ttl_seconds,
+            @default_recent_auth_ttl_seconds
+          )
+        )
+    }
+  end
+
+  defp insert_session(repo, account_id, params) do
+    credential = random_token()
+    credential_hash = hash_token(credential)
+    session_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
+
+    SQL.query!(
+      repo,
+      """
+      INSERT INTO sessions (
+        id, account_id, credential_hash, label, client_kind,
+        created_at, last_seen_at, idle_ttl_seconds, expires_at,
+        absolute_expires_at, recent_authenticated_at, recent_auth_expires_at,
+        inserted_at, updated_at
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $6, $7, $8, $9, $6, $10, $6, $6)
+      """,
+      [
+        session_id,
+        account_id,
+        credential_hash,
+        params.label,
+        params.client_kind,
+        params.created_at,
+        params.idle_ttl_seconds,
+        params.idle_expires_at,
+        params.absolute_expires_at,
+        params.recent_auth_expires_at
+      ]
+    )
+
+    session_result(
+      session_id,
+      account_id,
+      credential,
+      params.label,
+      params.client_kind,
+      params.created_at,
+      params.created_at,
+      params.idle_expires_at,
+      params.absolute_expires_at,
+      params.recent_auth_expires_at
+    )
+  end
+
+  defp session_result(
+         session_id,
+         account_id,
+         credential,
+         label,
+         client_kind,
+         created_at,
+         last_seen_at,
+         expires_at,
+         absolute_expires_at,
+         recent_auth_expires_at
+       ) do
+    %{
+      absolute_expires_at: absolute_expires_at,
+      account_id: account_id,
+      client_kind: client_kind,
+      created_at: created_at,
+      credential: credential,
+      expires_at: expires_at,
+      id: uuid_string(session_id),
+      label: label,
+      last_seen_at: last_seen_at,
+      recent_auth_expires_at: recent_auth_expires_at,
+      session_id: session_id
+    }
+  end
+
+  defp refresh_session(
+         repo,
+         [
+           session_id,
+           account_id,
+           label,
+           client_kind,
+           created_at,
+           last_seen_at,
+           idle_ttl_seconds,
+           _expires_at,
+           absolute_expires_at,
+           recent_auth_expires_at
+         ],
+         now
+       ) do
+    absolute_expires_at = as_utc(absolute_expires_at)
+    idle_expires_at = DateTime.add(now, idle_ttl_seconds, :second)
+    next_expires_at = min_datetime(idle_expires_at, absolute_expires_at)
+    last_seen_at = as_utc(last_seen_at || created_at)
+
+    coarsened_last_seen_at =
+      if DateTime.diff(now, last_seen_at, :second) >= @session_activity_write_interval_seconds,
+        do: now,
+        else: last_seen_at
+
+    SQL.query!(
+      repo,
+      """
+      UPDATE sessions
+      SET expires_at = $2, last_seen_at = $3, updated_at = $4
+      WHERE id = $1
+      """,
+      [session_id, next_expires_at, coarsened_last_seen_at, now]
+    )
+
+    %{
+      account_id: account_id,
+      client_kind: client_kind,
+      created_at: as_utc(created_at),
+      id: uuid_string(session_id),
+      label: label,
+      recently_authenticated?: DateTime.compare(as_utc(recent_auth_expires_at), now) == :gt,
+      session_id: session_id
+    }
+  end
+
+  defp consume_recovery_locked(
+         repo,
+         presented_hash,
+         password_hash,
+         accepted_at,
+         label,
+         client_kind
+       ) do
+    case SQL.query!(
+           repo,
+           """
+           SELECT account_id, token_hash, expires_at, consumed_at
+           FROM account_recovery
+           FOR UPDATE
+           """,
+           []
+         ).rows do
+      [[account_id, stored_hash, expires_at, nil]] ->
+        if usable_token?(stored_hash, presented_hash, expires_at, accepted_at) do
+          SQL.query!(
+            repo,
+            "UPDATE accounts SET password_hash = $2, updated_at = $3 WHERE id = $1",
+            [account_id, password_hash, accepted_at]
+          )
+
+          SQL.query!(
+            repo,
+            """
+            UPDATE account_recovery
+            SET consumed_at = $2, updated_at = $2
+            WHERE account_id = $1
+            """,
+            [account_id, accepted_at]
+          )
+
+          SQL.query!(
+            repo,
+            """
+            UPDATE sessions
+            SET revoked_at = $2, updated_at = $2
+            WHERE account_id = $1 AND revoked_at IS NULL
+            """,
+            [account_id, accepted_at]
+          )
+
+          {:ok, params} =
+            session_params(
+              now: accepted_at,
+              label: label,
+              client_kind: client_kind
+            )
+
+          session = insert_session(repo, account_id, params)
+          insert_security_audit(repo, account_id, "recovery_succeeded", accepted_at)
+          {:ok, session}
+        else
+          {:error, :recovery_unavailable}
+        end
+
+      _ ->
+        {:error, :recovery_unavailable}
+    end
+  end
+
+  defp valid_session_label(label) when is_binary(label) do
+    trimmed = String.trim(label)
+    length = String.length(trimmed)
+
+    if length >= 1 and length <= 200, do: {:ok, trimmed}, else: {:error, :invalid_label}
+  end
+
+  defp valid_session_label(_label), do: {:error, :invalid_label}
+
+  defp valid_client_kind(client_kind) when client_kind in @client_kinds,
+    do: {:ok, client_kind}
+
+  defp valid_client_kind(_client_kind), do: {:error, :invalid_client_kind}
+
+  defp login_password_valid?(password) do
+    size = byte_size(password)
+    size > 0 and size <= @maximum_password_bytes
+  end
+
+  defp recovery_accepted_at(params) do
+    case Map.fetch(params, :accepted_at) do
+      {:ok, %DateTime{} = accepted_at} -> {:ok, truncate_utc!(accepted_at)}
+      _ -> {:error, :recovery_unavailable}
+    end
+  end
+
+  defp coarse_activity(last_seen_at, now) do
+    seconds = max(DateTime.diff(now, last_seen_at, :second), 0)
+
+    cond do
+      seconds < 15 * 60 -> "active_now"
+      Date.compare(DateTime.to_date(last_seen_at), DateTime.to_date(now)) == :eq -> "today"
+      true -> "earlier"
+    end
+  end
+
+  defp record_security_audit(account_id, event_type, accepted_at) do
+    case Repo.transact(fn repo ->
+           insert_security_audit(repo, account_id, event_type, accepted_at)
+           {:ok, :recorded}
+         end) do
+      {:ok, :recorded} -> :ok
+      _ -> :ok
+    end
+  rescue
+    _error -> :ok
+  end
+
+  defp insert_security_audit(repo, account_id, event_type, accepted_at) do
+    SQL.query!(
+      repo,
+      """
+      INSERT INTO account_security_audits (
+        account_id, event_type, event_version, accepted_at, inserted_at
+      )
+      VALUES ($1, $2, 1, $3, $3)
+      """,
+      [account_id, event_type, accepted_at]
+    )
+  end
+
+  defp dump_uuid(value) when is_binary(value) do
+    case Ecto.UUID.cast(value) do
+      {:ok, uuid} -> {:ok, Ecto.UUID.dump!(uuid)}
+      :error -> :error
+    end
+  end
+
+  defp dump_uuid(_value), do: :error
+
+  defp uuid_string(value) when is_binary(value) do
+    case Ecto.UUID.load(value) do
+      {:ok, uuid} -> uuid
+      :error -> value
+    end
+  end
+
+  defp min_datetime(left, right) do
+    case DateTime.compare(left, right) do
+      :gt -> right
+      _ -> left
+    end
+  end
 
   defp change_timezone_locked(repo, timezone, accepted_at) do
     case SQL.query!(

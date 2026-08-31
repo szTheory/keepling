@@ -336,7 +336,10 @@ defmodule Keepling.Accounts.RecoveryRaceTest do
   end
 
   test "independent recovery consumers have exactly one winner and the token is one-use" do
-    assert {:ok, issued} = Accounts.issue_recovery_token(now: @now, ttl_seconds: 900)
+    assert {:ok, issued} =
+             with_connection(fn _backend_pid ->
+               Accounts.issue_recovery_token(now: @now, ttl_seconds: 900)
+             end)
 
     assert %{rows: [[stored_hash]]} =
              with_connection(fn _backend_pid ->
@@ -376,18 +379,22 @@ defmodule Keepling.Accounts.RecoveryRaceTest do
              result == {:error, :recovery_unavailable}
            end) == 1
 
-    assert {:ok, _session} = Accounts.login(@new_password, now: DateTime.add(@now, 31, :second))
-    assert {:error, :authentication_failed} =
-             Accounts.login(@previous_password, now: DateTime.add(@now, 31, :second))
+    with_connection(fn _backend_pid ->
+      assert {:ok, _session} =
+               Accounts.login(@new_password, now: DateTime.add(@now, 31, :second))
 
-    assert {:error, :recovery_unavailable} =
-             Accounts.consume_recovery(%{
-               token: issued.token,
-               password: "another replacement password value",
-               accepted_at: DateTime.add(@now, 40, :second),
-               label: "Browser",
-               client_kind: "web"
-             })
+      assert {:error, :authentication_failed} =
+               Accounts.login(@previous_password, now: DateTime.add(@now, 31, :second))
+
+      assert {:error, :recovery_unavailable} =
+               Accounts.consume_recovery(%{
+                 token: issued.token,
+                 password: "another replacement password value",
+                 accepted_at: DateTime.add(@now, 40, :second),
+                 label: "Browser",
+                 client_kind: "web"
+               })
+    end)
   end
 
   defp create_account(password) do

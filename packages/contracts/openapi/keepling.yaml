@@ -32,6 +32,168 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
         '503':
           $ref: '#/components/responses/ProblemResponse'
+  /login:
+    post:
+      operationId: login
+      summary: Authenticate the closed personal account and rotate browser session state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Browser session established with fresh CSRF state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTransitionResponse'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /recovery:
+    post:
+      operationId: recoverAccount
+      summary: Consume a one-use operator capability and set a browser-supplied password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoveryRequest'
+      responses:
+        '200':
+          description: Password replaced and a fresh browser session established
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTransitionResponse'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /reauthenticate:
+    post:
+      operationId: reauthenticate
+      summary: Refresh the recent-auth window and rotate browser credential and CSRF state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReauthenticationRequest'
+      responses:
+        '200':
+          description: Recent-auth window refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTransitionResponse'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /logout:
+    post:
+      operationId: logout
+      summary: Revoke the current server session and clear browser authentication state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VersionedAuthRequest'
+      responses:
+        '200':
+          description: Current session revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionMutationResponse'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /sessions:
+    get:
+      operationId: listSessions
+      summary: List active account sessions with current and coarse activity markers
+      responses:
+        '200':
+          description: Active session inventory
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /sessions/{session_id}:
+    parameters:
+      - in: path
+        name: session_id
+        required: true
+        schema:
+          $ref: '#/components/schemas/SessionIdentity'
+    patch:
+      operationId: updateSession
+      summary: Change one account-scoped session label
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionUpdateRequest'
+      responses:
+        '200':
+          description: Session label updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionMutationResponse'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+    delete:
+      operationId: revokeSession
+      summary: Revoke one account-scoped session after recent authentication
+      responses:
+        '200':
+          description: Session revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionMutationResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /test/session:
     post:
       operationId: createTestSession
@@ -136,6 +298,22 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    AuthTransitionResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - csrf_token
+        - status
+      properties:
+        csrf_token:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          enum:
+            - authenticated
+            - recently_authenticated
+            - recovery_complete
     CaptureTaskCommand:
       type: object
       additionalProperties: false
@@ -194,6 +372,28 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaskSnapshot'
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - client_kind
+        - label
+        - password
+        - version
+      properties:
+        client_kind:
+          type: string
+          const: web
+        label:
+          $ref: '#/components/schemas/SessionLabel'
+        password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          format: password
+        version:
+          type: integer
+          const: 1
     MutationIdentity:
       type: string
       format: uuid
@@ -230,6 +430,69 @@ components:
       type: integer
       format: int64
       minimum: 1
+    RecoveryRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - client_kind
+        - label
+        - password
+        - token
+        - version
+      properties:
+        client_kind:
+          type: string
+          const: web
+        label:
+          $ref: '#/components/schemas/SessionLabel'
+        password:
+          type: string
+          minLength: 12
+          maxLength: 1024
+          format: password
+        token:
+          type: string
+          minLength: 43
+          maxLength: 43
+        version:
+          type: integer
+          const: 1
+    ReauthenticationRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - password
+        - version
+      properties:
+        password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+          format: password
+        version:
+          type: integer
+          const: 1
+    SessionIdentity:
+      type: string
+      format: uuid
+    SessionLabel:
+      type: string
+      minLength: 1
+      maxLength: 200
+    SessionMutationResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+      properties:
+        label:
+          $ref: '#/components/schemas/SessionLabel'
+        status:
+          type: string
+          enum:
+            - session_updated
+            - session_revoked
+            - signed_out
     SessionResponse:
       type: object
       additionalProperties: false
@@ -239,6 +502,28 @@ components:
         csrf_token:
           type: string
           minLength: 1
+    SessionsResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - sessions
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrackedSession'
+    SessionUpdateRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - label
+        - version
+      properties:
+        label:
+          $ref: '#/components/schemas/SessionLabel'
+        version:
+          type: integer
+          const: 1
     SetupRequest:
       type: object
       additionalProperties: false
@@ -304,6 +589,48 @@ components:
           $ref: '#/components/schemas/Revision'
         title:
           type: string
+    TrackedSession:
+      type: object
+      additionalProperties: false
+      required:
+        - client_kind
+        - coarse_activity
+        - created_at
+        - current
+        - id
+        - label
+      properties:
+        client_kind:
+          type: string
+          enum:
+            - web
+            - electron
+            - iphone
+            - mcp
+        coarse_activity:
+          type: string
+          enum:
+            - active_now
+            - today
+            - earlier
+        created_at:
+          type: string
+          format: date-time
+        current:
+          type: boolean
+        id:
+          $ref: '#/components/schemas/SessionIdentity'
+        label:
+          $ref: '#/components/schemas/SessionLabel'
+    VersionedAuthRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - version
+      properties:
+        version:
+          type: integer
+          const: 1
     Warning:
       type: object
       additionalProperties: false
