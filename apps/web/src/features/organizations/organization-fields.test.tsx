@@ -180,6 +180,118 @@ describe('organization assignment fields', () => {
 })
 
 describe('organization management routes', () => {
+  it('reconciles accepted response loss for create, rename, archive, and unarchive by exact identity', async () => {
+    const stored = new Map<string, Record<string, unknown>>()
+    const commandBodies = new Map<string, string[]>()
+
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input)
+      if (path === '/api/v1/organizations') return jsonResponse({ organizations })
+
+      if (path.startsWith('/api/v1/mutations/')) {
+        const mutationId = path.slice('/api/v1/mutations/'.length)
+        const acknowledgement = stored.get(mutationId)
+        if (!acknowledgement) throw new Error(`Missing stored mutation ${mutationId}`)
+        return jsonResponse(acknowledgement)
+      }
+
+      if (path.startsWith('/api/v1/commands/')) {
+        const body = String(init?.body)
+        commandBodies.set(path, [...(commandBodies.get(path) ?? []), body])
+        const request = JSON.parse(body) as {
+          expected_revision?: number
+          kind?: 'project' | 'tag'
+          mutation_id: string
+          name?: string
+          organization_id: string
+        }
+        const original = organizations.find(
+          (organization) => organization.id === request.organization_id,
+        )
+
+        const snapshot =
+          path.endsWith('/create-organization')
+            ? {
+                archived: false,
+                assignable: true,
+                id: request.organization_id,
+                kind: request.kind,
+                name: request.name,
+                revision: 1,
+              }
+            : path.endsWith('/rename-organization')
+              ? {
+                  ...original,
+                  name: request.name,
+                  revision: (request.expected_revision ?? 0) + 1,
+                }
+              : path.endsWith('/archive-organization')
+                ? {
+                    ...original,
+                    archived: true,
+                    assignable: false,
+                    revision: (request.expected_revision ?? 0) + 1,
+                  }
+                : {
+                    ...original,
+                    archived: false,
+                    assignable: true,
+                    revision: (request.expected_revision ?? 0) + 1,
+                  }
+
+        stored.set(request.mutation_id, {
+          mutation_id: request.mutation_id,
+          organization_id: request.organization_id,
+          outcome: 'accepted',
+          revision: snapshot.revision,
+          snapshot,
+        })
+        throw new TypeError('response lost after acceptance')
+      }
+
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(<OrganizationManager csrfToken="csrf" kind="project" />)
+
+    await user.type(await screen.findByLabelText('New project name'), 'Garden')
+    await user.click(screen.getByRole('button', { name: 'Create project' }))
+    await user.click(await screen.findByRole('button', { name: 'Check again' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Project created.')
+
+    const homeName = screen.getByLabelText('Rename Home')
+    await user.clear(homeName)
+    await user.type(homeName, 'House')
+    await user.click(within(homeName.closest('li')!).getByRole('button', { name: 'Save name' }))
+    await user.click(await screen.findByRole('button', { name: 'Check again' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Home renamed.')
+
+    await user.click(screen.getByRole('button', { name: 'Archive House' }))
+    await user.click(screen.getByRole('button', { name: 'Confirm archive House' }))
+    await user.click(await screen.findByRole('button', { name: 'Check again' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('House archived.')
+
+    await user.click(screen.getByRole('button', { name: 'Unarchive Old home' }))
+    await user.click(await screen.findByRole('button', { name: 'Check again' }))
+    expect(await screen.findByRole('status')).toHaveTextContent('Old home unarchived.')
+
+    for (const path of [
+      '/api/v1/commands/create-organization',
+      '/api/v1/commands/rename-organization',
+      '/api/v1/commands/archive-organization',
+      '/api/v1/commands/unarchive-organization',
+    ]) {
+      const [body] = commandBodies.get(path) ?? []
+      expect(commandBodies.get(path)).toHaveLength(1)
+      const mutationId = (JSON.parse(body ?? '{}') as { mutation_id?: string }).mutation_id
+      expect(fetchMock.mock.calls.some(([input]) =>
+        String(input) === `/api/v1/mutations/${mutationId}`,
+      )).toBe(true)
+    }
+  })
+
   it('creates with generated identities and names exact project archive blockers', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const path = String(input)

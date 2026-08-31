@@ -1,10 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 
 import {
   KeeplingApiError,
   archiveOrganization,
   assignTaskOrganizations,
   createOrganization,
+  getOrganizationMutation,
   getTask,
   getOrganizations,
   renameOrganization,
@@ -12,8 +13,19 @@ import {
   type AssignTaskOrganizationsSubmission,
   type BrowserOrganization,
   type BrowserTask,
+  type CreateOrganizationSubmission,
+  type OrganizationAcknowledgement,
+  type OrganizationLifecycleSubmission,
+  type RenameOrganizationSubmission,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
+import {
+  classifyKeeplingError,
+  createExactSubmission,
+  type ExactSubmission,
+  type ExactSubmissionState,
+} from '@/commands/submission'
+import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 
 type OrganizationFieldsProps = {
   csrfToken: string
@@ -23,7 +35,43 @@ type OrganizationFieldsProps = {
 type OrganizationManagerProps = {
   csrfToken: string
   kind: BrowserOrganization['kind']
+  onAuthenticationRequired?: (
+    intent: InterruptedIntent,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => void
 }
+
+type OrganizationAction =
+  | {
+      displayName: string
+      kind: BrowserOrganization['kind']
+      submission: CreateOrganizationSubmission
+      type: 'create'
+    }
+  | {
+      displayName: string
+      kind: BrowserOrganization['kind']
+      submission: RenameOrganizationSubmission
+      type: 'rename'
+    }
+  | {
+      displayName: string
+      kind: BrowserOrganization['kind']
+      submission: OrganizationLifecycleSubmission
+      type: 'archive' | 'unarchive'
+    }
+
+type OrganizationSubmissionState = ExactSubmissionState<
+  OrganizationAction,
+  OrganizationAcknowledgement,
+  KeeplingApiError
+>
+
+type OrganizationExactSubmission = ExactSubmission<
+  OrganizationAction,
+  OrganizationAcknowledgement,
+  KeeplingApiError
+>
 
 type AssignmentDraft = {
   projectId: string | null
@@ -47,6 +95,27 @@ const taskAssignment = (task: BrowserTask): AssignmentDraft => ({
   projectId: task.project?.id ?? null,
   tagIds: task.tags.map((tag) => tag.id).toSorted(),
 })
+
+const actionIdentity = (action: OrganizationAction) => ({
+  mutationId: action.submission.mutationId,
+  organizationId: action.submission.organizationId,
+})
+
+const submitOrganizationAction = (
+  action: OrganizationAction,
+  csrfToken: string,
+): Promise<OrganizationAcknowledgement> => {
+  switch (action.type) {
+    case 'create':
+      return createOrganization(action.submission, csrfToken)
+    case 'rename':
+      return renameOrganization(action.submission, csrfToken)
+    case 'archive':
+      return archiveOrganization(action.submission, csrfToken)
+    case 'unarchive':
+      return unarchiveOrganization(action.submission, csrfToken)
+  }
+}
 
 function OrganizationFields({ csrfToken, taskId }: OrganizationFieldsProps) {
   const [loadState, setLoadState] = useState<LoadState>({ kind: 'loading' })
@@ -247,7 +316,11 @@ function OrganizationFields({ csrfToken, taskId }: OrganizationFieldsProps) {
   )
 }
 
-function OrganizationManager({ csrfToken, kind }: OrganizationManagerProps) {
+function OrganizationManager({
+  csrfToken,
+  kind,
+  onAuthenticationRequired,
+}: OrganizationManagerProps) {
   const [organizations, setOrganizations] = useState<readonly BrowserOrganization[]>([])
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState('')
@@ -255,6 +328,10 @@ function OrganizationManager({ csrfToken, kind }: OrganizationManagerProps) {
   const [confirmArchiveId, setConfirmArchiveId] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [message, setMessage] = useState<{ kind: 'alert' | 'status'; text: string } | null>(null)
+  const [pendingAction, setPendingAction] = useState<OrganizationAction | null>(null)
+  const [submissionState, setSubmissionState] =
+    useState<OrganizationSubmissionState | null>(null)
+  const exactSubmission = useRef<OrganizationExactSubmission | null>(null)
 
   useEffect(() => {
     let active = true
@@ -285,118 +362,173 @@ function OrganizationManager({ csrfToken, kind }: OrganizationManagerProps) {
     setRenames((current) => ({ ...current, [organization.id]: organization.name }))
   }
 
-  const create = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (name.trim() === '') return
-    setBusyId('create')
-    setMessage(null)
-    try {
-      const acknowledgement = await createOrganization(
-        {
-          kind,
-          mutationId: crypto.randomUUID(),
-          name,
-          organizationId: crypto.randomUUID(),
-        },
-        csrfToken,
-      )
-      replaceOrganization(acknowledgement.snapshot)
-      setName('')
-      setMessage({ kind: 'status', text: `${kind === 'project' ? 'Project' : 'Tag'} created.` })
-    } catch (error) {
+  const clearPending = () => {
+    exactSubmission.current = null
+    setPendingAction(null)
+    setSubmissionState(null)
+    setBusyId(null)
+  }
+
+  const settle = async (action: OrganizationAction, exact: OrganizationExactSubmission) => {
+    const state = exact.snapshot
+
+    if (state.kind === 'acknowledged') {
+      replaceOrganization(state.acknowledgement.snapshot)
+      if (action.type === 'create') setName('')
+      if (action.type === 'archive') setConfirmArchiveId(null)
+
+      const actionCopy =
+        action.type === 'create'
+          ? `${action.kind === 'project' ? 'Project' : 'Tag'} created.`
+          : `${action.displayName} ${action.type === 'rename' ? 'renamed' : `${action.type}d`}.`
+
+      clearPending()
+      setMessage({ kind: 'status', text: actionCopy })
+      return
+    }
+
+    if (state.kind === 'authentication_required') {
+      setBusyId(null)
+      if (onAuthenticationRequired) {
+        onAuthenticationRequired(
+          {
+            kind: state.operation === 'lookup' ? 'submitted-unknown' : 'not-submitted',
+            mutationId: action.submission.mutationId,
+          },
+          async (nextCsrfToken) => {
+            setBusyId(action.type === 'create' ? 'create' : action.submission.organizationId)
+            await exact.resumeAfterAuthentication(nextCsrfToken)
+            await settle(action, exact)
+          },
+        )
+      }
+      return
+    }
+
+    if (state.kind === 'unknown') {
+      setBusyId(null)
+      return
+    }
+
+    if (state.kind !== 'rejected' && state.kind !== 'conflict') return
+
+    const error = state.rejection
+    clearPending()
+
+    if (action.type === 'archive' && error.problem.code === 'project_archive_blocked') {
+      const count = error.problem.active_unfinished_task_count ?? 0
       setMessage({
         kind: 'alert',
-        text: error instanceof Error ? error.message : `Couldn’t create ${kind}. Nothing was changed.`,
+        text: `${action.displayName} still has ${String(count)} active unfinished ${count === 1 ? 'task' : 'tasks'}. Nothing changed.`,
       })
-    } finally {
-      setBusyId(null)
+    } else if (
+      action.type === 'unarchive' &&
+      error.problem.code === 'active_organization_name_collision'
+    ) {
+      setMessage({
+        kind: 'alert',
+        text: `${action.displayName} remains archived because an active ${action.kind} already uses that name.`,
+      })
+    } else {
+      setMessage({ kind: 'alert', text: error.message })
     }
   }
 
-  const rename = async (organization: BrowserOrganization) => {
-    setBusyId(organization.id)
+  const begin = async (action: OrganizationAction) => {
+    const identity = actionIdentity(action)
+    setPendingAction(action)
+    setBusyId(action.type === 'create' ? 'create' : identity.organizationId)
     setMessage(null)
-    try {
-      const acknowledgement = await renameOrganization(
-        {
-          expectedRevision: organization.revision,
-          mutationId: crypto.randomUUID(),
-          name: renames[organization.id] ?? organization.name,
-          organizationId: organization.id,
-        },
-        csrfToken,
-      )
-      replaceOrganization(acknowledgement.snapshot)
-      setMessage({ kind: 'status', text: `${organization.name} renamed.` })
-    } catch (error) {
-      setMessage({ kind: 'alert', text: error instanceof Error ? error.message : 'Nothing changed.' })
-    } finally {
-      setBusyId(null)
-    }
+
+    const exact = createExactSubmission<
+      OrganizationAction,
+      OrganizationAcknowledgement,
+      KeeplingApiError
+    >({
+      classifyError: classifyKeeplingError,
+      lookup: (original) => getOrganizationMutation(original.submission.mutationId),
+      matchesAcknowledgement: (acknowledgement) =>
+        acknowledgement.mutationId === identity.mutationId &&
+        acknowledgement.organizationId === identity.organizationId,
+      onStateChange: setSubmissionState,
+      request: action,
+      send: submitOrganizationAction,
+    })
+
+    exactSubmission.current = exact
+    await exact.submit(csrfToken)
+    await settle(action, exact)
   }
 
-  const archive = async (organization: BrowserOrganization) => {
-    setBusyId(organization.id)
-    setMessage(null)
-    try {
-      const acknowledgement = await archiveOrganization(
-        {
-          expectedRevision: organization.revision,
-          mutationId: crypto.randomUUID(),
-          organizationId: organization.id,
-        },
-        csrfToken,
-      )
-      replaceOrganization(acknowledgement.snapshot)
-      setConfirmArchiveId(null)
-      setMessage({ kind: 'status', text: `${organization.name} archived.` })
-    } catch (error) {
-      if (
-        error instanceof KeeplingApiError &&
-        error.problem.code === 'project_archive_blocked'
-      ) {
-        const count = error.problem.active_unfinished_task_count ?? 0
-        setMessage({
-          kind: 'alert',
-          text: `${organization.name} still has ${String(count)} active unfinished ${count === 1 ? 'task' : 'tasks'}. Nothing changed.`,
-        })
-      } else {
-        setMessage({ kind: 'alert', text: error instanceof Error ? error.message : 'Nothing changed.' })
-      }
-    } finally {
-      setBusyId(null)
-    }
+  const checkPending = async () => {
+    const exact = exactSubmission.current
+    if (!exact || !pendingAction) return
+
+    setBusyId(
+      pendingAction.type === 'create' ? 'create' : pendingAction.submission.organizationId,
+    )
+    await exact.check(csrfToken)
+    await settle(pendingAction, exact)
   }
 
-  const unarchive = async (organization: BrowserOrganization) => {
-    setBusyId(organization.id)
-    setMessage(null)
-    try {
-      const acknowledgement = await unarchiveOrganization(
-        {
-          expectedRevision: organization.revision,
-          mutationId: crypto.randomUUID(),
-          organizationId: organization.id,
-        },
-        csrfToken,
-      )
-      replaceOrganization(acknowledgement.snapshot)
-      setMessage({ kind: 'status', text: `${organization.name} unarchived.` })
-    } catch (error) {
-      if (
-        error instanceof KeeplingApiError &&
-        error.problem.code === 'active_organization_name_collision'
-      ) {
-        setMessage({
-          kind: 'alert',
-          text: `${organization.name} remains archived because an active ${kind} already uses that name.`,
-        })
-      } else {
-        setMessage({ kind: 'alert', text: error instanceof Error ? error.message : 'Nothing changed.' })
-      }
-    } finally {
-      setBusyId(null)
-    }
+  const create = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (name.trim() === '' || pendingAction) return
+
+    void begin({
+      displayName: name,
+      kind,
+      submission: {
+        kind,
+        mutationId: crypto.randomUUID(),
+        name,
+        organizationId: crypto.randomUUID(),
+      },
+      type: 'create',
+    })
+  }
+
+  const rename = (organization: BrowserOrganization) => {
+    if (pendingAction) return
+    void begin({
+      displayName: organization.name,
+      kind: organization.kind,
+      submission: {
+        expectedRevision: organization.revision,
+        mutationId: crypto.randomUUID(),
+        name: renames[organization.id] ?? organization.name,
+        organizationId: organization.id,
+      },
+      type: 'rename',
+    })
+  }
+
+  const archive = (organization: BrowserOrganization) => {
+    if (pendingAction) return
+    void begin({
+      displayName: organization.name,
+      kind: organization.kind,
+      submission: {
+        expectedRevision: organization.revision,
+        mutationId: crypto.randomUUID(),
+        organizationId: organization.id,
+      },
+      type: 'archive',
+    })
+  }
+
+  const unarchive = (organization: BrowserOrganization) => {
+    if (pendingAction) return
+    void begin({
+      displayName: organization.name,
+      kind: organization.kind,
+      submission: {
+        expectedRevision: organization.revision,
+        mutationId: crypto.randomUUID(),
+        organizationId: organization.id,
+      },
+      type: 'unarchive',
+    })
   }
 
   const label = kind === 'project' ? 'project' : 'tag'
@@ -417,16 +549,41 @@ function OrganizationManager({ csrfToken, kind }: OrganizationManagerProps) {
             </label>
             <input
               className="min-h-11 w-full rounded-lg border border-input bg-card px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              disabled={pendingAction !== null}
               id={`new-${label}-name`}
               maxLength={200}
               onChange={(event) => setName(event.target.value)}
               value={name}
             />
           </div>
-          <Button className="min-h-11" disabled={busyId !== null || name.trim() === ''} type="submit">
+          <Button
+            className="min-h-11"
+            disabled={pendingAction !== null || busyId !== null || name.trim() === ''}
+            type="submit"
+          >
             Create {label}
           </Button>
         </form>
+
+        {submissionState?.kind === 'unknown' ? (
+          <div className="mt-6 rounded-lg border p-4" role="status">
+            <p>Checking whether the organization change was saved…</p>
+            <Button
+              className="mt-3 min-h-11"
+              onClick={() => void checkPending()}
+              type="button"
+              variant="outline"
+            >
+              Check again
+            </Button>
+          </div>
+        ) : null}
+
+        {submissionState?.kind === 'authentication_required' ? (
+          <p className="mt-6 rounded-lg border p-4" role="status">
+            Sign in again to finish the organization change. Nothing was discarded.
+          </p>
+        ) : null}
 
         {message ? (
           <p className="mt-6 rounded-lg border p-4" role={message.kind}>
@@ -445,6 +602,7 @@ function OrganizationManager({ csrfToken, kind }: OrganizationManagerProps) {
                   </label>
                   <input
                     className="min-h-11 min-w-56 flex-1 rounded-lg border border-input bg-card px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    disabled={pendingAction !== null}
                     id={`rename-${organization.id}`}
                     maxLength={200}
                     onChange={(event) =>
@@ -460,7 +618,7 @@ function OrganizationManager({ csrfToken, kind }: OrganizationManagerProps) {
                   ) : null}
                   <Button
                     className="min-h-11"
-                    disabled={busyId !== null}
+                    disabled={pendingAction !== null || busyId !== null}
                     onClick={() => void rename(organization)}
                     type="button"
                     variant="outline"
@@ -470,7 +628,7 @@ function OrganizationManager({ csrfToken, kind }: OrganizationManagerProps) {
                   {organization.archived ? (
                     <Button
                       className="min-h-11"
-                      disabled={busyId !== null}
+                      disabled={pendingAction !== null || busyId !== null}
                       onClick={() => void unarchive(organization)}
                       type="button"
                       variant="outline"
@@ -480,7 +638,7 @@ function OrganizationManager({ csrfToken, kind }: OrganizationManagerProps) {
                   ) : (
                     <Button
                       className="min-h-11"
-                      disabled={busyId !== null}
+                      disabled={pendingAction !== null || busyId !== null}
                       onClick={() => setConfirmArchiveId(organization.id)}
                       type="button"
                       variant="outline"
@@ -499,14 +657,20 @@ function OrganizationManager({ csrfToken, kind }: OrganizationManagerProps) {
                     <div className="mt-3 flex flex-wrap gap-3">
                       <Button
                         className="min-h-11"
-                        disabled={busyId !== null}
+                        disabled={pendingAction !== null || busyId !== null}
                         onClick={() => void archive(organization)}
                         type="button"
                         variant="destructive"
                       >
                         Confirm archive {organization.name}
                       </Button>
-                      <Button className="min-h-11" onClick={() => setConfirmArchiveId(null)} type="button" variant="outline">
+                      <Button
+                        className="min-h-11"
+                        disabled={pendingAction !== null}
+                        onClick={() => setConfirmArchiveId(null)}
+                        type="button"
+                        variant="outline"
+                      >
                         Keep active
                       </Button>
                     </div>

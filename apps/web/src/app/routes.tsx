@@ -127,11 +127,23 @@ function AppRoutes({
   if (pathname === '/trash' && csrfToken) return <TrashList csrfToken={csrfToken} />
 
   if (pathname === '/projects' && csrfToken) {
-    return <OrganizationManager csrfToken={csrfToken} kind="project" />
+    return (
+      <OrganizationManager
+        csrfToken={csrfToken}
+        kind="project"
+        onAuthenticationRequired={onAuthenticationRequired}
+      />
+    )
   }
 
   if (pathname === '/tags' && csrfToken) {
-    return <OrganizationManager csrfToken={csrfToken} kind="tag" />
+    return (
+      <OrganizationManager
+        csrfToken={csrfToken}
+        kind="tag"
+        onAuthenticationRequired={onAuthenticationRequired}
+      />
+    )
   }
 
   const assignmentMatch = pathname.match(/^\/tasks\/([^/]+)\/organizations$/)

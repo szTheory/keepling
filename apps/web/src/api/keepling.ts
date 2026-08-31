@@ -1187,6 +1187,18 @@ const getMutation = async (mutationId: string): Promise<CommandAcknowledgement> 
     ),
   )
 
+const getOrganizationMutation = async (
+  mutationId: string,
+): Promise<OrganizationAcknowledgement> =>
+  mapOrganizationAcknowledgement(
+    await readJson<WireOrganizationAcknowledgement>(
+      await fetch(`/api/v1/mutations/${encodeURIComponent(mutationId)}`, {
+        credentials: 'same-origin',
+        headers: { accept: 'application/json' },
+      }),
+    ),
+  )
+
 export {
   KeeplingApiError,
   archiveOrganization,
@@ -1199,6 +1211,7 @@ export {
   editTaskDates,
   getInbox,
   getMutation,
+  getOrganizationMutation,
   getOrganizations,
   getSession,
   getTrash,

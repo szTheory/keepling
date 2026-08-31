@@ -165,7 +165,7 @@ const createTaskSubmission = (
     send: submitPreparedTaskCommand,
   })
 
-export { createExactSubmission, createTaskSubmission }
+export { classifyKeeplingError, createExactSubmission, createTaskSubmission }
 export type {
   ExactSubmission,
   ExactSubmissionOptions,
