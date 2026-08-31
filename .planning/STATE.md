@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-09-PLAN.md
-last_updated: "2026-08-31T03:57:59.288Z"
+stopped_at: Completed KPL-01-10-PLAN.md
+last_updated: "2026-08-31T04:26:16.639Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase KPL-01 execution started
-state_head: a445435d008a32867f22da999946538882f27b54
+state_head: 8129e1bd92408d88f19e78c2781d043ccd95d50a
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 9
+  completed_plans: 10
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 10 of 19
+Plan: 11 of 19
 Total Plans in Phase: 19
 Status: Executing Phase KPL-01
 Last activity: 2026-08-30 — Phase KPL-01 execution started
@@ -72,6 +72,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01]: [Phase KPL-01]: Edit and clarify send only touched fields with matching base values; the locked server task and pure domain own rebase and conflict decisions.
 - [Phase 01]: [Phase KPL-01]: Inbox membership is explicit; only clarify_task removes it and only return_to_inbox restores it.
 - [Phase 01]: [Phase KPL-01]: The routed browser editor retains drafts and a fixed mutation identity until exact acknowledgement.
+- [Phase 01]: Projects and tags use stable opaque IDs with versioned normalized active-name uniqueness; display names remain mutable projections.
+- [Phase 01]: Task organization writes carry stable IDs and base values; account-scoped server locks own validation, merge, revision, and exact acknowledgement.
+- [Phase 01]: Archived organizations remain visible and removable in historical assignments but cannot receive new assignments.
 
 ### Retained Research
 
@@ -99,8 +102,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T03:57:59.280Z
-**Stopped at:** Completed KPL-01-09-PLAN.md
+**Last session:** 2026-08-31T04:26:16.632Z
+**Stopped at:** Completed KPL-01-10-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -116,3 +119,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P07 | 31min | 2 tasks | 15 files |
 | Phase KPL-01 P08 | 20min | 2 tasks | 13 files |
 | Phase KPL-01 P09 | 16min | 2 tasks | 15 files |
+| Phase KPL-01 P10 | 23min | 2 tasks | 14 files |
