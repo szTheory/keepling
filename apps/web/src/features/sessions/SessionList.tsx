@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 
 import {
   KeeplingApiError,
-  getSession,
   listSessions,
   logout,
   revokeSession,
@@ -91,29 +90,20 @@ function SessionList({
     setRecovery({ ...action, status: 'checking' })
     setMessage('')
 
-    if (action.action === 'logout') {
-      try {
-        await getSession()
-        setRecovery(null)
-        setMessage('This browser is still signed in.')
-      } catch (error) {
-        if (
-          error instanceof KeeplingApiError &&
-          error.problem.code === 'authentication_required'
-        ) {
-          setRecovery(null)
-          onLoggedOut()
-          return
-        }
-        setRecovery({ ...action, status: 'unknown' })
-      }
-      return
-    }
-
     try {
       const sessions = await listSessions()
       replaceSessions(sessions)
       const authoritative = sessions.find((session) => session.id === action.sessionId)
+
+      if (action.action === 'logout') {
+        setRecovery(null)
+        setMessage(
+          authoritative
+            ? 'The previous browser session remains active.'
+            : 'The previous browser session was logged out.',
+        )
+        return
+      }
 
       if (action.action === 'revoke') {
         setRecovery(null)
@@ -238,9 +228,17 @@ function SessionList({
             ? 'reauthenticate'
             : null
       if (authentication && onAuthenticationRequired) {
+        const action: SessionRecovery = {
+          action: 'rename',
+          intendedLabel: nextLabel,
+          previousLabel: session.label,
+          sessionId: session.id,
+          status: 'checking',
+        }
+        setRecovery(action)
         onAuthenticationRequired(
           { authentication, kind: 'action', mutationId: `session-label:${session.id}` },
-          async (nextCsrfToken) => saveLabel(session, nextCsrfToken),
+          async () => reconcile(action, false),
         )
         return
       }
@@ -292,9 +290,19 @@ function SessionList({
             ? 'reauthenticate'
             : null
       if (authentication && onAuthenticationRequired) {
+        const action: SessionRecovery = confirmation.kind === 'logout'
+          ? { action: 'logout', sessionId: session.id, status: 'checking' }
+          : {
+              action: 'revoke',
+              label: session.label,
+              sessionId: session.id,
+              status: 'checking',
+            }
+        setConfirmation(null)
+        setRecovery(action)
         onAuthenticationRequired(
           { authentication, kind: 'action', mutationId: `session-revoke:${session.id}` },
-          async (nextCsrfToken) => confirmAction(nextCsrfToken),
+          async () => reconcile(action, false),
         )
         return
       }

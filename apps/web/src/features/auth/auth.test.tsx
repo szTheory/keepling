@@ -438,38 +438,39 @@ describe('session administration', () => {
     expect(await screen.findByDisplayValue('Recovered browser')).toBeInTheDocument()
   })
 
-  it('reauthenticates a revoke and completes the original administration action', async () => {
+  it('reauthenticates a revoke and reconciles without replaying the administration action', async () => {
     const deleteTokens: string[] = []
     let deleteCount = 0
     const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
       const path = String(input)
       if (path === '/api/v1/sessions' && init?.method === undefined) {
         return jsonResponse({
-          sessions: [
-            {
-              client_kind: 'iphone',
-              coarse_activity: 'today',
-              created_at: '2026-08-29T16:00:00Z',
-              current: false,
-              id: 'session-other',
-              label: 'Phone',
-            },
-          ],
+          sessions:
+            deleteCount === 0
+              ? [
+                  {
+                    client_kind: 'iphone',
+                    coarse_activity: 'today',
+                    created_at: '2026-08-29T16:00:00Z',
+                    current: false,
+                    id: 'session-other',
+                    label: 'Phone',
+                  },
+                ]
+              : [],
         })
       }
       if (path.endsWith('/session-other') && init?.method === 'DELETE') {
         deleteTokens.push(new Headers(init.headers).get('x-csrf-token') ?? '')
         deleteCount += 1
-        return deleteCount === 1
-          ? jsonResponse(
-              problem(
-                'recent_authentication_required',
-                'Reauthenticate before revoking this session.',
-                401,
-              ),
-              401,
-            )
-          : jsonResponse({ status: 'session_revoked' })
+        return jsonResponse(
+          problem(
+            'recent_authentication_required',
+            'Reauthenticate before revoking this session.',
+            401,
+          ),
+          401,
+        )
       }
       throw new Error(`Unexpected request: ${path} ${String(init?.method)}`)
     })
@@ -494,12 +495,12 @@ describe('session administration', () => {
       (csrfToken: string) => Promise<void>,
     ]
     expect(intent).toMatchObject({ authentication: 'reauthenticate', kind: 'action' })
-    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
 
     await resume('recent-csrf')
 
     await waitFor(() => expect(screen.queryByText('Phone')).not.toBeInTheDocument())
-    expect(deleteTokens).toEqual(['old-csrf', 'recent-csrf'])
+    expect(deleteTokens).toEqual(['old-csrf'])
   })
 
   it('routes Settings/Sessions with editable labels and exact revocation choices', async () => {

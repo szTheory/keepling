@@ -194,6 +194,40 @@ describe('uncertain session administration', () => {
     expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'PATCH')).toHaveLength(1)
   })
 
+  it('reconciles an authentication-after-commit rename without replaying PATCH', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(sessionsResponse())
+      .mockResolvedValueOnce(jsonResponse(problem('recent_authentication_required', 401), 401))
+      .mockResolvedValueOnce(
+        sessionsResponse([currentSession, { ...otherSession, label: 'Travel phone' }]),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <SessionList
+        csrfToken="csrf"
+        hasDirtyWork={false}
+        onAuthenticationRequired={onAuthenticationRequired}
+        onLoggedOut={vi.fn()}
+      />,
+    )
+
+    const label = await screen.findByLabelText('Label for Phone')
+    await user.clear(label)
+    await user.type(label, 'Travel phone')
+    await user.click(screen.getByRole('button', { name: 'Save label for Phone' }))
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [, resume] = onAuthenticationRequired.mock.calls[0] as [unknown, () => Promise<void>]
+    await resume()
+
+    expect(await screen.findByText('Session label changed to Travel phone.')).toBeVisible()
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'PATCH')).toHaveLength(1)
+  })
+
   it('proves an after-commit revocation from absence without retrying DELETE', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
@@ -210,6 +244,35 @@ describe('uncertain session administration', () => {
 
     expect(await screen.findByText('Phone revoked.')).toBeVisible()
     expect(screen.queryByLabelText('Label for Phone')).not.toBeInTheDocument()
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'DELETE')).toHaveLength(1)
+  })
+
+  it('reconciles an authentication-after-commit revocation without replaying DELETE', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(sessionsResponse())
+      .mockResolvedValueOnce(jsonResponse(problem('recent_authentication_required', 401), 401))
+      .mockResolvedValueOnce(sessionsResponse([currentSession]))
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <SessionList
+        csrfToken="csrf"
+        hasDirtyWork={false}
+        onAuthenticationRequired={onAuthenticationRequired}
+        onLoggedOut={vi.fn()}
+      />,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Revoke Phone' }))
+    await user.click(screen.getByRole('button', { name: 'Revoke session' }))
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [, resume] = onAuthenticationRequired.mock.calls[0] as [unknown, () => Promise<void>]
+    await resume()
+
+    expect(await screen.findByText('Phone revoked.')).toBeVisible()
     expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'DELETE')).toHaveLength(1)
   })
 
@@ -231,22 +294,34 @@ describe('uncertain session administration', () => {
     expect(screen.getByLabelText('Label for Phone')).toBeVisible()
   })
 
-  it('proves current-session logout only when the authenticated probe says the session is gone', async () => {
+  it('reconciles authentication-after-commit logout against the retained session id', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(sessionsResponse())
-      .mockResolvedValueOnce(jsonResponse(problem(), 503))
       .mockResolvedValueOnce(jsonResponse(problem('authentication_required', 401), 401))
+      .mockResolvedValueOnce(sessionsResponse([{ ...otherSession, current: true }]))
     vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
     const onLoggedOut = vi.fn()
     const user = userEvent.setup()
 
-    render(<SessionList csrfToken="csrf" hasDirtyWork={false} onLoggedOut={onLoggedOut} />)
+    render(
+      <SessionList
+        csrfToken="csrf"
+        hasDirtyWork={false}
+        onAuthenticationRequired={onAuthenticationRequired}
+        onLoggedOut={onLoggedOut}
+      />,
+    )
 
     await user.click(await screen.findByRole('button', { name: 'Log out this browser' }))
     await user.click(screen.getByRole('button', { name: 'Log out' }))
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [, resume] = onAuthenticationRequired.mock.calls[0] as [unknown, () => Promise<void>]
+    await resume()
 
-    await waitFor(() => expect(onLoggedOut).toHaveBeenCalledOnce())
+    expect(await screen.findByText('The previous browser session was logged out.')).toBeVisible()
+    expect(onLoggedOut).not.toHaveBeenCalled()
     expect(fetchMock.mock.calls.filter(([input]) => String(input) === '/api/v1/logout')).toHaveLength(1)
   })
 
@@ -255,7 +330,7 @@ describe('uncertain session administration', () => {
       .fn<typeof fetch>()
       .mockResolvedValueOnce(sessionsResponse())
       .mockResolvedValueOnce(jsonResponse(problem(), 503))
-      .mockResolvedValueOnce(jsonResponse({ csrf_token: 'still-authenticated' }))
+      .mockResolvedValueOnce(sessionsResponse())
     vi.stubGlobal('fetch', fetchMock)
     const onLoggedOut = vi.fn()
     const user = userEvent.setup()
@@ -265,7 +340,7 @@ describe('uncertain session administration', () => {
     await user.click(await screen.findByRole('button', { name: 'Log out this browser' }))
     await user.click(screen.getByRole('button', { name: 'Log out' }))
 
-    expect(await screen.findByText('This browser is still signed in.')).toBeVisible()
+    expect(await screen.findByText('The previous browser session remains active.')).toBeVisible()
     expect(onLoggedOut).not.toHaveBeenCalled()
   })
 
@@ -275,7 +350,7 @@ describe('uncertain session administration', () => {
       .mockResolvedValueOnce(sessionsResponse())
       .mockResolvedValueOnce(jsonResponse(problem(), 503))
       .mockRejectedValueOnce(new TypeError('session probe unavailable'))
-      .mockResolvedValueOnce(jsonResponse(problem('authentication_required', 401), 401))
+      .mockResolvedValueOnce(sessionsResponse([otherSession]))
     vi.stubGlobal('fetch', fetchMock)
     const onLoggedOut = vi.fn()
     const user = userEvent.setup()
@@ -290,7 +365,8 @@ describe('uncertain session administration', () => {
     ).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Check logout again' }))
 
-    await waitFor(() => expect(onLoggedOut).toHaveBeenCalledOnce())
+    expect(await screen.findByText('The previous browser session was logged out.')).toBeVisible()
+    expect(onLoggedOut).not.toHaveBeenCalled()
     expect(fetchMock.mock.calls.filter(([input]) => String(input) === '/api/v1/logout')).toHaveLength(1)
   })
 })
