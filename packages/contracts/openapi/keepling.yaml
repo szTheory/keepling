@@ -88,15 +88,21 @@ paths:
           schema:
             $ref: '#/components/schemas/MutationIdentity'
       responses:
-        '200':
-          description: Stored accepted acknowledgement
+        '201':
+          description: Original stored accepted acknowledgement
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommandAcknowledgement'
         '401':
           $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
         '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
           $ref: '#/components/responses/ProblemResponse'
 components:
   responses:

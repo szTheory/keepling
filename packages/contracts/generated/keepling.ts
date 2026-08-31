@@ -228,8 +228,8 @@ export interface operations {
         };
         readonly requestBody?: never;
         readonly responses: {
-            /** @description Stored accepted acknowledgement */
-            readonly 200: {
+            /** @description Original stored accepted acknowledgement */
+            readonly 201: {
                 headers: {
                     readonly [name: string]: unknown;
                 };
@@ -239,6 +239,9 @@ export interface operations {
             };
             readonly 401: components["responses"]["ProblemResponse"];
             readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
         };
     };
     readonly getSession: {

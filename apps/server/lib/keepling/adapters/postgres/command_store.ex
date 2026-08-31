@@ -138,7 +138,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
             context.client_kind,
             activity.from_revision,
             activity.to_revision,
-            Jason.encode!(activity.changed_fields),
+            activity.changed_fields,
             activity.accepted_at
           ]
         )
@@ -177,7 +177,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       SET response_status = $3, response = $4::jsonb, terminal = TRUE, updated_at = NOW()
       WHERE account_id = $1 AND mutation_id = $2
       """,
-      [account_id, dump_uuid(mutation_id), result.status, Jason.encode!(result.body)]
+      [account_id, dump_uuid(mutation_id), result.status, result.body]
     )
   end
 
@@ -255,9 +255,8 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     }
   end
 
-  defp fingerprint(command) do
-    command
-    |> Map.take([:mutation_id, :task_id, :title, :type, :version])
+  defp fingerprint(%{type: :capture_task} = command) do
+    {:capture_task, command.version, command.task_id, String.trim(command.title)}
     |> :erlang.term_to_binary([:deterministic])
     |> then(&:crypto.hash(:sha256, &1))
   end

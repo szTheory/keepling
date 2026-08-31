@@ -20,12 +20,18 @@ type CaptureTaskSubmission = {
   title: string
 }
 
+type CaptureWarning = {
+  code: string
+  message: string
+}
+
 type CaptureAcknowledgement = {
   mutationId: string
   outcome: 'accepted' | 'already_satisfied'
   revision: number
   snapshot: BrowserTask
   taskId: string
+  warnings: readonly CaptureWarning[]
 }
 
 class KeeplingApiError extends Error {
@@ -72,6 +78,7 @@ const mapAcknowledgement = (
   revision: acknowledgement.revision,
   snapshot: mapTask(acknowledgement.snapshot),
   taskId: acknowledgement.task_id,
+  warnings: acknowledgement.warnings.map((warning) => ({ ...warning })),
 })
 
 const getInbox = async (): Promise<readonly BrowserTask[]> => {
@@ -131,5 +138,6 @@ export {
   type BrowserTask,
   type CaptureAcknowledgement,
   type CaptureTaskSubmission,
+  type CaptureWarning,
   type Problem,
 }
