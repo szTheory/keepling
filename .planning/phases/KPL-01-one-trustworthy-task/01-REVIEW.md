@@ -1,8 +1,8 @@
 ---
 phase: KPL-01-one-trustworthy-task
-reviewed: 2026-08-31T16:24:52Z
+reviewed: 2026-08-31T19:13:04Z
 depth: standard
-files_reviewed: 152
+files_reviewed: 156
 files_reviewed_list:
   - .gitignore
   - apps/server/.formatter.exs
@@ -17,6 +17,7 @@ files_reviewed_list:
   - apps/server/lib/keepling/accounts.ex
   - apps/server/lib/keepling/accounts/account.ex
   - apps/server/lib/keepling/accounts/rate_limit.ex
+  - apps/server/lib/keepling/accounts/security_audit.ex
   - apps/server/lib/keepling/accounts/session.ex
   - apps/server/lib/keepling/adapters/postgres/command_store.ex
   - apps/server/lib/keepling/adapters/postgres/task_views.ex
@@ -29,6 +30,7 @@ files_reviewed_list:
   - apps/server/lib/keepling/domain/organization.ex
   - apps/server/lib/keepling/domain/task.ex
   - apps/server/lib/keepling/domain/task_dates.ex
+  - apps/server/lib/keepling/operator_base_url.ex
   - apps/server/lib/keepling/repo.ex
   - apps/server/lib/keepling_web.ex
   - apps/server/lib/keepling_web/auth.ex
@@ -57,6 +59,7 @@ files_reviewed_list:
   - apps/server/priv/repo/migrations/20260830000700_add_trash_state.exs
   - apps/server/priv/repo/migrations/20260830000800_add_persisted_conflicts.exs
   - apps/server/priv/repo/migrations/20260830000900_add_undo_handles.exs
+  - apps/server/priv/repo/migrations/20260830000950_expand_today_move_receipts.exs
   - apps/server/priv/repo/seeds.exs
   - apps/server/test/architecture_test.exs
   - apps/server/test/keepling/accounts/setup_timezone_test.exs
@@ -71,6 +74,7 @@ files_reviewed_list:
   - apps/server/test/keepling/domain/long_sequence_test.exs
   - apps/server/test/keepling/domain/organization_test.exs
   - apps/server/test/keepling/domain/task_dates_test.exs
+  - apps/server/test/keepling/operator_base_url_test.exs
   - apps/server/test/keepling/security_audit_test.exs
   - apps/server/test/keepling/telemetry_redaction_test.exs
   - apps/server/test/keepling_web/auth_test.exs
@@ -157,125 +161,106 @@ files_reviewed_list:
   - tooling/runtime-versions.env
   - tooling/test-phase-1.sh
 findings:
-  critical: 7
-  warning: 1
+  critical: 3
+  warning: 2
   info: 0
-  total: 8
+  total: 5
 status: issues_found
 ---
 
 # Phase KPL-01: Code Review Report
 
-**Reviewed:** 2026-08-31T16:24:52Z  
-**Depth:** standard  
-**Files Reviewed:** 152  
+**Reviewed:** 2026-08-31T19:13:04Z
+**Depth:** standard
+**Files Reviewed:** 156
 **Status:** issues_found
 
 ## Summary
 
-The phase implements a substantial task, recovery, authentication, and organization surface, but the reviewed code contains seven ship-blocking correctness/security defects and one robustness warning. The most serious failures are concentrated at trust boundaries promised by the phase: several mutations cannot be retried with their original identity after an uncertain response, task detail routes cannot load the tasks that link to them, undo cannot survive reauthentication, completed cursors remain valid across a timezone change that changes their rendered grouping, reauthentication is unthrottled, and the recovery operator can disclose its bearer token over cleartext remote HTTP.
+The iteration-2 fixes do repair the six previously reported paths: an expired exact task mutation can now continue through login, routed task lifecycle actions receive the authentication callback, organization assignment retains its exact prepared command, Today movement has an account-scoped receipt lookup, reauthentication audit and session rotation are atomic, and the shared recovery strip no longer asserts that an interrupted request was not submitted.
+
+The full anchored phase diff still has three release-blocking correctness/recovery defects and two robustness defects. Most seriously, a normal stale task-date command reaches an unimplemented conflict serializer and crashes instead of returning its promised stable 409 receipt. Several authenticated screens still cannot recover from a genuinely expired session, and quick capture discards mutation identity when a dispatched request receives a parsed 5xx response. Green tests do not cover these real call paths.
 
 ## Narrative Findings (AI reviewer)
 
-### Critical Issues
+## Critical Issues
 
-#### CR-01: Task detail links fail for every task outside the Inbox
+### CR-01: Stale date and planning commands crash while trying to persist an unsupported conflict
 
-**Classification:** BLOCKER  
-**Files:**
+**Classification:** BLOCKER
 
-- `/Users/jon/projects/keepling/apps/web/src/features/tasks/TaskEditor.tsx:103-111`
-- `/Users/jon/projects/keepling/apps/web/src/features/organizations/OrganizationFields.tsx:61-69`
-- `/Users/jon/projects/keepling/apps/web/src/features/lists/TaskList.tsx:317-324`
-- `/Users/jon/projects/keepling/apps/server/lib/keepling/adapters/postgres/command_store.ex:57-66`
+**File:** `/Users/jon/projects/keepling/apps/server/lib/keepling/domain/task_dates.ex:106-134`
 
-**Issue:** Every Today, Upcoming, and Completed row links to `/tasks/:id`, but both task-detail components load the task by calling `getInbox()`. The Inbox query explicitly excludes clarified and completed tasks. Consequently, a valid row from Today, Upcoming, or Completed opens the editor and deterministically lands in its load-error state; organization assignment has the same failure. This is not an intermittent projection issue—the chosen endpoint cannot return those tasks.
+**Also affected:** `/Users/jon/projects/keepling/apps/server/lib/keepling/adapters/postgres/command_store.ex:652-678`, `/Users/jon/projects/keepling/apps/server/lib/keepling/adapters/postgres/command_store.ex:719-753`
 
-**Fix:** Add an account-scoped authoritative `GET /api/v1/tasks/:task_id` endpoint that returns the editable task snapshot independent of list membership (with an explicit policy for trashed tasks), expose it in the contract/client, and use it in both components. Add browser tests that open clarified and completed rows, not only Inbox rows.
+**Issue:** `TaskDates.edit/2`, `plan_for_today/3`, and `unplan/2` legitimately return `{:error, {:edit_conflict, fields}}` when a touched date changed since the caller's base. `CommandStore.decide_existing/6` classifies every `:edit_conflict` as persistable and calls `conflict_values/2`, but that function has clauses only for detail edits, completion/reopen, and trash/restore. An `:edit_task_dates`, `:plan_for_today`, or `:unplan_task` overlap therefore raises `FunctionClauseError` inside the transaction. The exception is not one of the rescued database exceptions, so the request becomes a 500 and its receipt rolls back. Exact replay crashes again instead of returning the contract's terminal 409, making a common multi-device planning conflict unrecoverable.
 
-#### CR-02: Quick Capture never resends an exact submission after a before-acceptance disconnect
+**Fix:** Restrict persisted conflict handling by both conflict kind and command type, and return a stable semantic rejection for date/planning conflicts unless the persisted-conflict schema, API DTO, and resolver are deliberately expanded. For example:
 
-**Classification:** BLOCKER  
-**File:** `/Users/jon/projects/keepling/apps/web/src/features/capture/QuickCapture.tsx:114-138`  
-**Issue:** When delivery has an unknown outcome, “Check again” performs a mutation lookup. If the server returns `mutation_not_found`, the catch block merely restores the same `unknown` state. Every subsequent check repeats the lookup forever; the preserved capture/plan request is never delivered again. A disconnect before server acceptance therefore strands the capture even though the exact request bytes and mutation ID are still present. The reusable exact-submission implementation already handles this case by transitioning from a not-found lookup to an exact send (`apps/web/src/commands/submission.ts:113-116`).
+```elixir
+defp persisted_conflict_reason?(%{type: type}, {:edit_conflict, fields})
+     when type in [:edit_task, :clarify_task] and is_list(fields),
+     do: true
 
-**Fix:** On `mutation_not_found`, call `deliver(current, activeCsrfToken)` with the preserved `Submission`, or migrate Quick Capture to the existing exact-submission state machine. Add a test that simulates network failure before acceptance, lookup-not-found, then successful exact replay with the original task and mutation IDs.
+defp persisted_conflict_reason?(%{type: type}, {:edit_conflict, fields})
+     when type in [:edit_task_dates, :plan_for_today, :unplan_task] and is_list(fields),
+     do: false
+```
 
-#### CR-03: Undo cannot continue through reauthentication and loses its recovery identity
+Pass `command` into the predicate, persist the resulting 409 command receipt, and add adapter/controller tests for overlapping `edit-task-dates`, `plan-for-today`, and `unplan-task` requests, including exact replay and mutation lookup.
 
-**Classification:** BLOCKER  
-**Files:**
+### CR-02: Genuine session expiry still leaves list, Trash, and session administration in recovery dead ends
 
-- `/Users/jon/projects/keepling/apps/web/src/features/recovery/RecoveryStrip.tsx:62-67`
-- `/Users/jon/projects/keepling/apps/web/src/features/recovery/RecoveryStrip.tsx:106-109`
-- `/Users/jon/projects/keepling/apps/web/src/app/routes.tsx:109-120`
+**Classification:** BLOCKER
 
-**Issue:** On an `authentication_required` response, the undo strip renders a plain link to `/login` rather than registering a continuation with `AuthProvider`. While the client still believes the session is authenticated, that route displays “Already signed in,” so the user cannot reauthenticate. If the user reloads to refresh auth state, the strip unmounts and its in-memory undo handle/mutation ID is lost. The promised exact undo operation therefore cannot be resumed after session expiry.
+**File:** `/Users/jon/projects/keepling/apps/web/src/features/lists/TaskList.tsx:143-181`
 
-**Fix:** Give `RecoveryStrip` the same `onAuthenticationRequired(interruption, continuation)` integration used by other mutation components. Preserve the prepared undo submission while the reauthentication dialog rotates credentials, then retry or reconcile that exact mutation with the new CSRF token. Cover the expired-session undo path in an end-to-end test.
+**Also affected:** `/Users/jon/projects/keepling/apps/web/src/features/lists/TaskList.tsx:502-512`, `/Users/jon/projects/keepling/apps/web/src/app/routes.tsx:117-135`, `/Users/jon/projects/keepling/apps/web/src/features/lists/TrashList.tsx:74-124`, `/Users/jon/projects/keepling/apps/web/src/features/lists/TrashList.tsx:202-211`, `/Users/jon/projects/keepling/apps/web/src/features/sessions/SessionList.tsx:98-123`, `/Users/jon/projects/keepling/apps/web/src/app/AppShell.tsx:158-163`
 
-#### CR-04: Timezone changes leave Completed cursors valid after their grouping semantics change
+**Issue:** The iteration-2 callback repair reaches task lifecycle mutations, but the initial/read retry paths never invoke it. `TaskList` recognizes `authentication_required`, then its “Sign in again” button simply repeats the same GET with the same expired cookie. `AuthProvider` still says authenticated, so navigating to `/login` renders “Already signed in.” `/trash` is not wrapped with `withInterruption`; restore maps a 401 to `authentication` but “Sign in and continue” directly resends with the same expired session. `SessionList` similarly turns recent-auth failure into text and closes its dialog without opening reauthentication. These are genuine expired/revoked-session paths, not merely uncertain fault responses: the offered actions repeat 401 forever, and recovery requires an undocumented full reload that discards in-memory intent.
 
-**Classification:** BLOCKER  
-**Files:**
+**Fix:** Centralize authentication failure handling at the authenticated API/AuthProvider boundary, or pass the same interruption callback through every authenticated surface. An expired session must clear stale auth and present login; `recent_authentication_required` must open the reauthentication overlay. Wrap Trash and Sessions in the routed interruption boundary, convert restore to the shared exact-submission state machine, and have read retries transition auth before retrying. Add real-stack tests that revoke/expire the current session on each screen and complete the visible login/reauth flow through the final read or mutation acknowledgement.
 
-- `/Users/jon/projects/keepling/apps/server/lib/keepling/accounts.ex:896-939`
-- `/Users/jon/projects/keepling/apps/server/lib/keepling/adapters/postgres/task_views.ex:205-226`
-- `/Users/jon/projects/keepling/apps/server/lib/keepling/adapters/postgres/task_views.ex:439-453`
-- `/Users/jon/projects/keepling/apps/web/src/features/lists/TaskList.tsx:155-167`
+### CR-03: Quick capture discards its accepted mutation identity on a dispatched 5xx and can create duplicate tasks
 
-**Issue:** Changing the account timezone bumps Today, Upcoming, and Activity revisions, but not `completed_view_revision`. Completed items derive `completed_on` and their Today/Earlier section from the account timezone. An old Completed cursor is therefore accepted after a timezone change even though the representation semantics have changed, and the browser appends the newly interpreted page to already rendered items from the old timezone. The result can be a single Completed list with internally inconsistent dates and sections.
+**Classification:** BLOCKER
 
-**Fix:** Select, increment, and return `completed_view_revision` in the timezone-change transaction alongside the other affected revisions. Update the setting result/contract if it exposes revision state, and add a test proving that a Completed cursor issued before a timezone change is rejected as stale.
+**File:** `/Users/jon/projects/keepling/apps/web/src/features/capture/QuickCapture.tsx:83-113`
 
-#### CR-05: The recovery operator permits bearer-token links over remote cleartext HTTP
+**Also affected:** `/Users/jon/projects/keepling/apps/web/src/features/capture/QuickCapture.tsx:147-162`, `/Users/jon/projects/keepling/apps/web/src/commands/submission.ts:147-174`
 
-**Classification:** BLOCKER  
-**Files:**
+**Issue:** After dispatch, `QuickCapture.deliver` treats every parsed `KeeplingApiError` other than authentication as terminal. For the capture stage, line 108 clears `submission`, unlocks the draft, and the next click creates new task and mutation IDs. That includes all 5xx responses, even though a reverse proxy or fault boundary can produce a 5xx after the server accepted and receipted the original request. The shared submission classifier correctly treats status `>= 500` as unknown, but QuickCapture bypasses it. A user following the enabled retry path can therefore create a second accepted task while the first accepted task remains in PostgreSQL, violating the phase's no-silent-duplication trust requirement.
 
-- `/Users/jon/projects/keepling/apps/server/lib/mix/tasks/keepling.recover.ex:24-47`
-- `/Users/jon/projects/keepling/apps/server/lib/mix/tasks/keepling.setup_token.ex:47-58`
+**Fix:** Run both capture and optional plan stages through `createTaskSubmission` with immutable prepared requests, or at minimum classify every post-dispatch 5xx as unknown, retain the original request and identity, and call `getMutation` before any resend. Add a test where the server commits capture but the client receives a parsed 5xx response (not only a thrown network error), then assert lookup settles the original mutation and no second task ID is generated.
 
-**Issue:** `mix keepling.recover` accepts any absolute `http://` host and prints a password-reset bearer token into that URL. Running the documented recovery command with a non-loopback HTTP base URL exposes the token to network interception and gives the interceptor control of the account password and sessions. The setup-token command correctly limits cleartext HTTP to loopback, so the two equally sensitive operator paths have inconsistent security enforcement.
+## Warnings
 
-**Fix:** Share one base-URL validator between both tasks: require HTTPS for non-loopback hosts, permit HTTP only for loopback development addresses, reject URI userinfo, and update the error text accordingly. Add unit coverage for remote HTTP rejection and localhost/HTTPS acceptance.
+### WR-01: Conflict resolution labels resubmission as a receipt check and bypasses the shared exact-recovery state machine
 
-#### CR-06: Reauthentication has no brute-force or resource-exhaustion limit
+**Classification:** WARNING
 
-**Classification:** BLOCKER  
-**Files:**
+**File:** `/Users/jon/projects/keepling/apps/web/src/features/tasks/ConflictResolver.tsx:107-143`
 
-- `/Users/jon/projects/keepling/apps/server/lib/keepling_web/controllers/auth_controller.ex:111-125`
-- `/Users/jon/projects/keepling/apps/server/lib/keepling/accounts/rate_limit.ex:17-35`
+**Also affected:** `/Users/jon/projects/keepling/apps/web/src/features/tasks/ConflictResolver.tsx:224-229`
 
-**Issue:** Setup, login, and recovery are protected by account/source rate limiting, but the reauthentication endpoint performs an Argon2 password verification and session rotation without any admission check. A compromised but not recently authenticated session can make unlimited password guesses against the recent-authentication gate; independently, repeated Argon2 calls provide a straightforward authenticated CPU-exhaustion path.
+**Issue:** An authentication error is recorded as `kind: 'not-submitted'` even though it was caught after `resolveTaskConflict` dispatched, and the resume callback sends immediately. A transport-unknown state displays “Checking whether your resolution was saved…” but its “Check again” action also calls `deliver`, which sends instead of looking up the receipt. Server idempotency limits duplicate writes, but the UI's state and wording are false and recovery does not verify the stored acknowledgement's conflict identity before deciding to replay.
 
-**Fix:** Add a `:reauthentication` policy to `RateLimit`, admit requests by account and coarsened source before password verification, and record/emit the same privacy-safe decisions as other authentication flows. Return a generic rate-limited authentication response and add tests for both account and source buckets.
+**Fix:** Prepare the resolve command once and use `createTaskSubmission` (with the additional `resolvedConflictId` identity match). Mark post-dispatch authentication as `submitted-unknown`, perform `getMutation` before resend, and add before-acceptance, after-commit, authentication-after-commit, and changed-identity tests.
 
-#### CR-07: Organization management discards mutation identity on uncertain delivery
+### WR-02: Moving the last visible Today row can be accepted against a hidden row while the UI shows no movement and retains a stale cursor
 
-**Classification:** BLOCKER  
-**File:** `/Users/jon/projects/keepling/apps/web/src/features/organizations/OrganizationFields.tsx:293-404`  
-**Issue:** Create, rename, archive, and unarchive each construct a fresh mutation ID inside the click handler and discard the request on every error. A response lost after server acceptance is shown as a generic failure; retrying creates a different organization for Create or sends a different mutation against stale revision state for the other operations. This bypasses the server’s mutation-receipt/idempotency contract and permits accepted organization changes to be silently misreported or duplicated.
+**Classification:** WARNING
 
-**Fix:** Prepare and retain an immutable submission for each organization action before network delivery. On a transport-unknown result, expose reconciliation and retry the exact mutation/request bytes until a terminal acknowledgement or rejection is known; only then clear it. Reuse the generic exact-submission state machine and add accepted-but-response-lost tests for all four operations.
+**File:** `/Users/jon/projects/keepling/apps/web/src/features/lists/TaskList.tsx:115-125`
 
-### Warnings
+**Also affected:** `/Users/jon/projects/keepling/apps/web/src/features/lists/TaskList.tsx:222-239`, `/Users/jon/projects/keepling/apps/web/src/features/lists/TaskList.tsx:390-410`, `/Users/jon/projects/keepling/apps/server/lib/keepling/adapters/postgres/task_views.ex:601-627`
 
-#### WR-01: Security audit persistence failures are silently treated as success
+**Issue:** Today pages load only a slice, but every row receives Earlier/Later controls. The server reorders the complete section (up to 500 tasks), while the client `swap` refuses to move past the loaded array boundary. If a 20-item page has a hidden item 21, moving item 20 later is accepted and swaps it with the hidden row on the server; settlement advances `orderRevision` but leaves visible items and `nextCursor` unchanged. The user sees “Today order updated” with no visible change, and the next load-more request uses a cursor bound to the old order revision and fails stale.
 
-**Classification:** WARNING  
-**Files:**
-
-- `/Users/jon/projects/keepling/apps/server/lib/keepling/accounts.ex:848-857`
-- `/Users/jon/projects/keepling/apps/server/lib/keepling/accounts/rate_limit.ex:109-125`
-
-**Issue:** Both general security-audit writes and rate-limit audit writes swallow database errors and exceptions without surfacing any signal. Login, reauthentication, session revocation, recovery issuance, and throttling can therefore succeed while their supposedly inspectable security trail is silently absent. That weakens incident reconstruction and violates the project’s requirement that human and agent actions remain inspectable.
-
-**Fix:** Make audit insertion part of the same transaction for security state changes whose success requires an audit record. Where an availability-driven fail-open policy is intentional (for example, recording a rejected login), emit a privacy-safe structured error/metric and expose degraded audit health so operators can detect the gap; add failure-path tests for both policies.
+**Fix:** Disable boundary movement until the adjacent row is loaded, or refresh the authoritative first page after acknowledgement and replace both rows and cursor. Add a test with more than one Today page that moves the last visible row across the page boundary and then loads the next page without a stale-cursor error.
 
 ---
 
-_Reviewed: 2026-08-31T16:24:52Z_  
-_Reviewer: the agent (gsd-code-reviewer)_  
+_Reviewed: 2026-08-31T19:13:04Z_
+_Reviewer: the agent (gsd-code-reviewer)_
 _Depth: standard_
