@@ -4,6 +4,7 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
   import Keepling.ConcurrencyCase
 
   alias Ecto.Adapters.SQL
+  alias Keepling.Accounts
   alias Keepling.Adapters.Postgres.TaskViews, as: PostgresTaskViews
   alias Keepling.Application.TaskViews
   alias Keepling.Repo
@@ -118,6 +119,37 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
              {newer_id, "earlier", "2026-08-30"},
              {older_id, "earlier", "2026-08-30"}
            ]
+  end
+
+  test "Completed cursor becomes stale when account timezone changes", %{account_id: account_id} do
+    insert_task(
+      account_id,
+      "12345678-1234-4234-8234-123456789001",
+      "First completion",
+      @accepted_at,
+      completed_at: ~U[2026-08-31 03:59:00.000000Z]
+    )
+
+    insert_task(
+      account_id,
+      "12345678-1234-4234-8234-123456789002",
+      "Second completion",
+      @accepted_at,
+      completed_at: ~U[2026-08-31 04:01:00.000000Z]
+    )
+
+    assert {:ok, %{next_cursor: cursor}} =
+             list_view(:completed, context(account_id), %{limit: 1})
+
+    assert is_binary(cursor)
+
+    assert {:ok, %{completed_view_revision: 2}} =
+             with_connection(fn _backend_pid ->
+               Accounts.change_timezone("America/Los_Angeles", accepted_at: @accepted_at)
+             end)
+
+    assert {:error, :stale_cursor} =
+             list_view(:completed, context(account_id), %{cursor: cursor, limit: 1})
   end
 
   test "concurrent Today moves have one revision winner and preserve unique positions", %{

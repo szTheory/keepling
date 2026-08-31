@@ -898,18 +898,18 @@ defmodule Keepling.Accounts do
            repo,
            """
            SELECT id, timezone, today_view_revision, upcoming_view_revision,
-                  activity_view_revision
+                  completed_view_revision, activity_view_revision
            FROM accounts
            WHERE singleton_key = TRUE
            FOR UPDATE
            """,
            []
          ).rows do
-      [[_account_id, ^timezone, today, upcoming, activity]] ->
-        {:ok, setting_result(timezone, today, upcoming, activity)}
+      [[_account_id, ^timezone, today, upcoming, completed, activity]] ->
+        {:ok, setting_result(timezone, today, upcoming, completed, activity)}
 
-      [[account_id, _previous_timezone, _today, _upcoming, _activity]] ->
-        %{rows: [[today, upcoming, activity]]} =
+      [[account_id, _previous_timezone, _today, _upcoming, _completed, _activity]] ->
+        %{rows: [[today, upcoming, completed, activity]]} =
           SQL.query!(
             repo,
             """
@@ -917,10 +917,12 @@ defmodule Keepling.Accounts do
             SET timezone = $2,
                 today_view_revision = today_view_revision + 1,
                 upcoming_view_revision = upcoming_view_revision + 1,
+                completed_view_revision = completed_view_revision + 1,
                 activity_view_revision = activity_view_revision + 1,
                 updated_at = $3
             WHERE id = $1
-            RETURNING today_view_revision, upcoming_view_revision, activity_view_revision
+            RETURNING today_view_revision, upcoming_view_revision,
+                      completed_view_revision, activity_view_revision
             """,
             [account_id, timezone, accepted_at]
           )
@@ -936,16 +938,17 @@ defmodule Keepling.Accounts do
           [accepted_at]
         )
 
-        {:ok, setting_result(timezone, today, upcoming, activity)}
+        {:ok, setting_result(timezone, today, upcoming, completed, activity)}
 
       [] ->
         {:error, :account_unavailable}
     end
   end
 
-  defp setting_result(timezone, today, upcoming, activity) do
+  defp setting_result(timezone, today, upcoming, completed, activity) do
     %{
       activity_view_revision: activity,
+      completed_view_revision: completed,
       timezone: timezone,
       today_view_revision: today,
       upcoming_view_revision: upcoming

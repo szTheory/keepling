@@ -345,6 +345,7 @@ defmodule Keepling.Accounts.TimezoneTest do
     assert {:ok,
             %{
               activity_view_revision: 2,
+              completed_view_revision: 2,
               timezone: "America/Los_Angeles",
               today_view_revision: 2,
               upcoming_view_revision: 2
@@ -402,6 +403,7 @@ defmodule Keepling.Accounts.TimezoneTest do
     assert state.today_view_revision == 3
     assert state.upcoming_view_revision == 3
     assert state.activity_view_revision == 3
+    assert state.completed_view_revision == 3
     assert %{rows: [[2]]} = query!("SELECT count(*) FROM account_security_audits")
   end
 
@@ -459,16 +461,17 @@ defmodule Keepling.Accounts.TimezoneTest do
   end
 
   defp account_setting_state do
-    %{rows: [[id, timezone, today, upcoming, activity]]} =
+    %{rows: [[id, timezone, today, upcoming, completed, activity]]} =
       query!("""
       SELECT id, timezone, today_view_revision, upcoming_view_revision,
-             activity_view_revision
+             completed_view_revision, activity_view_revision
       FROM accounts
       WHERE singleton_key = TRUE
       """)
 
     %{
       activity_view_revision: activity,
+      completed_view_revision: completed,
       id: id,
       timezone: timezone,
       today_view_revision: today,
