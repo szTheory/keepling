@@ -126,6 +126,51 @@ describe('closed browser authentication', () => {
 })
 
 describe('reauthentication interruption', () => {
+  it('makes retained content inert, contains keyboard focus, and restores prior focus', async () => {
+    const interruption = {
+      authentication: 'sign_in',
+      kind: 'read',
+      mutationId: 'read:retained-route',
+    } satisfies InterruptedIntent
+    const { rerender } = render(
+      <AppRoutes
+        authenticated
+        authenticatedContent={<button type="button">Background action</button>}
+        csrfToken="csrf"
+      />,
+    )
+    const background = screen.getByRole('button', { name: 'Background action' })
+    background.focus()
+
+    rerender(
+      <AppRoutes
+        authenticated
+        authenticatedContent={<button type="button">Background action</button>}
+        csrfToken="csrf"
+        interruption={interruption}
+      />,
+    )
+
+    const dialog = screen.getByRole('dialog', { name: 'Authentication recovery' })
+    expect(background).toHaveAttribute('inert')
+    expect(background).toHaveAttribute('aria-hidden', 'true')
+    expect(dialog).toContainElement(document.activeElement as HTMLElement)
+
+    await userEvent.setup().tab({ shift: true })
+    expect(dialog).toContainElement(document.activeElement as HTMLElement)
+
+    rerender(
+      <AppRoutes
+        authenticated
+        authenticatedContent={<button type="button">Background action</button>}
+        csrfToken="csrf"
+      />,
+    )
+    expect(background).not.toHaveAttribute('inert')
+    expect(background).not.toHaveAttribute('aria-hidden')
+    expect(background).toHaveFocus()
+  })
+
   it('drains continuations registered and replaced while a drain is active', async () => {
     vi.stubGlobal(
       'fetch',

@@ -67,19 +67,62 @@ function InterruptionBoundary({
   useLayoutEffect(() => {
     const root = document.getElementById('root')
     if (!root || !interrupted) return
+    const overlayElement = root.querySelector<HTMLElement>('[data-auth-recovery-overlay="true"]')
+    if (!overlayElement) return
 
     const retainedElements = [...root.children].filter(
       (element) => !(element instanceof HTMLElement && element.dataset.authRecoveryOverlay === 'true'),
     )
-    const previousValues = retainedElements.map((element) => element.getAttribute('aria-hidden'))
-    retainedElements.forEach((element) => element.setAttribute('aria-hidden', 'true'))
+    const previousValues = retainedElements.map((element) => ({
+      ariaHidden: element.getAttribute('aria-hidden'),
+      inert: element.getAttribute('inert'),
+    }))
+    const previousFocus = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null
+    retainedElements.forEach((element) => {
+      element.setAttribute('aria-hidden', 'true')
+      element.setAttribute('inert', '')
+    })
+
+    const focusableSelector =
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+    const focusRecoverySurface = () => {
+      const first = overlayElement.querySelector<HTMLElement>(focusableSelector)
+      ;(first ?? overlayElement).focus()
+    }
+    focusRecoverySurface()
+
+    const containFocus = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab') return
+      const focusable = [...overlayElement.querySelectorAll<HTMLElement>(focusableSelector)]
+      if (focusable.length === 0) {
+        event.preventDefault()
+        overlayElement.focus()
+        return
+      }
+      const first = focusable[0]!
+      const last = focusable[focusable.length - 1]!
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    overlayElement.addEventListener('keydown', containFocus)
 
     return () => {
+      overlayElement.removeEventListener('keydown', containFocus)
       retainedElements.forEach((element, index) => {
-        const previousValue = previousValues[index]
-        if (previousValue === null) element.removeAttribute('aria-hidden')
-        else element.setAttribute('aria-hidden', previousValue)
+        const previousValue = previousValues[index]!
+        if (previousValue.ariaHidden === null) element.removeAttribute('aria-hidden')
+        else element.setAttribute('aria-hidden', previousValue.ariaHidden)
+        if (previousValue.inert === null) element.removeAttribute('inert')
+        else element.setAttribute('inert', previousValue.inert)
       })
+      if (previousFocus?.isConnected) previousFocus.focus()
     }
   }, [interrupted])
 
@@ -140,8 +183,12 @@ function AppRoutes({
         interrupted={Boolean(interruption && csrfToken)}
         overlay={interruption && csrfToken ? (
           <div
+            aria-label="Authentication recovery"
+            aria-modal="true"
             className="fixed inset-0 z-50 overflow-y-auto bg-background/95 px-4 py-16"
             data-auth-recovery-overlay="true"
+            role="dialog"
+            tabIndex={-1}
           >
             <div className="mx-auto max-w-2xl">
               {continuationError ? (
