@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 3
+open_count: 5
 waived_count: 0
 fixed_count: 0
-total_count: 3
-last_updated: 2026-08-31T01:19:02.349Z
+total_count: 5
+last_updated: 2026-08-31T01:31:44.083Z
 ---
 
 # Broken Windows Ledger
@@ -18,6 +18,8 @@ last_updated: 2026-08-31T01:19:02.349Z
 | 1 | 01 | deviation | apps/web/playwright.config.ts |  | Playwright 1.62 required a harness contract so pre-feature --list discovery exits successfully | open |  | 2026-08-31T01:19:02.196Z |  |
 | 2 | 01 | deviation | package.json |  | openapi-typescript 7.13.0 required a root-only TypeScript 5.9.3 peer alongside the web TypeScript 6 toolchain | open |  | 2026-08-31T01:19:02.274Z |  |
 | 3 | 01 | deviation | apps/web/e2e/support/stack.ts |  | Disposable trust-auth PostgreSQL now rejects every non-loopback bind | open |  | 2026-08-31T01:19:02.349Z |  |
+| 4 | KPL-01 | deviation | apps/server/priv/repo/migrations/.formatter.exs |  | Retained the Phoenix generator migration formatter marker so the planned Mix test alias can run before migrations exist | open |  | 2026-08-31T01:31:44.014Z |  |
+| 5 | KPL-01 | deviation | apps/server/test/architecture_test.exs |  | Corrected architecture-test formatting found by the plan-level Mix formatter gate | open |  | 2026-08-31T01:31:44.083Z |  |
 
 ````json
 [
@@ -55,6 +57,30 @@ last_updated: 2026-08-31T01:19:02.349Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-31T01:19:02.349Z",
+    "resolved_at": null
+  },
+  {
+    "id": 4,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/server/priv/repo/migrations/.formatter.exs",
+    "line": null,
+    "description": "Retained the Phoenix generator migration formatter marker so the planned Mix test alias can run before migrations exist",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T01:31:44.014Z",
+    "resolved_at": null
+  },
+  {
+    "id": 5,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/server/test/architecture_test.exs",
+    "line": null,
+    "description": "Corrected architecture-test formatting found by the plan-level Mix formatter gate",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T01:31:44.083Z",
     "resolved_at": null
   }
 ]

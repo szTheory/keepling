@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-04-PLAN.md
-last_updated: "2026-08-31T01:19:02.966Z"
+stopped_at: Completed KPL-01-03-PLAN.md
+last_updated: "2026-08-31T01:31:55.602Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase KPL-01 execution started
-state_head: 20dc92b6a3b492773ec84e08c5561829a791263f
+state_head: c26a2ff390fb4a687fc9410a0b35339e4bdd3949
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 4 of 19
+Plan: 5 of 19
 Total Plans in Phase: 19
 Status: Executing Phase KPL-01
 Last activity: 2026-08-30 — Phase KPL-01 execution started
@@ -53,6 +53,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01]: [Phase KPL-01]: Playwright uses one loopback reverse proxy while PostgreSQL, Phoenix, and Vite remain separately owned process groups.
 - [Phase 01]: [Phase KPL-01]: openapi-typescript 7.13.0 uses a root-only TypeScript 5.9.3 peer without changing the web TypeScript 6 toolchain.
 - [Phase 01]: [Phase KPL-01]: The consolidated Phase 1 runner lists and executes only lanes whose artifacts currently exist.
+- [Phase 01]: The OTP composition root starts Repo first and Endpoint last, retaining DNSCluster and Phoenix.PubSub without outward imports in semantic domain/application roots.
+- [Phase 01]: Concurrency tests use per-process unboxed SQL Sandbox checkouts, PostgreSQL backend PIDs, and an explicit reusable barrier.
+- [Phase 01]: Deterministic command tests thread an immutable clock and preselected identities explicitly through each scenario.
 
 ### Retained Research
 
@@ -80,8 +83,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T01:19:02.959Z
-**Stopped at:** Completed KPL-01-04-PLAN.md
+**Last session:** 2026-08-31T01:31:55.595Z
+**Stopped at:** Completed KPL-01-03-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -91,3 +94,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P01 | 16min | 2 tasks | 3 files |
 | Phase KPL-01 P02 | 8min | 2 tasks | 13 files |
 | Phase KPL-01 P04 | 10min | 2 tasks | 13 files |
+| Phase KPL-01 P03 | 8min | 2 tasks | 15 files |
