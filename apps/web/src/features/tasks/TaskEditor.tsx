@@ -157,7 +157,7 @@ function TaskEditor({
       draft.notes !== acceptedTask.notes ||
       draft.plannedOn !== (acceptedTask.plannedOn ?? '') ||
       draft.title !== acceptedTask.title)
-  const locked = submission !== null
+  const locked = submission !== null || commandState.kind === 'conflict'
 
   const applyExternalAcknowledgement = useCallback((acknowledgement: CommandAcknowledgement) => {
     setLoadState((state) => ({

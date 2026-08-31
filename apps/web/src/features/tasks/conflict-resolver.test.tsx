@@ -102,6 +102,31 @@ afterEach(() => {
 })
 
 describe('inline task conflict resolution', () => {
+  it('locks the underlying editor before and during conflict resolution', async () => {
+    const resolution = deferred<Response>()
+    const { fetchMock } = installEditorFetch(() => resolution.promise)
+    const user = userEvent.setup()
+    render(<TaskEditor csrfToken="csrf" taskId={task.id} />)
+
+    const title = await screen.findByLabelText('Title')
+    await user.clear(title)
+    await user.type(title, 'My title')
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    expect(await screen.findByRole('heading', { name: 'Resolve task conflict' })).toBeVisible()
+    expect(title).toHaveAttribute('readonly')
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Save & move out of Inbox' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    expect(fetchMock.mock.calls.filter(([url]) => String(url) === '/api/v1/commands/edit-task')).toHaveLength(1)
+
+    await user.click(screen.getByRole('button', { name: 'Use mine for Title' }))
+    await user.click(screen.getByRole('button', { name: 'Save resolution' }))
+    expect(title).toHaveAttribute('readonly')
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled()
+    expect(fetchMock.mock.calls.filter(([url]) => String(url) === '/api/v1/commands/edit-task')).toHaveLength(1)
+  })
+
   it('freezes the dispatched selection until its deferred response settles', async () => {
     const response = deferred<Response>()
     const bodies: string[] = []
