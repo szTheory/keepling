@@ -78,6 +78,22 @@ defmodule KeeplingWeb.TestFaultTest do
     assert source =~ "if Mix.env() == :test do"
     assert source =~ "plug KeeplingWeb.TestFaultController"
     assert source =~ "else: [:api, :authenticated, :mutation]"
+
+    assert source =~ "recent_auth_mutation_pipelines ="
+
+    assert source =~
+             "do: [:api, :authenticated, :mutation, :recent_auth, :test_fault]"
+
+    assert source =~
+             "else: [:api, :authenticated, :mutation, :recent_auth]"
+
+    assert source =~ "pipe_through recent_auth_mutation_pipelines"
+    assert source =~ ~s(delete "/sessions/:id", AuthController, :revoke_session)
+
+    assert Enum.find(KeeplingWeb.Router.__routes__(), fn route ->
+             route.verb == :delete and route.path == "/api/v1/sessions/:id" and
+               route.plug == KeeplingWeb.AuthController and route.plug_opts == :revoke_session
+           end)
   end
 
   defp fault_conn(mode) do
