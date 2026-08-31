@@ -650,7 +650,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         persist_existing(repo, command, context, task, activity)
 
       {:error, reason} when is_tuple(reason) ->
-        if persisted_conflict_reason?(reason) do
+        if persisted_conflict_reason?(command, reason) do
           persist_command_conflict(repo, command, context, current, reason)
         else
           semantic_rejection(reason, current)
@@ -661,12 +661,21 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     end
   end
 
-  defp persisted_conflict_reason?({kind, affected_fields})
-       when kind in [:edit_conflict, :lifecycle_conflict, :trash_conflict] and
-              is_list(affected_fields),
+  defp persisted_conflict_reason?(%{type: type}, {kind, affected_fields})
+       when type in [:edit_task, :clarify_task] and
+              kind in [:edit_conflict, :trash_conflict] and is_list(affected_fields),
        do: true
 
-  defp persisted_conflict_reason?(_reason), do: false
+  defp persisted_conflict_reason?(%{type: type}, {kind, affected_fields})
+       when type in [:complete_task, :reopen_task] and
+              kind in [:lifecycle_conflict, :trash_conflict] and is_list(affected_fields),
+       do: true
+
+  defp persisted_conflict_reason?(%{type: type}, {:trash_conflict, affected_fields})
+       when type in [:trash_task, :restore_task] and is_list(affected_fields),
+       do: true
+
+  defp persisted_conflict_reason?(_command, _reason), do: false
 
   defp persist_command_conflict(repo, command, context, current, reason) do
     {_kind, affected_fields} = reason

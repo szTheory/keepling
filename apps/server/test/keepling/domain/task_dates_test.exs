@@ -296,6 +296,99 @@ defmodule KeeplingWeb.TaskDatesBoundaryTest do
     assert %{"code" => "invalid_command"} = json_response(invalid, 400)
   end
 
+  test "stale date and planning requests replay and look up the exact terminal 409", %{
+    conn: conn,
+    csrf_token: csrf_token
+  } do
+    for command_type <- [:edit_task_dates, :plan_for_today, :unplan_task] do
+      task_id = Ecto.UUID.generate()
+
+      captured =
+        command(conn, csrf_token, "/api/v1/commands/capture-task", %{
+          "mutation_id" => Ecto.UUID.generate(),
+          "task_id" => task_id,
+          "title" => "Reject stale #{command_type}",
+          "version" => 1
+        })
+
+      assert %{"revision" => 1} = json_response(captured, 201)
+
+      changed =
+        command(conn, csrf_token, "/api/v1/commands/edit-task-dates", %{
+          "base_values" => %{"planned_on" => nil},
+          "expected_revision" => 1,
+          "fields" => %{"planned_on" => "2026-01-01"},
+          "mutation_id" => Ecto.UUID.generate(),
+          "task_id" => task_id,
+          "version" => 1
+        })
+
+      assert %{"revision" => 2} = json_response(changed, 200)
+
+      mutation_id = Ecto.UUID.generate()
+
+      {path, body} =
+        case command_type do
+          :edit_task_dates ->
+            {
+              "/api/v1/commands/edit-task-dates",
+              %{
+                "base_values" => %{"planned_on" => nil},
+                "expected_revision" => 1,
+                "fields" => %{"planned_on" => "2026-01-02"},
+                "mutation_id" => mutation_id,
+                "task_id" => task_id,
+                "version" => 1
+              }
+            }
+
+          :plan_for_today ->
+            {
+              "/api/v1/commands/plan-for-today",
+              %{
+                "base_planned_on" => nil,
+                "expected_revision" => 1,
+                "mutation_id" => mutation_id,
+                "task_id" => task_id,
+                "version" => 1
+              }
+            }
+
+          :unplan_task ->
+            {
+              "/api/v1/commands/unplan-task",
+              %{
+                "base_planned_on" => nil,
+                "expected_revision" => 1,
+                "mutation_id" => mutation_id,
+                "task_id" => task_id,
+                "version" => 1
+              }
+            }
+        end
+
+      rejected = command(conn, csrf_token, path, body)
+
+      assert %{
+               "affected_fields" => ["planned_on"],
+               "code" => "task_edit_conflict",
+               "current_revision" => 2,
+               "retryable" => false
+             } = rejected_body = json_response(rejected, 409)
+
+      replayed = command(conn, csrf_token, path, body)
+      assert rejected_body == json_response(replayed, 409)
+
+      looked_up =
+        conn
+        |> recycle()
+        |> trusted_request()
+        |> get("/api/v1/mutations/#{mutation_id}")
+
+      assert rejected_body == json_response(looked_up, 409)
+    end
+  end
+
   defp command(conn, csrf_token, path, body) do
     conn
     |> recycle()
@@ -465,6 +558,95 @@ defmodule Keepling.Application.TaskDatesPersistenceTest do
                """,
                [account_id]
              )
+  end
+
+  test "stale date and planning overlaps store stable semantic receipts without persisted conflicts", %{
+    account_id: account_id
+  } do
+    for type <- [:edit_task_dates, :plan_for_today, :unplan_task] do
+      task_id = Ecto.UUID.generate()
+
+      assert {:ok, %{status: 201}} =
+               dispatch(account_id, @accepted_at, %{
+                 mutation_id: Ecto.UUID.generate(),
+                 task_id: task_id,
+                 title: "Reject stale #{type}",
+                 type: :capture_task,
+                 version: 1
+               })
+
+      assert {:ok, %{status: 200, body: %{"revision" => 2}}} =
+               dispatch(account_id, @accepted_at, %{
+                 base_values: %{planned_on: nil},
+                 expected_revision: 1,
+                 fields: %{planned_on: ~D[2026-08-29]},
+                 mutation_id: Ecto.UUID.generate(),
+                 task_id: task_id,
+                 type: :edit_task_dates,
+                 version: 1
+               })
+
+      mutation_id = Ecto.UUID.generate()
+
+      stale_command =
+        case type do
+          :edit_task_dates ->
+            %{
+              base_values: %{planned_on: nil},
+              expected_revision: 1,
+              fields: %{planned_on: ~D[2026-08-30]},
+              mutation_id: mutation_id,
+              task_id: task_id,
+              type: type,
+              version: 1
+            }
+
+          type when type in [:plan_for_today, :unplan_task] ->
+            %{
+              base_planned_on: nil,
+              expected_revision: 1,
+              mutation_id: mutation_id,
+              task_id: task_id,
+              type: type,
+              version: 1
+            }
+        end
+
+      rejected = dispatch(account_id, @accepted_at, stale_command)
+
+      assert {:ok,
+              %{
+                status: 409,
+                body: %{
+                  "affected_fields" => ["planned_on"],
+                  "code" => "task_edit_conflict",
+                  "current_revision" => 2
+                }
+              }} = rejected
+
+      assert rejected == dispatch(account_id, DateTime.add(@accepted_at, 60), stale_command)
+
+      assert {:ok, lookup} =
+               Commands.lookup_result(
+                 %{
+                   accepted_at: @accepted_at,
+                   account_id: account_id,
+                   actor_type: "user",
+                   client_kind: "web"
+                 },
+                 mutation_id,
+                 CommandStore
+               )
+
+      assert elem(rejected, 1) == lookup
+
+      assert %{rows: [[0]]} =
+               SQL.query!(
+                 Repo,
+                 "SELECT count(*) FROM persisted_conflicts WHERE account_id = $1 AND task_id = $2",
+                 [account_id, Ecto.UUID.dump!(task_id)]
+               )
+    end
   end
 
   defp dispatch(account_id, accepted_at, command) do
