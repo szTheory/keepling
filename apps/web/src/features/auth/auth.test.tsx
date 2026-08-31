@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import AppShell from '@/app/AppShell'
 import AppRoutes from '@/app/routes'
 import Reauthenticate, { type InterruptedIntent } from '@/features/auth/Reauthenticate'
+import QuickCapture from '@/features/capture/QuickCapture'
 
 const jsonResponse = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -235,5 +236,132 @@ describe('session administration', () => {
     expect(screen.getByRole('button', { name: 'Stay here' })).toHaveFocus()
     await user.click(screen.getByRole('button', { name: 'Discard changes and log out' }))
     await waitFor(() => expect(onLoggedOut).toHaveBeenCalledOnce())
+  })
+})
+
+describe('capture authentication recovery', () => {
+  it('preserves the draft and mutation identity when authentication expires before acceptance', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse(problem('authentication_required', 'Sign in again.', 401), 401),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const onCaptured = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <QuickCapture
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        onCaptured={onCaptured}
+      />,
+    )
+
+    const draft = screen.getByLabelText('What do you want to keep?')
+    await user.type(draft, 'Keep this exact draft')
+    await user.click(screen.getByRole('button', { name: 'Add task' }))
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      InterruptedIntent,
+      () => Promise<void>,
+    ]
+    expect(intent.kind).toBe('not-submitted')
+    expect(draft).toHaveValue('Keep this exact draft')
+    const firstRequest = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as {
+      mutation_id: string
+      task_id: string
+    }
+
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(
+        {
+          mutation_id: firstRequest.mutation_id,
+          outcome: 'accepted',
+          revision: 1,
+          snapshot: {
+            captured_at: '2026-08-30T20:00:00Z',
+            id: firstRequest.task_id,
+            inbox_state: 'inbox',
+            revision: 1,
+            title: 'Keep this exact draft',
+          },
+          task_id: firstRequest.task_id,
+          warnings: [],
+        },
+        201,
+      ),
+    )
+    await resume()
+
+    const retryRequest = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)) as {
+      mutation_id: string
+    }
+    expect(retryRequest.mutation_id).toBe(firstRequest.mutation_id)
+    await waitFor(() => expect(onCaptured).toHaveBeenCalledOnce())
+  })
+
+  it('reauthenticates an unknown result check without replacing its submitted identity', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockRejectedValueOnce(new TypeError('response lost'))
+      .mockResolvedValueOnce(
+        jsonResponse(problem('authentication_required', 'Sign in again.', 401), 401),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const onCaptured = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <QuickCapture
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        onCaptured={onCaptured}
+      />,
+    )
+
+    await user.type(screen.getByLabelText('What do you want to keep?'), 'Unknown delivery')
+    await user.click(screen.getByRole('button', { name: 'Add task' }))
+    await user.click(await screen.findByRole('button', { name: 'Check again' }))
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      InterruptedIntent,
+      () => Promise<void>,
+    ]
+    expect(intent.kind).toBe('submitted-unknown')
+    if (intent.kind !== 'submitted-unknown') throw new Error('Expected submitted-unknown intent')
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(`/api/v1/mutations/${intent.mutationId}`)
+
+    const initialRequest = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as {
+      mutation_id: string
+      task_id: string
+    }
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(
+        {
+          mutation_id: initialRequest.mutation_id,
+          outcome: 'accepted',
+          revision: 1,
+          snapshot: {
+            captured_at: '2026-08-30T20:00:00Z',
+            id: initialRequest.task_id,
+            inbox_state: 'inbox',
+            revision: 1,
+            title: 'Unknown delivery',
+          },
+          task_id: initialRequest.task_id,
+          warnings: [],
+        },
+        201,
+      ),
+    )
+    await resume()
+
+    expect(fetchMock.mock.calls[2]?.[0]).toBe(`/api/v1/mutations/${intent.mutationId}`)
+    await waitFor(() => expect(onCaptured).toHaveBeenCalledOnce())
   })
 })
