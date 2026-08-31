@@ -201,7 +201,7 @@ test('@lifecycle-recovery preserves identity when authentication interrupts befo
   const missing = await page.request.get(`/api/v1/mutations/${request.mutation_id}`)
   expect(missing.status()).toBe(404)
 
-  await page.locator('form').getByRole('button', { name: 'Sign in and continue' }).click()
+  await page.getByRole('button', { name: 'Sign in and continue' }).click()
   await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
   await page.getByLabel('Session label').fill('Before acceptance continuation')
   await page.locator('form').getByRole('button', { name: 'Sign in and continue' }).click()
@@ -386,7 +386,22 @@ test('@lifecycle-recovery reauthenticates and completes the original session rev
   await authenticate(page, baseURL)
   const otherContext = await browser.newContext()
   const otherPage = await otherContext.newPage()
-  await authenticate(otherPage, baseURL)
+  const otherAuthentication = await authenticate(otherPage, baseURL)
+  const otherSessionsResponse = await otherPage.request.get('/api/v1/sessions')
+  const otherSessions = (await otherSessionsResponse.json()) as {
+    sessions: Array<{ current: boolean; id: string; label: string }>
+  }
+  const otherCurrent = otherSessions.sessions.find((session) => session.current)
+  expect(otherCurrent).toBeTruthy()
+  const targetLabel = 'Recent reauth target'
+  const renamed = await otherPage.request.patch(`/api/v1/sessions/${otherCurrent!.id}`, {
+    data: { label: targetLabel, version: 1 },
+    headers: {
+      origin: new URL(baseURL!).origin,
+      'x-csrf-token': otherAuthentication.csrf_token,
+    },
+  })
+  expect(renamed.ok()).toBe(true)
 
   await page.goto('/settings/sessions')
   const sessionsResponse = await page.request.get('/api/v1/sessions')
@@ -394,17 +409,17 @@ test('@lifecycle-recovery reauthenticates and completes the original session rev
     sessions: Array<{ current: boolean; id: string; label: string }>
   }
   const current = sessions.sessions.find((session) => session.current)
-  const other = sessions.sessions.find((session) => !session.current)
+  const other = sessions.sessions.find((session) => session.label === targetLabel)
   expect(current).toBeTruthy()
   expect(other).toBeTruthy()
   expireRecentAuthentication(current!.id)
 
-  await page.getByRole('button', { name: `Revoke ${other!.label}` }).click()
+  await page.getByRole('button', { name: `Revoke ${targetLabel}` }).click()
   await page.getByRole('button', { name: 'Revoke session' }).click()
   await expect(page.getByRole('heading', { name: 'Authentication required' })).toBeVisible()
   await page.getByLabel('Password').fill(continuationPassword)
   await page.getByRole('button', { name: 'Sign in and continue' }).click()
-  await expect(page.getByRole('button', { name: `Revoke ${other!.label}` })).not.toBeVisible()
+  await expect(page.getByRole('button', { name: `Revoke ${targetLabel}` })).not.toBeVisible()
 
   await otherContext.close()
 })
