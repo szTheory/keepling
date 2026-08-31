@@ -108,6 +108,49 @@ describe('canonical task editor', () => {
     expect(window.location.pathname).toBe('/')
   })
 
+  it('rejects a failed resumed detail read so the retained continuation can retry', async () => {
+    const authenticationProblem = {
+      code: 'authentication_required',
+      detail: 'Sign in again.',
+      recovery_action: 'sign_in',
+      retryable: true,
+      status: 401,
+      title: 'Authentication required',
+      type: '/problems/authentication_required',
+    }
+    let taskRequests = 0
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input)
+      if (path === taskPath) {
+        taskRequests += 1
+        if (taskRequests === 1) return jsonResponse(authenticationProblem, 401)
+        if (taskRequests === 2) return jsonResponse({ ...authenticationProblem, code: 'temporarily_unavailable' }, 503)
+        return taskResponse()
+      }
+      if (path.startsWith(`/api/v1/tasks/${task.id}/activity?`)) return activityResponse()
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+
+    render(
+      <TaskEditor
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        onNavigate={vi.fn()}
+        taskId={task.id}
+      />,
+    )
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const resume = onAuthenticationRequired.mock.calls[0]?.[1] as () => Promise<void>
+    await expect(resume()).rejects.toBeInstanceOf(Error)
+    expect(screen.getByText('Couldn’t load this task. Your tasks weren’t changed.')).toBeVisible()
+
+    await resume()
+    expect(await screen.findByLabelText('Title')).toHaveValue(task.title)
+  })
+
   it('keeps Inbox explicit and plans an opted-in capture only after exact capture acknowledgement', async () => {
     let resolvePlan: ((response: Response) => void) | undefined
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {

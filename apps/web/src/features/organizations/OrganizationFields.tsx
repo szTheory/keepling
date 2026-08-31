@@ -168,6 +168,7 @@ function OrganizationFields({
           return
         }
         setLoadState({ kind: 'error' })
+        if (!allowAuthenticationRecovery) throw error
       }
     }
 
@@ -438,6 +439,7 @@ function OrganizationManager({
         }
         setLoading(false)
         setMessage({ kind: 'alert', text: `Couldn’t load ${kind}s. Nothing was changed.` })
+        if (!allowAuthenticationRecovery) throw error
       }
     }
 

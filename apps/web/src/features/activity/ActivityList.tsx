@@ -276,6 +276,7 @@ function ActivityListForTask({ onAuthenticationRequired, taskId }: ActivityListP
           return
         }
         setViewState('initial-error')
+        if (!allowAuthenticationRecovery) throw error
       }
     }
 

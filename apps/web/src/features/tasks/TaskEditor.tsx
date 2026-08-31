@@ -136,6 +136,7 @@ function TaskEditor({
           return
         }
         setLoadState({ kind: 'error' })
+        if (!allowAuthenticationRecovery) throw error
       }
     }
 
