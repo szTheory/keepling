@@ -109,6 +109,19 @@ function InboxWorkspace() {
             >
               Inbox
             </a>
+            {[
+              ['/today', 'Today'],
+              ['/upcoming', 'Upcoming'],
+              ['/completed', 'Completed'],
+            ].map(([href, label]) => (
+              <a
+                className="mt-2 flex min-h-11 items-center border-l-2 border-transparent pl-3 font-semibold"
+                href={href}
+                key={href}
+              >
+                {label}
+              </a>
+            ))}
             <p className="mt-6 px-3 text-sm font-semibold text-muted-foreground">Settings</p>
             <a
               className="mt-2 flex min-h-11 items-center border-l-2 border-transparent pl-3 font-semibold"

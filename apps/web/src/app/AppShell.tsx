@@ -41,6 +41,20 @@ function AppShell({ csrfToken, hasDirtyWork = false, inboxContent, onLoggedOut }
             >
               Inbox
             </a>
+            {[
+              ['/today', 'Today'],
+              ['/upcoming', 'Upcoming'],
+              ['/completed', 'Completed'],
+            ].map(([href, label]) => (
+              <a
+                aria-current={pathname === href ? 'page' : undefined}
+                className="mt-2 flex min-h-11 items-center border-l-2 border-transparent pl-3 font-semibold"
+                href={href}
+                key={href}
+              >
+                {label}
+              </a>
+            ))}
             <p className="mt-6 px-3 text-sm font-semibold text-muted-foreground">Settings</p>
             <a
               aria-current={pathname === '/settings/sessions' ? 'page' : undefined}

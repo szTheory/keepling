@@ -15,6 +15,10 @@ type WireOrganizationLifecycleCommand = components['schemas']['OrganizationLifec
 type WireOrganizationsResponse = components['schemas']['OrganizationsResponse']
 type WireRenameOrganizationCommand = components['schemas']['RenameOrganizationCommand']
 type WireReturnToInboxCommand = components['schemas']['ReturnToInboxCommand']
+type WireTaskViewItem = components['schemas']['TaskViewItem']
+type WireTaskViewPage = components['schemas']['TaskViewPage']
+type WireTodayMoveRequest = components['schemas']['TodayMoveRequest']
+type WireTodayMoveResponse = components['schemas']['TodayMoveResponse']
 type InboxResponse = components['schemas']['InboxResponse']
 type Problem = components['schemas']['Problem']
 type AuthTransitionResponse = components['schemas']['AuthTransitionResponse']
@@ -120,6 +124,39 @@ type TaskActivityPage = {
   accountTimezone: string
   items: readonly TaskActivity[]
   nextCursor: string | null
+}
+
+type TaskViewName = 'completed' | 'inbox' | 'today' | 'upcoming'
+
+type TaskViewItem = {
+  capturedAt: string
+  completedAt?: string
+  completedOn?: string
+  deadlineOn: string | null
+  groupOn?: string
+  id: string
+  plannedOn: string | null
+  reasons: readonly NonNullable<WireTaskViewItem['reasons']>[number][]
+  revision: number
+  section?: NonNullable<WireTaskViewItem['section']>
+  title: string
+  upcomingReason?: NonNullable<WireTaskViewItem['upcoming_reason']>
+}
+
+type TaskViewPage = {
+  accountDay: string
+  accountTimezone: string
+  items: readonly TaskViewItem[]
+  nextCursor: string | null
+  orderRevision: number | null
+  view: TaskViewName
+}
+
+type TodayMoveSubmission = {
+  direction: 'earlier' | 'later'
+  expectedOrderRevision: number
+  mutationId: string
+  taskId: string
 }
 
 type CaptureTaskSubmission = {
@@ -458,6 +495,21 @@ const mapActivity = (activity: WireActivityItem): TaskActivity => ({
   version: activity.version,
 })
 
+const mapTaskViewItem = (task: WireTaskViewItem): TaskViewItem => ({
+  capturedAt: task.captured_at,
+  ...(task.completed_at === undefined ? {} : { completedAt: task.completed_at }),
+  ...(task.completed_on === undefined ? {} : { completedOn: task.completed_on }),
+  deadlineOn: task.deadline_on,
+  ...(task.group_on === undefined ? {} : { groupOn: task.group_on }),
+  id: task.id,
+  plannedOn: task.planned_on,
+  reasons: task.reasons ?? [],
+  revision: task.revision,
+  ...(task.section === undefined ? {} : { section: task.section }),
+  title: task.title,
+  ...(task.upcoming_reason === undefined ? {} : { upcomingReason: task.upcoming_reason }),
+})
+
 const mapOrganizationAcknowledgement = (
   acknowledgement: WireOrganizationAcknowledgement,
 ): OrganizationAcknowledgement => ({
@@ -486,6 +538,47 @@ const getInbox = async (): Promise<readonly BrowserTask[]> => {
   )
 
   return response.tasks.map(mapTask)
+}
+
+const getTaskView = async (view: TaskViewName, cursor?: string): Promise<TaskViewPage> => {
+  const query = new URLSearchParams({ limit: '20' })
+  if (cursor !== undefined) query.set('cursor', cursor)
+  const path = view === 'inbox' ? '/api/v1/views/inbox' : `/api/v1/${view}`
+  const response = await readJson<WireTaskViewPage>(
+    await fetch(`${path}?${query.toString()}`, {
+      credentials: 'same-origin',
+      headers: { accept: 'application/json' },
+    }),
+  )
+
+  return {
+    accountDay: response.account_day,
+    accountTimezone: response.account_timezone,
+    items: response.items.map(mapTaskViewItem),
+    nextCursor: response.next_cursor,
+    orderRevision: response.order_revision,
+    view: response.view,
+  }
+}
+
+const moveTodayTask = async (
+  submission: TodayMoveSubmission,
+  csrfToken: string,
+): Promise<{ orderRevision: number }> => {
+  const request: WireTodayMoveRequest = {
+    direction: submission.direction,
+    expected_order_revision: submission.expectedOrderRevision,
+    mutation_id: submission.mutationId,
+    task_id: submission.taskId,
+    version: 1,
+  }
+  const response = await jsonRequest<WireTodayMoveRequest, WireTodayMoveResponse>(
+    '/api/v1/commands/move-today-task',
+    'POST',
+    request,
+    csrfToken,
+  )
+  return { orderRevision: response.order_revision }
 }
 
 const getOrganizations = async (): Promise<readonly BrowserOrganization[]> => {
@@ -774,6 +867,7 @@ export {
   getOrganizations,
   getSession,
   getTaskActivity,
+  getTaskView,
   editTask,
   listSessions,
   login,
@@ -787,6 +881,7 @@ export {
   unarchiveOrganization,
   unplanTask,
   planForToday,
+  moveTodayTask,
   type AssignTaskOrganizationsSubmission,
   type ActivityChange,
   type AuthenticationTransition,
@@ -811,5 +906,9 @@ export {
   type TaskDateValues,
   type TaskActivity,
   type TaskActivityPage,
+  type TaskViewItem,
+  type TaskViewName,
+  type TaskViewPage,
+  type TodayMoveSubmission,
   type TaskOrganizationReference,
 }

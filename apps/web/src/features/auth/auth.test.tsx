@@ -207,7 +207,7 @@ describe('session administration', () => {
     expect(screen.getByText('Web')).toBeVisible()
     expect(screen.getByText('Active now')).toBeVisible()
     expect(screen.getByText('iPhone')).toBeVisible()
-    expect(screen.getByText('Today')).toBeVisible()
+    expect(screen.getByText('Today', { selector: 'dd' })).toBeVisible()
     expect(screen.getAllByRole('time')).toHaveLength(2)
 
     const label = screen.getByLabelText('Label for Phone')
