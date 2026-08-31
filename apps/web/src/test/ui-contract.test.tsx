@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
@@ -5,6 +7,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
+import tokens from '../../../../packages/design-tokens/tokens.json'
 import AppShell from '@/app/AppShell'
 
 vi.mock('@/features/recovery/RecoveryStrip', () => ({
@@ -20,14 +23,7 @@ const repositoryFile = (relativePath: string) =>
 
 describe('approved Phase 1 UI contract', () => {
   it('keeps DTCG source and generated CSS in exact semantic sync', () => {
-    const tokens = JSON.parse(repositoryFile('packages/design-tokens/tokens.json')) as {
-      layout: Record<string, { $value: string }>
-      motion: Record<string, { $value: string }>
-      space: Record<string, { $value: string }>
-      typography: Record<string, { $value: string }>
-    }
-    const generated = repositoryFile('packages/design-tokens/css.css')
-
+    const generatedTokens = repositoryFile('packages/design-tokens/css.css')
     expect(Object.values(tokens.space).map(({ $value }) => $value)).toEqual([
       '4px',
       '8px',
@@ -55,9 +51,9 @@ describe('approved Phase 1 UI contract', () => {
       overlay: { $value: '180ms' },
       reduced: { $value: '100ms' },
     })
-    expect(generated).toContain('--keepling-layout-nav: 224px;')
-    expect(generated).toContain('--keepling-color-canvas: #f7f2e8;')
-    expect(generated).toContain('--keepling-dark-color-accent: #d29abf;')
+    expect(generatedTokens).toContain('--keepling-layout-nav: 224px;')
+    expect(generatedTokens).toContain('--keepling-color-canvas: #f7f2e8;')
+    expect(generatedTokens).toContain('--keepling-dark-color-accent: #d29abf;')
   })
 
   it('exposes reachable landmarks, navigation, 44px targets, and one live region', () => {

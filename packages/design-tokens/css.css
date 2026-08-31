@@ -1,0 +1,64 @@
+/* Generated from tokens.json. Keep values storage-neutral and semantic. */
+:root {
+  --keepling-space-xs: 4px;
+  --keepling-space-sm: 8px;
+  --keepling-space-md: 16px;
+  --keepling-space-lg: 24px;
+  --keepling-space-xl: 32px;
+  --keepling-space-2xl: 48px;
+  --keepling-space-3xl: 64px;
+  --keepling-type-label: 14px;
+  --keepling-type-body: 16px;
+  --keepling-type-heading: 20px;
+  --keepling-type-display: 28px;
+  --keepling-layout-nav: 224px;
+  --keepling-layout-list-min: 360px;
+  --keepling-layout-list-max: 440px;
+  --keepling-layout-detail-min: 480px;
+  --keepling-layout-form-max: 720px;
+  --keepling-layout-target: 44px;
+  --keepling-layout-task-row-min: 52px;
+  --keepling-motion-direct: 160ms;
+  --keepling-motion-overlay: 180ms;
+  --keepling-motion-reduced: 100ms;
+  --keepling-color-canvas: #f7f2e8;
+  --keepling-color-surface: #fffcf7;
+  --keepling-color-text: #211e1a;
+  --keepling-color-muted-text: #696158;
+  --keepling-color-accent: #6f4a63;
+  --keepling-color-accent-text: #fff8e9;
+  --keepling-color-destructive: #a33b32;
+  --keepling-color-destructive-text: #ffffff;
+  --keepling-dark-color-canvas: #1c1917;
+  --keepling-dark-color-surface: #24201d;
+  --keepling-dark-color-text: #f5efe5;
+  --keepling-dark-color-muted-text: #c7bbae;
+  --keepling-dark-color-accent: #d29abf;
+  --keepling-dark-color-accent-text: #201b22;
+  --keepling-dark-color-destructive: #f2a39b;
+  --keepling-dark-color-destructive-text: #24201d;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --keepling-color-canvas: var(--keepling-dark-color-canvas);
+    --keepling-color-surface: var(--keepling-dark-color-surface);
+    --keepling-color-text: var(--keepling-dark-color-text);
+    --keepling-color-muted-text: var(--keepling-dark-color-muted-text);
+    --keepling-color-accent: var(--keepling-dark-color-accent);
+    --keepling-color-accent-text: var(--keepling-dark-color-accent-text);
+    --keepling-color-destructive: var(--keepling-dark-color-destructive);
+    --keepling-color-destructive-text: var(--keepling-dark-color-destructive-text);
+  }
+}
+
+.dark {
+  --keepling-color-canvas: var(--keepling-dark-color-canvas);
+  --keepling-color-surface: var(--keepling-dark-color-surface);
+  --keepling-color-text: var(--keepling-dark-color-text);
+  --keepling-color-muted-text: var(--keepling-dark-color-muted-text);
+  --keepling-color-accent: var(--keepling-dark-color-accent);
+  --keepling-color-accent-text: var(--keepling-dark-color-accent-text);
+  --keepling-color-destructive: var(--keepling-dark-color-destructive);
+  --keepling-color-destructive-text: var(--keepling-dark-color-destructive-text);
+}
