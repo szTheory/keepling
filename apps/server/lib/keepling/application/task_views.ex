@@ -16,6 +16,7 @@ defmodule Keepling.Application.TaskViews do
     @moduledoc "Persistence port for task-list reads and scoped Today moves."
 
     @callback list_tasks(map(), atom(), map()) :: {:ok, map()} | {:error, atom()}
+    @callback lookup_today_result(map(), String.t()) :: {:ok, map()} | {:error, atom()}
     @callback move_today(map(), map()) :: {:ok, map()} | {:error, atom()}
   end
 
@@ -43,10 +44,21 @@ defmodule Keepling.Application.TaskViews do
       )
       when direction in [:earlier, :later] and is_integer(revision) and revision > 0 and
              is_binary(task_id) and is_binary(mutation_id) do
-    port.move_today(context, command)
+    case port.move_today(context, command) do
+      {:ok, result} ->
+        {:ok, Map.merge(result, %{mutation_id: mutation_id, task_id: task_id})}
+
+      other ->
+        other
+    end
   end
 
   def move_today(_command, _context, _port), do: {:error, :invalid_move}
+
+  @spec lookup_today_result(map(), String.t(), module()) :: tuple()
+  def lookup_today_result(context, mutation_id, port) when is_binary(mutation_id) do
+    port.lookup_today_result(context, mutation_id)
+  end
 
   @spec encode_cursor(map(), map(), atom()) :: String.t()
   def encode_cursor(keyset, context, view) when view in @views do

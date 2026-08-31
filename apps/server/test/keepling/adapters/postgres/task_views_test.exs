@@ -184,8 +184,12 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
 
     assert moves |> Enum.map(&elem(&1, 0)) |> Enum.uniq() |> length() == 2
 
-    assert Enum.sort(Enum.map(moves, &elem(&1, 1))) ==
-             Enum.sort([{:ok, %{order_revision: 2}}, {:error, :order_stale}])
+    assert Enum.sort(
+             Enum.map(moves, fn
+               {_backend, {:ok, %{order_revision: revision}}} -> {:ok, revision}
+               {_backend, error} -> error
+             end)
+           ) == Enum.sort([{:ok, 2}, {:error, :order_stale}])
 
     assert %{rows: [[3, 3]]} =
              with_connection(fn _backend_pid ->
@@ -222,7 +226,30 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
         TaskViews.move_today(command, context(account_id), PostgresTaskViews)
       end)
 
-    assert {:ok, %{order_revision: 2}} = accepted
+    assert {:ok,
+            %{
+              mutation_id: mutation_id,
+              order_revision: 2,
+              task_id: ^second_id
+            }} = accepted
+
+    assert mutation_id == command.mutation_id
+
+    assert {:ok,
+            %{
+              mutation_id: mutation_id,
+              order_revision: 2,
+              task_id: ^second_id
+            }} =
+             with_connection(fn _backend_pid ->
+               TaskViews.lookup_today_result(
+                 context(account_id),
+                 command.mutation_id,
+                 PostgresTaskViews
+               )
+             end)
+
+    assert mutation_id == command.mutation_id
 
     assert accepted ==
              with_connection(fn _backend_pid ->

@@ -169,6 +169,21 @@ type TodayMoveSubmission = {
   taskId: string
 }
 
+type PreparedTodayMove = Readonly<{
+  body: string
+  direction: TodayMoveSubmission['direction']
+  expectedOrderRevision: number
+  mutationId: string
+  path: string
+  taskId: string
+}>
+
+type TodayMoveAcknowledgement = {
+  mutationId: string
+  orderRevision: number
+  taskId: string
+}
+
 type CaptureTaskSubmission = {
   mutationId: string
   taskId: string
@@ -713,25 +728,68 @@ const getTaskView = async (view: TaskViewName, cursor?: string): Promise<TaskVie
   }
 }
 
-const moveTodayTask = async (
-  submission: TodayMoveSubmission,
-  csrfToken: string,
-): Promise<{ orderRevision: number }> => {
-  const request: WireTodayMoveRequest = {
+const todayMoveRequest = (submission: TodayMoveSubmission): WireTodayMoveRequest => ({
     direction: submission.direction,
     expected_order_revision: submission.expectedOrderRevision,
     mutation_id: submission.mutationId,
     task_id: submission.taskId,
     version: 1,
-  }
-  const response = await jsonRequest<WireTodayMoveRequest, WireTodayMoveResponse>(
-    '/api/v1/commands/move-today-task',
-    'POST',
-    request,
-    csrfToken,
+  })
+
+const prepareTodayMove = (submission: TodayMoveSubmission): PreparedTodayMove =>
+  Object.freeze({
+    body: JSON.stringify(todayMoveRequest(submission)),
+    direction: submission.direction,
+    expectedOrderRevision: submission.expectedOrderRevision,
+    mutationId: submission.mutationId,
+    path: '/api/v1/commands/move-today-task',
+    taskId: submission.taskId,
+  })
+
+const mapTodayMoveAcknowledgement = (
+  response: WireTodayMoveResponse,
+): TodayMoveAcknowledgement => ({
+  mutationId: response.mutation_id,
+  orderRevision: response.order_revision,
+  taskId: response.task_id,
+})
+
+const submitPreparedTodayMove = async (
+  request: PreparedTodayMove,
+  csrfToken: string,
+): Promise<TodayMoveAcknowledgement> =>
+  mapTodayMoveAcknowledgement(
+    await readJson<WireTodayMoveResponse>(
+      await fetch(request.path, {
+        body: request.body,
+        credentials: 'same-origin',
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        method: 'POST',
+      }),
+    ),
   )
-  return { orderRevision: response.order_revision }
-}
+
+const getTodayMoveMutation = async (
+  mutationId: string,
+): Promise<TodayMoveAcknowledgement> =>
+  mapTodayMoveAcknowledgement(
+    await readJson<WireTodayMoveResponse>(
+      await fetch(`/api/v1/today/mutations/${encodeURIComponent(mutationId)}`, {
+        credentials: 'same-origin',
+        headers: { accept: 'application/json' },
+      }),
+    ),
+  )
+
+const moveTodayTask = async (
+  submission: TodayMoveSubmission,
+  csrfToken: string,
+): Promise<TodayMoveAcknowledgement> =>
+  submitPreparedTodayMove(prepareTodayMove(submission), csrfToken)
 
 const getOrganizations = async (): Promise<readonly BrowserOrganization[]> => {
   const response = await readJson<WireOrganizationsResponse>(
@@ -1229,6 +1287,7 @@ export {
   getTaskActivity,
   getTask,
   getTaskView,
+  getTodayMoveMutation,
   editTask,
   listSessions,
   login,
@@ -1252,7 +1311,9 @@ export {
   prepareEditTask,
   prepareEditTaskDates,
   prepareLifecycleTask,
+  prepareTodayMove,
   moveTodayTask,
+  submitPreparedTodayMove,
   submitPreparedTaskCommand,
   type AssignTaskOrganizationsSubmission,
   type ActivityChange,
@@ -1292,5 +1353,7 @@ export {
   type UndoResult,
   type UndoSubmission,
   type TodayMoveSubmission,
+  type TodayMoveAcknowledgement,
+  type PreparedTodayMove,
   type TaskOrganizationReference,
 }

@@ -124,7 +124,13 @@ describe('routed task lists', () => {
     })
     expect(request.mutation_id).toMatch(/^[0-9a-f-]{36}$/)
 
-    moveResponse.resolve(jsonResponse({ order_revision: 8 }))
+    moveResponse.resolve(
+      jsonResponse({
+        mutation_id: request.mutation_id,
+        order_revision: 8,
+        task_id: request.task_id,
+      }),
+    )
 
     await waitFor(() => {
       expect(within(list).getAllByRole('link').map((link) => link.textContent)).toEqual([
@@ -177,11 +183,13 @@ describe('routed task lists', () => {
     await waitFor(() => expect(appended).toHaveFocus())
   })
 
-  it('treats a lost Today move response as unknown and retries the original identity', async () => {
-    const fetchMock = vi
-      .fn<typeof fetch>()
-      .mockResolvedValueOnce(
-        jsonResponse(
+  it('looks up a lost Today move response by exact identity before any resend', async () => {
+    let stored: { mutation_id: string; order_revision: number; task_id: string } | null = null
+    const commandBodies: string[] = []
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const path = String(input)
+      if (path.startsWith('/api/v1/today?')) {
+        return jsonResponse(
           page(
             [
               item(),
@@ -189,10 +197,22 @@ describe('routed task lists', () => {
             ],
             { order_revision: 3, view: 'today' },
           ),
-        ),
-      )
-      .mockRejectedValueOnce(new TypeError('response lost'))
-      .mockResolvedValueOnce(jsonResponse({ order_revision: 4 }))
+        )
+      }
+      if (path === '/api/v1/commands/move-today-task') {
+        const body = String(init?.body)
+        commandBodies.push(body)
+        const request = JSON.parse(body) as { mutation_id: string; task_id: string }
+        stored = {
+          mutation_id: request.mutation_id,
+          order_revision: 4,
+          task_id: request.task_id,
+        }
+        throw new TypeError('response lost')
+      }
+      if (path.startsWith('/api/v1/today/mutations/')) return jsonResponse(stored)
+      throw new Error(`Unexpected request ${path}`)
+    })
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
 
@@ -204,7 +224,72 @@ describe('routed task lists', () => {
     await user.click(screen.getByRole('button', { name: 'Check again' }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
-    expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(fetchMock.mock.calls[2]?.[1]?.body)
+    expect(commandBodies).toHaveLength(1)
+    const mutationId = (JSON.parse(commandBodies[0] ?? '{}') as { mutation_id: string }).mutation_id
+    expect(fetchMock.mock.calls[2]?.[0]).toBe(`/api/v1/today/mutations/${mutationId}`)
+  })
+
+  it('retains an after-commit authentication response until exact Today reconciliation', async () => {
+    const bodies: string[] = []
+    let stored: { mutation_id: string; order_revision: number; task_id: string } | null = null
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const path = String(input)
+      if (path.startsWith('/api/v1/today?')) {
+        return jsonResponse(
+          page(
+            [
+              item(),
+              item({ id: '22222222-2222-4222-8222-222222222222', title: 'Send invoice' }),
+            ],
+            { order_revision: 3, view: 'today' },
+          ),
+        )
+      }
+      if (path === '/api/v1/commands/move-today-task') {
+        const body = String(init?.body)
+        bodies.push(body)
+        const request = JSON.parse(body) as { mutation_id: string; task_id: string }
+        stored ??= {
+          mutation_id: request.mutation_id,
+          order_revision: 4,
+          task_id: request.task_id,
+        }
+        return bodies.length === 1
+          ? jsonResponse(
+              {
+                code: 'authentication_required',
+                recovery_action: 'sign_in',
+                retryable: true,
+                status: 401,
+                title: 'Authentication required',
+                type: '/problems/authentication_required',
+              },
+              401,
+            )
+          : jsonResponse(stored)
+      }
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <TaskList
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        view="today"
+      />,
+    )
+    await screen.findByRole('link', { name: 'Call dentist' })
+    await user.click(screen.getByRole('button', { name: 'Move later “Call dentist”' }))
+    await user.click(await screen.findByRole('button', { name: 'Sign in and continue' }))
+    const [, resume] = onAuthenticationRequired.mock.calls[0] as [unknown, (csrf: string) => Promise<void>]
+    await resume('new-session-csrf')
+
+    await waitFor(() => expect(screen.getByText('Today order updated.')).toBeInTheDocument())
+    expect(bodies).toHaveLength(2)
+    expect(bodies[1]).toBe(bodies[0])
   })
 
   it('routes authenticated Today, Upcoming, and Completed views through their facades', async () => {

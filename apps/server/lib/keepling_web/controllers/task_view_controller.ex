@@ -11,6 +11,18 @@ defmodule KeeplingWeb.TaskViewController do
   def upcoming(conn, params), do: list_view(conn, params, :upcoming)
   def completed(conn, params), do: list_view(conn, params, :completed)
 
+  def mutation(conn, %{"mutation_id" => mutation_id}) do
+    with {:ok, _uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, result} <-
+           TaskViews.lookup_today_result(view_context(conn), mutation_id, PostgresTaskViews) do
+      json(conn, result)
+    else
+      :error -> invalid_query(conn)
+      {:error, :not_found} -> mutation_not_found(conn)
+      {:error, :infrastructure_failure} -> infrastructure_problem(conn)
+    end
+  end
+
   def move_today(conn, params) do
     with {:ok, command} <- decode_move(params),
          {:ok, result} <-
@@ -131,6 +143,18 @@ defmodule KeeplingWeb.TaskViewController do
       "Refresh the list before moving this task.",
       false,
       "refresh_today"
+    )
+  end
+
+  defp mutation_not_found(conn) do
+    problem(
+      conn,
+      404,
+      "mutation_not_found",
+      "Mutation not found",
+      "No Today order receipt exists for that mutation identity.",
+      true,
+      "retry_exact_mutation"
     )
   end
 

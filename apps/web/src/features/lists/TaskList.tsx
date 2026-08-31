@@ -2,13 +2,23 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
   getTaskView,
+  getTodayMoveMutation,
   KeeplingApiError,
-  moveTodayTask,
+  prepareTodayMove,
+  submitPreparedTodayMove,
+  type PreparedTodayMove,
+  type TodayMoveAcknowledgement,
   type TaskViewItem,
   type TaskViewName,
   type TaskViewPage,
   type TodayMoveSubmission,
 } from '@/api/keepling'
+import {
+  classifyKeeplingError,
+  createExactSubmission,
+  type ExactSubmission,
+  type ExactSubmissionState,
+} from '@/commands/submission'
 import LifecycleActions, {
   type LifecycleReconciliation,
 } from '@/features/tasks/LifecycleActions'
@@ -27,6 +37,18 @@ type LoadState =
   | { kind: 'error'; authenticationRequired: boolean }
   | { kind: 'loading' }
   | { kind: 'ready'; page: TaskViewPage }
+
+type TodayMoveState = ExactSubmissionState<
+  PreparedTodayMove,
+  TodayMoveAcknowledgement,
+  KeeplingApiError
+>
+
+type TodayMoveExact = ExactSubmission<
+  PreparedTodayMove,
+  TodayMoveAcknowledgement,
+  KeeplingApiError
+>
 
 const copy = {
   completed: {
@@ -110,7 +132,8 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
   const [moveError, setMoveError] = useState<
     'authentication' | 'generic' | 'stale' | 'unknown' | null
   >(null)
-  const [unknownMove, setUnknownMove] = useState<TodayMoveSubmission | null>(null)
+  const [moveSubmissionState, setMoveSubmissionState] = useState<TodayMoveState | null>(null)
+  const exactMove = useRef<TodayMoveExact | null>(null)
   const [announcement, setAnnouncement] = useState('')
   const [completedToday, setCompletedToday] = useState<readonly TaskViewItem[]>([])
   const heading = useRef<HTMLHeadingElement>(null)
@@ -196,6 +219,35 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
     }
   }
 
+  const settleMove = (exact: TodayMoveExact) => {
+    const result = exact.snapshot
+    if (state.kind !== 'ready') return
+
+    if (result.kind === 'acknowledged') {
+      const request = result.request
+      setState({
+        kind: 'ready',
+        page: {
+          ...state.page,
+          items: swap(state.page.items, request.taskId, request.direction),
+          orderRevision: result.acknowledgement.orderRevision,
+        },
+      })
+      exactMove.current = null
+      setMoveSubmissionState(null)
+      setMoveError(null)
+      setAnnouncement('Today order updated.')
+    } else if (result.kind === 'conflict' || result.kind === 'rejected') {
+      exactMove.current = null
+      setMoveSubmissionState(null)
+      setMoveError(result.rejection.problem.code === 'today_order_stale' ? 'stale' : 'generic')
+    } else if (result.kind === 'unknown') {
+      setMoveError('unknown')
+    } else if (result.kind === 'authentication_required') {
+      setMoveError('authentication')
+    }
+  }
+
   const move = async (taskId: string, direction: 'earlier' | 'later') => {
     if (state.kind !== 'ready' || state.page.orderRevision === null || !csrfToken) return
     const submission: TodayMoveSubmission = {
@@ -204,64 +256,61 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
       mutationId: crypto.randomUUID(),
       taskId,
     }
+    const request = prepareTodayMove(submission)
+    const exact = createExactSubmission<
+      PreparedTodayMove,
+      TodayMoveAcknowledgement,
+      KeeplingApiError
+    >({
+      classifyError: classifyKeeplingError,
+      lookup: (original) => getTodayMoveMutation(original.mutationId),
+      matchesAcknowledgement: (acknowledgement) =>
+        acknowledgement.mutationId === request.mutationId &&
+        acknowledgement.taskId === request.taskId &&
+        acknowledgement.orderRevision >= request.expectedOrderRevision,
+      onStateChange: setMoveSubmissionState,
+      request,
+      send: submitPreparedTodayMove,
+    })
+    exactMove.current = exact
     setMovingTaskId(taskId)
     setMoveError(null)
-    try {
-      const result = await moveTodayTask(submission, csrfToken)
-      setState({
-        kind: 'ready',
-        page: {
-          ...state.page,
-          items: swap(state.page.items, taskId, direction),
-          orderRevision: result.orderRevision,
-        },
-      })
-      setAnnouncement('Today order updated.')
-    } catch (error) {
-      if (error instanceof KeeplingApiError && error.problem.code === 'today_order_stale') {
-        setMoveError('stale')
-      } else if (error instanceof KeeplingApiError && error.problem.code === 'authentication_required') {
-        setMoveError('authentication')
-      } else if (!(error instanceof KeeplingApiError)) {
-        setUnknownMove(submission)
-        setMoveError('unknown')
-      } else {
-        setMoveError('generic')
-      }
-    } finally {
-      setMovingTaskId(null)
-    }
+    await exact.submit(csrfToken)
+    settleMove(exact)
+    setMovingTaskId(null)
   }
 
-  const retryUnknownMove = async () => {
-    if (state.kind !== 'ready' || !unknownMove || !csrfToken) return
-    setMovingTaskId(unknownMove.taskId)
-    try {
-      const result = await moveTodayTask(unknownMove, csrfToken)
-      setState({
-        kind: 'ready',
-        page: {
-          ...state.page,
-          items: swap(state.page.items, unknownMove.taskId, unknownMove.direction),
-          orderRevision: result.orderRevision,
-        },
-      })
-      setUnknownMove(null)
-      setMoveError(null)
-      setAnnouncement('Today order updated.')
-    } catch (error) {
-      if (error instanceof KeeplingApiError && error.problem.code === 'today_order_stale') {
-        setUnknownMove(null)
-        setMoveError('stale')
-      } else if (error instanceof KeeplingApiError && error.problem.code === 'authentication_required') {
-        setMoveError('authentication')
-      } else if (error instanceof KeeplingApiError) {
-        setUnknownMove(null)
-        setMoveError('generic')
-      }
-    } finally {
-      setMovingTaskId(null)
-    }
+  const checkUnknownMove = async () => {
+    const exact = exactMove.current
+    if (!exact || !csrfToken) return
+    setMovingTaskId(exact.snapshot.request.taskId)
+    await exact.check(csrfToken)
+    settleMove(exact)
+    setMovingTaskId(null)
+  }
+
+  const authenticateMove = () => {
+    const exact = exactMove.current
+    if (
+      !exact ||
+      exact.snapshot.kind !== 'authentication_required' ||
+      !onAuthenticationRequired
+    ) return
+
+    const { authentication, operation, request } = exact.snapshot
+    onAuthenticationRequired(
+      {
+        authentication,
+        kind: operation === 'lookup' ? 'submitted-unknown' : 'not-submitted',
+        mutationId: request.mutationId,
+      },
+      async (nextCsrfToken) => {
+        setMovingTaskId(request.taskId)
+        await exact.resumeAfterAuthentication(nextCsrfToken)
+        settleMove(exact)
+        setMovingTaskId(null)
+      },
+    )
   }
 
   const focusAfterRemoval = (items: readonly TaskViewItem[], taskId: string) => {
@@ -511,8 +560,13 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
               </button>
             ) : null}
             {moveError === 'unknown' ? (
-              <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={() => void retryUnknownMove()} type="button">
+              <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={() => void checkUnknownMove()} type="button">
                 Check again
+              </button>
+            ) : null}
+            {moveError === 'authentication' && moveSubmissionState?.kind === 'authentication_required' ? (
+              <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={authenticateMove} type="button">
+                Sign in and continue
               </button>
             ) : null}
           </div>

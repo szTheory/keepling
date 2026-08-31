@@ -1079,7 +1079,9 @@ export interface components {
             readonly version: 1;
         };
         readonly TodayMoveResponse: {
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly order_revision: components["schemas"]["Revision"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
         };
         readonly TrackedSession: {
             /** @enum {string} */

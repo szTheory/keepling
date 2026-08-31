@@ -68,6 +68,7 @@ defmodule KeeplingWeb.Router do
     get "/trash", CommandController, :trash
     get "/organizations", CommandController, :organizations
     get "/mutations/:mutation_id", CommandController, :mutation
+    get "/today/mutations/:mutation_id", TaskViewController, :mutation
     get "/tasks/:task_id", CommandController, :task
     get "/tasks/:task_id/activity", ActivityController, :index
   end

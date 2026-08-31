@@ -40,6 +40,39 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
   end
 
   @impl true
+  def lookup_today_result(%{account_id: account_id}, mutation_id) do
+    case SQL.query(
+           Repo,
+           """
+           SELECT task_id, outcome, order_revision
+           FROM today_order_receipts
+           WHERE account_id = $1 AND mutation_id = $2
+           """,
+           [account_id, dump_uuid(mutation_id)]
+         ) do
+      {:ok, %{rows: [[task_id, "accepted", revision]]}} when not is_nil(task_id) ->
+        {:ok,
+         %{
+           mutation_id: mutation_id,
+           order_revision: revision,
+           task_id: Ecto.UUID.load!(task_id)
+         }}
+
+      {:ok, %{rows: []}} ->
+        {:error, :not_found}
+
+      {:ok, %{rows: [[_task_id, _outcome, _revision]]}} ->
+        {:error, :not_found}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  @impl true
   def move_today(
         %{account_id: account_id, accepted_at: accepted_at},
         %{
@@ -86,6 +119,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
                        repo,
                        account_id,
                        mutation_id,
+                       task_id,
                        fingerprint,
                        terminal,
                        accepted_at
@@ -181,6 +215,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
          repo,
          account_id,
          mutation_id,
+         task_id,
          fingerprint,
          result,
          accepted_at
@@ -195,10 +230,18 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
       repo,
       """
       INSERT INTO today_order_receipts (
-        account_id, mutation_id, fingerprint, outcome, order_revision, inserted_at
-      ) VALUES ($1, $2, $3, $4, $5, $6)
+        account_id, mutation_id, task_id, fingerprint, outcome, order_revision, inserted_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       """,
-      [account_id, dump_uuid(mutation_id), fingerprint, outcome, revision, accepted_at]
+      [
+        account_id,
+        dump_uuid(mutation_id),
+        dump_uuid(task_id),
+        fingerprint,
+        outcome,
+        revision,
+        accepted_at
+      ]
     )
   end
 

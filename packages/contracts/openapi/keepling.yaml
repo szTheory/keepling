@@ -1604,10 +1604,16 @@ components:
       type: object
       additionalProperties: false
       required:
+        - mutation_id
         - order_revision
+        - task_id
       properties:
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
         order_revision:
           $ref: '#/components/schemas/Revision'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
     EditTaskCommand:
       type: object
       additionalProperties: false
