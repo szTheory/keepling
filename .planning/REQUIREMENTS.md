@@ -19,7 +19,7 @@
 
 - [x] **SRV-01**: User can authenticate a personal account and authorize multiple owned devices without exposing server credentials to clients or agents.
 - [ ] **SRV-02**: User receives the same domain invariants through web, desktop, iPhone, API, and MCP entry points.
-- [ ] **SRV-03**: User-visible mutations are idempotent by mutation identity and return stable result or error contracts.
+- [x] **SRV-03**: User-visible mutations are idempotent by mutation identity and return stable result or error contracts.
 - [ ] **SRV-04**: User can synchronize through an ordered, account-scoped change feed with opaque durable cursors and tombstones.
 - [ ] **SRV-05**: User sees a structured conflict instead of a silent overwrite when concurrent edits cannot be safely merged.
 - [ ] **SRV-06**: User can continue using a supported released client after a compatible server deployment without a coordinated forced upgrade.
