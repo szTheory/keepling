@@ -151,6 +151,9 @@ describe('routed task lists', () => {
     await user.click(screen.getByRole('button', { name: 'Move later “Call dentist”' }))
 
     expect(screen.getByText('Moving…')).toBeInTheDocument()
+    for (const button of screen.getAllByRole('button', { name: /Move (earlier|later)/ })) {
+      expect(button).toBeDisabled()
+    }
     expect(within(list).getAllByRole('link').map((link) => link.textContent)).toEqual([
       'Call dentist',
       'Send invoice',
@@ -179,6 +182,9 @@ describe('routed task lists', () => {
         'Call dentist',
       ])
     })
+    for (const button of screen.getAllByRole('button', { name: /Move (earlier|later)/ })) {
+      expect(button).toBeEnabled()
+    }
   })
 
   it('refreshes authoritative rows and cursor after moving across a loaded Today boundary', async () => {
@@ -402,12 +408,19 @@ describe('routed task lists', () => {
     )
     await screen.findByRole('link', { name: 'Call dentist' })
     await user.click(screen.getByRole('button', { name: 'Move later “Call dentist”' }))
-    await user.click(await screen.findByRole('button', { name: 'Sign in and continue' }))
+    const continueButton = await screen.findByRole('button', { name: 'Sign in and continue' })
+    for (const button of screen.getAllByRole('button', { name: /Move (earlier|later)/ })) {
+      expect(button).toBeDisabled()
+    }
+    await user.click(continueButton)
     const [, resume] = onAuthenticationRequired.mock.calls[0] as [unknown, (csrf: string) => Promise<void>]
     await resume('new-session-csrf')
 
     await waitFor(() => expect(screen.getByText('Today order updated.')).toBeInTheDocument())
     expect(bodies).toHaveLength(1)
+    for (const button of screen.getAllByRole('button', { name: /Move (earlier|later)/ })) {
+      expect(button).toBeEnabled()
+    }
   })
 
   it('routes authenticated Today, Upcoming, and Completed views through their facades', async () => {

@@ -50,6 +50,10 @@ type TodayMoveExact = ExactSubmission<
   KeeplingApiError
 >
 
+const todayMoveIsLocked = (snapshot: TodayMoveState | null) =>
+  snapshot !== null &&
+  ['authentication_required', 'in_flight', 'not_submitted', 'unknown'].includes(snapshot.kind)
+
 const copy = {
   completed: {
     description: 'Completed tasks use their accepted completion date in account time.',
@@ -139,6 +143,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
   const heading = useRef<HTMLHeadingElement>(null)
   const rowLinks = useRef(new Map<string, HTMLAnchorElement>())
   const viewCopy = copy[view]
+  const moveLocked = todayMoveIsLocked(moveSubmissionState)
 
   const beginReadAuthentication = useCallback(
     (resume: () => Promise<void>) => {
@@ -279,6 +284,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
   }
 
   const move = async (taskId: string, direction: 'earlier' | 'later') => {
+    if (todayMoveIsLocked(exactMove.current?.snapshot ?? null)) return
     if (state.kind !== 'ready' || state.page.orderRevision === null || !csrfToken) return
     const submission: TodayMoveSubmission = {
       direction,
@@ -422,7 +428,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
             <button
               aria-label={`Move earlier “${task.title}”`}
               className="min-h-11 px-2 text-sm font-semibold text-primary underline"
-              disabled={movingTaskId !== null}
+              disabled={moveLocked}
               onClick={() => void move(task.id, 'earlier')}
               type="button"
             >
@@ -431,7 +437,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
             <button
               aria-label={`Move later “${task.title}”`}
               className="min-h-11 px-2 text-sm font-semibold text-primary underline"
-              disabled={movingTaskId !== null}
+              disabled={moveLocked}
               onClick={() => void move(task.id, 'later')}
               type="button"
             >
