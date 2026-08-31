@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 12
+open_count: 13
 waived_count: 0
 fixed_count: 0
-total_count: 12
-last_updated: 2026-08-31T02:33:05.234Z
+total_count: 13
+last_updated: 2026-08-31T03:57:58.529Z
 ---
 
 # Broken Windows Ledger
@@ -27,6 +27,7 @@ last_updated: 2026-08-31T02:33:05.234Z
 | 10 | KPL-01 | deviation | apps/server/mix.exs |  | Added exact reviewed Argon2id and Tzdata dependencies required by the planned setup contract | open |  | 2026-08-31T02:33:05.090Z |  |
 | 11 | KPL-01 | deviation | apps/server/priv/repo/migrations/20260830000200_add_closed_setup_and_timezone.exs |  | Bound setup TTL and enforced permanent disablement plus future account credential/timezone fields | open |  | 2026-08-31T02:33:05.162Z |  |
 | 12 | KPL-01 | deviation | apps/server/config/config.exs |  | Disabled Tzdata remote updater to close the vulnerable transitive HTTP path | open |  | 2026-08-31T02:33:05.234Z |  |
+| 13 | KPL-01 | deviation | apps/web/src/App.tsx |  | Wired Inbox route reachability and exact acknowledgement reconciliation omitted from the plan file list | open |  | 2026-08-31T03:57:58.529Z |  |
 
 ````json
 [
@@ -172,6 +173,18 @@ last_updated: 2026-08-31T02:33:05.234Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-31T02:33:05.234Z",
+    "resolved_at": null
+  },
+  {
+    "id": 13,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/web/src/App.tsx",
+    "line": null,
+    "description": "Wired Inbox route reachability and exact acknowledgement reconciliation omitted from the plan file list",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T03:57:58.529Z",
     "resolved_at": null
   }
 ]
