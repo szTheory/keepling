@@ -80,6 +80,7 @@ defmodule Keepling.ArchitectureTest do
     assert Keepling.TestClock.now(clock) == now
     assert {"task-1", clock} = Keepling.TestClock.next_id(clock)
     assert {"mutation-1", clock} = Keepling.TestClock.next_id(clock)
+
     assert Keepling.TestClock.now(Keepling.TestClock.advance(clock, 90, :second)) ==
              ~U[2026-08-30 12:01:30.000000Z]
   end
