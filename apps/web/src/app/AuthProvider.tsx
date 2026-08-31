@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -18,7 +19,10 @@ type AuthenticationState =
 
 type AuthContextValue = {
   acceptAuthentication: (csrfToken: string) => void
-  beginReauthentication: (intent: InterruptedIntent) => void
+  beginReauthentication: (
+    intent: InterruptedIntent,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => void
   clearAuthentication: () => void
   completeReauthentication: (intent: InterruptedIntent, csrfToken: string) => void
   interruption: InterruptedIntent | null
@@ -30,6 +34,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthenticationState>({ kind: 'loading' })
   const [interruption, setInterruption] = useState<InterruptedIntent | null>(null)
+  const resumeRef = useRef<((csrfToken: string) => Promise<void>) | null>(null)
 
   useEffect(() => {
     let active = true
@@ -56,14 +61,21 @@ function AuthProvider({ children }: { children: ReactNode }) {
         setState({ csrfToken, kind: 'authenticated' })
         setInterruption(null)
       },
-      beginReauthentication: (intent) => setInterruption(intent),
+      beginReauthentication: (intent, resume) => {
+        resumeRef.current = resume
+        setInterruption(intent)
+      },
       clearAuthentication: () => {
+        resumeRef.current = null
         setInterruption(null)
         setState({ kind: 'unauthenticated' })
       },
       completeReauthentication: (intent, csrfToken) => {
         setState({ csrfToken, kind: 'authenticated' })
         setInterruption((current) => (current === intent ? null : current))
+        const resume = resumeRef.current
+        resumeRef.current = null
+        if (resume) queueMicrotask(() => void resume(csrfToken))
       },
       interruption,
       state,

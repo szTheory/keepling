@@ -38,35 +38,47 @@ function AppRoutes({
   onAuthenticated = () => undefined,
   onReauthenticated = () => undefined,
 }: AppRoutesProps) {
-  const [pathname, setPathname] = useState(window.location.pathname)
+  const [locationKey, setLocationKey] = useState(
+    `${window.location.pathname}${window.location.search}`,
+  )
 
   useEffect(() => {
-    const update = () => setPathname(window.location.pathname)
+    const update = () => setLocationKey(`${window.location.pathname}${window.location.search}`)
     window.addEventListener('popstate', update)
     return () => window.removeEventListener('popstate', update)
   }, [])
+
+  const location = new URL(locationKey, window.location.origin)
+  const { pathname } = location
 
   const handleAuthenticated = (nextCsrfToken: string) => {
     onAuthenticated(nextCsrfToken)
     navigate('/')
   }
-  const setupToken = routeToken(pathname, '/setup/')
+  const setupToken = routeToken(pathname, '/setup/') ??
+    (pathname === '/setup' ? location.searchParams.get('token') : null)
   if (setupToken) return <SetupForm token={setupToken} />
 
-  const recoveryToken = routeToken(pathname, '/recover/')
+  const recoveryToken = routeToken(pathname, '/recover/') ??
+    (pathname === '/recover' ? location.searchParams.get('token') : null)
   if (recoveryToken) {
     return <RecoveryReset onAuthenticated={handleAuthenticated} token={recoveryToken} />
   }
 
   if (interruption && csrfToken) {
     return (
-      <main className="mx-auto min-h-screen max-w-2xl bg-background px-4 py-16" id="main-content">
-        <Reauthenticate
-          csrfToken={csrfToken}
-          interruption={interruption}
-          onAuthenticated={onReauthenticated}
-        />
-      </main>
+      <>
+        {authenticatedContent}
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 px-4 py-16">
+          <div className="mx-auto max-w-2xl">
+            <Reauthenticate
+              csrfToken={csrfToken}
+              interruption={interruption}
+              onAuthenticated={onReauthenticated}
+            />
+          </div>
+        </div>
+      </>
     )
   }
 

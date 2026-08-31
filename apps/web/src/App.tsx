@@ -7,6 +7,7 @@ import {
   type CaptureAcknowledgement,
 } from '@/api/keepling'
 import { AuthProvider, useAuth } from '@/app/AuthProvider'
+import AppShell from '@/app/AppShell'
 import AppRoutes from '@/app/routes'
 import QuickCapture from '@/features/capture/QuickCapture'
 
@@ -91,6 +92,13 @@ function InboxWorkspace() {
             >
               Inbox
             </a>
+            <p className="mt-6 px-3 text-sm font-semibold text-muted-foreground">Settings</p>
+            <a
+              className="mt-2 flex min-h-11 items-center border-l-2 border-transparent pl-3 font-semibold"
+              href="/settings/sessions"
+            >
+              Sessions
+            </a>
           </nav>
         </aside>
 
@@ -103,7 +111,11 @@ function InboxWorkspace() {
           </div>
 
           {state.kind === 'ready' && auth.state.kind === 'authenticated' ? (
-            <QuickCapture csrfToken={auth.state.csrfToken} onCaptured={handleCaptured} />
+            <QuickCapture
+              csrfToken={auth.state.csrfToken}
+              onAuthenticationRequired={auth.beginReauthentication}
+              onCaptured={handleCaptured}
+            />
           ) : null}
 
           <section aria-labelledby="inbox-list-heading" className="p-6">
@@ -196,11 +208,23 @@ function RoutedApp() {
   }
 
   const authenticatedState = auth.state.kind === 'authenticated' ? auth.state : null
+  const handleLoggedOut = () => {
+    auth.clearAuthentication()
+    window.location.assign('/login')
+  }
 
   return (
     <AppRoutes
       authenticated={authenticatedState !== null}
-      authenticatedContent={authenticatedState ? <InboxWorkspace /> : undefined}
+      authenticatedContent={
+        authenticatedState ? (
+          <AppShell
+            csrfToken={authenticatedState.csrfToken}
+            inboxContent={<InboxWorkspace />}
+            onLoggedOut={handleLoggedOut}
+          />
+        ) : undefined
+      }
       csrfToken={authenticatedState?.csrfToken}
       interruption={auth.interruption}
       onAuthenticated={auth.acceptAuthentication}

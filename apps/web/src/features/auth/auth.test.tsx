@@ -266,7 +266,7 @@ describe('capture authentication recovery', () => {
     await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
     const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
       InterruptedIntent,
-      () => Promise<void>,
+      (csrfToken: string) => Promise<void>,
     ]
     expect(intent.kind).toBe('not-submitted')
     expect(draft).toHaveValue('Keep this exact draft')
@@ -294,7 +294,7 @@ describe('capture authentication recovery', () => {
         201,
       ),
     )
-    await resume()
+    await resume('renewed-csrf')
 
     const retryRequest = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)) as {
       mutation_id: string
@@ -330,7 +330,7 @@ describe('capture authentication recovery', () => {
     await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
     const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
       InterruptedIntent,
-      () => Promise<void>,
+      (csrfToken: string) => Promise<void>,
     ]
     expect(intent.kind).toBe('submitted-unknown')
     if (intent.kind !== 'submitted-unknown') throw new Error('Expected submitted-unknown intent')
@@ -359,7 +359,7 @@ describe('capture authentication recovery', () => {
         201,
       ),
     )
-    await resume()
+    await resume('renewed-csrf')
 
     expect(fetchMock.mock.calls[2]?.[0]).toBe(`/api/v1/mutations/${intent.mutationId}`)
     await waitFor(() => expect(onCaptured).toHaveBeenCalledOnce())

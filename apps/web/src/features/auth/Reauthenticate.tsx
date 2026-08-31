@@ -4,7 +4,7 @@ import { KeeplingApiError, reauthenticate } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
 
 type InterruptedIntent =
-  | { kind: 'not-submitted' }
+  | { kind: 'not-submitted'; mutationId: string }
   | { kind: 'submitted-unknown'; mutationId: string }
 
 type ReauthenticateProps = {

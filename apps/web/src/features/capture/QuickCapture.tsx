@@ -8,9 +8,14 @@ import {
   type CaptureTaskSubmission,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
+import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 
 type QuickCaptureProps = {
   csrfToken: string
+  onAuthenticationRequired?: (
+    intent: InterruptedIntent,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => void
   onCaptured: (acknowledgement: CaptureAcknowledgement) => void
 }
 
@@ -21,10 +26,11 @@ type Submission = {
 type Status =
   | { kind: 'idle' }
   | { kind: 'submitting' }
+  | { kind: 'authentication-required' }
   | { kind: 'problem'; message: string }
   | { kind: 'unknown' }
 
-function QuickCapture({ csrfToken, onCaptured }: QuickCaptureProps) {
+function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: QuickCaptureProps) {
   const fieldId = 'quick-capture-title'
   const errorId = `${fieldId}-error`
   const [draft, setDraft] = useState('')
@@ -43,6 +49,57 @@ function QuickCapture({ csrfToken, onCaptured }: QuickCaptureProps) {
     setStatus({ kind: 'idle' })
   }
 
+  const deliver = async (current: Submission, activeCsrfToken = csrfToken) => {
+    setSubmission(current)
+    setStatus({ kind: 'submitting' })
+
+    try {
+      reconcile(await captureTask(current.command, activeCsrfToken), current)
+    } catch (error) {
+      if (
+        error instanceof KeeplingApiError &&
+        error.problem.code === 'authentication_required' &&
+        onAuthenticationRequired
+      ) {
+        setStatus({ kind: 'authentication-required' })
+        onAuthenticationRequired(
+          { kind: 'not-submitted', mutationId: current.command.mutationId },
+          (nextCsrfToken) => deliver(current, nextCsrfToken),
+        )
+      } else if (error instanceof KeeplingApiError) {
+        setSubmission(null)
+        setStatus({ kind: 'problem', message: error.message })
+      } else {
+        setStatus({ kind: 'unknown' })
+      }
+    }
+  }
+
+  const checkSubmission = async (current: Submission, _activeCsrfToken = csrfToken) => {
+    void _activeCsrfToken
+    setStatus({ kind: 'submitting' })
+
+    try {
+      reconcile(await getMutation(current.command.mutationId), current)
+    } catch (error) {
+      if (
+        error instanceof KeeplingApiError &&
+        error.problem.code === 'authentication_required' &&
+        onAuthenticationRequired
+      ) {
+        setStatus({ kind: 'authentication-required' })
+        onAuthenticationRequired(
+          { kind: 'submitted-unknown', mutationId: current.command.mutationId },
+          (nextCsrfToken) => checkSubmission(current, nextCsrfToken),
+        )
+      } else if (error instanceof KeeplingApiError && error.problem.code !== 'mutation_not_found') {
+        setStatus({ kind: 'problem', message: error.message })
+      } else {
+        setStatus({ kind: 'unknown' })
+      }
+    }
+  }
+
   const submit = async () => {
     if (draft.trim() === '' || status.kind === 'submitting') return
 
@@ -56,35 +113,11 @@ function QuickCapture({ csrfToken, onCaptured }: QuickCaptureProps) {
         },
       } satisfies Submission)
 
-    setSubmission(current)
-    setStatus({ kind: 'submitting' })
-
-    try {
-      reconcile(await captureTask(current.command, csrfToken), current)
-    } catch (error) {
-      if (error instanceof KeeplingApiError) {
-        setSubmission(null)
-        setStatus({ kind: 'problem', message: error.message })
-      } else {
-        setStatus({ kind: 'unknown' })
-      }
-    }
+    await deliver(current)
   }
 
   const checkAgain = async () => {
-    if (!submission) return
-
-    setStatus({ kind: 'submitting' })
-
-    try {
-      reconcile(await getMutation(submission.command.mutationId), submission)
-    } catch (error) {
-      if (error instanceof KeeplingApiError && error.problem.code !== 'mutation_not_found') {
-        setStatus({ kind: 'problem', message: error.message })
-      } else {
-        setStatus({ kind: 'unknown' })
-      }
-    }
+    if (submission) await checkSubmission(submission)
   }
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -153,6 +186,12 @@ function QuickCapture({ csrfToken, onCaptured }: QuickCaptureProps) {
           <Button className="mt-3 min-h-11" onClick={() => void checkAgain()} variant="outline">
             Check again
           </Button>
+        </div>
+      ) : null}
+
+      {status.kind === 'authentication-required' ? (
+        <div className="mt-4 rounded-lg border border-border bg-card p-4" role="status">
+          Sign in again to finish saving. Your changes are still here.
         </div>
       ) : null}
     </section>
