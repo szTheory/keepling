@@ -1,4 +1,5 @@
 import {
+  useCallback,
   createContext,
   useContext,
   useEffect,
@@ -55,32 +56,53 @@ function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const acceptAuthentication = useCallback((csrfToken: string) => {
+    setState({ csrfToken, kind: 'authenticated' })
+    setInterruption(null)
+  }, [])
+
+  const beginReauthentication = useCallback(
+    (intent: InterruptedIntent, resume: (csrfToken: string) => Promise<void>) => {
+      resumeRef.current = resume
+      setInterruption(intent)
+    },
+    [],
+  )
+
+  const clearAuthentication = useCallback(() => {
+    resumeRef.current = null
+    setInterruption(null)
+    setState({ kind: 'unauthenticated' })
+  }, [])
+
+  const completeReauthentication = useCallback(
+    (intent: InterruptedIntent, csrfToken: string) => {
+      setState({ csrfToken, kind: 'authenticated' })
+      setInterruption((current) => (current === intent ? null : current))
+      const resume = resumeRef.current
+      resumeRef.current = null
+      if (resume) queueMicrotask(() => void resume(csrfToken))
+    },
+    [],
+  )
+
   const value = useMemo<AuthContextValue>(
     () => ({
-      acceptAuthentication: (csrfToken) => {
-        setState({ csrfToken, kind: 'authenticated' })
-        setInterruption(null)
-      },
-      beginReauthentication: (intent, resume) => {
-        resumeRef.current = resume
-        setInterruption(intent)
-      },
-      clearAuthentication: () => {
-        resumeRef.current = null
-        setInterruption(null)
-        setState({ kind: 'unauthenticated' })
-      },
-      completeReauthentication: (intent, csrfToken) => {
-        setState({ csrfToken, kind: 'authenticated' })
-        setInterruption((current) => (current === intent ? null : current))
-        const resume = resumeRef.current
-        resumeRef.current = null
-        if (resume) queueMicrotask(() => void resume(csrfToken))
-      },
+      acceptAuthentication,
+      beginReauthentication,
+      clearAuthentication,
+      completeReauthentication,
       interruption,
       state,
     }),
-    [interruption, state],
+    [
+      acceptAuthentication,
+      beginReauthentication,
+      clearAuthentication,
+      completeReauthentication,
+      interruption,
+      state,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

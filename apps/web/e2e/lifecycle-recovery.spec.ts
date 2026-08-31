@@ -184,7 +184,7 @@ test('@lifecycle-recovery preserves identity when authentication interrupts befo
   await page.getByRole('button', { name: 'Sign in and continue' }).click()
   await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
   await page.getByLabel('Session label').fill('Before acceptance continuation')
-  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+  await page.locator('form').getByRole('button', { name: 'Sign in and continue' }).click()
 
   await expect(page.getByRole('button', { name: `Reopen “${title}”` })).toBeVisible()
   expect(bodies).toHaveLength(2)
@@ -229,7 +229,7 @@ test('@lifecycle-recovery preserves the stored identity when authentication inte
   await page.getByRole('button', { name: 'Sign in and continue' }).click()
   await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
   await page.getByLabel('Session label').fill('After commit continuation')
-  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+  await page.locator('form').getByRole('button', { name: 'Sign in and continue' }).click()
 
   await expect(page.getByRole('button', { name: `Reopen “${title}”` })).toBeVisible()
   expect(bodies).toHaveLength(1)
