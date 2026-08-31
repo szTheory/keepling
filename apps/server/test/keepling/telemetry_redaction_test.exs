@@ -129,7 +129,10 @@ defmodule Keepling.TelemetryRedactionTest do
       |> Enum.filter(&(File.read!(&1) =~ ":telemetry.execute"))
       |> Enum.map(&Path.relative_to(&1, root))
 
-    assert telemetry_sources == ["lib/keepling/accounts/rate_limit.ex"]
+    assert telemetry_sources == [
+             "lib/keepling/accounts/rate_limit.ex",
+             "lib/keepling/accounts/security_audit.ex"
+           ]
 
     rate_limit_source = File.read!(Path.join(root, "lib/keepling/accounts/rate_limit.ex"))
     assert rate_limit_source =~ "[:keepling, :authentication, :decision]"
@@ -137,6 +140,16 @@ defmodule Keepling.TelemetryRedactionTest do
     refute rate_limit_source =~ "task_id"
     refute rate_limit_source =~ "mutation_id"
     refute rate_limit_source =~ "token"
+
+    audit_source = File.read!(Path.join(root, "lib/keepling/accounts/security_audit.ex"))
+    assert audit_source =~ "[:keepling, :security_audit, :persistence]"
+
+    assert audit_source =~
+             "%{event_type: event_type, persistence_policy: policy, status: :degraded}"
+
+    for forbidden <- ["account_id", "task_id", "mutation_id", "password", "token"] do
+      refute audit_source =~ forbidden
+    end
 
     router = File.read!(Path.join(root, "lib/keepling_web/router.ex"))
     assert router =~ "if Mix.env() == :test do"
