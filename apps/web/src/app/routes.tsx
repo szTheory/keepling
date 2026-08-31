@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react'
 
 import LoginForm from '@/features/auth/LoginForm'
 import Reauthenticate, { type InterruptedIntent } from '@/features/auth/Reauthenticate'
@@ -55,6 +55,42 @@ const navigate = (pathname: string) => {
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
+function InterruptionBoundary({
+  children,
+  interrupted,
+  overlay,
+}: {
+  children: ReactNode
+  interrupted: boolean
+  overlay: ReactNode
+}) {
+  useLayoutEffect(() => {
+    const root = document.getElementById('root')
+    if (!root || !interrupted) return
+
+    const retainedElements = [...root.children].filter(
+      (element) => !(element instanceof HTMLElement && element.dataset.authRecoveryOverlay === 'true'),
+    )
+    const previousValues = retainedElements.map((element) => element.getAttribute('aria-hidden'))
+    retainedElements.forEach((element) => element.setAttribute('aria-hidden', 'true'))
+
+    return () => {
+      retainedElements.forEach((element, index) => {
+        const previousValue = previousValues[index]
+        if (previousValue === null) element.removeAttribute('aria-hidden')
+        else element.setAttribute('aria-hidden', previousValue)
+      })
+    }
+  }, [interrupted])
+
+  return (
+    <>
+      {children}
+      {overlay}
+    </>
+  )
+}
+
 function AppRoutes({
   authenticated,
   authenticatedContent,
@@ -100,12 +136,13 @@ function AppRoutes({
     }
 
     return (
-      <>
-        <div aria-hidden={interruption ? 'true' : undefined} className="contents">
-          {content}
-        </div>
-        {interruption && csrfToken ? (
-          <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 px-4 py-16">
+      <InterruptionBoundary
+        interrupted={Boolean(interruption && csrfToken)}
+        overlay={interruption && csrfToken ? (
+          <div
+            className="fixed inset-0 z-50 overflow-y-auto bg-background/95 px-4 py-16"
+            data-auth-recovery-overlay="true"
+          >
             <div className="mx-auto max-w-2xl">
               {continuationError ? (
               <section
@@ -140,7 +177,9 @@ function AppRoutes({
             </div>
           </div>
         ) : null}
-      </>
+      >
+        {content}
+      </InterruptionBoundary>
     )
   }
 
