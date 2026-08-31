@@ -8,6 +8,8 @@ type WireClarifyTaskCommand = components['schemas']['ClarifyTaskCommand']
 type WireCommandAcknowledgement = components['schemas']['CommandAcknowledgement']
 type WireCreateOrganizationCommand = components['schemas']['CreateOrganizationCommand']
 type WireEditTaskCommand = components['schemas']['EditTaskCommand']
+type WireEditTaskDatesRequest = components['schemas']['EditTaskDatesRequest']
+type WirePlanForTodayRequest = components['schemas']['PlanForTodayRequest']
 type WireOrganizationAcknowledgement = components['schemas']['OrganizationAcknowledgement']
 type WireOrganizationLifecycleCommand = components['schemas']['OrganizationLifecycleCommand']
 type WireOrganizationsResponse = components['schemas']['OrganizationsResponse']
@@ -30,9 +32,11 @@ type VersionedAuthRequest = components['schemas']['VersionedAuthRequest']
 
 type BrowserTask = {
   capturedAt: string
+  deadlineOn: string | null
   id: string
   inboxState: 'clarified' | 'inbox'
   notes: string
+  plannedOn: string | null
   project: TaskOrganizationReference | null
   revision: number
   tags: readonly TaskOrganizationReference[]
@@ -149,6 +153,26 @@ type EditTaskSubmission = {
   baseValues: TaskDetailValues
   expectedRevision: number
   fields: TaskDetailValues
+  mutationId: string
+  taskId: string
+}
+
+type TaskDateValues = {
+  deadlineOn?: string | null
+  plannedOn?: string | null
+}
+
+type EditTaskDatesSubmission = {
+  baseValues: TaskDateValues
+  expectedRevision: number
+  fields: TaskDateValues
+  mutationId: string
+  taskId: string
+}
+
+type PlanningSubmission = {
+  basePlannedOn: string | null
+  expectedRevision: number
   mutationId: string
   taskId: string
 }
@@ -378,9 +402,11 @@ const revokeSession = async (
 
 const mapTask = (task: components['schemas']['TaskSnapshot']): BrowserTask => ({
   capturedAt: task.captured_at,
+  deadlineOn: task.deadline_on,
   id: task.id,
   inboxState: task.inbox_state,
   notes: task.notes,
+  plannedOn: task.planned_on,
   project: task.project == null ? null : { ...task.project },
   revision: task.revision,
   tags: task.tags?.map((tag) => ({ ...tag })) ?? [],
@@ -552,6 +578,56 @@ const editTask = async (
     csrfToken,
   )
 
+const editTaskDates = async (
+  submission: EditTaskDatesSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> => {
+  const command: WireEditTaskDatesRequest = {
+    base_values: {
+      ...(submission.baseValues.deadlineOn !== undefined
+        ? { deadline_on: submission.baseValues.deadlineOn }
+        : {}),
+      ...(submission.baseValues.plannedOn !== undefined
+        ? { planned_on: submission.baseValues.plannedOn }
+        : {}),
+    },
+    expected_revision: submission.expectedRevision,
+    fields: {
+      ...(submission.fields.deadlineOn !== undefined
+        ? { deadline_on: submission.fields.deadlineOn }
+        : {}),
+      ...(submission.fields.plannedOn !== undefined
+        ? { planned_on: submission.fields.plannedOn }
+        : {}),
+    },
+    mutation_id: submission.mutationId,
+    task_id: submission.taskId,
+    version: 1,
+  }
+
+  return submitTaskCommand('/api/v1/commands/edit-task-dates', command, csrfToken)
+}
+
+const planningCommand = (submission: PlanningSubmission): WirePlanForTodayRequest => ({
+  base_planned_on: submission.basePlannedOn,
+  expected_revision: submission.expectedRevision,
+  mutation_id: submission.mutationId,
+  task_id: submission.taskId,
+  version: 1,
+})
+
+const planForToday = async (
+  submission: PlanningSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> =>
+  submitTaskCommand('/api/v1/commands/plan-for-today', planningCommand(submission), csrfToken)
+
+const unplanTask = async (
+  submission: PlanningSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> =>
+  submitTaskCommand('/api/v1/commands/unplan-task', planningCommand(submission), csrfToken)
+
 const clarifyTask = async (
   submission: EditTaskSubmission,
   csrfToken: string,
@@ -692,6 +768,7 @@ export {
   clarifyTask,
   completeSetup,
   createOrganization,
+  editTaskDates,
   getInbox,
   getMutation,
   getOrganizations,
@@ -708,6 +785,8 @@ export {
   revokeSession,
   updateSession,
   unarchiveOrganization,
+  unplanTask,
+  planForToday,
   type AssignTaskOrganizationsSubmission,
   type ActivityChange,
   type AuthenticationTransition,
@@ -720,6 +799,8 @@ export {
   type CommandAcknowledgement,
   type CreateOrganizationSubmission,
   type EditTaskSubmission,
+  type EditTaskDatesSubmission,
+  type PlanningSubmission,
   type Problem,
   type OrganizationAcknowledgement,
   type OrganizationAssignmentValues,
@@ -727,6 +808,7 @@ export {
   type RenameOrganizationSubmission,
   type ReturnToInboxSubmission,
   type TaskDetailValues,
+  type TaskDateValues,
   type TaskActivity,
   type TaskActivityPage,
   type TaskOrganizationReference,

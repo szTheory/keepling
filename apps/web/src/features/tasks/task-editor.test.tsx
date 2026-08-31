@@ -6,7 +6,18 @@ import AppRoutes from '@/app/routes'
 import QuickCapture from '@/features/capture/QuickCapture'
 import TaskEditor from '@/features/tasks/TaskEditor'
 
-const task = {
+type TaskFixture = {
+  captured_at: string
+  deadline_on: string | null
+  id: string
+  inbox_state: 'clarified' | 'inbox'
+  notes: string
+  planned_on: string | null
+  revision: number
+  title: string
+}
+
+const task: TaskFixture = {
   captured_at: '2026-08-30T20:00:00Z',
   deadline_on: '2026-09-02',
   id: '018d8b40-2f10-7b1a-9d71-263f4af77001',
@@ -83,6 +94,7 @@ describe('canonical task editor', () => {
     render(<QuickCapture csrfToken="csrf" onCaptured={onCaptured} />)
 
     expect(screen.getByText('Destination: Inbox')).toBeVisible()
+    expect(screen.getByRole('checkbox', { name: 'Add to Today' })).not.toBeChecked()
     await user.type(screen.getByLabelText('What do you want to keep?'), 'Plan this deliberately')
     await user.click(screen.getByRole('checkbox', { name: 'Add to Today' }))
     await user.click(screen.getByRole('button', { name: 'Add task' }))
@@ -218,14 +230,111 @@ describe('canonical task editor', () => {
 
     expect(planned).toHaveValue('2026-02-30')
     expect(planned).toHaveFocus()
-    expect(screen.getByText('Enter a valid planned date in YYYY-MM-DD format.')).toBeVisible()
+    expect(
+      screen.getAllByText('Enter a valid planned date in YYYY-MM-DD format.'),
+    ).toHaveLength(2)
     expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('chains touched details and dates with the acknowledged revision', async () => {
+    let resolveDetails: ((response: Response) => void) | undefined
+    let resolveDates: ((response: Response) => void) | undefined
+    const fetchMock = vi.fn((...args: [RequestInfo | URL, RequestInit?]) => {
+      const [input] = args
+      if (String(input) === '/api/v1/inbox') return Promise.resolve(inboxResponse())
+      if (String(input).startsWith(`/api/v1/tasks/${task.id}/activity?`)) {
+        return Promise.resolve(activityResponse())
+      }
+      if (String(input) === '/api/v1/commands/edit-task') {
+        return new Promise<Response>((resolve) => {
+          resolveDetails = resolve
+        })
+      }
+      if (String(input) === '/api/v1/commands/edit-task-dates') {
+        return new Promise<Response>((resolve) => {
+          resolveDates = resolve
+        })
+      }
+      throw new Error(`Unexpected request ${String(input)}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAcknowledged = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <TaskEditor
+        csrfToken="csrf"
+        onAcknowledged={onAcknowledged}
+        onNavigate={vi.fn()}
+        taskId={task.id}
+      />,
+    )
+
+    const title = await screen.findByLabelText('Title')
+    const planned = screen.getByLabelText('Planned date')
+    await user.clear(title)
+    await user.type(title, 'Call dentist tomorrow')
+    await user.clear(planned)
+    await user.type(planned, '2026-09-01')
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    const detailRequest = JSON.parse(
+      String(
+        fetchMock.mock.calls.find(
+          ([url]) => String(url) === '/api/v1/commands/edit-task',
+        )?.[1]?.body,
+      ),
+    ) as Record<string, unknown>
+    resolveDetails?.(
+      jsonResponse({
+        ...acknowledgement({ revision: 4, title: 'Call dentist tomorrow' }),
+        mutation_id: detailRequest.mutation_id,
+      }),
+    )
+
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/v1/commands/edit-task-dates',
+        expect.any(Object),
+      ),
+    )
+    const dateRequest = JSON.parse(
+      String(
+        fetchMock.mock.calls.find(
+          ([url]) => String(url) === '/api/v1/commands/edit-task-dates',
+        )?.[1]?.body,
+      ),
+    ) as Record<string, unknown>
+    expect(dateRequest).toMatchObject({
+      base_values: { planned_on: '2026-08-31' },
+      expected_revision: 4,
+      fields: { planned_on: '2026-09-01' },
+    })
+    expect(onAcknowledged).not.toHaveBeenCalled()
+
+    resolveDates?.(
+      jsonResponse({
+        ...acknowledgement({
+          planned_on: '2026-09-01',
+          revision: 5,
+          title: 'Call dentist tomorrow',
+        }),
+        mutation_id: dateRequest.mutation_id,
+      }),
+    )
+
+    await waitFor(() => expect(onAcknowledged).toHaveBeenCalledOnce())
+    expect(title).toHaveValue('Call dentist tomorrow')
+    expect(planned).toHaveValue('2026-09-01')
   })
 
   it('sends only touched notes with their base value and never saves on blur', async () => {
     let resolveSave: ((response: Response) => void) | undefined
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       if (String(input) === '/api/v1/inbox') return Promise.resolve(inboxResponse())
+      if (String(input).startsWith(`/api/v1/tasks/${task.id}/activity?`)) {
+        return Promise.resolve(activityResponse())
+      }
       if (String(input) === '/api/v1/commands/edit-task') {
         return new Promise<Response>((resolve) => {
           resolveSave = resolve
@@ -250,10 +359,16 @@ describe('canonical task editor', () => {
     await user.clear(notes)
     await user.type(notes, 'Ask about Wednesday')
     await user.tab()
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
 
     await user.click(screen.getByRole('button', { name: 'Save changes' }))
-    const request = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)) as Record<string, unknown>
+    const request = JSON.parse(
+      String(
+        fetchMock.mock.calls.find(
+          ([url]) => String(url) === '/api/v1/commands/edit-task',
+        )?.[1]?.body,
+      ),
+    ) as Record<string, unknown>
     expect(request).toMatchObject({
       base_values: { notes: 'Ask about Tuesday' },
       expected_revision: 3,
@@ -284,6 +399,9 @@ describe('canonical task editor', () => {
     let resolveClarify: ((response: Response) => void) | undefined
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       if (String(input) === '/api/v1/inbox') return Promise.resolve(inboxResponse())
+      if (String(input).startsWith(`/api/v1/tasks/${task.id}/activity?`)) {
+        return Promise.resolve(activityResponse())
+      }
       if (String(input) === '/api/v1/commands/clarify-task') {
         return new Promise<Response>((resolve) => {
           resolveClarify = resolve
@@ -310,7 +428,13 @@ describe('canonical task editor', () => {
     expect(onNavigate).not.toHaveBeenCalled()
     expect(onAcknowledged).not.toHaveBeenCalled()
 
-    const request = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)) as Record<string, unknown>
+    const request = JSON.parse(
+      String(
+        fetchMock.mock.calls.find(
+          ([url]) => String(url) === '/api/v1/commands/clarify-task',
+        )?.[1]?.body,
+      ),
+    ) as Record<string, unknown>
     const mutationId = request.mutation_id as string
     resolveClarify?.(
       jsonResponse({
@@ -326,7 +450,11 @@ describe('canonical task editor', () => {
   })
 
   it('preserves every field, links the summary, and focuses the first invalid field', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(inboxResponse())
+    const fetchMock = vi.fn((input: RequestInfo | URL) =>
+      String(input) === '/api/v1/inbox'
+        ? Promise.resolve(inboxResponse())
+        : Promise.resolve(activityResponse()),
+    )
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
 
@@ -348,11 +476,15 @@ describe('canonical task editor', () => {
     )
     expect(title).toHaveFocus()
     expect(notes).toHaveValue('Keep this notes draft')
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
   it('offers Save, Discard, and Stay for dirty navigation and scopes beforeunload', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(inboxResponse())
+    const fetchMock = vi.fn((input: RequestInfo | URL) =>
+      String(input) === '/api/v1/inbox'
+        ? Promise.resolve(inboxResponse())
+        : Promise.resolve(activityResponse()),
+    )
     vi.stubGlobal('fetch', fetchMock)
     const onNavigate = vi.fn()
     const user = userEvent.setup()
@@ -380,7 +512,14 @@ describe('canonical task editor', () => {
   })
 
   it('routes the same editor component at the canonical task URL', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(inboxResponse()))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: RequestInfo | URL) =>
+        String(input) === '/api/v1/inbox'
+          ? Promise.resolve(inboxResponse())
+          : Promise.resolve(activityResponse()),
+      ),
+    )
     window.history.replaceState({}, '', `/tasks/${task.id}`)
 
     render(<AppRoutes authenticated csrfToken="csrf" />)
@@ -395,7 +534,14 @@ describe('canonical task editor', () => {
       notes: '<script>window.taskNotesRan = true</script>',
       title: '<img src=x onerror="window.taskTitleRan = true">',
     }
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ tasks: [hostileTask] })))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: RequestInfo | URL) =>
+        String(input) === '/api/v1/inbox'
+          ? Promise.resolve(jsonResponse({ tasks: [hostileTask] }))
+          : Promise.resolve(activityResponse()),
+      ),
+    )
 
     render(<TaskEditor csrfToken="csrf" taskId={task.id} />)
 

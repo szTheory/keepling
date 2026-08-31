@@ -4,8 +4,11 @@ import {
   KeeplingApiError,
   captureTask,
   getMutation,
+  planForToday,
   type CaptureAcknowledgement,
   type CaptureTaskSubmission,
+  type CommandAcknowledgement,
+  type PlanningSubmission,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
@@ -20,7 +23,9 @@ type QuickCaptureProps = {
 }
 
 type Submission = {
-  command: CaptureTaskSubmission
+  addToToday: boolean
+  captureCommand: CaptureTaskSubmission
+  planCommand?: PlanningSubmission
 }
 
 type Status =
@@ -34,19 +39,44 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
   const fieldId = 'quick-capture-title'
   const errorId = `${fieldId}-error`
   const [draft, setDraft] = useState('')
+  const [addToToday, setAddToToday] = useState(false)
   const [submission, setSubmission] = useState<Submission | null>(null)
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
 
-  const reconcile = (acknowledgement: CaptureAcknowledgement, current: Submission) => {
-    if (acknowledgement.mutationId !== current.command.mutationId) {
+  const finish = (acknowledgement: CommandAcknowledgement) => {
+    onCaptured(acknowledgement)
+    setDraft('')
+    setAddToToday(false)
+    setSubmission(null)
+    setStatus({ kind: 'idle' })
+  }
+
+  const reconcile = async (
+    acknowledgement: CommandAcknowledgement,
+    current: Submission,
+    activeCsrfToken: string,
+  ) => {
+    const activeCommand = current.planCommand ?? current.captureCommand
+    if (acknowledgement.mutationId !== activeCommand.mutationId) {
       setStatus({ kind: 'unknown' })
       return
     }
 
-    onCaptured(acknowledgement)
-    setDraft('')
-    setSubmission(null)
-    setStatus({ kind: 'idle' })
+    if (current.addToToday && current.planCommand === undefined) {
+      const next: Submission = {
+        ...current,
+        planCommand: {
+          basePlannedOn: acknowledgement.snapshot.plannedOn,
+          expectedRevision: acknowledgement.revision,
+          mutationId: crypto.randomUUID(),
+          taskId: acknowledgement.taskId,
+        },
+      }
+      await deliver(next, activeCsrfToken)
+      return
+    }
+
+    finish(acknowledgement)
   }
 
   const deliver = async (current: Submission, activeCsrfToken = csrfToken) => {
@@ -54,7 +84,10 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
     setStatus({ kind: 'submitting' })
 
     try {
-      reconcile(await captureTask(current.command, activeCsrfToken), current)
+      const acknowledgement = current.planCommand
+        ? await planForToday(current.planCommand, activeCsrfToken)
+        : await captureTask(current.captureCommand, activeCsrfToken)
+      await reconcile(acknowledgement, current, activeCsrfToken)
     } catch (error) {
       if (
         error instanceof KeeplingApiError &&
@@ -63,11 +96,14 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
       ) {
         setStatus({ kind: 'authentication-required' })
         onAuthenticationRequired(
-          { kind: 'not-submitted', mutationId: current.command.mutationId },
+          {
+            kind: 'not-submitted',
+            mutationId: (current.planCommand ?? current.captureCommand).mutationId,
+          },
           (nextCsrfToken) => deliver(current, nextCsrfToken),
         )
       } else if (error instanceof KeeplingApiError) {
-        setSubmission(null)
+        setSubmission(current.planCommand ? current : null)
         setStatus({ kind: 'problem', message: error.message })
       } else {
         setStatus({ kind: 'unknown' })
@@ -76,11 +112,11 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
   }
 
   const checkSubmission = async (current: Submission, _activeCsrfToken = csrfToken) => {
-    void _activeCsrfToken
     setStatus({ kind: 'submitting' })
 
     try {
-      reconcile(await getMutation(current.command.mutationId), current)
+      const activeCommand = current.planCommand ?? current.captureCommand
+      await reconcile(await getMutation(activeCommand.mutationId), current, _activeCsrfToken)
     } catch (error) {
       if (
         error instanceof KeeplingApiError &&
@@ -89,7 +125,10 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
       ) {
         setStatus({ kind: 'authentication-required' })
         onAuthenticationRequired(
-          { kind: 'submitted-unknown', mutationId: current.command.mutationId },
+          {
+            kind: 'submitted-unknown',
+            mutationId: (current.planCommand ?? current.captureCommand).mutationId,
+          },
           (nextCsrfToken) => checkSubmission(current, nextCsrfToken),
         )
       } else if (error instanceof KeeplingApiError && error.problem.code !== 'mutation_not_found') {
@@ -106,7 +145,8 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
     const current =
       submission ??
       ({
-        command: {
+        addToToday,
+        captureCommand: {
           mutationId: crypto.randomUUID(),
           taskId: crypto.randomUUID(),
           title: draft,
@@ -162,14 +202,31 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
             value={draft}
           />
           {message ? (
-            <p className="text-sm text-destructive" id={errorId} role="alert">
-              {message}
-            </p>
+            <div className="space-y-2" id={errorId} role="alert">
+              <p className="text-sm text-destructive">{message}</p>
+              {submission?.planCommand ? (
+                <Button onClick={() => void deliver(submission)} type="button" variant="outline">
+                  Retry adding to Today
+                </Button>
+              ) : null}
+            </div>
           ) : null}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <p className="text-sm font-semibold text-muted-foreground">Destination: Inbox</p>
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-muted-foreground">Destination: Inbox</p>
+            <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
+              <input
+                checked={addToToday}
+                className="size-5 rounded border-input accent-primary"
+                disabled={locked}
+                onChange={(event) => setAddToToday(event.target.checked)}
+                type="checkbox"
+              />
+              Add to Today
+            </label>
+          </div>
           <Button
             className="min-h-11 px-4"
             disabled={draft.trim() === '' || status.kind === 'submitting' || locked}

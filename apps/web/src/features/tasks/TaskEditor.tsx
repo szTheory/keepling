@@ -11,11 +11,15 @@ import {
   KeeplingApiError,
   clarifyTask,
   editTask,
+  editTaskDates,
   getInbox,
   getMutation,
+  getTaskActivity,
   type BrowserTask,
   type CommandAcknowledgement,
   type EditTaskSubmission,
+  type EditTaskDatesSubmission,
+  type TaskDateValues,
   type TaskDetailValues,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
@@ -32,15 +36,20 @@ type TaskEditorProps = {
   taskId: string
 }
 
-type Draft = Pick<BrowserTask, 'notes' | 'title'>
+type Draft = Pick<BrowserTask, 'notes' | 'title'> & {
+  deadlineOn: string
+  plannedOn: string
+}
 type LoadState =
   | { kind: 'error' }
   | { kind: 'loading' }
-  | { kind: 'ready'; task: BrowserTask }
+  | { accountTimezone: string; kind: 'ready'; task: BrowserTask }
 
 type Submission = {
   action: 'clarify' | 'edit'
-  command: EditTaskSubmission
+  command: EditTaskSubmission | EditTaskDatesSubmission
+  commandKind: 'dates' | 'details'
+  datesAfter?: Pick<EditTaskDatesSubmission, 'baseValues' | 'fields'>
   navigateAfter?: string
 }
 
@@ -68,13 +77,20 @@ function TaskEditor({
   taskId,
 }: TaskEditorProps) {
   const [loadState, setLoadState] = useState<LoadState>({ kind: 'loading' })
-  const [draft, setDraft] = useState<Draft>({ notes: '', title: '' })
+  const [draft, setDraft] = useState<Draft>({
+    deadlineOn: '',
+    notes: '',
+    plannedOn: '',
+    title: '',
+  })
   const [commandState, setCommandState] = useState<CommandState>({ kind: 'idle' })
   const [submission, setSubmission] = useState<Submission | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const notesRef = useRef<HTMLTextAreaElement>(null)
+  const plannedOnRef = useRef<HTMLInputElement>(null)
+  const deadlineOnRef = useRef<HTMLInputElement>(null)
   const stayRef = useRef<HTMLButtonElement>(null)
   const currentPath = useRef(`${window.location.pathname}${window.location.search}`)
   const allowNavigation = useRef(false)
@@ -82,16 +98,21 @@ function TaskEditor({
   useEffect(() => {
     let active = true
 
-    void getInbox()
-      .then((tasks) => {
+    void Promise.all([getInbox(), getTaskActivity(taskId)])
+      .then(([tasks, activity]) => {
         if (!active) return
         const task = tasks.find((candidate) => candidate.id === taskId)
         if (!task) {
           setLoadState({ kind: 'error' })
           return
         }
-        setLoadState({ kind: 'ready', task })
-        setDraft({ notes: task.notes, title: task.title })
+        setLoadState({ accountTimezone: activity.accountTimezone, kind: 'ready', task })
+        setDraft({
+          deadlineOn: task.deadlineOn ?? '',
+          notes: task.notes,
+          plannedOn: task.plannedOn ?? '',
+          title: task.title,
+        })
       })
       .catch(() => {
         if (active) setLoadState({ kind: 'error' })
@@ -105,7 +126,10 @@ function TaskEditor({
   const acceptedTask = loadState.kind === 'ready' ? loadState.task : null
   const dirty =
     acceptedTask !== null &&
-    (draft.notes !== acceptedTask.notes || draft.title !== acceptedTask.title)
+    (draft.deadlineOn !== (acceptedTask.deadlineOn ?? '') ||
+      draft.notes !== acceptedTask.notes ||
+      draft.plannedOn !== (acceptedTask.plannedOn ?? '') ||
+      draft.title !== acceptedTask.title)
   const locked = submission !== null
 
   useEffect(() => {
@@ -177,6 +201,37 @@ function TaskEditor({
     return { baseValues, fields }
   }, [acceptedTask, draft])
 
+  const changedDateValues = useMemo(() => {
+    if (!acceptedTask) return { baseValues: {}, fields: {} }
+    const baseValues: TaskDateValues = {}
+    const fields: TaskDateValues = {}
+
+    if (draft.plannedOn !== (acceptedTask.plannedOn ?? '')) {
+      baseValues.plannedOn = acceptedTask.plannedOn
+      fields.plannedOn = draft.plannedOn === '' ? null : draft.plannedOn
+    }
+    if (draft.deadlineOn !== (acceptedTask.deadlineOn ?? '')) {
+      baseValues.deadlineOn = acceptedTask.deadlineOn
+      fields.deadlineOn = draft.deadlineOn === '' ? null : draft.deadlineOn
+    }
+
+    return { baseValues, fields }
+  }, [acceptedTask, draft.deadlineOn, draft.plannedOn])
+
+  const validCivilDate = (value: string) => {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+    if (!match) return false
+    const year = Number(match[1])
+    const month = Number(match[2])
+    const day = Number(match[3])
+    const date = new Date(Date.UTC(year, month - 1, day))
+    return (
+      date.getUTCFullYear() === year &&
+      date.getUTCMonth() === month - 1 &&
+      date.getUTCDate() === day
+    )
+  }
+
   const validate = () => {
     const errors: FieldErrors = {}
     const titleLength = [...draft.title.trim()].length
@@ -185,23 +240,71 @@ function TaskEditor({
     if (titleLength === 0) errors.title = 'Enter a task title.'
     else if (titleLength > 512) errors.title = 'Shorten the title to 512 characters or fewer.'
     if (notesLength > 50_000) errors.notes = 'Shorten the notes to 50000 characters or fewer.'
+    if (draft.plannedOn !== '' && !validCivilDate(draft.plannedOn)) {
+      errors.plannedOn = 'Enter a valid planned date in YYYY-MM-DD format.'
+    }
+    if (draft.deadlineOn !== '' && !validCivilDate(draft.deadlineOn)) {
+      errors.deadlineOn = 'Enter a valid deadline in YYYY-MM-DD format.'
+    }
 
     setFieldErrors(errors)
-    const first = errors.title ? titleRef.current : errors.notes ? notesRef.current : null
+    const first = errors.title
+      ? titleRef.current
+      : errors.notes
+        ? notesRef.current
+        : errors.plannedOn
+          ? plannedOnRef.current
+          : errors.deadlineOn
+            ? deadlineOnRef.current
+            : null
     first?.focus()
     return Object.keys(errors).length === 0
   }
 
-  const reconcile = (acknowledgement: CommandAcknowledgement, current: Submission) => {
+  const reconcile = async (
+    acknowledgement: CommandAcknowledgement,
+    current: Submission,
+    activeCsrfToken: string,
+  ) => {
     if (acknowledgement.mutationId !== current.command.mutationId) {
       setCommandState({ kind: 'unknown' })
       return
     }
 
+    if (current.commandKind === 'details' && current.datesAfter) {
+      setLoadState((state) => ({
+        accountTimezone: state.kind === 'ready' ? state.accountTimezone : 'UTC',
+        kind: 'ready',
+        task: acknowledgement.snapshot,
+      }))
+      const next: Submission = {
+        action: current.action,
+        command: {
+          ...current.datesAfter,
+          expectedRevision: acknowledgement.revision,
+          mutationId: crypto.randomUUID(),
+          taskId: acknowledgement.taskId,
+        },
+        commandKind: 'dates',
+        navigateAfter: current.navigateAfter,
+      }
+      await deliver(next, activeCsrfToken)
+      return
+    }
+
     setSubmission(null)
     setFieldErrors({})
-    setLoadState({ kind: 'ready', task: acknowledgement.snapshot })
-    setDraft({ notes: acknowledgement.snapshot.notes, title: acknowledgement.snapshot.title })
+    setLoadState((state) => ({
+      accountTimezone: state.kind === 'ready' ? state.accountTimezone : 'UTC',
+      kind: 'ready',
+      task: acknowledgement.snapshot,
+    }))
+    setDraft({
+      deadlineOn: acknowledgement.snapshot.deadlineOn ?? '',
+      notes: acknowledgement.snapshot.notes,
+      plannedOn: acknowledgement.snapshot.plannedOn ?? '',
+      title: acknowledgement.snapshot.title,
+    })
     onAcknowledged(acknowledgement)
     setCommandState({
       kind: 'saved',
@@ -218,11 +321,19 @@ function TaskEditor({
     setCommandState({ kind: 'submitting' })
 
     try {
-      const acknowledgement =
-        current.action === 'clarify'
-          ? await clarifyTask(current.command, activeCsrfToken)
-          : await editTask(current.command, activeCsrfToken)
-      reconcile(acknowledgement, current)
+      let acknowledgement: CommandAcknowledgement
+      if (current.commandKind === 'dates') {
+        acknowledgement = await editTaskDates(
+          current.command as EditTaskDatesSubmission,
+          activeCsrfToken,
+        )
+      } else {
+        acknowledgement =
+          current.action === 'clarify'
+            ? await clarifyTask(current.command as EditTaskSubmission, activeCsrfToken)
+            : await editTask(current.command as EditTaskSubmission, activeCsrfToken)
+      }
+      await reconcile(acknowledgement, current, activeCsrfToken)
     } catch (error) {
       if (
         error instanceof KeeplingApiError &&
@@ -255,11 +366,14 @@ function TaskEditor({
   }
 
   const checkSubmission = async (current: Submission, _activeCsrfToken = csrfToken) => {
-    void _activeCsrfToken
     setCommandState({ kind: 'submitting' })
 
     try {
-      reconcile(await getMutation(current.command.mutationId), current)
+      await reconcile(
+        await getMutation(current.command.mutationId),
+        current,
+        _activeCsrfToken,
+      )
     } catch (error) {
       if (
         error instanceof KeeplingApiError &&
@@ -282,24 +396,41 @@ function TaskEditor({
 
   const submit = async (action: Submission['action'], navigateAfter?: string) => {
     if (!acceptedTask || commandState.kind === 'submitting' || !validate()) return
-    if (action === 'edit' && Object.keys(changedValues.fields).length === 0) {
+    const hasDetails = Object.keys(changedValues.fields).length > 0
+    const hasDates = Object.keys(changedDateValues.fields).length > 0
+    if (action === 'edit' && !hasDetails && !hasDates) {
       if (navigateAfter) onNavigate(navigateAfter)
       return
     }
 
     const current =
       submission ??
-      ({
-        action,
-        command: {
-          baseValues: changedValues.baseValues,
-          expectedRevision: acceptedTask.revision,
-          fields: changedValues.fields,
-          mutationId: crypto.randomUUID(),
-          taskId: acceptedTask.id,
-        },
-        navigateAfter,
-      } satisfies Submission)
+      (action === 'edit' && !hasDetails
+        ? ({
+            action,
+            command: {
+              baseValues: changedDateValues.baseValues,
+              expectedRevision: acceptedTask.revision,
+              fields: changedDateValues.fields,
+              mutationId: crypto.randomUUID(),
+              taskId: acceptedTask.id,
+            },
+            commandKind: 'dates',
+            navigateAfter,
+          } satisfies Submission)
+        : ({
+            action,
+            command: {
+              baseValues: changedValues.baseValues,
+              expectedRevision: acceptedTask.revision,
+              fields: changedValues.fields,
+              mutationId: crypto.randomUUID(),
+              taskId: acceptedTask.id,
+            },
+            commandKind: 'details',
+            datesAfter: hasDates ? changedDateValues : undefined,
+            navigateAfter,
+          } satisfies Submission))
 
     setPendingNavigation(null)
     await deliver(current)
@@ -346,7 +477,17 @@ function TaskEditor({
     )
   }
 
-  const firstError = fieldErrors.title ?? fieldErrors.notes
+  const firstError =
+    fieldErrors.title ??
+    fieldErrors.notes ??
+    fieldErrors.plannedOn ??
+    fieldErrors.deadlineOn
+  const dateWarning =
+    draft.plannedOn !== '' &&
+    draft.deadlineOn !== '' &&
+    validCivilDate(draft.plannedOn) &&
+    validCivilDate(draft.deadlineOn) &&
+    draft.plannedOn > draft.deadlineOn
 
   return (
     <main
@@ -377,6 +518,20 @@ function TaskEditor({
                   <li>
                     <a className="underline" href="#task-editor-notes">
                       {fieldErrors.notes}
+                    </a>
+                  </li>
+                ) : null}
+                {fieldErrors.plannedOn ? (
+                  <li>
+                    <a className="underline" href="#task-editor-planned-on">
+                      {fieldErrors.plannedOn}
+                    </a>
+                  </li>
+                ) : null}
+                {fieldErrors.deadlineOn ? (
+                  <li>
+                    <a className="underline" href="#task-editor-deadline-on">
+                      {fieldErrors.deadlineOn}
                     </a>
                   </li>
                 ) : null}
@@ -427,6 +582,72 @@ function TaskEditor({
               </p>
             ) : null}
           </div>
+
+          <fieldset className="space-y-4">
+            <legend className="text-sm font-semibold">Dates</legend>
+            <p className="text-sm text-muted-foreground">
+              Dates use {loadState.accountTimezone}
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold" htmlFor="task-editor-planned-on">
+                  Planned date
+                </label>
+                <input
+                  aria-describedby={
+                    fieldErrors.plannedOn ? 'task-editor-planned-on-error' : undefined
+                  }
+                  aria-invalid={fieldErrors.plannedOn ? true : undefined}
+                  className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  id="task-editor-planned-on"
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, plannedOn: event.target.value }))
+                  }
+                  placeholder="YYYY-MM-DD"
+                  readOnly={locked}
+                  ref={plannedOnRef}
+                  value={draft.plannedOn}
+                />
+                {fieldErrors.plannedOn ? (
+                  <p className="text-sm text-destructive" id="task-editor-planned-on-error">
+                    {fieldErrors.plannedOn}
+                  </p>
+                ) : null}
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold" htmlFor="task-editor-deadline-on">
+                  Deadline
+                </label>
+                <input
+                  aria-describedby={
+                    fieldErrors.deadlineOn ? 'task-editor-deadline-on-error' : undefined
+                  }
+                  aria-invalid={fieldErrors.deadlineOn ? true : undefined}
+                  className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  id="task-editor-deadline-on"
+                  inputMode="numeric"
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, deadlineOn: event.target.value }))
+                  }
+                  placeholder="YYYY-MM-DD"
+                  readOnly={locked}
+                  ref={deadlineOnRef}
+                  value={draft.deadlineOn}
+                />
+                {fieldErrors.deadlineOn ? (
+                  <p className="text-sm text-destructive" id="task-editor-deadline-on-error">
+                    {fieldErrors.deadlineOn}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+            {dateWarning ? (
+              <p className="rounded-lg border border-border bg-muted p-3 text-sm" role="status">
+                Planned date is after the deadline. Both dates will be saved.
+              </p>
+            ) : null}
+          </fieldset>
 
           {dirty ? <p className="text-sm font-semibold text-muted-foreground">Unsaved changes</p> : null}
 
