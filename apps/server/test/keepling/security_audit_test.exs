@@ -2,8 +2,14 @@ defmodule Keepling.SecurityAuditTest do
   use KeeplingWeb.ConnCase, async: false
 
   alias Ecto.Adapters.SQL
+  alias Keepling.Accounts
   alias Keepling.Accounts.RateLimit
+  alias Keepling.Accounts.SecurityAudit
   alias Keepling.Repo
+
+  defmodule FailingAuditWriter do
+    def insert(_repo, _event_type, _accepted_at), do: {:error, :injected_audit_failure}
+  end
 
   @password "correct password manager value"
   @fast_policy %{account: {60_000, 1}, source: {60_000, 1}, max_backoff_ms: 60_000}
@@ -14,15 +20,24 @@ defmodule Keepling.SecurityAuditTest do
     clear_rate_limit_table()
 
     previous_policy = Application.get_env(:keepling, :rate_limit_policy)
+    previous_audit_writer = Application.get_env(:keepling, :security_audit_writer)
+    SecurityAudit.acknowledge_degraded_health()
 
     on_exit(fn ->
       reset_account_state()
       clear_rate_limit_table()
+      SecurityAudit.acknowledge_degraded_health()
 
       if previous_policy do
         Application.put_env(:keepling, :rate_limit_policy, previous_policy)
       else
         Application.delete_env(:keepling, :rate_limit_policy)
+      end
+
+      if previous_audit_writer do
+        Application.put_env(:keepling, :security_audit_writer, previous_audit_writer)
+      else
+        Application.delete_env(:keepling, :security_audit_writer)
       end
     end)
 
@@ -172,6 +187,61 @@ defmodule Keepling.SecurityAuditTest do
              ["login_failed", 1, nil],
              ["rate_limited", 1, nil]
            ] = audit_rows
+  end
+
+  test "required audit failure rolls back the authenticated session and fails closed" do
+    Application.put_env(:keepling, :security_audit_writer, FailingAuditWriter)
+
+    assert {:error, :infrastructure_failure} =
+             Accounts.login(@password, label: "Audit rollback browser", client_kind: "web")
+
+    assert %{rows: [[0]]} = SQL.query!(Repo, "SELECT count(*) FROM sessions", [])
+    assert %{rows: [[0]]} = SQL.query!(Repo, "SELECT count(*) FROM account_security_audits", [])
+
+    assert %{
+             failure_count: 1,
+             last_failure_at: last_failure_at,
+             status: :degraded
+           } = Accounts.security_audit_health()
+
+    assert {:ok, _instant, 0} = DateTime.from_iso8601(last_failure_at)
+  end
+
+  @tag rate_limit: true
+  test "best-effort audit failure preserves throttling and exposes closed degraded telemetry" do
+    Application.put_env(:keepling, :security_audit_writer, FailingAuditWriter)
+    handler_id = "security-audit-failure-#{System.unique_integer([:positive])}"
+
+    :ok =
+      :telemetry.attach(
+        handler_id,
+        [:keepling, :security_audit, :persistence],
+        fn event, measurements, metadata, test_pid ->
+          send(test_pid, {:audit_failure, event, measurements, metadata})
+        end,
+        self()
+      )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
+
+    source = {192, 0, 2, 42}
+    assert :ok = RateLimit.admit(:login, source, policy: @fast_policy)
+
+    assert {:error, :rate_limited, retry_after_ms} =
+             RateLimit.admit(:login, source, policy: @fast_policy)
+
+    assert retry_after_ms > 0
+
+    assert_receive {:audit_failure, [:keepling, :security_audit, :persistence],
+                    %{failure_count: 1},
+                    %{
+                      event_type: "rate_limited",
+                      persistence_policy: :best_effort,
+                      status: :degraded
+                    }}
+
+    assert %{failure_count: 1, status: :degraded} = Accounts.security_audit_health()
+    assert %{rows: [[0]]} = SQL.query!(Repo, "SELECT count(*) FROM account_security_audits", [])
   end
 
   @tag rate_limit: true

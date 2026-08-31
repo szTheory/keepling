@@ -10,7 +10,7 @@ defmodule Keepling.Accounts.RateLimit do
 
   use Hammer, backend: :ets
 
-  alias Ecto.Adapters.SQL
+  alias Keepling.Accounts.SecurityAudit
   alias Keepling.Repo
 
   @clean_period_ms :timer.minutes(5)
@@ -127,20 +127,6 @@ defmodule Keepling.Accounts.RateLimit do
 
   defp record_limited_audit do
     accepted_at = DateTime.utc_now() |> DateTime.truncate(:microsecond)
-
-    SQL.query(
-      Repo,
-      """
-      INSERT INTO account_security_audits (
-        event_type, event_version, accepted_at, inserted_at
-      )
-      VALUES ('rate_limited', 1, $1, $1)
-      """,
-      [accepted_at]
-    )
-
-    :ok
-  rescue
-    _error -> :ok
+    SecurityAudit.record_best_effort(Repo, "rate_limited", accepted_at)
   end
 end

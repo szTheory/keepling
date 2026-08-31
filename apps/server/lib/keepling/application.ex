@@ -7,6 +7,7 @@ defmodule Keepling.Application do
   def start(_type, _args) do
     children = [
       Keepling.Repo,
+      Keepling.Accounts.SecurityAudit,
       {Keepling.Accounts.RateLimit,
        [clean_period: Keepling.Accounts.RateLimit.clean_period_ms()]},
       KeeplingWeb.Telemetry,

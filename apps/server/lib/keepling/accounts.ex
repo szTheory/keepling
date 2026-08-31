@@ -9,6 +9,7 @@ defmodule Keepling.Accounts do
 
   alias Ecto.Adapters.SQL
   alias Keepling.Accounts.Account
+  alias Keepling.Accounts.SecurityAudit
   alias Keepling.Repo
 
   @default_setup_ttl_seconds 900
@@ -115,9 +116,8 @@ defmodule Keepling.Accounts do
             {:error, :authentication_failed}
 
           Argon2.verify_pass(password, password_hash) ->
-            case create_session(account_id, Keyword.put(opts, :now, now)) do
+            case create_login_session(account_id, Keyword.put(opts, :now, now), now) do
               {:ok, _session} = result ->
-                record_security_audit(account_id, "login_succeeded", now)
                 result
 
               {:error, _reason} ->
@@ -153,6 +153,27 @@ defmodule Keepling.Accounts do
          {:ok, session} <-
            Repo.transact(fn repo ->
              {:ok, insert_session(repo, account_id, session_params)}
+           end) do
+      {:ok, session}
+    else
+      {:error, reason} when reason in [:invalid_label, :invalid_client_kind, :invalid_expiry] ->
+        {:error, reason}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  defp create_login_session(account_id, opts, accepted_at) do
+    with {:ok, session_params} <- session_params(opts),
+         {:ok, session} <-
+           Repo.transact(fn repo ->
+             session = insert_session(repo, account_id, session_params)
+             SecurityAudit.record_required!(repo, "login_succeeded", accepted_at)
+             {:ok, session}
            end) do
       {:ok, session}
     else
@@ -225,8 +246,7 @@ defmodule Keepling.Accounts do
             {:error, :authentication_failed}
 
           Argon2.verify_pass(password, password_hash) ->
-            record_security_audit(account_id, "reauthenticated", now)
-            :ok
+            record_required_security_audit("reauthenticated", now)
 
           true ->
             record_security_audit(account_id, "login_failed", now)
@@ -246,6 +266,10 @@ defmodule Keepling.Accounts do
   end
 
   def reauthenticate(_account_id, _password, _opts), do: {:error, :authentication_failed}
+
+  @doc "Returns the latched persistence health of the security audit trail."
+  @spec security_audit_health() :: SecurityAudit.health()
+  def security_audit_health, do: SecurityAudit.health()
 
   @doc "Rotates the raw credential and recent-auth state without changing session identity."
   @spec rotate_session(binary(), binary(), keyword()) :: {:ok, map()} | {:error, atom()}
@@ -368,43 +392,61 @@ defmodule Keepling.Accounts do
     now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
 
     with {:ok, session_id} <- dump_uuid(session_id),
-         {:ok, %{num_rows: 1}} <-
-           SQL.query(
-             Repo,
-             """
-             UPDATE sessions SET revoked_at = $3, updated_at = $3
-             WHERE id = $1 AND account_id = $2 AND revoked_at IS NULL
-             """,
-             [session_id, account_id, now]
-           ) do
-      record_security_audit(account_id, "session_revoked", now)
-      {:ok, %{status: "session_revoked"}}
+         {:ok, result} <-
+           Repo.transact(fn repo ->
+             case SQL.query!(
+                    repo,
+                    """
+                    UPDATE sessions SET revoked_at = $3, updated_at = $3
+                    WHERE id = $1 AND account_id = $2 AND revoked_at IS NULL
+                    """,
+                    [session_id, account_id, now]
+                  ).num_rows do
+               1 ->
+                 SecurityAudit.record_required!(repo, "session_revoked", now)
+                 {:ok, %{status: "session_revoked"}}
+
+               0 ->
+                 {:error, :session_unavailable}
+             end
+           end) do
+      {:ok, result}
     else
       :error -> {:error, :session_unavailable}
-      {:ok, %{num_rows: 0}} -> {:error, :session_unavailable}
+      {:error, :session_unavailable} -> {:error, :session_unavailable}
       {:error, _reason} -> {:error, :infrastructure_failure}
     end
+  rescue
+    _error in [DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
   end
 
   @doc "Revokes the current session for logout."
   def logout(account_id, session_id, opts \\ []) do
     now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
 
-    case SQL.query(
-           Repo,
-           """
-           UPDATE sessions SET revoked_at = $3, updated_at = $3
-           WHERE id = $1 AND account_id = $2 AND revoked_at IS NULL
-           """,
-           [session_id, account_id, now]
-         ) do
-      {:ok, _result} ->
-        record_security_audit(account_id, "logout", now)
+    case Repo.transact(fn repo ->
+           SQL.query!(
+             repo,
+             """
+             UPDATE sessions SET revoked_at = $3, updated_at = $3
+             WHERE id = $1 AND account_id = $2 AND revoked_at IS NULL
+             """,
+             [session_id, account_id, now]
+           )
+
+           SecurityAudit.record_required!(repo, "logout", now)
+           {:ok, :logged_out}
+         end) do
+      {:ok, :logged_out} ->
         :ok
 
       {:error, _reason} ->
         {:error, :infrastructure_failure}
     end
+  rescue
+    _error in [DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
   end
 
   @doc "Issues one short-lived recovery capability and persists only its hash."
@@ -421,7 +463,7 @@ defmodule Keepling.Accounts do
          token <- random_token(),
          token_hash <- hash_token(token),
          expires_at <- DateTime.add(now, ttl_seconds, :second),
-         {:ok, account_id} <-
+         {:ok, _account_id} <-
            Repo.transact(fn repo ->
              case SQL.query!(
                     repo,
@@ -447,13 +489,13 @@ defmodule Keepling.Accounts do
                    [account_id, token_hash, now, expires_at]
                  )
 
+                 SecurityAudit.record_required!(repo, "recovery_issued", now)
                  {:ok, account_id}
 
                [] ->
                  {:error, :account_unavailable}
              end
            end) do
-      record_security_audit(account_id, "recovery_issued", now)
       {:ok, %{token: token, expires_at: expires_at}}
     else
       false -> {:error, :invalid_ttl}
@@ -798,7 +840,7 @@ defmodule Keepling.Accounts do
             )
 
           session = insert_session(repo, account_id, params)
-          insert_security_audit(repo, account_id, "recovery_succeeded", accepted_at)
+          SecurityAudit.record_required!(repo, "recovery_succeeded", accepted_at)
           {:ok, session}
         else
           {:error, :recovery_unavailable}
@@ -845,29 +887,21 @@ defmodule Keepling.Accounts do
     end
   end
 
-  defp record_security_audit(account_id, event_type, accepted_at) do
+  defp record_security_audit(_account_id, event_type, accepted_at) do
+    SecurityAudit.record_best_effort(Repo, event_type, accepted_at)
+  end
+
+  defp record_required_security_audit(event_type, accepted_at) do
     case Repo.transact(fn repo ->
-           insert_security_audit(repo, account_id, event_type, accepted_at)
+           SecurityAudit.record_required!(repo, event_type, accepted_at)
            {:ok, :recorded}
          end) do
       {:ok, :recorded} -> :ok
-      _ -> :ok
+      {:error, _reason} -> {:error, :infrastructure_failure}
     end
   rescue
-    _error -> :ok
-  end
-
-  defp insert_security_audit(repo, _account_id, event_type, accepted_at) do
-    SQL.query!(
-      repo,
-      """
-      INSERT INTO account_security_audits (
-        event_type, event_version, accepted_at, inserted_at
-      )
-      VALUES ($1, 1, $2, $2)
-      """,
-      [event_type, accepted_at]
-    )
+    _error in [DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
   end
 
   defp dump_uuid(value) when is_binary(value) do
