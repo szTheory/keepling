@@ -138,6 +138,8 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
         %{task_id: first_id, direction: :earlier, expected_order_revision: 1},
         %{task_id: third_id, direction: :later, expected_order_revision: 1}
       ]
+      |> Enum.with_index()
+      |> Enum.map(fn {command, index} -> Map.put(command, :mutation_id, mutation_id(index)) end)
       |> Enum.map(fn command ->
         Task.async(fn ->
           with_connection(fn backend_pid ->
@@ -162,6 +164,53 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
                  FROM today_task_order
                  WHERE account_id = $1 AND section = 'today'
                  """,
+                 [account_id]
+               )
+             end)
+  end
+
+  test "Today move identity replays one stored result and rejects changed semantics", %{
+    account_id: account_id
+  } do
+    first_id = "99999999-9999-4999-8999-999999999999"
+    second_id = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+
+    insert_task(account_id, first_id, "First", @accepted_at, planned_on: ~D[2026-08-31])
+    insert_task(account_id, second_id, "Second", @accepted_at, planned_on: ~D[2026-08-31])
+
+    command = %{
+      direction: :later,
+      expected_order_revision: 1,
+      mutation_id: mutation_id(9),
+      task_id: second_id
+    }
+
+    accepted =
+      with_connection(fn _backend_pid ->
+        TaskViews.move_today(command, context(account_id), PostgresTaskViews)
+      end)
+
+    assert {:ok, %{order_revision: 2}} = accepted
+
+    assert accepted ==
+             with_connection(fn _backend_pid ->
+               TaskViews.move_today(command, context(account_id), PostgresTaskViews)
+             end)
+
+    assert {:error, :mutation_identity_reused} =
+             with_connection(fn _backend_pid ->
+               TaskViews.move_today(
+                 %{command | direction: :earlier},
+                 context(account_id),
+                 PostgresTaskViews
+               )
+             end)
+
+    assert %{rows: [[2, 1]]} =
+             with_connection(fn _backend_pid ->
+               SQL.query!(
+                 Repo,
+                 "SELECT today_order_revision, (SELECT count(*) FROM today_order_receipts WHERE account_id = $1) FROM accounts WHERE id = $1",
                  [account_id]
                )
              end)
@@ -225,4 +274,7 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
       TaskViews.list(view, context, options, PostgresTaskViews)
     end)
   end
+
+  defp mutation_id(index),
+    do: "00000000-0000-4000-8000-#{index |> Integer.to_string() |> String.pad_leading(12, "0")}"
 end

@@ -177,6 +177,36 @@ describe('routed task lists', () => {
     await waitFor(() => expect(appended).toHaveFocus())
   })
 
+  it('treats a lost Today move response as unknown and retries the original identity', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse(
+          page(
+            [
+              item(),
+              item({ id: '22222222-2222-4222-8222-222222222222', title: 'Send invoice' }),
+            ],
+            { order_revision: 3, view: 'today' },
+          ),
+        ),
+      )
+      .mockRejectedValueOnce(new TypeError('response lost'))
+      .mockResolvedValueOnce(jsonResponse({ order_revision: 4 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(<TodayList csrfToken="csrf" />)
+    await screen.findByRole('link', { name: 'Call dentist' })
+    await user.click(screen.getByRole('button', { name: 'Move later “Call dentist”' }))
+
+    expect(await screen.findByText('Checking whether your change was saved…')).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Check again' }))
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3))
+    expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(fetchMock.mock.calls[2]?.[1]?.body)
+  })
+
   it('routes authenticated Today, Upcoming, and Completed views through their facades', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(jsonResponse(page([])))))
 

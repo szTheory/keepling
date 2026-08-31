@@ -7,6 +7,7 @@ import {
   type TaskViewItem,
   type TaskViewName,
   type TaskViewPage,
+  type TodayMoveSubmission,
 } from '@/api/keepling'
 
 type TaskListProps = {
@@ -98,7 +99,10 @@ function TaskList({ csrfToken, view }: TaskListProps) {
   const [updating, setUpdating] = useState(false)
   const [loadMoreError, setLoadMoreError] = useState<'background' | 'stale' | null>(null)
   const [movingTaskId, setMovingTaskId] = useState<string | null>(null)
-  const [moveError, setMoveError] = useState<'authentication' | 'generic' | 'stale' | null>(null)
+  const [moveError, setMoveError] = useState<
+    'authentication' | 'generic' | 'stale' | 'unknown' | null
+  >(null)
+  const [unknownMove, setUnknownMove] = useState<TodayMoveSubmission | null>(null)
   const [announcement, setAnnouncement] = useState('')
   const rowLinks = useRef(new Map<string, HTMLAnchorElement>())
   const viewCopy = copy[view]
@@ -184,18 +188,16 @@ function TaskList({ csrfToken, view }: TaskListProps) {
 
   const move = async (taskId: string, direction: 'earlier' | 'later') => {
     if (state.kind !== 'ready' || state.page.orderRevision === null || !csrfToken) return
+    const submission: TodayMoveSubmission = {
+      direction,
+      expectedOrderRevision: state.page.orderRevision,
+      mutationId: crypto.randomUUID(),
+      taskId,
+    }
     setMovingTaskId(taskId)
     setMoveError(null)
     try {
-      const result = await moveTodayTask(
-        {
-          direction,
-          expectedOrderRevision: state.page.orderRevision,
-          mutationId: crypto.randomUUID(),
-          taskId,
-        },
-        csrfToken,
-      )
+      const result = await moveTodayTask(submission, csrfToken)
       setState({
         kind: 'ready',
         page: {
@@ -210,7 +212,41 @@ function TaskList({ csrfToken, view }: TaskListProps) {
         setMoveError('stale')
       } else if (error instanceof KeeplingApiError && error.problem.code === 'authentication_required') {
         setMoveError('authentication')
+      } else if (!(error instanceof KeeplingApiError)) {
+        setUnknownMove(submission)
+        setMoveError('unknown')
       } else {
+        setMoveError('generic')
+      }
+    } finally {
+      setMovingTaskId(null)
+    }
+  }
+
+  const retryUnknownMove = async () => {
+    if (state.kind !== 'ready' || !unknownMove || !csrfToken) return
+    setMovingTaskId(unknownMove.taskId)
+    try {
+      const result = await moveTodayTask(unknownMove, csrfToken)
+      setState({
+        kind: 'ready',
+        page: {
+          ...state.page,
+          items: swap(state.page.items, unknownMove.taskId, unknownMove.direction),
+          orderRevision: result.orderRevision,
+        },
+      })
+      setUnknownMove(null)
+      setMoveError(null)
+      setAnnouncement('Today order updated.')
+    } catch (error) {
+      if (error instanceof KeeplingApiError && error.problem.code === 'today_order_stale') {
+        setUnknownMove(null)
+        setMoveError('stale')
+      } else if (error instanceof KeeplingApiError && error.problem.code === 'authentication_required') {
+        setMoveError('authentication')
+      } else if (error instanceof KeeplingApiError) {
+        setUnknownMove(null)
         setMoveError('generic')
       }
     } finally {
@@ -382,11 +418,18 @@ function TaskList({ csrfToken, view }: TaskListProps) {
                 ? 'Today changed elsewhere. Refresh the list before moving this task.'
                 : moveError === 'authentication'
                   ? 'Sign in again to finish saving. Your changes are still here.'
+                  : moveError === 'unknown'
+                    ? 'Checking whether your change was saved…'
                   : 'Couldn’t move this task. Nothing was changed.'}
             </p>
             {moveError === 'stale' ? (
               <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={() => void load(true)} type="button">
                 Refresh Today
+              </button>
+            ) : null}
+            {moveError === 'unknown' ? (
+              <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={() => void retryUnknownMove()} type="button">
+                Check again
               </button>
             ) : null}
           </div>

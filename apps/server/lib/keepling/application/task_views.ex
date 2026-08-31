@@ -32,12 +32,17 @@ defmodule Keepling.Application.TaskViews do
 
   @spec move_today(map(), map(), module()) :: tuple()
   def move_today(
-        %{task_id: task_id, direction: direction, expected_order_revision: revision} = command,
+        %{
+          task_id: task_id,
+          direction: direction,
+          expected_order_revision: revision,
+          mutation_id: mutation_id
+        } = command,
         context,
         port
       )
       when direction in [:earlier, :later] and is_integer(revision) and revision > 0 and
-             is_binary(task_id) do
+             is_binary(task_id) and is_binary(mutation_id) do
     port.move_today(context, command)
   end
 

@@ -20,6 +20,7 @@ defmodule KeeplingWeb.TaskViewController do
       {:error, :invalid_move} -> invalid_query(conn)
       {:error, :not_found} -> task_not_found(conn)
       {:error, :order_stale} -> order_stale(conn)
+      {:error, :mutation_identity_reused} -> mutation_identity_reused(conn)
       {:error, :today_section_too_large} -> section_too_large(conn)
       {:error, :infrastructure_failure} -> infrastructure_problem(conn)
     end
@@ -130,6 +131,18 @@ defmodule KeeplingWeb.TaskViewController do
       "Refresh the list before moving this task.",
       false,
       "refresh_today"
+    )
+  end
+
+  defp mutation_identity_reused(conn) do
+    problem(
+      conn,
+      409,
+      "mutation_identity_reused",
+      "Mutation identity already used",
+      "Retry the original Today move or use a new identity for a different move.",
+      false,
+      "use_original_command"
     )
   end
 

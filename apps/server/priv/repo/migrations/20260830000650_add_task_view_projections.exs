@@ -49,6 +49,27 @@ defmodule Keepling.Repo.Migrations.AddTaskViewProjections do
 
     create unique_index(:today_task_order, [:account_id, :section, :position])
 
+    create table(:today_order_receipts, primary_key: false) do
+      add :account_id, references(:accounts, type: :uuid, on_delete: :delete_all),
+        primary_key: true
+
+      add :mutation_id, :uuid, primary_key: true
+      add :fingerprint, :binary, null: false
+      add :outcome, :text, null: false
+      add :order_revision, :bigint
+      add :inserted_at, :utc_datetime_usec, null: false
+    end
+
+    create constraint(:today_order_receipts, :today_order_receipts_closed_outcome,
+             check: "outcome IN ('accepted', 'order_stale', 'today_section_too_large')"
+           )
+
+    create constraint(:today_order_receipts, :today_order_receipts_result_shape,
+             check:
+               "(outcome = 'accepted' AND order_revision IS NOT NULL) OR " <>
+                 "(outcome <> 'accepted' AND order_revision IS NULL)"
+           )
+
     execute(
       """
       ALTER TABLE today_task_order

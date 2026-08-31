@@ -42,40 +42,75 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
   @impl true
   def move_today(
         %{account_id: account_id, accepted_at: accepted_at},
-        %{task_id: task_id, direction: direction, expected_order_revision: expected_revision}
+        %{
+          task_id: task_id,
+          direction: direction,
+          expected_order_revision: expected_revision,
+          mutation_id: mutation_id
+        }
       ) do
+    fingerprint =
+      :crypto.hash(
+        :sha256,
+        :erlang.term_to_binary({task_id, direction, expected_revision}, [:deterministic])
+      )
+
     case Repo.transact(fn repo ->
-           with {:ok, timezone, order_revision} <- lock_today_scope(repo, account_id),
-                :ok <- expected_order_revision(expected_revision, order_revision),
-                {:ok, account_day} <- TaskDates.account_day(accepted_at, timezone),
-                {:ok, section} <- today_section(repo, account_id, task_id, account_day),
-                {:ok, task_ids} <- today_section_task_ids(repo, account_id, section, account_day),
-                {:ok, moved_ids} <- move(task_ids, task_id, direction) do
-             if moved_ids == task_ids do
-               {:ok, %{order_revision: order_revision}}
-             else
-               persist_today_order(repo, account_id, section, moved_ids, accepted_at)
+           with {:ok, timezone, order_revision} <- lock_today_scope(repo, account_id) do
+             case today_move_replay(repo, account_id, mutation_id, fingerprint) do
+               {:replay, result} ->
+                 {:ok, result}
 
-               %{rows: [[next_revision]]} =
-                 SQL.query!(
-                   repo,
-                   """
-                   UPDATE accounts
-                   SET today_order_revision = today_order_revision + 1, updated_at = $2
-                   WHERE id = $1
-                   RETURNING today_order_revision
-                   """,
-                   [account_id, accepted_at]
-                 )
+               :new ->
+                 result =
+                   execute_today_move(
+                     repo,
+                     account_id,
+                     task_id,
+                     direction,
+                     expected_revision,
+                     order_revision,
+                     timezone,
+                     accepted_at
+                   )
 
-               {:ok, %{order_revision: next_revision}}
+                 case result do
+                   {:error, :not_found} ->
+                     Repo.rollback(:not_found)
+
+                   {:error, :infrastructure_failure} ->
+                     Repo.rollback(:infrastructure_failure)
+
+                   terminal ->
+                     persist_today_move_receipt(
+                       repo,
+                       account_id,
+                       mutation_id,
+                       fingerprint,
+                       terminal,
+                       accepted_at
+                     )
+
+                     {:ok, terminal}
+                 end
+
+               :identity_reused ->
+                 {:ok, {:error, :mutation_identity_reused}}
              end
            else
              {:error, reason} -> Repo.rollback(reason)
            end
          end) do
-      {:ok, result} ->
+      {:ok, {:ok, result}} when is_map(result) ->
         {:ok, result}
+
+      {:ok, {:error, reason}}
+      when reason in [
+             :mutation_identity_reused,
+             :order_stale,
+             :today_section_too_large
+           ] ->
+        {:error, reason}
 
       {:error, reason} when reason in [:order_stale, :not_found, :today_section_too_large] ->
         {:error, reason}
@@ -86,6 +121,85 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
   rescue
     _error in [DBConnection.ConnectionError, Postgrex.Error] ->
       {:error, :infrastructure_failure}
+  end
+
+  defp execute_today_move(
+         repo,
+         account_id,
+         task_id,
+         direction,
+         expected_revision,
+         order_revision,
+         timezone,
+         accepted_at
+       ) do
+    with :ok <- expected_order_revision(expected_revision, order_revision),
+         {:ok, account_day} <- TaskDates.account_day(accepted_at, timezone),
+         {:ok, section} <- today_section(repo, account_id, task_id, account_day),
+         {:ok, task_ids} <- today_section_task_ids(repo, account_id, section, account_day),
+         {:ok, moved_ids} <- move(task_ids, task_id, direction) do
+      if moved_ids == task_ids do
+        {:ok, %{order_revision: order_revision}}
+      else
+        persist_today_order(repo, account_id, section, moved_ids, accepted_at)
+
+        %{rows: [[next_revision]]} =
+          SQL.query!(
+            repo,
+            """
+            UPDATE accounts
+            SET today_order_revision = today_order_revision + 1, updated_at = $2
+            WHERE id = $1
+            RETURNING today_order_revision
+            """,
+            [account_id, accepted_at]
+          )
+
+        {:ok, %{order_revision: next_revision}}
+      end
+    end
+  end
+
+  defp today_move_replay(repo, account_id, mutation_id, fingerprint) do
+    case SQL.query!(
+           repo,
+           """
+           SELECT fingerprint, outcome, order_revision
+           FROM today_order_receipts
+           WHERE account_id = $1 AND mutation_id = $2
+           """,
+           [account_id, dump_uuid(mutation_id)]
+         ).rows do
+      [] -> :new
+      [[^fingerprint, "accepted", revision]] -> {:replay, {:ok, %{order_revision: revision}}}
+      [[^fingerprint, outcome, nil]] -> {:replay, {:error, String.to_existing_atom(outcome)}}
+      [[_other, _outcome, _revision]] -> :identity_reused
+    end
+  end
+
+  defp persist_today_move_receipt(
+         repo,
+         account_id,
+         mutation_id,
+         fingerprint,
+         result,
+         accepted_at
+       ) do
+    {outcome, revision} =
+      case result do
+        {:ok, %{order_revision: revision}} -> {"accepted", revision}
+        {:error, reason} -> {Atom.to_string(reason), nil}
+      end
+
+    SQL.query!(
+      repo,
+      """
+      INSERT INTO today_order_receipts (
+        account_id, mutation_id, fingerprint, outcome, order_revision, inserted_at
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+      """,
+      [account_id, dump_uuid(mutation_id), fingerprint, outcome, revision, accepted_at]
+    )
   end
 
   defp account_scope(repo, account_id, accepted_at, view) do
