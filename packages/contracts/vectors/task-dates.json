@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "date_format": "YYYY-MM-DD",
+  "unsupported": ["exact_times", "recurrence", "reminders", "start_dates"],
+  "cases": [
+    {
+      "name": "no dates",
+      "account_day": "2026-08-31",
+      "planned_on": null,
+      "deadline_on": null,
+      "classification": {"today_reasons": [], "today_section": null, "upcoming_on": null, "upcoming_reason": null, "warnings": []}
+    },
+    {
+      "name": "planned overdue",
+      "account_day": "2026-08-31",
+      "planned_on": "2026-08-30",
+      "deadline_on": null,
+      "classification": {"today_reasons": ["planned_overdue"], "today_section": "overdue", "upcoming_on": null, "upcoming_reason": null, "warnings": []}
+    },
+    {
+      "name": "planned today",
+      "account_day": "2026-08-31",
+      "planned_on": "2026-08-31",
+      "deadline_on": null,
+      "classification": {"today_reasons": ["planned_today"], "today_section": "today", "upcoming_on": null, "upcoming_reason": null, "warnings": []}
+    },
+    {
+      "name": "deadline overdue",
+      "account_day": "2026-08-31",
+      "planned_on": null,
+      "deadline_on": "2026-08-30",
+      "classification": {"today_reasons": ["deadline_overdue"], "today_section": "overdue", "upcoming_on": null, "upcoming_reason": null, "warnings": []}
+    },
+    {
+      "name": "deadline today",
+      "account_day": "2026-08-31",
+      "planned_on": null,
+      "deadline_on": "2026-08-31",
+      "classification": {"today_reasons": ["deadline_today"], "today_section": "today", "upcoming_on": null, "upcoming_reason": null, "warnings": []}
+    },
+    {
+      "name": "combined overdue and today reasons",
+      "account_day": "2026-08-31",
+      "planned_on": "2026-08-30",
+      "deadline_on": "2026-08-31",
+      "classification": {"today_reasons": ["planned_overdue", "deadline_today"], "today_section": "overdue", "upcoming_on": null, "upcoming_reason": null, "warnings": []}
+    },
+    {
+      "name": "planned Today and overdue deadline remain combined",
+      "account_day": "2026-08-31",
+      "planned_on": "2026-08-31",
+      "deadline_on": "2026-08-30",
+      "classification": {"today_reasons": ["planned_today", "deadline_overdue"], "today_section": "overdue", "upcoming_on": null, "upcoming_reason": null, "warnings": ["planned_after_deadline"]}
+    },
+    {
+      "name": "Today and later deadline stay independently visible",
+      "account_day": "2026-08-31",
+      "planned_on": "2026-08-30",
+      "deadline_on": "2026-09-02",
+      "classification": {"today_reasons": ["planned_overdue"], "today_section": "overdue", "upcoming_on": "2026-09-02", "upcoming_reason": "deadline", "warnings": []}
+    },
+    {
+      "name": "future planned date takes Upcoming precedence",
+      "account_day": "2026-08-31",
+      "planned_on": "2026-09-03",
+      "deadline_on": "2026-09-02",
+      "classification": {"today_reasons": [], "today_section": null, "upcoming_on": "2026-09-03", "upcoming_reason": "planned", "warnings": ["planned_after_deadline"]}
+    },
+    {
+      "name": "future deadline is Upcoming when not planned",
+      "account_day": "2026-08-31",
+      "planned_on": null,
+      "deadline_on": "2026-09-02",
+      "classification": {"today_reasons": [], "today_section": null, "upcoming_on": "2026-09-02", "upcoming_reason": "deadline", "warnings": []}
+    },
+    {
+      "name": "deadline Today and future plan stay separate",
+      "account_day": "2026-08-31",
+      "planned_on": "2026-09-02",
+      "deadline_on": "2026-08-31",
+      "classification": {"today_reasons": ["deadline_today"], "today_section": "today", "upcoming_on": "2026-09-02", "upcoming_reason": "planned", "warnings": ["planned_after_deadline"]}
+    }
+  ]
+}

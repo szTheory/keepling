@@ -12,7 +12,16 @@ defmodule Keepling.Domain.Task do
   @detail_fields [:title, :notes]
 
   @enforce_keys [:id, :title, :notes, :inbox_state, :revision, :captured_at]
-  defstruct [:id, :title, :notes, :inbox_state, :revision, :captured_at]
+  defstruct [
+    :id,
+    :title,
+    :notes,
+    :inbox_state,
+    :revision,
+    :captured_at,
+    planned_on: nil,
+    deadline_on: nil
+  ]
 
   @type inbox_state :: :inbox | :clarified
   @type t :: %__MODULE__{
@@ -21,7 +30,9 @@ defmodule Keepling.Domain.Task do
           notes: String.t(),
           inbox_state: inbox_state(),
           revision: pos_integer(),
-          captured_at: DateTime.t()
+          captured_at: DateTime.t(),
+          planned_on: Date.t() | nil,
+          deadline_on: Date.t() | nil
         }
 
   @type activity :: %{
@@ -49,7 +60,9 @@ defmodule Keepling.Domain.Task do
         notes: "",
         inbox_state: :inbox,
         revision: 1,
-        captured_at: accepted_at
+        captured_at: accepted_at,
+        planned_on: nil,
+        deadline_on: nil
       }
 
       activity =

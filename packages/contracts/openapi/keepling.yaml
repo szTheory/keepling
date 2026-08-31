@@ -407,6 +407,99 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
         '503':
           $ref: '#/components/responses/ProblemResponse'
+  /commands/edit-task-dates:
+    post:
+      operationId: editTaskDates
+      summary: Edit touched planned and deadline civil dates independently
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditTaskDatesRequest'
+      responses:
+        '200':
+          description: Exact stored task-date acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/plan-for-today:
+    post:
+      operationId: planForToday
+      summary: Resolve the configured account day at acceptance and plan the task for it
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanForTodayRequest'
+      responses:
+        '200':
+          description: Exact stored Today-planning acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/unplan-task:
+    post:
+      operationId: unplanTask
+      summary: Remove deliberate planned placement without changing the deadline
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnplanTaskRequest'
+      responses:
+        '200':
+          description: Exact stored unplanning acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /commands/create-organization:
     post:
       operationId: createOrganization
@@ -1028,6 +1121,53 @@ components:
         version:
           type: integer
           const: 1
+    EditTaskDatesRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - base_values
+        - expected_revision
+        - fields
+        - mutation_id
+        - task_id
+        - version
+      properties:
+        base_values:
+          $ref: '#/components/schemas/TaskDateValues'
+        expected_revision:
+          $ref: '#/components/schemas/Revision'
+        fields:
+          $ref: '#/components/schemas/TaskDateValues'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        version:
+          type: integer
+          const: 1
+    PlanForTodayRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - base_planned_on
+        - expected_revision
+        - mutation_id
+        - task_id
+        - version
+      properties:
+        base_planned_on:
+          $ref: '#/components/schemas/NullableCivilDate'
+        expected_revision:
+          $ref: '#/components/schemas/Revision'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        version:
+          type: integer
+          const: 1
+    UnplanTaskRequest:
+      $ref: '#/components/schemas/PlanForTodayRequest'
     LoginRequest:
       type: object
       additionalProperties: false
@@ -1395,14 +1535,34 @@ components:
           type: string
           minLength: 1
           maxLength: 512
+    CivilDate:
+      type: string
+      format: date
+      description: Canonical civil date with no time or device-zone interpretation.
+    NullableCivilDate:
+      anyOf:
+        - $ref: '#/components/schemas/CivilDate'
+        - type: 'null'
+    TaskDateValues:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      maxProperties: 2
+      properties:
+        deadline_on:
+          $ref: '#/components/schemas/NullableCivilDate'
+        planned_on:
+          $ref: '#/components/schemas/NullableCivilDate'
     TaskSnapshot:
       type: object
       additionalProperties: false
       required:
         - captured_at
+        - deadline_on
         - id
         - inbox_state
         - notes
+        - planned_on
         - project
         - revision
         - tags
@@ -1411,6 +1571,8 @@ components:
         captured_at:
           type: string
           format: date-time
+        deadline_on:
+          $ref: '#/components/schemas/NullableCivilDate'
         id:
           $ref: '#/components/schemas/TaskIdentity'
         inbox_state:
@@ -1420,6 +1582,8 @@ components:
             - clarified
         notes:
           type: string
+        planned_on:
+          $ref: '#/components/schemas/NullableCivilDate'
         project:
           anyOf:
             - $ref: '#/components/schemas/TaskOrganizationReference'
@@ -1497,5 +1661,7 @@ components:
       properties:
         code:
           type: string
+          enum:
+            - planned_after_deadline
         message:
           type: string

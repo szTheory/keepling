@@ -106,6 +106,40 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/commands/edit-task-dates": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Edit touched planned and deadline civil dates independently */
+        readonly post: operations["editTaskDates"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/commands/plan-for-today": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Resolve the configured account day at acceptance and plan the task for it */
+        readonly post: operations["planForToday"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/commands/rename-organization": {
         readonly parameters: {
             readonly query?: never;
@@ -151,6 +185,23 @@ export interface paths {
         readonly put?: never;
         /** Unarchive a project or tag by stable identity */
         readonly post: operations["unarchiveOrganization"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/commands/unplan-task": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Remove deliberate planned placement without changing the deadline */
+        readonly post: operations["unplanTask"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -495,6 +546,11 @@ export interface components {
             /** @constant */
             readonly version: 1;
         };
+        /**
+         * Format: date
+         * @description Canonical civil date with no time or device-zone interpretation.
+         */
+        readonly CivilDate: string;
         readonly ClarifyTaskCommand: components["schemas"]["EditTaskCommand"];
         readonly CommandAcknowledgement: {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
@@ -522,6 +578,15 @@ export interface components {
             /** @constant */
             readonly version: 1;
         };
+        readonly EditTaskDatesRequest: {
+            readonly base_values: components["schemas"]["TaskDateValues"];
+            readonly expected_revision: components["schemas"]["Revision"];
+            readonly fields: components["schemas"]["TaskDateValues"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            /** @constant */
+            readonly version: 1;
+        };
         readonly InboxResponse: {
             readonly tasks: readonly components["schemas"]["TaskSnapshot"][];
         };
@@ -540,6 +605,7 @@ export interface components {
          */
         readonly MutationIdentity: string;
         readonly MutationResult: components["schemas"]["CommandAcknowledgement"] | components["schemas"]["OrganizationAcknowledgement"];
+        readonly NullableCivilDate: components["schemas"]["CivilDate"] | null;
         readonly OrganizationAcknowledgement: {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly organization_id: components["schemas"]["OrganizationIdentity"];
@@ -575,6 +641,14 @@ export interface components {
         };
         readonly OrganizationsResponse: {
             readonly organizations: readonly components["schemas"]["OrganizationSnapshot"][];
+        };
+        readonly PlanForTodayRequest: {
+            readonly base_planned_on: components["schemas"]["NullableCivilDate"];
+            readonly expected_revision: components["schemas"]["Revision"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            /** @constant */
+            readonly version: 1;
         };
         readonly Problem: {
             readonly active_unfinished_task_count?: number;
@@ -659,6 +733,10 @@ export interface components {
             readonly status: "setup_complete";
             readonly timezone: string;
         };
+        readonly TaskDateValues: {
+            readonly deadline_on?: components["schemas"]["NullableCivilDate"];
+            readonly planned_on?: components["schemas"]["NullableCivilDate"];
+        };
         readonly TaskDetailValues: {
             readonly notes?: string;
             readonly title?: string;
@@ -673,10 +751,12 @@ export interface components {
         readonly TaskSnapshot: {
             /** Format: date-time */
             readonly captured_at: string;
+            readonly deadline_on: components["schemas"]["NullableCivilDate"];
             readonly id: components["schemas"]["TaskIdentity"];
             /** @enum {string} */
             readonly inbox_state: "inbox" | "clarified";
             readonly notes: string;
+            readonly planned_on: components["schemas"]["NullableCivilDate"];
             readonly project: components["schemas"]["TaskOrganizationReference"] | null;
             readonly revision: components["schemas"]["Revision"];
             readonly tags: readonly components["schemas"]["TaskOrganizationReference"][];
@@ -693,12 +773,14 @@ export interface components {
             readonly id: components["schemas"]["SessionIdentity"];
             readonly label: components["schemas"]["SessionLabel"];
         };
+        readonly UnplanTaskRequest: components["schemas"]["PlanForTodayRequest"];
         readonly VersionedAuthRequest: {
             /** @constant */
             readonly version: 1;
         };
         readonly Warning: {
-            readonly code: string;
+            /** @enum {string} */
+            readonly code: "planned_after_deadline";
             readonly message: string;
         };
     };
@@ -903,6 +985,68 @@ export interface operations {
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };
+    readonly editTaskDates: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["EditTaskDatesRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored task-date acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly planForToday: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["PlanForTodayRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored Today-planning acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly renameOrganization: {
         readonly parameters: {
             readonly query?: never;
@@ -991,6 +1135,37 @@ export interface operations {
             readonly 403: components["responses"]["ProblemResponse"];
             readonly 404: components["responses"]["ProblemResponse"];
             readonly 409: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly unplanTask: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["UnplanTaskRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored unplanning acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };

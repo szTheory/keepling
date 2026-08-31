@@ -49,6 +49,15 @@ defmodule KeeplingWeb.CommandController do
   def return_to_inbox(conn, params),
     do: dispatch_task_command(conn, decode_return_to_inbox(params))
 
+  def edit_task_dates(conn, params),
+    do: dispatch_task_command(conn, decode_task_dates(params))
+
+  def plan_for_today(conn, params),
+    do: dispatch_task_command(conn, decode_planning(params, :plan_for_today))
+
+  def unplan_task(conn, params),
+    do: dispatch_task_command(conn, decode_planning(params, :unplan_task))
+
   def create_organization(conn, params),
     do: dispatch_task_command(conn, decode_create_organization(params))
 
@@ -195,6 +204,102 @@ defmodule KeeplingWeb.CommandController do
       _ -> {:error, :invalid_command}
     end
   end
+
+  defp decode_task_dates(params) do
+    allowed_keys = [
+      "base_values",
+      "expected_revision",
+      "fields",
+      "mutation_id",
+      "task_id",
+      "version"
+    ]
+
+    with true <- Enum.sort(Map.keys(params)) == allowed_keys,
+         %{
+           "base_values" => base_values,
+           "expected_revision" => expected_revision,
+           "fields" => fields,
+           "mutation_id" => mutation_id,
+           "task_id" => task_id,
+           "version" => 1
+         } <- params,
+         true <- is_integer(expected_revision) and expected_revision >= 1,
+         {:ok, decoded_fields} <- decode_date_fields(fields),
+         {:ok, decoded_base_values} <- decode_date_fields(base_values),
+         true <-
+           Map.keys(decoded_fields) |> Enum.sort() == Map.keys(decoded_base_values) |> Enum.sort(),
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, _task_uuid} <- Ecto.UUID.cast(task_id) do
+      {:ok,
+       %{
+         base_values: decoded_base_values,
+         expected_revision: expected_revision,
+         fields: decoded_fields,
+         mutation_id: mutation_id,
+         task_id: task_id,
+         type: :edit_task_dates,
+         version: 1
+       }}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
+  defp decode_date_fields(fields) when is_map(fields) and map_size(fields) > 0 do
+    if Enum.all?(Map.keys(fields), &(&1 in ["deadline_on", "planned_on"])) do
+      Enum.reduce_while(fields, {:ok, %{}}, fn {key, value}, {:ok, decoded} ->
+        case decode_date(value) do
+          {:ok, date} -> {:cont, {:ok, Map.put(decoded, String.to_existing_atom(key), date)}}
+          :error -> {:halt, {:error, :invalid_command}}
+        end
+      end)
+    else
+      {:error, :invalid_command}
+    end
+  end
+
+  defp decode_date_fields(_fields), do: {:error, :invalid_command}
+
+  defp decode_planning(params, type) do
+    allowed_keys = ["base_planned_on", "expected_revision", "mutation_id", "task_id", "version"]
+
+    with true <- Enum.sort(Map.keys(params)) == allowed_keys,
+         %{
+           "base_planned_on" => base_planned_on,
+           "expected_revision" => expected_revision,
+           "mutation_id" => mutation_id,
+           "task_id" => task_id,
+           "version" => 1
+         } <- params,
+         true <- is_integer(expected_revision) and expected_revision >= 1,
+         {:ok, decoded_base_planned_on} <- decode_date(base_planned_on),
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, _task_uuid} <- Ecto.UUID.cast(task_id) do
+      {:ok,
+       %{
+         base_planned_on: decoded_base_planned_on,
+         expected_revision: expected_revision,
+         mutation_id: mutation_id,
+         task_id: task_id,
+         type: type,
+         version: 1
+       }}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
+  defp decode_date(nil), do: {:ok, nil}
+
+  defp decode_date(value) when is_binary(value) do
+    case Date.from_iso8601(value) do
+      {:ok, date} -> {:ok, date}
+      {:error, _reason} -> :error
+    end
+  end
+
+  defp decode_date(_value), do: :error
 
   defp decode_create_organization(params) do
     allowed_keys = ["kind", "mutation_id", "name", "organization_id", "version"]

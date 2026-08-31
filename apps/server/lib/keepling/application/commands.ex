@@ -3,7 +3,7 @@ defmodule Keepling.Application.Commands do
   Shared semantic application boundary used by every outward adapter.
   """
 
-  alias Keepling.Domain.{Organization, Task}
+  alias Keepling.Domain.{Organization, Task, TaskDates}
 
   defmodule Port do
     @moduledoc "Persistence/query port interpreted by an outward adapter."
@@ -40,6 +40,30 @@ defmodule Keepling.Application.Commands do
   def dispatch(%{type: :return_to_inbox} = command, context, port) do
     port.execute(command, context, fn current_task, accepted_command ->
       Task.return_to_inbox(current_task, accepted_command)
+    end)
+  end
+
+  def dispatch(%{type: :edit_task_dates} = command, context, port) do
+    port.execute(command, context, fn current_task, accepted_command ->
+      TaskDates.edit(current_task, accepted_command)
+    end)
+  end
+
+  def dispatch(%{type: :plan_for_today} = command, context, port) do
+    port.execute(command, context, fn current_task, accepted_command ->
+      with {:ok, account_day} <-
+             TaskDates.account_day(
+               accepted_command.accepted_at,
+               accepted_command.account_timezone
+             ) do
+        TaskDates.plan_for_today(current_task, accepted_command, account_day)
+      end
+    end)
+  end
+
+  def dispatch(%{type: :unplan_task} = command, context, port) do
+    port.execute(command, context, fn current_task, accepted_command ->
+      TaskDates.unplan(current_task, accepted_command)
     end)
   end
 

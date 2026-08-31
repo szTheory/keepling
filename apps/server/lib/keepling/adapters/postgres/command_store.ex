@@ -35,7 +35,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     case SQL.query(
            Repo,
            """
-           SELECT id, title, notes, inbox_state, revision, captured_at
+           SELECT id, title, notes, inbox_state, revision, captured_at, planned_on, deadline_on
            FROM tasks
            WHERE account_id = $1 AND inbox_state = 'inbox'
            ORDER BY captured_at DESC, id ASC
@@ -311,7 +311,10 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
   end
 
   defp execute_first_delivery(repo, command, context, decide) do
-    accepted_command = Map.put(command, :accepted_at, context.accepted_at)
+    accepted_command =
+      command
+      |> Map.put(:accepted_at, context.accepted_at)
+      |> maybe_put_account_timezone(repo, context)
 
     result =
       case command.type do
@@ -344,6 +347,20 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
 
   defp decide_existing(repo, command, context, current, accepted_command, decide) do
     case decide.(current, accepted_command) do
+      {:ok, task, nil, :already_satisfied, warnings} ->
+        acknowledgement(
+          repo,
+          context.account_id,
+          command,
+          task,
+          :already_satisfied,
+          200,
+          warnings
+        )
+
+      {:ok, task, activity, :accepted, warnings} ->
+        persist_existing(repo, command, context, task, activity, warnings)
+
       {:ok, task, nil, :already_satisfied} ->
         acknowledgement(repo, context.account_id, command, task, :already_satisfied)
 
@@ -354,6 +371,19 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         semantic_rejection(reason, current)
     end
   end
+
+  defp maybe_put_account_timezone(%{type: :plan_for_today} = command, repo, context) do
+    %{rows: [[timezone]]} =
+      SQL.query!(
+        repo,
+        "SELECT timezone FROM accounts WHERE id = $1 FOR SHARE",
+        [context.account_id]
+      )
+
+    Map.put(command, :account_timezone, timezone)
+  end
+
+  defp maybe_put_account_timezone(command, _repo, _context), do: command
 
   defp execute_create_organization(repo, command, context, accepted_command, decide) do
     case decide.(accepted_command) do
@@ -435,7 +465,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     case SQL.query!(
            repo,
            """
-           SELECT id, title, notes, inbox_state, revision, captured_at
+           SELECT id, title, notes, inbox_state, revision, captured_at, planned_on, deadline_on
            FROM tasks
            WHERE account_id = $1 AND id = $2
            FOR UPDATE
@@ -451,14 +481,27 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     case SQL.query!(
            repo,
            """
-           SELECT id, title, notes, inbox_state, revision, captured_at, project_id
+           SELECT id, title, notes, inbox_state, revision, captured_at,
+                  planned_on, deadline_on, project_id
            FROM tasks
            WHERE account_id = $1 AND id = $2
            FOR UPDATE
            """,
            [account_id, dump_uuid(task_id)]
          ).rows do
-      [[id, title, notes, inbox_state, revision, captured_at, project_id]] ->
+      [
+        [
+          id,
+          title,
+          notes,
+          inbox_state,
+          revision,
+          captured_at,
+          planned_on,
+          deadline_on,
+          project_id
+        ]
+      ] ->
         %{
           id: load_uuid(id),
           title: title,
@@ -466,6 +509,8 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
           inbox_state: String.to_existing_atom(inbox_state),
           revision: revision,
           captured_at: to_datetime(captured_at),
+          planned_on: planned_on,
+          deadline_on: deadline_on,
           project_id: load_optional_uuid(project_id),
           tag_ids: load_task_tag_ids(repo, account_id, task_id)
         }
@@ -620,11 +665,12 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         repo,
         """
         INSERT INTO tasks (
-          account_id, id, title, notes, inbox_state, revision, captured_at, inserted_at, updated_at
+          account_id, id, title, notes, inbox_state, revision, captured_at,
+          planned_on, deadline_on, inserted_at, updated_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $7, $7)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $7, $7)
         ON CONFLICT (account_id, id) DO NOTHING
-        RETURNING id, title, notes, inbox_state, revision, captured_at
+        RETURNING id, title, notes, inbox_state, revision, captured_at, planned_on, deadline_on
         """,
         [
           context.account_id,
@@ -633,7 +679,9 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
           task.notes,
           Atom.to_string(task.inbox_state),
           task.revision,
-          task.captured_at
+          task.captured_at,
+          task.planned_on,
+          task.deadline_on
         ]
       )
 
@@ -654,13 +702,14 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     end
   end
 
-  defp persist_existing(repo, command, context, task, activity) do
+  defp persist_existing(repo, command, context, task, activity, warnings \\ []) do
     %{num_rows: 1} =
       SQL.query!(
         repo,
         """
         UPDATE tasks
-        SET title = $3, notes = $4, inbox_state = $5, revision = $6, updated_at = $7
+        SET title = $3, notes = $4, inbox_state = $5, revision = $6,
+            planned_on = $7, deadline_on = $8, updated_at = $9
         WHERE account_id = $1 AND id = $2
         """,
         [
@@ -670,12 +719,15 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
           task.notes,
           Atom.to_string(task.inbox_state),
           task.revision,
+          task.planned_on,
+          task.deadline_on,
           context.accepted_at
         ]
       )
 
+    maybe_bump_temporal_view_revisions(repo, command, context)
     persist_activity(repo, command, context, activity)
-    acknowledgement(repo, context.account_id, command, task, :accepted)
+    acknowledgement(repo, context.account_id, command, task, :accepted, 200, warnings)
   end
 
   defp persist_create_organization(repo, command, context, organization) do
@@ -826,7 +878,33 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       )
   end
 
-  defp acknowledgement(repo, account_id, command, task, outcome, status \\ 200) do
+  defp maybe_bump_temporal_view_revisions(repo, command, context)
+       when command.type in [:edit_task_dates, :plan_for_today, :unplan_task] do
+    %{num_rows: 1} =
+      SQL.query!(
+        repo,
+        """
+        UPDATE accounts
+        SET today_view_revision = today_view_revision + 1,
+            upcoming_view_revision = upcoming_view_revision + 1,
+            updated_at = $2
+        WHERE id = $1
+        """,
+        [context.account_id, context.accepted_at]
+      )
+  end
+
+  defp maybe_bump_temporal_view_revisions(_repo, _command, _context), do: :ok
+
+  defp acknowledgement(
+         repo,
+         account_id,
+         command,
+         task,
+         outcome,
+         status \\ 200,
+         warnings \\ []
+       ) do
     %{
       status: status,
       body: %{
@@ -835,8 +913,15 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         "revision" => task.revision,
         "snapshot" => task_body(task, account_id, repo),
         "task_id" => task.id,
-        "warnings" => []
+        "warnings" => Enum.map(warnings, &warning_body/1)
       }
+    }
+  end
+
+  defp warning_body(:planned_after_deadline) do
+    %{
+      "code" => "planned_after_deadline",
+      "message" => "Planned date is after the deadline. Both dates will be saved."
     }
   end
 
@@ -936,6 +1021,28 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         "Send at least one changed title or notes field.",
         false,
         "edit_task"
+      )
+
+  defp semantic_rejection(:no_date_fields_touched, _current),
+    do:
+      problem(
+        422,
+        "no_date_fields_touched",
+        "No task dates changed",
+        "Send at least one planned date or deadline field.",
+        false,
+        "edit_task_dates"
+      )
+
+  defp semantic_rejection(:invalid_timezone, _current),
+    do:
+      problem(
+        503,
+        "account_timezone_unavailable",
+        "Account timezone unavailable",
+        "The configured account timezone could not resolve an account day.",
+        true,
+        "check_account_timezone"
       )
 
   defp semantic_rejection({:edit_conflict, affected_fields}, current) do
@@ -1120,14 +1227,25 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     %{status: status, body: Map.merge(body, extensions)}
   end
 
-  defp task_from_row([id, title, notes, inbox_state, revision, captured_at]) do
+  defp task_from_row([
+         id,
+         title,
+         notes,
+         inbox_state,
+         revision,
+         captured_at,
+         planned_on,
+         deadline_on
+       ]) do
     %Task{
       id: load_uuid(id),
       title: title,
       notes: notes,
       inbox_state: String.to_existing_atom(inbox_state),
       revision: revision,
-      captured_at: to_datetime(captured_at)
+      captured_at: to_datetime(captured_at),
+      planned_on: planned_on,
+      deadline_on: deadline_on
     }
   end
 
@@ -1142,6 +1260,8 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       "id" => task.id,
       "inbox_state" => Atom.to_string(task.inbox_state),
       "notes" => task.notes,
+      "planned_on" => optional_date(task.planned_on),
+      "deadline_on" => optional_date(task.deadline_on),
       "project" => assignment.project,
       "revision" => task.revision,
       "tags" => assignment.tags,
@@ -1291,5 +1411,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
   defp to_datetime(%NaiveDateTime{} = value), do: DateTime.from_naive!(value, "Etc/UTC")
   defp optional_datetime(nil), do: nil
   defp optional_datetime(value), do: to_datetime(value)
+  defp optional_date(nil), do: nil
+  defp optional_date(%Date{} = value), do: Date.to_iso8601(value)
   defp utc_iso8601(value), do: value |> to_datetime() |> DateTime.to_iso8601()
 end
