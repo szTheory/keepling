@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "field": "trashed_at",
+  "cases": [
+    {
+      "name": "trash accepts the exact active revision",
+      "command": {
+        "type": "trash_task",
+        "expected_revision": 7,
+        "accepted_at": "2026-08-31T13:00:00.000000Z"
+      },
+      "current": {
+        "revision": 7,
+        "trashed_at": null
+      },
+      "result": {
+        "outcome": "accepted",
+        "revision": 8,
+        "trashed_at": "2026-08-31T13:00:00.000000Z",
+        "activity_type": "task_trashed"
+      }
+    },
+    {
+      "name": "trash conflicts after any intervening revision",
+      "command": {
+        "type": "trash_task",
+        "expected_revision": 6,
+        "accepted_at": "2026-08-31T13:00:00.000000Z"
+      },
+      "current": {
+        "revision": 7,
+        "trashed_at": null
+      },
+      "result": {
+        "outcome": "conflict",
+        "affected_fields": ["trashed_at"]
+      }
+    },
+    {
+      "name": "a fresh trash command is already satisfied only at the exact trashed revision",
+      "command": {
+        "type": "trash_task",
+        "expected_revision": 8,
+        "accepted_at": "2026-08-31T13:05:00.000000Z"
+      },
+      "current": {
+        "revision": 8,
+        "trashed_at": "2026-08-31T13:00:00.000000Z"
+      },
+      "result": {
+        "outcome": "already_satisfied",
+        "revision": 8,
+        "trashed_at": "2026-08-31T13:00:00.000000Z",
+        "activity_type": null
+      }
+    },
+    {
+      "name": "restore accepts the exact trashed revision",
+      "command": {
+        "type": "restore_task",
+        "expected_revision": 8,
+        "accepted_at": "2026-08-31T13:10:00.000000Z"
+      },
+      "current": {
+        "revision": 8,
+        "trashed_at": "2026-08-31T13:00:00.000000Z"
+      },
+      "result": {
+        "outcome": "accepted",
+        "revision": 9,
+        "trashed_at": null,
+        "activity_type": "task_restored"
+      }
+    },
+    {
+      "name": "restore conflicts after any intervening revision",
+      "command": {
+        "type": "restore_task",
+        "expected_revision": 7,
+        "accepted_at": "2026-08-31T13:10:00.000000Z"
+      },
+      "current": {
+        "revision": 8,
+        "trashed_at": "2026-08-31T13:00:00.000000Z"
+      },
+      "result": {
+        "outcome": "conflict",
+        "affected_fields": ["trashed_at"]
+      }
+    },
+    {
+      "name": "a fresh restore command is already satisfied only at the exact active revision",
+      "command": {
+        "type": "restore_task",
+        "expected_revision": 9,
+        "accepted_at": "2026-08-31T13:15:00.000000Z"
+      },
+      "current": {
+        "revision": 9,
+        "trashed_at": null
+      },
+      "result": {
+        "outcome": "already_satisfied",
+        "revision": 9,
+        "trashed_at": null,
+        "activity_type": null
+      }
+    }
+  ]
+}
