@@ -17,15 +17,17 @@ const authenticate = async (page: Page, baseURL: string | undefined) => {
   return (await response.json()) as { csrf_token: string }
 }
 
-const captureTask = async (page: Page, title: string) => {
+const captureTask = async (page: Page, title: string, navigateToToday = true) => {
   await page.goto('/')
   const capture = page.getByLabel('What do you want to keep?')
   await capture.fill(title)
   await page.getByLabel('Add to Today').check()
   await page.getByRole('button', { name: 'Add task' }).click()
   await expect(page.getByRole('listitem').filter({ hasText: title })).toBeVisible()
-  await page.getByRole('link', { name: 'Today' }).click()
-  await expect(page.getByRole('listitem').filter({ hasText: title })).toBeVisible()
+  if (navigateToToday) {
+    await page.getByRole('link', { name: 'Today' }).click()
+    await expect(page.getByRole('listitem').filter({ hasText: title })).toBeVisible()
+  }
 }
 
 type FaultMode =
@@ -179,7 +181,7 @@ test('@lifecycle-recovery continues exact undo through reauthentication', async 
   page,
 }) => {
   const { csrf_token: csrfToken } = await authenticate(page, baseURL)
-  await captureTask(page, 'Undo survives reauthentication')
+  await captureTask(page, 'Undo survives reauthentication', false)
 
   const bodies: string[] = []
   let armed = true
