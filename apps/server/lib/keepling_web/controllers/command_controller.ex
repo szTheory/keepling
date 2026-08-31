@@ -23,6 +23,13 @@ defmodule KeeplingWeb.CommandController do
     end
   end
 
+  def trash(conn, _params) do
+    case Commands.list_trash(context(conn), CommandStore) do
+      {:ok, tasks} -> json(conn, %{tasks: tasks})
+      {:error, :infrastructure_failure} -> infrastructure_problem(conn)
+    end
+  end
+
   def organizations(conn, _params) do
     case Commands.list_organizations(context(conn), CommandStore) do
       {:ok, organizations} -> json(conn, %{organizations: organizations})
@@ -54,6 +61,12 @@ defmodule KeeplingWeb.CommandController do
 
   def reopen_task(conn, params),
     do: dispatch_task_command(conn, decode_task_lifecycle(params, :reopen_task))
+
+  def trash_task(conn, params),
+    do: dispatch_task_command(conn, decode_task_lifecycle(params, :trash_task))
+
+  def restore_task(conn, params),
+    do: dispatch_task_command(conn, decode_task_lifecycle(params, :restore_task))
 
   def edit_task_dates(conn, params),
     do: dispatch_task_command(conn, decode_task_dates(params))

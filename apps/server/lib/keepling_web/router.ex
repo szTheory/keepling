@@ -56,6 +56,7 @@ defmodule KeeplingWeb.Router do
     get "/today", TaskViewController, :today
     get "/upcoming", TaskViewController, :upcoming
     get "/completed", TaskViewController, :completed
+    get "/trash", CommandController, :trash
     get "/organizations", CommandController, :organizations
     get "/mutations/:mutation_id", CommandController, :mutation
     get "/tasks/:task_id/activity", ActivityController, :index
@@ -70,6 +71,8 @@ defmodule KeeplingWeb.Router do
     post "/commands/return-to-inbox", CommandController, :return_to_inbox
     post "/commands/complete-task", CommandController, :complete_task
     post "/commands/reopen-task", CommandController, :reopen_task
+    post "/commands/trash-task", CommandController, :trash_task
+    post "/commands/restore-task", CommandController, :restore_task
     post "/commands/edit-task-dates", CommandController, :edit_task_dates
     post "/commands/plan-for-today", CommandController, :plan_for_today
     post "/commands/unplan-task", CommandController, :unplan_task

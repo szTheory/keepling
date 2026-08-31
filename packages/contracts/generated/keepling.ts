@@ -208,6 +208,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/commands/restore-task": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Restore a task at its exact revision and return authoritative destinations */
+        readonly post: operations["restoreTask"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/commands/return-to-inbox": {
         readonly parameters: {
             readonly query?: never;
@@ -219,6 +236,23 @@ export interface paths {
         readonly put?: never;
         /** Explicitly restore canonical Inbox membership */
         readonly post: operations["returnToInbox"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/commands/trash-task": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Move a task to durable recoverable Trash at its exact revision */
+        readonly post: operations["trashTask"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -519,6 +553,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/trash": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Read account-scoped recoverable tasks newest trashed first */
+        readonly get: operations["getTrash"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/upcoming": {
         readonly parameters: {
             readonly query?: never;
@@ -806,6 +857,16 @@ export interface components {
             /** @constant */
             readonly version: 1;
         };
+        readonly RestoreAcknowledgement: {
+            readonly destinations: readonly ("Inbox" | "Today" | "Upcoming" | "Completed")[];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            /** @enum {string} */
+            readonly outcome: "accepted" | "already_satisfied";
+            readonly revision: components["schemas"]["Revision"];
+            readonly snapshot: components["schemas"]["TaskSnapshot"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly warnings: readonly components["schemas"]["Warning"][];
+        };
         readonly ReturnToInboxCommand: {
             readonly expected_revision: components["schemas"]["Revision"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
@@ -888,6 +949,7 @@ export interface components {
             readonly revision: components["schemas"]["Revision"];
             readonly tags: readonly components["schemas"]["TaskOrganizationReference"][];
             readonly title: string;
+            readonly trashed_at: string | null;
         };
         /** @description Opaque HMAC-authenticated account/view/revision-bound complete keyset. */
         readonly TaskViewCursor: string;
@@ -943,6 +1005,9 @@ export interface components {
             readonly current: boolean;
             readonly id: components["schemas"]["SessionIdentity"];
             readonly label: components["schemas"]["SessionLabel"];
+        };
+        readonly TrashResponse: {
+            readonly tasks: readonly components["schemas"]["TaskSnapshot"][];
         };
         readonly UnplanTaskRequest: components["schemas"]["PlanForTodayRequest"];
         readonly VersionedAuthRequest: {
@@ -1342,6 +1407,36 @@ export interface operations {
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };
+    readonly restoreTask: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["TaskLifecycleCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored restore acknowledgement with actual destinations */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["RestoreAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly returnToInbox: {
         readonly parameters: {
             readonly query?: never;
@@ -1356,6 +1451,36 @@ export interface operations {
         };
         readonly responses: {
             /** @description Exact stored Inbox-return acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly trashTask: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["TaskLifecycleCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored Trash acknowledgement or already-satisfied result */
             readonly 200: {
                 headers: {
                     readonly [name: string]: unknown;
@@ -1847,6 +1972,27 @@ export interface operations {
             };
             readonly 401: components["responses"]["ProblemResponse"];
             readonly 409: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly getTrash: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Authoritative recoverable Trash projection */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["TrashResponse"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
         };
     };
     readonly getUpcoming: {

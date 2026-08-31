@@ -305,6 +305,19 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
         '409':
           $ref: '#/components/responses/ProblemResponse'
+  /trash:
+    get:
+      operationId: getTrash
+      summary: Read account-scoped recoverable tasks newest trashed first
+      responses:
+        '200':
+          description: Authoritative recoverable Trash projection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrashResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
   /organizations:
     get:
       operationId: listOrganizations
@@ -525,6 +538,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/trash-task:
+    post:
+      operationId: trashTask
+      summary: Move a task to durable recoverable Trash at its exact revision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskLifecycleCommand'
+      responses:
+        '200':
+          description: Exact stored Trash acknowledgement or already-satisfied result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/restore-task:
+    post:
+      operationId: restoreTask
+      summary: Restore a task at its exact revision and return authoritative destinations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskLifecycleCommand'
+      responses:
+        '200':
+          description: Exact stored restore acknowledgement with actual destinations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestoreAcknowledgement'
         '400':
           $ref: '#/components/responses/ProblemResponse'
         '401':
@@ -1271,6 +1342,55 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaskSnapshot'
+    TrashResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - tasks
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskSnapshot'
+    RestoreAcknowledgement:
+      type: object
+      additionalProperties: false
+      required:
+        - destinations
+        - mutation_id
+        - outcome
+        - revision
+        - snapshot
+        - task_id
+        - warnings
+      properties:
+        destinations:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - Inbox
+              - Today
+              - Upcoming
+              - Completed
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        outcome:
+          type: string
+          enum:
+            - accepted
+            - already_satisfied
+        revision:
+          $ref: '#/components/schemas/Revision'
+        snapshot:
+          $ref: '#/components/schemas/TaskSnapshot'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Warning'
     TaskViewCursor:
       type: string
       minLength: 1
@@ -1890,6 +2010,7 @@ components:
         - revision
         - tags
         - title
+        - trashed_at
       properties:
         captured_at:
           type: string
@@ -1924,6 +2045,11 @@ components:
             $ref: '#/components/schemas/TaskOrganizationReference'
         title:
           type: string
+        trashed_at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: 'null'
     TaskOrganizationReference:
       type: object
       additionalProperties: false

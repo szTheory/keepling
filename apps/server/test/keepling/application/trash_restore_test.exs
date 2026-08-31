@@ -162,7 +162,7 @@ defmodule Keepling.Application.TrashRestorePersistenceTest do
     assert {:ok,
             %{
               body: %{
-                "destinations" => ["Inbox", "Today", "Completed"],
+                "destinations" => ["Completed"],
                 "mutation_id" => ^restore_id,
                 "outcome" => "accepted",
                 "revision" => 9,
@@ -173,10 +173,8 @@ defmodule Keepling.Application.TrashRestorePersistenceTest do
     assert restored == dispatch(account_id, ~U[2026-08-31 13:15:00.000000Z], restore_command)
     assert {:ok, []} = CommandStore.list_trash(context(account_id, @captured_at))
 
-    assert {:ok, [%{"id" => ^task_id}]} =
-             CommandStore.list_inbox(context(account_id, @captured_at))
-
-    assert {:ok, %{items: [%{id: ^task_id}]}} = list_view(account_id, :today)
+    assert {:ok, []} = CommandStore.list_inbox(context(account_id, @captured_at))
+    assert {:ok, %{items: []}} = list_view(account_id, :today)
     assert {:ok, %{items: [%{id: ^task_id}]}} = list_view(account_id, :completed)
 
     after_restore = preserved_state(account_id, task_id)

@@ -270,7 +270,8 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
         """
         SELECT id, title, revision, captured_at, planned_on, deadline_on
         FROM tasks
-        WHERE account_id = $1 AND inbox_state = 'inbox' AND completed_at IS NULL
+        WHERE account_id = $1 AND inbox_state = 'inbox'
+          AND completed_at IS NULL AND trashed_at IS NULL
         #{predicate}
         ORDER BY captured_at DESC, id DESC
         LIMIT $#{limit_parameter}
@@ -312,6 +313,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
              ELSE 'today'
            END
           WHERE tasks.account_id = $1 AND tasks.completed_at IS NULL
+            AND tasks.trashed_at IS NULL
             AND (tasks.planned_on <= $2 OR tasks.deadline_on <= $2)
         )
         SELECT id, title, revision, captured_at, planned_on, deadline_on,
@@ -343,7 +345,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
                  END AS group_on,
                  CASE WHEN planned_on > $2 THEN 'planned' ELSE 'deadline' END AS upcoming_reason
           FROM tasks
-          WHERE account_id = $1 AND completed_at IS NULL
+          WHERE account_id = $1 AND completed_at IS NULL AND trashed_at IS NULL
             AND (planned_on > $2 OR deadline_on > $2)
         )
         SELECT id, title, revision, captured_at, planned_on, deadline_on,
@@ -378,7 +380,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
         """
         SELECT id, title, revision, captured_at, planned_on, deadline_on, completed_at
         FROM tasks
-        WHERE account_id = $1 AND completed_at IS NOT NULL
+        WHERE account_id = $1 AND completed_at IS NOT NULL AND trashed_at IS NULL
         #{predicate}
         ORDER BY completed_at DESC, id DESC
         LIMIT $#{limit_parameter}
@@ -541,7 +543,8 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
              ELSE 'today'
            END
            FROM tasks
-           WHERE account_id = $1 AND id = $2 AND completed_at IS NULL
+           WHERE account_id = $1 AND id = $2
+             AND completed_at IS NULL AND trashed_at IS NULL
              AND (planned_on <= $3 OR deadline_on <= $3)
            """,
            [account_id, dump_uuid(task_id), account_day]
@@ -564,6 +567,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
          AND today_task_order.task_id = tasks.id
          AND today_task_order.section = $2
         WHERE tasks.account_id = $1 AND tasks.completed_at IS NULL
+          AND tasks.trashed_at IS NULL
           AND (tasks.planned_on <= $3 OR tasks.deadline_on <= $3)
           AND (CASE WHEN tasks.planned_on < $3 OR tasks.deadline_on < $3 THEN 'overdue'
                     ELSE 'today' END) = $2

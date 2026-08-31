@@ -10,7 +10,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
 
   alias Ecto.Adapters.SQL
   alias Keepling.Application.Activity
-  alias Keepling.Domain.{Organization, Task}
+  alias Keepling.Domain.{Organization, Task, TaskDates}
   alias Keepling.Repo
 
   @behaviour Activity.Port
@@ -36,10 +36,32 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
            Repo,
            """
            SELECT id, title, notes, inbox_state, revision, captured_at,
-                  planned_on, deadline_on, completed_at
+                  planned_on, deadline_on, completed_at, trashed_at
            FROM tasks
-           WHERE account_id = $1 AND inbox_state = 'inbox' AND completed_at IS NULL
+           WHERE account_id = $1 AND inbox_state = 'inbox'
+             AND completed_at IS NULL AND trashed_at IS NULL
            ORDER BY captured_at DESC, id ASC
+           """,
+           [account_id]
+         ) do
+      {:ok, %{rows: rows}} ->
+        {:ok, Enum.map(rows, &task_body_from_row(&1, account_id, Repo))}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  end
+
+  @impl true
+  def list_trash(%{account_id: account_id}) do
+    case SQL.query(
+           Repo,
+           """
+           SELECT id, title, notes, inbox_state, revision, captured_at,
+                  planned_on, deadline_on, completed_at, trashed_at
+           FROM tasks
+           WHERE account_id = $1 AND trashed_at IS NOT NULL
+           ORDER BY trashed_at DESC, id DESC
            """,
            [account_id]
          ) do
@@ -337,8 +359,11 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
 
         _existing_task_command ->
           case lock_task(repo, context.account_id, command.task_id) do
-            nil -> task_not_found()
-            current -> decide_existing(repo, command, context, current, accepted_command, decide)
+            nil ->
+              task_not_found()
+
+            current ->
+              decide_existing(repo, accepted_command, context, current, accepted_command, decide)
           end
       end
 
@@ -347,7 +372,15 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
   end
 
   defp decide_existing(repo, command, context, current, accepted_command, decide) do
-    case decide.(current, accepted_command) do
+    result =
+      if not is_nil(current.trashed_at) and
+           command.type not in [:trash_task, :restore_task] do
+        {:error, {:trash_conflict, ["trashed_at"]}}
+      else
+        decide.(current, accepted_command)
+      end
+
+    case result do
       {:ok, task, nil, :already_satisfied, warnings} ->
         acknowledgement(
           repo,
@@ -373,7 +406,8 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     end
   end
 
-  defp maybe_put_account_timezone(%{type: :plan_for_today} = command, repo, context) do
+  defp maybe_put_account_timezone(%{type: type} = command, repo, context)
+       when type in [:plan_for_today, :restore_task] do
     %{rows: [[timezone]]} =
       SQL.query!(
         repo,
@@ -444,6 +478,9 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
 
       current ->
         case validate_assignment_targets(repo, context.account_id, current, command.fields) do
+          :ok when not is_nil(current.trashed_at) ->
+            semantic_rejection({:trash_conflict, ["trashed_at"]}, current)
+
           :ok ->
             case decide.(current, accepted_command) do
               {:ok, task, nil, :already_satisfied} ->
@@ -468,7 +505,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
            """
            SELECT tasks.id, tasks.title, tasks.notes, tasks.inbox_state,
                   tasks.revision, tasks.captured_at, tasks.planned_on,
-                  tasks.deadline_on, tasks.completed_at,
+                  tasks.deadline_on, tasks.completed_at, tasks.trashed_at,
                   COALESCE((
                     SELECT max(activity.to_revision)
                     FROM task_activities AS activity
@@ -492,7 +529,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
            repo,
            """
            SELECT id, title, notes, inbox_state, revision, captured_at,
-                  planned_on, deadline_on, completed_at, project_id
+                  planned_on, deadline_on, completed_at, trashed_at, project_id
            FROM tasks
            WHERE account_id = $1 AND id = $2
            FOR UPDATE
@@ -510,6 +547,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
           planned_on,
           deadline_on,
           completed_at,
+          trashed_at,
           project_id
         ]
       ] ->
@@ -523,6 +561,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
           planned_on: planned_on,
           deadline_on: deadline_on,
           completed_at: optional_datetime(completed_at),
+          trashed_at: optional_datetime(trashed_at),
           project_id: load_optional_uuid(project_id),
           tag_ids: load_task_tag_ids(repo, account_id, task_id)
         }
@@ -575,7 +614,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     %{rows: [[count]]} =
       SQL.query!(
         repo,
-        "SELECT count(*) FROM tasks WHERE account_id = $1 AND project_id = $2 AND completed_at IS NULL",
+        "SELECT count(*) FROM tasks WHERE account_id = $1 AND project_id = $2 AND completed_at IS NULL AND trashed_at IS NULL",
         [account_id, dump_uuid(organization_id)]
       )
 
@@ -683,7 +722,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $7, $7)
         ON CONFLICT (account_id, id) DO NOTHING
         RETURNING id, title, notes, inbox_state, revision, captured_at,
-                  planned_on, deadline_on, completed_at
+                  planned_on, deadline_on, completed_at, trashed_at
         """,
         [
           context.account_id,
@@ -723,7 +762,8 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         """
         UPDATE tasks
         SET title = $3, notes = $4, inbox_state = $5, revision = $6,
-            planned_on = $7, deadline_on = $8, completed_at = $9, updated_at = $10
+            planned_on = $7, deadline_on = $8, completed_at = $9,
+            trashed_at = $10, updated_at = $11
         WHERE account_id = $1 AND id = $2
         """,
         [
@@ -736,6 +776,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
           task.planned_on,
           task.deadline_on,
           task.completed_at,
+          task.trashed_at,
           context.accepted_at
         ]
       )
@@ -908,6 +949,11 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     bump_task_view_revisions(repo, [:inbox, :today, :upcoming, :completed], context)
   end
 
+  defp maybe_bump_task_view_revisions(repo, command, context)
+       when command.type in [:trash_task, :restore_task] do
+    bump_task_view_revisions(repo, [:inbox, :today, :upcoming, :completed, :trash], context)
+  end
+
   defp maybe_bump_task_view_revisions(_repo, _command, _context), do: :ok
 
   defp bump_task_view_revisions(repo, views, context) do
@@ -933,18 +979,50 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
          status \\ 200,
          warnings \\ []
        ) do
+    body = %{
+      "mutation_id" => command.mutation_id,
+      "outcome" => Atom.to_string(outcome),
+      "revision" => task.revision,
+      "snapshot" => task_body(task, account_id, repo),
+      "task_id" => task.id,
+      "warnings" => Enum.map(warnings, &warning_body/1)
+    }
+
+    body =
+      if command.type == :restore_task do
+        Map.put(body, "destinations", restore_destinations(task, command))
+      else
+        body
+      end
+
     %{
       status: status,
-      body: %{
-        "mutation_id" => command.mutation_id,
-        "outcome" => Atom.to_string(outcome),
-        "revision" => task.revision,
-        "snapshot" => task_body(task, account_id, repo),
-        "task_id" => task.id,
-        "warnings" => Enum.map(warnings, &warning_body/1)
-      }
+      body: body
     }
   end
+
+  defp restore_destinations(%Task{completed_at: completed_at}, _command)
+       when not is_nil(completed_at),
+       do: ["Completed"]
+
+  defp restore_destinations(task, command) do
+    {:ok, account_day} = TaskDates.account_day(command.accepted_at, command.account_timezone)
+    classification = TaskDates.classify(task.planned_on, task.deadline_on, account_day)
+
+    []
+    |> maybe_destination(task.inbox_state == :inbox, "Inbox")
+    |> maybe_destination(classification.today_reasons != [], "Today")
+    |> maybe_destination(
+      Enum.any?([task.planned_on, task.deadline_on], fn
+        %Date{} = date -> Date.after?(date, account_day)
+        nil -> false
+      end),
+      "Upcoming"
+    )
+  end
+
+  defp maybe_destination(destinations, true, destination), do: destinations ++ [destination]
+  defp maybe_destination(destinations, false, _destination), do: destinations
 
   defp warning_body(:planned_after_deadline) do
     %{
@@ -1118,6 +1196,21 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     )
   end
 
+  defp semantic_rejection({:trash_conflict, affected_fields}, current) do
+    problem(
+      409,
+      "task_trash_conflict",
+      "Task Trash state changed elsewhere",
+      "Refresh the task before moving it to Trash or restoring it.",
+      false,
+      "refresh_task",
+      %{
+        "affected_fields" => affected_fields,
+        "current_revision" => current.revision
+      }
+    )
+  end
+
   defp semantic_rejection(_reason, _current),
     do:
       problem(
@@ -1279,7 +1372,8 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
          captured_at,
          planned_on,
          deadline_on,
-         completed_at
+         completed_at,
+         trashed_at
        ]) do
     %Task{
       id: load_uuid(id),
@@ -1291,12 +1385,13 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       completed_at: optional_datetime(completed_at),
       lifecycle_revision: 0,
       planned_on: planned_on,
-      deadline_on: deadline_on
+      deadline_on: deadline_on,
+      trashed_at: optional_datetime(trashed_at)
     }
   end
 
-  defp task_from_row(row_and_lifecycle_revision) when length(row_and_lifecycle_revision) == 10 do
-    {row, [lifecycle_revision]} = Enum.split(row_and_lifecycle_revision, 9)
+  defp task_from_row(row_and_lifecycle_revision) when length(row_and_lifecycle_revision) == 11 do
+    {row, [lifecycle_revision]} = Enum.split(row_and_lifecycle_revision, 10)
     %{task_from_row(row) | lifecycle_revision: lifecycle_revision}
   end
 
@@ -1317,7 +1412,8 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       "project" => assignment.project,
       "revision" => task.revision,
       "tags" => assignment.tags,
-      "title" => task.title
+      "title" => task.title,
+      "trashed_at" => optional_utc_iso8601(task.trashed_at)
     }
   end
 

@@ -22,7 +22,8 @@ defmodule Keepling.Domain.Task do
     completed_at: nil,
     lifecycle_revision: 0,
     planned_on: nil,
-    deadline_on: nil
+    deadline_on: nil,
+    trashed_at: nil
   ]
 
   @type inbox_state :: :inbox | :clarified
@@ -36,7 +37,8 @@ defmodule Keepling.Domain.Task do
           completed_at: DateTime.t() | nil,
           lifecycle_revision: non_neg_integer(),
           planned_on: Date.t() | nil,
-          deadline_on: Date.t() | nil
+          deadline_on: Date.t() | nil,
+          trashed_at: DateTime.t() | nil
         }
 
   @type activity :: %{
@@ -68,7 +70,8 @@ defmodule Keepling.Domain.Task do
         completed_at: nil,
         lifecycle_revision: 0,
         planned_on: nil,
-        deadline_on: nil
+        deadline_on: nil,
+        trashed_at: nil
       }
 
       activity =
@@ -152,6 +155,20 @@ defmodule Keepling.Domain.Task do
 
   def reopen(%__MODULE__{} = task, command) do
     lifecycle_transition(task, command, nil, :task_reopened)
+  end
+
+  @spec trash(t(), map()) ::
+          {:ok, t(), activity() | nil, :accepted | :already_satisfied}
+          | {:error, {:trash_conflict, [String.t()]}}
+  def trash(%__MODULE__{} = task, command) do
+    trash_transition(task, command, :trash)
+  end
+
+  @spec restore(t(), map()) ::
+          {:ok, t(), activity() | nil, :accepted | :already_satisfied}
+          | {:error, {:trash_conflict, [String.t()]}}
+  def restore(%__MODULE__{} = task, command) do
+    trash_transition(task, command, :restore)
   end
 
   defp require_touched_fields(%{fields: fields}) when map_size(fields) > 0, do: :ok
@@ -247,6 +264,35 @@ defmodule Keepling.Domain.Task do
         activity_type,
         command.accepted_at
       )
+    end
+  end
+
+  defp trash_transition(task, command, operation) do
+    cond do
+      command.expected_revision != task.revision ->
+        {:error, {:trash_conflict, ["trashed_at"]}}
+
+      operation == :trash and not is_nil(task.trashed_at) ->
+        {:ok, task, nil, :already_satisfied}
+
+      operation == :restore and is_nil(task.trashed_at) ->
+        {:ok, task, nil, :already_satisfied}
+
+      true ->
+        {trashed_at, activity_type} =
+          if operation == :trash,
+            do: {command.accepted_at, :task_trashed},
+            else: {nil, :task_restored}
+
+        updated = %{task | trashed_at: trashed_at}
+
+        finish(
+          task,
+          updated,
+          %{"trashed_at" => %{"from" => task.trashed_at, "to" => trashed_at}},
+          activity_type,
+          command.accepted_at
+        )
     end
   end
 

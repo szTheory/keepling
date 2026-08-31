@@ -10,6 +10,7 @@ defmodule Keepling.Application.Commands do
 
     @callback execute(map(), map(), function()) :: tuple()
     @callback list_inbox(map()) :: tuple()
+    @callback list_trash(map()) :: tuple()
     @callback list_organizations(map()) :: tuple()
     @callback lookup_result(map(), String.t()) :: tuple()
   end
@@ -52,6 +53,18 @@ defmodule Keepling.Application.Commands do
   def dispatch(%{type: :reopen_task} = command, context, port) do
     port.execute(command, context, fn current_task, accepted_command ->
       Task.reopen(current_task, accepted_command)
+    end)
+  end
+
+  def dispatch(%{type: :trash_task} = command, context, port) do
+    port.execute(command, context, fn current_task, accepted_command ->
+      Task.trash(current_task, accepted_command)
+    end)
+  end
+
+  def dispatch(%{type: :restore_task} = command, context, port) do
+    port.execute(command, context, fn current_task, accepted_command ->
+      Task.restore(current_task, accepted_command)
     end)
   end
 
@@ -111,6 +124,9 @@ defmodule Keepling.Application.Commands do
 
   @spec list_inbox(map(), module()) :: tuple()
   def list_inbox(context, port), do: port.list_inbox(context)
+
+  @spec list_trash(map(), module()) :: tuple()
+  def list_trash(context, port), do: port.list_trash(context)
 
   @spec list_organizations(map(), module()) :: tuple()
   def list_organizations(context, port), do: port.list_organizations(context)
