@@ -101,7 +101,7 @@ function AppRoutes({
 
     return (
       <>
-        {content}
+        <div aria-hidden="true">{content}</div>
         <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 px-4 py-16">
           <div className="mx-auto max-w-2xl">
             {continuationError ? (
