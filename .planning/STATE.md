@@ -1,21 +1,20 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-milestone_name: milestone
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed 01-14-PLAN.md
-last_updated: "2026-08-31T06:11:48.617Z"
+stopped_at: Completed 01-15-PLAN.md
+last_updated: "2026-08-31T06:37:07.314Z"
 last_activity: 2026-08-31
 last_activity_desc: Completed KPL-01 Plan 14 trustworthy complete/reopen lifecycle
-state_head: 5f34ef7
+state_head: bd9e881718b0b52d94bd018edd688f3e76d320f9
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 14
-  percent: 74
+  completed_plans: 15
+milestone_name: milestone
 ---
 
 # Project State
@@ -30,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 15 of 19
+Plan: 16 of 19
 Total Plans in Phase: 19
 Status: Ready to execute
 Last activity: 2026-08-31
@@ -92,6 +91,9 @@ Progress: [███████░░░] 74%
 - [Phase 01]: Lifecycle staleness is scoped to the latest accepted complete/reopen revision, allowing unrelated-edit rebase while opposing lifecycle intent conflicts on completed_at.
 - [Phase 01]: Completion preserves inbox_state and active projections filter completed_at so reopen can recompute visibility from canonical task fields.
 - [Phase 01]: Browser lifecycle reconciliation requires exact task and mutation acknowledgement identities and reads reopen destinations from authoritative projections.
+- [Phase 01]: Trash is retained canonical task state with an immutable accepted UTC instant and no purge or retention mechanism.
+- [Phase 01]: Trash and restore require the exact current revision before already-satisfied intent; other writes conflict while trashed.
+- [Phase 01]: Restore acknowledgements carry server-derived destinations so clients never predict projection visibility.
 
 ### Retained Research
 
@@ -119,8 +121,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T06:11:48.614Z
-**Stopped at:** Completed 01-14-PLAN.md
+**Last session:** 2026-08-31T06:37:07.306Z
+**Stopped at:** Completed 01-15-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -141,3 +143,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P12 | 22min | 2 tasks | 15 files |
 | Phase KPL-01 P13 | 24min | 2 tasks | 18 files |
 | Phase KPL-01 P14 | 18min | 2 tasks | 14 files |
+| Phase KPL-01 P15 | 18min | 2 tasks | 15 files |
