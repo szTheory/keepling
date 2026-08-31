@@ -20,6 +20,16 @@ defmodule Keepling.Repo.Migrations.AddClosedSetupAndTimezone do
                  "activity_view_revision >= 1"
            )
 
+    execute(
+      """
+      ALTER TABLE accounts
+      ADD CONSTRAINT accounts_setup_fields_required
+      CHECK (password_hash IS NOT NULL AND timezone IS NOT NULL)
+      NOT VALID
+      """,
+      "ALTER TABLE accounts DROP CONSTRAINT accounts_setup_fields_required"
+    )
+
     create table(:account_setup, primary_key: false) do
       add :singleton_key, :boolean, primary_key: true, null: false, default: true
       add :token_hash, :binary

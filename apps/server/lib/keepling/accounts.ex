@@ -12,17 +12,23 @@ defmodule Keepling.Accounts do
   alias Keepling.Repo
 
   @default_setup_ttl_seconds 900
+  @minimum_setup_ttl_seconds 60
+  @maximum_setup_ttl_seconds 3_600
   @minimum_password_bytes 12
   @maximum_password_bytes 1_024
 
   @spec issue_setup_token(keyword()) ::
           {:ok, %{token: String.t(), expires_at: DateTime.t()}}
-          | {:error, :setup_disabled | :setup_token_active | :infrastructure_failure}
+          | {:error,
+             :invalid_ttl | :setup_disabled | :setup_token_active | :infrastructure_failure}
   def issue_setup_token(opts \\ []) do
     now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
     ttl_seconds = Keyword.get(opts, :ttl_seconds, @default_setup_ttl_seconds)
 
-    with true <- is_integer(ttl_seconds) and ttl_seconds > 0,
+    with true <-
+           is_integer(ttl_seconds) and
+             ttl_seconds >= @minimum_setup_ttl_seconds and
+             ttl_seconds <= @maximum_setup_ttl_seconds,
          token <- random_token(),
          token_hash <- hash_token(token),
          expires_at <- DateTime.add(now, ttl_seconds, :second),
@@ -36,7 +42,7 @@ defmodule Keepling.Accounts do
         {:error, reason} -> {:error, reason}
       end
     else
-      false -> {:error, :infrastructure_failure}
+      false -> {:error, :invalid_ttl}
       {:error, _reason} -> {:error, :infrastructure_failure}
     end
   rescue
@@ -209,7 +215,11 @@ defmodule Keepling.Accounts do
     active? = active_setup_token?(stored_hash, stored_expires_at, consumed_at, now)
 
     cond do
-      disabled_at != nil or account_exists? ->
+      disabled_at != nil ->
+        {:error, :setup_disabled}
+
+      account_exists? ->
+        disable_setup(repo, now)
         {:error, :setup_disabled}
 
       active? ->
@@ -289,6 +299,20 @@ defmodule Keepling.Accounts do
       INSERT INTO account_setup (singleton_key, inserted_at, updated_at)
       VALUES (TRUE, $1, $1)
       ON CONFLICT (singleton_key) DO NOTHING
+      """,
+      [now]
+    )
+  end
+
+  defp disable_setup(repo, now) do
+    SQL.query!(
+      repo,
+      """
+      UPDATE account_setup
+      SET consumed_at = COALESCE(consumed_at, $1),
+          disabled_at = COALESCE(disabled_at, $1),
+          updated_at = $1
+      WHERE singleton_key = TRUE
       """,
       [now]
     )

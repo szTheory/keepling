@@ -146,8 +146,10 @@ defmodule Keepling.Adapters.Postgres.IdempotencyTest do
       SQL.query!(
         Repo,
         """
-        INSERT INTO accounts (id, singleton_key, inserted_at, updated_at)
-        VALUES ($1, TRUE, $2, $2)
+        INSERT INTO accounts (
+          id, singleton_key, password_hash, timezone, inserted_at, updated_at
+        )
+        VALUES ($1, TRUE, '$argon2id$test-fixture', 'Etc/UTC', $2, $2)
         """,
         [account_id, now]
       )
@@ -197,8 +199,10 @@ defmodule KeeplingWeb.UntrustedReceiptBoundaryTest do
     SQL.query!(
       Repo,
       """
-      INSERT INTO accounts (id, singleton_key, inserted_at, updated_at)
-      VALUES ($1, TRUE, $2, $2)
+      INSERT INTO accounts (
+        id, singleton_key, password_hash, timezone, inserted_at, updated_at
+      )
+      VALUES ($1, TRUE, '$argon2id$test-fixture', 'Etc/UTC', $2, $2)
       """,
       [account_id, now]
     )

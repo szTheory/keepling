@@ -15,7 +15,8 @@ defmodule Mix.Tasks.Keepling.SetupToken do
     base_url = opts[:base_url]
     ttl_seconds = Keyword.get(opts, :ttl_seconds, 900)
 
-    if positional != [] or invalid != [] or not valid_base_url?(base_url) or ttl_seconds <= 0 do
+    if positional != [] or invalid != [] or not valid_base_url?(base_url) or
+         ttl_seconds < 60 or ttl_seconds > 3_600 do
       Mix.raise(
         "usage: mix keepling.setup_token --base-url https://keepling.example [--ttl-seconds 900]"
       )
@@ -34,6 +35,9 @@ defmodule Mix.Tasks.Keepling.SetupToken do
 
       {:error, :setup_disabled} ->
         Mix.raise("setup is permanently disabled")
+
+      {:error, :invalid_ttl} ->
+        Mix.raise("setup link lifetime must be between 60 and 3600 seconds")
 
       {:error, :infrastructure_failure} ->
         Mix.raise("setup link could not be issued")

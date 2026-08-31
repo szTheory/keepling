@@ -179,13 +179,55 @@ defmodule Keepling.Accounts.SetupTest do
     assert url != ""
   end
 
+  @tag setup: true
+  test "issuance is bounded short-lived and an existing account durably disables setup" do
+    assert {:error, :invalid_ttl} =
+             call(fn -> Accounts.issue_setup_token(now: @now, ttl_seconds: 59) end)
+
+    assert {:error, :invalid_ttl} =
+             call(fn -> Accounts.issue_setup_token(now: @now, ttl_seconds: 3_601) end)
+
+    account_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
+
+    query!(
+      """
+      INSERT INTO accounts (
+        id, singleton_key, password_hash, timezone, inserted_at, updated_at
+      )
+      VALUES ($1, TRUE, '$argon2id$test-fixture', 'Etc/UTC', $2, $2)
+      """,
+      [account_id, @now]
+    )
+
+    assert {:error, :setup_disabled} =
+             call(fn -> Accounts.issue_setup_token(now: @now, ttl_seconds: 900) end)
+
+    assert inspect_setup_state().consumed_at == @now
+    assert inspect_setup_state().disabled_at == @now
+  end
+
+  @tag setup: true
+  test "database rejects future account rows without setup-owned credential and timezone" do
+    account_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
+
+    assert_raise Postgrex.Error, fn ->
+      query!(
+        """
+        INSERT INTO accounts (id, singleton_key, inserted_at, updated_at)
+        VALUES ($1, TRUE, $2, $2)
+        """,
+        [account_id, @now]
+      )
+    end
+  end
+
   defp inspect_setup_state do
     %{rows: [[token_hash, expires_at, consumed_at, disabled_at]]} =
       query!("SELECT token_hash, expires_at, consumed_at, disabled_at FROM account_setup")
 
     %{
-      consumed_at: consumed_at,
-      disabled_at: disabled_at,
+      consumed_at: as_utc(consumed_at),
+      disabled_at: as_utc(disabled_at),
       expires_at: as_utc(expires_at),
       token_hash: token_hash
     }
@@ -217,6 +259,7 @@ defmodule Keepling.Accounts.SetupTest do
 
   defp as_utc(%DateTime{} = value), do: value
   defp as_utc(%NaiveDateTime{} = value), do: DateTime.from_naive!(value, "Etc/UTC")
+  defp as_utc(nil), do: nil
 end
 
 defmodule KeeplingWeb.SetupControllerTest do
