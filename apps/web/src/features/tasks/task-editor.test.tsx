@@ -145,7 +145,9 @@ describe('canonical task editor', () => {
     await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
     const resume = onAuthenticationRequired.mock.calls[0]?.[1] as () => Promise<void>
     await expect(resume()).rejects.toBeInstanceOf(Error)
-    expect(screen.getByText('Couldn’t load this task. Your tasks weren’t changed.')).toBeVisible()
+    expect(
+      await screen.findByText('Couldn’t load this task. Your tasks weren’t changed.'),
+    ).toBeVisible()
 
     await resume()
     expect(await screen.findByLabelText('Title')).toHaveValue(task.title)
