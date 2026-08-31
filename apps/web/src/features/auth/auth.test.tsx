@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import AppShell from '@/app/AppShell'
 import AppRoutes from '@/app/routes'
 import Reauthenticate, { type InterruptedIntent } from '@/features/auth/Reauthenticate'
 
@@ -155,5 +156,84 @@ describe('reauthentication interruption', () => {
       expect(onAuthenticated).toHaveBeenCalledWith(interruption, 'new-csrf'),
     )
     expect(onAuthenticated.mock.calls[0]?.[0]).toBe(interruption)
+  })
+})
+
+describe('session administration', () => {
+  it('routes Settings/Sessions with editable labels and exact revocation choices', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input)
+      if (path === '/api/v1/sessions' && init?.method === undefined) {
+        return jsonResponse({
+          sessions: [
+            {
+              client_kind: 'web',
+              coarse_activity: 'active_now',
+              created_at: '2026-08-30T18:00:00Z',
+              current: true,
+              id: 'session-current',
+              label: 'Home browser',
+            },
+            {
+              client_kind: 'iphone',
+              coarse_activity: 'today',
+              created_at: '2026-08-29T16:00:00Z',
+              current: false,
+              id: 'session-other',
+              label: 'Phone',
+            },
+          ],
+        })
+      }
+      if (path.endsWith('/session-other') && init?.method === 'PATCH') {
+        return jsonResponse({ label: 'Travel phone', status: 'session_updated' })
+      }
+      if (path.endsWith('/session-other') && init?.method === 'DELETE') {
+        return jsonResponse({ status: 'session_revoked' })
+      }
+      if (path === '/api/v1/logout') return jsonResponse({ status: 'signed_out' })
+      throw new Error(`Unexpected request: ${path} ${String(init?.method)}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    window.history.replaceState({}, '', '/settings/sessions')
+    const onLoggedOut = vi.fn()
+    const user = userEvent.setup()
+
+    render(<AppShell csrfToken="csrf" hasDirtyWork onLoggedOut={onLoggedOut} />)
+
+    expect(await screen.findByRole('heading', { name: 'Sessions' })).toBeVisible()
+    expect(screen.getByText('Current browser')).toBeVisible()
+    expect(screen.getByText('Web')).toBeVisible()
+    expect(screen.getByText('Active now')).toBeVisible()
+    expect(screen.getByText('iPhone')).toBeVisible()
+    expect(screen.getByText('Today')).toBeVisible()
+    expect(screen.getAllByRole('time')).toHaveLength(2)
+
+    const label = screen.getByLabelText('Label for Phone')
+    await user.clear(label)
+    await user.type(label, 'Travel phone')
+    await user.click(screen.getByRole('button', { name: 'Save label for Phone' }))
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/v1/sessions/session-other',
+        expect.objectContaining({ method: 'PATCH' }),
+      ),
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Revoke Travel phone' }))
+    expect(screen.getByRole('alertdialog')).toHaveTextContent(
+      'Revoke Travel phone? Keepling on that device will need to sign in again.',
+    )
+    expect(screen.getByRole('button', { name: 'Keep session active' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Revoke session' }))
+    await waitFor(() => expect(screen.queryByDisplayValue('Travel phone')).not.toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: 'Log out this browser' }))
+    expect(screen.getByRole('alertdialog')).toHaveTextContent(
+      'Log out and discard unsaved changes? Saved tasks will remain in Keepling.',
+    )
+    expect(screen.getByRole('button', { name: 'Stay here' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Discard changes and log out' }))
+    await waitFor(() => expect(onLoggedOut).toHaveBeenCalledOnce())
   })
 })
