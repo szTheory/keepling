@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-21-PLAN.md
-last_updated: "2026-08-31T22:48:05.439Z"
+stopped_at: Completed KPL-01-22-PLAN.md
+last_updated: "2026-08-31T22:56:05.746Z"
 last_activity: 2026-08-31
 last_activity_desc: Phase KPL-01 Plan 20 complete — authenticated read recovery
-state_head: 2acf2e482d91b80c797db614eac9fd2af78cd48e
+state_head: 7da95969cfd7c3a671c24adcd55fab50b6df9c67
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 23
-  completed_plans: 21
+  completed_plans: 22
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — READY TO EXECUTE
-Plan: 22 of 23
+Plan: 23 of 23
 Total Plans in Phase: 23
 Status: Executing Phase KPL-01
 Last activity: 2026-08-31 — Completed KPL-01-20-PLAN.md
@@ -111,6 +111,7 @@ Progress: [█████████░] 87%
 - [Phase 01]: Authenticated route content remains mounted during recovery and is hidden accessibly without a layout-affecting DOM wrapper.
 - [Phase 01]: The test environment permits full-suite successful sign-in volume while production authentication abuse limits remain unchanged.
 - [Phase 01]: The exact submission snapshot locks conflict choices, Save resolution, and Keep editing through in-flight, unknown, and authentication-required states.
+- [Phase 01]: Today ordering uses the exact submission snapshot as its global lock authority; transient progress presentation never decides whether another move may begin.
 
 ### Retained Research
 
@@ -138,8 +139,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T22:48:05.421Z
-**Stopped at:** Completed KPL-01-21-PLAN.md
+**Last session:** 2026-08-31T22:56:05.729Z
+**Stopped at:** Completed KPL-01-22-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -167,3 +168,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P19 | 31min | 3 tasks | 13 files |
 | Phase KPL-01 P20 | 30min | 3 tasks | 12 files |
 | Phase KPL-01 P21 | 5min | 2 tasks | 3 files |
+| Phase KPL-01 P22 | 5min | 2 tasks | 3 files |
