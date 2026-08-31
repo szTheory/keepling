@@ -116,11 +116,10 @@ function ConflictResolver({
     [conflict.fields, selections],
   )
 
-  const exactState = exactSubmission.current?.snapshot.kind
   const resolutionLocked =
-    exactState === 'in_flight' ||
-    exactState === 'unknown' ||
-    exactState === 'authentication_required'
+    state.kind === 'pending' ||
+    state.kind === 'unknown' ||
+    state.kind === 'authentication'
 
   const choose = (field: TaskConflictField['field'], selection: 'current' | 'mine') => {
     if (resolutionLocked) return
