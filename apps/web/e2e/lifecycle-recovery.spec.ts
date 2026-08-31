@@ -47,7 +47,7 @@ const expireRecentAuthentication = (sessionId: string) => {
   }
   const code = [
     `session_id = Ecto.UUID.dump!(${JSON.stringify(sessionId)})`,
-    'Ecto.Adapters.SQL.query!(Keepling.Repo, "UPDATE sessions SET recent_auth_expires_at = NOW() - make_interval(secs => 1) WHERE id = $1", [session_id])',
+    'Ecto.Adapters.SQL.query!(Keepling.Repo, "UPDATE sessions SET recent_authenticated_at = NOW() - make_interval(mins => 2), recent_auth_expires_at = NOW() - make_interval(mins => 1) WHERE id = $1", [session_id])',
   ].join('; ')
   const result = spawnSync(
     runtimePreflight,
@@ -201,7 +201,7 @@ test('@lifecycle-recovery preserves identity when authentication interrupts befo
   const missing = await page.request.get(`/api/v1/mutations/${request.mutation_id}`)
   expect(missing.status()).toBe(404)
 
-  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+  await page.locator('form').getByRole('button', { name: 'Sign in and continue' }).click()
   await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
   await page.getByLabel('Session label').fill('Before acceptance continuation')
   await page.locator('form').getByRole('button', { name: 'Sign in and continue' }).click()
@@ -373,7 +373,7 @@ test('@lifecycle-recovery resumes expired list reads and exact Trash restore thr
   await page.getByRole('button', { name: 'Sign in and continue' }).click()
   await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
   await page.getByLabel('Session label').fill('Trash continuation')
-  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+  await page.locator('form').getByRole('button', { name: 'Sign in and continue' }).click()
   await expect(page.getByText('Restore survives session revocation')).not.toBeVisible()
 })
 
