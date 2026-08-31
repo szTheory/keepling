@@ -159,6 +159,7 @@ function AppShell({
               <SessionList
                 csrfToken={csrfToken}
                 hasDirtyWork={hasDirtyWork}
+                onAuthenticationRequired={onAuthenticationRequired}
                 onLoggedOut={onLoggedOut}
               />
             </section>

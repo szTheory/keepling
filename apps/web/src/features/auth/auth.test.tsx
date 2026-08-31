@@ -200,6 +200,112 @@ describe('reauthentication interruption', () => {
 })
 
 describe('session administration', () => {
+  it('continues an expired session-list read through sign-in', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse(problem('authentication_required', 'Sign in again.', 401), 401),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          sessions: [
+            {
+              client_kind: 'web',
+              coarse_activity: 'active_now',
+              created_at: '2026-08-30T18:00:00Z',
+              current: true,
+              id: 'session-current',
+              label: 'Recovered browser',
+            },
+          ],
+        }),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+    window.history.replaceState({}, '', '/settings/sessions')
+    const onAuthenticationRequired = vi.fn()
+
+    render(
+      <AppShell
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        onLoggedOut={() => undefined}
+      />,
+    )
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { authentication: string; kind: string },
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'read' })
+    await resume('new-csrf')
+    expect(await screen.findByDisplayValue('Recovered browser')).toBeInTheDocument()
+  })
+
+  it('reauthenticates a revoke and completes the original administration action', async () => {
+    const deleteTokens: string[] = []
+    let deleteCount = 0
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const path = String(input)
+      if (path === '/api/v1/sessions' && init?.method === undefined) {
+        return jsonResponse({
+          sessions: [
+            {
+              client_kind: 'iphone',
+              coarse_activity: 'today',
+              created_at: '2026-08-29T16:00:00Z',
+              current: false,
+              id: 'session-other',
+              label: 'Phone',
+            },
+          ],
+        })
+      }
+      if (path.endsWith('/session-other') && init?.method === 'DELETE') {
+        deleteTokens.push(new Headers(init.headers).get('x-csrf-token') ?? '')
+        deleteCount += 1
+        return deleteCount === 1
+          ? jsonResponse(
+              problem(
+                'recent_authentication_required',
+                'Reauthenticate before revoking this session.',
+                401,
+              ),
+              401,
+            )
+          : jsonResponse({ status: 'session_revoked' })
+      }
+      throw new Error(`Unexpected request: ${path} ${String(init?.method)}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    window.history.replaceState({}, '', '/settings/sessions')
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <AppShell
+        csrfToken="old-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        onLoggedOut={() => undefined}
+      />,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Revoke Phone' }))
+    await user.click(screen.getByRole('button', { name: 'Revoke session' }))
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { authentication: string; kind: string },
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toMatchObject({ authentication: 'reauthenticate', kind: 'action' })
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
+
+    await resume('recent-csrf')
+
+    await waitFor(() => expect(screen.queryByText('Phone')).not.toBeInTheDocument())
+    expect(deleteTokens).toEqual(['old-csrf', 'recent-csrf'])
+  })
+
   it('routes Settings/Sessions with editable labels and exact revocation choices', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const path = String(input)

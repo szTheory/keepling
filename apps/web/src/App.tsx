@@ -18,7 +18,7 @@ type AppState =
 
 function InboxWorkspace() {
   const auth = useAuth()
-  const { clearAuthentication } = auth
+  const { beginReauthentication } = auth
   const [state, setState] = useState<AppState>({ kind: 'loading' })
   const [announcement, setAnnouncement] = useState('')
 
@@ -35,7 +35,12 @@ function InboxWorkspace() {
         if (!active) return
 
         if (error instanceof KeeplingApiError && error.problem.code === 'authentication_required') {
-          clearAuthentication()
+          beginReauthentication(
+            { authentication: 'sign_in', kind: 'read', mutationId: 'inbox:list' },
+            async () => {
+              setState({ kind: 'ready', tasks: await getInbox() })
+            },
+          )
         } else {
           setState({ kind: 'error' })
         }
@@ -44,7 +49,7 @@ function InboxWorkspace() {
     return () => {
       active = false
     }
-  }, [clearAuthentication])
+  }, [beginReauthentication])
 
   useEffect(() => {
     const updateTask = (event: Event) => {

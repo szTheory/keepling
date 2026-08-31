@@ -1,15 +1,30 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
   getTrash,
+  getRestoreMutation,
   KeeplingApiError,
-  restoreTask,
+  prepareRestoreTask,
+  submitPreparedRestoreTask,
   type BrowserTask,
   type LifecycleSubmission,
+  type PreparedRestoreTask,
+  type RestoreAcknowledgement,
 } from '@/api/keepling'
+import {
+  classifyKeeplingError,
+  createExactSubmission,
+  type ExactSubmission,
+  type ExactSubmissionState,
+} from '@/commands/submission'
+import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 
 type TrashListProps = {
   csrfToken: string
+  onAuthenticationRequired?: (
+    intent: InterruptedIntent,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => void
 }
 
 type LoadState = 'error' | 'loaded' | 'loading'
@@ -21,6 +36,14 @@ type RestoreState = {
   submission: LifecycleSubmission
 }
 
+type RestoreSubmissionState = ExactSubmissionState<
+  PreparedRestoreTask,
+  RestoreAcknowledgement,
+  KeeplingApiError
+>
+
+type RestoreExact = ExactSubmission<PreparedRestoreTask, RestoreAcknowledgement, KeeplingApiError>
+
 const restoredAnnouncement = (destinations: readonly string[]) => {
   if (destinations.length === 0) return 'Task restored. It is not in an active list.'
   if (destinations.length === 1) return `Task restored to ${destinations[0]}.`
@@ -31,63 +54,60 @@ const restoredAnnouncement = (destinations: readonly string[]) => {
   return `Task restored to ${destinations.slice(0, -1).join(', ')}, and ${destinations.at(-1)}.`
 }
 
-function TrashList({ csrfToken }: TrashListProps) {
+function TrashList({ csrfToken, onAuthenticationRequired }: TrashListProps) {
   const [announcement, setAnnouncement] = useState('')
   const [loadState, setLoadState] = useState<LoadState>('loading')
   const [restoreStates, setRestoreStates] = useState<Record<string, RestoreState>>({})
   const [tasks, setTasks] = useState<readonly BrowserTask[]>([])
   const heading = useRef<HTMLHeadingElement>(null)
   const restoreButtons = useRef(new Map<string, HTMLButtonElement>())
+  const exactRestores = useRef(new Map<string, RestoreExact>())
 
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoadState('loading')
     try {
       setTasks(await getTrash())
       setLoadState('loaded')
-    } catch {
+    } catch (error) {
       setLoadState('error')
+      if (
+        error instanceof KeeplingApiError &&
+        error.problem.code === 'authentication_required' &&
+        onAuthenticationRequired
+      ) {
+        onAuthenticationRequired(
+          { authentication: 'sign_in', kind: 'read', mutationId: 'trash:list' },
+          async () => {
+            setLoadState('loading')
+            setTasks(await getTrash())
+            setLoadState('loaded')
+          },
+        )
+      }
     }
-  }
+  }, [onAuthenticationRequired])
 
   useEffect(() => {
-    let active = true
-
-    void getTrash()
-      .then((loadedTasks) => {
-        if (!active) return
-        setTasks(loadedTasks)
-        setLoadState('loaded')
-      })
-      .catch(() => {
-        if (active) setLoadState('error')
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
+    void load()
+  }, [load])
 
   const setRestoreState = (taskId: string, state: RestoreState) => {
     setRestoreStates((current) => ({ ...current, [taskId]: state }))
   }
 
-  const runRestore = async (task: BrowserTask, submission: LifecycleSubmission) => {
-    setRestoreState(task.id, { pending: true, recovery: null, submission })
+  const settleRestore = (task: BrowserTask, state: RestoreSubmissionState) => {
+    const submission = restoreStates[task.id]?.submission ?? {
+      expectedRevision: task.revision,
+      mutationId: state.request.mutationId,
+      taskId: task.id,
+    }
 
-    try {
-      const acknowledgement = await restoreTask(submission, csrfToken)
-
-      if (
-        acknowledgement.mutationId !== submission.mutationId ||
-        acknowledgement.taskId !== submission.taskId
-      ) {
-        setRestoreState(task.id, { pending: false, recovery: 'unknown', submission })
-        return
-      }
-
+    if (state.kind === 'acknowledged') {
+      const acknowledgement = state.acknowledgement
       const index = tasks.findIndex((candidate) => candidate.id === task.id)
       const nextTask = tasks[index + 1] ?? tasks[index - 1]
 
+      exactRestores.current.delete(task.id)
       setRestoreStates((current) => {
         const next = { ...current }
         delete next[task.id]
@@ -99,29 +119,99 @@ function TrashList({ csrfToken }: TrashListProps) {
         if (nextTask) restoreButtons.current.get(nextTask.id)?.focus()
         else heading.current?.focus()
       })
-    } catch (error) {
-      const recovery: RestoreRecovery =
-        !(error instanceof KeeplingApiError)
-          ? 'unknown'
-          : error.problem.code === 'authentication_required'
-            ? 'authentication'
-            : error.problem.code === 'task_trash_conflict'
-              ? 'conflict'
-              : 'generic'
-
-      setRestoreState(task.id, { pending: false, recovery, submission })
+      return
     }
+
+    const recovery: RestoreRecovery =
+      state.kind === 'unknown'
+        ? 'unknown'
+        : state.kind === 'authentication_required'
+          ? 'authentication'
+          : state.kind === 'conflict'
+            ? 'conflict'
+            : state.kind === 'rejected'
+              ? 'generic'
+              : null
+
+    setRestoreState(task.id, {
+      pending: state.kind === 'in_flight',
+      recovery,
+      submission,
+    })
+  }
+
+  const runRestore = async (
+    task: BrowserTask,
+    exact: RestoreExact,
+    operation: 'check' | 'submit',
+    activeCsrfToken = csrfToken,
+  ) => {
+    const current = restoreStates[task.id]
+    setRestoreState(task.id, {
+      pending: true,
+      recovery: null,
+      submission:
+        current?.submission ?? {
+          expectedRevision: task.revision,
+          mutationId: exact.snapshot.request.mutationId,
+          taskId: task.id,
+        },
+    })
+    if (operation === 'check') await exact.check(activeCsrfToken)
+    else await exact.submit(activeCsrfToken)
+    settleRestore(task, exact.snapshot)
   }
 
   const beginRestore = (task: BrowserTask) => {
-    const submission =
-      restoreStates[task.id]?.submission ?? {
+    const existing = exactRestores.current.get(task.id)
+    if (existing) {
+      if (existing.snapshot.kind === 'unknown') void runRestore(task, existing, 'check')
+      else if (existing.snapshot.kind === 'conflict' || existing.snapshot.kind === 'rejected') {
+        void load()
+      }
+      return
+    }
+
+    const submission = {
         expectedRevision: task.revision,
         mutationId: crypto.randomUUID(),
         taskId: task.id,
       }
+    setRestoreState(task.id, { pending: true, recovery: null, submission })
+    const request = prepareRestoreTask(submission)
+    const exact = createExactSubmission<
+      PreparedRestoreTask,
+      RestoreAcknowledgement,
+      KeeplingApiError
+    >({
+      classifyError: classifyKeeplingError,
+      lookup: (original) => getRestoreMutation(original.mutationId),
+      matchesAcknowledgement: (acknowledgement) =>
+        acknowledgement.mutationId === request.mutationId &&
+        acknowledgement.taskId === request.taskId,
+      request,
+      send: submitPreparedRestoreTask,
+    })
+    exactRestores.current.set(task.id, exact)
+    void runRestore(task, exact, 'submit')
+  }
 
-    void runRestore(task, submission)
+  const authenticateRestore = (task: BrowserTask) => {
+    const exact = exactRestores.current.get(task.id)
+    if (
+      !exact ||
+      exact.snapshot.kind !== 'authentication_required' ||
+      !onAuthenticationRequired
+    ) return
+
+    const { authentication, request } = exact.snapshot
+    onAuthenticationRequired(
+      { authentication, kind: 'submitted-unknown', mutationId: request.mutationId },
+      async (nextCsrfToken) => {
+        await exact.resumeAfterAuthentication(nextCsrfToken)
+        settleRestore(task, exact.snapshot)
+      },
+    )
   }
 
   const recoveryMessage = (recovery: RestoreRecovery) => {
@@ -204,7 +294,10 @@ function TrashList({ csrfToken }: TrashListProps) {
                         <p>{message}</p>
                         <button
                           className="min-h-11 font-semibold text-primary underline"
-                          onClick={() => beginRestore(task)}
+                          onClick={() => {
+                            if (recovery === 'authentication') authenticateRestore(task)
+                            else beginRestore(task)
+                          }}
                           type="button"
                         >
                           {recoveryAction(recovery)}

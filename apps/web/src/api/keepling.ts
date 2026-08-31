@@ -305,6 +305,8 @@ type PreparedTaskCommand = {
   readonly taskId: string
 }
 
+type PreparedRestoreTask = PreparedTaskCommand
+
 type OrganizationAssignmentValues = {
   projectId: string | null
   tagIds: readonly string[]
@@ -1108,6 +1110,33 @@ const restoreTask = async (
     ),
   )
 
+const prepareRestoreTask = (submission: LifecycleSubmission): PreparedRestoreTask =>
+  prepareTaskCommand(
+    '/api/v1/commands/restore-task',
+    lifecycleCommand(submission),
+    submission.mutationId,
+    submission.taskId,
+  )
+
+const submitPreparedRestoreTask = async (
+  request: PreparedRestoreTask,
+  csrfToken: string,
+): Promise<RestoreAcknowledgement> =>
+  mapRestoreAcknowledgement(
+    await readJson<WireRestoreAcknowledgement>(
+      await fetch(request.path, {
+        body: request.body,
+        credentials: 'same-origin',
+        headers: {
+          accept: 'application/json',
+          'content-type': 'application/json',
+          'x-csrf-token': csrfToken,
+        },
+        method: 'POST',
+      }),
+    ),
+  )
+
 const undoTask = async (
   submission: UndoSubmission,
   csrfToken: string,
@@ -1256,6 +1285,16 @@ const getMutation = async (mutationId: string): Promise<CommandAcknowledgement> 
     ),
   )
 
+const getRestoreMutation = async (mutationId: string): Promise<RestoreAcknowledgement> =>
+  mapRestoreAcknowledgement(
+    await readJson<WireRestoreAcknowledgement>(
+      await fetch(`/api/v1/mutations/${encodeURIComponent(mutationId)}`, {
+        credentials: 'same-origin',
+        headers: { accept: 'application/json' },
+      }),
+    ),
+  )
+
 const getOrganizationMutation = async (
   mutationId: string,
 ): Promise<OrganizationAcknowledgement> =>
@@ -1280,6 +1319,7 @@ export {
   editTaskDates,
   getInbox,
   getMutation,
+  getRestoreMutation,
   getOrganizationMutation,
   getOrganizations,
   getSession,
@@ -1311,10 +1351,12 @@ export {
   prepareEditTask,
   prepareEditTaskDates,
   prepareLifecycleTask,
+  prepareRestoreTask,
   prepareTodayMove,
   moveTodayTask,
   submitPreparedTodayMove,
   submitPreparedTaskCommand,
+  submitPreparedRestoreTask,
   type AssignTaskOrganizationsSubmission,
   type ActivityChange,
   type AuthenticationTransition,
@@ -1332,6 +1374,7 @@ export {
   type LifecycleSubmission,
   type PlanningSubmission,
   type PreparedTaskCommand,
+  type PreparedRestoreTask,
   type Problem,
   type OrganizationAcknowledgement,
   type OrganizationAssignmentValues,

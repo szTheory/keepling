@@ -124,7 +124,7 @@ describe('Trash route and acknowledged restore', () => {
     )
   })
 
-  it('treats a mismatched or lost response as unknown and retries the exact submission', async () => {
+  it('treats a mismatched response as unknown and looks up the exact receipt before any resend', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(jsonResponse({ tasks: [task()] }))
@@ -132,9 +132,9 @@ describe('Trash route and acknowledged restore', () => {
         const request = JSON.parse(String(init?.body))
         return jsonResponse(acknowledgement(request.mutation_id, '99999999-9999-4999-8999-999999999999'))
       })
-      .mockImplementationOnce(async (_input, init) => {
-        const request = JSON.parse(String(init?.body))
-        return jsonResponse(acknowledgement(request.mutation_id))
+      .mockImplementationOnce(async (input) => {
+        const mutationId = String(input).split('/').at(-1) ?? ''
+        return jsonResponse(acknowledgement(mutationId))
       })
     vi.stubGlobal('fetch', fetchMock)
     const user = userEvent.setup()
@@ -147,7 +147,103 @@ describe('Trash route and acknowledged restore', () => {
     await user.click(screen.getByRole('button', { name: 'Check again' }))
 
     await waitFor(() => expect(screen.queryByText('Call dentist')).not.toBeInTheDocument())
-    expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(fetchMock.mock.calls[2]?.[1]?.body)
+    const original = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)) as {
+      mutation_id: string
+    }
+    expect(fetchMock.mock.calls[2]?.[0]).toBe(`/api/v1/mutations/${original.mutation_id}`)
+    expect(fetchMock.mock.calls.filter((call) => call[1]?.method === 'POST')).toHaveLength(1)
+  })
+
+  it('enters sign-in for an expired Trash read and completes the original read', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            code: 'authentication_required',
+            recovery_action: 'sign_in',
+            retryable: true,
+            status: 401,
+            title: 'Authentication required',
+            type: '/problems/authentication_required',
+          },
+          401,
+        ),
+      )
+      .mockResolvedValueOnce(jsonResponse({ tasks: [task()] }))
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+
+    render(
+      <TrashList
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+      />,
+    )
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { authentication: string; kind: string },
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'read' })
+    await resume('new-csrf')
+    expect(await screen.findByText('Call dentist')).toBeInTheDocument()
+  })
+
+  it('checks the exact restore receipt after authentication without a second restore dispatch', async () => {
+    const bodies: string[] = []
+    let mutationId = ''
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const path = String(input)
+      if (path === '/api/v1/trash') return jsonResponse({ tasks: [task()] })
+      if (path === '/api/v1/commands/restore-task') {
+        bodies.push(String(init?.body))
+        mutationId = (JSON.parse(String(init?.body)) as { mutation_id: string }).mutation_id
+        return jsonResponse(
+          {
+            code: 'authentication_required',
+            recovery_action: 'sign_in',
+            retryable: true,
+            status: 401,
+            title: 'Authentication required',
+            type: '/problems/authentication_required',
+          },
+          401,
+        )
+      }
+      if (path === `/api/v1/mutations/${mutationId}`) {
+        return jsonResponse(acknowledgement(mutationId))
+      }
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <TrashList
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+      />,
+    )
+    await user.click(await screen.findByRole('button', { name: 'Restore “Call dentist”' }))
+    await user.click(await screen.findByRole('button', { name: 'Sign in and continue' }))
+
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { authentication: string; kind: string; mutationId: string },
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toEqual({
+      authentication: 'sign_in',
+      kind: 'submitted-unknown',
+      mutationId,
+    })
+    await resume('new-csrf')
+
+    await waitFor(() => expect(screen.queryByText('Call dentist')).not.toBeInTheDocument())
+    expect(bodies).toHaveLength(1)
+    expect(fetchMock).toHaveBeenCalledWith(`/api/v1/mutations/${mutationId}`, expect.anything())
   })
 
   it.each([

@@ -57,6 +57,47 @@ afterEach(() => {
 })
 
 describe('routed task lists', () => {
+  it('enters sign-in continuation for an expired list read and completes the original read', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse(
+          {
+            code: 'authentication_required',
+            recovery_action: 'sign_in',
+            retryable: true,
+            status: 401,
+            title: 'Authentication required',
+            type: '/problems/authentication_required',
+          },
+          401,
+        ),
+      )
+      .mockResolvedValueOnce(jsonResponse(page([item()], { view: 'today' })))
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+
+    render(
+      <TaskList
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        view="today"
+      />,
+    )
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { authentication: string; kind: string },
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'read' })
+
+    await resume('new-csrf')
+
+    expect(await screen.findByRole('link', { name: 'Call dentist' })).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
   it('does not render Today empty copy until an authoritative zero result arrives', async () => {
     const response = deferred<Response>()
     vi.stubGlobal('fetch', vi.fn(() => response.promise))

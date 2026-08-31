@@ -9,10 +9,15 @@ import {
   type BrowserSession,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
+import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 
 type SessionListProps = {
   csrfToken: string
   hasDirtyWork: boolean
+  onAuthenticationRequired?: (
+    intent: InterruptedIntent,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => void
   onLoggedOut: () => void
 }
 
@@ -31,7 +36,12 @@ const exactCreatedTime = (value: string) =>
     timeZone: 'UTC',
   }).format(new Date(value)) + ' UTC'
 
-function SessionList({ csrfToken, hasDirtyWork, onLoggedOut }: SessionListProps) {
+function SessionList({
+  csrfToken,
+  hasDirtyWork,
+  onAuthenticationRequired,
+  onLoggedOut,
+}: SessionListProps) {
   const keepActiveRef = useRef<HTMLButtonElement>(null)
   const [state, setState] = useState<
     | { kind: 'loading' }
@@ -49,8 +59,24 @@ function SessionList({ csrfToken, hasDirtyWork, onLoggedOut }: SessionListProps)
       const sessions = await listSessions()
       setDraftLabels(Object.fromEntries(sessions.map((session) => [session.id, session.label])))
       setState({ kind: 'ready', sessions })
-    } catch {
+    } catch (error) {
       setState({ kind: 'error' })
+      if (
+        error instanceof KeeplingApiError &&
+        error.problem.code === 'authentication_required' &&
+        onAuthenticationRequired
+      ) {
+        onAuthenticationRequired(
+          { authentication: 'sign_in', kind: 'read', mutationId: 'sessions:list' },
+          async () => {
+            const sessions = await listSessions()
+            setDraftLabels(
+              Object.fromEntries(sessions.map((session) => [session.id, session.label])),
+            )
+            setState({ kind: 'ready', sessions })
+          },
+        )
+      }
     }
   }
 
@@ -62,25 +88,42 @@ function SessionList({ csrfToken, hasDirtyWork, onLoggedOut }: SessionListProps)
         setDraftLabels(Object.fromEntries(sessions.map((session) => [session.id, session.label])))
         setState({ kind: 'ready', sessions })
       })
-      .catch(() => {
-        if (active) setState({ kind: 'error' })
+      .catch((error: unknown) => {
+        if (!active) return
+        setState({ kind: 'error' })
+        if (
+          error instanceof KeeplingApiError &&
+          error.problem.code === 'authentication_required' &&
+          onAuthenticationRequired
+        ) {
+          onAuthenticationRequired(
+            { authentication: 'sign_in', kind: 'read', mutationId: 'sessions:list' },
+            async () => {
+              const sessions = await listSessions()
+              setDraftLabels(
+                Object.fromEntries(sessions.map((session) => [session.id, session.label])),
+              )
+              setState({ kind: 'ready', sessions })
+            },
+          )
+        }
       })
     return () => {
       active = false
     }
-  }, [])
+  }, [onAuthenticationRequired])
 
   useEffect(() => {
     if (confirmation) keepActiveRef.current?.focus()
   }, [confirmation])
 
-  const saveLabel = async (session: BrowserSession) => {
+  const saveLabel = async (session: BrowserSession, activeCsrfToken = csrfToken) => {
     if (state.kind !== 'ready') return
     const nextLabel = draftLabels[session.id]?.trim() ?? ''
     if (nextLabel === '' || nextLabel === session.label) return
     setBusySessionId(session.id)
     try {
-      await updateSession(session.id, nextLabel, csrfToken)
+      await updateSession(session.id, nextLabel, activeCsrfToken)
       setState({
         kind: 'ready',
         sessions: state.sessions.map((candidate) =>
@@ -88,24 +131,38 @@ function SessionList({ csrfToken, hasDirtyWork, onLoggedOut }: SessionListProps)
         ),
       })
       setMessage(`Session label changed to ${nextLabel}.`)
-    } catch {
+    } catch (error) {
+      const authentication =
+        error instanceof KeeplingApiError && error.problem.code === 'authentication_required'
+          ? 'sign_in'
+          : error instanceof KeeplingApiError &&
+              error.problem.code === 'recent_authentication_required'
+            ? 'reauthenticate'
+            : null
+      if (authentication && onAuthenticationRequired) {
+        onAuthenticationRequired(
+          { authentication, kind: 'action', mutationId: `session-label:${session.id}` },
+          async (nextCsrfToken) => saveLabel(session, nextCsrfToken),
+        )
+        return
+      }
       setMessage(`Couldn’t rename ${session.label}. The existing label is unchanged.`)
     } finally {
       setBusySessionId(null)
     }
   }
 
-  const confirmAction = async () => {
+  const confirmAction = async (activeCsrfToken = csrfToken) => {
     if (!confirmation || state.kind !== 'ready') return
     const { session } = confirmation
     setBusySessionId(session.id)
     try {
       if (confirmation.kind === 'logout') {
-        await logout(csrfToken)
+        await logout(activeCsrfToken)
         onLoggedOut()
         return
       }
-      await revokeSession(session.id, csrfToken)
+      await revokeSession(session.id, activeCsrfToken)
       setState({
         kind: 'ready',
         sessions: state.sessions.filter((candidate) => candidate.id !== session.id),
@@ -113,10 +170,22 @@ function SessionList({ csrfToken, hasDirtyWork, onLoggedOut }: SessionListProps)
       setMessage(`${session.label} revoked.`)
       setConfirmation(null)
     } catch (error) {
+      const authentication =
+        error instanceof KeeplingApiError && error.problem.code === 'authentication_required'
+          ? 'sign_in'
+          : error instanceof KeeplingApiError &&
+              error.problem.code === 'recent_authentication_required'
+            ? 'reauthenticate'
+            : null
+      if (authentication && onAuthenticationRequired) {
+        onAuthenticationRequired(
+          { authentication, kind: 'action', mutationId: `session-revoke:${session.id}` },
+          async (nextCsrfToken) => confirmAction(nextCsrfToken),
+        )
+        return
+      }
       setMessage(
-        error instanceof KeeplingApiError && error.problem.code === 'recent_authentication_required'
-          ? 'Sign in again before revoking this session.'
-          : `Couldn’t revoke ${session.label}. The session remains active.`,
+        `Couldn’t revoke ${session.label}. The session remains active.`,
       )
       setConfirmation(null)
     } finally {

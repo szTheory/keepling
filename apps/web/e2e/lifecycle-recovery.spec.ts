@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { randomBytes } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { userInfo } from 'node:os'
 import { resolve } from 'node:path'
 import process from 'node:process'
@@ -28,6 +28,26 @@ const setAccountPassword = () => {
   const code = [
     `hash = Argon2.hash_pwd_salt(${JSON.stringify(continuationPassword)})`,
     'Ecto.Adapters.SQL.query!(Keepling.Repo, "UPDATE accounts SET password_hash = $1", [hash])',
+  ].join('; ')
+  const result = spawnSync(
+    runtimePreflight,
+    ['--exec', '--', 'sh', '-c', `cd apps/server && mix run -e '${code}'`],
+    { cwd: repositoryRoot, encoding: 'utf8', env: environment },
+  )
+  if (result.status !== 0) throw new Error(`${result.stdout}\n${result.stderr}`)
+}
+
+const expireRecentAuthentication = (sessionId: string) => {
+  const environment = {
+    ...process.env,
+    KEEPLING_TEST_DATABASE_URL: databaseUrl,
+    KEEPLING_TEST_SECRET_KEY_BASE:
+      process.env.KEEPLING_TEST_SECRET_KEY_BASE ?? randomBytes(64).toString('hex'),
+    MIX_ENV: 'test',
+  }
+  const code = [
+    `session_id = Ecto.UUID.dump!(${JSON.stringify(sessionId)})`,
+    'Ecto.Adapters.SQL.query!(Keepling.Repo, "UPDATE sessions SET recent_auth_expires_at = NOW() - make_interval(secs => 1) WHERE id = $1", [session_id])',
   ].join('; ')
   const result = spawnSync(
     runtimePreflight,
@@ -273,4 +293,118 @@ test('@lifecycle-recovery continues exact undo through a real login after sessio
   await expect(page.getByText('Change undone.')).toBeVisible()
   expect(bodies).toHaveLength(2)
   expect(bodies[1]).toBe(bodies[0])
+})
+
+test('@lifecycle-recovery resumes expired list reads and exact Trash restore through real login', async ({
+  baseURL,
+  page,
+}) => {
+  setAccountPassword()
+  const { csrf_token: firstCsrf } = await authenticate(page, baseURL)
+  await captureTask(page, 'Read survives session revocation')
+
+  const sessionsResponse = await page.request.get('/api/v1/sessions')
+  const sessions = (await sessionsResponse.json()) as {
+    sessions: Array<{ current: boolean; id: string }>
+  }
+  const current = sessions.sessions.find((session) => session.current)
+  expect(current).toBeTruthy()
+  const revoked = await page.request.delete(`/api/v1/sessions/${current!.id}`, {
+    headers: {
+      origin: new URL(baseURL!).origin,
+      'x-csrf-token': firstCsrf,
+    },
+  })
+  expect(revoked.ok()).toBe(true)
+
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/completed')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  })
+  await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible()
+  await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
+  await page.getByLabel('Session label').fill('List continuation')
+  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+  await expect(page.getByRole('heading', { exact: true, name: 'Completed' })).toBeVisible()
+
+  await captureTask(page, 'Restore survives session revocation', false)
+  const taskLink = page.getByRole('link', { name: 'Restore survives session revocation' })
+  const href = await taskLink.getAttribute('href')
+  const taskId = href?.split('/').at(-1)
+  expect(taskId).toBeTruthy()
+  const taskResponse = await page.request.get(`/api/v1/tasks/${taskId}`)
+  expect(taskResponse.ok()).toBe(true)
+  const task = (await taskResponse.json()) as { revision: number }
+  const activeSession = (await (await page.request.get('/api/v1/session')).json()) as {
+    csrf_token: string
+  }
+  const trashed = await page.request.post('/api/v1/commands/trash-task', {
+    data: {
+      expected_revision: task.revision,
+      mutation_id: randomUUID(),
+      task_id: taskId,
+      version: 1,
+    },
+    headers: {
+      origin: new URL(baseURL!).origin,
+      'x-csrf-token': activeSession.csrf_token,
+    },
+  })
+  expect(trashed.ok()).toBe(true)
+
+  await page.goto('/trash')
+  await expect(page.getByText('Restore survives session revocation')).toBeVisible()
+  const activeSessions = (await (await page.request.get('/api/v1/sessions')).json()) as {
+    sessions: Array<{ current: boolean; id: string }>
+  }
+  const activeCurrent = activeSessions.sessions.find((session) => session.current)
+  expect(activeCurrent).toBeTruthy()
+  const secondRevocation = await page.request.delete(`/api/v1/sessions/${activeCurrent!.id}`, {
+    headers: {
+      origin: new URL(baseURL!).origin,
+      'x-csrf-token': activeSession.csrf_token,
+    },
+  })
+  expect(secondRevocation.ok()).toBe(true)
+
+  await page
+    .getByRole('button', { name: 'Restore “Restore survives session revocation”' })
+    .click()
+  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+  await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
+  await page.getByLabel('Session label').fill('Trash continuation')
+  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+  await expect(page.getByText('Restore survives session revocation')).not.toBeVisible()
+})
+
+test('@lifecycle-recovery reauthenticates and completes the original session revocation', async ({
+  baseURL,
+  browser,
+  page,
+}) => {
+  setAccountPassword()
+  await authenticate(page, baseURL)
+  const otherContext = await browser.newContext()
+  const otherPage = await otherContext.newPage()
+  await authenticate(otherPage, baseURL)
+
+  await page.goto('/settings/sessions')
+  const sessionsResponse = await page.request.get('/api/v1/sessions')
+  const sessions = (await sessionsResponse.json()) as {
+    sessions: Array<{ current: boolean; id: string; label: string }>
+  }
+  const current = sessions.sessions.find((session) => session.current)
+  const other = sessions.sessions.find((session) => !session.current)
+  expect(current).toBeTruthy()
+  expect(other).toBeTruthy()
+  expireRecentAuthentication(current!.id)
+
+  await page.getByRole('button', { name: `Revoke ${other!.label}` }).click()
+  await page.getByRole('button', { name: 'Revoke session' }).click()
+  await expect(page.getByRole('heading', { name: 'Authentication required' })).toBeVisible()
+  await page.getByLabel('Password').fill(continuationPassword)
+  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+  await expect(page.getByRole('button', { name: `Revoke ${other!.label}` })).not.toBeVisible()
+
+  await otherContext.close()
 })

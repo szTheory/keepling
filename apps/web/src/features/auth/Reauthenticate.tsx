@@ -11,6 +11,11 @@ type InterruptedIntent =
     }
   | {
       authentication: 'reauthenticate' | 'sign_in'
+      kind: 'read' | 'action'
+      mutationId: string
+    }
+  | {
+      authentication: 'reauthenticate' | 'sign_in'
       kind: 'submitted-unknown'
       mutationId: string
     }
@@ -61,7 +66,11 @@ function Reauthenticate({ csrfToken, interruption, onAuthenticated }: Reauthenti
       <p className="mt-2 text-sm text-muted-foreground">
         {interruption.kind === 'submitted-unknown'
           ? 'The submitted change will be checked with its original identity.'
-          : 'Keepling will continue with the original mutation identity.'}
+          : interruption.kind === 'not-submitted'
+            ? 'Keepling will continue with the original mutation identity.'
+            : interruption.kind === 'read'
+              ? 'Keepling will retry the original read after sign-in.'
+              : 'Keepling will continue the original administration action.'}
       </p>
       <form className="mt-5 space-y-4" onSubmit={(event) => void submit(event)}>
         <div className="space-y-2">

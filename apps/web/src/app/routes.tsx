@@ -132,7 +132,14 @@ function AppRoutes({
   if (pathname === '/upcoming' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} onAuthenticationRequired={onAuthenticationRequired} view="upcoming" />)
   if (pathname === '/completed' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} onAuthenticationRequired={onAuthenticationRequired} view="completed" />)
   if (pathname === '/inbox' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} onAuthenticationRequired={onAuthenticationRequired} view="inbox" />)
-  if (pathname === '/trash' && csrfToken) return <TrashList csrfToken={csrfToken} />
+  if (pathname === '/trash' && csrfToken) {
+    return withInterruption(
+      <TrashList
+        csrfToken={csrfToken}
+        onAuthenticationRequired={onAuthenticationRequired}
+      />,
+    )
+  }
 
   if (pathname === '/projects' && csrfToken) {
     return withInterruption(

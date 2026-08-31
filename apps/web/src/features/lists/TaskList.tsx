@@ -140,6 +140,20 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
   const rowLinks = useRef(new Map<string, HTMLAnchorElement>())
   const viewCopy = copy[view]
 
+  const beginReadAuthentication = useCallback(
+    (resume: () => Promise<void>) => {
+      onAuthenticationRequired?.(
+        {
+          authentication: 'sign_in',
+          kind: 'read',
+          mutationId: `task-view:${view}`,
+        },
+        async () => resume(),
+      )
+    },
+    [onAuthenticationRequired, view],
+  )
+
   const load = useCallback(
     async (preserveRows = false) => {
       if (preserveRows) setUpdating(true)
@@ -154,31 +168,27 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
           error instanceof KeeplingApiError && error.problem.code === 'authentication_required'
         if (!preserveRows) setState({ authenticationRequired, kind: 'error' })
         else setLoadMoreError('background')
+        if (authenticationRequired) {
+          beginReadAuthentication(async () => {
+            if (preserveRows) setUpdating(true)
+            else setState({ kind: 'loading' })
+            try {
+              setState({ kind: 'ready', page: await getTaskView(view) })
+            } finally {
+              setUpdating(false)
+            }
+          })
+        }
       } finally {
         setUpdating(false)
       }
     },
-    [view],
+    [beginReadAuthentication, view],
   )
 
   useEffect(() => {
-    let active = true
-
-    void getTaskView(view)
-      .then((page) => {
-        if (active) setState({ kind: 'ready', page })
-      })
-      .catch((error: unknown) => {
-        if (!active) return
-        const authenticationRequired =
-          error instanceof KeeplingApiError && error.problem.code === 'authentication_required'
-        setState({ authenticationRequired, kind: 'error' })
-      })
-
-    return () => {
-      active = false
-    }
-  }, [view])
+    void load()
+  }, [load])
 
   const loadMore = async () => {
     if (state.kind !== 'ready' || !state.page.nextCursor) return
@@ -197,6 +207,9 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
     } catch (error) {
       const stale = error instanceof KeeplingApiError && error.problem.code === 'task_view_cursor_stale'
       setLoadMoreError(stale ? 'stale' : 'background')
+      if (error instanceof KeeplingApiError && error.problem.code === 'authentication_required') {
+        beginReadAuthentication(async () => load(true))
+      }
     } finally {
       setUpdating(false)
     }
