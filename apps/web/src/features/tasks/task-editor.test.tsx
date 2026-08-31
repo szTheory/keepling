@@ -550,4 +550,48 @@ describe('canonical task editor', () => {
     expect(document.querySelector('img')).toBeNull()
     expect(document.querySelector('script')).toBeNull()
   })
+
+  it('applies a semantic undo acknowledgement to the mounted editor immediately', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: RequestInfo | URL) =>
+        String(input) === '/api/v1/inbox'
+          ? Promise.resolve(inboxResponse())
+          : Promise.resolve(activityResponse()),
+      ),
+    )
+
+    render(<TaskEditor csrfToken="csrf" taskId={task.id} />)
+    expect(await screen.findByLabelText('Title')).toHaveValue('Call dentist')
+
+    window.dispatchEvent(
+      new CustomEvent('keepling:task-acknowledged', {
+        detail: {
+          mutationId: 'undo-mutation',
+          outcome: 'accepted',
+          revision: 4,
+          snapshot: {
+            capturedAt: task.captured_at,
+            completedAt: null,
+            deadlineOn: task.deadline_on,
+            id: task.id,
+            inboxState: task.inbox_state,
+            notes: 'Canonical notes restored by undo',
+            plannedOn: task.planned_on,
+            revision: 4,
+            title: 'Canonical title restored by undo',
+            trashedAt: null,
+          },
+          taskId: task.id,
+          warnings: [],
+        },
+      }),
+    )
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('Title')).toHaveValue('Canonical title restored by undo'),
+    )
+    expect(screen.getByLabelText('Notes')).toHaveValue('Canonical notes restored by undo')
+    expect(screen.getByRole('status')).toHaveTextContent('Accepted change applied.')
+  })
 })

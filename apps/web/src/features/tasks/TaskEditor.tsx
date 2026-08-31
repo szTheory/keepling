@@ -125,6 +125,34 @@ function TaskEditor({
     }
   }, [taskId])
 
+  useEffect(() => {
+    const applyExternalAcknowledgement = (event: Event) => {
+      const acknowledgement = (event as CustomEvent<CommandAcknowledgement>).detail
+      if (!acknowledgement || acknowledgement.taskId !== taskId) return
+
+      setSubmission(null)
+      exactSubmission.current = null
+      setRecoveryState(null)
+      setFieldErrors({})
+      setLoadState((state) => ({
+        accountTimezone: state.kind === 'ready' ? state.accountTimezone : 'UTC',
+        kind: 'ready',
+        task: acknowledgement.snapshot,
+      }))
+      setDraft({
+        deadlineOn: acknowledgement.snapshot.deadlineOn ?? '',
+        notes: acknowledgement.snapshot.notes,
+        plannedOn: acknowledgement.snapshot.plannedOn ?? '',
+        title: acknowledgement.snapshot.title,
+      })
+      setCommandState({ kind: 'saved', message: 'Accepted change applied.' })
+    }
+
+    window.addEventListener('keepling:task-acknowledged', applyExternalAcknowledgement)
+    return () =>
+      window.removeEventListener('keepling:task-acknowledged', applyExternalAcknowledgement)
+  }, [taskId])
+
   const acceptedTask = loadState.kind === 'ready' ? loadState.task : null
   const dirty =
     acceptedTask !== null &&

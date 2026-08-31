@@ -120,7 +120,28 @@ defmodule Keepling.TelemetryRedactionTest do
   end
 
   test "every production diagnostic event is allow-listed and test controls are absent from production" do
-    flunk("Phase 1 diagnostic and production-route closure is not implemented yet")
+    root = Path.expand("../../", __DIR__)
+
+    telemetry_sources =
+      root
+      |> Path.join("lib/**/*.ex")
+      |> Path.wildcard()
+      |> Enum.filter(&(File.read!(&1) =~ ":telemetry.execute"))
+      |> Enum.map(&Path.relative_to(&1, root))
+
+    assert telemetry_sources == ["lib/keepling/accounts/rate_limit.ex"]
+
+    rate_limit_source = File.read!(Path.join(root, "lib/keepling/accounts/rate_limit.ex"))
+    assert rate_limit_source =~ "[:keepling, :authentication, :decision]"
+    assert rate_limit_source =~ "%{flow: flow, outcome: outcome}"
+    refute rate_limit_source =~ "task_id"
+    refute rate_limit_source =~ "mutation_id"
+    refute rate_limit_source =~ "token"
+
+    router = File.read!(Path.join(root, "lib/keepling_web/router.ex"))
+    assert router =~ "if Mix.env() == :test do"
+    assert router =~ ~s(scope "/api/v1/test")
+    assert router =~ "if Mix.env() == :test,"
   end
 
   defp collect_auth_telemetry(acc) do
