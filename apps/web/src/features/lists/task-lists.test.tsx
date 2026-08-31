@@ -181,6 +181,72 @@ describe('routed task lists', () => {
     })
   })
 
+  it('refreshes authoritative rows and cursor after moving across a loaded Today boundary', async () => {
+    const first = item()
+    const boundary = item({
+      id: '22222222-2222-4222-8222-222222222222',
+      title: 'Boundary task',
+    })
+    const hiddenAdjacent = item({
+      id: '33333333-3333-4333-8333-333333333333',
+      title: 'Previously hidden task',
+    })
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse(
+          page([first, boundary], {
+            next_cursor: 'old-order-cursor',
+            order_revision: 7,
+            view: 'today',
+          }),
+        ),
+      )
+      .mockImplementationOnce(async (_input, init) => {
+        const request = JSON.parse(String(init?.body)) as {
+          mutation_id: string
+          task_id: string
+        }
+        return jsonResponse({
+          mutation_id: request.mutation_id,
+          order_revision: 8,
+          task_id: request.task_id,
+        })
+      })
+      .mockResolvedValueOnce(
+        jsonResponse(
+          page([first, hiddenAdjacent], {
+            next_cursor: 'new-order-cursor',
+            order_revision: 8,
+            view: 'today',
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse(
+          page([boundary], {
+            next_cursor: null,
+            order_revision: 8,
+            view: 'today',
+          }),
+        ),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(<TodayList csrfToken="csrf" />)
+
+    await user.click(await screen.findByRole('button', { name: 'Move later “Boundary task”' }))
+    expect(await screen.findByRole('link', { name: 'Previously hidden task' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Boundary task' })).not.toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Load more tasks' }))
+
+    expect(await screen.findByRole('link', { name: 'Boundary task' })).toBeInTheDocument()
+    expect(String(fetchMock.mock.calls[3]?.[0])).toContain('cursor=new-order-cursor')
+    expect(String(fetchMock.mock.calls[3]?.[0])).not.toContain('old-order-cursor')
+  })
+
   it('retains accepted rows on stale pagination and focuses the first appended row', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

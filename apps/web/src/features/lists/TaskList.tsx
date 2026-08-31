@@ -232,20 +232,37 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
     }
   }
 
-  const settleMove = (exact: TodayMoveExact) => {
+  const settleMove = async (exact: TodayMoveExact) => {
     const result = exact.snapshot
     if (state.kind !== 'ready') return
 
     if (result.kind === 'acknowledged') {
       const request = result.request
-      setState({
-        kind: 'ready',
-        page: {
-          ...state.page,
-          items: swap(state.page.items, request.taskId, request.direction),
-          orderRevision: result.acknowledgement.orderRevision,
-        },
-      })
+      if (state.page.nextCursor) {
+        try {
+          setState({ kind: 'ready', page: await getTaskView(view) })
+        } catch {
+          setState({
+            kind: 'ready',
+            page: {
+              ...state.page,
+              items: swap(state.page.items, request.taskId, request.direction),
+              nextCursor: null,
+              orderRevision: result.acknowledgement.orderRevision,
+            },
+          })
+          setLoadMoreError('background')
+        }
+      } else {
+        setState({
+          kind: 'ready',
+          page: {
+            ...state.page,
+            items: swap(state.page.items, request.taskId, request.direction),
+            orderRevision: result.acknowledgement.orderRevision,
+          },
+        })
+      }
       exactMove.current = null
       setMoveSubmissionState(null)
       setMoveError(null)
@@ -289,7 +306,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
     setMovingTaskId(taskId)
     setMoveError(null)
     await exact.submit(csrfToken)
-    settleMove(exact)
+    await settleMove(exact)
     setMovingTaskId(null)
   }
 
@@ -298,7 +315,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
     if (!exact || !csrfToken) return
     setMovingTaskId(exact.snapshot.request.taskId)
     await exact.check(csrfToken)
-    settleMove(exact)
+    await settleMove(exact)
     setMovingTaskId(null)
   }
 
@@ -320,7 +337,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
       async (nextCsrfToken) => {
         setMovingTaskId(request.taskId)
         await exact.resumeAfterAuthentication(nextCsrfToken)
-        settleMove(exact)
+        await settleMove(exact)
         setMovingTaskId(null)
       },
     )
