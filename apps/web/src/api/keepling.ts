@@ -1,7 +1,10 @@
 import type { components } from '../../../../packages/contracts/generated/keepling'
 
 type WireCaptureTaskCommand = components['schemas']['CaptureTaskCommand']
+type WireClarifyTaskCommand = components['schemas']['ClarifyTaskCommand']
 type WireCommandAcknowledgement = components['schemas']['CommandAcknowledgement']
+type WireEditTaskCommand = components['schemas']['EditTaskCommand']
+type WireReturnToInboxCommand = components['schemas']['ReturnToInboxCommand']
 type InboxResponse = components['schemas']['InboxResponse']
 type Problem = components['schemas']['Problem']
 type AuthTransitionResponse = components['schemas']['AuthTransitionResponse']
@@ -20,7 +23,8 @@ type VersionedAuthRequest = components['schemas']['VersionedAuthRequest']
 type BrowserTask = {
   capturedAt: string
   id: string
-  inboxState: 'inbox'
+  inboxState: 'clarified' | 'inbox'
+  notes: string
   revision: number
   title: string
 }
@@ -36,13 +40,34 @@ type CaptureWarning = {
   message: string
 }
 
-type CaptureAcknowledgement = {
+type CommandAcknowledgement = {
   mutationId: string
   outcome: 'accepted' | 'already_satisfied'
   revision: number
   snapshot: BrowserTask
   taskId: string
   warnings: readonly CaptureWarning[]
+}
+
+type CaptureAcknowledgement = CommandAcknowledgement
+
+type TaskDetailValues = {
+  notes?: string
+  title?: string
+}
+
+type EditTaskSubmission = {
+  baseValues: TaskDetailValues
+  expectedRevision: number
+  fields: TaskDetailValues
+  mutationId: string
+  taskId: string
+}
+
+type ReturnToInboxSubmission = {
+  expectedRevision: number
+  mutationId: string
+  taskId: string
 }
 
 type AuthenticationTransition = {
@@ -225,13 +250,12 @@ const mapTask = (task: components['schemas']['TaskSnapshot']): BrowserTask => ({
   capturedAt: task.captured_at,
   id: task.id,
   inboxState: task.inbox_state,
+  notes: task.notes,
   revision: task.revision,
   title: task.title,
 })
 
-const mapAcknowledgement = (
-  acknowledgement: WireCommandAcknowledgement,
-): CaptureAcknowledgement => ({
+const mapAcknowledgement = (acknowledgement: WireCommandAcknowledgement): CommandAcknowledgement => ({
   mutationId: acknowledgement.mutation_id,
   outcome: acknowledgement.outcome,
   revision: acknowledgement.revision,
@@ -278,7 +302,59 @@ const captureTask = async (
   )
 }
 
-const getMutation = async (mutationId: string): Promise<CaptureAcknowledgement> =>
+const taskEditCommand = (submission: EditTaskSubmission): WireEditTaskCommand => ({
+  base_values: submission.baseValues,
+  expected_revision: submission.expectedRevision,
+  fields: submission.fields,
+  mutation_id: submission.mutationId,
+  task_id: submission.taskId,
+  version: 1,
+})
+
+const submitTaskCommand = async <RequestBody>(
+  path: string,
+  command: RequestBody,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> =>
+  mapAcknowledgement(
+    await jsonRequest<RequestBody, WireCommandAcknowledgement>(path, 'POST', command, csrfToken),
+  )
+
+const editTask = async (
+  submission: EditTaskSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> =>
+  submitTaskCommand<WireEditTaskCommand>(
+    '/api/v1/commands/edit-task',
+    taskEditCommand(submission),
+    csrfToken,
+  )
+
+const clarifyTask = async (
+  submission: EditTaskSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> =>
+  submitTaskCommand<WireClarifyTaskCommand>(
+    '/api/v1/commands/clarify-task',
+    taskEditCommand(submission),
+    csrfToken,
+  )
+
+const returnToInbox = async (
+  submission: ReturnToInboxSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> => {
+  const command: WireReturnToInboxCommand = {
+    expected_revision: submission.expectedRevision,
+    mutation_id: submission.mutationId,
+    task_id: submission.taskId,
+    version: 1,
+  }
+
+  return submitTaskCommand('/api/v1/commands/return-to-inbox', command, csrfToken)
+}
+
+const getMutation = async (mutationId: string): Promise<CommandAcknowledgement> =>
   mapAcknowledgement(
     await readJson<WireCommandAcknowledgement>(
     await fetch(`/api/v1/mutations/${encodeURIComponent(mutationId)}`, {
@@ -291,15 +367,18 @@ const getMutation = async (mutationId: string): Promise<CaptureAcknowledgement> 
 export {
   KeeplingApiError,
   captureTask,
+  clarifyTask,
   completeSetup,
   getInbox,
   getMutation,
   getSession,
+  editTask,
   listSessions,
   login,
   logout,
   reauthenticate,
   recoverAccount,
+  returnToInbox,
   revokeSession,
   updateSession,
   type AuthenticationTransition,
@@ -308,5 +387,9 @@ export {
   type CaptureAcknowledgement,
   type CaptureTaskSubmission,
   type CaptureWarning,
+  type CommandAcknowledgement,
+  type EditTaskSubmission,
   type Problem,
+  type ReturnToInboxSubmission,
+  type TaskDetailValues,
 }

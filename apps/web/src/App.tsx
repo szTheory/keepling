@@ -45,6 +45,23 @@ function InboxWorkspace() {
     }
   }, [auth])
 
+  useEffect(() => {
+    const updateTask = (event: Event) => {
+      const acknowledgement = (event as CustomEvent<CaptureAcknowledgement>).detail
+      setState((current) => {
+        if (current.kind !== 'ready') return current
+        const withoutCurrent = current.tasks.filter((task) => task.id !== acknowledgement.taskId)
+
+        return acknowledgement.snapshot.inboxState === 'inbox'
+          ? { ...current, tasks: [acknowledgement.snapshot, ...withoutCurrent] }
+          : { ...current, tasks: withoutCurrent }
+      })
+    }
+
+    window.addEventListener('keepling:task-acknowledged', updateTask)
+    return () => window.removeEventListener('keepling:task-acknowledged', updateTask)
+  }, [])
+
   const handleCaptured = (acknowledgement: CaptureAcknowledgement) => {
     setState((current) => {
       if (current.kind !== 'ready') return current
@@ -155,7 +172,12 @@ function InboxWorkspace() {
               <ul className="mt-4 divide-y divide-border">
                 {state.tasks.map((task) => (
                   <li className="flex min-h-[3.25rem] items-center py-3" key={task.id}>
-                    <span className="break-words text-base leading-6">{task.title}</span>
+                    <a
+                      className="break-words text-base leading-6 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                      href={`/tasks/${encodeURIComponent(task.id)}`}
+                    >
+                      {task.title}
+                    </a>
                   </li>
                 ))}
               </ul>
@@ -212,6 +234,13 @@ function RoutedApp() {
     auth.clearAuthentication()
     window.location.assign('/login')
   }
+  const handleTaskAcknowledged = (acknowledgement: CaptureAcknowledgement) => {
+    window.dispatchEvent(
+      new CustomEvent<CaptureAcknowledgement>('keepling:task-acknowledged', {
+        detail: acknowledgement,
+      }),
+    )
+  }
 
   return (
     <AppRoutes
@@ -227,7 +256,9 @@ function RoutedApp() {
       }
       csrfToken={authenticatedState?.csrfToken}
       interruption={auth.interruption}
+      onAcknowledged={handleTaskAcknowledged}
       onAuthenticated={auth.acceptAuthentication}
+      onAuthenticationRequired={auth.beginReauthentication}
       onReauthenticated={auth.completeReauthentication}
     />
   )

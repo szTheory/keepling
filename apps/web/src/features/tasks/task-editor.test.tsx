@@ -206,4 +206,20 @@ describe('canonical task editor', () => {
     expect(await screen.findByRole('heading', { name: 'Edit task' })).toBeVisible()
     expect(screen.getByDisplayValue('Call dentist')).toBeVisible()
   })
+
+  it('renders task title and notes as plain text without creating hostile markup', async () => {
+    const hostileTask = {
+      ...task,
+      notes: '<script>window.taskNotesRan = true</script>',
+      title: '<img src=x onerror="window.taskTitleRan = true">',
+    }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ tasks: [hostileTask] })))
+
+    render(<TaskEditor csrfToken="csrf" taskId={task.id} />)
+
+    expect(await screen.findByLabelText('Title')).toHaveValue(hostileTask.title)
+    expect(screen.getByLabelText('Notes')).toHaveValue(hostileTask.notes)
+    expect(document.querySelector('img')).toBeNull()
+    expect(document.querySelector('script')).toBeNull()
+  })
 })

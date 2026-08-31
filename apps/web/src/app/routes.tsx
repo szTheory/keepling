@@ -4,13 +4,20 @@ import LoginForm from '@/features/auth/LoginForm'
 import Reauthenticate, { type InterruptedIntent } from '@/features/auth/Reauthenticate'
 import RecoveryReset from '@/features/auth/RecoveryReset'
 import SetupForm from '@/features/auth/SetupForm'
+import TaskEditor from '@/features/tasks/TaskEditor'
+import type { CommandAcknowledgement } from '@/api/keepling'
 
 type AppRoutesProps = {
   authenticated: boolean
   authenticatedContent?: ReactNode
   csrfToken?: string
   interruption?: InterruptedIntent | null
+  onAcknowledged?: (acknowledgement: CommandAcknowledgement) => void
   onAuthenticated?: (csrfToken: string) => void
+  onAuthenticationRequired?: (
+    intent: InterruptedIntent,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => void
   onReauthenticated?: (interruption: InterruptedIntent, csrfToken: string) => void
 }
 
@@ -35,7 +42,9 @@ function AppRoutes({
   authenticatedContent,
   csrfToken,
   interruption,
+  onAcknowledged = () => undefined,
   onAuthenticated = () => undefined,
+  onAuthenticationRequired,
   onReauthenticated = () => undefined,
 }: AppRoutesProps) {
   const [locationKey, setLocationKey] = useState(
@@ -94,6 +103,22 @@ function AppRoutes({
       )
     }
     return <LoginForm onAuthenticated={handleAuthenticated} />
+  }
+
+  const taskId = routeToken(pathname, '/tasks/')
+  if (taskId && csrfToken) {
+    return (
+      <>
+        {authenticatedContent ? <div className="hidden lg:block">{authenticatedContent}</div> : null}
+        <TaskEditor
+          csrfToken={csrfToken}
+          onAcknowledged={onAcknowledged}
+          onAuthenticationRequired={onAuthenticationRequired}
+          onNavigate={navigate}
+          taskId={taskId}
+        />
+      </>
+    )
   }
 
   return authenticatedContent ?? (
