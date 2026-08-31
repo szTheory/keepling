@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 18
+open_count: 21
 waived_count: 0
 fixed_count: 0
-total_count: 18
-last_updated: 2026-08-31T05:48:12.377Z
+total_count: 21
+last_updated: 2026-08-31T14:01:34.566Z
 ---
 
 # Broken Windows Ledger
@@ -33,6 +33,9 @@ last_updated: 2026-08-31T05:48:12.377Z
 | 16 | KPL-01 | deviation | apps/web/src/App.tsx |  | Wired authenticated shell list reachability and scoped the resulting legacy test ambiguity | open |  | 2026-08-31T05:48:12.168Z |  |
 | 17 | KPL-01 | deviation | apps/server/lib/keepling/application/task_views.ex |  | Removed an Ecto UUID dependency from the persistence-neutral application boundary | open |  | 2026-08-31T05:48:12.271Z |  |
 | 18 | KPL-01 | deviation | apps/server/priv/repo/migrations/20260830000650_add_task_view_projections.exs |  | Added exact Today move receipts and honest ambiguous-delivery retry after final trust review | open |  | 2026-08-31T05:48:12.377Z |  |
+| 19 | KPL-01 | deviation | apps/web/src/commands/submission.ts |  | Added explicit direct same-ID retry semantics required by lifecycle recovery | open |  | 2026-08-31T14:01:34.378Z |  |
+| 20 | KPL-01 | deviation | apps/web/src/commands/submission.ts |  | Classified infrastructure 5xx as unknown delivery rather than terminal rejection | open |  | 2026-08-31T14:01:34.472Z |  |
+| 21 | KPL-01 | deviation | apps/server/lib/keepling_web/controllers/test_fault_controller.ex |  | Halted authentication-before-acceptance injection before command dispatch | open |  | 2026-08-31T14:01:34.566Z |  |
 
 ````json
 [
@@ -250,6 +253,42 @@ last_updated: 2026-08-31T05:48:12.377Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-31T05:48:12.377Z",
+    "resolved_at": null
+  },
+  {
+    "id": 19,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/web/src/commands/submission.ts",
+    "line": null,
+    "description": "Added explicit direct same-ID retry semantics required by lifecycle recovery",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T14:01:34.378Z",
+    "resolved_at": null
+  },
+  {
+    "id": 20,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/web/src/commands/submission.ts",
+    "line": null,
+    "description": "Classified infrastructure 5xx as unknown delivery rather than terminal rejection",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T14:01:34.472Z",
+    "resolved_at": null
+  },
+  {
+    "id": 21,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/server/lib/keepling_web/controllers/test_fault_controller.ex",
+    "line": null,
+    "description": "Halted authentication-before-acceptance injection before command dispatch",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T14:01:34.566Z",
     "resolved_at": null
   }
 ]

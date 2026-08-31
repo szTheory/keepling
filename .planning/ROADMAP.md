@@ -19,7 +19,7 @@ Keepling is built as six vertical proof increments. Each phase produces observab
 5. Domain/application modules have no dependency on React, HTTP transport, MCP, or client persistence.
 6. Phase 1 proves the shared semantic boundary and web/API adapters for SRV-02; Electron, iPhone, and MCP adapter proofs remain assigned to Phases 3, 4, and 5.
 
-**Plans:** 16/19 plans executed
+**Plans:** 17/19 plans executed
 
 Plans:
 **Wave 1**
@@ -82,7 +82,7 @@ Plans:
 
 **Wave 15** *(blocked on Wave 14 completion)*
 
-- [ ] 01-17-PLAN.md — Deliver exact uncertain-delivery and auth-interruption recovery.
+- [x] 01-17-PLAN.md — Deliver exact uncertain-delivery and auth-interruption recovery.
 
 **Wave 16** *(blocked on Wave 15 completion)*
 

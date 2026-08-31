@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed 01-16-PLAN.md
-last_updated: "2026-08-31T13:12:19.917Z"
+stopped_at: Completed 01-17-PLAN.md
+last_updated: "2026-08-31T14:02:09.199Z"
 last_activity: 2026-08-31
 last_activity_desc: Completed KPL-01 Plan 14 trustworthy complete/reopen lifecycle
-state_head: 3e94ac0677334eef027f7f6ccf3a6018125e6ea8
+state_head: cd13e0c0fb9e9f837f85cb62ae9f68306167e041
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 16
+  completed_plans: 17
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 17 of 19
+Plan: 18 of 19
 Total Plans in Phase: 19
 Status: Ready to execute
 Last activity: 2026-08-31
@@ -97,6 +97,9 @@ Progress: [███████░░░] 74%
 - [Phase 01]: Task detail fields rebase only when canonical truth equals submitted base or requested value; merge authority and invariant checks remain server/domain-owned.
 - [Phase 01]: Unmergeable outcomes are committed account-scoped conflict rows linked to the original receipt; resolution uses a fresh mutation identity against the stored latest revision.
 - [Phase 01]: The browser submits only closed mine/current selections and reconciles only acknowledgements matching mutation, task, and conflict identities.
+- [Phase 01]: Prepare and retain immutable serialized command bytes before submission; every lookup, retry, and authentication resume uses the exact original identity.
+- [Phase 01]: Authentication recovery resumes the interrupted lookup or send operation instead of minting or ambiguously replaying intent.
+- [Phase 01]: Fault controls compile only in test, require a random per-run credential, and inject privacy-safe faults around the real acceptance/response boundary.
 
 ### Retained Research
 
@@ -124,8 +127,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T13:12:19.904Z
-**Stopped at:** Completed 01-16-PLAN.md
+**Last session:** 2026-08-31T14:02:09.185Z
+**Stopped at:** Completed 01-17-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -148,3 +151,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P14 | 18min | 2 tasks | 14 files |
 | Phase KPL-01 P15 | 18min | 2 tasks | 15 files |
 | Phase KPL-01 P16 | 37min | 2 tasks | 15 files |
+| Phase KPL-01 P17 | 42min | 2 tasks | 10 files |
