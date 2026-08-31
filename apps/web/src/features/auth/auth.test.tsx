@@ -385,6 +385,73 @@ describe('session administration', () => {
 })
 
 describe('capture authentication recovery', () => {
+  it('keeps parsed 5xx capture identity and reconciles the committed receipt before resend', async () => {
+    const commandBodies: string[] = []
+    let stored: Record<string, unknown> | null = null
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const path = String(input)
+      if (path === '/api/v1/commands/capture-task') {
+        const body = String(init?.body)
+        commandBodies.push(body)
+        const request = JSON.parse(body) as {
+          mutation_id: string
+          task_id: string
+          title: string
+        }
+        stored = {
+          mutation_id: request.mutation_id,
+          outcome: 'accepted',
+          revision: 1,
+          snapshot: {
+            captured_at: '2026-08-30T20:00:00Z',
+            completed_at: null,
+            deadline_on: null,
+            id: request.task_id,
+            inbox_state: 'inbox',
+            notes: '',
+            planned_on: null,
+            project: null,
+            revision: 1,
+            tags: [],
+            title: request.title,
+            trashed_at: null,
+          },
+          task_id: request.task_id,
+          warnings: [],
+        }
+        return jsonResponse(problem('service_unavailable', 'Response replaced after commit.', 503), 503)
+      }
+      if (path.startsWith('/api/v1/mutations/')) return jsonResponse(stored)
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onCaptured = vi.fn()
+    const user = userEvent.setup()
+
+    render(<QuickCapture csrfToken="csrf" onCaptured={onCaptured} />)
+
+    const draft = screen.getByLabelText('What do you want to keep?')
+    await user.type(draft, 'One task after parsed 5xx')
+    await user.click(screen.getByRole('button', { name: 'Add task' }))
+
+    expect(await screen.findByText('Checking whether your change was saved…')).toBeVisible()
+    expect(draft).toHaveValue('One task after parsed 5xx')
+    const identity = JSON.parse(commandBodies[0] ?? '{}') as {
+      mutation_id: string
+      task_id: string
+    }
+
+    await user.click(screen.getByRole('button', { name: 'Check again' }))
+
+    await waitFor(() => expect(onCaptured).toHaveBeenCalledOnce())
+    expect(commandBodies).toHaveLength(1)
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(`/api/v1/mutations/${identity.mutation_id}`)
+    expect(onCaptured).toHaveBeenCalledWith(
+      expect.objectContaining({ mutationId: identity.mutation_id, taskId: identity.task_id }),
+    )
+    expect(draft).toHaveValue('')
+  })
+
   it('replays the exact capture after a before-acceptance disconnect and missing receipt', async () => {
     const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       const call = fetchMock.mock.calls.length

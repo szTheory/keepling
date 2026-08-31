@@ -2,17 +2,19 @@ import { useState, type FormEvent, type KeyboardEvent } from 'react'
 
 import {
   KeeplingApiError,
-  captureTask,
   getMutation,
-  planForToday,
+  prepareCaptureTask,
+  preparePlanForToday,
+  submitPreparedTaskCommand,
   type CaptureAcknowledgement,
   type CaptureTaskSubmission,
   type CommandAcknowledgement,
   type PlanningSubmission,
+  type PreparedTaskCommand,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
-import { authenticationRecoveryFor } from '@/commands/submission'
+import { classifyKeeplingError } from '@/commands/submission'
 
 type QuickCaptureProps = {
   csrfToken: string
@@ -26,7 +28,9 @@ type QuickCaptureProps = {
 type Submission = {
   addToToday: boolean
   captureCommand: CaptureTaskSubmission
+  captureRequest: PreparedTaskCommand
   planCommand?: PlanningSubmission
+  planRequest?: PreparedTaskCommand
 }
 
 type Status =
@@ -57,21 +61,26 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
     current: Submission,
     activeCsrfToken: string,
   ) => {
-    const activeCommand = current.planCommand ?? current.captureCommand
-    if (acknowledgement.mutationId !== activeCommand.mutationId) {
+    const activeRequest = current.planRequest ?? current.captureRequest
+    if (
+      acknowledgement.mutationId !== activeRequest.mutationId ||
+      acknowledgement.taskId !== activeRequest.taskId
+    ) {
       setStatus({ kind: 'unknown' })
       return
     }
 
     if (current.addToToday && current.planCommand === undefined) {
+      const planCommand = {
+        basePlannedOn: acknowledgement.snapshot.plannedOn,
+        expectedRevision: acknowledgement.revision,
+        mutationId: crypto.randomUUID(),
+        taskId: acknowledgement.taskId,
+      } satisfies PlanningSubmission
       const next: Submission = {
         ...current,
-        planCommand: {
-          basePlannedOn: acknowledgement.snapshot.plannedOn,
-          expectedRevision: acknowledgement.revision,
-          mutationId: crypto.randomUUID(),
-          taskId: acknowledgement.taskId,
-        },
+        planCommand,
+        planRequest: preparePlanForToday(planCommand),
       }
       await deliver(next, activeCsrfToken)
       return
@@ -85,30 +94,28 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
     setStatus({ kind: 'submitting' })
 
     try {
-      const acknowledgement = current.planCommand
-        ? await planForToday(current.planCommand, activeCsrfToken)
-        : await captureTask(current.captureCommand, activeCsrfToken)
+      const acknowledgement = await submitPreparedTaskCommand(
+        current.planRequest ?? current.captureRequest,
+        activeCsrfToken,
+      )
       await reconcile(acknowledgement, current, activeCsrfToken)
     } catch (error) {
-      const authentication =
-        error instanceof KeeplingApiError
-          ? authenticationRecoveryFor(error.problem.code)
-          : null
-      if (authentication && onAuthenticationRequired) {
+      const classification = classifyKeeplingError(error)
+      if (classification.kind === 'authentication_required' && onAuthenticationRequired) {
         setStatus({ kind: 'authentication-required' })
         onAuthenticationRequired(
           {
-            authentication,
+            authentication: classification.authentication,
             kind: 'submitted-unknown',
-            mutationId: (current.planCommand ?? current.captureCommand).mutationId,
+            mutationId: (current.planRequest ?? current.captureRequest).mutationId,
           },
           (nextCsrfToken) => checkSubmission(current, nextCsrfToken),
         )
+      } else if (classification.kind === 'unknown') {
+        setStatus({ kind: 'unknown' })
       } else if (error instanceof KeeplingApiError) {
         setSubmission(current.planCommand ? current : null)
         setStatus({ kind: 'problem', message: error.message })
-      } else {
-        setStatus({ kind: 'unknown' })
       }
     }
   }
@@ -117,20 +124,17 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
     setStatus({ kind: 'submitting' })
 
     try {
-      const activeCommand = current.planCommand ?? current.captureCommand
-      await reconcile(await getMutation(activeCommand.mutationId), current, _activeCsrfToken)
+      const activeRequest = current.planRequest ?? current.captureRequest
+      await reconcile(await getMutation(activeRequest.mutationId), current, _activeCsrfToken)
     } catch (error) {
-      const authentication =
-        error instanceof KeeplingApiError
-          ? authenticationRecoveryFor(error.problem.code)
-          : null
-      if (authentication && onAuthenticationRequired) {
+      const classification = classifyKeeplingError(error)
+      if (classification.kind === 'authentication_required' && onAuthenticationRequired) {
         setStatus({ kind: 'authentication-required' })
         onAuthenticationRequired(
           {
-            authentication,
+            authentication: classification.authentication,
             kind: 'submitted-unknown',
-            mutationId: (current.planCommand ?? current.captureCommand).mutationId,
+            mutationId: (current.planRequest ?? current.captureRequest).mutationId,
           },
           (nextCsrfToken) => checkSubmission(current, nextCsrfToken),
         )
@@ -147,16 +151,18 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
   const submit = async () => {
     if (draft.trim() === '' || status.kind === 'submitting') return
 
-    const current =
-      submission ??
-      ({
+    const current = submission ?? (() => {
+      const captureCommand = {
+        mutationId: crypto.randomUUID(),
+        taskId: crypto.randomUUID(),
+        title: draft,
+      } satisfies CaptureTaskSubmission
+      return {
         addToToday,
-        captureCommand: {
-          mutationId: crypto.randomUUID(),
-          taskId: crypto.randomUUID(),
-          title: draft,
-        },
-      } satisfies Submission)
+        captureCommand,
+        captureRequest: prepareCaptureTask(captureCommand),
+      } satisfies Submission
+    })()
 
     await deliver(current)
   }

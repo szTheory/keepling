@@ -855,6 +855,19 @@ const captureTask = async (
   )
 }
 
+const prepareCaptureTask = (submission: CaptureTaskSubmission): PreparedTaskCommand =>
+  prepareTaskCommand(
+    '/api/v1/commands/capture-task',
+    {
+      mutation_id: submission.mutationId,
+      task_id: submission.taskId,
+      title: submission.title,
+      version: 1,
+    } satisfies WireCaptureTaskCommand,
+    submission.mutationId,
+    submission.taskId,
+  )
+
 const taskEditCommand = (submission: EditTaskSubmission): WireEditTaskCommand => ({
   base_values: submission.baseValues,
   expected_revision: submission.expectedRevision,
@@ -1022,6 +1035,14 @@ const planForToday = async (
   csrfToken: string,
 ): Promise<CommandAcknowledgement> =>
   submitTaskCommand('/api/v1/commands/plan-for-today', planningCommand(submission), csrfToken)
+
+const preparePlanForToday = (submission: PlanningSubmission): PreparedTaskCommand =>
+  prepareTaskCommand(
+    '/api/v1/commands/plan-for-today',
+    planningCommand(submission),
+    submission.mutationId,
+    submission.taskId,
+  )
 
 const unplanTask = async (
   submission: PlanningSubmission,
@@ -1347,10 +1368,12 @@ export {
   undoTask,
   planForToday,
   prepareClarifyTask,
+  prepareCaptureTask,
   prepareAssignTaskOrganizations,
   prepareEditTask,
   prepareEditTaskDates,
   prepareLifecycleTask,
+  preparePlanForToday,
   prepareRestoreTask,
   prepareTodayMove,
   moveTodayTask,
