@@ -42,6 +42,11 @@ defmodule KeeplingWeb.Router do
       do: [:api, :authenticated, :mutation, :test_fault],
       else: [:api, :authenticated, :mutation]
 
+  recent_auth_mutation_pipelines =
+    if Mix.env() == :test,
+      do: [:api, :authenticated, :mutation, :recent_auth, :test_fault],
+      else: [:api, :authenticated, :mutation, :recent_auth]
+
   scope "/api/v1", KeeplingWeb do
     pipe_through [:api]
 
@@ -105,7 +110,7 @@ defmodule KeeplingWeb.Router do
   end
 
   scope "/api/v1", KeeplingWeb do
-    pipe_through [:api, :authenticated, :mutation, :recent_auth]
+    pipe_through recent_auth_mutation_pipelines
 
     delete "/sessions/:id", AuthController, :revoke_session
   end
