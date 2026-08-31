@@ -98,6 +98,13 @@ type AssignmentState =
   | { kind: 'submitting' }
   | { kind: 'recovering' }
 
+const authenticationFor = (error: unknown) => {
+  if (!(error instanceof KeeplingApiError)) return null
+  if (error.problem.code === 'authentication_required') return 'sign_in' as const
+  if (error.problem.code === 'recent_authentication_required') return 'reauthenticate' as const
+  return null
+}
+
 const taskAssignment = (task: BrowserTask): AssignmentDraft => ({
   projectId: task.project?.id ?? null,
   tagIds: task.tags.map((tag) => tag.id).toSorted(),
@@ -138,20 +145,38 @@ function OrganizationFields({
   useEffect(() => {
     let active = true
 
-    void Promise.all([getTask(taskId), getOrganizations()])
-      .then(([task, organizations]) => {
+    const load = async (allowAuthenticationRecovery: boolean) => {
+      try {
+        const [task, organizations] = await Promise.all([getTask(taskId), getOrganizations()])
         if (!active) return
         setLoadState({ kind: 'ready', organizations, task })
         setDraft(taskAssignment(task))
-      })
-      .catch(() => {
-        if (active) setLoadState({ kind: 'error' })
-      })
+      } catch (error) {
+        if (!active) return
+        const authentication = authenticationFor(error)
+        if (allowAuthenticationRecovery && authentication && onAuthenticationRequired) {
+          onAuthenticationRequired(
+            {
+              authentication,
+              kind: 'read',
+              mutationId: `read:task-organizations:${taskId}`,
+            },
+            async () => {
+              await load(false)
+            },
+          )
+          return
+        }
+        setLoadState({ kind: 'error' })
+      }
+    }
+
+    void load(true)
 
     return () => {
       active = false
     }
-  }, [taskId])
+  }, [onAuthenticationRequired, taskId])
 
   const acceptedTask = loadState.kind === 'ready' ? loadState.task : null
   const organizations = loadState.kind === 'ready' ? loadState.organizations : []
@@ -386,23 +411,41 @@ function OrganizationManager({
 
   useEffect(() => {
     let active = true
-    void getOrganizations()
-      .then((loaded) => {
+
+    const load = async (allowAuthenticationRecovery: boolean) => {
+      try {
+        const loaded = await getOrganizations()
         if (!active) return
         const relevant = loaded.filter((organization) => organization.kind === kind)
         setOrganizations(relevant)
         setRenames(Object.fromEntries(relevant.map((organization) => [organization.id, organization.name])))
         setLoading(false)
-      })
-      .catch(() => {
+      } catch (error) {
         if (!active) return
+        const authentication = authenticationFor(error)
+        if (allowAuthenticationRecovery && authentication && onAuthenticationRequired) {
+          onAuthenticationRequired(
+            {
+              authentication,
+              kind: 'read',
+              mutationId: `read:organizations:${kind}`,
+            },
+            async () => {
+              await load(false)
+            },
+          )
+          return
+        }
         setLoading(false)
         setMessage({ kind: 'alert', text: `Couldn’t load ${kind}s. Nothing was changed.` })
-      })
+      }
+    }
+
+    void load(true)
     return () => {
       active = false
     }
-  }, [kind])
+  }, [kind, onAuthenticationRequired])
 
   const replaceOrganization = (organization: BrowserOrganization) => {
     setOrganizations((current) =>

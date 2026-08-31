@@ -41,6 +41,41 @@ const authenticate = async (page: Page, baseURL: string | undefined) => {
   return (await response.json()) as { csrf_token: string }
 }
 
+const revokeCurrentSession = async (
+  page: Page,
+  baseURL: string | undefined,
+  csrfToken: string,
+) => {
+  if (!baseURL) throw new Error('Playwright baseURL is required')
+  const sessionsResponse = await page.request.get('/api/v1/sessions')
+  const sessions = (await sessionsResponse.json()) as {
+    sessions: Array<{ current: boolean; id: string }>
+  }
+  const current = sessions.sessions.find((session) => session.current)
+  expect(current).toBeTruthy()
+  const revoked = await page.request.delete(`/api/v1/sessions/${current!.id}`, {
+    headers: {
+      origin: new URL(baseURL).origin,
+      'x-csrf-token': csrfToken,
+    },
+  })
+  expect(revoked.ok()).toBe(true)
+}
+
+const continueThroughLogin = async (page: Page, label: string) => {
+  await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible()
+  await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
+  await page.getByLabel('Session label').fill(label)
+  await page.locator('form').getByRole('button', { name: 'Sign in and continue' }).click()
+  await expect(page.getByRole('heading', { name: 'Sign in to continue' })).not.toBeVisible()
+  const sessionResponse = await page.request.get('/api/v1/session')
+  expect(sessionResponse.ok()).toBe(true)
+  const session = (await sessionResponse.json()) as {
+    csrf_token: string
+  }
+  return session.csrf_token
+}
+
 test('@authenticated-read-task restores one task route after real session expiry', async ({
   baseURL,
   page,
@@ -55,32 +90,63 @@ test('@authenticated-read-task restores one task route after real session expiry
   const taskPath = await taskLink.getAttribute('href')
   expect(taskPath).toBeTruthy()
 
-  const sessionsResponse = await page.request.get('/api/v1/sessions')
-  const sessions = (await sessionsResponse.json()) as {
-    sessions: Array<{ current: boolean; id: string }>
-  }
-  const current = sessions.sessions.find((session) => session.current)
-  expect(current).toBeTruthy()
-  const revoked = await page.request.delete(`/api/v1/sessions/${current!.id}`, {
-    headers: {
-      origin: new URL(baseURL!).origin,
-      'x-csrf-token': csrfToken,
-    },
-  })
-  expect(revoked.ok()).toBe(true)
+  await revokeCurrentSession(page, baseURL, csrfToken)
 
   await page.evaluate((pathname) => {
     window.history.pushState({}, '', pathname)
     window.dispatchEvent(new PopStateEvent('popstate'))
   }, taskPath)
 
-  await expect(page.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible()
-  await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
-  await page.getByLabel('Session label').fill('Recovered task read')
-  await page.locator('form').getByRole('button', { name: 'Sign in and continue' }).click()
+  await continueThroughLogin(page, 'Recovered task read')
 
   await expect(page.getByRole('heading', { name: 'Edit task' })).toBeVisible()
   await expect(page.getByLabel('Title')).toHaveValue('Read recovery task')
   await expect(page.getByRole('heading', { name: 'Activity' })).toBeVisible()
   expect(new URL(page.url()).pathname).toBe(taskPath)
+})
+
+test('@authenticated-read-organizations restores assignment, Projects, and Tags routes', async ({
+  baseURL,
+  page,
+}) => {
+  setAccountPassword()
+  let { csrf_token: csrfToken } = await authenticate(page, baseURL)
+  await page.goto('/')
+
+  for (const [pathname, heading, label] of [
+    ['/projects', 'Projects', 'Recovered project read'],
+    ['/tags', 'Tags', 'Recovered tag read'],
+  ] as const) {
+    await revokeCurrentSession(page, baseURL, csrfToken)
+    await page.evaluate((nextPath) => {
+      window.history.pushState({}, '', nextPath)
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    }, pathname)
+    csrfToken = await continueThroughLogin(page, label)
+    await expect(page.getByRole('heading', { name: heading })).toBeVisible()
+    expect(new URL(page.url()).pathname).toBe(pathname)
+  }
+
+  await page.evaluate(() => {
+    window.history.pushState({}, '', '/')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  })
+  await page.getByLabel('What do you want to keep?').fill('Assignment read recovery task')
+  await page.getByRole('button', { name: 'Add task' }).click()
+  const taskLink = page.getByRole('link', { name: 'Assignment read recovery task' })
+  await expect(taskLink).toBeVisible()
+  const taskPath = await taskLink.getAttribute('href')
+  expect(taskPath).toBeTruthy()
+  const assignmentPath = `${taskPath}/organizations`
+
+  await revokeCurrentSession(page, baseURL, csrfToken)
+  await page.evaluate((nextPath) => {
+    window.history.pushState({}, '', nextPath)
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }, assignmentPath)
+  await continueThroughLogin(page, 'Recovered assignment read')
+
+  await expect(page.getByRole('heading', { name: 'Project and tags' })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Project' })).toBeVisible()
+  expect(new URL(page.url()).pathname).toBe(assignmentPath)
 })
