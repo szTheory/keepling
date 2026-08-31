@@ -78,6 +78,132 @@ afterEach(() => {
 })
 
 describe('routed task lists', () => {
+  it.each(['inbox-first', 'today-first'] as const)(
+    'keeps Today state when switched list reads settle %s',
+    async (settlementOrder) => {
+      const inboxResponse = deferred<Response>()
+      const todayResponse = deferred<Response>()
+      const commandBodies: Array<Record<string, unknown>> = []
+      const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const path = String(input)
+        if (path.startsWith('/api/v1/views/inbox?')) return inboxResponse.promise
+        if (path.startsWith('/api/v1/today?')) return todayResponse.promise
+        if (path === '/api/v1/commands/move-today-task') {
+          const request = JSON.parse(String(init?.body)) as Record<string, unknown>
+          commandBodies.push(request)
+          return jsonResponse({
+            mutation_id: request.mutation_id,
+            order_revision: 24,
+            task_id: request.task_id,
+          })
+        }
+        throw new Error(`Unexpected request ${path}`)
+      })
+      vi.stubGlobal('fetch', fetchMock)
+      const user = userEvent.setup()
+      const inboxItem = item({ title: 'Inbox task' })
+      const todayItem = item({
+        id: '22222222-2222-4222-8222-222222222222',
+        title: 'Today task',
+      })
+      window.history.replaceState({}, '', '/inbox')
+
+      render(<AppRoutes authenticated csrfToken="csrf" />)
+      await waitFor(() =>
+        expect(fetchMock.mock.calls.some(([url]) => String(url).startsWith('/api/v1/views/inbox?'))).toBe(true),
+      )
+      window.history.replaceState({}, '', '/today')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+      expect(await screen.findByText('Loading Today…')).toBeInTheDocument()
+
+      if (settlementOrder === 'inbox-first') {
+        inboxResponse.resolve(jsonResponse(page([inboxItem], { next_cursor: 'inbox-cursor' })))
+        await Promise.resolve()
+        expect(screen.getByText('Loading Today…')).toBeInTheDocument()
+        todayResponse.resolve(
+          jsonResponse(
+            page([todayItem], {
+              account_day: '2026-09-01',
+              next_cursor: 'today-cursor',
+              order_revision: 23,
+              view: 'today',
+            }),
+          ),
+        )
+      } else {
+        todayResponse.resolve(
+          jsonResponse(
+            page([todayItem], {
+              account_day: '2026-09-01',
+              next_cursor: 'today-cursor',
+              order_revision: 23,
+              view: 'today',
+            }),
+          ),
+        )
+        expect(await screen.findByRole('link', { name: 'Today task' })).toBeInTheDocument()
+        inboxResponse.resolve(jsonResponse(page([inboxItem], { next_cursor: 'inbox-cursor' })))
+      }
+
+      expect(await screen.findByRole('link', { name: 'Today task' })).toBeInTheDocument()
+      await waitFor(() => expect(screen.queryByRole('link', { name: 'Inbox task' })).not.toBeInTheDocument())
+      await user.click(screen.getByRole('button', { name: 'Move later “Today task”' }))
+
+      await waitFor(() => expect(commandBodies).toHaveLength(1))
+      expect(commandBodies[0]).toMatchObject({
+        expected_order_revision: 23,
+        task_id: todayItem.id,
+      })
+      expect(screen.getByRole('button', { name: 'Load more tasks' })).toBeInTheDocument()
+    },
+  )
+
+  it('ignores pending Inbox pagination after switching to Today', async () => {
+    const inboxPagination = deferred<Response>()
+    const todayResponse = deferred<Response>()
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input)
+      if (path === '/api/v1/views/inbox?limit=20') {
+        return jsonResponse(page([item({ title: 'Inbox task' })], { next_cursor: 'inbox-cursor' }))
+      }
+      if (path === '/api/v1/views/inbox?limit=20&cursor=inbox-cursor') {
+        return inboxPagination.promise
+      }
+      if (path.startsWith('/api/v1/today?')) return todayResponse.promise
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/inbox')
+
+    render(<AppRoutes authenticated csrfToken="csrf" />)
+    expect(await screen.findByRole('link', { name: 'Inbox task' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Load more tasks' }))
+
+    window.history.replaceState({}, '', '/today')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    expect(await screen.findByText('Loading Today…')).toBeInTheDocument()
+    todayResponse.resolve(
+      jsonResponse(
+        page([item({ id: '22222222-2222-4222-8222-222222222222', title: 'Today task' })], {
+          account_day: '2026-09-01',
+          next_cursor: 'today-cursor',
+          order_revision: 23,
+          view: 'today',
+        }),
+      ),
+    )
+    expect(await screen.findByRole('link', { name: 'Today task' })).toBeInTheDocument()
+
+    inboxPagination.resolve(
+      jsonResponse(page([item({ id: '33333333-3333-4333-8333-333333333333', title: 'Late Inbox task' })])),
+    )
+
+    await waitFor(() => expect(screen.queryByRole('link', { name: 'Late Inbox task' })).not.toBeInTheDocument())
+    expect(screen.queryByRole('link', { name: 'Inbox task' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Load more tasks' })).toBeInTheDocument()
+  })
+
   it('enters sign-in continuation for an expired list read and completes the original read', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

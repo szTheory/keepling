@@ -248,10 +248,10 @@ function AppRoutes({
     return <LoginForm onAuthenticated={handleAuthenticated} />
   }
 
-  if (pathname === '/today' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} onAuthenticationRequired={onAuthenticationRequired} view="today" />)
-  if (pathname === '/upcoming' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} onAuthenticationRequired={onAuthenticationRequired} view="upcoming" />)
-  if (pathname === '/completed' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} onAuthenticationRequired={onAuthenticationRequired} view="completed" />)
-  if (pathname === '/inbox' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} onAuthenticationRequired={onAuthenticationRequired} view="inbox" />)
+  if (pathname === '/today' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="today" onAuthenticationRequired={onAuthenticationRequired} view="today" />)
+  if (pathname === '/upcoming' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="upcoming" onAuthenticationRequired={onAuthenticationRequired} view="upcoming" />)
+  if (pathname === '/completed' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="completed" onAuthenticationRequired={onAuthenticationRequired} view="completed" />)
+  if (pathname === '/inbox' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="inbox" onAuthenticationRequired={onAuthenticationRequired} view="inbox" />)
   if (pathname === '/trash' && csrfToken) {
     return withInterruption(
       <TrashList
