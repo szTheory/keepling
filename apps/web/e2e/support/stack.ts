@@ -16,7 +16,6 @@ type OwnedChild = {
 
 const supportDirectory = dirname(fileURLToPath(import.meta.url))
 const repositoryRoot = resolve(supportDirectory, '../../../..')
-const serverRoot = join(repositoryRoot, 'apps/server')
 const webRoot = join(repositoryRoot, 'apps/web')
 const runtimePreflight = join(repositoryRoot, 'tooling/runtime-preflight.sh')
 const host = process.env.KEEPLING_E2E_HOST ?? '127.0.0.1'
@@ -157,9 +156,7 @@ const cleanup = async (exitCode: number, reason?: string) => {
   if (proxyServer) {
     await new Promise<void>((resolvePromise) => proxyServer?.close(() => resolvePromise()))
   }
-  for (const child of ownedChildren.reverse()) {
-    await stopOwnedProcess(child)
-  }
+  await Promise.all(ownedChildren.reverse().map(stopOwnedProcess))
   if (temporaryRoot) await rm(temporaryRoot, { force: true, recursive: true })
   process.exit(exitCode)
 }
@@ -216,16 +213,20 @@ const start = async () => {
   ])
   await runChecked('PostgreSQL createdb', preflight, createdbArgs, repositoryRoot, env)
 
-  for (const [label, mixArgs] of [
-    ['database migrations', ['mix', 'ecto.migrate']],
-    ['deterministic seed', ['mix', 'run', 'priv/repo/seeds.exs']],
+  for (const [label, mixCommand] of [
+    ['database migrations', 'cd apps/server && mix ecto.migrate'],
+    ['deterministic seed', 'cd apps/server && mix run priv/repo/seeds.exs'],
   ] as const) {
-    const [, args] = selectedRuntime([...mixArgs])
-    await runChecked(label, preflight, args, serverRoot, env)
+    const [, args] = selectedRuntime(['sh', '-c', mixCommand])
+    await runChecked(label, preflight, args, repositoryRoot, env)
   }
 
-  const [, phoenixArgs] = selectedRuntime(['mix', 'phx.server'])
-  spawnOwned('Phoenix', preflight, phoenixArgs, serverRoot, env)
+  const [, phoenixArgs] = selectedRuntime([
+    'sh',
+    '-c',
+    'cd apps/server && mix phx.server',
+  ])
+  spawnOwned('Phoenix', preflight, phoenixArgs, repositoryRoot, env)
   await waitForPort('Phoenix', phoenixPort)
 
   spawnOwned(

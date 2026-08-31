@@ -7,6 +7,7 @@ _build/
 cover/
 dist/
 build/
+apps/web/test-results/
 DerivedData/
 *.xcuserstate
 .env
@@ -14,4 +15,3 @@ DerivedData/
 !.env.example
 tmp/
 log/
-

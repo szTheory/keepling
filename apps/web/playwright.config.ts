@@ -31,12 +31,16 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'node --experimental-strip-types ./e2e/support/stack.ts',
+    command: 'exec node --experimental-strip-types ./e2e/support/stack.ts',
     env: {
       ...process.env,
       KEEPLING_E2E_HOST: host,
       KEEPLING_E2E_PORT: publicPort,
       KEEPLING_TEST_FAULT_TOKEN: testFaultToken,
+    },
+    gracefulShutdown: {
+      signal: 'SIGTERM',
+      timeout: 8_000,
     },
     reuseExistingServer: false,
     timeout: 120_000,
