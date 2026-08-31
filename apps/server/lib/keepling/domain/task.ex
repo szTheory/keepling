@@ -11,6 +11,8 @@ defmodule Keepling.Domain.Task do
   @max_notes_length 50_000
   @detail_fields [:title, :notes]
 
+  alias Keepling.Domain.Merge
+
   @enforce_keys [:id, :title, :notes, :inbox_state, :revision, :captured_at]
   defstruct [
     :id,
@@ -93,6 +95,23 @@ defmodule Keepling.Domain.Task do
          {:ok, fields} <- normalize_fields(command.fields),
          {:ok, updated, changes} <- merge_fields(task, command.base_values, fields) do
       finish(task, updated, changes, :task_details_updated, command.accepted_at)
+    end
+  end
+
+  @spec resolve_conflict(t(), map()) ::
+          {:ok, t(), activity() | nil, :accepted | :already_satisfied}
+          | {:error, atom()}
+  def resolve_conflict(%__MODULE__{} = task, command) do
+    with true <- command.latest_revision == task.revision,
+         {:ok, fields} <- normalize_fields(command.resolved_fields),
+         {:ok, updated, changes} <-
+           Merge.three_way(task, Map.take(task, Map.keys(fields)), fields, @detail_fields) do
+      finish(task, updated, changes, :task_details_updated, command.accepted_at)
+    else
+      false -> {:error, :stale_conflict}
+      {:conflict, _fields} -> {:error, :stale_conflict}
+      {:error, :invalid_merge_fields} -> {:error, :invalid_conflict_resolution}
+      error -> error
     end
   end
 
@@ -211,37 +230,10 @@ defmodule Keepling.Domain.Task do
 
   defp merge_fields(task, base_values, fields)
        when is_map(base_values) and map_size(base_values) == map_size(fields) do
-    if MapSet.new(Map.keys(base_values)) == MapSet.new(Map.keys(fields)) do
-      conflicts =
-        fields
-        |> Enum.reject(fn {field, requested} ->
-          current = Map.fetch!(task, field)
-          current == Map.fetch!(base_values, field) or current == requested
-        end)
-        |> Enum.map(fn {field, _requested} -> Atom.to_string(field) end)
-        |> Enum.sort()
-
-      if conflicts == [] do
-        {updated, changes} =
-          Enum.reduce(fields, {task, %{}}, fn {field, requested}, {current_task, changed} ->
-            current = Map.fetch!(current_task, field)
-
-            if current == requested do
-              {current_task, changed}
-            else
-              {
-                Map.put(current_task, field, requested),
-                Map.put(changed, Atom.to_string(field), %{"from" => current, "to" => requested})
-              }
-            end
-          end)
-
-        {:ok, updated, changes}
-      else
-        {:error, {:edit_conflict, conflicts}}
-      end
-    else
-      {:error, :base_values_mismatch}
+    case Merge.three_way(task, base_values, fields, @detail_fields) do
+      {:ok, updated, changes} -> {:ok, updated, changes}
+      {:conflict, fields} -> {:error, {:edit_conflict, fields}}
+      {:error, :invalid_merge_fields} -> {:error, :base_values_mismatch}
     end
   end
 

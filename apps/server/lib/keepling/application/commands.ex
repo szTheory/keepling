@@ -68,6 +68,12 @@ defmodule Keepling.Application.Commands do
     end)
   end
 
+  def dispatch(%{type: :resolve_task_conflict} = command, context, port) do
+    port.execute(command, context, fn current_task, accepted_command ->
+      Task.resolve_conflict(current_task, accepted_command)
+    end)
+  end
+
   def dispatch(%{type: :edit_task_dates} = command, context, port) do
     port.execute(command, context, fn current_task, accepted_command ->
       TaskDates.edit(current_task, accepted_command)

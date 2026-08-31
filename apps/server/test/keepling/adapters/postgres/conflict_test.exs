@@ -234,6 +234,58 @@ defmodule Keepling.Adapters.Postgres.ConflictTest do
              %{notes: "Later edit", revision: 3, title: "Current title"}
   end
 
+  test "an edit colliding with Trash persists the lifecycle field without applying its draft", %{
+    account_id: account_id
+  } do
+    task_id = capture(account_id, "Base title")
+
+    assert {:ok, %{body: %{"revision" => 2}}} =
+             dispatch(account_id, ~U[2026-08-31 12:41:00.000000Z], %{
+               type: :trash_task,
+               expected_revision: 1,
+               mutation_id: Ecto.UUID.generate(),
+               task_id: task_id,
+               version: 1
+             })
+
+    edit_command = %{
+      type: :edit_task,
+      base_values: %{title: "Base title"},
+      expected_revision: 1,
+      fields: %{title: "My title"},
+      mutation_id: Ecto.UUID.generate(),
+      task_id: task_id,
+      version: 1
+    }
+
+    conflict = dispatch(account_id, ~U[2026-08-31 12:42:00.000000Z], edit_command)
+
+    assert {:ok,
+            %{
+              status: 409,
+              body: %{
+                "affected_fields" => ["trashed_at"],
+                "code" => "task_trash_conflict",
+                "conflict" => %{
+                  "fields" => [
+                    %{
+                      "base" => nil,
+                      "current" => "2026-08-31T12:41:00.000000Z",
+                      "field" => "trashed_at",
+                      "mine" => nil
+                    }
+                  ],
+                  "id" => conflict_id,
+                  "latest_revision" => 2
+                }
+              }
+            }} = conflict
+
+    assert conflict == dispatch(account_id, @accepted_at, edit_command)
+    assert %{count: 1, resolved_by: nil} = stored_conflict(account_id, conflict_id)
+    assert stored_task(account_id, task_id) == %{notes: "", revision: 2, title: "Base title"}
+  end
+
   defp capture(account_id, title) do
     task_id = Ecto.UUID.generate()
 
@@ -258,18 +310,24 @@ defmodule Keepling.Adapters.Postgres.ConflictTest do
   end
 
   defp stored_conflict(account_id, conflict_id) do
-    %{rows: [[count, resolved_by]]} =
+    %{rows: rows} =
       SQL.query!(
         Repo,
         """
-        SELECT count(*), max(resolved_by_mutation_id)
+        SELECT resolved_by_mutation_id
         FROM persisted_conflicts
         WHERE account_id = $1 AND id = $2
         """,
         [account_id, Ecto.UUID.dump!(conflict_id)]
       )
 
-    %{count: count, resolved_by: if(resolved_by, do: Ecto.UUID.load!(resolved_by))}
+    resolved_by =
+      case rows do
+        [[value]] -> value
+        [] -> nil
+      end
+
+    %{count: length(rows), resolved_by: if(resolved_by, do: Ecto.UUID.load!(resolved_by))}
   end
 
   defp stored_task(account_id, task_id) do

@@ -208,6 +208,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/commands/resolve-task-conflict": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Resolve one persisted affected-field task conflict against its latest revision */
+        readonly post: operations["resolveTaskConflict"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/commands/restore-task": {
         readonly parameters: {
             readonly query?: never;
@@ -689,7 +706,7 @@ export interface components {
         };
         readonly ActivityTextChange: {
             /** @enum {string} */
-            readonly field: "notes" | "title";
+            readonly field: "completed_at" | "notes" | "title" | "trashed_at";
             /** @constant */
             readonly kind: "text";
             readonly new: string | null;
@@ -726,10 +743,26 @@ export interface components {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             /** @enum {string} */
             readonly outcome: "accepted" | "already_satisfied";
+            readonly resolved_conflict_id?: components["schemas"]["ConflictIdentity"];
             readonly revision: components["schemas"]["Revision"];
             readonly snapshot: components["schemas"]["TaskSnapshot"];
             readonly task_id: components["schemas"]["TaskIdentity"];
             readonly warnings: readonly components["schemas"]["Warning"][];
+        };
+        readonly ConflictField: {
+            readonly base: string | null;
+            readonly current: string | null;
+            /** @enum {string} */
+            readonly field: "notes" | "title";
+            readonly mine: string | null;
+        };
+        /** Format: uuid */
+        readonly ConflictIdentity: string;
+        /** @enum {string} */
+        readonly ConflictSelection: "current" | "mine";
+        readonly ConflictSelections: {
+            readonly notes?: components["schemas"]["ConflictSelection"];
+            readonly title?: components["schemas"]["ConflictSelection"];
         };
         readonly CreateOrganizationCommand: {
             readonly kind: components["schemas"]["OrganizationKind"];
@@ -812,6 +845,11 @@ export interface components {
         readonly OrganizationsResponse: {
             readonly organizations: readonly components["schemas"]["OrganizationSnapshot"][];
         };
+        readonly PersistedConflict: {
+            readonly fields: readonly components["schemas"]["ConflictField"][];
+            readonly id: components["schemas"]["ConflictIdentity"];
+            readonly latest_revision: components["schemas"]["Revision"];
+        };
         readonly PlanForTodayRequest: {
             readonly base_planned_on: components["schemas"]["NullableCivilDate"];
             readonly expected_revision: components["schemas"]["Revision"];
@@ -822,8 +860,9 @@ export interface components {
         };
         readonly Problem: {
             readonly active_unfinished_task_count?: number;
-            readonly affected_fields?: readonly ("completed_at" | "inbox_state" | "notes" | "project_id" | "tag_ids" | "title")[];
+            readonly affected_fields?: readonly ("completed_at" | "inbox_state" | "notes" | "project_id" | "tag_ids" | "title" | "trashed_at")[];
             readonly code: string;
+            readonly conflict?: components["schemas"]["PersistedConflict"];
             readonly current_revision?: components["schemas"]["Revision"];
             readonly detail?: string;
             readonly recovery_action: string;
@@ -854,6 +893,15 @@ export interface components {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly name: components["schemas"]["OrganizationName"];
             readonly organization_id: components["schemas"]["OrganizationIdentity"];
+            /** @constant */
+            readonly version: 1;
+        };
+        readonly ResolveTaskConflictCommand: {
+            readonly conflict_id: components["schemas"]["ConflictIdentity"];
+            readonly latest_revision: components["schemas"]["Revision"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly selections: components["schemas"]["ConflictSelections"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
             /** @constant */
             readonly version: 1;
         };
@@ -1404,6 +1452,37 @@ export interface operations {
             readonly 403: components["responses"]["ProblemResponse"];
             readonly 404: components["responses"]["ProblemResponse"];
             readonly 409: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly resolveTaskConflict: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["ResolveTaskConflictCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored conflict-resolution acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };

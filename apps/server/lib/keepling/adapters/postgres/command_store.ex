@@ -357,6 +357,9 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         :assign_task_organizations ->
           execute_task_assignment(repo, command, context, accepted_command, decide)
 
+        :resolve_task_conflict ->
+          execute_conflict_resolution(repo, command, context, accepted_command, decide)
+
         _existing_task_command ->
           case lock_task(repo, context.account_id, command.task_id) do
             nil ->
@@ -401,9 +404,284 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       {:ok, task, activity, :accepted} ->
         persist_existing(repo, command, context, task, activity)
 
+      {:error, reason} when is_tuple(reason) ->
+        if persisted_conflict_reason?(reason) do
+          persist_command_conflict(repo, command, context, current, reason)
+        else
+          semantic_rejection(reason, current)
+        end
+
       {:error, reason} ->
         semantic_rejection(reason, current)
     end
+  end
+
+  defp persisted_conflict_reason?({kind, affected_fields})
+       when kind in [:edit_conflict, :lifecycle_conflict, :trash_conflict] and
+              is_list(affected_fields),
+       do: true
+
+  defp persisted_conflict_reason?(_reason), do: false
+
+  defp persist_command_conflict(repo, command, context, current, reason) do
+    {_kind, affected_fields} = reason
+    conflict_id = Ecto.UUID.generate()
+
+    values =
+      command
+      |> conflict_values(current)
+      |> include_lifecycle_conflict_values(affected_fields, current)
+
+    %{num_rows: 1} =
+      SQL.query!(
+        repo,
+        """
+        INSERT INTO persisted_conflicts (
+          account_id, id, task_id, original_mutation_id, command_type,
+          expected_revision, latest_revision, affected_fields, base_values,
+          requested_values, current_values, inserted_at, updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb,
+                $11::jsonb, $12, $12)
+        """,
+        [
+          context.account_id,
+          dump_uuid(conflict_id),
+          dump_uuid(command.task_id),
+          dump_uuid(command.mutation_id),
+          Atom.to_string(command.type),
+          command.expected_revision,
+          current.revision,
+          affected_fields,
+          values.base,
+          values.requested,
+          values.current,
+          context.accepted_at
+        ]
+      )
+
+    result = semantic_rejection(reason, current)
+
+    conflict = %{
+      "fields" => conflict_field_bodies(affected_fields, values),
+      "id" => conflict_id,
+      "latest_revision" => current.revision
+    }
+
+    put_in(result, [:body, "conflict"], conflict)
+  end
+
+  defp conflict_values(%{type: type} = command, current)
+       when type in [:edit_task, :clarify_task] do
+    requested = stringify_detail_values(command.fields)
+
+    %{
+      base: stringify_detail_values(command.base_values),
+      requested: requested,
+      current:
+        requested
+        |> Map.keys()
+        |> Map.new(fn field -> {field, task_field_value(current, field)} end)
+    }
+  end
+
+  defp conflict_values(%{type: type, accepted_at: accepted_at}, current)
+       when type in [:complete_task, :reopen_task] do
+    requested = if type == :complete_task, do: utc_iso8601(accepted_at), else: nil
+
+    %{
+      base: %{"completed_at" => nil},
+      requested: %{"completed_at" => requested},
+      current: %{"completed_at" => optional_utc_iso8601(current.completed_at)}
+    }
+  end
+
+  defp conflict_values(%{type: type, accepted_at: accepted_at}, current)
+       when type in [:trash_task, :restore_task] do
+    requested = if type == :trash_task, do: utc_iso8601(accepted_at), else: nil
+
+    %{
+      base: %{"trashed_at" => nil},
+      requested: %{"trashed_at" => requested},
+      current: %{"trashed_at" => optional_utc_iso8601(current.trashed_at)}
+    }
+  end
+
+  defp conflict_field_bodies(affected_fields, values) do
+    Enum.map(affected_fields, fn field ->
+      %{
+        "base" => Map.get(values.base, field),
+        "current" => Map.get(values.current, field),
+        "field" => field,
+        "mine" => Map.get(values.requested, field)
+      }
+    end)
+  end
+
+  defp include_lifecycle_conflict_values(values, affected_fields, current) do
+    values
+    |> maybe_put_conflict_value(
+      "completed_at",
+      "completed_at" in affected_fields,
+      optional_utc_iso8601(current.completed_at)
+    )
+    |> maybe_put_conflict_value(
+      "trashed_at",
+      "trashed_at" in affected_fields,
+      optional_utc_iso8601(current.trashed_at)
+    )
+  end
+
+  defp maybe_put_conflict_value(values, _field, false, _current), do: values
+
+  defp maybe_put_conflict_value(values, field, true, current) do
+    %{
+      base: Map.put_new(values.base, field, nil),
+      current: Map.put(values.current, field, current),
+      requested: Map.put_new(values.requested, field, nil)
+    }
+  end
+
+  defp stringify_detail_values(values) do
+    Map.new(values, fn {field, value} -> {Atom.to_string(field), value} end)
+  end
+
+  defp task_field_value(task, "notes"), do: task.notes
+  defp task_field_value(task, "title"), do: task.title
+
+  defp execute_conflict_resolution(repo, command, context, accepted_command, decide) do
+    case lock_persisted_conflict(repo, context.account_id, command) do
+      nil ->
+        conflict_not_found()
+
+      conflict when not is_nil(conflict.resolved_by_mutation_id) ->
+        conflict_already_resolved()
+
+      conflict ->
+        case lock_task(repo, context.account_id, command.task_id) do
+          nil ->
+            conflict_not_found()
+
+          current ->
+            resolve_locked_conflict(
+              repo,
+              command,
+              context,
+              current,
+              conflict,
+              accepted_command,
+              decide
+            )
+        end
+    end
+  end
+
+  defp lock_persisted_conflict(repo, account_id, command) do
+    case SQL.query!(
+           repo,
+           """
+           SELECT command_type, latest_revision, affected_fields, requested_values,
+                  resolved_by_mutation_id
+           FROM persisted_conflicts
+           WHERE account_id = $1 AND id = $2 AND task_id = $3
+           FOR UPDATE
+           """,
+           [account_id, dump_uuid(command.conflict_id), dump_uuid(command.task_id)]
+         ).rows do
+      [[command_type, latest_revision, affected_fields, requested_values, resolved_by]] ->
+        %{
+          affected_fields: affected_fields,
+          command_type: command_type,
+          latest_revision: latest_revision,
+          requested_values: requested_values,
+          resolved_by_mutation_id: if(resolved_by, do: load_uuid(resolved_by))
+        }
+
+      [] ->
+        nil
+    end
+  end
+
+  defp resolve_locked_conflict(
+         repo,
+         command,
+         context,
+         current,
+         conflict,
+         accepted_command,
+         decide
+       ) do
+    cond do
+      conflict.command_type not in ["edit_task", "clarify_task"] ->
+        invalid_conflict_resolution()
+
+      command.latest_revision != conflict.latest_revision or
+          current.revision != conflict.latest_revision ->
+        stale_conflict(current.revision)
+
+      command.selections
+      |> Map.keys()
+      |> Enum.map(&Atom.to_string/1)
+      |> Enum.sort() != Enum.sort(conflict.affected_fields) ->
+        invalid_conflict_resolution()
+
+      true ->
+        resolved_fields = resolved_conflict_fields(current, conflict, command.selections)
+        accepted_command = Map.put(accepted_command, :resolved_fields, resolved_fields)
+
+        case decide.(current, accepted_command) do
+          {:ok, task, nil, :already_satisfied} ->
+            mark_conflict_resolved(repo, command, context)
+
+            repo
+            |> acknowledgement(context.account_id, command, task, :already_satisfied)
+            |> put_in([:body, "resolved_conflict_id"], command.conflict_id)
+
+          {:ok, task, activity, :accepted} ->
+            result = persist_existing(repo, command, context, task, activity)
+            mark_conflict_resolved(repo, command, context)
+            put_in(result, [:body, "resolved_conflict_id"], command.conflict_id)
+
+          {:error, :stale_conflict} ->
+            stale_conflict(current.revision)
+
+          {:error, _reason} ->
+            invalid_conflict_resolution()
+        end
+    end
+  end
+
+  defp resolved_conflict_fields(current, conflict, selections) do
+    conflict.requested_values
+    |> Map.new(fn
+      {"notes", value} -> {:notes, value}
+      {"title", value} -> {:title, value}
+    end)
+    |> then(fn requested ->
+      Enum.reduce(selections, requested, fn
+        {_field, :mine}, fields -> fields
+        {:notes, :current}, fields -> Map.put(fields, :notes, current.notes)
+        {:title, :current}, fields -> Map.put(fields, :title, current.title)
+      end)
+    end)
+  end
+
+  defp mark_conflict_resolved(repo, command, context) do
+    %{num_rows: 1} =
+      SQL.query!(
+        repo,
+        """
+        UPDATE persisted_conflicts
+        SET resolved_by_mutation_id = $3, resolved_at = $4, updated_at = $4
+        WHERE account_id = $1 AND id = $2 AND resolved_by_mutation_id IS NULL
+        """,
+        [
+          context.account_id,
+          dump_uuid(command.conflict_id),
+          dump_uuid(command.mutation_id),
+          context.accepted_at
+        ]
+      )
   end
 
   defp maybe_put_account_timezone(%{type: type} = command, repo, context)
@@ -1230,6 +1508,51 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       "Refresh the view before trying again.",
       false,
       "refresh_view"
+    )
+  end
+
+  defp conflict_not_found do
+    problem(
+      404,
+      "task_conflict_not_found",
+      "Task conflict not found",
+      "Refresh the task before trying to resolve this conflict.",
+      false,
+      "refresh_task"
+    )
+  end
+
+  defp conflict_already_resolved do
+    problem(
+      409,
+      "task_conflict_already_resolved",
+      "Task conflict already resolved",
+      "Refresh the task to see the accepted resolution.",
+      false,
+      "refresh_task"
+    )
+  end
+
+  defp stale_conflict(current_revision) do
+    problem(
+      409,
+      "task_conflict_stale",
+      "Task changed after the conflict",
+      "Review the latest task before resolving the conflict again.",
+      false,
+      "review_task_conflict",
+      %{"current_revision" => current_revision}
+    )
+  end
+
+  defp invalid_conflict_resolution do
+    problem(
+      422,
+      "invalid_conflict_resolution",
+      "Invalid task conflict resolution",
+      "Choose mine or current for every affected task detail field.",
+      false,
+      "review_task_conflict"
     )
   end
 

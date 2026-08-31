@@ -73,6 +73,7 @@ defmodule KeeplingWeb.Router do
     post "/commands/reopen-task", CommandController, :reopen_task
     post "/commands/trash-task", CommandController, :trash_task
     post "/commands/restore-task", CommandController, :restore_task
+    post "/commands/resolve-task-conflict", CommandController, :resolve_task_conflict
     post "/commands/edit-task-dates", CommandController, :edit_task_dates
     post "/commands/plan-for-today", CommandController, :plan_for_today
     post "/commands/unplan-task", CommandController, :unplan_task

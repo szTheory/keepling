@@ -432,6 +432,37 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
         '503':
           $ref: '#/components/responses/ProblemResponse'
+  /commands/resolve-task-conflict:
+    post:
+      operationId: resolveTaskConflict
+      summary: Resolve one persisted affected-field task conflict against its latest revision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveTaskConflictCommand'
+      responses:
+        '200':
+          description: Exact stored conflict-resolution acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /commands/clarify-task:
     post:
       operationId: clarifyTask
@@ -1208,8 +1239,10 @@ components:
         field:
           type: string
           enum:
+            - completed_at
             - notes
             - title
+            - trashed_at
         kind:
           type: string
           const: text
@@ -1303,6 +1336,8 @@ components:
             - already_satisfied
         revision:
           $ref: '#/components/schemas/Revision'
+        resolved_conflict_id:
+          $ref: '#/components/schemas/ConflictIdentity'
         snapshot:
           $ref: '#/components/schemas/TaskSnapshot'
         task_id:
@@ -1544,6 +1579,92 @@ components:
         version:
           type: integer
           const: 1
+    ConflictIdentity:
+      type: string
+      format: uuid
+    ConflictSelection:
+      type: string
+      enum:
+        - current
+        - mine
+    ConflictSelections:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      maxProperties: 2
+      properties:
+        notes:
+          $ref: '#/components/schemas/ConflictSelection'
+        title:
+          $ref: '#/components/schemas/ConflictSelection'
+    ConflictField:
+      type: object
+      additionalProperties: false
+      required:
+        - base
+        - current
+        - field
+        - mine
+      properties:
+        base:
+          anyOf:
+            - type: string
+            - type: 'null'
+        current:
+          anyOf:
+            - type: string
+            - type: 'null'
+        field:
+          type: string
+          enum:
+            - notes
+            - title
+        mine:
+          anyOf:
+            - type: string
+            - type: 'null'
+    PersistedConflict:
+      type: object
+      additionalProperties: false
+      required:
+        - fields
+        - id
+        - latest_revision
+      properties:
+        fields:
+          type: array
+          minItems: 1
+          maxItems: 2
+          items:
+            $ref: '#/components/schemas/ConflictField'
+        id:
+          $ref: '#/components/schemas/ConflictIdentity'
+        latest_revision:
+          $ref: '#/components/schemas/Revision'
+    ResolveTaskConflictCommand:
+      type: object
+      additionalProperties: false
+      required:
+        - conflict_id
+        - latest_revision
+        - mutation_id
+        - selections
+        - task_id
+        - version
+      properties:
+        conflict_id:
+          $ref: '#/components/schemas/ConflictIdentity'
+        latest_revision:
+          $ref: '#/components/schemas/Revision'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        selections:
+          $ref: '#/components/schemas/ConflictSelections'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        version:
+          type: integer
+          const: 1
     EditTaskDatesRequest:
       type: object
       additionalProperties: false
@@ -1763,11 +1884,14 @@ components:
               - project_id
               - tag_ids
               - title
+              - trashed_at
         active_unfinished_task_count:
           type: integer
           minimum: 0
         current_revision:
           $ref: '#/components/schemas/Revision'
+        conflict:
+          $ref: '#/components/schemas/PersistedConflict'
     RenameOrganizationCommand:
       type: object
       additionalProperties: false

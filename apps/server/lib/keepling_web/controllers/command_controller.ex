@@ -68,6 +68,9 @@ defmodule KeeplingWeb.CommandController do
   def restore_task(conn, params),
     do: dispatch_task_command(conn, decode_task_lifecycle(params, :restore_task))
 
+  def resolve_task_conflict(conn, params),
+    do: dispatch_task_command(conn, decode_conflict_resolution(params))
+
   def edit_task_dates(conn, params),
     do: dispatch_task_command(conn, decode_task_dates(params))
 
@@ -249,6 +252,61 @@ defmodule KeeplingWeb.CommandController do
       _ -> {:error, :invalid_command}
     end
   end
+
+  defp decode_conflict_resolution(params) do
+    allowed_keys = [
+      "conflict_id",
+      "latest_revision",
+      "mutation_id",
+      "selections",
+      "task_id",
+      "version"
+    ]
+
+    with true <- Enum.sort(Map.keys(params)) == allowed_keys,
+         %{
+           "conflict_id" => conflict_id,
+           "latest_revision" => latest_revision,
+           "mutation_id" => mutation_id,
+           "selections" => selections,
+           "task_id" => task_id,
+           "version" => 1
+         } <- params,
+         true <- is_integer(latest_revision) and latest_revision >= 1,
+         {:ok, decoded_selections} <- decode_conflict_selections(selections),
+         {:ok, _conflict_uuid} <- Ecto.UUID.cast(conflict_id),
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, _task_uuid} <- Ecto.UUID.cast(task_id) do
+      {:ok,
+       %{
+         conflict_id: conflict_id,
+         latest_revision: latest_revision,
+         mutation_id: mutation_id,
+         selections: decoded_selections,
+         task_id: task_id,
+         type: :resolve_task_conflict,
+         version: 1
+       }}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
+  defp decode_conflict_selections(selections)
+       when is_map(selections) and map_size(selections) > 0 do
+    if Enum.all?(selections, fn {field, selection} ->
+         field in ["notes", "title"] and selection in ["current", "mine"]
+       end) do
+      {:ok,
+       Map.new(selections, fn {field, selection} ->
+         {String.to_existing_atom(field), String.to_existing_atom(selection)}
+       end)}
+    else
+      {:error, :invalid_command}
+    end
+  end
+
+  defp decode_conflict_selections(_selections), do: {:error, :invalid_command}
 
   defp decode_task_dates(params) do
     allowed_keys = [
