@@ -9,6 +9,7 @@ import OrganizationFields, {
   OrganizationManager,
 } from '@/features/organizations/OrganizationFields'
 import TaskList from '@/features/lists/TaskList'
+import TrashList from '@/features/lists/TrashList'
 import TaskEditor from '@/features/tasks/TaskEditor'
 import type { CommandAcknowledgement } from '@/api/keepling'
 
@@ -123,6 +124,7 @@ function AppRoutes({
   if (pathname === '/upcoming' && csrfToken) return <TaskList csrfToken={csrfToken} view="upcoming" />
   if (pathname === '/completed' && csrfToken) return <TaskList csrfToken={csrfToken} view="completed" />
   if (pathname === '/inbox' && csrfToken) return <TaskList csrfToken={csrfToken} view="inbox" />
+  if (pathname === '/trash' && csrfToken) return <TrashList csrfToken={csrfToken} />
 
   if (pathname === '/projects' && csrfToken) {
     return <OrganizationManager csrfToken={csrfToken} kind="project" />

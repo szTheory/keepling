@@ -15,11 +15,13 @@ type WireOrganizationLifecycleCommand = components['schemas']['OrganizationLifec
 type WireOrganizationsResponse = components['schemas']['OrganizationsResponse']
 type WireRenameOrganizationCommand = components['schemas']['RenameOrganizationCommand']
 type WireReturnToInboxCommand = components['schemas']['ReturnToInboxCommand']
+type WireRestoreAcknowledgement = components['schemas']['RestoreAcknowledgement']
 type WireTaskLifecycleCommand = components['schemas']['TaskLifecycleCommand']
 type WireTaskViewItem = components['schemas']['TaskViewItem']
 type WireTaskViewPage = components['schemas']['TaskViewPage']
 type WireTodayMoveRequest = components['schemas']['TodayMoveRequest']
 type WireTodayMoveResponse = components['schemas']['TodayMoveResponse']
+type WireTrashResponse = components['schemas']['TrashResponse']
 type InboxResponse = components['schemas']['InboxResponse']
 type Problem = components['schemas']['Problem']
 type AuthTransitionResponse = components['schemas']['AuthTransitionResponse']
@@ -47,6 +49,7 @@ type BrowserTask = {
   revision: number
   tags: readonly TaskOrganizationReference[]
   title: string
+  trashedAt: string | null
 }
 
 type TaskOrganizationReference = {
@@ -179,6 +182,10 @@ type CommandAcknowledgement = {
   snapshot: BrowserTask
   taskId: string
   warnings: readonly CaptureWarning[]
+}
+
+type RestoreAcknowledgement = CommandAcknowledgement & {
+  destinations: readonly WireRestoreAcknowledgement['destinations'][number][]
 }
 
 type CaptureAcknowledgement = CommandAcknowledgement
@@ -453,6 +460,7 @@ const mapTask = (task: components['schemas']['TaskSnapshot']): BrowserTask => ({
   revision: task.revision,
   tags: task.tags?.map((tag) => ({ ...tag })) ?? [],
   title: task.title,
+  trashedAt: task.trashed_at,
 })
 
 const mapOrganization = (
@@ -534,9 +542,27 @@ const mapAcknowledgement = (acknowledgement: WireCommandAcknowledgement): Comman
   warnings: acknowledgement.warnings.map((warning) => ({ ...warning })),
 })
 
+const mapRestoreAcknowledgement = (
+  acknowledgement: WireRestoreAcknowledgement,
+): RestoreAcknowledgement => ({
+  ...mapAcknowledgement(acknowledgement),
+  destinations: [...acknowledgement.destinations],
+})
+
 const getInbox = async (): Promise<readonly BrowserTask[]> => {
   const response = await readJson<InboxResponse>(
     await fetch('/api/v1/inbox', {
+      credentials: 'same-origin',
+      headers: { accept: 'application/json' },
+    }),
+  )
+
+  return response.tasks.map(mapTask)
+}
+
+const getTrash = async (): Promise<readonly BrowserTask[]> => {
+  const response = await readJson<WireTrashResponse>(
+    await fetch('/api/v1/trash', {
       credentials: 'same-origin',
       headers: { accept: 'application/json' },
     }),
@@ -769,6 +795,25 @@ const reopenTask = async (
 ): Promise<CommandAcknowledgement> =>
   submitTaskCommand('/api/v1/commands/reopen-task', lifecycleCommand(submission), csrfToken)
 
+const trashTask = async (
+  submission: LifecycleSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> =>
+  submitTaskCommand('/api/v1/commands/trash-task', lifecycleCommand(submission), csrfToken)
+
+const restoreTask = async (
+  submission: LifecycleSubmission,
+  csrfToken: string,
+): Promise<RestoreAcknowledgement> =>
+  mapRestoreAcknowledgement(
+    await jsonRequest<WireTaskLifecycleCommand, WireRestoreAcknowledgement>(
+      '/api/v1/commands/restore-task',
+      'POST',
+      lifecycleCommand(submission),
+      csrfToken,
+    ),
+  )
+
 const assignTaskOrganizations = async (
   submission: AssignTaskOrganizationsSubmission,
   csrfToken: string,
@@ -891,6 +936,7 @@ export {
   getMutation,
   getOrganizations,
   getSession,
+  getTrash,
   getTaskActivity,
   getTaskView,
   editTask,
@@ -901,11 +947,13 @@ export {
   recoverAccount,
   renameOrganization,
   reopenTask,
+  restoreTask,
   returnToInbox,
   revokeSession,
   updateSession,
   unarchiveOrganization,
   unplanTask,
+  trashTask,
   planForToday,
   moveTodayTask,
   type AssignTaskOrganizationsSubmission,
@@ -928,6 +976,7 @@ export {
   type OrganizationAssignmentValues,
   type OrganizationLifecycleSubmission,
   type RenameOrganizationSubmission,
+  type RestoreAcknowledgement,
   type ReturnToInboxSubmission,
   type TaskDetailValues,
   type TaskDateValues,
