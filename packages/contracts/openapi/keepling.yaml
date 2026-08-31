@@ -639,6 +639,37 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
         '503':
           $ref: '#/components/responses/ProblemResponse'
+  /commands/undo-task:
+    post:
+      operationId: undoTask
+      summary: Apply one bounded account-authorized semantic compensation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UndoTaskCommand'
+      responses:
+        '200':
+          description: Exact accepted or explicit no-change undo result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UndoResult'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          description: Account-scoped unknown handle result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UndoNoChange'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /commands/edit-task-dates:
     post:
       operationId: editTaskDates
@@ -1336,6 +1367,8 @@ components:
           $ref: '#/components/schemas/Revision'
         resolved_conflict_id:
           $ref: '#/components/schemas/ConflictIdentity'
+        undo:
+          $ref: '#/components/schemas/UndoAvailability'
         snapshot:
           $ref: '#/components/schemas/TaskSnapshot'
         task_id:
@@ -1710,6 +1743,91 @@ components:
           const: 1
     UnplanTaskRequest:
       $ref: '#/components/schemas/PlanForTodayRequest'
+    UndoAvailability:
+      type: object
+      additionalProperties: false
+      required:
+        - expires_at
+        - handle
+        - label
+      properties:
+        expires_at:
+          type: string
+          format: date-time
+        handle:
+          $ref: '#/components/schemas/UndoHandle'
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Precise action-object recovery copy derived by the server.
+    UndoHandle:
+      type: string
+      minLength: 43
+      maxLength: 128
+      pattern: '^[A-Za-z0-9_-]+$'
+      description: Opaque account-bound one-shot capability; possession never authorizes use.
+    UndoNoChange:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - mutation_id
+        - outcome
+        - recovery_action
+        - retryable
+        - title
+      properties:
+        code:
+          type: string
+          enum:
+            - undo_already_applied
+            - undo_expired
+            - undo_stale
+            - undo_uncertain
+            - undo_unknown
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        outcome:
+          type: string
+          enum:
+            - already_applied
+            - expired
+            - stale
+            - uncertain
+            - unknown
+        recovery_action:
+          anyOf:
+            - type: string
+              enum:
+                - check_mutation_result
+                - review_latest_task
+            - type: 'null'
+        retryable:
+          type: boolean
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+    UndoResult:
+      oneOf:
+        - $ref: '#/components/schemas/CommandAcknowledgement'
+        - $ref: '#/components/schemas/UndoNoChange'
+    UndoTaskCommand:
+      type: object
+      additionalProperties: false
+      required:
+        - handle
+        - mutation_id
+        - version
+      properties:
+        handle:
+          $ref: '#/components/schemas/UndoHandle'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        version:
+          type: integer
+          const: 1
     LoginRequest:
       type: object
       additionalProperties: false
@@ -1740,6 +1858,7 @@ components:
       oneOf:
         - $ref: '#/components/schemas/CommandAcknowledgement'
         - $ref: '#/components/schemas/OrganizationAcknowledgement'
+        - $ref: '#/components/schemas/UndoNoChange'
     OrganizationAcknowledgement:
       type: object
       additionalProperties: false

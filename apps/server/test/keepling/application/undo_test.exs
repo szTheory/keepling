@@ -26,7 +26,7 @@ defmodule Keepling.Application.UndoTest do
     end
 
     for unsupported <- vectors["unsupported"] do
-      refute Undo.supported_command?(String.to_existing_atom(unsupported)), unsupported
+      refute Undo.supported_command?(String.to_atom(unsupported)), unsupported
     end
   end
 
@@ -62,13 +62,16 @@ defmodule Keepling.Application.UndoTest do
            }
 
     assert {:error, :invalid_inverse} =
-             Undo.apply(current, %{kind: :details, values: %{"project_id" => nil}},
+             Undo.apply(
+               current,
+               %{kind: :details, values: %{"project_id" => nil}},
                ~U[2026-08-31 14:00:00.000000Z]
              )
   end
 
   defp task(overrides) do
-    struct!(Task,
+    struct!(
+      Task,
       Keyword.merge(
         [
           captured_at: ~U[2026-08-31 12:00:00.000000Z],
@@ -122,6 +125,282 @@ defmodule Keepling.Application.UndoTest do
   end
 end
 
+defmodule Keepling.Application.UndoRaceTest do
+  use ExUnit.Case, async: false
+
+  import Keepling.ConcurrencyCase
+
+  alias Ecto.Adapters.SQL
+  alias Keepling.Adapters.Postgres.CommandStore
+  alias Keepling.Application.{Commands, Undo}
+  alias Keepling.Repo
+
+  @captured_at ~U[2026-08-31 15:00:00.000000Z]
+
+  setup do
+    account_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
+
+    with_connection(fn _backend_pid ->
+      SQL.query!(
+        Repo,
+        """
+        INSERT INTO accounts (id, singleton_key, password_hash, timezone, inserted_at, updated_at)
+        VALUES ($1, TRUE, '$argon2id$test-fixture', 'Etc/UTC', $2, $2)
+        """,
+        [account_id, @captured_at]
+      )
+    end)
+
+    on_exit(fn ->
+      with_connection(fn _backend_pid ->
+        SQL.query!(Repo, "DELETE FROM accounts WHERE id = $1", [account_id])
+      end)
+    end)
+
+    %{account_id: account_id}
+  end
+
+  test "independent compensation consumers serialize to one inverse, activity, and winner", %{
+    account_id: account_id
+  } do
+    task_id = Ecto.UUID.generate()
+
+    {:ok, %{status: 201}} =
+      with_connection(fn _backend_pid ->
+        Commands.dispatch(
+          %{
+            mutation_id: Ecto.UUID.generate(),
+            task_id: task_id,
+            title: "Race one undo",
+            type: :capture_task,
+            version: 1
+          },
+          context(account_id, @captured_at),
+          CommandStore
+        )
+      end)
+
+    {:ok, %{body: %{"undo" => %{"handle" => handle}}}} =
+      with_connection(fn _backend_pid ->
+        Commands.dispatch(
+          %{
+            base_values: %{title: "Race one undo"},
+            expected_revision: 1,
+            fields: %{title: "Race changed"},
+            mutation_id: Ecto.UUID.generate(),
+            task_id: task_id,
+            type: :edit_task,
+            version: 1
+          },
+          context(account_id, ~U[2026-08-31 15:01:00.000000Z]),
+          CommandStore
+        )
+      end)
+
+    barrier = start_barrier(2)
+
+    results =
+      for second <- [2, 3] do
+        Task.async(fn ->
+          with_connection(fn backend_pid ->
+            :ok = await(barrier)
+
+            result =
+              Undo.dispatch(
+                %{
+                  handle: handle,
+                  mutation_id: Ecto.UUID.generate(),
+                  type: :undo_task,
+                  version: 1
+                },
+                context(account_id, DateTime.add(@captured_at, second * 60, :second)),
+                CommandStore
+              )
+
+            {backend_pid, result}
+          end)
+        end)
+      end
+      |> Enum.map(&Task.await(&1, 10_000))
+
+    assert results |> Enum.map(&elem(&1, 0)) |> Enum.uniq() |> length() == 2
+
+    assert Enum.sort(
+             Enum.map(results, fn {_pid, {:ok, %{body: %{"outcome" => outcome}}}} -> outcome end)
+           ) == ["accepted", "already_applied"]
+
+    with_connection(fn _backend_pid ->
+      assert %{rows: [[3, "Race one undo", 3, 1, 1]]} =
+               SQL.query!(
+                 Repo,
+                 """
+                 SELECT tasks.revision, tasks.title,
+                        (SELECT count(*) FROM task_activities WHERE account_id = $1),
+                        (SELECT count(*) FROM task_activities
+                         WHERE account_id = $1 AND activity_type = 'task_undo_applied'),
+                        (SELECT count(*) FROM undo_handles
+                         WHERE account_id = $1 AND state = 'applied')
+                 FROM tasks WHERE account_id = $1 AND id = $2
+                 """,
+                 [account_id, Ecto.UUID.dump!(task_id)]
+               )
+    end)
+  end
+
+  defp context(account_id, accepted_at),
+    do: %{
+      accepted_at: accepted_at,
+      account_id: account_id,
+      actor_type: "user",
+      client_kind: "web"
+    }
+end
+
+defmodule KeeplingWeb.UndoBoundaryTest do
+  use KeeplingWeb.ConnCase, async: false
+
+  alias Ecto.Adapters.SQL
+  alias Keepling.Repo
+
+  setup %{conn: conn} do
+    account_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
+    now = DateTime.utc_now() |> DateTime.truncate(:microsecond)
+
+    SQL.query!(
+      Repo,
+      """
+      INSERT INTO accounts (id, singleton_key, password_hash, timezone, inserted_at, updated_at)
+      VALUES ($1, TRUE, '$argon2id$test-fixture', 'Etc/UTC', $2, $2)
+      """,
+      [account_id, now]
+    )
+
+    previous_seed = System.get_env("KEEPLING_E2E_SEED")
+    System.put_env("KEEPLING_E2E_SEED", "phase-1")
+
+    on_exit(fn ->
+      if previous_seed,
+        do: System.put_env("KEEPLING_E2E_SEED", previous_seed),
+        else: System.delete_env("KEEPLING_E2E_SEED")
+    end)
+
+    login = conn |> trusted_request() |> post("/api/v1/test/session")
+    %{conn: login, csrf_token: json_response(login, 200)["csrf_token"]}
+  end
+
+  test "authenticated closed undo route applies exact compensation without exposing the handle in reads",
+       %{conn: conn, csrf_token: csrf_token} do
+    task_id = Ecto.UUID.generate()
+
+    captured =
+      command(conn, csrf_token, "/api/v1/commands/capture-task", %{
+        "mutation_id" => Ecto.UUID.generate(),
+        "task_id" => task_id,
+        "title" => "Boundary undo",
+        "version" => 1
+      })
+
+    assert %{"revision" => 1} = json_response(captured, 201)
+
+    edited =
+      command(conn, csrf_token, "/api/v1/commands/edit-task", %{
+        "base_values" => %{"title" => "Boundary undo"},
+        "expected_revision" => 1,
+        "fields" => %{"title" => "Boundary changed"},
+        "mutation_id" => Ecto.UUID.generate(),
+        "task_id" => task_id,
+        "version" => 1
+      })
+
+    assert %{"undo" => %{"handle" => handle, "label" => "Undo task edit"}} =
+             json_response(edited, 200)
+
+    unauthenticated =
+      build_conn()
+      |> trusted_request()
+      |> post("/api/v1/commands/undo-task", %{
+        "handle" => handle,
+        "mutation_id" => Ecto.UUID.generate(),
+        "version" => 1
+      })
+
+    assert %{"code" => "authentication_required"} = json_response(unauthenticated, 401)
+
+    undone =
+      command(conn, csrf_token, "/api/v1/commands/undo-task", %{
+        "handle" => handle,
+        "mutation_id" => Ecto.UUID.generate(),
+        "version" => 1
+      })
+
+    assert %{
+             "outcome" => "accepted",
+             "revision" => 3,
+             "snapshot" => %{"title" => "Boundary undo"}
+           } =
+             json_response(undone, 200)
+
+    activity = conn |> recycle() |> get("/api/v1/tasks/#{task_id}/activity") |> json_response(200)
+    activity_text = Jason.encode!(activity)
+
+    assert [
+             %{"type" => "task_undo_applied", "undone_activity_id" => undone_id},
+             %{"recovery_state" => "undone", "type" => "task_details_updated"} | _
+           ] =
+             activity["items"]
+
+    assert is_integer(undone_id)
+    refute activity_text =~ handle
+    refute activity_text =~ "undo_handle"
+  end
+
+  test "closed transport rejects malformed handle before creating a receipt", %{
+    conn: conn,
+    csrf_token: csrf_token
+  } do
+    mutation_id = Ecto.UUID.generate()
+
+    invalid =
+      command(conn, csrf_token, "/api/v1/commands/undo-task", %{
+        "handle" => "not-a-handle",
+        "mutation_id" => mutation_id,
+        "version" => 1
+      })
+
+    assert %{"code" => "invalid_command"} = json_response(invalid, 400)
+
+    assert %{rows: [[0]]} =
+             SQL.query!(Repo, "SELECT count(*) FROM command_receipts WHERE mutation_id = $1", [
+               Ecto.UUID.dump!(mutation_id)
+             ])
+  end
+
+  defp command(conn, csrf_token, path, body) do
+    conn
+    |> recycle()
+    |> trusted_request()
+    |> enforce_csrf()
+    |> put_req_header("x-csrf-token", csrf_token)
+    |> post(path, body)
+  end
+
+  defp trusted_request(conn) do
+    conn = %{
+      conn
+      | host: "www.example.com",
+        req_headers: [
+          {"host", "www.example.com"}
+          | Enum.reject(conn.req_headers, fn {name, _value} -> name == "host" end)
+        ]
+    }
+
+    put_req_header(conn, "origin", "http://www.example.com")
+  end
+
+  defp enforce_csrf(conn),
+    do: %{conn | private: Map.delete(conn.private, :plug_skip_csrf_protection)}
+end
+
 defmodule Keepling.Application.UndoPersistenceTest do
   use Keepling.DataCase, async: false
 
@@ -133,13 +412,14 @@ defmodule Keepling.Application.UndoPersistenceTest do
   @captured_at ~U[2026-08-31 12:00:00.000000Z]
 
   setup do
-    account_id = create_account(true)
+    account_id = create_account()
     %{account_id: account_id}
   end
 
-  test "accepted compensation is hash-only, exact-revision, atomic, one-shot, linked, and replayable", %{
-    account_id: account_id
-  } do
+  test "accepted compensation is hash-only, exact-revision, atomic, one-shot, linked, and replayable",
+       %{
+         account_id: account_id
+       } do
     task_id = capture(account_id)
     edit_id = Ecto.UUID.generate()
 
@@ -179,7 +459,8 @@ defmodule Keepling.Application.UndoPersistenceTest do
       version: 1
     }
 
-    accepted = Undo.dispatch(undo_command, context(account_id, ~U[2026-08-31 12:02:00Z]), CommandStore)
+    accepted =
+      Undo.dispatch(undo_command, context(account_id, ~U[2026-08-31 12:02:00Z]), CommandStore)
 
     assert {:ok,
             %{
@@ -194,7 +475,11 @@ defmodule Keepling.Application.UndoPersistenceTest do
             }} = accepted
 
     assert accepted ==
-             Undo.dispatch(undo_command, context(account_id, ~U[2026-08-31 12:03:00Z]), CommandStore)
+             Undo.dispatch(
+               undo_command,
+               context(account_id, ~U[2026-08-31 12:03:00Z]),
+               CommandStore
+             )
 
     state = stored_state(account_id, task_id)
     assert state.revision == 3
@@ -207,8 +492,7 @@ defmodule Keepling.Application.UndoPersistenceTest do
 
     second_id = Ecto.UUID.generate()
 
-    assert {:ok,
-            %{body: %{"code" => "undo_already_applied", "outcome" => "already_applied"}}} =
+    assert {:ok, %{body: %{"code" => "undo_already_applied", "outcome" => "already_applied"}}} =
              Undo.dispatch(
                %{undo_command | mutation_id: second_id},
                context(account_id, ~U[2026-08-31 12:04:00Z]),
@@ -218,7 +502,7 @@ defmodule Keepling.Application.UndoPersistenceTest do
     assert stored_state(account_id, task_id).activities == 3
   end
 
-  test "expired, stale, unknown, and cross-account handles apply no inverse", %{
+  test "expired, stale, and unknown handles apply no inverse", %{
     account_id: account_id
   } do
     task_id = capture(account_id)
@@ -231,10 +515,12 @@ defmodule Keepling.Application.UndoPersistenceTest do
 
     assert stored_state(account_id, task_id).title == "Changed again"
 
-    other_account = create_account(false)
-
     assert {:ok, %{body: %{"code" => "undo_unknown", "outcome" => "unknown"}}} =
-             undo(other_account, handle, ~U[2026-08-31 12:05:00Z])
+             undo(
+               account_id,
+               Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false),
+               ~U[2026-08-31 12:05:00Z]
+             )
 
     {expiring_handle, _edit_id} = edit_title(account_id, task_id, 3, "Expires")
 
@@ -264,7 +550,10 @@ defmodule Keepling.Application.UndoPersistenceTest do
 
     {:ok, %{body: %{"snapshot" => snapshot, "undo" => %{"handle" => handle}}}} =
       dispatch(account_id, ~U[2026-08-31 12:05:00Z], %{
-        base_values: %{title: if(revision == 1, do: "Undo proof", else: stored_state(account_id, task_id).title)},
+        base_values: %{
+          title:
+            if(revision == 1, do: "Undo proof", else: stored_state(account_id, task_id).title)
+        },
         expected_revision: revision,
         fields: %{title: title},
         mutation_id: mutation_id,
@@ -285,16 +574,16 @@ defmodule Keepling.Application.UndoPersistenceTest do
     )
   end
 
-  defp create_account(singleton_key) do
+  defp create_account do
     account_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
 
     SQL.query!(
       Repo,
       """
       INSERT INTO accounts (id, singleton_key, password_hash, timezone, inserted_at, updated_at)
-      VALUES ($1, $2, '$argon2id$test-fixture', 'Etc/UTC', $3, $3)
+      VALUES ($1, TRUE, '$argon2id$test-fixture', 'Etc/UTC', $2, $2)
       """,
-      [account_id, singleton_key, @captured_at]
+      [account_id, @captured_at]
     )
 
     account_id
@@ -304,21 +593,34 @@ defmodule Keepling.Application.UndoPersistenceTest do
     do: Commands.dispatch(command, context(account_id, accepted_at), CommandStore)
 
   defp context(account_id, accepted_at),
-    do: %{accepted_at: accepted_at, account_id: account_id, actor_type: "user", client_kind: "web"}
+    do: %{
+      accepted_at: accepted_at,
+      account_id: account_id,
+      actor_type: "user",
+      client_kind: "web"
+    }
 
   defp stored_undo_text(account_id) do
     %{rows: [[value]]} =
-      SQL.query!(Repo, "SELECT row_to_json(undo_handles)::text FROM undo_handles WHERE account_id = $1", [account_id])
+      SQL.query!(
+        Repo,
+        "SELECT row_to_json(undo_handles)::text FROM undo_handles WHERE account_id = $1",
+        [account_id]
+      )
 
     value
   end
 
   defp stored_receipt_text(account_id, mutation_id) do
     %{rows: [[value]]} =
-      SQL.query!(Repo, "SELECT response::text FROM command_receipts WHERE account_id = $1 AND mutation_id = $2", [
-        account_id,
-        Ecto.UUID.dump!(mutation_id)
-      ])
+      SQL.query!(
+        Repo,
+        "SELECT response::text FROM command_receipts WHERE account_id = $1 AND mutation_id = $2",
+        [
+          account_id,
+          Ecto.UUID.dump!(mutation_id)
+        ]
+      )
 
     value
   end
@@ -352,10 +654,5 @@ defmodule Keepling.Application.UndoPersistenceTest do
       undo_linked: linked,
       undo_rows: undo_rows
     }
-  end
-
-  defp undo_vectors do
-    path = Path.expand("../../../../../packages/contracts/vectors/undo.json", __DIR__)
-    path |> File.read!() |> Jason.decode!()
   end
 end

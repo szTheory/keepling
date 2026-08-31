@@ -9,11 +9,12 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
   @behaviour Keepling.Application.Commands.Port
 
   alias Ecto.Adapters.SQL
-  alias Keepling.Application.Activity
+  alias Keepling.Application.{Activity, Undo}
   alias Keepling.Domain.{Organization, Task, TaskDates}
   alias Keepling.Repo
 
   @behaviour Activity.Port
+  @behaviour Undo.Port
 
   @impl true
   def execute(command, context, decide) do
@@ -21,6 +22,28 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
 
     case Repo.transact(fn repo ->
            {:ok, first_delivery_or_replay(repo, command, context, fingerprint, decide)}
+         end) do
+      {:ok, result} -> result
+      {:error, _reason} -> {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  @impl Undo.Port
+  def execute_undo(command, context, apply_inverse) do
+    fingerprint = fingerprint(command)
+
+    case Repo.transact(fn repo ->
+           {:ok,
+            first_undo_delivery_or_replay(
+              repo,
+              command,
+              context,
+              fingerprint,
+              apply_inverse
+            )}
          end) do
       {:ok, result} -> result
       {:error, _reason} -> {:error, :infrastructure_failure}
@@ -133,7 +156,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
   end
 
   @impl true
-  def lookup_result(%{account_id: account_id}, mutation_id) do
+  def lookup_result(%{account_id: account_id} = context, mutation_id) do
     case SQL.query(
            Repo,
            """
@@ -143,9 +166,21 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
            """,
            [account_id, dump_uuid(mutation_id)]
          ) do
-      {:ok, %{rows: [[status, response]]}} -> {:ok, %{status: status, body: response}}
-      {:ok, %{rows: []}} -> {:error, :not_found}
-      {:error, _reason} -> {:error, :infrastructure_failure}
+      {:ok, %{rows: [[status, response]]}} ->
+        {:ok,
+         attach_replay_undo(
+           Repo,
+           account_id,
+           mutation_id,
+           %{status: status, body: response},
+           Map.get(context, :accepted_at, DateTime.utc_now())
+         )}
+
+      {:ok, %{rows: []}} ->
+        {:error, :not_found}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
     end
   end
 
@@ -333,6 +368,32 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     end
   end
 
+  defp first_undo_delivery_or_replay(repo, command, context, fingerprint, apply_inverse) do
+    inserted =
+      SQL.query!(
+        repo,
+        """
+        INSERT INTO command_receipts (
+          account_id, mutation_id, fingerprint, terminal, inserted_at, updated_at
+        )
+        VALUES ($1, $2, $3, FALSE, $4, $4)
+        ON CONFLICT (account_id, mutation_id) DO NOTHING
+        RETURNING mutation_id
+        """,
+        [context.account_id, dump_uuid(command.mutation_id), fingerprint, context.accepted_at]
+      )
+
+    case inserted.rows do
+      [[_mutation_id]] ->
+        result = apply_undo_delivery(repo, command, context, apply_inverse)
+        finalize_receipt(repo, context.account_id, command.mutation_id, result)
+        {:ok, public_result(result)}
+
+      [] ->
+        replay(repo, command, context, fingerprint)
+    end
+  end
+
   defp execute_first_delivery(repo, command, context, decide) do
     accepted_command =
       command
@@ -371,7 +432,168 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       end
 
     finalize_receipt(repo, context.account_id, command.mutation_id, result)
-    {:ok, result}
+    {:ok, public_result(result)}
+  end
+
+  defp apply_undo_delivery(repo, command, context, apply_inverse) do
+    handle_hash = :crypto.hash(:sha256, command.handle)
+
+    case lock_undo_handle(repo, context.account_id, handle_hash) do
+      nil ->
+        undo_no_change(command, :unknown, "undo_unknown", "Undo unavailable", false, nil)
+
+      %{state: "applied"} ->
+        undo_no_change(
+          command,
+          :already_applied,
+          "undo_already_applied",
+          "Already undone",
+          false,
+          nil
+        )
+
+      %{state: "expired"} ->
+        undo_no_change(command, :expired, "undo_expired", "Undo expired", false, nil)
+
+      %{state: "stale"} ->
+        undo_no_change(
+          command,
+          :stale,
+          "undo_stale",
+          "Task changed after this action",
+          false,
+          "review_latest_task"
+        )
+
+      handle ->
+        cond do
+          DateTime.compare(context.accepted_at, handle.expires_at) == :gt ->
+            mark_undo_unavailable(repo, handle, context, "expired")
+            undo_no_change(command, :expired, "undo_expired", "Undo expired", false, nil)
+
+          true ->
+            apply_available_undo(repo, command, context, handle, apply_inverse)
+        end
+    end
+  end
+
+  defp apply_available_undo(repo, command, context, handle, apply_inverse) do
+    case lock_task(repo, context.account_id, handle.task_id) do
+      nil ->
+        undo_no_change(command, :unknown, "undo_unknown", "Undo unavailable", false, nil)
+
+      current when current.revision != handle.produced_revision ->
+        mark_undo_unavailable(repo, handle, context, "stale")
+
+        undo_no_change(
+          command,
+          :stale,
+          "undo_stale",
+          "Task changed after this action",
+          false,
+          "review_latest_task"
+        )
+
+      current ->
+        inverse = %{
+          kind: String.to_existing_atom(handle.inverse_type),
+          values: handle.inverse_payload
+        }
+
+        case apply_inverse.(current, inverse, context.accepted_at) do
+          {:ok, task, activity} ->
+            command = Map.put(command, :task_id, handle.task_id)
+            persist_undo(repo, command, context, task, activity, handle)
+
+          {:error, :invalid_inverse} ->
+            undo_no_change(
+              command,
+              :uncertain,
+              "undo_uncertain",
+              "Undo could not be confirmed",
+              true,
+              "check_mutation_result"
+            )
+        end
+    end
+  end
+
+  defp lock_undo_handle(repo, account_id, handle_hash) do
+    case SQL.query!(
+           repo,
+           """
+           SELECT id, task_id, original_activity_id, original_command_type,
+                  produced_revision, inverse_type, inverse_payload,
+                  expires_at, state
+           FROM undo_handles
+           WHERE account_id = $1 AND handle_hash = $2
+           FOR UPDATE
+           """,
+           [account_id, handle_hash]
+         ).rows do
+      [
+        [
+          id,
+          task_id,
+          original_activity_id,
+          original_command_type,
+          produced_revision,
+          inverse_type,
+          inverse_payload,
+          expires_at,
+          state
+        ]
+      ] ->
+        %{
+          expires_at: to_datetime(expires_at),
+          id: load_uuid(id),
+          inverse_payload: inverse_payload,
+          inverse_type: inverse_type,
+          original_activity_id: original_activity_id,
+          original_command_type: original_command_type,
+          produced_revision: produced_revision,
+          state: state,
+          task_id: load_uuid(task_id)
+        }
+
+      [] ->
+        nil
+    end
+  end
+
+  defp mark_undo_unavailable(repo, handle, context, state) do
+    %{num_rows: 1} =
+      SQL.query!(
+        repo,
+        """
+        UPDATE undo_handles SET state = $3, updated_at = $4
+        WHERE account_id = $1 AND id = $2 AND state = 'available'
+        """,
+        [context.account_id, dump_uuid(handle.id), state, context.accepted_at]
+      )
+
+    SQL.query!(
+      repo,
+      """
+      UPDATE task_activities SET recovery_state = $3
+      WHERE account_id = $1 AND id = $2 AND recovery_state = 'available'
+      """,
+      [context.account_id, handle.original_activity_id, state]
+    )
+  end
+
+  defp undo_no_change(command, outcome, code, title, retryable, recovery_action) do
+    %{
+      status: if(outcome == :unknown, do: 404, else: 200),
+      body: %{
+        "code" => code,
+        "mutation_id" => command.mutation_id,
+        "outcome" => Atom.to_string(outcome),
+        "recovery_action" => recovery_action,
+        "retryable" => retryable,
+        "title" => title
+      }
+    }
   end
 
   defp decide_existing(repo, command, context, current, accepted_command, decide) do
@@ -1060,8 +1282,153 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       )
 
     maybe_bump_task_view_revisions(repo, command, context)
-    persist_activity(repo, command, context, activity)
-    acknowledgement(repo, context.account_id, command, task, :accepted, 200, warnings)
+    activity_id = persist_activity(repo, command, context, activity)
+
+    result = acknowledgement(repo, context.account_id, command, task, :accepted, 200, warnings)
+
+    case issue_undo(repo, command, context, task, activity, activity_id) do
+      nil -> result
+      undo -> put_undo(result, undo)
+    end
+  end
+
+  defp persist_undo(repo, command, context, task, activity, handle) do
+    %{num_rows: 1} =
+      SQL.query!(
+        repo,
+        """
+        UPDATE tasks
+        SET title = $3, notes = $4, inbox_state = $5, revision = $6,
+            planned_on = $7, deadline_on = $8, completed_at = $9,
+            trashed_at = $10, updated_at = $11
+        WHERE account_id = $1 AND id = $2
+        """,
+        [
+          context.account_id,
+          dump_uuid(task.id),
+          task.title,
+          task.notes,
+          Atom.to_string(task.inbox_state),
+          task.revision,
+          task.planned_on,
+          task.deadline_on,
+          task.completed_at,
+          task.trashed_at,
+          context.accepted_at
+        ]
+      )
+
+    maybe_bump_task_view_revisions(
+      repo,
+      %{type: String.to_existing_atom(handle.original_command_type)},
+      context
+    )
+
+    persist_activity(repo, command, context, activity, handle.original_activity_id)
+
+    %{num_rows: 1} =
+      SQL.query!(
+        repo,
+        """
+        UPDATE task_activities SET recovery_state = 'undone'
+        WHERE account_id = $1 AND id = $2 AND recovery_state = 'available'
+        """,
+        [context.account_id, handle.original_activity_id]
+      )
+
+    %{num_rows: 1} =
+      SQL.query!(
+        repo,
+        """
+        UPDATE undo_handles
+        SET state = 'applied', consumed_at = $3, result_mutation_id = $4, updated_at = $3
+        WHERE account_id = $1 AND id = $2 AND state = 'available'
+        """,
+        [
+          context.account_id,
+          dump_uuid(handle.id),
+          context.accepted_at,
+          dump_uuid(command.mutation_id)
+        ]
+      )
+
+    acknowledgement(repo, context.account_id, command, task, :accepted)
+  end
+
+  defp issue_undo(repo, command, context, task, activity, activity_id) do
+    case Undo.compensation(command, activity) do
+      :not_supported ->
+        nil
+
+      {:ok, compensation} ->
+        undo_id = Ecto.UUID.generate()
+        raw_handle = raw_undo_handle(undo_id)
+        expires_at = DateTime.add(context.accepted_at, Undo.valid_for_seconds(), :second)
+        inverse_payload = stringify_inverse_values(compensation.inverse.values)
+
+        %{num_rows: 1} =
+          SQL.query!(
+            repo,
+            """
+            INSERT INTO undo_handles (
+              account_id, id, handle_hash, task_id, original_mutation_id,
+              original_activity_id, original_command_type, produced_revision,
+              inverse_type, inverse_payload, label, expires_at, state,
+              inserted_at, updated_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb,
+                    $11, $12, 'available', $13, $13)
+            """,
+            [
+              context.account_id,
+              dump_uuid(undo_id),
+              :crypto.hash(:sha256, raw_handle),
+              dump_uuid(task.id),
+              dump_uuid(command.mutation_id),
+              activity_id,
+              Atom.to_string(command.type),
+              task.revision,
+              Atom.to_string(compensation.inverse.kind),
+              inverse_payload,
+              compensation.label,
+              expires_at,
+              context.accepted_at
+            ]
+          )
+
+        %{num_rows: 1} =
+          SQL.query!(
+            repo,
+            """
+            UPDATE task_activities SET recovery_state = 'available'
+            WHERE account_id = $1 AND id = $2 AND recovery_state = 'not_available'
+            """,
+            [context.account_id, activity_id]
+          )
+
+        %{
+          expires_at: expires_at,
+          handle: raw_handle,
+          label: compensation.label
+        }
+    end
+  end
+
+  defp stringify_inverse_values(values) do
+    Map.new(values, fn
+      {field, %Date{} = value} -> {field, Date.to_iso8601(value)}
+      {field, %DateTime{} = value} -> {field, DateTime.to_iso8601(value)}
+      pair -> pair
+    end)
+  end
+
+  defp put_undo(result, undo) do
+    result
+    |> put_in([:body, "undo"], %{
+      "expires_at" => utc_iso8601(undo.expires_at),
+      "label" => undo.label
+    })
+    |> Map.put(:undo_handle, undo.handle)
   end
 
   defp persist_create_organization(repo, command, context, organization) do
@@ -1157,40 +1524,45 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     acknowledgement(repo, context.account_id, command, task, :accepted)
   end
 
-  defp persist_activity(repo, command, context, activity) do
+  defp persist_activity(repo, command, context, activity, undone_activity_id \\ nil) do
     actor = activity_actor(context)
     bump_activity_view_revision(repo, context)
 
-    SQL.query!(
-      repo,
-      """
-      INSERT INTO task_activities (
-        account_id, task_id, mutation_id, activity_type, activity_version,
-        actor_type, actor_principal, actor_label, client_kind,
-        from_revision, to_revision, changed_fields, recovery_state,
-        accepted_at, inserted_at
+    %{rows: [[activity_id]]} =
+      SQL.query!(
+        repo,
+        """
+        INSERT INTO task_activities (
+          account_id, task_id, mutation_id, activity_type, activity_version,
+          actor_type, actor_principal, actor_label, client_kind,
+          from_revision, to_revision, changed_fields, recovery_state,
+          undone_activity_id, accepted_at, inserted_at
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9,
+          $10, $11, $12::jsonb, 'not_available', $13, $14, $14
+        )
+        RETURNING id
+        """,
+        [
+          context.account_id,
+          dump_uuid(command.task_id),
+          dump_uuid(command.mutation_id),
+          Atom.to_string(activity.type),
+          activity.version,
+          actor.type,
+          actor.principal,
+          actor.label,
+          context.client_kind,
+          activity.from_revision,
+          activity.to_revision,
+          activity.changed_fields,
+          undone_activity_id,
+          activity.accepted_at
+        ]
       )
-      VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9,
-        $10, $11, $12::jsonb, 'not_available', $13, $13
-      )
-      """,
-      [
-        context.account_id,
-        dump_uuid(command.task_id),
-        dump_uuid(command.mutation_id),
-        Atom.to_string(activity.type),
-        activity.version,
-        actor.type,
-        actor.principal,
-        actor.label,
-        context.client_kind,
-        activity.from_revision,
-        activity.to_revision,
-        activity.changed_fields,
-        activity.accepted_at
-      ]
-    )
+
+    activity_id
   end
 
   defp activity_actor(%{actor_type: "user"}),
@@ -1347,7 +1719,14 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       )
 
     if Plug.Crypto.secure_compare(stored_fingerprint, fingerprint) do
-      {:ok, %{status: status, body: response}}
+      {:ok,
+       attach_replay_undo(
+         repo,
+         context.account_id,
+         command.mutation_id,
+         %{status: status, body: response},
+         context.accepted_at
+       )}
     else
       {:ok,
        problem(
@@ -1359,6 +1738,45 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
          "use_original_command"
        )}
     end
+  end
+
+  defp attach_replay_undo(repo, account_id, mutation_id, result, accepted_at) do
+    case SQL.query!(
+           repo,
+           """
+           SELECT id
+           FROM undo_handles
+           WHERE account_id = $1 AND original_mutation_id = $2
+             AND state = 'available' AND expires_at >= $3
+           """,
+           [account_id, dump_uuid(mutation_id), accepted_at]
+         ).rows do
+      [[undo_id]] ->
+        result
+        |> update_in([:body, "undo"], fn
+          nil -> nil
+          undo -> Map.put(undo, "handle", raw_undo_handle(load_uuid(undo_id)))
+        end)
+
+      [] ->
+        result
+    end
+  end
+
+  defp public_result(%{undo_handle: raw_handle} = result) do
+    result
+    |> Map.delete(:undo_handle)
+    |> update_in([:body, "undo"], &Map.put(&1, "handle", raw_handle))
+  end
+
+  defp public_result(result), do: result
+
+  defp raw_undo_handle(undo_id) do
+    endpoint_config = Application.fetch_env!(:keepling, KeeplingWeb.Endpoint)
+    secret = Keyword.fetch!(endpoint_config, :secret_key_base)
+
+    :crypto.mac(:hmac, :sha256, secret, Ecto.UUID.dump!(undo_id))
+    |> Base.url_encode64(padding: false)
   end
 
   defp semantic_rejection(:title_required),

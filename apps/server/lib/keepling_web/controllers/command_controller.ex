@@ -2,7 +2,7 @@ defmodule KeeplingWeb.CommandController do
   use KeeplingWeb, :controller
 
   alias Keepling.Adapters.Postgres.CommandStore
-  alias Keepling.Application.Commands
+  alias Keepling.Application.{Commands, Undo}
   alias KeeplingWeb.Auth
 
   def test_session(conn, _params) do
@@ -79,6 +79,16 @@ defmodule KeeplingWeb.CommandController do
 
   def unplan_task(conn, params),
     do: dispatch_task_command(conn, decode_planning(params, :unplan_task))
+
+  def undo_task(conn, params) do
+    with {:ok, command} <- decode_undo(params),
+         {:ok, result} <- Undo.dispatch(command, context(conn), CommandStore) do
+      respond(conn, result)
+    else
+      {:error, :invalid_command} -> invalid_command(conn)
+      {:error, :infrastructure_failure} -> infrastructure_problem(conn)
+    end
+  end
 
   def create_organization(conn, params),
     do: dispatch_task_command(conn, decode_create_organization(params))
@@ -403,6 +413,21 @@ defmodule KeeplingWeb.CommandController do
   end
 
   defp decode_date(_value), do: :error
+
+  defp decode_undo(params) do
+    allowed_keys = ["handle", "mutation_id", "version"]
+
+    with true <- Enum.sort(Map.keys(params)) == allowed_keys,
+         %{"handle" => handle, "mutation_id" => mutation_id, "version" => 1} <- params,
+         true <- is_binary(handle) and byte_size(handle) >= 43 and byte_size(handle) <= 128,
+         {:ok, decoded_handle} <- Base.url_decode64(handle, padding: false),
+         true <- byte_size(decoded_handle) == 32,
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id) do
+      {:ok, %{handle: handle, mutation_id: mutation_id, type: :undo_task, version: 1}}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
 
   defp decode_create_organization(params) do
     allowed_keys = ["kind", "mutation_id", "name", "organization_id", "version"]

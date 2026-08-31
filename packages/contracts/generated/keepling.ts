@@ -293,6 +293,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/commands/undo-task": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Apply one bounded account-authorized semantic compensation */
+        readonly post: operations["undoTask"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/commands/unplan-task": {
         readonly parameters: {
             readonly query?: never;
@@ -747,6 +764,7 @@ export interface components {
             readonly revision: components["schemas"]["Revision"];
             readonly snapshot: components["schemas"]["TaskSnapshot"];
             readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly undo?: components["schemas"]["UndoAvailability"];
             readonly warnings: readonly components["schemas"]["Warning"][];
         };
         readonly ConflictField: {
@@ -807,7 +825,7 @@ export interface components {
          * @description Client-generated identity retained across exact retries.
          */
         readonly MutationIdentity: string;
-        readonly MutationResult: components["schemas"]["CommandAcknowledgement"] | components["schemas"]["OrganizationAcknowledgement"];
+        readonly MutationResult: components["schemas"]["CommandAcknowledgement"] | components["schemas"]["OrganizationAcknowledgement"] | components["schemas"]["UndoNoChange"];
         readonly NullableCivilDate: components["schemas"]["CivilDate"] | null;
         readonly OrganizationAcknowledgement: {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
@@ -1056,6 +1074,32 @@ export interface components {
         };
         readonly TrashResponse: {
             readonly tasks: readonly components["schemas"]["TaskSnapshot"][];
+        };
+        readonly UndoAvailability: {
+            /** Format: date-time */
+            readonly expires_at: string;
+            readonly handle: components["schemas"]["UndoHandle"];
+            /** @description Precise action-object recovery copy derived by the server. */
+            readonly label: string;
+        };
+        /** @description Opaque account-bound one-shot capability; possession never authorizes use. */
+        readonly UndoHandle: string;
+        readonly UndoNoChange: {
+            /** @enum {string} */
+            readonly code: "undo_already_applied" | "undo_expired" | "undo_stale" | "undo_uncertain" | "undo_unknown";
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            /** @enum {string} */
+            readonly outcome: "already_applied" | "expired" | "stale" | "uncertain" | "unknown";
+            readonly recovery_action: ("check_mutation_result" | "review_latest_task") | null;
+            readonly retryable: boolean;
+            readonly title: string;
+        };
+        readonly UndoResult: components["schemas"]["CommandAcknowledgement"] | components["schemas"]["UndoNoChange"];
+        readonly UndoTaskCommand: {
+            readonly handle: components["schemas"]["UndoHandle"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            /** @constant */
+            readonly version: 1;
         };
         readonly UnplanTaskRequest: components["schemas"]["PlanForTodayRequest"];
         readonly VersionedAuthRequest: {
@@ -1603,6 +1647,43 @@ export interface operations {
             readonly 403: components["responses"]["ProblemResponse"];
             readonly 404: components["responses"]["ProblemResponse"];
             readonly 409: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly undoTask: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["UndoTaskCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact accepted or explicit no-change undo result */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["UndoResult"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            /** @description Account-scoped unknown handle result */
+            readonly 404: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["UndoNoChange"];
+                };
+            };
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };

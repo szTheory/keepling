@@ -146,7 +146,7 @@ defmodule KeeplingWeb.ActivityBoundaryTest do
                  "from_revision" => 1,
                  "mutation_id" => ^edit_mutation_id,
                  "outcome" => "accepted",
-                 "recovery_state" => "not_available",
+                 "recovery_state" => "available",
                  "to_revision" => 2,
                  "type" => "task_details_updated",
                  "version" => 1
