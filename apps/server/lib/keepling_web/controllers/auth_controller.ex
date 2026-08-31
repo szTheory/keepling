@@ -117,11 +117,11 @@ defmodule KeeplingWeb.AuthController do
              []
            ),
          {:ok, password} <- decode_reauthentication(params),
-         :ok <- Accounts.reauthenticate(conn.assigns.current_account_id, password),
          {:ok, session} <-
-           Accounts.rotate_session(
+           Accounts.reauthenticate_session(
              conn.assigns.current_account_id,
-             conn.assigns.current_session_id
+             conn.assigns.current_session_id,
+             password
            ) do
       RateLimit.emit_decision(:reauthentication, :accepted)
       authenticated(conn, session, "recently_authenticated")

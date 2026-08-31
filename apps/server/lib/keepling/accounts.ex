@@ -228,7 +228,7 @@ defmodule Keepling.Accounts do
 
   def authenticate_session(_credential, _opts), do: {:error, :authentication_required}
 
-  @doc "Verifies the account password without creating another session."
+  @doc "Verifies the account password without claiming a completed reauthentication."
   @spec reauthenticate(binary(), String.t(), keyword()) ::
           :ok | {:error, :authentication_failed | :infrastructure_failure}
   def reauthenticate(account_id, password, opts \\ [])
@@ -246,7 +246,7 @@ defmodule Keepling.Accounts do
             {:error, :authentication_failed}
 
           Argon2.verify_pass(password, password_hash) ->
-            record_required_security_audit("reauthenticated", now)
+            :ok
 
           true ->
             record_security_audit(account_id, "login_failed", now)
@@ -266,6 +266,79 @@ defmodule Keepling.Accounts do
   end
 
   def reauthenticate(_account_id, _password, _opts), do: {:error, :authentication_failed}
+
+  @doc "Verifies a password, rotates the locked session, and audits one atomic reauthentication."
+  @spec reauthenticate_session(binary(), binary(), String.t(), keyword()) ::
+          {:ok, map()} | {:error, atom()}
+  def reauthenticate_session(account_id, session_id, password, opts \\ [])
+
+  def reauthenticate_session(account_id, session_id, password, opts)
+      when is_binary(account_id) and is_binary(session_id) and is_binary(password) do
+    now = opts |> Keyword.get(:now, utc_now()) |> truncate_utc!()
+    policy = session_policy(opts)
+    credential = random_token()
+    credential_hash = hash_token(credential)
+    idle_expires_at = DateTime.add(now, policy.idle_ttl_seconds, :second)
+    recent_auth_expires_at = DateTime.add(now, policy.recent_auth_ttl_seconds, :second)
+
+    case Repo.transact(fn repo ->
+           case SQL.query!(
+                  repo,
+                  "SELECT password_hash FROM accounts WHERE id = $1 FOR UPDATE",
+                  [account_id]
+                ).rows do
+             [[password_hash]] ->
+               cond do
+                 not login_password_valid?(password) ->
+                   Argon2.no_user_verify()
+                   repo.rollback(:authentication_failed)
+
+                 Argon2.verify_pass(password, password_hash) ->
+                   session =
+                     rotate_session_locked(
+                       repo,
+                       account_id,
+                       session_id,
+                       credential,
+                       credential_hash,
+                       policy,
+                       now,
+                       idle_expires_at,
+                       recent_auth_expires_at
+                     )
+
+                   SecurityAudit.record_required!(repo, "reauthenticated", now)
+                   {:ok, session}
+
+                 true ->
+                   repo.rollback(:authentication_failed)
+               end
+
+             [] ->
+               Argon2.no_user_verify()
+               repo.rollback(:authentication_failed)
+           end
+         end) do
+      {:ok, session} ->
+        {:ok, session}
+
+      {:error, :authentication_failed} ->
+        record_security_audit(account_id, "login_failed", now)
+        {:error, :authentication_failed}
+
+      {:error, :session_unavailable} ->
+        {:error, :session_unavailable}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  def reauthenticate_session(_account_id, _session_id, _password, _opts),
+    do: {:error, :authentication_failed}
 
   @doc "Returns the latched persistence health of the security audit trail."
   @spec security_audit_health() :: SecurityAudit.health()
@@ -326,6 +399,60 @@ defmodule Keepling.Accounts do
 
       {:error, _reason} ->
         {:error, :infrastructure_failure}
+    end
+  end
+
+  defp rotate_session_locked(
+         repo,
+         account_id,
+         session_id,
+         credential,
+         credential_hash,
+         policy,
+         now,
+         idle_expires_at,
+         recent_auth_expires_at
+       ) do
+    case SQL.query!(
+           repo,
+           """
+           UPDATE sessions
+           SET credential_hash = $3,
+               idle_ttl_seconds = $4,
+               expires_at = LEAST($5, absolute_expires_at),
+               last_seen_at = $6,
+               recent_authenticated_at = $6,
+               recent_auth_expires_at = $7,
+               updated_at = $6
+           WHERE id = $1 AND account_id = $2 AND revoked_at IS NULL
+           RETURNING label, client_kind, created_at, absolute_expires_at
+           """,
+           [
+             session_id,
+             account_id,
+             credential_hash,
+             policy.idle_ttl_seconds,
+             idle_expires_at,
+             now,
+             recent_auth_expires_at
+           ]
+         ).rows do
+      [[label, client_kind, created_at, absolute_expires_at]] ->
+        session_result(
+          session_id,
+          account_id,
+          credential,
+          label,
+          client_kind,
+          as_utc(created_at),
+          now,
+          min_datetime(idle_expires_at, as_utc(absolute_expires_at)),
+          as_utc(absolute_expires_at),
+          recent_auth_expires_at
+        )
+
+      [] ->
+        repo.rollback(:session_unavailable)
     end
   end
 
@@ -889,19 +1016,6 @@ defmodule Keepling.Accounts do
 
   defp record_security_audit(_account_id, event_type, accepted_at) do
     SecurityAudit.record_best_effort(Repo, event_type, accepted_at)
-  end
-
-  defp record_required_security_audit(event_type, accepted_at) do
-    case Repo.transact(fn repo ->
-           SecurityAudit.record_required!(repo, event_type, accepted_at)
-           {:ok, :recorded}
-         end) do
-      {:ok, :recorded} -> :ok
-      {:error, _reason} -> {:error, :infrastructure_failure}
-    end
-  rescue
-    _error in [DBConnection.ConnectionError, Postgrex.Error] ->
-      {:error, :infrastructure_failure}
   end
 
   defp dump_uuid(value) when is_binary(value) do

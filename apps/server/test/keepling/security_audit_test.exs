@@ -207,6 +207,57 @@ defmodule Keepling.SecurityAuditTest do
     assert {:ok, _instant, 0} = DateTime.from_iso8601(last_failure_at)
   end
 
+  test "reauthentication rotation and its required audit commit or roll back together" do
+    assert {:ok, session} =
+             Accounts.login(@password, label: "Atomic reauthentication", client_kind: "web")
+
+    assert %{rows: [[credential_hash, recent_authenticated_at, recent_auth_expires_at]]} =
+             SQL.query!(
+               Repo,
+               "SELECT credential_hash, recent_authenticated_at, recent_auth_expires_at FROM sessions WHERE id = $1",
+               [session.session_id]
+             )
+
+    Application.put_env(:keepling, :security_audit_writer, FailingAuditWriter)
+
+    assert {:error, :infrastructure_failure} =
+             Accounts.reauthenticate_session(
+               session.account_id,
+               session.session_id,
+               @password
+             )
+
+    assert %{rows: [[^credential_hash, ^recent_authenticated_at, ^recent_auth_expires_at]]} =
+             SQL.query!(
+               Repo,
+               "SELECT credential_hash, recent_authenticated_at, recent_auth_expires_at FROM sessions WHERE id = $1",
+               [session.session_id]
+             )
+
+    assert %{rows: [[0]]} =
+             SQL.query!(
+               Repo,
+               "SELECT count(*) FROM account_security_audits WHERE event_type = 'reauthenticated'",
+               []
+             )
+
+    Application.put_env(:keepling, :security_audit_writer, SecurityAudit)
+
+    assert {:error, :session_unavailable} =
+             Accounts.reauthenticate_session(
+               session.account_id,
+               Ecto.UUID.bingenerate(),
+               @password
+             )
+
+    assert %{rows: [[0]]} =
+             SQL.query!(
+               Repo,
+               "SELECT count(*) FROM account_security_audits WHERE event_type = 'reauthenticated'",
+               []
+             )
+  end
+
   @tag rate_limit: true
   test "best-effort audit failure preserves throttling and exposes closed degraded telemetry" do
     Application.put_env(:keepling, :security_audit_writer, FailingAuditWriter)
