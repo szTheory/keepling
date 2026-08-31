@@ -75,6 +75,55 @@ defmodule Keepling.Accounts do
 
   def consume_setup(_params), do: {:error, :setup_unavailable}
 
+  @spec change_timezone(String.t(), keyword()) ::
+          {:ok,
+           %{
+             timezone: String.t(),
+             today_view_revision: pos_integer(),
+             upcoming_view_revision: pos_integer(),
+             activity_view_revision: pos_integer()
+           }}
+          | {:error, :invalid_timezone | :account_unavailable | :infrastructure_failure}
+  def change_timezone(timezone, opts \\ []) do
+    accepted_at = opts |> Keyword.get(:accepted_at, utc_now()) |> truncate_utc!()
+
+    with true <- valid_timezone?(timezone),
+         {:ok, result} <-
+           Repo.transact(fn repo ->
+             {:ok, change_timezone_locked(repo, timezone, accepted_at)}
+           end) do
+      result
+    else
+      false -> {:error, :invalid_timezone}
+      {:error, _reason} -> {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  @spec account_date_at(DateTime.t()) ::
+          {:ok, Date.t()} | {:error, :account_unavailable | :infrastructure_failure}
+  def account_date_at(%DateTime{} = instant) do
+    case SQL.query(
+           Repo,
+           "SELECT timezone FROM accounts WHERE singleton_key = TRUE",
+           []
+         ) do
+      {:ok, %{rows: [[timezone]]}} when is_binary(timezone) ->
+        case DateTime.shift_zone(instant, timezone) do
+          {:ok, zoned} -> {:ok, DateTime.to_date(zoned)}
+          {:error, _reason} -> {:error, :infrastructure_failure}
+        end
+
+      {:ok, %{rows: []}} ->
+        {:error, :account_unavailable}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  end
+
   @spec valid_timezone?(term()) :: boolean()
   def valid_timezone?(timezone) when is_binary(timezone) do
     timezone == String.trim(timezone) and
@@ -83,6 +132,65 @@ defmodule Keepling.Accounts do
   end
 
   def valid_timezone?(_timezone), do: false
+
+  defp change_timezone_locked(repo, timezone, accepted_at) do
+    case SQL.query!(
+           repo,
+           """
+           SELECT id, timezone, today_view_revision, upcoming_view_revision,
+                  activity_view_revision
+           FROM accounts
+           WHERE singleton_key = TRUE
+           FOR UPDATE
+           """,
+           []
+         ).rows do
+      [[_account_id, ^timezone, today, upcoming, activity]] ->
+        {:ok, setting_result(timezone, today, upcoming, activity)}
+
+      [[account_id, _previous_timezone, _today, _upcoming, _activity]] ->
+        %{rows: [[today, upcoming, activity]]} =
+          SQL.query!(
+            repo,
+            """
+            UPDATE accounts
+            SET timezone = $2,
+                today_view_revision = today_view_revision + 1,
+                upcoming_view_revision = upcoming_view_revision + 1,
+                activity_view_revision = activity_view_revision + 1,
+                updated_at = $3
+            WHERE id = $1
+            RETURNING today_view_revision, upcoming_view_revision, activity_view_revision
+            """,
+            [account_id, timezone, accepted_at]
+          )
+
+        SQL.query!(
+          repo,
+          """
+          INSERT INTO account_security_audits (
+            account_id, event_type, event_version, accepted_at, inserted_at
+          )
+          VALUES ($1, 'timezone_changed', 1, $2, $2)
+          """,
+          [account_id, accepted_at]
+        )
+
+        {:ok, setting_result(timezone, today, upcoming, activity)}
+
+      [] ->
+        {:error, :account_unavailable}
+    end
+  end
+
+  defp setting_result(timezone, today, upcoming, activity) do
+    %{
+      activity_view_revision: activity,
+      timezone: timezone,
+      today_view_revision: today,
+      upcoming_view_revision: upcoming
+    }
+  end
 
   defp issue_setup_token_locked(repo, token_hash, now, expires_at) do
     %{rows: [[stored_hash, stored_expires_at, consumed_at, disabled_at]]} =
