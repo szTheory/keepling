@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "fields": ["notes", "title"],
+  "cases": [
+    {
+      "name": "disjoint notes edit rebases across a title change",
+      "current": {"notes": "", "title": "Current title"},
+      "base_values": {"notes": ""},
+      "requested_values": {"notes": "Keep the draft"},
+      "result": {
+        "outcome": "merged",
+        "values": {"notes": "Keep the draft", "title": "Current title"}
+      }
+    },
+    {
+      "name": "a value already equal to the request is satisfied",
+      "current": {"notes": "Already saved", "title": "Task"},
+      "base_values": {"notes": "Old notes"},
+      "requested_values": {"notes": "Already saved"},
+      "result": {
+        "outcome": "merged",
+        "values": {"notes": "Already saved", "title": "Task"}
+      }
+    },
+    {
+      "name": "overlapping title edit reports only the affected field",
+      "current": {"notes": "", "title": "Current title"},
+      "base_values": {"title": "Base title"},
+      "requested_values": {"title": "My title"},
+      "result": {
+        "outcome": "conflict",
+        "affected_fields": ["title"]
+      }
+    },
+    {
+      "name": "mixed edit reports overlap without losing the safe request",
+      "current": {"notes": "", "title": "Current title"},
+      "base_values": {"notes": "", "title": "Base title"},
+      "requested_values": {"notes": "Keep the draft", "title": "My title"},
+      "result": {
+        "outcome": "conflict",
+        "affected_fields": ["title"]
+      }
+    }
+  ]
+}
