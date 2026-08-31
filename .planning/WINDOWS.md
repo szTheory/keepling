@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 24
+open_count: 26
 waived_count: 0
 fixed_count: 0
-total_count: 24
-last_updated: 2026-08-31T16:02:33.734Z
+total_count: 26
+last_updated: 2026-08-31T22:38:58.894Z
 ---
 
 # Broken Windows Ledger
@@ -39,6 +39,8 @@ last_updated: 2026-08-31T16:02:33.734Z
 | 22 | KPL-01 | deviation | apps/web/src/index.css |  | Resolved the 1024px wide-shell overflow seam with a compact list column | open |  | 2026-08-31T16:02:33.525Z |  |
 | 23 | KPL-01 | deviation | apps/web/src/features/tasks/TaskEditor.tsx |  | Reconciled mounted editor state immediately after semantic undo acknowledgement | open |  | 2026-08-31T16:02:33.629Z |  |
 | 24 | KPL-01 | deviation | tooling/test-phase-1.sh |  | Pinned disposable migration, compile, and ExUnit lanes to MIX_ENV=test | open |  | 2026-08-31T16:02:33.734Z |  |
+| 25 | KPL-01 | lint-warning | apps/web/src/features/lists/TaskList.tsx | 190 | Pre-existing react-hooks/set-state-in-effect lint violation in TaskList | open |  | 2026-08-31T22:38:58.822Z |  |
+| 26 | KPL-01 | lint-warning | apps/web/src/features/lists/TrashList.tsx | 91 | Pre-existing react-hooks/set-state-in-effect lint violation in TrashList | open |  | 2026-08-31T22:38:58.894Z |  |
 
 ````json
 [
@@ -328,6 +330,30 @@ last_updated: 2026-08-31T16:02:33.734Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-31T16:02:33.734Z",
+    "resolved_at": null
+  },
+  {
+    "id": 25,
+    "kind": "lint-warning",
+    "phase": "KPL-01",
+    "file": "apps/web/src/features/lists/TaskList.tsx",
+    "line": 190,
+    "description": "Pre-existing react-hooks/set-state-in-effect lint violation in TaskList",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T22:38:58.822Z",
+    "resolved_at": null
+  },
+  {
+    "id": 26,
+    "kind": "lint-warning",
+    "phase": "KPL-01",
+    "file": "apps/web/src/features/lists/TrashList.tsx",
+    "line": 91,
+    "description": "Pre-existing react-hooks/set-state-in-effect lint violation in TrashList",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T22:38:58.894Z",
     "resolved_at": null
   }
 ]

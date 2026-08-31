@@ -17,7 +17,7 @@
 
 ### Identity and server authority
 
-- [ ] **SRV-01**: User can authenticate a personal account and authorize multiple owned devices without exposing server credentials to clients or agents.
+- [x] **SRV-01**: User can authenticate a personal account and authorize multiple owned devices without exposing server credentials to clients or agents.
 - [ ] **SRV-02**: User receives the same domain invariants through web, desktop, iPhone, API, and MCP entry points.
 - [ ] **SRV-03**: User-visible mutations are idempotent by mutation identity and return stable result or error contracts.
 - [ ] **SRV-04**: User can synchronize through an ordered, account-scoped change feed with opaque durable cursors and tombstones.
@@ -27,7 +27,7 @@
 ### Browser tracer
 
 - [ ] **WEB-01**: User can use an online browser interface to capture, view Inbox and Today, edit, complete, and reopen tasks against the real Phoenix/PostgreSQL system.
-- [ ] **WEB-02**: User sees clear empty, loading, validation, authentication-expired, stale, conflict, and retry states wherever those states apply.
+- [x] **WEB-02**: User sees clear empty, loading, validation, authentication-expired, stale, conflict, and retry states wherever those states apply.
 
 ### Mac desktop
 
@@ -68,7 +68,7 @@
 
 ### Quality and delivery
 
-- [ ] **QUAL-01**: Contributor receives deterministic tests for domain rules, long mutation sequences, persistence/migrations, API/contracts, adapters, browser behavior, Electron boundaries, native orchestration, and deployment recovery at the layer best able to catch each failure.
+- [x] **QUAL-01**: Contributor receives deterministic tests for domain rules, long mutation sequences, persistence/migrations, API/contracts, adapters, browser behavior, Electron boundaries, native orchestration, and deployment recovery at the layer best able to catch each failure.
 - [ ] **QUAL-02**: Contributor receives fast required CI lanes with parallelism, dependency caching, slow-test visibility, flake accountability, and cross-consumer fan-out for contract/token changes.
 - [ ] **QUAL-03**: Release promotion uses the exact revision and artifact previously tested; distribution jobs do not silently rebuild different bytes.
 - [ ] **QUAL-04**: Important screens have representative user-level coverage for meaningful populated, empty, loading, offline, denied, stale, conflict, partial, retry, and unrecoverable states.
