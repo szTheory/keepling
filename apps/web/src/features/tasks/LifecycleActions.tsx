@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import {
   prepareLifecycleTask,
@@ -26,6 +26,7 @@ type LifecycleActionsProps = {
     intent: InterruptedIntent,
     resume: (csrfToken: string) => Promise<void>,
   ) => void
+  onLockedChange?: (locked: boolean) => void
   task: TaskViewItem
 }
 
@@ -36,6 +37,7 @@ function LifecycleActions({
   disabled = false,
   onAcknowledged,
   onAuthenticationRequired,
+  onLockedChange,
   task,
 }: LifecycleActionsProps) {
   const action: LifecycleAction = task.completedAt ? 'reopen' : 'complete'
@@ -47,6 +49,8 @@ function LifecycleActions({
   const label = action === 'complete' ? 'Complete' : 'Reopen'
   const pendingLabel = action === 'complete' ? 'Completing' : 'Reopening'
 
+  useEffect(() => () => onLockedChange?.(false), [onLockedChange])
+
   const settle = async (exact: ReturnType<typeof createTaskSubmission>) => {
     const state = exact.snapshot
     if (state.kind === 'acknowledged') {
@@ -54,16 +58,19 @@ function LifecycleActions({
       setRecoveryState(null)
       setSubmission(null)
       await onAcknowledged({ acknowledgement: state.acknowledgement, action, task })
+      onLockedChange?.(false)
     } else if (state.kind === 'conflict') {
       exactSubmission.current = null
       setRecoveryState(null)
       setSubmission(null)
       setRecovery('conflict')
+      onLockedChange?.(false)
     } else if (state.kind === 'rejected') {
       exactSubmission.current = null
       setRecoveryState(null)
       setSubmission(null)
       setRecovery('generic')
+      onLockedChange?.(false)
     }
   }
 
@@ -79,6 +86,7 @@ function LifecycleActions({
   }
 
   const begin = () => {
+    if (disabled) return
     const nextSubmission =
       submission ?? {
         expectedRevision: task.revision,
@@ -86,6 +94,7 @@ function LifecycleActions({
         taskId: task.id,
       }
     setSubmission(nextSubmission)
+    onLockedChange?.(true)
     void run(nextSubmission)
   }
 

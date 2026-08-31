@@ -51,6 +51,27 @@ const page = (items: readonly unknown[], overrides: Record<string, unknown> = {}
   ...overrides,
 })
 
+const completionAcknowledgement = (mutationId: string) => ({
+  mutation_id: mutationId,
+  outcome: 'accepted',
+  revision: 2,
+  snapshot: {
+    captured_at: '2026-08-31T04:00:00.000000Z',
+    completed_at: '2026-08-31T12:00:00.000000Z',
+    deadline_on: null,
+    id: '11111111-1111-4111-8111-111111111111',
+    inbox_state: 'inbox',
+    notes: '',
+    planned_on: '2026-08-31',
+    project: null,
+    revision: 2,
+    tags: [],
+    title: 'Call dentist',
+  },
+  task_id: '11111111-1111-4111-8111-111111111111',
+  warnings: [],
+})
+
 afterEach(() => {
   vi.restoreAllMocks()
   window.history.replaceState({}, '', '/')
@@ -299,6 +320,75 @@ describe('routed task lists', () => {
 
     const appended = await screen.findByRole('link', { name: 'Buy stamps' })
     await waitFor(() => expect(appended).toHaveFocus())
+  })
+
+  it('finishes pagination before allowing lifecycle settlement to remove a row', async () => {
+    const pagination = deferred<Response>()
+    const appended = item({
+      id: '22222222-2222-4222-8222-222222222222',
+      title: 'Buy stamps',
+    })
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse(page([item()], { next_cursor: 'opaque-page-1' })))
+      .mockImplementationOnce(() => pagination.promise)
+      .mockImplementationOnce(async (_input, init) => {
+        const request = JSON.parse(String(init?.body)) as { mutation_id: string }
+        return jsonResponse(completionAcknowledgement(request.mutation_id))
+      })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(<TaskList csrfToken="csrf" view="inbox" />)
+    await screen.findByRole('link', { name: 'Call dentist' })
+    await user.click(screen.getByRole('button', { name: 'Load more tasks' }))
+
+    const complete = screen.getByRole('button', { name: 'Complete “Call dentist”' })
+    expect(complete).toBeDisabled()
+    await user.click(complete)
+    expect(fetchMock.mock.calls.filter(([url]) => String(url) === '/api/v1/commands/complete-task')).toHaveLength(0)
+
+    pagination.resolve(jsonResponse(page([appended])))
+    await screen.findByRole('link', { name: 'Buy stamps' })
+    await user.click(screen.getByRole('button', { name: 'Complete “Call dentist”' }))
+
+    const inbox = await screen.findByRole('list', { name: 'Inbox tasks' })
+    await waitFor(() => expect(within(inbox).queryByRole('link', { name: 'Call dentist' })).not.toBeInTheDocument())
+    expect(within(inbox).getByRole('link', { name: 'Buy stamps' })).toBeInTheDocument()
+  })
+
+  it('finishes lifecycle settlement before allowing pagination to append rows', async () => {
+    const completion = deferred<Response>()
+    const appended = item({
+      id: '22222222-2222-4222-8222-222222222222',
+      title: 'Buy stamps',
+    })
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse(page([item()], { next_cursor: 'opaque-page-1' })))
+      .mockImplementationOnce(() => completion.promise)
+      .mockResolvedValueOnce(jsonResponse(page([appended])))
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(<TaskList csrfToken="csrf" view="inbox" />)
+    await user.click(await screen.findByRole('button', { name: 'Complete “Call dentist”' }))
+
+    const loadMore = screen.getByRole('button', { name: 'Load more tasks' })
+    expect(loadMore).toBeDisabled()
+    await user.click(loadMore)
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+
+    const request = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body)) as {
+      mutation_id: string
+    }
+    completion.resolve(jsonResponse(completionAcknowledgement(request.mutation_id)))
+    await waitFor(() => expect(loadMore).toBeEnabled())
+    await user.click(loadMore)
+
+    const inbox = await screen.findByRole('list', { name: 'Inbox tasks' })
+    expect(within(inbox).queryByRole('link', { name: 'Call dentist' })).not.toBeInTheDocument()
+    expect(within(inbox).getByRole('link', { name: 'Buy stamps' })).toBeInTheDocument()
   })
 
   it('globally locks Today moves and looks up the original identity after response loss', async () => {

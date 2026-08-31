@@ -131,6 +131,7 @@ const swap = (items: readonly TaskViewItem[], taskId: string, direction: 'earlie
 function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) {
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [updating, setUpdating] = useState(false)
+  const [lifecycleLocked, setLifecycleLocked] = useState(false)
   const [loadMoreError, setLoadMoreError] = useState<'background' | 'stale' | null>(null)
   const [movingTaskId, setMovingTaskId] = useState<string | null>(null)
   const [moveError, setMoveError] = useState<
@@ -196,7 +197,13 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
   }, [load])
 
   const loadMore = async () => {
-    if (state.kind !== 'ready' || !state.page.nextCursor) return
+    if (
+      state.kind !== 'ready' ||
+      !state.page.nextCursor ||
+      updating ||
+      moveLocked ||
+      lifecycleLocked
+    ) return
     setUpdating(true)
     setLoadMoreError(null)
     const knownIds = new Set(state.page.items.map((task) => task.id))
@@ -204,10 +211,14 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
     try {
       const page = await getTaskView(view, state.page.nextCursor)
       const appended = page.items.filter((task) => !knownIds.has(task.id))
-      setState({
-        kind: 'ready',
-        page: { ...page, items: [...state.page.items, ...appended] },
-      })
+      setState((current) =>
+        current.kind === 'ready'
+          ? {
+              kind: 'ready',
+              page: { ...page, items: [...current.page.items, ...appended] },
+            }
+          : current,
+      )
       window.requestAnimationFrame(() => rowLinks.current.get(appended[0]?.id ?? '')?.focus())
     } catch (error) {
       const stale = error instanceof KeeplingApiError && error.problem.code === 'task_view_cursor_stale'
@@ -292,7 +303,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
   }
 
   const move = async (taskId: string, direction: 'earlier' | 'later') => {
-    if (todayMoveIsLocked(exactMove.current?.snapshot ?? null)) return
+    if (updating || lifecycleLocked || todayMoveIsLocked(exactMove.current?.snapshot ?? null)) return
     if (state.kind !== 'ready' || state.page.orderRevision === null || !csrfToken) return
     const submission: TodayMoveSubmission = {
       direction,
@@ -382,10 +393,17 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
         revision: acknowledgement.revision,
         title: acknowledgement.snapshot.title,
       }
-      setState({
-        kind: 'ready',
-        page: { ...state.page, items: previousItems.filter((item) => item.id !== task.id) },
-      })
+      setState((current) =>
+        current.kind === 'ready'
+          ? {
+              kind: 'ready',
+              page: {
+                ...current.page,
+                items: current.page.items.filter((item) => item.id !== task.id),
+              },
+            }
+          : current,
+      )
       setCompletedToday((items) => [completedTask, ...items.filter((item) => item.id !== task.id)])
       setAnnouncement('Task completed. Moved to Completed today.')
       focusAfterRemoval(previousItems, task.id)
@@ -436,7 +454,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
             <button
               aria-label={`Move earlier “${task.title}”`}
               className="min-h-11 px-2 text-sm font-semibold text-primary underline"
-              disabled={moveLocked}
+              disabled={moveLocked || updating || lifecycleLocked}
               onClick={() => void move(task.id, 'earlier')}
               type="button"
             >
@@ -445,7 +463,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
             <button
               aria-label={`Move later “${task.title}”`}
               className="min-h-11 px-2 text-sm font-semibold text-primary underline"
-              disabled={moveLocked}
+              disabled={moveLocked || updating || lifecycleLocked}
               onClick={() => void move(task.id, 'later')}
               type="button"
             >
@@ -456,9 +474,10 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
           {csrfToken ? (
             <LifecycleActions
               csrfToken={csrfToken}
-              disabled={moveLocked}
+              disabled={moveLocked || updating || lifecycleLocked}
               onAcknowledged={reconcileLifecycle}
               onAuthenticationRequired={onAuthenticationRequired}
+              onLockedChange={setLifecycleLocked}
               task={task}
             />
           ) : null}
@@ -570,7 +589,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
         {updating ? <p className="mt-4" role="status">Updating…</p> : null}
 
         {state.kind === 'ready' && state.page.nextCursor && !loadMoreError ? (
-          <button className="mt-6 min-h-11 font-semibold text-primary underline" disabled={moveLocked || updating} onClick={() => void loadMore()} type="button">
+          <button className="mt-6 min-h-11 font-semibold text-primary underline" disabled={moveLocked || updating || lifecycleLocked} onClick={() => void loadMore()} type="button">
             Load more tasks
           </button>
         ) : null}
