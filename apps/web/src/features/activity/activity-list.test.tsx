@@ -73,6 +73,9 @@ const page = (items: readonly unknown[], nextCursor: string | null) => ({
   next_cursor: nextCursor,
 })
 
+const activitySentence = (sentence: string) =>
+  screen.getByText((_, element) => element?.tagName === 'P' && element.textContent === sentence)
+
 afterEach(() => {
   vi.unstubAllGlobals()
   window.history.replaceState({}, '', '/')
@@ -81,11 +84,12 @@ afterEach(() => {
 describe('task activity', () => {
   it('renders hostile changes as compact plain text with exact zoned time and disclosures', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(page([item], null))))
+    const user = userEvent.setup()
 
     render(<ActivityList taskId={taskId} />)
 
     expect(await screen.findByRole('heading', { name: 'Activity' })).toBeVisible()
-    expect(screen.getByText('You updated task details.')).toBeVisible()
+    expect(activitySentence('You updated task details.')).toBeVisible()
     expect(screen.getByText('Accepted')).toBeVisible()
 
     const time = screen.getByText(/Aug 30, 2026.*EDT/)
@@ -101,6 +105,8 @@ describe('task activity', () => {
 
     const technical = screen.getByText('Technical details').closest('details')
     expect(technical).not.toHaveAttribute('open')
+    await user.click(screen.getByText('Technical details'))
+    expect(technical).toHaveAttribute('open')
     expect(within(technical as HTMLElement).getByText('Revision 1 → 2')).toBeInTheDocument()
     expect(within(technical as HTMLElement).getByText(mutationId)).toBeInTheDocument()
     expect(
@@ -122,7 +128,7 @@ describe('task activity', () => {
     await user.click(await screen.findByRole('button', { name: 'Load earlier activity' }))
 
     await waitFor(() =>
-      expect(screen.getByText('You captured this task.').closest('li')).toHaveFocus(),
+      expect(activitySentence('You captured this task.').closest('li')).toHaveFocus(),
     )
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
@@ -182,7 +188,7 @@ describe('task activity', () => {
       'This view changed before more items could load.',
     )
     expect(screen.getByRole('button', { name: 'Refresh view' })).toBeVisible()
-    expect(screen.getByText('You updated task details.')).toBeVisible()
+    expect(activitySentence('You updated task details.')).toBeVisible()
   })
 
   it('composes history into the canonical task route', async () => {
@@ -213,6 +219,6 @@ describe('task activity', () => {
 
     expect(await screen.findByRole('heading', { name: 'Edit task' })).toBeVisible()
     expect(await screen.findByRole('heading', { name: 'Activity' })).toBeVisible()
-    expect(screen.getByText('You updated task details.')).toBeVisible()
+    expect(activitySentence('You updated task details.')).toBeVisible()
   })
 })

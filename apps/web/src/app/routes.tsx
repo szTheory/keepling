@@ -4,6 +4,7 @@ import LoginForm from '@/features/auth/LoginForm'
 import Reauthenticate, { type InterruptedIntent } from '@/features/auth/Reauthenticate'
 import RecoveryReset from '@/features/auth/RecoveryReset'
 import SetupForm from '@/features/auth/SetupForm'
+import ActivityList from '@/features/activity/ActivityList'
 import OrganizationFields, {
   OrganizationManager,
 } from '@/features/organizations/OrganizationFields'
@@ -136,13 +137,16 @@ function AppRoutes({
     return (
       <>
         {authenticatedContent ? <div className="hidden lg:block">{authenticatedContent}</div> : null}
-        <TaskEditor
-          csrfToken={csrfToken}
-          onAcknowledged={onAcknowledged}
-          onAuthenticationRequired={onAuthenticationRequired}
-          onNavigate={navigate}
-          taskId={taskId}
-        />
+        <div className="min-h-screen bg-card [&>main]:!static [&>main]:!min-h-0 [&>main]:!min-w-0 [&>main]:!w-auto [&>main]:!overflow-visible [&>main]:!border-0 lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:w-[calc(100%-41.5rem)] lg:min-w-[30rem] lg:overflow-y-auto lg:border-l lg:border-border">
+          <TaskEditor
+            csrfToken={csrfToken}
+            onAcknowledged={onAcknowledged}
+            onAuthenticationRequired={onAuthenticationRequired}
+            onNavigate={navigate}
+            taskId={taskId}
+          />
+          <ActivityList taskId={taskId} />
+        </div>
       </>
     )
   }

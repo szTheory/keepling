@@ -2,6 +2,8 @@ import type { components } from '../../../../packages/contracts/generated/keepli
 
 type WireCaptureTaskCommand = components['schemas']['CaptureTaskCommand']
 type WireAssignTaskOrganizationsCommand = components['schemas']['AssignTaskOrganizationsCommand']
+type WireActivityItem = components['schemas']['ActivityItem']
+type WireActivityPage = components['schemas']['ActivityPage']
 type WireClarifyTaskCommand = components['schemas']['ClarifyTaskCommand']
 type WireCommandAcknowledgement = components['schemas']['CommandAcknowledgement']
 type WireCreateOrganizationCommand = components['schemas']['CreateOrganizationCommand']
@@ -50,6 +52,70 @@ type BrowserOrganization = {
   kind: 'project' | 'tag'
   name: string
   revision: number
+}
+
+type ActivityChange =
+  | {
+      field: 'deadline_on' | 'planned_on'
+      kind: 'date'
+      new: string | null
+      old: string | null
+    }
+  | {
+      field: 'completed_at' | 'trashed_at'
+      kind: 'instant'
+      new: string | null
+      old: string | null
+    }
+  | {
+      field: 'project'
+      kind: 'organization'
+      new: TaskOrganizationReference | null
+      old: TaskOrganizationReference | null
+    }
+  | {
+      field: 'tags'
+      kind: 'organizations'
+      new: readonly TaskOrganizationReference[]
+      old: readonly TaskOrganizationReference[]
+    }
+  | {
+      field: 'inbox_state'
+      kind: 'state'
+      new: string | null
+      old: string | null
+    }
+  | {
+      field: 'notes' | 'title'
+      kind: 'text'
+      new: string | null
+      old: string | null
+    }
+
+type TaskActivity = {
+  acceptedAt: string
+  activityId: number
+  actor: {
+    label: string
+    principal: 'account_owner' | 'authorized_grant'
+    type: 'agent' | 'user'
+  }
+  changes: readonly ActivityChange[]
+  clientKind: 'electron' | 'iphone' | 'mcp' | 'web'
+  fromRevision: number | null
+  mutationId: string
+  outcome: 'accepted'
+  recoveryState: 'available' | 'expired' | 'not_available' | 'stale' | 'undone'
+  toRevision: number
+  type: WireActivityItem['type']
+  undoneActivityId: number | null
+  version: 1
+}
+
+type TaskActivityPage = {
+  accountTimezone: string
+  items: readonly TaskActivity[]
+  nextCursor: string | null
 }
 
 type CaptureTaskSubmission = {
@@ -332,6 +398,40 @@ const mapOrganization = (
   revision: organization.revision,
 })
 
+const mapActivityChange = (change: WireActivityItem['changes'][number]): ActivityChange => {
+  if (change.kind === 'organization') {
+    return {
+      ...change,
+      new: change.new == null ? null : { ...change.new },
+      old: change.old == null ? null : { ...change.old },
+    }
+  }
+  if (change.kind === 'organizations') {
+    return {
+      ...change,
+      new: change.new.map((organization) => ({ ...organization })),
+      old: change.old.map((organization) => ({ ...organization })),
+    }
+  }
+  return { ...change }
+}
+
+const mapActivity = (activity: WireActivityItem): TaskActivity => ({
+  acceptedAt: activity.accepted_at,
+  activityId: activity.activity_id,
+  actor: { ...activity.actor },
+  changes: activity.changes.map(mapActivityChange),
+  clientKind: activity.client_kind,
+  fromRevision: activity.from_revision,
+  mutationId: activity.mutation_id,
+  outcome: activity.outcome,
+  recoveryState: activity.recovery_state,
+  toRevision: activity.to_revision,
+  type: activity.type,
+  undoneActivityId: activity.undone_activity_id,
+  version: activity.version,
+})
+
 const mapOrganizationAcknowledgement = (
   acknowledgement: WireOrganizationAcknowledgement,
 ): OrganizationAcknowledgement => ({
@@ -371,6 +471,30 @@ const getOrganizations = async (): Promise<readonly BrowserOrganization[]> => {
   )
 
   return response.organizations.map(mapOrganization)
+}
+
+const getTaskActivity = async (
+  taskId: string,
+  cursor?: string,
+): Promise<TaskActivityPage> => {
+  const query = new URLSearchParams({ limit: '20' })
+  if (cursor !== undefined) query.set('cursor', cursor)
+
+  const response = await readJson<WireActivityPage>(
+    await fetch(
+      `/api/v1/tasks/${encodeURIComponent(taskId)}/activity?${query.toString()}`,
+      {
+        credentials: 'same-origin',
+        headers: { accept: 'application/json' },
+      },
+    ),
+  )
+
+  return {
+    accountTimezone: response.account_timezone,
+    items: response.items.map(mapActivity),
+    nextCursor: response.next_cursor,
+  }
 }
 
 const captureTask = async (
@@ -572,6 +696,7 @@ export {
   getMutation,
   getOrganizations,
   getSession,
+  getTaskActivity,
   editTask,
   listSessions,
   login,
@@ -584,6 +709,7 @@ export {
   updateSession,
   unarchiveOrganization,
   type AssignTaskOrganizationsSubmission,
+  type ActivityChange,
   type AuthenticationTransition,
   type BrowserOrganization,
   type BrowserSession,
@@ -601,5 +727,7 @@ export {
   type RenameOrganizationSubmission,
   type ReturnToInboxSubmission,
   type TaskDetailValues,
+  type TaskActivity,
+  type TaskActivityPage,
   type TaskOrganizationReference,
 }
