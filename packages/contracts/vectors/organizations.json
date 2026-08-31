@@ -1,0 +1,30 @@
+{
+  "name_equivalence_version": 1,
+  "name_equivalence": [
+    {
+      "input": "  Home  ",
+      "display_name": "Home",
+      "key": "home"
+    },
+    {
+      "input": "Cafe\u0301",
+      "display_name": "Café",
+      "key": "café"
+    },
+    {
+      "input": "Straße",
+      "display_name": "Straße",
+      "key": "strasse"
+    }
+  ],
+  "archive": {
+    "project_with_active_unfinished_tasks": "project_archive_blocked",
+    "tag_with_assignments": "accepted",
+    "unarchive_with_active_name_collision": "active_organization_name_collision"
+  },
+  "assignment": {
+    "project_cardinality": "zero_or_one",
+    "tag_cardinality": "zero_or_many",
+    "writes_address": "stable_ids"
+  }
+}

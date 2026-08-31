@@ -52,6 +52,7 @@ defmodule KeeplingWeb.Router do
     get "/session", CommandController, :session
     get "/sessions", AuthController, :sessions
     get "/inbox", CommandController, :inbox
+    get "/organizations", CommandController, :organizations
     get "/mutations/:mutation_id", CommandController, :mutation
   end
 
@@ -62,6 +63,15 @@ defmodule KeeplingWeb.Router do
     post "/commands/edit-task", CommandController, :edit_task
     post "/commands/clarify-task", CommandController, :clarify_task
     post "/commands/return-to-inbox", CommandController, :return_to_inbox
+    post "/commands/create-organization", CommandController, :create_organization
+    post "/commands/rename-organization", CommandController, :rename_organization
+    post "/commands/archive-organization", CommandController, :archive_organization
+    post "/commands/unarchive-organization", CommandController, :unarchive_organization
+
+    post "/commands/assign-task-organizations",
+         CommandController,
+         :assign_task_organizations
+
     post "/reauthenticate", AuthController, :reauthenticate
     post "/logout", AuthController, :logout
     patch "/sessions/:id", AuthController, :update_session

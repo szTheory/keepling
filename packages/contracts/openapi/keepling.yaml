@@ -233,6 +233,19 @@ paths:
                 $ref: '#/components/schemas/InboxResponse'
         '401':
           $ref: '#/components/responses/ProblemResponse'
+  /organizations:
+    get:
+      operationId: listOrganizations
+      summary: Read account-scoped projects and tags with archived state
+      responses:
+        '200':
+          description: Authoritative project and tag projection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationsResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
   /commands/capture-task:
     post:
       operationId: captureTask
@@ -353,6 +366,155 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
         '503':
           $ref: '#/components/responses/ProblemResponse'
+  /commands/create-organization:
+    post:
+      operationId: createOrganization
+      summary: Create a stable-ID project or tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganizationCommand'
+      responses:
+        '201':
+          description: Exact stored organization acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/rename-organization:
+    post:
+      operationId: renameOrganization
+      summary: Rename a project or tag by stable identity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RenameOrganizationCommand'
+      responses:
+        '200':
+          description: Exact stored organization acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/archive-organization:
+    post:
+      operationId: archiveOrganization
+      summary: Archive a project or tag by stable identity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationLifecycleCommand'
+      responses:
+        '200':
+          description: Exact stored organization acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/unarchive-organization:
+    post:
+      operationId: unarchiveOrganization
+      summary: Unarchive a project or tag by stable identity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationLifecycleCommand'
+      responses:
+        '200':
+          description: Exact stored organization acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/assign-task-organizations:
+    post:
+      operationId: assignTaskOrganizations
+      summary: Assign one project and many flat tags by stable identity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignTaskOrganizationsCommand'
+      responses:
+        '200':
+          description: Exact stored task assignment acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /mutations/{mutation_id}:
     get:
       operationId: getMutation
@@ -369,13 +531,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommandAcknowledgement'
+                $ref: '#/components/schemas/MutationResult'
         '200':
           description: Original stored update acknowledgement
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CommandAcknowledgement'
+                $ref: '#/components/schemas/MutationResult'
         '401':
           $ref: '#/components/responses/ProblemResponse'
         '409':
@@ -395,6 +557,30 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    AssignTaskOrganizationsCommand:
+      type: object
+      additionalProperties: false
+      required:
+        - base_values
+        - expected_revision
+        - fields
+        - mutation_id
+        - task_id
+        - version
+      properties:
+        base_values:
+          $ref: '#/components/schemas/OrganizationAssignmentValues'
+        expected_revision:
+          $ref: '#/components/schemas/Revision'
+        fields:
+          $ref: '#/components/schemas/OrganizationAssignmentValues'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        version:
+          type: integer
+          const: 1
     AuthTransitionResponse:
       type: object
       additionalProperties: false
@@ -461,6 +647,27 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Warning'
+    CreateOrganizationCommand:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - mutation_id
+        - name
+        - organization_id
+        - version
+      properties:
+        kind:
+          $ref: '#/components/schemas/OrganizationKind'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        name:
+          $ref: '#/components/schemas/OrganizationName'
+        organization_id:
+          $ref: '#/components/schemas/OrganizationIdentity'
+        version:
+          type: integer
+          const: 1
     InboxResponse:
       type: object
       additionalProperties: false
@@ -521,6 +728,113 @@ components:
       type: string
       format: uuid
       description: Client-generated identity retained across exact retries.
+    MutationResult:
+      oneOf:
+        - $ref: '#/components/schemas/CommandAcknowledgement'
+        - $ref: '#/components/schemas/OrganizationAcknowledgement'
+    OrganizationAcknowledgement:
+      type: object
+      additionalProperties: false
+      required:
+        - mutation_id
+        - organization_id
+        - outcome
+        - revision
+        - snapshot
+      properties:
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        organization_id:
+          $ref: '#/components/schemas/OrganizationIdentity'
+        outcome:
+          type: string
+          enum:
+            - accepted
+            - already_satisfied
+        revision:
+          $ref: '#/components/schemas/Revision'
+        snapshot:
+          $ref: '#/components/schemas/OrganizationSnapshot'
+    OrganizationAssignmentValues:
+      type: object
+      additionalProperties: false
+      required:
+        - project_id
+        - tag_ids
+      properties:
+        project_id:
+          anyOf:
+            - $ref: '#/components/schemas/OrganizationIdentity'
+            - type: 'null'
+        tag_ids:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/OrganizationIdentity'
+    OrganizationIdentity:
+      type: string
+      format: uuid
+    OrganizationKind:
+      type: string
+      enum:
+        - project
+        - tag
+    OrganizationLifecycleCommand:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_revision
+        - mutation_id
+        - organization_id
+        - version
+      properties:
+        expected_revision:
+          $ref: '#/components/schemas/Revision'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        organization_id:
+          $ref: '#/components/schemas/OrganizationIdentity'
+        version:
+          type: integer
+          const: 1
+    OrganizationName:
+      type: string
+      minLength: 1
+      maxLength: 200
+      description: Display text; active equivalence version 1 is NFC, outer trim, then Unicode case-fold.
+    OrganizationsResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - organizations
+      properties:
+        organizations:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrganizationSnapshot'
+    OrganizationSnapshot:
+      type: object
+      additionalProperties: false
+      required:
+        - archived
+        - assignable
+        - id
+        - kind
+        - name
+        - revision
+      properties:
+        archived:
+          type: boolean
+        assignable:
+          type: boolean
+        id:
+          $ref: '#/components/schemas/OrganizationIdentity'
+        kind:
+          $ref: '#/components/schemas/OrganizationKind'
+        name:
+          $ref: '#/components/schemas/OrganizationName'
+        revision:
+          $ref: '#/components/schemas/Revision'
     Problem:
       type: object
       additionalProperties: false
@@ -556,9 +870,35 @@ components:
             enum:
               - inbox_state
               - notes
+              - project_id
+              - tag_ids
               - title
+        active_unfinished_task_count:
+          type: integer
+          minimum: 0
         current_revision:
           $ref: '#/components/schemas/Revision'
+    RenameOrganizationCommand:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_revision
+        - mutation_id
+        - name
+        - organization_id
+        - version
+      properties:
+        expected_revision:
+          $ref: '#/components/schemas/Revision'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        name:
+          $ref: '#/components/schemas/OrganizationName'
+        organization_id:
+          $ref: '#/components/schemas/OrganizationIdentity'
+        version:
+          type: integer
+          const: 1
     Revision:
       type: integer
       format: int64
@@ -737,7 +1077,9 @@ components:
         - id
         - inbox_state
         - notes
+        - project
         - revision
+        - tags
         - title
       properties:
         captured_at:
@@ -752,10 +1094,32 @@ components:
             - clarified
         notes:
           type: string
+        project:
+          anyOf:
+            - $ref: '#/components/schemas/TaskOrganizationReference'
+            - type: 'null'
         revision:
           $ref: '#/components/schemas/Revision'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskOrganizationReference'
         title:
           type: string
+    TaskOrganizationReference:
+      type: object
+      additionalProperties: false
+      required:
+        - archived
+        - id
+        - name
+      properties:
+        archived:
+          type: boolean
+        id:
+          $ref: '#/components/schemas/OrganizationIdentity'
+        name:
+          $ref: '#/components/schemas/OrganizationName'
     TrackedSession:
       type: object
       additionalProperties: false

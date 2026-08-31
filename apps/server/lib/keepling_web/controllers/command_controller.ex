@@ -23,6 +23,13 @@ defmodule KeeplingWeb.CommandController do
     end
   end
 
+  def organizations(conn, _params) do
+    case Commands.list_organizations(context(conn), CommandStore) do
+      {:ok, organizations} -> json(conn, %{organizations: organizations})
+      {:error, :infrastructure_failure} -> infrastructure_problem(conn)
+    end
+  end
+
   def capture_task(conn, params) do
     with {:ok, command} <- decode_capture(params),
          {:ok, result} <- Commands.dispatch(command, context(conn), CommandStore) do
@@ -41,6 +48,22 @@ defmodule KeeplingWeb.CommandController do
 
   def return_to_inbox(conn, params),
     do: dispatch_task_command(conn, decode_return_to_inbox(params))
+
+  def create_organization(conn, params),
+    do: dispatch_task_command(conn, decode_create_organization(params))
+
+  def rename_organization(conn, params),
+    do: dispatch_task_command(conn, decode_rename_organization(params))
+
+  def archive_organization(conn, params),
+    do: dispatch_task_command(conn, decode_organization_lifecycle(params, :archive_organization))
+
+  def unarchive_organization(conn, params),
+    do:
+      dispatch_task_command(conn, decode_organization_lifecycle(params, :unarchive_organization))
+
+  def assign_task_organizations(conn, params),
+    do: dispatch_task_command(conn, decode_task_organizations(params))
 
   def mutation(conn, %{"mutation_id" => mutation_id}) do
     with {:ok, _uuid} <- Ecto.UUID.cast(mutation_id),
@@ -172,6 +195,147 @@ defmodule KeeplingWeb.CommandController do
       _ -> {:error, :invalid_command}
     end
   end
+
+  defp decode_create_organization(params) do
+    allowed_keys = ["kind", "mutation_id", "name", "organization_id", "version"]
+
+    with true <- Enum.sort(Map.keys(params)) == allowed_keys,
+         %{
+           "kind" => kind,
+           "mutation_id" => mutation_id,
+           "name" => name,
+           "organization_id" => organization_id,
+           "version" => 1
+         }
+         when kind in ["project", "tag"] and is_binary(name) <- params,
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, _organization_uuid} <- Ecto.UUID.cast(organization_id) do
+      {:ok,
+       %{
+         kind: String.to_existing_atom(kind),
+         mutation_id: mutation_id,
+         name: name,
+         organization_id: organization_id,
+         type: :create_organization,
+         version: 1
+       }}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
+  defp decode_rename_organization(params) do
+    allowed_keys = ["expected_revision", "mutation_id", "name", "organization_id", "version"]
+
+    with true <- Enum.sort(Map.keys(params)) == allowed_keys,
+         %{
+           "expected_revision" => expected_revision,
+           "mutation_id" => mutation_id,
+           "name" => name,
+           "organization_id" => organization_id,
+           "version" => 1
+         }
+         when is_binary(name) <- params,
+         true <- is_integer(expected_revision) and expected_revision >= 1,
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, _organization_uuid} <- Ecto.UUID.cast(organization_id) do
+      {:ok,
+       %{
+         expected_revision: expected_revision,
+         mutation_id: mutation_id,
+         name: name,
+         organization_id: organization_id,
+         type: :rename_organization,
+         version: 1
+       }}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
+  defp decode_organization_lifecycle(params, type) do
+    allowed_keys = ["expected_revision", "mutation_id", "organization_id", "version"]
+
+    with true <- Enum.sort(Map.keys(params)) == allowed_keys,
+         %{
+           "expected_revision" => expected_revision,
+           "mutation_id" => mutation_id,
+           "organization_id" => organization_id,
+           "version" => 1
+         } <- params,
+         true <- is_integer(expected_revision) and expected_revision >= 1,
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, _organization_uuid} <- Ecto.UUID.cast(organization_id) do
+      {:ok,
+       %{
+         expected_revision: expected_revision,
+         mutation_id: mutation_id,
+         organization_id: organization_id,
+         type: type,
+         version: 1
+       }}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
+  defp decode_task_organizations(params) do
+    allowed_keys = [
+      "base_values",
+      "expected_revision",
+      "fields",
+      "mutation_id",
+      "task_id",
+      "version"
+    ]
+
+    with true <- Enum.sort(Map.keys(params)) == allowed_keys,
+         %{
+           "base_values" => base_values,
+           "expected_revision" => expected_revision,
+           "fields" => fields,
+           "mutation_id" => mutation_id,
+           "task_id" => task_id,
+           "version" => 1
+         } <- params,
+         true <- is_integer(expected_revision) and expected_revision >= 1,
+         {:ok, decoded_base_values} <- decode_assignment_values(base_values),
+         {:ok, decoded_fields} <- decode_assignment_values(fields),
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, _task_uuid} <- Ecto.UUID.cast(task_id) do
+      {:ok,
+       %{
+         base_values: decoded_base_values,
+         expected_revision: expected_revision,
+         fields: decoded_fields,
+         mutation_id: mutation_id,
+         task_id: task_id,
+         type: :assign_task_organizations,
+         version: 1
+       }}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
+  defp decode_assignment_values(%{"project_id" => project_id, "tag_ids" => tag_ids} = values)
+       when map_size(values) == 2 and (is_nil(project_id) or is_binary(project_id)) and
+              is_list(tag_ids) do
+    with :ok <- cast_optional_uuid(project_id),
+         true <- Enum.all?(tag_ids, &match?({:ok, _uuid}, Ecto.UUID.cast(&1))),
+         true <- length(tag_ids) == MapSet.size(MapSet.new(tag_ids)) do
+      {:ok, %{project_id: project_id, tag_ids: Enum.sort(tag_ids)}}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
+  defp decode_assignment_values(_values), do: {:error, :invalid_command}
+
+  defp cast_optional_uuid(nil), do: :ok
+
+  defp cast_optional_uuid(value),
+    do: if(match?({:ok, _uuid}, Ecto.UUID.cast(value)), do: :ok, else: :error)
 
   defp context(conn) do
     %{

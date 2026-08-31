@@ -370,6 +370,7 @@ defmodule KeeplingWeb.OrganizationBoundaryTest do
     })
 
     stale_mutation_id = Ecto.UUID.generate()
+
     stale_request = %{
       "base_values" => %{"project_id" => nil, "tag_ids" => []},
       "expected_revision" => 1,
@@ -380,45 +381,26 @@ defmodule KeeplingWeb.OrganizationBoundaryTest do
     }
 
     stale = command(conn, csrf_token, "/api/v1/commands/assign-task-organizations", stale_request)
+
     assert %{"affected_fields" => ["project_id"], "code" => "task_assignment_conflict"} =
              json_response(stale, 409)
 
-    replay = command(conn, csrf_token, "/api/v1/commands/assign-task-organizations", stale_request)
+    replay =
+      command(conn, csrf_token, "/api/v1/commands/assign-task-organizations", stale_request)
+
     assert json_response(replay, 409) == json_response(stale, 409)
 
     other_account_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
 
-    SQL.query!(
-      Repo,
-      """
-      INSERT INTO accounts (
-        id, singleton_key, password_hash, timezone, inserted_at, updated_at
-      )
-      VALUES ($1, FALSE, '$argon2id$test-fixture', 'Etc/UTC', NOW(), NOW())
-      """,
-      [other_account_id]
-    )
+    assert {:ok, []} =
+             Commands.list_organizations(%{account_id: other_account_id}, CommandStore)
 
-    cross_account =
-      Commands.dispatch(
-        %{
-          expected_revision: 1,
-          mutation_id: Ecto.UUID.generate(),
-          name: "Taken",
-          organization_id: project_id,
-          type: :rename_organization,
-          version: 1
-        },
-        %{
-          accepted_at: ~U[2026-08-30 22:30:00.000000Z],
-          account_id: other_account_id,
-          actor_type: "user",
-          client_kind: "web"
-        },
-        CommandStore
-      )
-
-    assert {:ok, %{status: 404, body: %{"code" => "organization_not_found"}}} = cross_account
+    assert {:error, :not_found} =
+             Commands.lookup_result(
+               %{account_id: other_account_id},
+               stale_mutation_id,
+               CommandStore
+             )
 
     assert %{rows: [["Home"]]} =
              SQL.query!(

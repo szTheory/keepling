@@ -4,6 +4,40 @@
  */
 
 export interface paths {
+    readonly "/commands/archive-organization": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Archive a project or tag by stable identity */
+        readonly post: operations["archiveOrganization"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/commands/assign-task-organizations": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Assign one project and many flat tags by stable identity */
+        readonly post: operations["assignTaskOrganizations"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/commands/capture-task": {
         readonly parameters: {
             readonly query?: never;
@@ -38,6 +72,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/commands/create-organization": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Create a stable-ID project or tag */
+        readonly post: operations["createOrganization"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/commands/edit-task": {
         readonly parameters: {
             readonly query?: never;
@@ -55,6 +106,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/commands/rename-organization": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Rename a project or tag by stable identity */
+        readonly post: operations["renameOrganization"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/commands/return-to-inbox": {
         readonly parameters: {
             readonly query?: never;
@@ -66,6 +134,23 @@ export interface paths {
         readonly put?: never;
         /** Explicitly restore canonical Inbox membership */
         readonly post: operations["returnToInbox"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/commands/unarchive-organization": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Unarchive a project or tag by stable identity */
+        readonly post: operations["unarchiveOrganization"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -132,6 +217,23 @@ export interface paths {
         };
         /** Look up the exact stored terminal result by mutation identity */
         readonly get: operations["getMutation"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/organizations": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Read account-scoped projects and tags with archived state */
+        readonly get: operations["listOrganizations"];
         readonly put?: never;
         readonly post?: never;
         readonly delete?: never;
@@ -266,6 +368,15 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        readonly AssignTaskOrganizationsCommand: {
+            readonly base_values: components["schemas"]["OrganizationAssignmentValues"];
+            readonly expected_revision: components["schemas"]["Revision"];
+            readonly fields: components["schemas"]["OrganizationAssignmentValues"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            /** @constant */
+            readonly version: 1;
+        };
         readonly AuthTransitionResponse: {
             readonly csrf_token: string;
             /** @enum {string} */
@@ -287,6 +398,14 @@ export interface components {
             readonly snapshot: components["schemas"]["TaskSnapshot"];
             readonly task_id: components["schemas"]["TaskIdentity"];
             readonly warnings: readonly components["schemas"]["Warning"][];
+        };
+        readonly CreateOrganizationCommand: {
+            readonly kind: components["schemas"]["OrganizationKind"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly name: components["schemas"]["OrganizationName"];
+            readonly organization_id: components["schemas"]["OrganizationIdentity"];
+            /** @constant */
+            readonly version: 1;
         };
         readonly EditTaskCommand: {
             readonly base_values: components["schemas"]["TaskDetailValues"];
@@ -314,8 +433,46 @@ export interface components {
          * @description Client-generated identity retained across exact retries.
          */
         readonly MutationIdentity: string;
+        readonly MutationResult: components["schemas"]["CommandAcknowledgement"] | components["schemas"]["OrganizationAcknowledgement"];
+        readonly OrganizationAcknowledgement: {
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly organization_id: components["schemas"]["OrganizationIdentity"];
+            /** @enum {string} */
+            readonly outcome: "accepted" | "already_satisfied";
+            readonly revision: components["schemas"]["Revision"];
+            readonly snapshot: components["schemas"]["OrganizationSnapshot"];
+        };
+        readonly OrganizationAssignmentValues: {
+            readonly project_id: components["schemas"]["OrganizationIdentity"] | null;
+            readonly tag_ids: readonly components["schemas"]["OrganizationIdentity"][];
+        };
+        /** Format: uuid */
+        readonly OrganizationIdentity: string;
+        /** @enum {string} */
+        readonly OrganizationKind: "project" | "tag";
+        readonly OrganizationLifecycleCommand: {
+            readonly expected_revision: components["schemas"]["Revision"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly organization_id: components["schemas"]["OrganizationIdentity"];
+            /** @constant */
+            readonly version: 1;
+        };
+        /** @description Display text; active equivalence version 1 is NFC, outer trim, then Unicode case-fold. */
+        readonly OrganizationName: string;
+        readonly OrganizationSnapshot: {
+            readonly archived: boolean;
+            readonly assignable: boolean;
+            readonly id: components["schemas"]["OrganizationIdentity"];
+            readonly kind: components["schemas"]["OrganizationKind"];
+            readonly name: components["schemas"]["OrganizationName"];
+            readonly revision: components["schemas"]["Revision"];
+        };
+        readonly OrganizationsResponse: {
+            readonly organizations: readonly components["schemas"]["OrganizationSnapshot"][];
+        };
         readonly Problem: {
-            readonly affected_fields?: readonly ("inbox_state" | "notes" | "title")[];
+            readonly active_unfinished_task_count?: number;
+            readonly affected_fields?: readonly ("inbox_state" | "notes" | "project_id" | "tag_ids" | "title")[];
             readonly code: string;
             readonly current_revision?: components["schemas"]["Revision"];
             readonly detail?: string;
@@ -339,6 +496,14 @@ export interface components {
             /** Format: password */
             readonly password: string;
             readonly token: string;
+            /** @constant */
+            readonly version: 1;
+        };
+        readonly RenameOrganizationCommand: {
+            readonly expected_revision: components["schemas"]["Revision"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly name: components["schemas"]["OrganizationName"];
+            readonly organization_id: components["schemas"]["OrganizationIdentity"];
             /** @constant */
             readonly version: 1;
         };
@@ -394,6 +559,11 @@ export interface components {
         };
         /** Format: uuid */
         readonly TaskIdentity: string;
+        readonly TaskOrganizationReference: {
+            readonly archived: boolean;
+            readonly id: components["schemas"]["OrganizationIdentity"];
+            readonly name: components["schemas"]["OrganizationName"];
+        };
         readonly TaskSnapshot: {
             /** Format: date-time */
             readonly captured_at: string;
@@ -401,7 +571,9 @@ export interface components {
             /** @enum {string} */
             readonly inbox_state: "inbox" | "clarified";
             readonly notes: string;
+            readonly project: components["schemas"]["TaskOrganizationReference"] | null;
             readonly revision: components["schemas"]["Revision"];
+            readonly tags: readonly components["schemas"]["TaskOrganizationReference"][];
             readonly title: string;
         };
         readonly TrackedSession: {
@@ -442,6 +614,67 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    readonly archiveOrganization: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["OrganizationLifecycleCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored organization acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["OrganizationAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly assignTaskOrganizations: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["AssignTaskOrganizationsCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored task assignment acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly captureTask: {
         readonly parameters: {
             readonly query?: never;
@@ -503,6 +736,36 @@ export interface operations {
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };
+    readonly createOrganization: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["CreateOrganizationCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored organization acknowledgement */
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["OrganizationAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly editTask: {
         readonly parameters: {
             readonly query?: never;
@@ -534,6 +797,37 @@ export interface operations {
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };
+    readonly renameOrganization: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["RenameOrganizationCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored organization acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["OrganizationAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly returnToInbox: {
         readonly parameters: {
             readonly query?: never;
@@ -554,6 +848,36 @@ export interface operations {
                 };
                 content: {
                     readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly unarchiveOrganization: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["OrganizationLifecycleCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored organization acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["OrganizationAcknowledgement"];
                 };
             };
             readonly 400: components["responses"]["ProblemResponse"];
@@ -657,7 +981,7 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                    readonly "application/json": components["schemas"]["MutationResult"];
                 };
             };
             /** @description Original stored accepted acknowledgement */
@@ -666,7 +990,7 @@ export interface operations {
                     readonly [name: string]: unknown;
                 };
                 content: {
-                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                    readonly "application/json": components["schemas"]["MutationResult"];
                 };
             };
             readonly 401: components["responses"]["ProblemResponse"];
@@ -674,6 +998,27 @@ export interface operations {
             readonly 409: components["responses"]["ProblemResponse"];
             readonly 422: components["responses"]["ProblemResponse"];
             readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly listOrganizations: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Authoritative project and tag projection */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["OrganizationsResponse"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
         };
     };
     readonly reauthenticate: {
