@@ -221,6 +221,12 @@ defmodule Keepling.Accounts.SetupTest do
     end
   end
 
+  @tag setup: true
+  test "vendored timezone data never starts a remote updater" do
+    assert Application.fetch_env(:tzdata, :autoupdate) == {:ok, :disabled}
+    refute Process.whereis(:tzdata_release_updater)
+  end
+
   defp inspect_setup_state do
     %{rows: [[token_hash, expires_at, consumed_at, disabled_at]]} =
       query!("SELECT token_hash, expires_at, consumed_at, disabled_at FROM account_setup")
