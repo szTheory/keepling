@@ -19,7 +19,7 @@ defmodule Keepling.Accounts.SetupTest do
   @tag setup: true
   test "operator issuance stores only a hash and setup atomically creates the sole account" do
     assert {:ok, issued} =
-             Accounts.issue_setup_token(now: @now, ttl_seconds: 900)
+             call(fn -> Accounts.issue_setup_token(now: @now, ttl_seconds: 900) end)
 
     assert is_binary(issued.token)
     assert byte_size(Base.url_decode64!(issued.token, padding: false)) == 32
@@ -28,12 +28,14 @@ defmodule Keepling.Accounts.SetupTest do
     assert inspect_setup_state().expires_at == ~U[2026-08-30 18:15:00.000000Z]
 
     assert {:ok, %{timezone: "America/New_York"}} =
-             Accounts.consume_setup(%{
-               token: issued.token,
-               password: "correct horse battery staple",
-               timezone: "America/New_York",
-               accepted_at: DateTime.add(@now, 60, :second)
-             })
+             call(fn ->
+               Accounts.consume_setup(%{
+                 token: issued.token,
+                 password: "correct horse battery staple",
+                 timezone: "America/New_York",
+                 accepted_at: DateTime.add(@now, 60, :second)
+               })
+             end)
 
     assert %{accounts: 1, disabled: true} = setup_counts()
 
@@ -45,40 +47,49 @@ defmodule Keepling.Accounts.SetupTest do
     assert timezone == "America/New_York"
 
     assert {:error, :setup_unavailable} =
-             Accounts.consume_setup(%{
-               token: issued.token,
-               password: "another correct horse battery staple",
-               timezone: "America/Chicago",
-               accepted_at: DateTime.add(@now, 120, :second)
-             })
+             call(fn ->
+               Accounts.consume_setup(%{
+                 token: issued.token,
+                 password: "another correct horse battery staple",
+                 timezone: "America/Chicago",
+                 accepted_at: DateTime.add(@now, 120, :second)
+               })
+             end)
 
     assert {:error, :setup_disabled} =
-             Accounts.issue_setup_token(now: DateTime.add(@now, 120, :second))
+             call(fn ->
+               Accounts.issue_setup_token(now: DateTime.add(@now, 120, :second))
+             end)
 
     assert %{accounts: 1, disabled: true} = setup_counts()
   end
 
   @tag setup: true
   test "invalid zones and expired capabilities create no account" do
-    assert {:ok, issued} = Accounts.issue_setup_token(now: @now, ttl_seconds: 60)
+    assert {:ok, issued} =
+             call(fn -> Accounts.issue_setup_token(now: @now, ttl_seconds: 60) end)
 
     assert {:error, :invalid_timezone} =
-             Accounts.consume_setup(%{
-               token: issued.token,
-               password: "correct horse battery staple",
-               timezone: "UTC-05:00",
-               accepted_at: DateTime.add(@now, 10, :second)
-             })
+             call(fn ->
+               Accounts.consume_setup(%{
+                 token: issued.token,
+                 password: "correct horse battery staple",
+                 timezone: "UTC-05:00",
+                 accepted_at: DateTime.add(@now, 10, :second)
+               })
+             end)
 
     assert %{accounts: 0, disabled: false} = setup_counts()
 
     assert {:error, :setup_unavailable} =
-             Accounts.consume_setup(%{
-               token: issued.token,
-               password: "correct horse battery staple",
-               timezone: "America/New_York",
-               accepted_at: DateTime.add(@now, 61, :second)
-             })
+             call(fn ->
+               Accounts.consume_setup(%{
+                 token: issued.token,
+                 password: "correct horse battery staple",
+                 timezone: "America/New_York",
+                 accepted_at: DateTime.add(@now, 61, :second)
+               })
+             end)
 
     assert %{accounts: 0, disabled: false} = setup_counts()
   end
@@ -110,7 +121,9 @@ defmodule Keepling.Accounts.SetupTest do
 
   @tag setup: true
   test "concurrent consumption has one winner and permanently disables setup" do
-    assert {:ok, issued} = Accounts.issue_setup_token(now: @now, ttl_seconds: 900)
+    assert {:ok, issued} =
+             call(fn -> Accounts.issue_setup_token(now: @now, ttl_seconds: 900) end)
+
     barrier = start_barrier(2)
 
     results =
@@ -148,12 +161,14 @@ defmodule Keepling.Accounts.SetupTest do
   test "operator task prints one setup URL and no credential in surrounding output" do
     output =
       capture_io(fn ->
-        Mix.Tasks.Keepling.SetupToken.run([
-          "--base-url",
-          "https://keepling.example",
-          "--ttl-seconds",
-          "900"
-        ])
+        call(fn ->
+          Mix.Tasks.Keepling.SetupToken.run([
+            "--base-url",
+            "https://keepling.example",
+            "--ttl-seconds",
+            "900"
+          ])
+        end)
       end)
 
     assert [url] = Regex.scan(~r{https://keepling\.example/setup\?token=[A-Za-z0-9_-]+}, output)
@@ -197,6 +212,8 @@ defmodule Keepling.Accounts.SetupTest do
   defp query!(statement, params \\ []) do
     with_connection(fn _backend_pid -> SQL.query!(Repo, statement, params) end)
   end
+
+  defp call(fun), do: with_connection(fn _backend_pid -> fun.() end)
 
   defp as_utc(%DateTime{} = value), do: value
   defp as_utc(%NaiveDateTime{} = value), do: DateTime.from_naive!(value, "Etc/UTC")

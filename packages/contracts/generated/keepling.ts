@@ -72,6 +72,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/setup": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Consume the operator-issued capability and create the sole account */
+        readonly post: operations["completeSetup"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/test/session": {
         readonly parameters: {
             readonly query?: never;
@@ -131,6 +148,24 @@ export interface components {
         readonly Revision: number;
         readonly SessionResponse: {
             readonly csrf_token: string;
+        };
+        readonly SetupRequest: {
+            /** Format: password */
+            readonly password: string;
+            /**
+             * @description Explicit valid IANA timezone; device and deployment defaults are not used.
+             * @example America/New_York
+             */
+            readonly timezone: string;
+            /** @description Short-lived operator-issued setup capability. */
+            readonly token: string;
+            /** @constant */
+            readonly version: 1;
+        };
+        readonly SetupResponse: {
+            /** @constant */
+            readonly status: "setup_complete";
+            readonly timezone: string;
         };
         /** Format: uuid */
         readonly TaskIdentity: string;
@@ -263,6 +298,33 @@ export interface operations {
                 };
             };
             readonly 401: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly completeSetup: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["SetupRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Sole account created and setup permanently disabled */
+            readonly 201: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["SetupResponse"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
         };
     };
     readonly createTestSession: {

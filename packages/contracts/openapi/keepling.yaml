@@ -9,6 +9,29 @@ servers:
   - url: /api/v1
     description: Same-origin Keepling API
 paths:
+  /setup:
+    post:
+      operationId: completeSetup
+      summary: Consume the operator-issued capability and create the sole account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetupRequest'
+      responses:
+        '201':
+          description: Sole account created and setup permanently disabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetupResponse'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /test/session:
     post:
       operationId: createTestSession
@@ -216,6 +239,46 @@ components:
         csrf_token:
           type: string
           minLength: 1
+    SetupRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - password
+        - timezone
+        - token
+        - version
+      properties:
+        password:
+          type: string
+          minLength: 12
+          maxLength: 1024
+          format: password
+        timezone:
+          type: string
+          minLength: 1
+          description: Explicit valid IANA timezone; device and deployment defaults are not used.
+          examples:
+            - America/New_York
+        token:
+          type: string
+          minLength: 43
+          maxLength: 43
+          description: Short-lived operator-issued setup capability.
+        version:
+          type: integer
+          const: 1
+    SetupResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - status
+        - timezone
+      properties:
+        status:
+          type: string
+          const: setup_complete
+        timezone:
+          type: string
     TaskIdentity:
       type: string
       format: uuid

@@ -18,4 +18,14 @@ config :logger, :default_formatter,
 
 config :phoenix, :json_library, Jason
 
+config :elixir, :time_zone_database, Tzdata.TimeZoneDatabase
+
+config :tzdata, :autoupdate, :disabled
+
+config :argon2_elixir,
+  argon2_type: 2,
+  m_cost: 16,
+  parallelism: 4,
+  t_cost: 3
+
 import_config "#{config_env()}.exs"

@@ -30,6 +30,12 @@ defmodule KeeplingWeb.Router do
   end
 
   scope "/api/v1", KeeplingWeb do
+    pipe_through [:api]
+
+    post "/setup", AuthController, :setup
+  end
+
+  scope "/api/v1", KeeplingWeb do
     pipe_through [:api, :authenticated]
 
     get "/session", CommandController, :session
