@@ -65,7 +65,7 @@ const installEditorFetch = (
   let originalMutationId = ''
   const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
     const path = String(input)
-    if (path === '/api/v1/inbox') return Promise.resolve(jsonResponse({ tasks: [task] }))
+    if (path === `/api/v1/tasks/${task.id}`) return Promise.resolve(jsonResponse(task))
     if (path.startsWith(`/api/v1/tasks/${task.id}/activity?`)) {
       return Promise.resolve(activityResponse())
     }

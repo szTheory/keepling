@@ -206,7 +206,7 @@ describe('task activity', () => {
       'fetch',
       vi.fn(async (input: RequestInfo | URL) => {
         const path = String(input)
-        if (path === '/api/v1/inbox') return jsonResponse({ tasks: [task] })
+        if (path === `/api/v1/tasks/${taskId}`) return jsonResponse(task)
         if (path === `/api/v1/tasks/${taskId}/activity?limit=20`) {
           return jsonResponse(page([item], null))
         }
