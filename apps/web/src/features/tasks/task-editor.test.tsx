@@ -684,4 +684,72 @@ describe('canonical task editor', () => {
     expect(screen.getByLabelText('Notes')).toHaveValue('Canonical notes restored by undo')
     expect(screen.getByRole('status')).toHaveTextContent('Accepted change applied.')
   })
+
+  it('preserves a dirty draft when an external acknowledgement arrives', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((input: RequestInfo | URL) =>
+        String(input) === taskPath
+          ? Promise.resolve(taskResponse())
+          : Promise.resolve(activityResponse()),
+      ),
+    )
+    const user = userEvent.setup()
+    render(<TaskEditor csrfToken="csrf" taskId={task.id} />)
+    const title = await screen.findByLabelText('Title')
+    await user.clear(title)
+    await user.type(title, 'My unsaved title')
+
+    window.dispatchEvent(
+      new CustomEvent('keepling:task-acknowledged', {
+        detail: {
+          mutationId: 'external-undo', outcome: 'accepted', revision: 4,
+          snapshot: {
+            capturedAt: task.captured_at, completedAt: null, deadlineOn: task.deadline_on,
+            id: task.id, inboxState: task.inbox_state, notes: 'External notes',
+            plannedOn: task.planned_on, revision: 4, title: 'External title', trashedAt: null,
+          },
+          taskId: task.id, warnings: [],
+        },
+      }),
+    )
+
+    expect(title).toHaveValue('My unsaved title')
+    expect(screen.getByText('Unsaved changes')).toBeVisible()
+  })
+
+  it('retains an unknown exact edit when an external acknowledgement arrives', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input) === taskPath) return Promise.resolve(taskResponse())
+      if (String(input).startsWith(`/api/v1/tasks/${task.id}/activity?`)) return Promise.resolve(activityResponse())
+      if (String(input) === '/api/v1/commands/edit-task') return Promise.reject(new TypeError('lost response'))
+      if (String(input).startsWith('/api/v1/mutations/')) return Promise.resolve(jsonResponse(acknowledgement({ revision: 4, title: 'My exact edit' })))
+      throw new Error(`Unexpected request ${String(input)} ${String(init?.method)}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(<TaskEditor csrfToken="csrf" taskId={task.id} />)
+    const title = await screen.findByLabelText('Title')
+    await user.clear(title)
+    await user.type(title, 'My exact edit')
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    expect(await screen.findByRole('button', { name: 'Check whether it was saved' })).toBeVisible()
+
+    window.dispatchEvent(
+      new CustomEvent('keepling:task-acknowledged', {
+        detail: {
+          mutationId: 'external-undo', outcome: 'accepted', revision: 4,
+          snapshot: {
+            capturedAt: task.captured_at, completedAt: null, deadlineOn: task.deadline_on,
+            id: task.id, inboxState: task.inbox_state, notes: 'External notes',
+            plannedOn: task.planned_on, revision: 4, title: 'External title', trashedAt: null,
+          },
+          taskId: task.id, warnings: [],
+        },
+      }),
+    )
+
+    expect(title).toHaveValue('My exact edit')
+    expect(screen.getByRole('button', { name: 'Check whether it was saved' })).toBeVisible()
+  })
 })

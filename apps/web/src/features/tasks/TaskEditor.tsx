@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -88,6 +89,8 @@ function TaskEditor({
   const [recoveryState, setRecoveryState] = useState<TaskSubmissionState | null>(null)
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null)
+  const [pendingExternalAcknowledgement, setPendingExternalAcknowledgement] =
+    useState<CommandAcknowledgement | null>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const notesRef = useRef<HTMLTextAreaElement>(null)
   const plannedOnRef = useRef<HTMLInputElement>(null)
@@ -147,34 +150,6 @@ function TaskEditor({
     }
   }, [onAuthenticationRequired, taskId])
 
-  useEffect(() => {
-    const applyExternalAcknowledgement = (event: Event) => {
-      const acknowledgement = (event as CustomEvent<CommandAcknowledgement>).detail
-      if (!acknowledgement || acknowledgement.taskId !== taskId) return
-
-      setSubmission(null)
-      exactSubmission.current = null
-      setRecoveryState(null)
-      setFieldErrors({})
-      setLoadState((state) => ({
-        accountTimezone: state.kind === 'ready' ? state.accountTimezone : 'UTC',
-        kind: 'ready',
-        task: acknowledgement.snapshot,
-      }))
-      setDraft({
-        deadlineOn: acknowledgement.snapshot.deadlineOn ?? '',
-        notes: acknowledgement.snapshot.notes,
-        plannedOn: acknowledgement.snapshot.plannedOn ?? '',
-        title: acknowledgement.snapshot.title,
-      })
-      setCommandState({ kind: 'saved', message: 'Accepted change applied.' })
-    }
-
-    window.addEventListener('keepling:task-acknowledged', applyExternalAcknowledgement)
-    return () =>
-      window.removeEventListener('keepling:task-acknowledged', applyExternalAcknowledgement)
-  }, [taskId])
-
   const acceptedTask = loadState.kind === 'ready' ? loadState.task : null
   const dirty =
     acceptedTask !== null &&
@@ -183,6 +158,62 @@ function TaskEditor({
       draft.plannedOn !== (acceptedTask.plannedOn ?? '') ||
       draft.title !== acceptedTask.title)
   const locked = submission !== null
+
+  const applyExternalAcknowledgement = useCallback((acknowledgement: CommandAcknowledgement) => {
+    setLoadState((state) => ({
+      accountTimezone: state.kind === 'ready' ? state.accountTimezone : 'UTC',
+      kind: 'ready',
+      task: acknowledgement.snapshot,
+    }))
+    setDraft({
+      deadlineOn: acknowledgement.snapshot.deadlineOn ?? '',
+      notes: acknowledgement.snapshot.notes,
+      plannedOn: acknowledgement.snapshot.plannedOn ?? '',
+      title: acknowledgement.snapshot.title,
+    })
+    setFieldErrors({})
+    setCommandState({ kind: 'saved', message: 'Accepted change applied.' })
+  }, [])
+
+  useEffect(() => {
+    const receiveExternalAcknowledgement = (event: Event) => {
+      const acknowledgement = (event as CustomEvent<CommandAcknowledgement>).detail
+      if (!acknowledgement || acknowledgement.taskId !== taskId) return
+
+      if (dirty || submission !== null || exactSubmission.current !== null) {
+        setPendingExternalAcknowledgement(acknowledgement)
+        return
+      }
+      applyExternalAcknowledgement(acknowledgement)
+    }
+
+    window.addEventListener('keepling:task-acknowledged', receiveExternalAcknowledgement)
+    return () =>
+      window.removeEventListener('keepling:task-acknowledged', receiveExternalAcknowledgement)
+  }, [applyExternalAcknowledgement, dirty, submission, taskId])
+
+  useEffect(() => {
+    if (
+      !pendingExternalAcknowledgement ||
+      dirty ||
+      submission !== null ||
+      exactSubmission.current !== null
+    ) return
+
+    if (
+      loadState.kind !== 'ready' ||
+      pendingExternalAcknowledgement.revision > loadState.task.revision
+    ) {
+      applyExternalAcknowledgement(pendingExternalAcknowledgement)
+    }
+    setPendingExternalAcknowledgement(null)
+  }, [
+    applyExternalAcknowledgement,
+    dirty,
+    loadState,
+    pendingExternalAcknowledgement,
+    submission,
+  ])
 
   useEffect(() => {
     if (!dirty) return
