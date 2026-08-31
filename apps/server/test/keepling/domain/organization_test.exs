@@ -91,6 +91,9 @@ defmodule Keepling.Domain.OrganizationTest do
     assert assigned.revision == 5
     assert activity.type == :task_details_updated
 
+    assert {:error, :invalid_expected_revision} =
+             Organization.assign_task(current, %{command | expected_revision: 5})
+
     stale = %{
       command
       | base_values: %{project_id: nil, tag_ids: []},

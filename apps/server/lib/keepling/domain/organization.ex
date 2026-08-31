@@ -154,7 +154,8 @@ defmodule Keepling.Domain.Organization do
           {:ok, map(), map() | nil, :accepted | :already_satisfied}
           | {:error, atom() | {:assignment_conflict, [String.t()]}}
   def assign_task(current, command) when is_map(current) do
-    with {:ok, base_values} <- normalize_assignment(command.base_values),
+    with :ok <- require_assignment_revision(current, command),
+         {:ok, base_values} <- normalize_assignment(command.base_values),
          {:ok, fields} <- normalize_assignment(command.fields),
          {:ok, updated, changes} <- merge_assignment(current, base_values, fields) do
       if map_size(changes) == 0 do
@@ -181,6 +182,13 @@ defmodule Keepling.Domain.Organization do
   end
 
   defp require_revision(_organization, _command), do: :ok
+
+  defp require_assignment_revision(current, %{expected_revision: expected_revision})
+       when is_integer(expected_revision) and expected_revision >= 1 and
+              expected_revision <= current.revision,
+       do: :ok
+
+  defp require_assignment_revision(_current, _command), do: {:error, :invalid_expected_revision}
 
   defp normalize_assignment(%{project_id: project_id, tag_ids: tag_ids})
        when (is_nil(project_id) or is_binary(project_id)) and is_list(tag_ids) do
