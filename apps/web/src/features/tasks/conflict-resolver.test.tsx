@@ -113,7 +113,9 @@ describe('inline task conflict resolution', () => {
     await user.type(title, 'My title')
     await user.click(screen.getByRole('button', { name: 'Save changes' }))
 
-    expect(await screen.findByRole('heading', { name: 'Resolve task conflict' })).toBeVisible()
+    expect(
+      await screen.findByRole('heading', { name: 'This task changed somewhere else.' }),
+    ).toBeVisible()
     expect(title).toHaveAttribute('readonly')
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Save & move out of Inbox' })).toBeDisabled()
