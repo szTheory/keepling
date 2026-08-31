@@ -1,19 +1,21 @@
 ---
 gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-13-PLAN.md
-last_updated: "2026-08-31T05:48:31.537Z"
-last_activity: 2026-08-30
-last_activity_desc: Phase KPL-01 execution started
-state_head: 0b3859bc11bf627a71fec232ad31a302cfd07f9c
+stopped_at: Completed 01-14-PLAN.md
+last_updated: "2026-08-31T06:11:48.617Z"
+last_activity: 2026-08-31
+last_activity_desc: Completed KPL-01 Plan 14 trustworthy complete/reopen lifecycle
+state_head: 5f34ef7
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 13
-  percent: 0
+  completed_plans: 14
+  percent: 74
 ---
 
 # Project State
@@ -28,12 +30,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 14 of 19
+Plan: 15 of 19
 Total Plans in Phase: 19
-Status: Executing Phase KPL-01
-Last activity: 2026-08-30 — Phase KPL-01 execution started
+Status: Ready to execute
+Last activity: 2026-08-31
 Last Activity Description: Phase KPL-01 execution started
-Progress: [░░░░░░░░░░] 0%
+Progress: [███████░░░] 74%
 
 ## Accumulated Context
 
@@ -87,6 +89,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01]: Today order is dense, section-scoped, server-owned, account-lock serialized, and changed only by semantic earlier/later commands.
 - [Phase 01]: Ambiguous Today delivery retains and retries the exact original mutation identity against a durable terminal receipt.
 - [Phase 01]: Plan 01-13 expands nullable completed_at only as a projection seam; Plan 01-14 owns completion lifecycle writes.
+- [Phase 01]: Lifecycle staleness is scoped to the latest accepted complete/reopen revision, allowing unrelated-edit rebase while opposing lifecycle intent conflicts on completed_at.
+- [Phase 01]: Completion preserves inbox_state and active projections filter completed_at so reopen can recompute visibility from canonical task fields.
+- [Phase 01]: Browser lifecycle reconciliation requires exact task and mutation acknowledgement identities and reads reopen destinations from authoritative projections.
 
 ### Retained Research
 
@@ -114,8 +119,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T05:48:31.523Z
-**Stopped at:** Completed KPL-01-13-PLAN.md
+**Last session:** 2026-08-31T06:11:48.614Z
+**Stopped at:** Completed 01-14-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -135,3 +140,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P11 | 21min | 2 tasks | 13 files |
 | Phase KPL-01 P12 | 22min | 2 tasks | 15 files |
 | Phase KPL-01 P13 | 24min | 2 tasks | 18 files |
+| Phase KPL-01 P14 | 18min | 2 tasks | 14 files |
