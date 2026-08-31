@@ -68,7 +68,7 @@
 
 ### Quality and delivery
 
-- [ ] **QUAL-01**: Contributor receives deterministic tests for domain rules, long mutation sequences, persistence/migrations, API/contracts, adapters, browser behavior, Electron boundaries, native orchestration, and deployment recovery at the layer best able to catch each failure.
+- [x] **QUAL-01**: Contributor receives deterministic tests for domain rules, long mutation sequences, persistence/migrations, API/contracts, adapters, browser behavior, Electron boundaries, native orchestration, and deployment recovery at the layer best able to catch each failure.
 - [ ] **QUAL-02**: Contributor receives fast required CI lanes with parallelism, dependency caching, slow-test visibility, flake accountability, and cross-consumer fan-out for contract/token changes.
 - [ ] **QUAL-03**: Release promotion uses the exact revision and artifact previously tested; distribution jobs do not silently rebuild different bytes.
 - [ ] **QUAL-04**: Important screens have representative user-level coverage for meaningful populated, empty, loading, offline, denied, stale, conflict, partial, retry, and unrecoverable states.
