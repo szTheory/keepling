@@ -43,6 +43,18 @@ defmodule Keepling.Application.Commands do
     end)
   end
 
+  def dispatch(%{type: :complete_task} = command, context, port) do
+    port.execute(command, context, fn current_task, accepted_command ->
+      Task.complete(current_task, accepted_command)
+    end)
+  end
+
+  def dispatch(%{type: :reopen_task} = command, context, port) do
+    port.execute(command, context, fn current_task, accepted_command ->
+      Task.reopen(current_task, accepted_command)
+    end)
+  end
+
   def dispatch(%{type: :edit_task_dates} = command, context, port) do
     port.execute(command, context, fn current_task, accepted_command ->
       TaskDates.edit(current_task, accepted_command)

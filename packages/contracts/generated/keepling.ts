@@ -72,6 +72,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/commands/complete-task": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Complete a task through the revision-aware semantic lifecycle boundary */
+        readonly post: operations["completeTask"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/commands/create-organization": {
         readonly parameters: {
             readonly query?: never;
@@ -168,6 +185,23 @@ export interface paths {
         readonly put?: never;
         /** Rename a project or tag by stable identity */
         readonly post: operations["renameOrganization"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/commands/reopen-task": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Reopen a task and recompute active projections from preserved fields */
+        readonly post: operations["reopenTask"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -737,7 +771,7 @@ export interface components {
         };
         readonly Problem: {
             readonly active_unfinished_task_count?: number;
-            readonly affected_fields?: readonly ("inbox_state" | "notes" | "project_id" | "tag_ids" | "title")[];
+            readonly affected_fields?: readonly ("completed_at" | "inbox_state" | "notes" | "project_id" | "tag_ids" | "title")[];
             readonly code: string;
             readonly current_revision?: components["schemas"]["Revision"];
             readonly detail?: string;
@@ -828,6 +862,13 @@ export interface components {
         };
         /** Format: uuid */
         readonly TaskIdentity: string;
+        readonly TaskLifecycleCommand: {
+            readonly expected_revision: components["schemas"]["Revision"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            /** @constant */
+            readonly version: 1;
+        };
         readonly TaskOrganizationReference: {
             readonly archived: boolean;
             readonly id: components["schemas"]["OrganizationIdentity"];
@@ -836,6 +877,7 @@ export interface components {
         readonly TaskSnapshot: {
             /** Format: date-time */
             readonly captured_at: string;
+            readonly completed_at: string | null;
             readonly deadline_on: components["schemas"]["NullableCivilDate"];
             readonly id: components["schemas"]["TaskIdentity"];
             /** @enum {string} */
@@ -1056,6 +1098,36 @@ export interface operations {
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };
+    readonly completeTask: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["TaskLifecycleCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored completion acknowledgement or already-satisfied result */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly createOrganization: {
         readonly parameters: {
             readonly query?: never;
@@ -1237,6 +1309,36 @@ export interface operations {
             readonly 404: components["responses"]["ProblemResponse"];
             readonly 409: components["responses"]["ProblemResponse"];
             readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly reopenTask: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["TaskLifecycleCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored reopen acknowledgement or already-satisfied result */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };

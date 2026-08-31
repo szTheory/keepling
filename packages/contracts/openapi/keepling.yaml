@@ -479,6 +479,64 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
         '503':
           $ref: '#/components/responses/ProblemResponse'
+  /commands/complete-task:
+    post:
+      operationId: completeTask
+      summary: Complete a task through the revision-aware semantic lifecycle boundary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskLifecycleCommand'
+      responses:
+        '200':
+          description: Exact stored completion acknowledgement or already-satisfied result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/reopen-task:
+    post:
+      operationId: reopenTask
+      summary: Reopen a task and recompute active projections from preserved fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskLifecycleCommand'
+      responses:
+        '200':
+          description: Exact stored reopen acknowledgement or already-satisfied result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /commands/edit-task-dates:
     post:
       operationId: editTaskDates
@@ -1579,6 +1637,7 @@ components:
           items:
             type: string
             enum:
+              - completed_at
               - inbox_state
               - notes
               - project_id
@@ -1769,6 +1828,24 @@ components:
     TaskIdentity:
       type: string
       format: uuid
+    TaskLifecycleCommand:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_revision
+        - mutation_id
+        - task_id
+        - version
+      properties:
+        expected_revision:
+          $ref: '#/components/schemas/Revision'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        version:
+          type: integer
+          const: 1
     TaskDetailValues:
       type: object
       additionalProperties: false
@@ -1803,6 +1880,7 @@ components:
       additionalProperties: false
       required:
         - captured_at
+        - completed_at
         - deadline_on
         - id
         - inbox_state
@@ -1816,6 +1894,11 @@ components:
         captured_at:
           type: string
           format: date-time
+        completed_at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: 'null'
         deadline_on:
           $ref: '#/components/schemas/NullableCivilDate'
         id:

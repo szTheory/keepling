@@ -68,6 +68,8 @@ defmodule KeeplingWeb.Router do
     post "/commands/edit-task", CommandController, :edit_task
     post "/commands/clarify-task", CommandController, :clarify_task
     post "/commands/return-to-inbox", CommandController, :return_to_inbox
+    post "/commands/complete-task", CommandController, :complete_task
+    post "/commands/reopen-task", CommandController, :reopen_task
     post "/commands/edit-task-dates", CommandController, :edit_task_dates
     post "/commands/plan-for-today", CommandController, :plan_for_today
     post "/commands/unplan-task", CommandController, :unplan_task

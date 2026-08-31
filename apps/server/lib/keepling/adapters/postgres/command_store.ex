@@ -35,9 +35,10 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     case SQL.query(
            Repo,
            """
-           SELECT id, title, notes, inbox_state, revision, captured_at, planned_on, deadline_on
+           SELECT id, title, notes, inbox_state, revision, captured_at,
+                  planned_on, deadline_on, completed_at
            FROM tasks
-           WHERE account_id = $1 AND inbox_state = 'inbox'
+           WHERE account_id = $1 AND inbox_state = 'inbox' AND completed_at IS NULL
            ORDER BY captured_at DESC, id ASC
            """,
            [account_id]
@@ -465,10 +466,19 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     case SQL.query!(
            repo,
            """
-           SELECT id, title, notes, inbox_state, revision, captured_at, planned_on, deadline_on
+           SELECT tasks.id, tasks.title, tasks.notes, tasks.inbox_state,
+                  tasks.revision, tasks.captured_at, tasks.planned_on,
+                  tasks.deadline_on, tasks.completed_at,
+                  COALESCE((
+                    SELECT max(activity.to_revision)
+                    FROM task_activities AS activity
+                    WHERE activity.account_id = tasks.account_id
+                      AND activity.task_id = tasks.id
+                      AND activity.activity_type IN ('task_completed', 'task_reopened')
+                  ), 0) AS lifecycle_revision
            FROM tasks
-           WHERE account_id = $1 AND id = $2
-           FOR UPDATE
+           WHERE tasks.account_id = $1 AND tasks.id = $2
+           FOR UPDATE OF tasks
            """,
            [account_id, dump_uuid(task_id)]
          ).rows do
@@ -482,7 +492,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
            repo,
            """
            SELECT id, title, notes, inbox_state, revision, captured_at,
-                  planned_on, deadline_on, project_id
+                  planned_on, deadline_on, completed_at, project_id
            FROM tasks
            WHERE account_id = $1 AND id = $2
            FOR UPDATE
@@ -499,6 +509,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
           captured_at,
           planned_on,
           deadline_on,
+          completed_at,
           project_id
         ]
       ] ->
@@ -511,6 +522,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
           captured_at: to_datetime(captured_at),
           planned_on: planned_on,
           deadline_on: deadline_on,
+          completed_at: optional_datetime(completed_at),
           project_id: load_optional_uuid(project_id),
           tag_ids: load_task_tag_ids(repo, account_id, task_id)
         }
@@ -563,7 +575,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     %{rows: [[count]]} =
       SQL.query!(
         repo,
-        "SELECT count(*) FROM tasks WHERE account_id = $1 AND project_id = $2",
+        "SELECT count(*) FROM tasks WHERE account_id = $1 AND project_id = $2 AND completed_at IS NULL",
         [account_id, dump_uuid(organization_id)]
       )
 
@@ -670,7 +682,8 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $7, $7)
         ON CONFLICT (account_id, id) DO NOTHING
-        RETURNING id, title, notes, inbox_state, revision, captured_at, planned_on, deadline_on
+        RETURNING id, title, notes, inbox_state, revision, captured_at,
+                  planned_on, deadline_on, completed_at
         """,
         [
           context.account_id,
@@ -710,7 +723,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         """
         UPDATE tasks
         SET title = $3, notes = $4, inbox_state = $5, revision = $6,
-            planned_on = $7, deadline_on = $8, updated_at = $9
+            planned_on = $7, deadline_on = $8, completed_at = $9, updated_at = $10
         WHERE account_id = $1 AND id = $2
         """,
         [
@@ -722,6 +735,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
           task.revision,
           task.planned_on,
           task.deadline_on,
+          task.completed_at,
           context.accepted_at
         ]
       )
@@ -887,6 +901,11 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
   defp maybe_bump_task_view_revisions(repo, command, context)
        when command.type in [:clarify_task, :return_to_inbox] do
     bump_task_view_revisions(repo, [:inbox], context)
+  end
+
+  defp maybe_bump_task_view_revisions(repo, command, context)
+       when command.type in [:complete_task, :reopen_task] do
+    bump_task_view_revisions(repo, [:inbox, :today, :upcoming, :completed], context)
   end
 
   defp maybe_bump_task_view_revisions(_repo, _command, _context), do: :ok
@@ -1084,6 +1103,21 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     )
   end
 
+  defp semantic_rejection({:lifecycle_conflict, affected_fields}, current) do
+    problem(
+      409,
+      "task_lifecycle_conflict",
+      "Task lifecycle changed elsewhere",
+      "Refresh the task before completing or reopening it.",
+      false,
+      "refresh_task",
+      %{
+        "affected_fields" => affected_fields,
+        "current_revision" => current.revision
+      }
+    )
+  end
+
   defp semantic_rejection(_reason, _current),
     do:
       problem(
@@ -1244,7 +1278,8 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
          revision,
          captured_at,
          planned_on,
-         deadline_on
+         deadline_on,
+         completed_at
        ]) do
     %Task{
       id: load_uuid(id),
@@ -1253,9 +1288,16 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       inbox_state: String.to_existing_atom(inbox_state),
       revision: revision,
       captured_at: to_datetime(captured_at),
+      completed_at: optional_datetime(completed_at),
+      lifecycle_revision: 0,
       planned_on: planned_on,
       deadline_on: deadline_on
     }
+  end
+
+  defp task_from_row(row_and_lifecycle_revision) when length(row_and_lifecycle_revision) == 10 do
+    {row, [lifecycle_revision]} = Enum.split(row_and_lifecycle_revision, 9)
+    %{task_from_row(row) | lifecycle_revision: lifecycle_revision}
   end
 
   defp task_body_from_row(row, account_id, repo),
@@ -1266,6 +1308,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
 
     %{
       "captured_at" => utc_iso8601(task.captured_at),
+      "completed_at" => optional_utc_iso8601(task.completed_at),
       "id" => task.id,
       "inbox_state" => Atom.to_string(task.inbox_state),
       "notes" => task.notes,
@@ -1420,6 +1463,8 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
   defp to_datetime(%NaiveDateTime{} = value), do: DateTime.from_naive!(value, "Etc/UTC")
   defp optional_datetime(nil), do: nil
   defp optional_datetime(value), do: to_datetime(value)
+  defp optional_utc_iso8601(nil), do: nil
+  defp optional_utc_iso8601(value), do: utc_iso8601(value)
   defp optional_date(nil), do: nil
   defp optional_date(%Date{} = value), do: Date.to_iso8601(value)
   defp utc_iso8601(value), do: value |> to_datetime() |> DateTime.to_iso8601()

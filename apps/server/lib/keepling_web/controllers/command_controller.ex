@@ -49,6 +49,12 @@ defmodule KeeplingWeb.CommandController do
   def return_to_inbox(conn, params),
     do: dispatch_task_command(conn, decode_return_to_inbox(params))
 
+  def complete_task(conn, params),
+    do: dispatch_task_command(conn, decode_task_lifecycle(params, :complete_task))
+
+  def reopen_task(conn, params),
+    do: dispatch_task_command(conn, decode_task_lifecycle(params, :reopen_task))
+
   def edit_task_dates(conn, params),
     do: dispatch_task_command(conn, decode_task_dates(params))
 
@@ -198,6 +204,32 @@ defmodule KeeplingWeb.CommandController do
          mutation_id: mutation_id,
          task_id: task_id,
          type: :return_to_inbox,
+         version: 1
+       }}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
+  defp decode_task_lifecycle(params, type) do
+    allowed_keys = ["expected_revision", "mutation_id", "task_id", "version"]
+
+    with true <- Enum.sort(Map.keys(params)) == allowed_keys,
+         %{
+           "expected_revision" => expected_revision,
+           "mutation_id" => mutation_id,
+           "task_id" => task_id,
+           "version" => 1
+         } <- params,
+         true <- is_integer(expected_revision) and expected_revision >= 1,
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, _task_uuid} <- Ecto.UUID.cast(task_id) do
+      {:ok,
+       %{
+         expected_revision: expected_revision,
+         mutation_id: mutation_id,
+         task_id: task_id,
+         type: type,
          version: 1
        }}
     else

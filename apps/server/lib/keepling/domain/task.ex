@@ -19,6 +19,8 @@ defmodule Keepling.Domain.Task do
     :inbox_state,
     :revision,
     :captured_at,
+    completed_at: nil,
+    lifecycle_revision: 0,
     planned_on: nil,
     deadline_on: nil
   ]
@@ -31,6 +33,8 @@ defmodule Keepling.Domain.Task do
           inbox_state: inbox_state(),
           revision: pos_integer(),
           captured_at: DateTime.t(),
+          completed_at: DateTime.t() | nil,
+          lifecycle_revision: non_neg_integer(),
           planned_on: Date.t() | nil,
           deadline_on: Date.t() | nil
         }
@@ -61,6 +65,8 @@ defmodule Keepling.Domain.Task do
         inbox_state: :inbox,
         revision: 1,
         captured_at: accepted_at,
+        completed_at: nil,
+        lifecycle_revision: 0,
         planned_on: nil,
         deadline_on: nil
       }
@@ -125,6 +131,27 @@ defmodule Keepling.Domain.Task do
     else
       {:error, {:edit_conflict, ["inbox_state"]}}
     end
+  end
+
+  @spec complete(t(), map()) ::
+          {:ok, t(), activity() | nil, :accepted | :already_satisfied}
+          | {:error, {:lifecycle_conflict, [String.t()]}}
+  def complete(%__MODULE__{completed_at: completed_at} = task, _command)
+      when not is_nil(completed_at),
+      do: {:ok, task, nil, :already_satisfied}
+
+  def complete(%__MODULE__{} = task, command) do
+    lifecycle_transition(task, command, command.accepted_at, :task_completed)
+  end
+
+  @spec reopen(t(), map()) ::
+          {:ok, t(), activity() | nil, :accepted | :already_satisfied}
+          | {:error, {:lifecycle_conflict, [String.t()]}}
+  def reopen(%__MODULE__{completed_at: nil} = task, _command),
+    do: {:ok, task, nil, :already_satisfied}
+
+  def reopen(%__MODULE__{} = task, command) do
+    lifecycle_transition(task, command, nil, :task_reopened)
   end
 
   defp require_touched_fields(%{fields: fields}) when map_size(fields) > 0, do: :ok
@@ -202,6 +229,26 @@ defmodule Keepling.Domain.Task do
   end
 
   defp merge_fields(_task, _base_values, _fields), do: {:error, :base_values_mismatch}
+
+  defp lifecycle_transition(task, command, completed_at, activity_type) do
+    if task.lifecycle_revision > command.expected_revision do
+      {:error, {:lifecycle_conflict, ["completed_at"]}}
+    else
+      updated = %{
+        task
+        | completed_at: completed_at,
+          lifecycle_revision: task.revision + 1
+      }
+
+      finish(
+        task,
+        updated,
+        %{"completed_at" => %{"from" => task.completed_at, "to" => completed_at}},
+        activity_type,
+        command.accepted_at
+      )
+    end
+  end
 
   defp finish(task, _updated, changes, _type, _accepted_at) when map_size(changes) == 0,
     do: {:ok, task, nil, :already_satisfied}
