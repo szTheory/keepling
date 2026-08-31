@@ -119,6 +119,10 @@ defmodule Keepling.TelemetryRedactionTest do
            end)
   end
 
+  test "every production diagnostic event is allow-listed and test controls are absent from production" do
+    flunk("Phase 1 diagnostic and production-route closure is not implemented yet")
+  end
+
   defp collect_auth_telemetry(acc) do
     receive do
       {:auth_telemetry, event, measurements, metadata} ->
