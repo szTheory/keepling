@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -119,7 +119,7 @@ describe('organization assignment fields', () => {
     expect(screen.getByText('Old errand')).toBeVisible()
     expect(screen.getByText('Archived', { selector: '[data-organization-status]' })).toBeVisible()
     expect(screen.getByRole('checkbox', { name: 'Old errand — Archived' })).toBeChecked()
-    expect(screen.getByRole('checkbox', { name: 'Old errand — Archived' })).toBeDisabled()
+    expect(screen.getByRole('checkbox', { name: 'Old errand — Archived' })).toBeEnabled()
 
     await user.selectOptions(project, activeProjectId)
     await user.click(screen.getByRole('checkbox', { name: 'Errand' }))
@@ -240,7 +240,7 @@ describe('organization management routes', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Home still has 2 active unfinished tasks. Nothing changed.',
     )
-    expect(screen.getByText('Home')).toBeVisible()
+    expect(screen.getByDisplayValue('Home')).toBeVisible()
   })
 
   it('surfaces unarchive collisions and exposes routed Projects and Tags management', async () => {

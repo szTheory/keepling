@@ -1,9 +1,15 @@
 import type { components } from '../../../../packages/contracts/generated/keepling'
 
 type WireCaptureTaskCommand = components['schemas']['CaptureTaskCommand']
+type WireAssignTaskOrganizationsCommand = components['schemas']['AssignTaskOrganizationsCommand']
 type WireClarifyTaskCommand = components['schemas']['ClarifyTaskCommand']
 type WireCommandAcknowledgement = components['schemas']['CommandAcknowledgement']
+type WireCreateOrganizationCommand = components['schemas']['CreateOrganizationCommand']
 type WireEditTaskCommand = components['schemas']['EditTaskCommand']
+type WireOrganizationAcknowledgement = components['schemas']['OrganizationAcknowledgement']
+type WireOrganizationLifecycleCommand = components['schemas']['OrganizationLifecycleCommand']
+type WireOrganizationsResponse = components['schemas']['OrganizationsResponse']
+type WireRenameOrganizationCommand = components['schemas']['RenameOrganizationCommand']
 type WireReturnToInboxCommand = components['schemas']['ReturnToInboxCommand']
 type InboxResponse = components['schemas']['InboxResponse']
 type Problem = components['schemas']['Problem']
@@ -25,8 +31,25 @@ type BrowserTask = {
   id: string
   inboxState: 'clarified' | 'inbox'
   notes: string
+  project: TaskOrganizationReference | null
   revision: number
+  tags: readonly TaskOrganizationReference[]
   title: string
+}
+
+type TaskOrganizationReference = {
+  archived: boolean
+  id: string
+  name: string
+}
+
+type BrowserOrganization = {
+  archived: boolean
+  assignable: boolean
+  id: string
+  kind: 'project' | 'tag'
+  name: string
+  revision: number
 }
 
 type CaptureTaskSubmission = {
@@ -68,6 +91,47 @@ type ReturnToInboxSubmission = {
   expectedRevision: number
   mutationId: string
   taskId: string
+}
+
+type OrganizationAssignmentValues = {
+  projectId: string | null
+  tagIds: readonly string[]
+}
+
+type AssignTaskOrganizationsSubmission = {
+  baseValues: OrganizationAssignmentValues
+  expectedRevision: number
+  fields: OrganizationAssignmentValues
+  mutationId: string
+  taskId: string
+}
+
+type CreateOrganizationSubmission = {
+  kind: BrowserOrganization['kind']
+  mutationId: string
+  name: string
+  organizationId: string
+}
+
+type RenameOrganizationSubmission = {
+  expectedRevision: number
+  mutationId: string
+  name: string
+  organizationId: string
+}
+
+type OrganizationLifecycleSubmission = {
+  expectedRevision: number
+  mutationId: string
+  organizationId: string
+}
+
+type OrganizationAcknowledgement = {
+  mutationId: string
+  organizationId: string
+  outcome: 'accepted' | 'already_satisfied'
+  revision: number
+  snapshot: BrowserOrganization
 }
 
 type AuthenticationTransition = {
@@ -251,8 +315,31 @@ const mapTask = (task: components['schemas']['TaskSnapshot']): BrowserTask => ({
   id: task.id,
   inboxState: task.inbox_state,
   notes: task.notes,
+  project: task.project == null ? null : { ...task.project },
   revision: task.revision,
+  tags: task.tags?.map((tag) => ({ ...tag })) ?? [],
   title: task.title,
+})
+
+const mapOrganization = (
+  organization: components['schemas']['OrganizationSnapshot'],
+): BrowserOrganization => ({
+  archived: organization.archived,
+  assignable: organization.assignable,
+  id: organization.id,
+  kind: organization.kind,
+  name: organization.name,
+  revision: organization.revision,
+})
+
+const mapOrganizationAcknowledgement = (
+  acknowledgement: WireOrganizationAcknowledgement,
+): OrganizationAcknowledgement => ({
+  mutationId: acknowledgement.mutation_id,
+  organizationId: acknowledgement.organization_id,
+  outcome: acknowledgement.outcome,
+  revision: acknowledgement.revision,
+  snapshot: mapOrganization(acknowledgement.snapshot),
 })
 
 const mapAcknowledgement = (acknowledgement: WireCommandAcknowledgement): CommandAcknowledgement => ({
@@ -273,6 +360,17 @@ const getInbox = async (): Promise<readonly BrowserTask[]> => {
   )
 
   return response.tasks.map(mapTask)
+}
+
+const getOrganizations = async (): Promise<readonly BrowserOrganization[]> => {
+  const response = await readJson<WireOrganizationsResponse>(
+    await fetch('/api/v1/organizations', {
+      credentials: 'same-origin',
+      headers: { accept: 'application/json' },
+    }),
+  )
+
+  return response.organizations.map(mapOrganization)
 }
 
 const captureTask = async (
@@ -354,6 +452,104 @@ const returnToInbox = async (
   return submitTaskCommand('/api/v1/commands/return-to-inbox', command, csrfToken)
 }
 
+const assignTaskOrganizations = async (
+  submission: AssignTaskOrganizationsSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> => {
+  const command: WireAssignTaskOrganizationsCommand = {
+    base_values: {
+      project_id: submission.baseValues.projectId,
+      tag_ids: submission.baseValues.tagIds,
+    },
+    expected_revision: submission.expectedRevision,
+    fields: {
+      project_id: submission.fields.projectId,
+      tag_ids: submission.fields.tagIds,
+    },
+    mutation_id: submission.mutationId,
+    task_id: submission.taskId,
+    version: 1,
+  }
+
+  return submitTaskCommand('/api/v1/commands/assign-task-organizations', command, csrfToken)
+}
+
+const createOrganization = async (
+  submission: CreateOrganizationSubmission,
+  csrfToken: string,
+): Promise<OrganizationAcknowledgement> => {
+  const command: WireCreateOrganizationCommand = {
+    kind: submission.kind,
+    mutation_id: submission.mutationId,
+    name: submission.name,
+    organization_id: submission.organizationId,
+    version: 1,
+  }
+
+  return mapOrganizationAcknowledgement(
+    await jsonRequest<WireCreateOrganizationCommand, WireOrganizationAcknowledgement>(
+      '/api/v1/commands/create-organization',
+      'POST',
+      command,
+      csrfToken,
+    ),
+  )
+}
+
+const renameOrganization = async (
+  submission: RenameOrganizationSubmission,
+  csrfToken: string,
+): Promise<OrganizationAcknowledgement> => {
+  const command: WireRenameOrganizationCommand = {
+    expected_revision: submission.expectedRevision,
+    mutation_id: submission.mutationId,
+    name: submission.name,
+    organization_id: submission.organizationId,
+    version: 1,
+  }
+
+  return mapOrganizationAcknowledgement(
+    await jsonRequest<WireRenameOrganizationCommand, WireOrganizationAcknowledgement>(
+      '/api/v1/commands/rename-organization',
+      'POST',
+      command,
+      csrfToken,
+    ),
+  )
+}
+
+const organizationLifecycle = async (
+  action: 'archive' | 'unarchive',
+  submission: OrganizationLifecycleSubmission,
+  csrfToken: string,
+): Promise<OrganizationAcknowledgement> => {
+  const command: WireOrganizationLifecycleCommand = {
+    expected_revision: submission.expectedRevision,
+    mutation_id: submission.mutationId,
+    organization_id: submission.organizationId,
+    version: 1,
+  }
+
+  return mapOrganizationAcknowledgement(
+    await jsonRequest<WireOrganizationLifecycleCommand, WireOrganizationAcknowledgement>(
+      `/api/v1/commands/${action}-organization`,
+      'POST',
+      command,
+      csrfToken,
+    ),
+  )
+}
+
+const archiveOrganization = (
+  submission: OrganizationLifecycleSubmission,
+  csrfToken: string,
+) => organizationLifecycle('archive', submission, csrfToken)
+
+const unarchiveOrganization = (
+  submission: OrganizationLifecycleSubmission,
+  csrfToken: string,
+) => organizationLifecycle('unarchive', submission, csrfToken)
+
 const getMutation = async (mutationId: string): Promise<CommandAcknowledgement> =>
   mapAcknowledgement(
     await readJson<WireCommandAcknowledgement>(
@@ -366,11 +562,15 @@ const getMutation = async (mutationId: string): Promise<CommandAcknowledgement> 
 
 export {
   KeeplingApiError,
+  archiveOrganization,
+  assignTaskOrganizations,
   captureTask,
   clarifyTask,
   completeSetup,
+  createOrganization,
   getInbox,
   getMutation,
+  getOrganizations,
   getSession,
   editTask,
   listSessions,
@@ -378,18 +578,28 @@ export {
   logout,
   reauthenticate,
   recoverAccount,
+  renameOrganization,
   returnToInbox,
   revokeSession,
   updateSession,
+  unarchiveOrganization,
+  type AssignTaskOrganizationsSubmission,
   type AuthenticationTransition,
+  type BrowserOrganization,
   type BrowserSession,
   type BrowserTask,
   type CaptureAcknowledgement,
   type CaptureTaskSubmission,
   type CaptureWarning,
   type CommandAcknowledgement,
+  type CreateOrganizationSubmission,
   type EditTaskSubmission,
   type Problem,
+  type OrganizationAcknowledgement,
+  type OrganizationAssignmentValues,
+  type OrganizationLifecycleSubmission,
+  type RenameOrganizationSubmission,
   type ReturnToInboxSubmission,
   type TaskDetailValues,
+  type TaskOrganizationReference,
 }

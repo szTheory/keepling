@@ -4,6 +4,9 @@ import LoginForm from '@/features/auth/LoginForm'
 import Reauthenticate, { type InterruptedIntent } from '@/features/auth/Reauthenticate'
 import RecoveryReset from '@/features/auth/RecoveryReset'
 import SetupForm from '@/features/auth/SetupForm'
+import OrganizationFields, {
+  OrganizationManager,
+} from '@/features/organizations/OrganizationFields'
 import TaskEditor from '@/features/tasks/TaskEditor'
 import type { CommandAcknowledgement } from '@/api/keepling'
 
@@ -25,6 +28,15 @@ const routeToken = (pathname: string, prefix: string) => {
   if (!pathname.startsWith(prefix)) return null
   const raw = pathname.slice(prefix.length)
   if (raw === '' || raw.includes('/')) return null
+  try {
+    return decodeURIComponent(raw)
+  } catch {
+    return null
+  }
+}
+
+const decodeRoutePart = (raw: string | undefined) => {
+  if (!raw) return null
   try {
     return decodeURIComponent(raw)
   } catch {
@@ -103,6 +115,20 @@ function AppRoutes({
       )
     }
     return <LoginForm onAuthenticated={handleAuthenticated} />
+  }
+
+  if (pathname === '/projects' && csrfToken) {
+    return <OrganizationManager csrfToken={csrfToken} kind="project" />
+  }
+
+  if (pathname === '/tags' && csrfToken) {
+    return <OrganizationManager csrfToken={csrfToken} kind="tag" />
+  }
+
+  const assignmentMatch = pathname.match(/^\/tasks\/([^/]+)\/organizations$/)
+  const assignmentTaskId = decodeRoutePart(assignmentMatch?.[1])
+  if (assignmentTaskId && csrfToken) {
+    return <OrganizationFields csrfToken={csrfToken} taskId={assignmentTaskId} />
   }
 
   const taskId = routeToken(pathname, '/tasks/')
