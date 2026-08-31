@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -120,12 +120,18 @@ describe('inline task conflict resolution', () => {
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Save & move out of Inbox' })).toBeDisabled()
     await user.click(screen.getByRole('button', { name: 'Save changes' }))
+    fireEvent.keyDown(title, { ctrlKey: true, key: 'Enter' })
+    fireEvent.keyDown(title, { key: 'Escape' })
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(fetchMock.mock.calls.filter(([url]) => String(url) === '/api/v1/commands/edit-task')).toHaveLength(1)
 
     await user.click(screen.getByRole('button', { name: 'Use mine for Title' }))
     await user.click(screen.getByRole('button', { name: 'Save resolution' }))
     expect(title).toHaveAttribute('readonly')
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled()
+    fireEvent.keyDown(title, { key: 'Enter', metaKey: true })
+    fireEvent.keyDown(title, { key: 'Escape' })
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(fetchMock.mock.calls.filter(([url]) => String(url) === '/api/v1/commands/edit-task')).toHaveLength(1)
   })
 

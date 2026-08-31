@@ -486,7 +486,12 @@ function TaskEditor({
   }
 
   const submit = async (action: Submission['action'], navigateAfter?: string) => {
-    if (!acceptedTask || recoveryState?.kind === 'in_flight' || !validate()) return
+    if (
+      locked ||
+      !acceptedTask ||
+      recoveryState?.kind === 'in_flight' ||
+      !validate()
+    ) return
     const hasDetails = Object.keys(changedValues.fields).length > 0
     const hasDates = Object.keys(changedDateValues.fields).length > 0
     if (action === 'edit' && !hasDetails && !hasDates) {
@@ -528,6 +533,7 @@ function TaskEditor({
   }
 
   const requestNavigation = (pathname: string) => {
+    if (locked) return
     if (dirty) setPendingNavigation(pathname)
     else onNavigate(pathname)
   }
@@ -558,15 +564,18 @@ function TaskEditor({
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (locked) return
     void submit('edit')
   }
 
   const handleKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
     if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
       event.preventDefault()
+      if (locked) return
       void submit('edit')
     } else if (event.key === 'Escape') {
       event.preventDefault()
+      if (locked) return
       requestNavigation('/')
     }
   }
@@ -830,7 +839,9 @@ function TaskEditor({
               <Button ref={stayRef} onClick={() => setPendingNavigation(null)} variant="outline">
                 Stay here
               </Button>
-              <Button onClick={() => void submit('edit', pendingNavigation)}>Save changes</Button>
+              {!locked ? (
+                <Button onClick={() => void submit('edit', pendingNavigation)}>Save changes</Button>
+              ) : null}
               <Button
                 onClick={() => {
                   allowNavigation.current = true
