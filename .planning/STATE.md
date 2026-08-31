@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-05-PLAN.md
-last_updated: "2026-08-31T02:11:14.077Z"
+stopped_at: Completed KPL-01-06-PLAN.md
+last_updated: "2026-08-31T02:33:25.490Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase KPL-01 execution started
-state_head: 3b5a5372ecd1ff1e00eefe4236a05065eb92a6a7
+state_head: 3e1c7c8d1d2c658f6cf9c8fe5b51f2130ec5cdee
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 6 of 19
+Plan: 7 of 19
 Total Plans in Phase: 19
 Status: Executing Phase KPL-01
 Last activity: 2026-08-30 — Phase KPL-01 execution started
@@ -59,6 +59,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01]: Capture fingerprints use canonical semantic fields, including the trimmed title, while mutation identity remains the account-scoped receipt key.
 - [Phase 01]: Terminal acknowledgements and activity field deltas are persisted as native JSONB values so first delivery, lookup, and replay preserve one closed shape.
 - [Phase 01]: Mutation lookup returns the original terminal HTTP status and the generated/browser contracts expose acknowledgement warnings and terminal problems.
+- [Phase 01]: Setup capabilities are 32 random bytes, valid for 60–3600 seconds, persisted only as SHA-256 hashes, and serialized through one locked account_setup singleton row.
+- [Phase 01]: Account timezone changes update only the account setting and three affected view revisions, while closed timezone_changed facts remain separate from task activity.
+- [Phase 01]: Tzdata uses its pinned vendored IANA snapshot with automatic network updates disabled; Keepling starts no remote timezone updater and has no Hackney call path.
 
 ### Retained Research
 
@@ -86,8 +89,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T02:11:14.070Z
-**Stopped at:** Completed KPL-01-05-PLAN.md
+**Last session:** 2026-08-31T02:33:25.482Z
+**Stopped at:** Completed KPL-01-06-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -99,3 +102,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P04 | 10min | 2 tasks | 13 files |
 | Phase KPL-01 P03 | 8min | 2 tasks | 15 files |
 | Phase KPL-01 P05 | 26min | 2 tasks | 20 files |
+| Phase KPL-01 P06 | 17min | 2 tasks | 16 files |

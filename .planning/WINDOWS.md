@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 9
+open_count: 12
 waived_count: 0
 fixed_count: 0
-total_count: 9
-last_updated: 2026-08-31T02:10:59.498Z
+total_count: 12
+last_updated: 2026-08-31T02:33:05.234Z
 ---
 
 # Broken Windows Ledger
@@ -24,6 +24,9 @@ last_updated: 2026-08-31T02:10:59.498Z
 | 7 | KPL-01 | deviation | apps/server/priv/repo/seeds.exs |  | Added an explicitly test-only closed-account seed | open |  | 2026-08-31T02:10:59.359Z |  |
 | 8 | KPL-01 | deviation | apps/web/src/index.css |  | Applied the approved accessible capture baseline | open |  | 2026-08-31T02:10:59.428Z |  |
 | 9 | KPL-01 | deviation | apps/server/lib/keepling/adapters/postgres/command_store.ex |  | Corrected double-encoded JSONB terminal results | open |  | 2026-08-31T02:10:59.498Z |  |
+| 10 | KPL-01 | deviation | apps/server/mix.exs |  | Added exact reviewed Argon2id and Tzdata dependencies required by the planned setup contract | open |  | 2026-08-31T02:33:05.090Z |  |
+| 11 | KPL-01 | deviation | apps/server/priv/repo/migrations/20260830000200_add_closed_setup_and_timezone.exs |  | Bound setup TTL and enforced permanent disablement plus future account credential/timezone fields | open |  | 2026-08-31T02:33:05.162Z |  |
+| 12 | KPL-01 | deviation | apps/server/config/config.exs |  | Disabled Tzdata remote updater to close the vulnerable transitive HTTP path | open |  | 2026-08-31T02:33:05.234Z |  |
 
 ````json
 [
@@ -133,6 +136,42 @@ last_updated: 2026-08-31T02:10:59.498Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-31T02:10:59.498Z",
+    "resolved_at": null
+  },
+  {
+    "id": 10,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/server/mix.exs",
+    "line": null,
+    "description": "Added exact reviewed Argon2id and Tzdata dependencies required by the planned setup contract",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T02:33:05.090Z",
+    "resolved_at": null
+  },
+  {
+    "id": 11,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/server/priv/repo/migrations/20260830000200_add_closed_setup_and_timezone.exs",
+    "line": null,
+    "description": "Bound setup TTL and enforced permanent disablement plus future account credential/timezone fields",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T02:33:05.162Z",
+    "resolved_at": null
+  },
+  {
+    "id": 12,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/server/config/config.exs",
+    "line": null,
+    "description": "Disabled Tzdata remote updater to close the vulnerable transitive HTTP path",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T02:33:05.234Z",
     "resolved_at": null
   }
 ]
