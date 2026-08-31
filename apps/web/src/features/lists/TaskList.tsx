@@ -9,6 +9,9 @@ import {
   type TaskViewPage,
   type TodayMoveSubmission,
 } from '@/api/keepling'
+import LifecycleActions, {
+  type LifecycleReconciliation,
+} from '@/features/tasks/LifecycleActions'
 
 type TaskListProps = {
   csrfToken?: string
@@ -104,6 +107,8 @@ function TaskList({ csrfToken, view }: TaskListProps) {
   >(null)
   const [unknownMove, setUnknownMove] = useState<TodayMoveSubmission | null>(null)
   const [announcement, setAnnouncement] = useState('')
+  const [completedToday, setCompletedToday] = useState<readonly TaskViewItem[]>([])
+  const heading = useRef<HTMLHeadingElement>(null)
   const rowLinks = useRef(new Map<string, HTMLAnchorElement>())
   const viewCopy = copy[view]
 
@@ -254,6 +259,61 @@ function TaskList({ csrfToken, view }: TaskListProps) {
     }
   }
 
+  const focusAfterRemoval = (items: readonly TaskViewItem[], taskId: string) => {
+    const index = items.findIndex((item) => item.id === taskId)
+    const destination = items[index + 1]?.id ?? items[index - 1]?.id
+    window.requestAnimationFrame(() => {
+      if (destination) rowLinks.current.get(destination)?.focus()
+      else heading.current?.focus()
+    })
+  }
+
+  const reconcileLifecycle = async ({ acknowledgement, action, task }: LifecycleReconciliation) => {
+    if (state.kind !== 'ready') return
+    const previousItems = state.page.items
+
+    if (action === 'complete') {
+      const completedTask: TaskViewItem = {
+        capturedAt: acknowledgement.snapshot.capturedAt,
+        completedAt: acknowledgement.snapshot.completedAt ?? undefined,
+        completedOn: state.page.accountDay,
+        deadlineOn: acknowledgement.snapshot.deadlineOn,
+        id: acknowledgement.snapshot.id,
+        plannedOn: acknowledgement.snapshot.plannedOn,
+        reasons: [],
+        revision: acknowledgement.revision,
+        title: acknowledgement.snapshot.title,
+      }
+      setState({
+        kind: 'ready',
+        page: { ...state.page, items: previousItems.filter((item) => item.id !== task.id) },
+      })
+      setCompletedToday((items) => [completedTask, ...items.filter((item) => item.id !== task.id)])
+      setAnnouncement('Task completed. Moved to Completed today.')
+      focusAfterRemoval(previousItems, task.id)
+      return
+    }
+
+    const destinations = await Promise.allSettled(
+      (['inbox', 'today', 'upcoming'] as const).map(async (destination) => ({
+        destination,
+        page: await getTaskView(destination),
+      })),
+    )
+    const successful = destinations.flatMap((result) => result.status === 'fulfilled' ? [result.value] : [])
+    const current = successful.find((result) => result.destination === view)
+    setCompletedToday((items) => items.filter((item) => item.id !== task.id))
+    setState({
+      kind: 'ready',
+      page: current?.page ?? { ...state.page, items: previousItems.filter((item) => item.id !== task.id) },
+    })
+    const labels = successful
+      .filter((result) => result.page.items.some((item) => item.id === task.id))
+      .map((result) => copy[result.destination].title)
+    setAnnouncement(labels.length > 0 ? `Task reopened to ${labels.join(' and ')}.` : 'Task reopened.')
+    focusAfterRemoval(previousItems, task.id)
+  }
+
   const taskRow = (task: TaskViewItem) => (
     <li className="min-h-[3.25rem] border-b border-border py-3" key={task.id}>
       <div className="flex items-start justify-between gap-4">
@@ -272,8 +332,9 @@ function TaskList({ csrfToken, view }: TaskListProps) {
             <p className="mt-1 text-sm text-muted-foreground">{reasonText(task)}</p>
           ) : null}
         </div>
-        {view === 'today' ? (
-          <div className="flex shrink-0 flex-wrap justify-end gap-1">
+        <div className="flex shrink-0 flex-wrap justify-end gap-1">
+          {view === 'today' ? (
+            <>
             <button
               aria-label={`Move earlier “${task.title}”`}
               className="min-h-11 px-2 text-sm font-semibold text-primary underline"
@@ -292,8 +353,16 @@ function TaskList({ csrfToken, view }: TaskListProps) {
             >
               Later
             </button>
-          </div>
-        ) : null}
+            </>
+          ) : null}
+          {csrfToken ? (
+            <LifecycleActions
+              csrfToken={csrfToken}
+              onAcknowledged={reconcileLifecycle}
+              task={task}
+            />
+          ) : null}
+        </div>
       </div>
       {movingTaskId === task.id ? (
         <p className="mt-1 text-sm text-muted-foreground" role="status">
@@ -348,6 +417,13 @@ function TaskList({ csrfToken, view }: TaskListProps) {
     return <ul aria-label={`${viewCopy.title} tasks`} className="mt-6">{page.items.map(taskRow)}</ul>
   }
 
+  const completedTodaySection = completedToday.length > 0 ? (
+    <section aria-labelledby="completed-today-heading" className="mt-8">
+      <h2 className="text-xl font-semibold" id="completed-today-heading">Completed today</h2>
+      <ul aria-label="Completed today tasks" className="mt-3">{completedToday.map(taskRow)}</ul>
+    </section>
+  ) : null
+
   return (
     <main className="min-h-screen min-w-0 bg-background px-4 py-8 sm:px-6 lg:px-8" id="main-content" tabIndex={-1}>
       <div className="mx-auto max-w-3xl">
@@ -363,7 +439,7 @@ function TaskList({ csrfToken, view }: TaskListProps) {
             </a>
           ))}
         </nav>
-        <h1 className="text-[1.75rem] font-semibold leading-[1.2]">{viewCopy.title}</h1>
+        <h1 className="text-[1.75rem] font-semibold leading-[1.2]" ref={heading} tabIndex={-1}>{viewCopy.title}</h1>
         <p className="mt-2 text-muted-foreground">{viewCopy.description}</p>
 
         {state.kind === 'loading' ? <p className="mt-8" role="status">Loading {viewCopy.title}…</p> : null}
@@ -381,7 +457,7 @@ function TaskList({ csrfToken, view }: TaskListProps) {
           </div>
         ) : null}
 
-        {state.kind === 'ready' && state.page.items.length === 0 ? (
+        {state.kind === 'ready' && state.page.items.length === 0 && completedToday.length === 0 ? (
           <div className="mt-12 max-w-md">
             <h2 className="text-xl font-semibold">{viewCopy.emptyHeading}</h2>
             <p className="mt-2 text-muted-foreground">{viewCopy.emptyBody}</p>
@@ -389,6 +465,7 @@ function TaskList({ csrfToken, view }: TaskListProps) {
         ) : null}
 
         {state.kind === 'ready' && state.page.items.length > 0 ? populated(state.page) : null}
+        {completedTodaySection}
 
         {updating ? <p className="mt-4" role="status">Updating…</p> : null}
 

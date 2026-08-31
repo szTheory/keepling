@@ -9,8 +9,6 @@ import OrganizationFields, {
   OrganizationManager,
 } from '@/features/organizations/OrganizationFields'
 import TaskList from '@/features/lists/TaskList'
-import TodayList from '@/features/lists/TodayList'
-import UpcomingList from '@/features/lists/UpcomingList'
 import TaskEditor from '@/features/tasks/TaskEditor'
 import type { CommandAcknowledgement } from '@/api/keepling'
 
@@ -121,10 +119,10 @@ function AppRoutes({
     return <LoginForm onAuthenticated={handleAuthenticated} />
   }
 
-  if (pathname === '/today' && csrfToken) return <TodayList csrfToken={csrfToken} />
-  if (pathname === '/upcoming') return <UpcomingList />
-  if (pathname === '/completed') return <TaskList view="completed" />
-  if (pathname === '/inbox') return <TaskList view="inbox" />
+  if (pathname === '/today' && csrfToken) return <TaskList csrfToken={csrfToken} view="today" />
+  if (pathname === '/upcoming' && csrfToken) return <TaskList csrfToken={csrfToken} view="upcoming" />
+  if (pathname === '/completed' && csrfToken) return <TaskList csrfToken={csrfToken} view="completed" />
+  if (pathname === '/inbox' && csrfToken) return <TaskList csrfToken={csrfToken} view="inbox" />
 
   if (pathname === '/projects' && csrfToken) {
     return <OrganizationManager csrfToken={csrfToken} kind="project" />

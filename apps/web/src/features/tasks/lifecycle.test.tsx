@@ -1,8 +1,9 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import LifecycleActions from '@/features/tasks/LifecycleActions'
+import TaskList from '@/features/lists/TaskList'
 
 type Deferred<T> = {
   promise: Promise<T>
@@ -53,6 +54,27 @@ const acknowledgement = (mutationId: string) => ({
   },
   task_id: task.id,
   warnings: [],
+})
+
+const page = (items: readonly unknown[], view = 'today') => ({
+  account_day: '2026-08-31',
+  account_timezone: 'America/New_York',
+  items,
+  next_cursor: null,
+  order_revision: view === 'today' ? 3 : null,
+  view,
+})
+
+const wireItem = (overrides: Record<string, unknown> = {}) => ({
+  captured_at: task.capturedAt,
+  deadline_on: null,
+  id: task.id,
+  planned_on: task.plannedOn,
+  reasons: ['planned_today'],
+  revision: task.revision,
+  section: 'today',
+  title: task.title,
+  ...overrides,
 })
 
 afterEach(() => {
@@ -173,5 +195,63 @@ describe('task lifecycle actions', () => {
     await waitFor(() => expect(onAcknowledged).toHaveBeenCalledTimes(1))
     expect(String(fetchMock.mock.calls[0]?.[0])).toBe('/api/v1/commands/reopen-task')
     expect(onAcknowledged).toHaveBeenCalledWith(expect.objectContaining({ action: 'reopen' }))
+  })
+
+  it('moves an acknowledged completion into Completed today and focuses the next task', async () => {
+    const completeResponse = deferred<Response>()
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse(page([
+          wireItem(),
+          wireItem({ id: '22222222-2222-4222-8222-222222222222', title: 'Send invoice' }),
+        ])),
+      )
+      .mockImplementationOnce(() => completeResponse.promise)
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(<TaskList csrfToken="csrf" view="today" />)
+    await screen.findByRole('link', { name: task.title })
+    await user.click(screen.getByRole('button', { name: 'Complete “Call dentist”' }))
+
+    expect(screen.getByRole('link', { name: task.title })).toBeInTheDocument()
+    const request = JSON.parse(String(fetchMock.mock.calls[1]?.[1]?.body))
+    completeResponse.resolve(jsonResponse(acknowledgement(request.mutation_id)))
+
+    const completed = await screen.findByRole('list', { name: 'Completed today tasks' })
+    expect(within(completed).getByRole('link', { name: task.title })).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('link', { name: 'Send invoice' })).toHaveFocus())
+    expect(screen.getByText('Task completed. Moved to Completed today.')).toBeInTheDocument()
+  })
+
+  it('recomputes destinations after reopen instead of predicting membership', async () => {
+    const reopened = wireItem({ completed_at: undefined, revision: 6 })
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        jsonResponse(page([wireItem({ completed_at: '2026-08-31T12:00:00.000000Z', completed_on: '2026-08-31' })], 'completed')),
+      )
+      .mockImplementationOnce(async (_input, init) => {
+        const request = JSON.parse(String(init?.body))
+        return jsonResponse({
+          ...acknowledgement(request.mutation_id),
+          revision: 6,
+          snapshot: { ...acknowledgement(request.mutation_id).snapshot, completed_at: null, revision: 6 },
+        })
+      })
+      .mockResolvedValueOnce(jsonResponse(page([reopened], 'inbox')))
+      .mockResolvedValueOnce(jsonResponse(page([reopened], 'today')))
+      .mockResolvedValueOnce(jsonResponse(page([], 'upcoming')))
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(<TaskList csrfToken="csrf" view="completed" />)
+    await screen.findByRole('button', { name: 'Reopen “Call dentist”' })
+    await user.click(screen.getByRole('button', { name: 'Reopen “Call dentist”' }))
+
+    expect(await screen.findByText('Task reopened to Inbox and Today.')).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: task.title })).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('heading', { level: 1, name: 'Completed' })).toHaveFocus())
   })
 })

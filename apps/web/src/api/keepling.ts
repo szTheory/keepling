@@ -15,6 +15,7 @@ type WireOrganizationLifecycleCommand = components['schemas']['OrganizationLifec
 type WireOrganizationsResponse = components['schemas']['OrganizationsResponse']
 type WireRenameOrganizationCommand = components['schemas']['RenameOrganizationCommand']
 type WireReturnToInboxCommand = components['schemas']['ReturnToInboxCommand']
+type WireTaskLifecycleCommand = components['schemas']['TaskLifecycleCommand']
 type WireTaskViewItem = components['schemas']['TaskViewItem']
 type WireTaskViewPage = components['schemas']['TaskViewPage']
 type WireTodayMoveRequest = components['schemas']['TodayMoveRequest']
@@ -36,6 +37,7 @@ type VersionedAuthRequest = components['schemas']['VersionedAuthRequest']
 
 type BrowserTask = {
   capturedAt: string
+  completedAt: string | null
   deadlineOn: string | null
   id: string
   inboxState: 'clarified' | 'inbox'
@@ -219,6 +221,8 @@ type ReturnToInboxSubmission = {
   mutationId: string
   taskId: string
 }
+
+type LifecycleSubmission = ReturnToInboxSubmission
 
 type OrganizationAssignmentValues = {
   projectId: string | null
@@ -439,6 +443,7 @@ const revokeSession = async (
 
 const mapTask = (task: components['schemas']['TaskSnapshot']): BrowserTask => ({
   capturedAt: task.captured_at,
+  completedAt: task.completed_at,
   deadlineOn: task.deadline_on,
   id: task.id,
   inboxState: task.inbox_state,
@@ -745,6 +750,25 @@ const returnToInbox = async (
   return submitTaskCommand('/api/v1/commands/return-to-inbox', command, csrfToken)
 }
 
+const lifecycleCommand = (submission: LifecycleSubmission): WireTaskLifecycleCommand => ({
+  expected_revision: submission.expectedRevision,
+  mutation_id: submission.mutationId,
+  task_id: submission.taskId,
+  version: 1,
+})
+
+const completeTask = async (
+  submission: LifecycleSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> =>
+  submitTaskCommand('/api/v1/commands/complete-task', lifecycleCommand(submission), csrfToken)
+
+const reopenTask = async (
+  submission: LifecycleSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> =>
+  submitTaskCommand('/api/v1/commands/reopen-task', lifecycleCommand(submission), csrfToken)
+
 const assignTaskOrganizations = async (
   submission: AssignTaskOrganizationsSubmission,
   csrfToken: string,
@@ -859,6 +883,7 @@ export {
   assignTaskOrganizations,
   captureTask,
   clarifyTask,
+  completeTask,
   completeSetup,
   createOrganization,
   editTaskDates,
@@ -875,6 +900,7 @@ export {
   reauthenticate,
   recoverAccount,
   renameOrganization,
+  reopenTask,
   returnToInbox,
   revokeSession,
   updateSession,
@@ -895,6 +921,7 @@ export {
   type CreateOrganizationSubmission,
   type EditTaskSubmission,
   type EditTaskDatesSubmission,
+  type LifecycleSubmission,
   type PlanningSubmission,
   type Problem,
   type OrganizationAcknowledgement,
