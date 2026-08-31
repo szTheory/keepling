@@ -126,6 +126,73 @@ describe('closed browser authentication', () => {
 })
 
 describe('reauthentication interruption', () => {
+  it('drains continuations registered and replaced while a drain is active', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({ csrf_token: 'initial-csrf', status: 'authenticated' }),
+      ),
+    )
+    let releaseFirst!: () => void
+    const firstResume = vi.fn(
+      () => new Promise<void>((resolve) => {
+        releaseFirst = resolve
+      }),
+    )
+    const differentResume = vi.fn().mockResolvedValue(undefined)
+    const replacementResume = vi.fn().mockResolvedValue(undefined)
+    const firstIntent = {
+      authentication: 'sign_in',
+      kind: 'read',
+      mutationId: 'read:first',
+    } satisfies InterruptedIntent
+    const differentIntent = {
+      authentication: 'sign_in',
+      kind: 'read',
+      mutationId: 'read:different',
+    } satisfies InterruptedIntent
+
+    function Harness() {
+      const auth = useAuth()
+      return (
+        <>
+          <button onClick={() => auth.beginReauthentication(firstIntent, firstResume)} type="button">
+            Register first
+          </button>
+          <button
+            onClick={() => void auth.completeReauthentication(firstIntent, 'rotated-csrf')}
+            type="button"
+          >
+            Complete authentication
+          </button>
+          <button
+            onClick={() => {
+              auth.beginReauthentication(differentIntent, differentResume)
+              auth.beginReauthentication(firstIntent, replacementResume)
+            }}
+            type="button"
+          >
+            Register during drain
+          </button>
+          <output>{auth.interruption?.mutationId ?? 'settled'}</output>
+        </>
+      )
+    }
+
+    const user = userEvent.setup()
+    render(<AuthProvider><Harness /></AuthProvider>)
+    await user.click(screen.getByRole('button', { name: 'Register first' }))
+    await user.click(screen.getByRole('button', { name: 'Complete authentication' }))
+    await waitFor(() => expect(firstResume).toHaveBeenCalledOnce())
+    await user.click(screen.getByRole('button', { name: 'Register during drain' }))
+    releaseFirst()
+
+    await waitFor(() => expect(differentResume).toHaveBeenCalledOnce())
+    await waitFor(() => expect(replacementResume).toHaveBeenCalledOnce())
+    expect(firstResume).toHaveBeenCalledOnce()
+    await waitFor(() => expect(screen.getByText('settled')).toBeVisible())
+  })
+
   it('drains keyed continuations once and keeps a failed resume visibly retryable', async () => {
     vi.stubGlobal(
       'fetch',

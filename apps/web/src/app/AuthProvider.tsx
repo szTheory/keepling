@@ -32,6 +32,12 @@ type AuthContextValue = {
   state: AuthenticationState
 }
 
+type ContinuationEntry = {
+  generation: number
+  intent: InterruptedIntent
+  resume: (csrfToken: string) => Promise<void>
+}
+
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 function AuthProvider({ children }: { children: ReactNode }) {
@@ -39,13 +45,11 @@ function AuthProvider({ children }: { children: ReactNode }) {
   const [interruption, setInterruption] = useState<InterruptedIntent | null>(null)
   const [continuationError, setContinuationError] = useState(false)
   const resumesRef = useRef(
-    new Map<
-      string,
-      { intent: InterruptedIntent; resume: (csrfToken: string) => Promise<void> }
-    >(),
+    new Map<string, ContinuationEntry>(),
   )
   const drainRef = useRef<Promise<void> | null>(null)
   const generationRef = useRef(0)
+  const continuationGenerationRef = useRef(0)
 
   useEffect(() => {
     let active = true
@@ -75,7 +79,12 @@ function AuthProvider({ children }: { children: ReactNode }) {
   const beginReauthentication = useCallback(
     (intent: InterruptedIntent, resume: (csrfToken: string) => Promise<void>) => {
       const key = `${intent.kind}:${intent.mutationId}`
-      resumesRef.current.set(key, { intent, resume })
+      continuationGenerationRef.current += 1
+      resumesRef.current.set(key, {
+        generation: continuationGenerationRef.current,
+        intent,
+        resume,
+      })
       setInterruption((current) => current ?? intent)
     },
     [],
@@ -94,21 +103,39 @@ function AuthProvider({ children }: { children: ReactNode }) {
     if (drainRef.current) return drainRef.current
 
     const generation = generationRef.current
-    const pending = [...resumesRef.current.entries()]
     setContinuationError(false)
 
-    const drain = Promise.allSettled(
-      pending.map(([, continuation]) => continuation.resume(csrfToken)),
-    )
-      .then((outcomes) => {
+    const drain = (async () => {
+      const attempted = new Set<number>()
+      let failed = false
+
+      while (generation === generationRef.current) {
+        const pending = [...resumesRef.current.entries()].filter(
+          ([, continuation]) => !attempted.has(continuation.generation),
+        )
+        if (pending.length === 0) break
+        pending.forEach(([, continuation]) => attempted.add(continuation.generation))
+
+        const outcomes = await Promise.allSettled(
+          pending.map(([, continuation]) => continuation.resume(csrfToken)),
+        )
         if (generation !== generationRef.current) return
-        pending.forEach(([key], index) => {
-          if (outcomes[index]?.status === 'fulfilled') resumesRef.current.delete(key)
+
+        pending.forEach(([key, continuation], index) => {
+          if (
+            outcomes[index]?.status === 'fulfilled' &&
+            resumesRef.current.get(key) === continuation
+          ) {
+            resumesRef.current.delete(key)
+          }
         })
-        const failed = outcomes.some((outcome) => outcome.status === 'rejected')
-        setContinuationError(failed)
-        setInterruption(resumesRef.current.values().next().value?.intent ?? null)
-      })
+        failed ||= outcomes.some((outcome) => outcome.status === 'rejected')
+      }
+
+      if (generation !== generationRef.current) return
+      setContinuationError(failed)
+      setInterruption(resumesRef.current.values().next().value?.intent ?? null)
+    })()
       .finally(() => {
         if (drainRef.current === drain) drainRef.current = null
       })
