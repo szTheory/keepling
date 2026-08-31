@@ -200,13 +200,14 @@ function TaskEditor({
       exactSubmission.current !== null
     ) return
 
-    if (
-      loadState.kind !== 'ready' ||
-      pendingExternalAcknowledgement.revision > loadState.task.revision
-    ) {
-      applyExternalAcknowledgement(pendingExternalAcknowledgement)
-    }
-    setPendingExternalAcknowledgement(null)
+    const acknowledgement = pendingExternalAcknowledgement
+    const shouldApply =
+      loadState.kind !== 'ready' || acknowledgement.revision > loadState.task.revision
+    const timeout = window.setTimeout(() => {
+      if (shouldApply) applyExternalAcknowledgement(acknowledgement)
+      setPendingExternalAcknowledgement(null)
+    }, 0)
+    return () => window.clearTimeout(timeout)
   }, [
     applyExternalAcknowledgement,
     dirty,
