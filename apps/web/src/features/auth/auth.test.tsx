@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import AppShell from '@/app/AppShell'
+import { AuthProvider, useAuth } from '@/app/AuthProvider'
 import AppRoutes from '@/app/routes'
 import Reauthenticate, { type InterruptedIntent } from '@/features/auth/Reauthenticate'
 import QuickCapture from '@/features/capture/QuickCapture'
@@ -125,6 +126,88 @@ describe('closed browser authentication', () => {
 })
 
 describe('reauthentication interruption', () => {
+  it('drains keyed continuations once and keeps a failed resume visibly retryable', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({ csrf_token: 'initial-csrf', status: 'authenticated' }),
+      ),
+    )
+    const firstResume = vi.fn().mockResolvedValue(undefined)
+    const secondResume = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('activity refresh failed'))
+      .mockResolvedValueOnce(undefined)
+    const firstIntent = {
+      authentication: 'sign_in',
+      kind: 'read',
+      mutationId: 'read:first',
+    } satisfies InterruptedIntent
+    const secondIntent = {
+      authentication: 'sign_in',
+      kind: 'read',
+      mutationId: 'read:second',
+    } satisfies InterruptedIntent
+
+    function Harness() {
+      const auth = useAuth()
+      return (
+        <>
+          <button
+            onClick={() => {
+              auth.beginReauthentication(firstIntent, firstResume)
+              auth.beginReauthentication(firstIntent, firstResume)
+              auth.beginReauthentication(secondIntent, secondResume)
+            }}
+            type="button"
+          >
+            Register interruptions
+          </button>
+          <button
+            onClick={() => void auth.completeReauthentication(firstIntent, 'rotated-csrf')}
+            type="button"
+          >
+            Complete authentication
+          </button>
+          <AppRoutes
+            authenticated
+            authenticatedContent={<p>Retained routed work</p>}
+            continuationError={auth.continuationError}
+            csrfToken={auth.state.kind === 'authenticated' ? auth.state.csrfToken : 'initial-csrf'}
+            interruption={auth.interruption}
+            onReauthenticated={auth.completeReauthentication}
+            onRetryContinuations={auth.retryContinuations}
+          />
+        </>
+      )
+    }
+
+    const user = userEvent.setup()
+    render(
+      <AuthProvider>
+        <Harness />
+      </AuthProvider>,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Register interruptions' }))
+    await user.click(screen.getByRole('button', { name: 'Complete authentication' }))
+
+    await waitFor(() => expect(firstResume).toHaveBeenCalledOnce())
+    expect(firstResume).toHaveBeenCalledWith('rotated-csrf')
+    expect(secondResume).toHaveBeenCalledOnce()
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Couldn’t finish restoring everything. Your work is still here.',
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Try continuing again' }))
+
+    await waitFor(() => expect(secondResume).toHaveBeenCalledTimes(2))
+    expect(firstResume).toHaveBeenCalledOnce()
+    await waitFor(() =>
+      expect(screen.queryByText('Couldn’t finish restoring everything. Your work is still here.')).not.toBeInTheDocument(),
+    )
+  })
+
   it('returns the exact submitted-unknown intent after password reauthentication', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       jsonResponse({ csrf_token: 'new-csrf', status: 'recently_authenticated' }),

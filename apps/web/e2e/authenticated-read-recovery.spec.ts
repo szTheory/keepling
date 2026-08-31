@@ -150,3 +150,33 @@ test('@authenticated-read-organizations restores assignment, Projects, and Tags 
   await expect(page.getByRole('combobox', { name: 'Project' })).toBeVisible()
   expect(new URL(page.url()).pathname).toBe(assignmentPath)
 })
+
+test('@authenticated-read-concurrent drains task and activity reads through one login', async ({
+  baseURL,
+  page,
+}) => {
+  setAccountPassword()
+  const { csrf_token: csrfToken } = await authenticate(page, baseURL)
+  await page.goto('/')
+  await page.getByLabel('What do you want to keep?').fill('Concurrent read recovery task')
+  await page.getByRole('button', { name: 'Add task' }).click()
+  const taskLink = page.getByRole('link', { name: 'Concurrent read recovery task' })
+  const taskPath = await taskLink.getAttribute('href')
+  expect(taskPath).toBeTruthy()
+  await revokeCurrentSession(page, baseURL, csrfToken)
+
+  let loginCount = 0
+  await page.route('**/api/v1/login', async (route) => {
+    loginCount += 1
+    await route.continue()
+  })
+  await page.evaluate((nextPath) => {
+    window.history.pushState({}, '', nextPath)
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }, taskPath)
+  await continueThroughLogin(page, 'Concurrent task reads')
+
+  await expect(page.getByLabel('Title')).toHaveValue('Concurrent read recovery task')
+  await expect(page.getByRole('heading', { name: 'Activity' })).toBeVisible()
+  expect(loginCount).toBe(1)
+})
