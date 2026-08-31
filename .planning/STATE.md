@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-07-PLAN.md
-last_updated: "2026-08-31T03:10:15.959Z"
+stopped_at: Completed KPL-01-08-PLAN.md
+last_updated: "2026-08-31T03:36:17.922Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase KPL-01 execution started
-state_head: 98919b68ce602db4ed65bdbfba307a38bcb0f555
+state_head: 3b294e7f486c4f4dce87461bd3c2b08609f65e97
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 8 of 19
+Plan: 9 of 19
 Total Plans in Phase: 19
 Status: Executing Phase KPL-01
 Last activity: 2026-08-30 — Phase KPL-01 execution started
@@ -65,6 +65,9 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01]: Browser sessions use opaque random credentials stored only as SHA-256 hashes; login, recovery, and reauthentication rotate cookie and CSRF state.
 - [Phase 01]: Recovery is an operator-issued hash-only one-use capability whose serialized consumption replaces the password and revokes prior sessions.
 - [Phase 01]: Authentication limiting uses supervised isolated flow/account/source digests with identifier-free allow-listed audit and telemetry facts.
+- [Phase KPL-01]: Browser capability routing accepts both path-token and existing operator query-token URLs through one closed DTO-backed form boundary.
+- [Phase KPL-01]: Reauthentication retains the mounted draft and fixed interrupted identity, then supplies rotated CSRF state to the exact resume continuation.
+- [Phase KPL-01]: Session activity remains coarse and is never presented as a trusted-device fingerprint.
 
 ### Retained Research
 
@@ -92,8 +95,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T03:10:15.945Z
-**Stopped at:** Completed KPL-01-07-PLAN.md
+**Last session:** 2026-08-31T03:36:17.915Z
+**Stopped at:** Completed KPL-01-08-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -107,3 +110,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P05 | 26min | 2 tasks | 20 files |
 | Phase KPL-01 P06 | 17min | 2 tasks | 16 files |
 | Phase KPL-01 P07 | 31min | 2 tasks | 15 files |
+| Phase KPL-01 P08 | 20min | 2 tasks | 13 files |
