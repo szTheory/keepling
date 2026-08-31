@@ -40,9 +40,47 @@ const otherSession = {
 const sessionsResponse = (sessions = [currentSession, otherSession]) =>
   jsonResponse({ sessions })
 
+const deferred = <Value,>() => {
+  let resolve!: (value: Value) => void
+  const promise = new Promise<Value>((resolvePromise) => {
+    resolve = resolvePromise
+  })
+  return { promise, resolve }
+}
+
 afterEach(() => vi.unstubAllGlobals())
 
 describe('uncertain session administration', () => {
+  it('serializes session writes and keeps both accepted labels in the projection', async () => {
+    const firstRename = deferred<Response>()
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(sessionsResponse())
+      .mockImplementationOnce(() => firstRename.promise)
+      .mockResolvedValueOnce(jsonResponse({ session: { ...currentSession, label: 'Work browser' } }))
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    render(<SessionList csrfToken="csrf" hasDirtyWork={false} onLoggedOut={vi.fn()} />)
+
+    const phone = await screen.findByLabelText('Label for Phone')
+    const browser = screen.getByLabelText('Label for Home browser')
+    await user.clear(phone)
+    await user.type(phone, 'Travel phone')
+    await user.clear(browser)
+    await user.type(browser, 'Work browser')
+    await user.click(screen.getByRole('button', { name: 'Save label for Phone' }))
+
+    expect(screen.getByRole('button', { name: 'Save label for Home browser' })).toBeDisabled()
+    await user.click(screen.getByRole('button', { name: 'Save label for Home browser' }))
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'PATCH')).toHaveLength(1)
+
+    firstRename.resolve(jsonResponse({ session: { ...otherSession, label: 'Travel phone' } }))
+    await waitFor(() => expect(screen.getByLabelText('Label for Travel phone')).toBeVisible())
+    await user.click(screen.getByRole('button', { name: 'Save label for Home browser' }))
+    await waitFor(() => expect(screen.getByLabelText('Label for Work browser')).toBeVisible())
+    expect(screen.getByLabelText('Label for Travel phone')).toBeVisible()
+  })
+
   it('proves an after-commit rename from the authoritative inventory without retrying the write', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()

@@ -67,6 +67,7 @@ function SessionList({
   onLoggedOut,
 }: SessionListProps) {
   const keepActiveRef = useRef<HTMLButtonElement>(null)
+  const writeInFlightRef = useRef(false)
   const [state, setState] = useState<
     | { kind: 'loading' }
     | { kind: 'error' }
@@ -210,18 +211,23 @@ function SessionList({
   }, [confirmation])
 
   const saveLabel = async (session: BrowserSession, activeCsrfToken = csrfToken) => {
-    if (state.kind !== 'ready') return
+    if (state.kind !== 'ready' || writeInFlightRef.current) return
     const nextLabel = draftLabels[session.id]?.trim() ?? ''
     if (nextLabel === '' || nextLabel === session.label) return
+    writeInFlightRef.current = true
     setBusySessionId(session.id)
     try {
       await updateSession(session.id, nextLabel, activeCsrfToken)
-      setState({
-        kind: 'ready',
-        sessions: state.sessions.map((candidate) =>
-          candidate.id === session.id ? { ...candidate, label: nextLabel } : candidate,
-        ),
-      })
+      setState((current) =>
+        current.kind === 'ready'
+          ? {
+              kind: 'ready',
+              sessions: current.sessions.map((candidate) =>
+                candidate.id === session.id ? { ...candidate, label: nextLabel } : candidate,
+              ),
+            }
+          : current,
+      )
       setMessage(`Session label changed to ${nextLabel}.`)
     } catch (error) {
       const authentication =
@@ -250,13 +256,15 @@ function SessionList({
         setMessage(`Couldn’t rename ${session.label}. The existing label is unchanged.`)
       }
     } finally {
+      writeInFlightRef.current = false
       setBusySessionId(null)
     }
   }
 
   const confirmAction = async (activeCsrfToken = csrfToken) => {
-    if (!confirmation || state.kind !== 'ready') return
+    if (!confirmation || state.kind !== 'ready' || writeInFlightRef.current) return
     const { session } = confirmation
+    writeInFlightRef.current = true
     setBusySessionId(session.id)
     try {
       if (confirmation.kind === 'logout') {
@@ -265,10 +273,14 @@ function SessionList({
         return
       }
       await revokeSession(session.id, activeCsrfToken)
-      setState({
-        kind: 'ready',
-        sessions: state.sessions.filter((candidate) => candidate.id !== session.id),
-      })
+      setState((current) =>
+        current.kind === 'ready'
+          ? {
+              kind: 'ready',
+              sessions: current.sessions.filter((candidate) => candidate.id !== session.id),
+            }
+          : current,
+      )
       setMessage(`${session.label} revoked.`)
       setConfirmation(null)
     } catch (error) {
@@ -304,6 +316,7 @@ function SessionList({
         setConfirmation(null)
       }
     } finally {
+      writeInFlightRef.current = false
       setBusySessionId(null)
     }
   }
@@ -388,7 +401,7 @@ function SessionList({
                   </div>
                   <Button
                     className="min-h-11"
-                    disabled={recovery !== null}
+                    disabled={busySessionId !== null || recovery !== null}
                     onClick={() =>
                       setConfirmation({ kind: session.current ? 'logout' : 'revoke', session })
                     }
@@ -407,7 +420,7 @@ function SessionList({
                       className="min-h-11 w-full rounded-lg border border-input bg-card px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       id={`session-label-${session.id}`}
                       maxLength={200}
-                      disabled={recovery !== null}
+                      disabled={busySessionId !== null || recovery !== null}
                       onChange={(event) =>
                         setDraftLabels((labels) => ({ ...labels, [session.id]: event.target.value }))
                       }
@@ -418,7 +431,7 @@ function SessionList({
                     aria-label={`Save label for ${session.label}`}
                     className="min-h-11"
                     disabled={
-                      busySessionId === session.id ||
+                      busySessionId !== null ||
                       recovery !== null ||
                       draftLabel.trim() === '' ||
                       draftLabel.trim() === session.label
