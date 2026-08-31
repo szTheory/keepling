@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-12-PLAN.md
-last_updated: "2026-08-31T05:18:47.560Z"
+stopped_at: Completed KPL-01-13-PLAN.md
+last_updated: "2026-08-31T05:48:31.537Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase KPL-01 execution started
-state_head: edc07a8f8df484ef286341cda94c4807a326870d
+state_head: 0b3859bc11bf627a71fec232ad31a302cfd07f9c
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 12
+  completed_plans: 13
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 13 of 19
+Plan: 14 of 19
 Total Plans in Phase: 19
 Status: Executing Phase KPL-01
 Last activity: 2026-08-30 — Phase KPL-01 execution started
@@ -82,6 +82,11 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01]: Plan for Today resolves from the validated account IANA timezone and an injected acceptance instant; later timezone changes never rewrite stored civil dates.
 - [Phase 01]: Active unfinished task classification preserves every applicable planned and deadline reason while deriving Today and Upcoming from the canonical account day.
 - [Phase 01]: Browser command composition uses stable mutation identities and acknowledged revisions, retaining drafts until the terminal exact receipt.
+- [Phase 01]: Paginated Inbox projection uses /api/v1/views/inbox while the supported full Inbox editor snapshot remains compatible.
+- [Phase 01]: Task-view cursors authenticate account, view, complete keyset, view revision, and Today order revision; relevant changes stale them explicitly.
+- [Phase 01]: Today order is dense, section-scoped, server-owned, account-lock serialized, and changed only by semantic earlier/later commands.
+- [Phase 01]: Ambiguous Today delivery retains and retries the exact original mutation identity against a durable terminal receipt.
+- [Phase 01]: Plan 01-13 expands nullable completed_at only as a projection seam; Plan 01-14 owns completion lifecycle writes.
 
 ### Retained Research
 
@@ -109,8 +114,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T05:18:47.551Z
-**Stopped at:** Completed KPL-01-12-PLAN.md
+**Last session:** 2026-08-31T05:48:31.523Z
+**Stopped at:** Completed KPL-01-13-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -129,3 +134,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P10 | 23min | 2 tasks | 14 files |
 | Phase KPL-01 P11 | 21min | 2 tasks | 13 files |
 | Phase KPL-01 P12 | 22min | 2 tasks | 15 files |
+| Phase KPL-01 P13 | 24min | 2 tasks | 18 files |

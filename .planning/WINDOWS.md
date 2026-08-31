@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 14
+open_count: 18
 waived_count: 0
 fixed_count: 0
-total_count: 14
-last_updated: 2026-08-31T05:18:34.955Z
+total_count: 18
+last_updated: 2026-08-31T05:48:12.377Z
 ---
 
 # Broken Windows Ledger
@@ -29,6 +29,10 @@ last_updated: 2026-08-31T05:18:34.955Z
 | 12 | KPL-01 | deviation | apps/server/config/config.exs |  | Disabled Tzdata remote updater to close the vulnerable transitive HTTP path | open |  | 2026-08-31T02:33:05.234Z |  |
 | 13 | KPL-01 | deviation | apps/web/src/App.tsx |  | Wired Inbox route reachability and exact acknowledgement reconciliation omitted from the plan file list | open |  | 2026-08-31T03:57:58.529Z |  |
 | 14 | KPL-01 | deviation | apps/server/lib/keepling/domain/task.ex |  | Added canonical nullable planned_on and deadline_on aggregate fields omitted from the plan file list | open |  | 2026-08-31T05:18:34.955Z |  |
+| 15 | KPL-01 | deviation | apps/server/priv/repo/migrations/20260830000650_add_task_view_projections.exs |  | Added durable projection schema and relevant command-store revision advancement omitted from the plan file list | open |  | 2026-08-31T05:48:12.063Z |  |
+| 16 | KPL-01 | deviation | apps/web/src/App.tsx |  | Wired authenticated shell list reachability and scoped the resulting legacy test ambiguity | open |  | 2026-08-31T05:48:12.168Z |  |
+| 17 | KPL-01 | deviation | apps/server/lib/keepling/application/task_views.ex |  | Removed an Ecto UUID dependency from the persistence-neutral application boundary | open |  | 2026-08-31T05:48:12.271Z |  |
+| 18 | KPL-01 | deviation | apps/server/priv/repo/migrations/20260830000650_add_task_view_projections.exs |  | Added exact Today move receipts and honest ambiguous-delivery retry after final trust review | open |  | 2026-08-31T05:48:12.377Z |  |
 
 ````json
 [
@@ -198,6 +202,54 @@ last_updated: 2026-08-31T05:18:34.955Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-31T05:18:34.955Z",
+    "resolved_at": null
+  },
+  {
+    "id": 15,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/server/priv/repo/migrations/20260830000650_add_task_view_projections.exs",
+    "line": null,
+    "description": "Added durable projection schema and relevant command-store revision advancement omitted from the plan file list",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T05:48:12.063Z",
+    "resolved_at": null
+  },
+  {
+    "id": 16,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/web/src/App.tsx",
+    "line": null,
+    "description": "Wired authenticated shell list reachability and scoped the resulting legacy test ambiguity",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T05:48:12.168Z",
+    "resolved_at": null
+  },
+  {
+    "id": 17,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/server/lib/keepling/application/task_views.ex",
+    "line": null,
+    "description": "Removed an Ecto UUID dependency from the persistence-neutral application boundary",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T05:48:12.271Z",
+    "resolved_at": null
+  },
+  {
+    "id": 18,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/server/priv/repo/migrations/20260830000650_add_task_view_projections.exs",
+    "line": null,
+    "description": "Added exact Today move receipts and honest ambiguous-delivery retry after final trust review",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-08-31T05:48:12.377Z",
     "resolved_at": null
   }
 ]
