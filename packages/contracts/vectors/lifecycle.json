@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "field": "completed_at",
+  "cases": [
+    {
+      "name": "complete accepts the active task",
+      "command": {
+        "type": "complete_task",
+        "expected_revision": 1,
+        "accepted_at": "2026-08-31T12:00:00.000000Z"
+      },
+      "current": {
+        "revision": 1,
+        "lifecycle_revision": 0,
+        "completed_at": null
+      },
+      "result": {
+        "outcome": "accepted",
+        "revision": 2,
+        "completed_at": "2026-08-31T12:00:00.000000Z",
+        "activity_type": "task_completed"
+      }
+    },
+    {
+      "name": "complete rebases across an unrelated edit",
+      "command": {
+        "type": "complete_task",
+        "expected_revision": 1,
+        "accepted_at": "2026-08-31T12:00:00.000000Z"
+      },
+      "current": {
+        "revision": 2,
+        "lifecycle_revision": 0,
+        "completed_at": null
+      },
+      "result": {
+        "outcome": "accepted",
+        "revision": 3,
+        "completed_at": "2026-08-31T12:00:00.000000Z",
+        "activity_type": "task_completed"
+      }
+    },
+    {
+      "name": "complete is already satisfied when completion won",
+      "command": {
+        "type": "complete_task",
+        "expected_revision": 1,
+        "accepted_at": "2026-08-31T12:00:00.000000Z"
+      },
+      "current": {
+        "revision": 2,
+        "lifecycle_revision": 2,
+        "completed_at": "2026-08-31T11:59:00.000000Z"
+      },
+      "result": {
+        "outcome": "already_satisfied",
+        "revision": 2,
+        "completed_at": "2026-08-31T11:59:00.000000Z",
+        "activity_type": null
+      }
+    },
+    {
+      "name": "complete conflicts when reopen changed lifecycle after the base revision",
+      "command": {
+        "type": "complete_task",
+        "expected_revision": 2,
+        "accepted_at": "2026-08-31T12:00:00.000000Z"
+      },
+      "current": {
+        "revision": 3,
+        "lifecycle_revision": 3,
+        "completed_at": null
+      },
+      "result": {
+        "outcome": "conflict",
+        "affected_fields": ["completed_at"]
+      }
+    },
+    {
+      "name": "reopen accepts the completed task after unrelated edits",
+      "command": {
+        "type": "reopen_task",
+        "expected_revision": 2,
+        "accepted_at": "2026-08-31T12:00:00.000000Z"
+      },
+      "current": {
+        "revision": 3,
+        "lifecycle_revision": 2,
+        "completed_at": "2026-08-31T11:59:00.000000Z"
+      },
+      "result": {
+        "outcome": "accepted",
+        "revision": 4,
+        "completed_at": null,
+        "activity_type": "task_reopened"
+      }
+    },
+    {
+      "name": "reopen is already satisfied when reopen won",
+      "command": {
+        "type": "reopen_task",
+        "expected_revision": 2,
+        "accepted_at": "2026-08-31T12:00:00.000000Z"
+      },
+      "current": {
+        "revision": 3,
+        "lifecycle_revision": 3,
+        "completed_at": null
+      },
+      "result": {
+        "outcome": "already_satisfied",
+        "revision": 3,
+        "completed_at": null,
+        "activity_type": null
+      }
+    },
+    {
+      "name": "reopen conflicts when completion changed lifecycle after the base revision",
+      "command": {
+        "type": "reopen_task",
+        "expected_revision": 3,
+        "accepted_at": "2026-08-31T12:00:00.000000Z"
+      },
+      "current": {
+        "revision": 4,
+        "lifecycle_revision": 4,
+        "completed_at": "2026-08-31T12:00:00.000000Z"
+      },
+      "result": {
+        "outcome": "conflict",
+        "affected_fields": ["completed_at"]
+      }
+    }
+  ]
+}
