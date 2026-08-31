@@ -1,0 +1,82 @@
+openapi: 3.1.0
+info:
+  title: Keepling API
+  version: 0.1.0
+  description: >-
+    Versioned same-origin transport primitives for Keepling semantic commands.
+    Domain and persistence representations remain separate from this contract.
+servers:
+  - url: /api/v1
+    description: Same-origin Keepling API
+paths: {}
+components:
+  schemas:
+    CommandAcknowledgement:
+      type: object
+      additionalProperties: false
+      required:
+        - mutation_id
+        - outcome
+        - revision
+        - warnings
+      properties:
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        outcome:
+          type: string
+          enum:
+            - accepted
+            - already_satisfied
+        revision:
+          $ref: '#/components/schemas/Revision'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Warning'
+    MutationIdentity:
+      type: string
+      format: uuid
+      description: Client-generated identity retained across exact retries.
+    Problem:
+      type: object
+      additionalProperties: false
+      required:
+        - type
+        - title
+        - status
+        - code
+        - retryable
+        - recovery_action
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        code:
+          type: string
+        retryable:
+          type: boolean
+        recovery_action:
+          type: string
+    Revision:
+      type: integer
+      format: int64
+      minimum: 1
+    Warning:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
