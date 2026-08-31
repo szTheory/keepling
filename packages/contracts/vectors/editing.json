@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "limits": {
+    "title_unicode_scalars": 512,
+    "notes_unicode_scalars": 50000,
+    "title_normalization": "outer_whitespace_trim",
+    "notes_normalization": "preserve_plain_text"
+  },
+  "cases": [
+    {
+      "name": "ordinary edit preserves Inbox",
+      "current": {
+        "title": "Call dentist",
+        "notes": "Ask about Tuesday",
+        "inbox_state": "inbox",
+        "revision": 3
+      },
+      "command": {
+        "expected_revision": 3,
+        "base_values": { "notes": "Ask about Tuesday" },
+        "fields": { "notes": "Ask about Wednesday" }
+      },
+      "result": {
+        "outcome": "accepted",
+        "title": "Call dentist",
+        "notes": "Ask about Wednesday",
+        "inbox_state": "inbox",
+        "revision": 4
+      }
+    },
+    {
+      "name": "unrelated accepted title survives notes rebase",
+      "current": {
+        "title": "Call the dentist",
+        "notes": "Ask about Tuesday",
+        "inbox_state": "inbox",
+        "revision": 4
+      },
+      "command": {
+        "expected_revision": 3,
+        "base_values": { "notes": "Ask about Tuesday" },
+        "fields": { "notes": "Ask about Wednesday" }
+      },
+      "result": {
+        "outcome": "accepted",
+        "title": "Call the dentist",
+        "notes": "Ask about Wednesday",
+        "inbox_state": "inbox",
+        "revision": 5
+      }
+    },
+    {
+      "name": "overlapping title edit conflicts",
+      "current": {
+        "title": "Call the dentist",
+        "notes": "",
+        "inbox_state": "inbox",
+        "revision": 4
+      },
+      "command": {
+        "expected_revision": 3,
+        "base_values": { "title": "Call dentist" },
+        "fields": { "title": "Book dentist" }
+      },
+      "result": {
+        "outcome": "conflict",
+        "affected_fields": ["title"]
+      }
+    },
+    {
+      "name": "clarify atomically edits and leaves Inbox",
+      "current": {
+        "title": "Call dentist",
+        "notes": "",
+        "inbox_state": "inbox",
+        "revision": 1
+      },
+      "command": {
+        "expected_revision": 1,
+        "base_values": { "notes": "" },
+        "fields": { "notes": "Ask about Wednesday" }
+      },
+      "result": {
+        "outcome": "accepted",
+        "title": "Call dentist",
+        "notes": "Ask about Wednesday",
+        "inbox_state": "clarified",
+        "revision": 2
+      }
+    }
+  ]
+}
