@@ -186,7 +186,10 @@ function AppRoutes({
             onNavigate={navigate}
             taskId={taskId}
           />
-          <ActivityList taskId={taskId} />
+          <ActivityList
+            onAuthenticationRequired={onAuthenticationRequired}
+            taskId={taskId}
+          />
         </div>
       </>,
     )

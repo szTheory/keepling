@@ -25,7 +25,7 @@ type AuthContextValue = {
     resume: (csrfToken: string) => Promise<void>,
   ) => void
   clearAuthentication: () => void
-  completeReauthentication: (intent: InterruptedIntent, csrfToken: string) => void
+  completeReauthentication: (intent: InterruptedIntent, csrfToken: string) => Promise<void>
   interruption: InterruptedIntent | null
   state: AuthenticationState
 }
@@ -35,7 +35,12 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthenticationState>({ kind: 'loading' })
   const [interruption, setInterruption] = useState<InterruptedIntent | null>(null)
-  const resumeRef = useRef<((csrfToken: string) => Promise<void>) | null>(null)
+  const resumesRef = useRef(
+    new Map<
+      string,
+      { intent: InterruptedIntent; resume: (csrfToken: string) => Promise<void> }
+    >(),
+  )
 
   useEffect(() => {
     let active = true
@@ -63,25 +68,30 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
   const beginReauthentication = useCallback(
     (intent: InterruptedIntent, resume: (csrfToken: string) => Promise<void>) => {
-      resumeRef.current = resume
-      setInterruption(intent)
+      const key = `${intent.kind}:${intent.mutationId}`
+      resumesRef.current.set(key, { intent, resume })
+      setInterruption((current) => current ?? intent)
     },
     [],
   )
 
   const clearAuthentication = useCallback(() => {
-    resumeRef.current = null
+    resumesRef.current.clear()
     setInterruption(null)
     setState({ kind: 'unauthenticated' })
   }, [])
 
   const completeReauthentication = useCallback(
-    (intent: InterruptedIntent, csrfToken: string) => {
+    async (_intent: InterruptedIntent, csrfToken: string) => {
       setState({ csrfToken, kind: 'authenticated' })
-      setInterruption((current) => (current === intent ? null : current))
-      const resume = resumeRef.current
-      resumeRef.current = null
-      if (resume) queueMicrotask(() => void resume(csrfToken))
+      const pending = [...resumesRef.current.entries()]
+      const outcomes = await Promise.allSettled(
+        pending.map(([, continuation]) => continuation.resume(csrfToken)),
+      )
+      pending.forEach(([key], index) => {
+        if (outcomes[index]?.status === 'fulfilled') resumesRef.current.delete(key)
+      })
+      setInterruption(resumesRef.current.values().next().value?.intent ?? null)
     },
     [],
   )

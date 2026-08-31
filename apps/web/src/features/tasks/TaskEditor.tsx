@@ -10,6 +10,7 @@ import {
 import {
   getTask,
   getTaskActivity,
+  KeeplingApiError,
   prepareClarifyTask,
   prepareEditTask,
   prepareEditTaskDates,
@@ -100,8 +101,9 @@ function TaskEditor({
   useEffect(() => {
     let active = true
 
-    void Promise.all([getTask(taskId), getTaskActivity(taskId)])
-      .then(([task, activity]) => {
+    const load = async (allowAuthenticationRecovery: boolean) => {
+      try {
+        const [task, activity] = await Promise.all([getTask(taskId), getTaskActivity(taskId)])
         if (!active) return
         setLoadState({ accountTimezone: activity.accountTimezone, kind: 'ready', task })
         setDraft({
@@ -110,15 +112,39 @@ function TaskEditor({
           plannedOn: task.plannedOn ?? '',
           title: task.title,
         })
-      })
-      .catch(() => {
-        if (active) setLoadState({ kind: 'error' })
-      })
+      } catch (error) {
+        if (!active) return
+        if (
+          allowAuthenticationRecovery &&
+          onAuthenticationRequired &&
+          error instanceof KeeplingApiError &&
+          ['authentication_required', 'recent_authentication_required'].includes(error.problem.code)
+        ) {
+          onAuthenticationRequired(
+            {
+              authentication:
+                error.problem.code === 'recent_authentication_required'
+                  ? 'reauthenticate'
+                  : 'sign_in',
+              kind: 'read',
+              mutationId: `read:task-detail:${taskId}`,
+            },
+            async () => {
+              await load(false)
+            },
+          )
+          return
+        }
+        setLoadState({ kind: 'error' })
+      }
+    }
+
+    void load(true)
 
     return () => {
       active = false
     }
-  }, [taskId])
+  }, [onAuthenticationRequired, taskId])
 
   useEffect(() => {
     const applyExternalAcknowledgement = (event: Event) => {

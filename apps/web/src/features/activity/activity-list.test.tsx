@@ -114,7 +114,7 @@ describe('task activity', () => {
     expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'read' })
     await resume('rotated-csrf')
 
-    expect(activitySentence('You updated task details.')).toBeVisible()
+    await waitFor(() => expect(activitySentence('You updated task details.')).toBeVisible())
     expect(screen.queryByText('Couldn’t load activity. Your tasks weren’t changed.')).not.toBeInTheDocument()
   })
 
@@ -153,7 +153,7 @@ describe('task activity', () => {
     ]
     await resume('rotated-csrf')
 
-    expect(activitySentence('You captured this task.')).toBeVisible()
+    await waitFor(() => expect(activitySentence('You captured this task.')).toBeVisible())
     expect(fetchMock).toHaveBeenNthCalledWith(
       3,
       `/api/v1/tasks/${taskId}/activity?limit=20&cursor=retained-cursor`,

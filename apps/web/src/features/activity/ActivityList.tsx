@@ -9,8 +9,13 @@ import {
   type TaskOrganizationReference,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
+import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 
 type ActivityListProps = {
+  onAuthenticationRequired?: (
+    intent: InterruptedIntent,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => void
   taskId: string
 }
 
@@ -233,7 +238,14 @@ const ActivityItem = ({
   </li>
 )
 
-function ActivityListForTask({ taskId }: ActivityListProps) {
+const authenticationFor = (error: unknown) => {
+  if (!(error instanceof KeeplingApiError)) return null
+  if (error.problem.code === 'authentication_required') return 'sign_in' as const
+  if (error.problem.code === 'recent_authentication_required') return 'reauthenticate' as const
+  return null
+}
+
+function ActivityListForTask({ onAuthenticationRequired, taskId }: ActivityListProps) {
   const [page, setPage] = useState<TaskActivityPage | null>(null)
   const [viewState, setViewState] = useState<ViewState>('loading')
   const appendedFocusId = useRef<number | null>(null)
@@ -241,20 +253,38 @@ function ActivityListForTask({ taskId }: ActivityListProps) {
   useEffect(() => {
     let active = true
 
-    void getTaskActivity(taskId)
-      .then((nextPage) => {
+    const loadInitial = async (allowAuthenticationRecovery: boolean) => {
+      try {
+        const nextPage = await getTaskActivity(taskId)
         if (!active) return
         setPage(nextPage)
         setViewState('ready')
-      })
-      .catch(() => {
-        if (active) setViewState('initial-error')
-      })
+      } catch (error) {
+        if (!active) return
+        const authentication = authenticationFor(error)
+        if (allowAuthenticationRecovery && authentication && onAuthenticationRequired) {
+          onAuthenticationRequired(
+            {
+              authentication,
+              kind: 'read',
+              mutationId: `read:task-activity:${taskId}:initial`,
+            },
+            async () => {
+              await loadInitial(false)
+            },
+          )
+          return
+        }
+        setViewState('initial-error')
+      }
+    }
+
+    void loadInitial(true)
 
     return () => {
       active = false
     }
-  }, [taskId])
+  }, [onAuthenticationRequired, taskId])
 
   useEffect(() => {
     if (appendedFocusId.current === null) return
@@ -277,9 +307,10 @@ function ActivityListForTask({ taskId }: ActivityListProps) {
 
   const loadEarlier = async () => {
     if (!page?.nextCursor) return
+    const interruptedCursor = page.nextCursor
     setViewState('loading-earlier')
     try {
-      const earlierPage = await getTaskActivity(taskId, page.nextCursor)
+      const earlierPage = await getTaskActivity(taskId, interruptedCursor)
       appendedFocusId.current = earlierPage.items[0]?.activityId ?? null
       setPage((current) =>
         current === null
@@ -292,7 +323,36 @@ function ActivityListForTask({ taskId }: ActivityListProps) {
       )
       setViewState('ready')
     } catch (error) {
-      if (error instanceof KeeplingApiError && error.problem.code === 'activity_cursor_stale') {
+      const authentication = authenticationFor(error)
+      if (authentication && onAuthenticationRequired) {
+        setViewState('ready')
+        onAuthenticationRequired(
+          {
+            authentication,
+            kind: 'read',
+            mutationId: `read:task-activity:${taskId}:cursor:${interruptedCursor}`,
+          },
+          async () => {
+            setViewState('loading-earlier')
+            try {
+              const earlierPage = await getTaskActivity(taskId, interruptedCursor)
+              appendedFocusId.current = earlierPage.items[0]?.activityId ?? null
+              setPage((current) =>
+                current === null
+                  ? earlierPage
+                  : {
+                      accountTimezone: current.accountTimezone,
+                      items: [...current.items, ...earlierPage.items],
+                      nextCursor: earlierPage.nextCursor,
+                    },
+              )
+              setViewState('ready')
+            } catch {
+              setViewState('earlier-error')
+            }
+          },
+        )
+      } else if (error instanceof KeeplingApiError && error.problem.code === 'activity_cursor_stale') {
         setViewState('stale')
       } else {
         setViewState('earlier-error')
@@ -406,8 +466,14 @@ function ActivityListForTask({ taskId }: ActivityListProps) {
   )
 }
 
-function ActivityList({ taskId }: ActivityListProps) {
-  return <ActivityListForTask key={taskId} taskId={taskId} />
+function ActivityList({ onAuthenticationRequired, taskId }: ActivityListProps) {
+  return (
+    <ActivityListForTask
+      key={taskId}
+      onAuthenticationRequired={onAuthenticationRequired}
+      taskId={taskId}
+    />
+  )
 }
 
 export default ActivityList
