@@ -13,7 +13,7 @@
 - [x] **GTD-04**: User can inspect upcoming scheduled tasks and deadlines using explicit timezone-aware semantics.
 - [x] **GTD-05**: User can complete and reopen a task as idempotent domain transitions.
 - [x] **GTD-06**: User can trash and restore a task without immediate hard deletion.
-- [ ] **GTD-07**: User can undo supported consequential mutations using a bounded, revision-aware handle.
+- [x] **GTD-07**: User can undo supported consequential mutations using a bounded, revision-aware handle.
 
 ### Identity and server authority
 

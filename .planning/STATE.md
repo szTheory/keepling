@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed 01-17-PLAN.md
-last_updated: "2026-08-31T14:02:09.199Z"
+stopped_at: Completed 01-18-PLAN.md
+last_updated: "2026-08-31T15:20:26.299Z"
 last_activity: 2026-08-31
 last_activity_desc: Completed KPL-01 Plan 14 trustworthy complete/reopen lifecycle
-state_head: cd13e0c0fb9e9f837f85cb62ae9f68306167e041
+state_head: 890fdc51cd5a30436399b858fe4a5f5b65e7eb4b
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 17
+  completed_plans: 18
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 18 of 19
+Plan: 19 of 19
 Total Plans in Phase: 19
 Status: Ready to execute
 Last activity: 2026-08-31
@@ -100,6 +100,10 @@ Progress: [███████░░░] 74%
 - [Phase 01]: Prepare and retain immutable serialized command bytes before submission; every lookup, retry, and authentication resume uses the exact original identity.
 - [Phase 01]: Authentication recovery resumes the interrupted lookup or send operation instead of minting or ambiguously replaying intent.
 - [Phase 01]: Fault controls compile only in test, require a random per-run credential, and inject privacy-safe faults around the real acceptance/response boundary.
+- [Phase 01]: Undo capabilities are 32-byte URL-safe values derived from a server-secret HMAC over a random UUID; PostgreSQL and durable receipts retain only the SHA-256 hash or derivation identity, never the raw handle.
+- [Phase 01]: The v1 undo matrix is closed to task details, clarify/return, plan/unplan, complete/reopen, and Trash/restore; unsupported commands do not mint nested undo.
+- [Phase 01]: Undo validates the exact produced revision under account-scoped locks and atomically commits inverse state, linked activity, consumption, and receipt.
+- [Phase 01]: AppShell retains only the latest recovery action across routes and uncertain retries reuse one fixed mutation identity without intercepting native Cmd/Ctrl-Z.
 
 ### Retained Research
 
@@ -127,8 +131,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T14:02:09.185Z
-**Stopped at:** Completed 01-17-PLAN.md
+**Last session:** 2026-08-31T15:20:26.286Z
+**Stopped at:** Completed 01-18-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -152,3 +156,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P15 | 18min | 2 tasks | 15 files |
 | Phase KPL-01 P16 | 37min | 2 tasks | 15 files |
 | Phase KPL-01 P17 | 42min | 2 tasks | 10 files |
+| Phase KPL-01 P18 | 63min | 2 tasks | 14 files |
