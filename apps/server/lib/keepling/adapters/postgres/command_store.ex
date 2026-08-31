@@ -687,6 +687,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
 
     case inserted_task.rows do
       [row] ->
+        bump_task_view_revisions(repo, [:inbox], context)
         persist_activity(repo, command, context, activity)
         acknowledgement(repo, context.account_id, command, task_from_row(row), :accepted, 201)
 
@@ -725,7 +726,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         ]
       )
 
-    maybe_bump_temporal_view_revisions(repo, command, context)
+    maybe_bump_task_view_revisions(repo, command, context)
     persist_activity(repo, command, context, activity)
     acknowledgement(repo, context.account_id, command, task, :accepted, 200, warnings)
   end
@@ -878,23 +879,31 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       )
   end
 
-  defp maybe_bump_temporal_view_revisions(repo, command, context)
+  defp maybe_bump_task_view_revisions(repo, command, context)
        when command.type in [:edit_task_dates, :plan_for_today, :unplan_task] do
+    bump_task_view_revisions(repo, [:today, :upcoming], context)
+  end
+
+  defp maybe_bump_task_view_revisions(repo, command, context)
+       when command.type in [:clarify_task, :return_to_inbox] do
+    bump_task_view_revisions(repo, [:inbox], context)
+  end
+
+  defp maybe_bump_task_view_revisions(_repo, _command, _context), do: :ok
+
+  defp bump_task_view_revisions(repo, views, context) do
+    assignments =
+      views
+      |> Enum.map(fn view -> "#{view}_view_revision = #{view}_view_revision + 1" end)
+      |> Enum.join(", ")
+
     %{num_rows: 1} =
       SQL.query!(
         repo,
-        """
-        UPDATE accounts
-        SET today_view_revision = today_view_revision + 1,
-            upcoming_view_revision = upcoming_view_revision + 1,
-            updated_at = $2
-        WHERE id = $1
-        """,
+        "UPDATE accounts SET #{assignments}, updated_at = $2 WHERE id = $1",
         [context.account_id, context.accepted_at]
       )
   end
-
-  defp maybe_bump_temporal_view_revisions(_repo, _command, _context), do: :ok
 
   defp acknowledgement(
          repo,

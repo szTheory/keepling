@@ -223,15 +223,87 @@ paths:
   /inbox:
     get:
       operationId: getInbox
-      summary: Read active Inbox tasks newest first
+      summary: Read active Inbox task snapshots newest first
+      responses:
+        '200':
+          description: Authoritative Inbox task snapshots
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InboxResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+  /views/inbox:
+    get:
+      operationId: getInboxView
+      summary: Read the deterministic active Inbox projection
+      parameters:
+        - $ref: '#/components/parameters/TaskViewCursorParameter'
+        - $ref: '#/components/parameters/TaskViewLimitParameter'
       responses:
         '200':
           description: Authoritative Inbox projection
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InboxResponse'
+                $ref: '#/components/schemas/TaskViewPage'
         '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+  /today:
+    get:
+      operationId: getToday
+      summary: Read fixed Overdue and Today sections in account time
+      parameters:
+        - $ref: '#/components/parameters/TaskViewCursorParameter'
+        - $ref: '#/components/parameters/TaskViewLimitParameter'
+      responses:
+        '200':
+          description: Authoritative Today projection and scoped order revision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskViewPage'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+  /upcoming:
+    get:
+      operationId: getUpcoming
+      summary: Read future planned dates and deadlines grouped in account time
+      parameters:
+        - $ref: '#/components/parameters/TaskViewCursorParameter'
+        - $ref: '#/components/parameters/TaskViewLimitParameter'
+      responses:
+        '200':
+          description: Authoritative read-only Upcoming projection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskViewPage'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+  /completed:
+    get:
+      operationId: getCompleted
+      summary: Read completed tasks newest first in account time
+      parameters:
+        - $ref: '#/components/parameters/TaskViewCursorParameter'
+        - $ref: '#/components/parameters/TaskViewLimitParameter'
+      responses:
+        '200':
+          description: Authoritative Completed projection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskViewPage'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
           $ref: '#/components/responses/ProblemResponse'
   /organizations:
     get:
@@ -469,6 +541,35 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
         '503':
           $ref: '#/components/responses/ProblemResponse'
+  /commands/move-today-task:
+    post:
+      operationId: moveTodayTask
+      summary: Move a task earlier or later within its server-owned Today section
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TodayMoveRequest'
+      responses:
+        '200':
+          description: Acknowledged scoped Today order revision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TodayMoveResponse'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /commands/unplan-task:
     post:
       operationId: unplanTask
@@ -683,6 +784,21 @@ paths:
         '503':
           $ref: '#/components/responses/ProblemResponse'
 components:
+  parameters:
+    TaskViewCursorParameter:
+      in: query
+      name: cursor
+      required: false
+      schema:
+        $ref: '#/components/schemas/TaskViewCursor'
+    TaskViewLimitParameter:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
   responses:
     ProblemResponse:
       description: Closed RFC 9457 problem
@@ -1097,6 +1213,135 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaskSnapshot'
+    TaskViewCursor:
+      type: string
+      minLength: 1
+      maxLength: 2048
+      description: Opaque HMAC-authenticated account/view/revision-bound complete keyset.
+    TaskViewItem:
+      type: object
+      additionalProperties: false
+      required:
+        - captured_at
+        - deadline_on
+        - id
+        - planned_on
+        - revision
+        - title
+      properties:
+        captured_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        completed_on:
+          type: string
+          format: date
+        deadline_on:
+          $ref: '#/components/schemas/NullableCivilDate'
+        group_on:
+          type: string
+          format: date
+        id:
+          $ref: '#/components/schemas/TaskIdentity'
+        planned_on:
+          $ref: '#/components/schemas/NullableCivilDate'
+        reasons:
+          type: array
+          items:
+            type: string
+            enum:
+              - planned_overdue
+              - planned_today
+              - planned_future
+              - deadline_overdue
+              - deadline_today
+              - deadline_future
+        revision:
+          $ref: '#/components/schemas/Revision'
+        section:
+          type: string
+          enum:
+            - overdue
+            - today
+            - earlier
+        title:
+          type: string
+        upcoming_reason:
+          type: string
+          enum:
+            - planned
+            - deadline
+    TaskViewPage:
+      type: object
+      additionalProperties: false
+      required:
+        - account_day
+        - account_timezone
+        - items
+        - next_cursor
+        - order_revision
+        - view
+      properties:
+        account_day:
+          type: string
+          format: date
+        account_timezone:
+          type: string
+          minLength: 1
+        items:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/TaskViewItem'
+        next_cursor:
+          anyOf:
+            - $ref: '#/components/schemas/TaskViewCursor'
+            - type: 'null'
+        order_revision:
+          anyOf:
+            - $ref: '#/components/schemas/Revision'
+            - type: 'null'
+        view:
+          type: string
+          enum:
+            - inbox
+            - today
+            - upcoming
+            - completed
+    TodayMoveRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - direction
+        - expected_order_revision
+        - mutation_id
+        - task_id
+        - version
+      properties:
+        direction:
+          type: string
+          enum:
+            - earlier
+            - later
+        expected_order_revision:
+          $ref: '#/components/schemas/Revision'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        version:
+          type: integer
+          const: 1
+    TodayMoveResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - order_revision
+      properties:
+        order_revision:
+          $ref: '#/components/schemas/Revision'
     EditTaskCommand:
       type: object
       additionalProperties: false

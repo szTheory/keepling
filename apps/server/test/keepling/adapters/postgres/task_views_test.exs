@@ -44,24 +44,30 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
               items: [%{id: ^first_id}, %{id: ^second_id}],
               next_cursor: cursor,
               view: "inbox"
-            }} = TaskViews.list(:inbox, context, %{limit: 2}, PostgresTaskViews)
+            }} = list_view(:inbox, context, %{limit: 2})
 
     refute cursor =~ first_id
+
     assert {:error, :invalid_cursor} =
-             TaskViews.decode_cursor(cursor, %{context | account_id: Ecto.UUID.bingenerate()}, :inbox)
+             TaskViews.decode_cursor(
+               cursor,
+               %{context | account_id: Ecto.UUID.bingenerate()},
+               :inbox
+             )
 
     assert {:ok, %{items: [%{id: ^third_id}], next_cursor: nil}} =
-             TaskViews.list(:inbox, context, %{cursor: cursor, limit: 2}, PostgresTaskViews)
+             list_view(:inbox, context, %{cursor: cursor, limit: 2})
 
     bump_view_revision(account_id, "inbox_view_revision")
 
     assert {:error, :stale_cursor} =
-             TaskViews.list(:inbox, context, %{cursor: cursor, limit: 2}, PostgresTaskViews)
+             list_view(:inbox, context, %{cursor: cursor, limit: 2})
   end
 
-  test "Today and Upcoming use the account day, fixed groups, and explicit independent reasons", %{
-    account_id: account_id
-  } do
+  test "Today and Upcoming use the account day, fixed groups, and explicit independent reasons",
+       %{
+         account_id: account_id
+       } do
     overdue_id = "11111111-1111-4111-8111-111111111111"
     today_id = "22222222-2222-4222-8222-222222222222"
     overlap_id = "33333333-3333-4333-8333-333333333333"
@@ -70,9 +76,7 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
       planned_on: ~D[2026-08-30]
     )
 
-    insert_task(account_id, today_id, "Due today", @accepted_at,
-      deadline_on: ~D[2026-08-31]
-    )
+    insert_task(account_id, today_id, "Due today", @accepted_at, deadline_on: ~D[2026-08-31])
 
     insert_task(account_id, overlap_id, "Today and later", @accepted_at,
       planned_on: ~D[2026-08-31],
@@ -80,7 +84,7 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
     )
 
     assert {:ok, today} =
-             TaskViews.list(:today, context(account_id), %{limit: 20}, PostgresTaskViews)
+             list_view(:today, context(account_id), %{limit: 20})
 
     assert Enum.map(today.items, &{&1.id, &1.section, &1.reasons}) == [
              {overdue_id, "overdue", ["planned_overdue"]},
@@ -91,7 +95,7 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
     assert today.order_revision == 1
 
     assert {:ok, upcoming} =
-             TaskViews.list(:upcoming, context(account_id), %{limit: 20}, PostgresTaskViews)
+             list_view(:upcoming, context(account_id), %{limit: 20})
 
     assert Enum.map(upcoming.items, &{&1.id, &1.group_on, &1.upcoming_reason, &1.reasons}) == [
              {overlap_id, "2026-09-02", "deadline", ["planned_today", "deadline_future"]}
@@ -103,20 +107,16 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
     newer_id = "55555555-5555-4555-8555-555555555555"
     same_instant = ~U[2026-08-31 03:59:00.000000Z]
 
-    insert_task(account_id, older_id, "Older identity", @accepted_at,
-      completed_at: same_instant
-    )
+    insert_task(account_id, older_id, "Older identity", @accepted_at, completed_at: same_instant)
 
-    insert_task(account_id, newer_id, "Newer identity", @accepted_at,
-      completed_at: same_instant
-    )
+    insert_task(account_id, newer_id, "Newer identity", @accepted_at, completed_at: same_instant)
 
     assert {:ok, completed} =
-             TaskViews.list(:completed, context(account_id), %{limit: 20}, PostgresTaskViews)
+             list_view(:completed, context(account_id), %{limit: 20})
 
     assert Enum.map(completed.items, &{&1.id, &1.section, &1.completed_on}) == [
-             {newer_id, "today", "2026-08-30"},
-             {older_id, "today", "2026-08-30"}
+             {newer_id, "earlier", "2026-08-30"},
+             {older_id, "earlier", "2026-08-30"}
            ]
   end
 
@@ -135,8 +135,8 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
 
     moves =
       [
-        %{task_id: first_id, direction: :later, expected_order_revision: 1},
-        %{task_id: third_id, direction: :earlier, expected_order_revision: 1}
+        %{task_id: first_id, direction: :earlier, expected_order_revision: 1},
+        %{task_id: third_id, direction: :later, expected_order_revision: 1}
       ]
       |> Enum.map(fn command ->
         Task.async(fn ->
@@ -218,5 +218,11 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
 
   defp context(account_id) do
     %{account_id: account_id, accepted_at: @accepted_at, cursor_secret: @cursor_secret}
+  end
+
+  defp list_view(view, context, options) do
+    with_connection(fn _backend_pid ->
+      TaskViews.list(view, context, options, PostgresTaskViews)
+    end)
   end
 end

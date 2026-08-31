@@ -123,6 +123,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/commands/move-today-task": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Move a task earlier or later within its server-owned Today section */
+        readonly post: operations["moveTodayTask"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/commands/plan-for-today": {
         readonly parameters: {
             readonly query?: never;
@@ -208,6 +225,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/completed": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Read completed tasks newest first in account time */
+        readonly get: operations["getCompleted"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/inbox": {
         readonly parameters: {
             readonly query?: never;
@@ -215,7 +249,7 @@ export interface paths {
             readonly path?: never;
             readonly cookie?: never;
         };
-        /** Read active Inbox tasks newest first */
+        /** Read active Inbox task snapshots newest first */
         readonly get: operations["getInbox"];
         readonly put?: never;
         readonly post?: never;
@@ -428,6 +462,57 @@ export interface paths {
         readonly put?: never;
         /** Authenticate the seeded account in an isolated test runtime */
         readonly post: operations["createTestSession"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/today": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Read fixed Overdue and Today sections in account time */
+        readonly get: operations["getToday"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/upcoming": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Read future planned dates and deadlines grouped in account time */
+        readonly get: operations["getUpcoming"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/views/inbox": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Read the deterministic active Inbox projection */
+        readonly get: operations["getInboxView"];
+        readonly put?: never;
+        readonly post?: never;
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -762,6 +847,50 @@ export interface components {
             readonly tags: readonly components["schemas"]["TaskOrganizationReference"][];
             readonly title: string;
         };
+        /** @description Opaque HMAC-authenticated account/view/revision-bound complete keyset. */
+        readonly TaskViewCursor: string;
+        readonly TaskViewItem: {
+            /** Format: date-time */
+            readonly captured_at: string;
+            /** Format: date-time */
+            readonly completed_at?: string;
+            /** Format: date */
+            readonly completed_on?: string;
+            readonly deadline_on: components["schemas"]["NullableCivilDate"];
+            /** Format: date */
+            readonly group_on?: string;
+            readonly id: components["schemas"]["TaskIdentity"];
+            readonly planned_on: components["schemas"]["NullableCivilDate"];
+            readonly reasons?: readonly ("planned_overdue" | "planned_today" | "planned_future" | "deadline_overdue" | "deadline_today" | "deadline_future")[];
+            readonly revision: components["schemas"]["Revision"];
+            /** @enum {string} */
+            readonly section?: "overdue" | "today" | "earlier";
+            readonly title: string;
+            /** @enum {string} */
+            readonly upcoming_reason?: "planned" | "deadline";
+        };
+        readonly TaskViewPage: {
+            /** Format: date */
+            readonly account_day: string;
+            readonly account_timezone: string;
+            readonly items: readonly components["schemas"]["TaskViewItem"][];
+            readonly next_cursor: components["schemas"]["TaskViewCursor"] | null;
+            readonly order_revision: components["schemas"]["Revision"] | null;
+            /** @enum {string} */
+            readonly view: "inbox" | "today" | "upcoming" | "completed";
+        };
+        readonly TodayMoveRequest: {
+            /** @enum {string} */
+            readonly direction: "earlier" | "later";
+            readonly expected_order_revision: components["schemas"]["Revision"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            /** @constant */
+            readonly version: 1;
+        };
+        readonly TodayMoveResponse: {
+            readonly order_revision: components["schemas"]["Revision"];
+        };
         readonly TrackedSession: {
             /** @enum {string} */
             readonly client_kind: "web" | "electron" | "iphone" | "mcp";
@@ -795,7 +924,10 @@ export interface components {
             };
         };
     };
-    parameters: never;
+    parameters: {
+        readonly TaskViewCursorParameter: components["schemas"]["TaskViewCursor"];
+        readonly TaskViewLimitParameter: number;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -1016,6 +1148,36 @@ export interface operations {
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };
+    readonly moveTodayTask: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["TodayMoveRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Acknowledged scoped Today order revision */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["TodayMoveResponse"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly planForToday: {
         readonly parameters: {
             readonly query?: never;
@@ -1169,6 +1331,31 @@ export interface operations {
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };
+    readonly getCompleted: {
+        readonly parameters: {
+            readonly query?: {
+                readonly cursor?: components["parameters"]["TaskViewCursorParameter"];
+                readonly limit?: components["parameters"]["TaskViewLimitParameter"];
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Authoritative Completed projection */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["TaskViewPage"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly getInbox: {
         readonly parameters: {
             readonly query?: never;
@@ -1178,7 +1365,7 @@ export interface operations {
         };
         readonly requestBody?: never;
         readonly responses: {
-            /** @description Authoritative Inbox projection */
+            /** @description Authoritative Inbox task snapshots */
             readonly 200: {
                 headers: {
                     readonly [name: string]: unknown;
@@ -1533,6 +1720,81 @@ export interface operations {
                 };
             };
             readonly 404: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly getToday: {
+        readonly parameters: {
+            readonly query?: {
+                readonly cursor?: components["parameters"]["TaskViewCursorParameter"];
+                readonly limit?: components["parameters"]["TaskViewLimitParameter"];
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Authoritative Today projection and scoped order revision */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["TaskViewPage"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly getUpcoming: {
+        readonly parameters: {
+            readonly query?: {
+                readonly cursor?: components["parameters"]["TaskViewCursorParameter"];
+                readonly limit?: components["parameters"]["TaskViewLimitParameter"];
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Authoritative read-only Upcoming projection */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["TaskViewPage"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly getInboxView: {
+        readonly parameters: {
+            readonly query?: {
+                readonly cursor?: components["parameters"]["TaskViewCursorParameter"];
+                readonly limit?: components["parameters"]["TaskViewLimitParameter"];
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Authoritative Inbox projection */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["TaskViewPage"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
         };
     };
 }
