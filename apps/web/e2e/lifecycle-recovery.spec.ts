@@ -417,7 +417,7 @@ test('@lifecycle-recovery reauthenticates and completes the original session rev
   await page.getByRole('button', { name: `Revoke ${targetLabel}` }).click()
   await page.getByRole('button', { name: 'Revoke session' }).click()
   await expect(page.getByRole('heading', { name: 'Authentication required' })).toBeVisible()
-  await page.getByLabel('Password').fill(continuationPassword)
+  await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
   await page.getByRole('button', { name: 'Sign in and continue' }).click()
   await expect(page.getByRole('button', { name: `Revoke ${targetLabel}` })).not.toBeVisible()
 
