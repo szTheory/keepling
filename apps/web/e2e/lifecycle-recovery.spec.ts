@@ -14,6 +14,7 @@ const authenticate = async (page: Page, baseURL: string | undefined) => {
     headers: { origin: new URL(baseURL).origin },
   })
   expect(response.ok()).toBe(true)
+  return (await response.json()) as { csrf_token: string }
 }
 
 const captureTask = async (page: Page, title: string) => {
@@ -171,4 +172,42 @@ test('@lifecycle-recovery preserves the stored identity when authentication inte
     mutation_id: request.mutation_id,
     outcome: 'accepted',
   })
+})
+
+test('@lifecycle-recovery continues exact undo through reauthentication', async ({
+  baseURL,
+  page,
+}) => {
+  const { csrf_token: csrfToken } = await authenticate(page, baseURL)
+  await captureTask(page, 'Undo survives reauthentication')
+
+  const bodies: string[] = []
+  let armed = true
+  await page.route('**/api/v1/commands/undo-task', async (route) => {
+    bodies.push(route.request().postData() ?? '')
+    if (armed) {
+      armed = false
+      await route.continue({
+        headers: faultHeaders(route, 'authentication_before_acceptance'),
+      })
+    } else {
+      await route.continue()
+    }
+  })
+  await page.route('**/api/v1/reauthenticate', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      json: { csrf_token: csrfToken, status: 'reauthenticated' },
+      status: 200,
+    })
+  })
+
+  await page.getByRole('button', { name: 'Undo Today planning' }).click()
+  await expect(page.getByRole('button', { name: 'Sign in and continue' })).toBeVisible()
+  await page.getByRole('textbox', { exact: true, name: 'Password' }).fill('test-only continuation')
+  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+
+  await expect(page.getByText('Change undone.')).toBeVisible()
+  expect(bodies).toHaveLength(2)
+  expect(bodies[1]).toBe(bodies[0])
 })

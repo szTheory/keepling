@@ -7,6 +7,7 @@ import {
 } from 'react'
 
 import type { UndoAvailability, UndoResult } from '@/api/keepling'
+import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 import RecoveryStrip from '@/features/recovery/RecoveryStrip'
 import SessionList from '@/features/sessions/SessionList'
 
@@ -16,6 +17,10 @@ type AppShellProps = {
   inboxContent?: ReactNode
   onDiscardDirtyWork?: () => void
   onLoggedOut: () => void
+  onAuthenticationRequired?: (
+    intent: InterruptedIntent,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => void
   onSaveDirtyWork?: () => void
 }
 
@@ -35,6 +40,7 @@ function AppShell({
   hasDirtyWork = false,
   inboxContent,
   onDiscardDirtyWork = () => undefined,
+  onAuthenticationRequired,
   onLoggedOut,
   onSaveDirtyWork = () => undefined,
 }: AppShellProps) {
@@ -77,6 +83,7 @@ function AppShell({
       availability={latestUndo}
       csrfToken={csrfToken}
       key={latestUndo.handle}
+      onAuthenticationRequired={onAuthenticationRequired}
       onSettled={handleUndoSettled}
     />
   ) : null

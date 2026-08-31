@@ -263,6 +263,7 @@ function RoutedApp() {
           <AppShell
             csrfToken={authenticatedState.csrfToken}
             inboxContent={<InboxWorkspace />}
+            onAuthenticationRequired={auth.beginReauthentication}
             onLoggedOut={handleLoggedOut}
           />
         ) : undefined

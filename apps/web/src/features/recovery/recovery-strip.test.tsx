@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import AppShell from '@/app/AppShell'
+import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 import RecoveryStrip from '@/features/recovery/RecoveryStrip'
 
 const availability = (overrides: Partial<{ expiresAt: string; handle: string; label: string }> = {}) => ({
@@ -155,7 +156,69 @@ describe('persistent semantic recovery', () => {
     expect(document.activeElement).toBe(input)
   })
 
-  it('renders authentication-required as a continuation state without claiming a change', async () => {
+  it('continues the exact undo through reauthentication with rotated CSRF state', async () => {
+    const user = userEvent.setup()
+    const onAuthenticationRequired = vi.fn()
+
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockImplementationOnce(() =>
+        jsonResponse(
+          {
+            code: 'authentication_required',
+            recovery_action: 'reauthenticate',
+            retryable: true,
+            status: 401,
+            title: 'Authentication required',
+            type: '/problems/authentication_required',
+          },
+          401,
+        ),
+      )
+      .mockImplementationOnce((_input, init) => {
+        const request = JSON.parse(String(init?.body)) as Record<string, unknown>
+        return jsonResponse({
+          mutation_id: request.mutation_id,
+          outcome: 'accepted',
+          revision: 3,
+          snapshot: taskSnapshot,
+          task_id: taskSnapshot.id,
+          warnings: [],
+        })
+      })
+
+    render(
+      <RecoveryStrip
+        availability={availability()}
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        onSettled={vi.fn()}
+      />,
+    )
+    await user.click(screen.getByRole('button', { name: 'Undo completion' }))
+
+    expect(await screen.findByText('Sign in to continue undo. Nothing was changed.')).toBeVisible()
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+
+    const firstRequest = String(fetchMock.mock.calls[0]?.[1]?.body)
+    const firstIdentity = JSON.parse(firstRequest) as { mutation_id: string }
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      InterruptedIntent,
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toEqual({ kind: 'not-submitted', mutationId: firstIdentity.mutation_id })
+
+    await resume('rotated-csrf')
+
+    expect(String(fetchMock.mock.calls[1]?.[1]?.body)).toBe(firstRequest)
+    expect(fetchMock.mock.calls[1]?.[1]?.headers).toMatchObject({
+      'x-csrf-token': 'rotated-csrf',
+    })
+    expect(await screen.findByText('Change undone.')).toBeVisible()
+    expect(screen.queryByRole('link', { name: 'Sign in' })).not.toBeInTheDocument()
+  })
+
+  it('keeps authentication-required explicit when no continuation host is available', async () => {
     const user = userEvent.setup()
 
     vi.spyOn(globalThis, 'fetch').mockImplementation(() =>
@@ -176,6 +239,6 @@ describe('persistent semantic recovery', () => {
     await user.click(screen.getByRole('button', { name: 'Undo completion' }))
 
     expect(await screen.findByText('Sign in to continue undo. Nothing was changed.')).toBeVisible()
-    expect(screen.getByRole('link', { name: 'Sign in' })).toHaveAttribute('href', '/login')
+    expect(screen.queryByRole('link', { name: 'Sign in' })).not.toBeInTheDocument()
   })
 })

@@ -7,10 +7,15 @@ import {
   type UndoResult,
   type UndoSubmission,
 } from '@/api/keepling'
+import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 
 type RecoveryStripProps = {
   availability: UndoAvailability
   csrfToken: string
+  onAuthenticationRequired?: (
+    intent: InterruptedIntent,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => void
   onSettled: (result: UndoResult) => void
 }
 
@@ -36,11 +41,16 @@ const noChangeCopy = (result: Extract<UndoResult, { kind: 'no-change' }>['result
   }
 }
 
-function RecoveryStrip({ availability, csrfToken, onSettled }: RecoveryStripProps) {
+function RecoveryStrip({
+  availability,
+  csrfToken,
+  onAuthenticationRequired,
+  onSettled,
+}: RecoveryStripProps) {
   const [state, setState] = useState<RecoveryState>({ kind: 'available' })
   const submissionRef = useRef<UndoSubmission | null>(null)
 
-  const submit = async () => {
+  const submit = async (activeCsrfToken = csrfToken) => {
     const submission =
       submissionRef.current ??
       ({ availability, mutationId: crypto.randomUUID() } satisfies UndoSubmission)
@@ -49,7 +59,7 @@ function RecoveryStrip({ availability, csrfToken, onSettled }: RecoveryStripProp
     setState({ kind: 'submitting' })
 
     try {
-      const result = await undoTask(submission, csrfToken)
+      const result = await undoTask(submission, activeCsrfToken)
       onSettled(result)
 
       if (result.kind === 'acknowledged') {
@@ -62,6 +72,10 @@ function RecoveryStrip({ availability, csrfToken, onSettled }: RecoveryStripProp
     } catch (error: unknown) {
       if (error instanceof KeeplingApiError && error.problem.code === 'authentication_required') {
         setState({ kind: 'authentication-required' })
+        onAuthenticationRequired?.(
+          { kind: 'not-submitted', mutationId: submission.mutationId },
+          (nextCsrfToken) => submit(nextCsrfToken),
+        )
       } else {
         setState({ kind: 'uncertain' })
       }
@@ -103,11 +117,6 @@ function RecoveryStrip({ availability, csrfToken, onSettled }: RecoveryStripProp
         </button>
       ) : null}
 
-      {state.kind === 'authentication-required' ? (
-        <a className="min-h-11 shrink-0 content-center font-semibold text-primary underline" href="/login">
-          Sign in
-        </a>
-      ) : null}
     </aside>
   )
 }
