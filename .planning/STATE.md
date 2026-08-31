@@ -3,16 +3,16 @@ gsd_state_version: 1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-11-PLAN.md
-last_updated: "2026-08-31T04:52:05.889Z"
+stopped_at: Completed KPL-01-12-PLAN.md
+last_updated: "2026-08-31T05:18:47.560Z"
 last_activity: 2026-08-30
 last_activity_desc: Phase KPL-01 execution started
-state_head: f0d113611f49a0ee00488e150f07864fb03f777d
+state_head: edc07a8f8df484ef286341cda94c4807a326870d
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 19
-  completed_plans: 11
+  completed_plans: 12
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 12 of 19
+Plan: 13 of 19
 Total Plans in Phase: 19
 Status: Executing Phase KPL-01
 Last activity: 2026-08-30 — Phase KPL-01 execution started
@@ -78,6 +78,10 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 01]: Accepted task activity is canonical account-lifetime user data committed atomically but represented separately from task state, receipts, recovery metadata, and telemetry.
 - [Phase 01]: Activity cursors bind account, task, full newest-first keyset, and activity-view revision so projected-label changes fail explicitly stale.
 - [Phase 01]: Task history renders generated closed DTOs as untrusted React text with exact account-zone time and technical identifiers only in disclosures.
+- [Phase 01]: Planned placement and deadline remain independent nullable civil dates; Today intent changes only planned_on and planned-after-deadline is accepted with an exact warning.
+- [Phase 01]: Plan for Today resolves from the validated account IANA timezone and an injected acceptance instant; later timezone changes never rewrite stored civil dates.
+- [Phase 01]: Active unfinished task classification preserves every applicable planned and deadline reason while deriving Today and Upcoming from the canonical account day.
+- [Phase 01]: Browser command composition uses stable mutation identities and acknowledged revisions, retaining drafts until the terminal exact receipt.
 
 ### Retained Research
 
@@ -105,8 +109,8 @@ Run `$gsd-execute-phase 1` from the repository root.
 
 ## Session
 
-**Last session:** 2026-08-31T04:52:05.881Z
-**Stopped at:** Completed KPL-01-11-PLAN.md
+**Last session:** 2026-08-31T05:18:47.551Z
+**Stopped at:** Completed KPL-01-12-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -124,3 +128,4 @@ Run `$gsd-execute-phase 1` from the repository root.
 | Phase KPL-01 P09 | 16min | 2 tasks | 15 files |
 | Phase KPL-01 P10 | 23min | 2 tasks | 14 files |
 | Phase KPL-01 P11 | 21min | 2 tasks | 13 files |
+| Phase KPL-01 P12 | 22min | 2 tasks | 15 files |
