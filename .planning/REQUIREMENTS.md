@@ -7,27 +7,27 @@
 
 ### Personal GTD domain
 
-- [x] **GTD-01**: User can capture a task with a title into Inbox and immediately receive a stable task identity.
-- [x] **GTD-02**: User can clarify a task by editing its title, notes, project membership, tags, and temporal fields supported by v1.
-- [x] **GTD-03**: User can deliberately place or remove a task in Today without conflating that choice with its deadline.
-- [x] **GTD-04**: User can inspect upcoming scheduled tasks and deadlines using explicit timezone-aware semantics.
-- [x] **GTD-05**: User can complete and reopen a task as idempotent domain transitions.
-- [x] **GTD-06**: User can trash and restore a task without immediate hard deletion.
-- [x] **GTD-07**: User can undo supported consequential mutations using a bounded, revision-aware handle.
+- [ ] **GTD-01**: User can capture a task with a title into Inbox and immediately receive a stable task identity.
+- [ ] **GTD-02**: User can clarify a task by editing its title, notes, project membership, tags, and temporal fields supported by v1.
+- [ ] **GTD-03**: User can deliberately place or remove a task in Today without conflating that choice with its deadline.
+- [ ] **GTD-04**: User can inspect upcoming scheduled tasks and deadlines using explicit timezone-aware semantics.
+- [ ] **GTD-05**: User can complete and reopen a task as idempotent domain transitions.
+- [ ] **GTD-06**: User can trash and restore a task without immediate hard deletion.
+- [ ] **GTD-07**: User can undo supported consequential mutations using a bounded, revision-aware handle.
 
 ### Identity and server authority
 
-- [x] **SRV-01**: User can authenticate a personal account and authorize multiple owned devices without exposing server credentials to clients or agents.
-- [x] **SRV-02**: User receives the same domain invariants through web, desktop, iPhone, API, and MCP entry points.
-- [x] **SRV-03**: User-visible mutations are idempotent by mutation identity and return stable result or error contracts.
+- [ ] **SRV-01**: User can authenticate a personal account and authorize multiple owned devices without exposing server credentials to clients or agents.
+- [ ] **SRV-02**: User receives the same domain invariants through web, desktop, iPhone, API, and MCP entry points.
+- [ ] **SRV-03**: User-visible mutations are idempotent by mutation identity and return stable result or error contracts.
 - [ ] **SRV-04**: User can synchronize through an ordered, account-scoped change feed with opaque durable cursors and tombstones.
 - [ ] **SRV-05**: User sees a structured conflict instead of a silent overwrite when concurrent edits cannot be safely merged.
 - [ ] **SRV-06**: User can continue using a supported released client after a compatible server deployment without a coordinated forced upgrade.
 
 ### Browser tracer
 
-- [x] **WEB-01**: User can use an online browser interface to capture, view Inbox and Today, edit, complete, and reopen tasks against the real Phoenix/PostgreSQL system.
-- [x] **WEB-02**: User sees clear empty, loading, validation, authentication-expired, stale, conflict, and retry states wherever those states apply.
+- [ ] **WEB-01**: User can use an online browser interface to capture, view Inbox and Today, edit, complete, and reopen tasks against the real Phoenix/PostgreSQL system.
+- [ ] **WEB-02**: User sees clear empty, loading, validation, authentication-expired, stale, conflict, and retry states wherever those states apply.
 
 ### Mac desktop
 
@@ -68,7 +68,7 @@
 
 ### Quality and delivery
 
-- [x] **QUAL-01**: Contributor receives deterministic tests for domain rules, long mutation sequences, persistence/migrations, API/contracts, adapters, browser behavior, Electron boundaries, native orchestration, and deployment recovery at the layer best able to catch each failure.
+- [ ] **QUAL-01**: Contributor receives deterministic tests for domain rules, long mutation sequences, persistence/migrations, API/contracts, adapters, browser behavior, Electron boundaries, native orchestration, and deployment recovery at the layer best able to catch each failure.
 - [ ] **QUAL-02**: Contributor receives fast required CI lanes with parallelism, dependency caching, slow-test visibility, flake accountability, and cross-consumer fan-out for contract/token changes.
 - [ ] **QUAL-03**: Release promotion uses the exact revision and artifact previously tested; distribution jobs do not silently rebuild different bytes.
 - [ ] **QUAL-04**: Important screens have representative user-level coverage for meaningful populated, empty, loading, offline, denied, stale, conflict, partial, retry, and unrecoverable states.
@@ -113,7 +113,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GTD-01..07, SRV-01, SRV-03, WEB-01..02, QUAL-01 | Phase 1 | Complete |
+| GTD-01..07, SRV-01, SRV-03, WEB-01..02, QUAL-01 | Phase 1 | Gaps Found |
 | SRV-02 shared semantic boundary + web/API adapter proof | Phase 1 | Pending partial proof |
 | SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05 | Phase 2 | Pending |
 | MAC-01..05, QUAL-03..04, SRV-02 Electron adapter proof | Phase 3 | Pending |
