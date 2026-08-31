@@ -33,6 +33,15 @@ defmodule KeeplingWeb.CommandController do
     end
   end
 
+  def edit_task(conn, params),
+    do: dispatch_task_command(conn, decode_edit(params, :edit_task, false))
+
+  def clarify_task(conn, params),
+    do: dispatch_task_command(conn, decode_edit(params, :clarify_task, true))
+
+  def return_to_inbox(conn, params),
+    do: dispatch_task_command(conn, decode_return_to_inbox(params))
+
   def mutation(conn, %{"mutation_id" => mutation_id}) do
     with {:ok, _uuid} <- Ecto.UUID.cast(mutation_id),
          {:ok, result} <- Commands.lookup_result(context(conn), mutation_id, CommandStore) do
@@ -70,6 +79,100 @@ defmodule KeeplingWeb.CommandController do
     end
   end
 
+  defp dispatch_task_command(conn, decoded) do
+    with {:ok, command} <- decoded,
+         {:ok, result} <- Commands.dispatch(command, context(conn), CommandStore) do
+      respond(conn, result)
+    else
+      {:error, :invalid_command} -> invalid_command(conn)
+      {:error, :infrastructure_failure} -> infrastructure_problem(conn)
+    end
+  end
+
+  defp decode_edit(params, type, allow_empty) do
+    allowed_keys = [
+      "base_values",
+      "expected_revision",
+      "fields",
+      "mutation_id",
+      "task_id",
+      "version"
+    ]
+
+    with true <- Enum.sort(Map.keys(params)) == allowed_keys,
+         %{
+           "base_values" => base_values,
+           "expected_revision" => expected_revision,
+           "fields" => fields,
+           "mutation_id" => mutation_id,
+           "task_id" => task_id,
+           "version" => 1
+         } <- params,
+         true <- is_integer(expected_revision) and expected_revision >= 1,
+         {:ok, decoded_fields} <- decode_detail_fields(fields, allow_empty),
+         {:ok, decoded_base_values} <- decode_detail_fields(base_values, true),
+         true <-
+           Map.keys(decoded_fields) |> Enum.sort() == Map.keys(decoded_base_values) |> Enum.sort(),
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, _task_uuid} <- Ecto.UUID.cast(task_id) do
+      {:ok,
+       %{
+         base_values: decoded_base_values,
+         expected_revision: expected_revision,
+         fields: decoded_fields,
+         mutation_id: mutation_id,
+         task_id: task_id,
+         type: type,
+         version: 1
+       }}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
+  defp decode_detail_fields(fields, allow_empty) when is_map(fields) do
+    allowed = ["notes", "title"]
+
+    if (allow_empty or map_size(fields) > 0) and
+         Enum.all?(fields, fn {key, value} -> key in allowed and is_binary(value) end) do
+      {:ok,
+       Map.new(fields, fn
+         {"notes", value} -> {:notes, value}
+         {"title", value} -> {:title, value}
+       end)}
+    else
+      {:error, :invalid_command}
+    end
+  end
+
+  defp decode_detail_fields(_fields, _allow_empty), do: {:error, :invalid_command}
+
+  defp decode_return_to_inbox(params) do
+    allowed_keys = ["expected_revision", "mutation_id", "task_id", "version"]
+
+    with true <- Enum.sort(Map.keys(params)) == allowed_keys,
+         %{
+           "expected_revision" => expected_revision,
+           "mutation_id" => mutation_id,
+           "task_id" => task_id,
+           "version" => 1
+         } <- params,
+         true <- is_integer(expected_revision) and expected_revision >= 1,
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, _task_uuid} <- Ecto.UUID.cast(task_id) do
+      {:ok,
+       %{
+         expected_revision: expected_revision,
+         mutation_id: mutation_id,
+         task_id: task_id,
+         type: :return_to_inbox,
+         version: 1
+       }}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
   defp context(conn) do
     %{
       accepted_at: DateTime.utc_now() |> DateTime.truncate(:microsecond),
@@ -97,7 +200,7 @@ defmodule KeeplingWeb.CommandController do
       400,
       "invalid_command",
       "Invalid command",
-      "Send the closed version 1 capture command shape.",
+      "Send a closed version 1 semantic command shape.",
       false,
       "correct_request"
     )

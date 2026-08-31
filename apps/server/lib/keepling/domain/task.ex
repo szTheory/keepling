@@ -2,66 +2,210 @@ defmodule Keepling.Domain.Task do
   @moduledoc """
   Pure task decisions for Keepling's semantic command boundary.
 
-  The task aggregate knows nothing about transport, persistence, accounts, or
-  clocks. Callers provide accepted time and preselected identities explicitly.
+  The versioned detail bounds are compatibility constants. The task aggregate
+  knows nothing about transport, persistence, accounts, or clocks.
   """
 
+  @details_version 1
   @max_title_length 512
+  @max_notes_length 50_000
+  @detail_fields [:title, :notes]
 
-  @enforce_keys [:id, :title, :inbox_state, :revision, :captured_at]
-  defstruct [:id, :title, :inbox_state, :revision, :captured_at]
+  @enforce_keys [:id, :title, :notes, :inbox_state, :revision, :captured_at]
+  defstruct [:id, :title, :notes, :inbox_state, :revision, :captured_at]
 
+  @type inbox_state :: :inbox | :clarified
   @type t :: %__MODULE__{
           id: String.t(),
           title: String.t(),
-          inbox_state: :inbox,
+          notes: String.t(),
+          inbox_state: inbox_state(),
           revision: pos_integer(),
           captured_at: DateTime.t()
         }
 
   @type activity :: %{
-          type: :task_captured,
+          type: atom(),
           version: 1,
-          from_revision: nil,
-          to_revision: 1,
+          from_revision: pos_integer() | nil,
+          to_revision: pos_integer(),
           accepted_at: DateTime.t(),
           changed_fields: map()
         }
 
+  @spec details_version() :: 1
+  def details_version, do: @details_version
+
+  @spec details_limits() :: %{title: 512, notes: 50_000}
+  def details_limits, do: %{title: @max_title_length, notes: @max_notes_length}
+
   @spec capture(%{task_id: String.t(), title: String.t(), accepted_at: DateTime.t()}) ::
           {:ok, t(), activity()} | {:error, :title_required | :title_too_long}
   def capture(%{task_id: task_id, title: submitted_title, accepted_at: accepted_at}) do
-    title = String.trim(submitted_title)
+    with {:ok, title} <- normalize_title(submitted_title) do
+      task = %__MODULE__{
+        id: task_id,
+        title: title,
+        notes: "",
+        inbox_state: :inbox,
+        revision: 1,
+        captured_at: accepted_at
+      }
+
+      activity =
+        activity(:task_captured, nil, task, accepted_at, %{
+          "inbox_state" => %{"from" => nil, "to" => "inbox"},
+          "notes" => %{"from" => nil, "to" => ""},
+          "title" => %{"from" => nil, "to" => title}
+        })
+
+      {:ok, task, activity}
+    end
+  end
+
+  @spec edit(t(), map()) ::
+          {:ok, t(), activity() | nil, :accepted | :already_satisfied}
+          | {:error, atom() | {:edit_conflict, [String.t()]}}
+  def edit(%__MODULE__{} = task, command) do
+    with :ok <- require_touched_fields(command),
+         {:ok, fields} <- normalize_fields(command.fields),
+         {:ok, updated, changes} <- merge_fields(task, command.base_values, fields) do
+      finish(task, updated, changes, :task_details_updated, command.accepted_at)
+    end
+  end
+
+  @spec clarify(t(), map()) ::
+          {:ok, t(), activity() | nil, :accepted | :already_satisfied}
+          | {:error, atom() | {:edit_conflict, [String.t()]}}
+  def clarify(%__MODULE__{} = task, command) do
+    with {:ok, fields} <- normalize_fields(command.fields),
+         {:ok, updated, detail_changes} <- merge_fields(task, command.base_values, fields) do
+      {updated, changes} =
+        if task.inbox_state == :inbox do
+          {%{updated | inbox_state: :clarified},
+           Map.put(detail_changes, "inbox_state", %{"from" => "inbox", "to" => "clarified"})}
+        else
+          {updated, detail_changes}
+        end
+
+      finish(task, updated, changes, :task_clarified, command.accepted_at)
+    end
+  end
+
+  @spec return_to_inbox(t(), map()) ::
+          {:ok, t(), activity() | nil, :accepted | :already_satisfied}
+          | {:error, {:edit_conflict, [String.t()]}}
+  def return_to_inbox(%__MODULE__{inbox_state: :inbox} = task, _command),
+    do: {:ok, task, nil, :already_satisfied}
+
+  def return_to_inbox(%__MODULE__{} = task, command) do
+    if command.expected_revision == task.revision do
+      updated = %{task | inbox_state: :inbox}
+
+      finish(
+        task,
+        updated,
+        %{"inbox_state" => %{"from" => "clarified", "to" => "inbox"}},
+        :task_returned_to_inbox,
+        command.accepted_at
+      )
+    else
+      {:error, {:edit_conflict, ["inbox_state"]}}
+    end
+  end
+
+  defp require_touched_fields(%{fields: fields}) when map_size(fields) > 0, do: :ok
+  defp require_touched_fields(_command), do: {:error, :no_fields_touched}
+
+  defp normalize_fields(fields) when is_map(fields) do
+    if Enum.all?(Map.keys(fields), &(&1 in @detail_fields)) do
+      Enum.reduce_while(fields, {:ok, %{}}, fn
+        {:title, value}, {:ok, normalized} ->
+          case normalize_title(value) do
+            {:ok, title} -> {:cont, {:ok, Map.put(normalized, :title, title)}}
+            error -> {:halt, error}
+          end
+
+        {:notes, value}, {:ok, normalized} ->
+          if is_binary(value) and String.length(value) <= @max_notes_length do
+            {:cont, {:ok, Map.put(normalized, :notes, value)}}
+          else
+            {:halt, {:error, :notes_too_long}}
+          end
+      end)
+    else
+      {:error, :invalid_detail_fields}
+    end
+  end
+
+  defp normalize_fields(_fields), do: {:error, :invalid_detail_fields}
+
+  defp normalize_title(value) when is_binary(value) do
+    title = String.trim(value)
 
     cond do
-      title == "" ->
-        {:error, :title_required}
-
-      String.length(title) > @max_title_length ->
-        {:error, :title_too_long}
-
-      true ->
-        task = %__MODULE__{
-          id: task_id,
-          title: title,
-          inbox_state: :inbox,
-          revision: 1,
-          captured_at: accepted_at
-        }
-
-        activity = %{
-          type: :task_captured,
-          version: 1,
-          from_revision: nil,
-          to_revision: 1,
-          accepted_at: accepted_at,
-          changed_fields: %{
-            "inbox_state" => %{"from" => nil, "to" => "inbox"},
-            "title" => %{"from" => nil, "to" => title}
-          }
-        }
-
-        {:ok, task, activity}
+      title == "" -> {:error, :title_required}
+      String.length(title) > @max_title_length -> {:error, :title_too_long}
+      true -> {:ok, title}
     end
+  end
+
+  defp normalize_title(_value), do: {:error, :title_required}
+
+  defp merge_fields(task, base_values, fields)
+       when is_map(base_values) and map_size(base_values) == map_size(fields) do
+    if MapSet.new(Map.keys(base_values)) == MapSet.new(Map.keys(fields)) do
+      conflicts =
+        fields
+        |> Enum.reject(fn {field, requested} ->
+          current = Map.fetch!(task, field)
+          current == Map.fetch!(base_values, field) or current == requested
+        end)
+        |> Enum.map(fn {field, _requested} -> Atom.to_string(field) end)
+        |> Enum.sort()
+
+      if conflicts == [] do
+        {updated, changes} =
+          Enum.reduce(fields, {task, %{}}, fn {field, requested}, {current_task, changed} ->
+            current = Map.fetch!(current_task, field)
+
+            if current == requested do
+              {current_task, changed}
+            else
+              {
+                Map.put(current_task, field, requested),
+                Map.put(changed, Atom.to_string(field), %{"from" => current, "to" => requested})
+              }
+            end
+          end)
+
+        {:ok, updated, changes}
+      else
+        {:error, {:edit_conflict, conflicts}}
+      end
+    else
+      {:error, :base_values_mismatch}
+    end
+  end
+
+  defp merge_fields(_task, _base_values, _fields), do: {:error, :base_values_mismatch}
+
+  defp finish(task, _updated, changes, _type, _accepted_at) when map_size(changes) == 0,
+    do: {:ok, task, nil, :already_satisfied}
+
+  defp finish(task, updated, changes, type, accepted_at) do
+    updated = %{updated | revision: task.revision + 1}
+    {:ok, updated, activity(type, task.revision, updated, accepted_at, changes), :accepted}
+  end
+
+  defp activity(type, from_revision, task, accepted_at, changed_fields) do
+    %{
+      type: type,
+      version: 1,
+      from_revision: from_revision,
+      to_revision: task.revision,
+      accepted_at: accepted_at,
+      changed_fields: changed_fields
+    }
   end
 end

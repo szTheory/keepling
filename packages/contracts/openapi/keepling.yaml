@@ -262,6 +262,97 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
         '503':
           $ref: '#/components/responses/ProblemResponse'
+  /commands/edit-task:
+    post:
+      operationId: editTask
+      summary: Edit only touched title or notes fields while preserving Inbox state
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EditTaskCommand'
+      responses:
+        '200':
+          description: Exact stored edit acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/clarify-task:
+    post:
+      operationId: clarifyTask
+      summary: Atomically edit touched details and move a task out of Inbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClarifyTaskCommand'
+      responses:
+        '200':
+          description: Exact stored clarification acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '422':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /commands/return-to-inbox:
+    post:
+      operationId: returnToInbox
+      summary: Explicitly restore canonical Inbox membership
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReturnToInboxCommand'
+      responses:
+        '200':
+          description: Exact stored Inbox-return acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /mutations/{mutation_id}:
     get:
       operationId: getMutation
@@ -275,6 +366,12 @@ paths:
       responses:
         '201':
           description: Original stored accepted acknowledgement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandAcknowledgement'
+        '200':
+          description: Original stored update acknowledgement
           content:
             application/json:
               schema:
@@ -334,6 +431,8 @@ components:
         version:
           type: integer
           const: 1
+    ClarifyTaskCommand:
+      $ref: '#/components/schemas/EditTaskCommand'
     CommandAcknowledgement:
       type: object
       additionalProperties: false
@@ -372,6 +471,30 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaskSnapshot'
+    EditTaskCommand:
+      type: object
+      additionalProperties: false
+      required:
+        - base_values
+        - expected_revision
+        - fields
+        - mutation_id
+        - task_id
+        - version
+      properties:
+        base_values:
+          $ref: '#/components/schemas/TaskDetailValues'
+        expected_revision:
+          $ref: '#/components/schemas/Revision'
+        fields:
+          $ref: '#/components/schemas/TaskDetailValues'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        version:
+          type: integer
+          const: 1
     LoginRequest:
       type: object
       additionalProperties: false
@@ -426,6 +549,16 @@ components:
           type: boolean
         recovery_action:
           type: string
+        affected_fields:
+          type: array
+          items:
+            type: string
+            enum:
+              - inbox_state
+              - notes
+              - title
+        current_revision:
+          $ref: '#/components/schemas/Revision'
     Revision:
       type: integer
       format: int64
@@ -469,6 +602,24 @@ components:
           minLength: 1
           maxLength: 1024
           format: password
+        version:
+          type: integer
+          const: 1
+    ReturnToInboxCommand:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_revision
+        - mutation_id
+        - task_id
+        - version
+      properties:
+        expected_revision:
+          $ref: '#/components/schemas/Revision'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
         version:
           type: integer
           const: 1
@@ -567,6 +718,17 @@ components:
     TaskIdentity:
       type: string
       format: uuid
+    TaskDetailValues:
+      type: object
+      additionalProperties: false
+      properties:
+        notes:
+          type: string
+          maxLength: 50000
+        title:
+          type: string
+          minLength: 1
+          maxLength: 512
     TaskSnapshot:
       type: object
       additionalProperties: false
@@ -574,6 +736,7 @@ components:
         - captured_at
         - id
         - inbox_state
+        - notes
         - revision
         - title
       properties:
@@ -584,7 +747,11 @@ components:
           $ref: '#/components/schemas/TaskIdentity'
         inbox_state:
           type: string
-          const: inbox
+          enum:
+            - inbox
+            - clarified
+        notes:
+          type: string
         revision:
           $ref: '#/components/schemas/Revision'
         title:

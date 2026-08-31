@@ -59,6 +59,9 @@ defmodule KeeplingWeb.Router do
     pipe_through [:api, :authenticated, :mutation]
 
     post "/commands/capture-task", CommandController, :capture_task
+    post "/commands/edit-task", CommandController, :edit_task
+    post "/commands/clarify-task", CommandController, :clarify_task
+    post "/commands/return-to-inbox", CommandController, :return_to_inbox
     post "/reauthenticate", AuthController, :reauthenticate
     post "/logout", AuthController, :logout
     patch "/sessions/:id", AuthController, :update_session

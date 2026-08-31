@@ -8,7 +8,7 @@ defmodule Keepling.Application.Commands do
   defmodule Port do
     @moduledoc "Persistence/query port interpreted by an outward adapter."
 
-    @callback execute(map(), map(), (map() -> tuple())) :: tuple()
+    @callback execute(map(), map(), function()) :: tuple()
     @callback list_inbox(map()) :: tuple()
     @callback lookup_result(map(), String.t()) :: tuple()
   end
@@ -21,6 +21,24 @@ defmodule Keepling.Application.Commands do
         task_id: accepted_command.task_id,
         title: accepted_command.title
       })
+    end)
+  end
+
+  def dispatch(%{type: :edit_task} = command, context, port) do
+    port.execute(command, context, fn current_task, accepted_command ->
+      Task.edit(current_task, accepted_command)
+    end)
+  end
+
+  def dispatch(%{type: :clarify_task} = command, context, port) do
+    port.execute(command, context, fn current_task, accepted_command ->
+      Task.clarify(current_task, accepted_command)
+    end)
+  end
+
+  def dispatch(%{type: :return_to_inbox} = command, context, port) do
+    port.execute(command, context, fn current_task, accepted_command ->
+      Task.return_to_inbox(current_task, accepted_command)
     end)
   end
 

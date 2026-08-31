@@ -9,6 +9,7 @@ defmodule Keepling.Domain.EditTaskTest do
     vectors = editing_vectors()
 
     assert vectors["version"] == 1
+
     assert vectors["limits"] == %{
              "notes_normalization" => "preserve_plain_text",
              "notes_unicode_scalars" => 50_000,
@@ -42,7 +43,13 @@ defmodule Keepling.Domain.EditTaskTest do
   end
 
   test "title is trimmed, notes are preserved, and validation is versioned" do
-    task = task_from(%{"title" => "Before", "notes" => "line one\n", "inbox_state" => "inbox", "revision" => 1})
+    task =
+      task_from(%{
+        "title" => "Before",
+        "notes" => "line one\n",
+        "inbox_state" => "inbox",
+        "revision" => 1
+      })
 
     assert Task.details_version() == 1
     assert Task.details_limits() == %{notes: 50_000, title: 512}
@@ -57,6 +64,7 @@ defmodule Keepling.Domain.EditTaskTest do
 
     assert updated.title == "After"
     assert updated.notes == "  line two\n"
+
     assert activity.changed_fields == %{
              "notes" => %{"from" => "line one\n", "to" => "  line two\n"},
              "title" => %{"from" => "Before", "to" => "After"}
@@ -70,7 +78,8 @@ defmodule Keepling.Domain.EditTaskTest do
   end
 
   test "ordinary edits preserve Inbox and only return_to_inbox is the inverse of clarify" do
-    task = task_from(%{"title" => "Before", "notes" => "", "inbox_state" => "inbox", "revision" => 1})
+    task =
+      task_from(%{"title" => "Before", "notes" => "", "inbox_state" => "inbox", "revision" => 1})
 
     assert {:ok, edited, _, :accepted} =
              Task.edit(task, edit_command(:title, "Before", "After"))
@@ -121,9 +130,13 @@ defmodule Keepling.Domain.EditTaskTest do
   defp atomize_command(command) do
     %{
       accepted_at: @accepted_at,
-      base_values: Map.new(command["base_values"], fn {key, value} -> {String.to_existing_atom(key), value} end),
+      base_values:
+        Map.new(command["base_values"], fn {key, value} ->
+          {String.to_existing_atom(key), value}
+        end),
       expected_revision: command["expected_revision"],
-      fields: Map.new(command["fields"], fn {key, value} -> {String.to_existing_atom(key), value} end)
+      fields:
+        Map.new(command["fields"], fn {key, value} -> {String.to_existing_atom(key), value} end)
     }
   end
 
@@ -131,4 +144,228 @@ defmodule Keepling.Domain.EditTaskTest do
     path = Path.expand("../../../../../packages/contracts/vectors/editing.json", __DIR__)
     path |> File.read!() |> Jason.decode!()
   end
+end
+
+defmodule KeeplingWeb.TaskEditingBoundaryTest do
+  use KeeplingWeb.ConnCase, async: false
+
+  alias Ecto.Adapters.SQL
+  alias Keepling.Repo
+
+  setup %{conn: conn} do
+    account_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
+    now = ~U[2026-08-30 21:30:00.000000Z]
+
+    SQL.query!(
+      Repo,
+      """
+      INSERT INTO accounts (
+        id, singleton_key, password_hash, timezone, inserted_at, updated_at
+      )
+      VALUES ($1, TRUE, '$argon2id$test-fixture', 'Etc/UTC', $2, $2)
+      """,
+      [account_id, now]
+    )
+
+    previous_seed = System.get_env("KEEPLING_E2E_SEED")
+    System.put_env("KEEPLING_E2E_SEED", "phase-1")
+
+    on_exit(fn ->
+      if previous_seed,
+        do: System.put_env("KEEPLING_E2E_SEED", previous_seed),
+        else: System.delete_env("KEEPLING_E2E_SEED")
+    end)
+
+    origin = "http://www.example.com"
+
+    login =
+      conn
+      |> trusted_request(origin)
+      |> post("/api/v1/test/session")
+
+    %{account_id: account_id, conn: login, csrf_token: json_response(login, 200)["csrf_token"]}
+  end
+
+  test "title and notes cross Phoenix and PostgreSQL with rebase, clarify, and return", %{
+    account_id: account_id,
+    conn: conn,
+    csrf_token: csrf_token
+  } do
+    task_id = Ecto.UUID.generate()
+
+    captured =
+      command(conn, csrf_token, "/api/v1/commands/capture-task", %{
+        "mutation_id" => Ecto.UUID.generate(),
+        "task_id" => task_id,
+        "title" => "Call dentist",
+        "version" => 1
+      })
+
+    assert %{"revision" => 1, "snapshot" => %{"notes" => "", "inbox_state" => "inbox"}} =
+             json_response(captured, 201)
+
+    edited =
+      command(conn, csrf_token, "/api/v1/commands/edit-task", %{
+        "base_values" => %{"notes" => ""},
+        "expected_revision" => 1,
+        "fields" => %{"notes" => "Ask about Wednesday"},
+        "mutation_id" => Ecto.UUID.generate(),
+        "task_id" => task_id,
+        "version" => 1
+      })
+
+    assert %{
+             "revision" => 2,
+             "snapshot" => %{
+               "inbox_state" => "inbox",
+               "notes" => "Ask about Wednesday",
+               "title" => "Call dentist"
+             }
+           } = json_response(edited, 200)
+
+    SQL.query!(
+      Repo,
+      """
+      UPDATE tasks
+      SET title = 'Call the dentist', revision = 3, updated_at = NOW()
+      WHERE account_id = $1 AND id = $2
+      """,
+      [account_id, Ecto.UUID.dump!(task_id)]
+    )
+
+    rebased =
+      command(conn, csrf_token, "/api/v1/commands/edit-task", %{
+        "base_values" => %{"notes" => "Ask about Wednesday"},
+        "expected_revision" => 2,
+        "fields" => %{"notes" => "Ask about Friday"},
+        "mutation_id" => Ecto.UUID.generate(),
+        "task_id" => task_id,
+        "version" => 1
+      })
+
+    assert %{
+             "revision" => 4,
+             "snapshot" => %{"notes" => "Ask about Friday", "title" => "Call the dentist"}
+           } = json_response(rebased, 200)
+
+    clarified =
+      command(conn, csrf_token, "/api/v1/commands/clarify-task", %{
+        "base_values" => %{"title" => "Call the dentist"},
+        "expected_revision" => 4,
+        "fields" => %{"title" => "Book dentist"},
+        "mutation_id" => Ecto.UUID.generate(),
+        "task_id" => task_id,
+        "version" => 1
+      })
+
+    assert %{"revision" => 5, "snapshot" => %{"inbox_state" => "clarified"}} =
+             json_response(clarified, 200)
+
+    inbox = conn |> recycle() |> get("/api/v1/inbox")
+    assert %{"tasks" => []} = json_response(inbox, 200)
+
+    returned =
+      command(conn, csrf_token, "/api/v1/commands/return-to-inbox", %{
+        "expected_revision" => 5,
+        "mutation_id" => Ecto.UUID.generate(),
+        "task_id" => task_id,
+        "version" => 1
+      })
+
+    assert %{"revision" => 6, "snapshot" => %{"inbox_state" => "inbox"}} =
+             json_response(returned, 200)
+
+    inbox = conn |> recycle() |> get("/api/v1/inbox")
+
+    assert %{"tasks" => [%{"id" => ^task_id, "notes" => "Ask about Friday"}]} =
+             json_response(inbox, 200)
+  end
+
+  test "overlap conflict and structural failure are stable and do not bypass receipts", %{
+    account_id: account_id,
+    conn: conn,
+    csrf_token: csrf_token
+  } do
+    task_id = Ecto.UUID.generate()
+
+    command(conn, csrf_token, "/api/v1/commands/capture-task", %{
+      "mutation_id" => Ecto.UUID.generate(),
+      "task_id" => task_id,
+      "title" => "Original",
+      "version" => 1
+    })
+
+    SQL.query!(
+      Repo,
+      "UPDATE tasks SET title = 'Accepted elsewhere', revision = 2 WHERE account_id = $1 AND id = $2",
+      [account_id, Ecto.UUID.dump!(task_id)]
+    )
+
+    mutation_id = Ecto.UUID.generate()
+
+    request = %{
+      "base_values" => %{"title" => "Original"},
+      "expected_revision" => 1,
+      "fields" => %{"title" => "My draft"},
+      "mutation_id" => mutation_id,
+      "task_id" => task_id,
+      "version" => 1
+    }
+
+    conflict = command(conn, csrf_token, "/api/v1/commands/edit-task", request)
+
+    assert %{
+             "affected_fields" => ["title"],
+             "code" => "task_edit_conflict",
+             "current_revision" => 2
+           } = json_response(conflict, 409)
+
+    replay = command(conn, csrf_token, "/api/v1/commands/edit-task", request)
+    assert json_response(replay, 409) == json_response(conflict, 409)
+
+    receipts_before = receipt_count(account_id)
+
+    invalid =
+      command(
+        conn,
+        csrf_token,
+        "/api/v1/commands/edit-task",
+        Map.put(request, "unexpected", true)
+      )
+
+    assert %{"code" => "invalid_command"} = json_response(invalid, 400)
+    assert receipt_count(account_id) == receipts_before
+  end
+
+  defp command(conn, csrf_token, path, body) do
+    conn
+    |> recycle()
+    |> trusted_request("http://www.example.com")
+    |> enforce_csrf()
+    |> put_req_header("x-csrf-token", csrf_token)
+    |> post(path, body)
+  end
+
+  defp receipt_count(account_id) do
+    %{rows: [[count]]} =
+      SQL.query!(Repo, "SELECT count(*) FROM command_receipts WHERE account_id = $1", [account_id])
+
+    count
+  end
+
+  defp trusted_request(conn, origin) do
+    conn = %{
+      conn
+      | host: "www.example.com",
+        req_headers: [
+          {"host", "www.example.com"}
+          | Enum.reject(conn.req_headers, fn {name, _value} -> name == "host" end)
+        ]
+    }
+
+    put_req_header(conn, "origin", origin)
+  end
+
+  defp enforce_csrf(conn),
+    do: %{conn | private: Map.delete(conn.private, :plug_skip_csrf_protection)}
 end

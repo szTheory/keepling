@@ -21,6 +21,57 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/commands/clarify-task": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Atomically edit touched details and move a task out of Inbox */
+        readonly post: operations["clarifyTask"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/commands/edit-task": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Edit only touched title or notes fields while preserving Inbox state */
+        readonly post: operations["editTask"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/commands/return-to-inbox": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Explicitly restore canonical Inbox membership */
+        readonly post: operations["returnToInbox"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/inbox": {
         readonly parameters: {
             readonly query?: never;
@@ -227,6 +278,7 @@ export interface components {
             /** @constant */
             readonly version: 1;
         };
+        readonly ClarifyTaskCommand: components["schemas"]["EditTaskCommand"];
         readonly CommandAcknowledgement: {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             /** @enum {string} */
@@ -235,6 +287,15 @@ export interface components {
             readonly snapshot: components["schemas"]["TaskSnapshot"];
             readonly task_id: components["schemas"]["TaskIdentity"];
             readonly warnings: readonly components["schemas"]["Warning"][];
+        };
+        readonly EditTaskCommand: {
+            readonly base_values: components["schemas"]["TaskDetailValues"];
+            readonly expected_revision: components["schemas"]["Revision"];
+            readonly fields: components["schemas"]["TaskDetailValues"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            /** @constant */
+            readonly version: 1;
         };
         readonly InboxResponse: {
             readonly tasks: readonly components["schemas"]["TaskSnapshot"][];
@@ -254,7 +315,9 @@ export interface components {
          */
         readonly MutationIdentity: string;
         readonly Problem: {
+            readonly affected_fields?: readonly ("inbox_state" | "notes" | "title")[];
             readonly code: string;
+            readonly current_revision?: components["schemas"]["Revision"];
             readonly detail?: string;
             readonly recovery_action: string;
             readonly retryable: boolean;
@@ -276,6 +339,13 @@ export interface components {
             /** Format: password */
             readonly password: string;
             readonly token: string;
+            /** @constant */
+            readonly version: 1;
+        };
+        readonly ReturnToInboxCommand: {
+            readonly expected_revision: components["schemas"]["Revision"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
             /** @constant */
             readonly version: 1;
         };
@@ -318,14 +388,19 @@ export interface components {
             readonly status: "setup_complete";
             readonly timezone: string;
         };
+        readonly TaskDetailValues: {
+            readonly notes?: string;
+            readonly title?: string;
+        };
         /** Format: uuid */
         readonly TaskIdentity: string;
         readonly TaskSnapshot: {
             /** Format: date-time */
             readonly captured_at: string;
             readonly id: components["schemas"]["TaskIdentity"];
-            /** @constant */
-            readonly inbox_state: "inbox";
+            /** @enum {string} */
+            readonly inbox_state: "inbox" | "clarified";
+            readonly notes: string;
             readonly revision: components["schemas"]["Revision"];
             readonly title: string;
         };
@@ -394,6 +469,98 @@ export interface operations {
             readonly 403: components["responses"]["ProblemResponse"];
             readonly 409: components["responses"]["ProblemResponse"];
             readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly clarifyTask: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["ClarifyTaskCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored clarification acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly editTask: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["EditTaskCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored edit acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly returnToInbox: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["ReturnToInboxCommand"];
+            };
+        };
+        readonly responses: {
+            /** @description Exact stored Inbox-return acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };
@@ -484,6 +651,15 @@ export interface operations {
         };
         readonly requestBody?: never;
         readonly responses: {
+            /** @description Original stored update acknowledgement */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CommandAcknowledgement"];
+                };
+            };
             /** @description Original stored accepted acknowledgement */
             readonly 201: {
                 headers: {
