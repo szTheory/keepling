@@ -185,7 +185,7 @@ defmodule Keepling.Adapters.Postgres.IdempotencyTest do
                Commands.dispatch(complete, context, CommandStore)
              end)
 
-    assert {:ok, %{id: ^task_id, inbox_state: "clarified", revision: 3}} =
+    assert {:ok, %{"id" => ^task_id, "inbox_state" => "clarified", "revision" => 3}} =
              with_connection(fn _backend_pid ->
                Commands.get_task(context, task_id, CommandStore)
              end)
