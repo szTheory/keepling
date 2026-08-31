@@ -14,8 +14,7 @@ defmodule Keepling.Domain.Merge do
              is_list(allowed_fields) do
     requested_keys = Map.keys(requested_values)
 
-    if requested_keys != [] and
-         MapSet.new(requested_keys) == MapSet.new(Map.keys(base_values)) and
+    if MapSet.new(requested_keys) == MapSet.new(Map.keys(base_values)) and
          Enum.all?(requested_keys, &(&1 in allowed_fields and Map.has_key?(current, &1))) do
       conflicts =
         requested_values
