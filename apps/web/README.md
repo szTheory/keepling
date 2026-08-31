@@ -12,4 +12,12 @@ pnpm dev:web
 pnpm build:web
 pnpm lint:web
 pnpm typecheck:web
+pnpm --filter @keepling/web test
+pnpm --filter @keepling/web test:e2e
 ```
+
+Unit and component tests run once in Vitest/jsdom with deterministic browser
+shims. Playwright starts an isolated PostgreSQL 18.6 database, migrates and
+seeds it, then runs Phoenix and Vite behind one local origin. The harness owns
+and stops only the process groups it starts, and test-fault controls receive a
+new high-entropy credential for each run unless the caller supplies one.
