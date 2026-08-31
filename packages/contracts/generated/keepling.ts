@@ -706,7 +706,7 @@ export interface components {
         };
         readonly ActivityTextChange: {
             /** @enum {string} */
-            readonly field: "completed_at" | "notes" | "title" | "trashed_at";
+            readonly field: "notes" | "title";
             /** @constant */
             readonly kind: "text";
             readonly new: string | null;

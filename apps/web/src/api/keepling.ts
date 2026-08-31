@@ -14,6 +14,7 @@ type WireOrganizationAcknowledgement = components['schemas']['OrganizationAcknow
 type WireOrganizationLifecycleCommand = components['schemas']['OrganizationLifecycleCommand']
 type WireOrganizationsResponse = components['schemas']['OrganizationsResponse']
 type WireRenameOrganizationCommand = components['schemas']['RenameOrganizationCommand']
+type WireResolveTaskConflictCommand = components['schemas']['ResolveTaskConflictCommand']
 type WireReturnToInboxCommand = components['schemas']['ReturnToInboxCommand']
 type WireRestoreAcknowledgement = components['schemas']['RestoreAcknowledgement']
 type WireTaskLifecycleCommand = components['schemas']['TaskLifecycleCommand']
@@ -179,6 +180,7 @@ type CommandAcknowledgement = {
   mutationId: string
   outcome: 'accepted' | 'already_satisfied'
   revision: number
+  resolvedConflictId: string | null
   snapshot: BrowserTask
   taskId: string
   warnings: readonly CaptureWarning[]
@@ -193,6 +195,27 @@ type CaptureAcknowledgement = CommandAcknowledgement
 type TaskDetailValues = {
   notes?: string
   title?: string
+}
+
+type TaskConflictField = {
+  base: string | null
+  current: string | null
+  field: 'notes' | 'title'
+  mine: string | null
+}
+
+type TaskConflict = {
+  fields: readonly TaskConflictField[]
+  id: string
+  latestRevision: number
+}
+
+type ConflictResolutionSubmission = {
+  conflictId: string
+  latestRevision: number
+  mutationId: string
+  selections: Partial<Record<TaskConflictField['field'], 'current' | 'mine'>>
+  taskId: string
 }
 
 type EditTaskSubmission = {
@@ -288,11 +311,33 @@ type BrowserSession = {
 
 class KeeplingApiError extends Error {
   readonly problem: Problem
+  readonly conflict: TaskConflict | null
 
   constructor(problem: Problem) {
     super(problem.detail ?? problem.title)
     this.name = 'KeeplingApiError'
     this.problem = problem
+    this.conflict = mapTaskConflict(problem.conflict)
+  }
+}
+
+const mapTaskConflict = (conflict: Problem['conflict']): TaskConflict | null => {
+  if (
+    conflict === undefined ||
+    !conflict.fields.every((field) => field.field === 'notes' || field.field === 'title')
+  ) {
+    return null
+  }
+
+  return {
+    fields: conflict.fields.map((field) => ({
+      base: field.base,
+      current: field.current,
+      field: field.field as TaskConflictField['field'],
+      mine: field.mine,
+    })),
+    id: conflict.id,
+    latestRevision: conflict.latest_revision,
   }
 }
 
@@ -537,6 +582,7 @@ const mapAcknowledgement = (acknowledgement: WireCommandAcknowledgement): Comman
   mutationId: acknowledgement.mutation_id,
   outcome: acknowledgement.outcome,
   revision: acknowledgement.revision,
+  resolvedConflictId: acknowledgement.resolved_conflict_id ?? null,
   snapshot: mapTask(acknowledgement.snapshot),
   taskId: acknowledgement.task_id,
   warnings: acknowledgement.warnings.map((warning) => ({ ...warning })),
@@ -701,6 +747,26 @@ const editTask = async (
     taskEditCommand(submission),
     csrfToken,
   )
+
+const resolveTaskConflict = async (
+  submission: ConflictResolutionSubmission,
+  csrfToken: string,
+): Promise<CommandAcknowledgement> => {
+  const command: WireResolveTaskConflictCommand = {
+    conflict_id: submission.conflictId,
+    latest_revision: submission.latestRevision,
+    mutation_id: submission.mutationId,
+    selections: submission.selections,
+    task_id: submission.taskId,
+    version: 1,
+  }
+
+  return submitTaskCommand(
+    '/api/v1/commands/resolve-task-conflict',
+    command,
+    csrfToken,
+  )
+}
 
 const editTaskDates = async (
   submission: EditTaskDatesSubmission,
@@ -945,6 +1011,7 @@ export {
   logout,
   reauthenticate,
   recoverAccount,
+  resolveTaskConflict,
   renameOrganization,
   reopenTask,
   restoreTask,
@@ -966,6 +1033,7 @@ export {
   type CaptureTaskSubmission,
   type CaptureWarning,
   type CommandAcknowledgement,
+  type ConflictResolutionSubmission,
   type CreateOrganizationSubmission,
   type EditTaskSubmission,
   type EditTaskDatesSubmission,
@@ -979,6 +1047,8 @@ export {
   type RestoreAcknowledgement,
   type ReturnToInboxSubmission,
   type TaskDetailValues,
+  type TaskConflict,
+  type TaskConflictField,
   type TaskDateValues,
   type TaskActivity,
   type TaskActivityPage,

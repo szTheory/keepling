@@ -116,7 +116,9 @@ describe('inline task conflict resolution', () => {
     expect(within(resolver).getByText('Current version')).toBeVisible()
     expect(within(resolver).getAllByRole('button', { name: 'Show full value' })).toHaveLength(2)
     expect(document.querySelector('img')).toBeNull()
-    expect(screen.getByText(longCurrent)).toHaveTextContent('<img src=x onerror=')
+    expect(
+      screen.getByText((_, element) => element?.textContent === longCurrent),
+    ).toHaveTextContent('<img src=x onerror=')
 
     const disclosure = within(resolver).getAllByRole('button', { name: 'Show full value' })[0]
     expect(disclosure).toHaveAttribute('aria-expanded', 'false')

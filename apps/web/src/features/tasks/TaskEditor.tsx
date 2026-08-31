@@ -21,9 +21,11 @@ import {
   type EditTaskDatesSubmission,
   type TaskDateValues,
   type TaskDetailValues,
+  type TaskConflict,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
+import ConflictResolver from '@/features/tasks/ConflictResolver'
 
 type TaskEditorProps = {
   csrfToken: string
@@ -55,7 +57,7 @@ type Submission = {
 
 type CommandState =
   | { kind: 'authentication-required' }
-  | { kind: 'conflict'; message: string }
+  | { conflict: TaskConflict; kind: 'conflict' }
   | { kind: 'idle' }
   | { kind: 'problem'; message: string }
   | { kind: 'saved'; message: string }
@@ -92,6 +94,7 @@ function TaskEditor({
   const plannedOnRef = useRef<HTMLInputElement>(null)
   const deadlineOnRef = useRef<HTMLInputElement>(null)
   const stayRef = useRef<HTMLButtonElement>(null)
+  const saveRef = useRef<HTMLButtonElement>(null)
   const currentPath = useRef(`${window.location.pathname}${window.location.search}`)
   const allowNavigation = useRef(false)
 
@@ -347,7 +350,11 @@ function TaskEditor({
         )
       } else if (error instanceof KeeplingApiError && error.problem.code === 'task_edit_conflict') {
         setSubmission(null)
-        setCommandState({ kind: 'conflict', message: error.message })
+        if (error.conflict) {
+          setCommandState({ conflict: error.conflict, kind: 'conflict' })
+        } else {
+          setCommandState({ kind: 'problem', message: error.message })
+        }
       } else if (error instanceof KeeplingApiError) {
         setSubmission(null)
         const errors: FieldErrors = {}
@@ -441,6 +448,30 @@ function TaskEditor({
     else onNavigate(pathname)
   }
 
+  const keepEditingConflict = (field: 'notes' | 'title') => {
+    setCommandState({ kind: 'idle' })
+    if (field === 'title') titleRef.current?.focus()
+    else notesRef.current?.focus()
+  }
+
+  const reconcileConflict = async (acknowledgement: CommandAcknowledgement) => {
+    setSubmission(null)
+    setFieldErrors({})
+    setLoadState((state) => ({
+      accountTimezone: state.kind === 'ready' ? state.accountTimezone : 'UTC',
+      kind: 'ready',
+      task: acknowledgement.snapshot,
+    }))
+    setDraft((current) => ({
+      ...current,
+      notes: acknowledgement.snapshot.notes,
+      title: acknowledgement.snapshot.title,
+    }))
+    onAcknowledged(acknowledgement)
+    setCommandState({ kind: 'saved', message: 'Conflict resolved. Task saved.' })
+    saveRef.current?.focus()
+  }
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     void submit('edit')
@@ -501,6 +532,17 @@ function TaskEditor({
       >
         <p className="text-sm font-semibold text-muted-foreground">Inbox</p>
         <h1 className="mt-2 text-[1.75rem] font-semibold leading-[1.2]">Edit task</h1>
+
+        {commandState.kind === 'conflict' ? (
+          <ConflictResolver
+            conflict={commandState.conflict}
+            csrfToken={csrfToken}
+            onAcknowledged={reconcileConflict}
+            onAuthenticationRequired={onAuthenticationRequired}
+            onKeepEditing={keepEditingConflict}
+            taskId={loadState.task.id}
+          />
+        ) : null}
 
         <form className="mt-8 space-y-6" onKeyDown={handleKeyDown} onSubmit={handleSubmit}>
           {firstError ? (
@@ -652,7 +694,7 @@ function TaskEditor({
           {dirty ? <p className="text-sm font-semibold text-muted-foreground">Unsaved changes</p> : null}
 
           <div className="flex flex-wrap gap-3">
-            <Button disabled={!dirty || locked} type="submit">
+            <Button disabled={!dirty || locked} ref={saveRef} type="submit">
               {commandState.kind === 'submitting' ? 'Saving…' : 'Save changes'}
             </Button>
             {loadState.task.inboxState === 'inbox' ? (
@@ -687,12 +729,6 @@ function TaskEditor({
         {commandState.kind === 'authentication-required' ? (
           <div className="mt-6 rounded-lg border border-border p-4" role="status">
             Sign in again to finish saving. Your changes are still here.
-          </div>
-        ) : null}
-        {commandState.kind === 'conflict' ? (
-          <div className="mt-6 rounded-lg border border-border p-4" role="alert">
-            <h2 className="text-xl font-semibold">This task changed somewhere else.</h2>
-            <p className="mt-2">Review the affected fields before saving again.</p>
           </div>
         ) : null}
         {commandState.kind === 'problem' && !firstError ? (

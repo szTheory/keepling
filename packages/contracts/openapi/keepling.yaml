@@ -1239,10 +1239,8 @@ components:
         field:
           type: string
           enum:
-            - completed_at
             - notes
             - title
-            - trashed_at
         kind:
           type: string
           const: text
