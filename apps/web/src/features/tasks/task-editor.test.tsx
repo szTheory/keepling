@@ -735,7 +735,7 @@ describe('canonical task editor', () => {
     await user.clear(title)
     await user.type(title, 'My exact edit')
     await user.click(screen.getByRole('button', { name: 'Save changes' }))
-    expect(await screen.findByRole('button', { name: 'Check whether it was saved' })).toBeVisible()
+    expect(await screen.findByRole('button', { name: 'Check again' })).toBeVisible()
 
     window.dispatchEvent(
       new CustomEvent('keepling:task-acknowledged', {
@@ -752,6 +752,6 @@ describe('canonical task editor', () => {
     )
 
     expect(title).toHaveValue('My exact edit')
-    expect(screen.getByRole('button', { name: 'Check whether it was saved' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Check again' })).toBeVisible()
   })
 })
