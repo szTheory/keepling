@@ -24,7 +24,7 @@ const captureTask = async (page: Page, title: string) => {
   await page.getByLabel('Add to Today').check()
   await page.getByRole('button', { name: 'Add task' }).click()
   await expect(page.getByRole('listitem').filter({ hasText: title })).toBeVisible()
-  await page.goto('/today')
+  await page.getByRole('link', { name: 'Today' }).click()
   await expect(page.getByRole('listitem').filter({ hasText: title })).toBeVisible()
 }
 
