@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { randomBytes } from 'node:crypto'
+import { randomBytes, randomUUID } from 'node:crypto'
 import { userInfo } from 'node:os'
 import { resolve } from 'node:path'
 import process from 'node:process'
@@ -40,6 +40,21 @@ const authenticate = async (page: Page, baseURL: string | undefined) => {
   expect(response.ok()).toBe(true)
   return (await response.json()) as { csrf_token: string }
 }
+
+const command = (
+  page: Page,
+  baseURL: string,
+  csrfToken: string,
+  path: string,
+  data: Record<string, unknown>,
+) =>
+  page.request.post(`/api/v1/commands/${path}`, {
+    data,
+    headers: {
+      origin: new URL(baseURL).origin,
+      'x-csrf-token': csrfToken,
+    },
+  })
 
 const revokeCurrentSession = async (
   page: Page,
@@ -84,11 +99,35 @@ test('@authenticated-read-task @authenticated-read-concurrent restores concurren
   const { csrf_token: csrfToken } = await authenticate(page, baseURL)
   await page.goto('/')
   await page.getByLabel('What do you want to keep?').fill('Read recovery task')
+  const captureResponsePromise = page.waitForResponse((response) =>
+    response.url().endsWith('/commands/capture-task'),
+  )
   await page.getByRole('button', { name: 'Add task' }).click()
+  const captured = (await (await captureResponsePromise).json()) as {
+    revision: number
+    task_id: string
+  }
   const taskLink = page.getByRole('link', { name: 'Read recovery task' })
   await expect(taskLink).toBeVisible()
   const taskPath = await taskLink.getAttribute('href')
   expect(taskPath).toBeTruthy()
+
+  let revision = captured.revision
+  let previousNotes = ''
+  for (let index = 1; index <= 20; index += 1) {
+    const notes = `Activity recovery revision ${index}`
+    const response = await command(page, baseURL!, csrfToken, 'edit-task', {
+      base_values: { notes: previousNotes },
+      expected_revision: revision,
+      fields: { notes },
+      mutation_id: randomUUID(),
+      task_id: captured.task_id,
+      version: 1,
+    })
+    expect(response.ok()).toBe(true)
+    revision = ((await response.json()) as { revision: number }).revision
+    previousNotes = notes
+  }
 
   await revokeCurrentSession(page, baseURL, csrfToken)
 
@@ -97,12 +136,19 @@ test('@authenticated-read-task @authenticated-read-concurrent restores concurren
     window.dispatchEvent(new PopStateEvent('popstate'))
   }, taskPath)
 
-  await continueThroughLogin(page, 'Recovered task read')
+  let recoveredCsrfToken = await continueThroughLogin(page, 'Recovered task read')
 
   await expect(page.getByRole('heading', { name: 'Edit task' })).toBeVisible()
   await expect(page.getByLabel('Title')).toHaveValue('Read recovery task')
   await expect(page.getByRole('heading', { name: 'Activity' })).toBeVisible()
+  await expect(page.getByText('You updated task details.').first()).toBeVisible()
   expect(new URL(page.url()).pathname).toBe(taskPath)
+
+  await revokeCurrentSession(page, baseURL, recoveredCsrfToken)
+  await page.getByRole('button', { name: 'Load earlier activity' }).click()
+  recoveredCsrfToken = await continueThroughLogin(page, 'Recovered activity cursor')
+  await expect(page.getByText('You captured this task.')).toBeVisible()
+  expect(recoveredCsrfToken).toBeTruthy()
 })
 
 test('@authenticated-read-organizations restores assignment, Projects, and Tags routes', async ({
@@ -113,17 +159,30 @@ test('@authenticated-read-organizations restores assignment, Projects, and Tags 
   let { csrf_token: csrfToken } = await authenticate(page, baseURL)
   await page.goto('/')
 
-  for (const [pathname, heading, label] of [
-    ['/projects', 'Projects', 'Recovered project read'],
-    ['/tags', 'Tags', 'Recovered tag read'],
+  for (const [pathname, heading, label, organizationName] of [
+    ['/projects', 'Projects', 'Recovered project read', 'Read recovery project'],
+    ['/tags', 'Tags', 'Recovered tag read', 'Read recovery tag'],
   ] as const) {
+    await page.evaluate((nextPath) => {
+      window.history.pushState({}, '', nextPath)
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    }, pathname)
+    await page.getByLabel(`New ${heading.slice(0, -1).toLowerCase()} name`).fill(organizationName)
+    await page.getByRole('button', { name: `Create ${heading.slice(0, -1).toLowerCase()}` }).click()
+    await expect(page.getByText(organizationName).first()).toBeVisible()
+
     await revokeCurrentSession(page, baseURL, csrfToken)
+    await page.evaluate(() => {
+      window.history.pushState({}, '', '/')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    })
     await page.evaluate((nextPath) => {
       window.history.pushState({}, '', nextPath)
       window.dispatchEvent(new PopStateEvent('popstate'))
     }, pathname)
     csrfToken = await continueThroughLogin(page, label)
     await expect(page.getByRole('heading', { name: heading })).toBeVisible()
+    await expect(page.getByText(organizationName).first()).toBeVisible()
     expect(new URL(page.url()).pathname).toBe(pathname)
   }
 
