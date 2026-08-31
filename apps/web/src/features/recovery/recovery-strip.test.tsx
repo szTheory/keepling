@@ -50,12 +50,14 @@ describe('persistent semantic recovery', () => {
       />,
     )
 
-    window.dispatchEvent(
+    fireEvent(
+      window,
       new CustomEvent('keepling:undo-available', {
         detail: availability({ label: 'Undo task edit' }),
       }),
     )
-    window.dispatchEvent(
+    fireEvent(
+      window,
       new CustomEvent('keepling:undo-available', {
         detail: availability({ handle: 'ZYXwvutsrqponmlkjihgfedcba9876543210_-ABCDE', label: 'Undo Trash' }),
       }),

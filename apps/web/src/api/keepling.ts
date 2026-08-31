@@ -23,6 +23,10 @@ type WireTaskViewPage = components['schemas']['TaskViewPage']
 type WireTodayMoveRequest = components['schemas']['TodayMoveRequest']
 type WireTodayMoveResponse = components['schemas']['TodayMoveResponse']
 type WireTrashResponse = components['schemas']['TrashResponse']
+type WireUndoAvailability = components['schemas']['UndoAvailability']
+type WireUndoNoChange = components['schemas']['UndoNoChange']
+type WireUndoResult = components['schemas']['UndoResult']
+type WireUndoTaskCommand = components['schemas']['UndoTaskCommand']
 type InboxResponse = components['schemas']['InboxResponse']
 type Problem = components['schemas']['Problem']
 type AuthTransitionResponse = components['schemas']['AuthTransitionResponse']
@@ -183,8 +187,33 @@ type CommandAcknowledgement = {
   resolvedConflictId: string | null
   snapshot: BrowserTask
   taskId: string
+  undo: UndoAvailability | null
   warnings: readonly CaptureWarning[]
 }
+
+type UndoAvailability = {
+  expiresAt: string
+  handle: string
+  label: string
+}
+
+type UndoNoChange = {
+  code: WireUndoNoChange['code']
+  mutationId: string
+  outcome: WireUndoNoChange['outcome']
+  recoveryAction: WireUndoNoChange['recovery_action']
+  retryable: boolean
+  title: string
+}
+
+type UndoSubmission = {
+  availability: UndoAvailability
+  mutationId: string
+}
+
+type UndoResult =
+  | { acknowledgement: CommandAcknowledgement; kind: 'acknowledged' }
+  | { kind: 'no-change'; result: UndoNoChange }
 
 type RestoreAcknowledgement = CommandAcknowledgement & {
   destinations: readonly WireRestoreAcknowledgement['destinations'][number][]
@@ -585,15 +614,44 @@ const mapOrganizationAcknowledgement = (
   snapshot: mapOrganization(acknowledgement.snapshot),
 })
 
-const mapAcknowledgement = (acknowledgement: WireCommandAcknowledgement): CommandAcknowledgement => ({
-  mutationId: acknowledgement.mutation_id,
-  outcome: acknowledgement.outcome,
-  revision: acknowledgement.revision,
-  resolvedConflictId: acknowledgement.resolved_conflict_id ?? null,
-  snapshot: mapTask(acknowledgement.snapshot),
-  taskId: acknowledgement.task_id,
-  warnings: acknowledgement.warnings.map((warning) => ({ ...warning })),
+const mapUndoAvailability = (undo: WireUndoAvailability): UndoAvailability => ({
+  expiresAt: undo.expires_at,
+  handle: undo.handle,
+  label: undo.label,
 })
+
+const mapAcknowledgement = (acknowledgement: WireCommandAcknowledgement): CommandAcknowledgement => {
+  const undo = acknowledgement.undo ? mapUndoAvailability(acknowledgement.undo) : null
+
+  if (undo) {
+    window.dispatchEvent(new CustomEvent<UndoAvailability>('keepling:undo-available', { detail: undo }))
+  }
+
+  return {
+    mutationId: acknowledgement.mutation_id,
+    outcome: acknowledgement.outcome,
+    revision: acknowledgement.revision,
+    resolvedConflictId: acknowledgement.resolved_conflict_id ?? null,
+    snapshot: mapTask(acknowledgement.snapshot),
+    taskId: acknowledgement.task_id,
+    undo,
+    warnings: acknowledgement.warnings.map((warning) => ({ ...warning })),
+  }
+}
+
+const mapUndoNoChange = (result: WireUndoNoChange): UndoNoChange => ({
+  code: result.code,
+  mutationId: result.mutation_id,
+  outcome: result.outcome,
+  recoveryAction: result.recovery_action,
+  retryable: result.retryable,
+  title: result.title,
+})
+
+const mapUndoResult = (result: WireUndoResult): UndoResult =>
+  'snapshot' in result
+    ? { acknowledgement: mapAcknowledgement(result), kind: 'acknowledged' }
+    : { kind: 'no-change', result: mapUndoNoChange(result) }
 
 const mapRestoreAcknowledgement = (
   acknowledgement: WireRestoreAcknowledgement,
@@ -982,6 +1040,35 @@ const restoreTask = async (
     ),
   )
 
+const undoTask = async (
+  submission: UndoSubmission,
+  csrfToken: string,
+): Promise<UndoResult> => {
+  const command: WireUndoTaskCommand = {
+    handle: submission.availability.handle,
+    mutation_id: submission.mutationId,
+    version: 1,
+  }
+
+  const response = await fetch('/api/v1/commands/undo-task', {
+    body: JSON.stringify(command),
+    credentials: 'same-origin',
+    headers: {
+      accept: 'application/json',
+      'content-type': 'application/json',
+      'x-csrf-token': csrfToken,
+    },
+    method: 'POST',
+  })
+  const body = (await response.json()) as WireUndoResult | Problem
+
+  if (!response.ok && !(response.status === 404 && 'outcome' in body)) {
+    throw new KeeplingApiError(body as Problem)
+  }
+
+  return mapUndoResult(body as WireUndoResult)
+}
+
 const assignTaskOrganizations = async (
   submission: AssignTaskOrganizationsSubmission,
   csrfToken: string,
@@ -1123,6 +1210,7 @@ export {
   unarchiveOrganization,
   unplanTask,
   trashTask,
+  undoTask,
   planForToday,
   prepareClarifyTask,
   prepareEditTask,
@@ -1163,6 +1251,10 @@ export {
   type TaskViewItem,
   type TaskViewName,
   type TaskViewPage,
+  type UndoAvailability,
+  type UndoNoChange,
+  type UndoResult,
+  type UndoSubmission,
   type TodayMoveSubmission,
   type TaskOrganizationReference,
 }

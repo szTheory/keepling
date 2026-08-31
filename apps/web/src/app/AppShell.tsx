@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 
+import type { UndoAvailability, UndoResult } from '@/api/keepling'
+import RecoveryStrip from '@/features/recovery/RecoveryStrip'
 import SessionList from '@/features/sessions/SessionList'
 
 type AppShellProps = {
@@ -11,6 +13,7 @@ type AppShellProps = {
 
 function AppShell({ csrfToken, hasDirtyWork = false, inboxContent, onLoggedOut }: AppShellProps) {
   const [pathname, setPathname] = useState(window.location.pathname)
+  const [latestUndo, setLatestUndo] = useState<UndoAvailability | null>(null)
 
   useEffect(() => {
     const update = () => setPathname(window.location.pathname)
@@ -18,7 +21,42 @@ function AppShell({ csrfToken, hasDirtyWork = false, inboxContent, onLoggedOut }
     return () => window.removeEventListener('popstate', update)
   }, [])
 
-  if (pathname !== '/settings/sessions' && inboxContent) return inboxContent
+  useEffect(() => {
+    const rememberLatest = (event: Event) => {
+      setLatestUndo((event as CustomEvent<UndoAvailability>).detail)
+    }
+
+    window.addEventListener('keepling:undo-available', rememberLatest)
+    return () => window.removeEventListener('keepling:undo-available', rememberLatest)
+  }, [])
+
+  const handleUndoSettled = (result: UndoResult) => {
+    if (result.kind === 'acknowledged') {
+      window.dispatchEvent(
+        new CustomEvent('keepling:task-acknowledged', {
+          detail: result.acknowledgement,
+        }),
+      )
+    }
+  }
+
+  const recovery = latestUndo ? (
+    <RecoveryStrip
+      availability={latestUndo}
+      csrfToken={csrfToken}
+      key={latestUndo.handle}
+      onSettled={handleUndoSettled}
+    />
+  ) : null
+
+  if (pathname !== '/settings/sessions' && inboxContent) {
+    return (
+      <>
+        {inboxContent}
+        {recovery}
+      </>
+    )
+  }
 
   return (
     <>
@@ -81,6 +119,7 @@ function AppShell({ csrfToken, hasDirtyWork = false, inboxContent, onLoggedOut }
           </div>
         </main>
       </div>
+      {recovery}
     </>
   )
 }
