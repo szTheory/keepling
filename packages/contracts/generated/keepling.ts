@@ -347,6 +347,25 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/tasks/{task_id}/activity": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly task_id: components["schemas"]["TaskIdentity"];
+            };
+            readonly cookie?: never;
+        };
+        /** Read canonical accepted task activity newest first */
+        readonly get: operations["listTaskActivity"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/test/session": {
         readonly parameters: {
             readonly query?: never;
@@ -368,6 +387,93 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        readonly ActivityActor: {
+            /** @description Server-derived human-facing actor label; clients cannot assert it. */
+            readonly label: string;
+            /** @enum {string} */
+            readonly principal: "account_owner" | "authorized_grant";
+            /** @enum {string} */
+            readonly type: "user" | "agent";
+        };
+        /** @description Opaque HMAC-authenticated account/task/revision-bound keyset cursor. */
+        readonly ActivityCursor: string;
+        readonly ActivityDateChange: {
+            /** @enum {string} */
+            readonly field: "deadline_on" | "planned_on";
+            /** @constant */
+            readonly kind: "date";
+            readonly new: string | null;
+            readonly old: string | null;
+        };
+        /** Format: int64 */
+        readonly ActivityIdentity: number;
+        readonly ActivityInstantChange: {
+            /** @enum {string} */
+            readonly field: "completed_at" | "trashed_at";
+            /** @constant */
+            readonly kind: "instant";
+            readonly new: string | null;
+            readonly old: string | null;
+        };
+        readonly ActivityItem: {
+            /** Format: date-time */
+            readonly accepted_at: string;
+            readonly activity_id: components["schemas"]["ActivityIdentity"];
+            readonly actor: components["schemas"]["ActivityActor"];
+            readonly changes: readonly (components["schemas"]["ActivityDateChange"] | components["schemas"]["ActivityInstantChange"] | components["schemas"]["ActivityOrganizationChange"] | components["schemas"]["ActivityOrganizationsChange"] | components["schemas"]["ActivityStateChange"] | components["schemas"]["ActivityTextChange"])[];
+            /** @enum {string} */
+            readonly client_kind: "web" | "electron" | "iphone" | "mcp";
+            readonly from_revision: components["schemas"]["Revision"] | null;
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            /** @constant */
+            readonly outcome: "accepted";
+            /** @enum {string} */
+            readonly recovery_state: "available" | "not_available" | "undone" | "expired" | "stale";
+            readonly to_revision: components["schemas"]["Revision"];
+            /** @enum {string} */
+            readonly type: "task_captured" | "task_details_updated" | "task_planned" | "task_unplanned" | "task_clarified" | "task_returned_to_inbox" | "task_completed" | "task_reopened" | "task_trashed" | "task_restored" | "task_undo_applied";
+            readonly undone_activity_id: components["schemas"]["ActivityIdentity"] | null;
+            /** @constant */
+            readonly version: 1;
+        };
+        readonly ActivityOrganizationChange: {
+            /** @constant */
+            readonly field: "project";
+            /** @constant */
+            readonly kind: "organization";
+            readonly new: components["schemas"]["TaskOrganizationReference"] | null;
+            readonly old: components["schemas"]["TaskOrganizationReference"] | null;
+        };
+        readonly ActivityOrganizationsChange: {
+            /** @constant */
+            readonly field: "tags";
+            /** @constant */
+            readonly kind: "organizations";
+            readonly new: readonly components["schemas"]["TaskOrganizationReference"][];
+            readonly old: readonly components["schemas"]["TaskOrganizationReference"][];
+        };
+        readonly ActivityPage: {
+            /** @description Canonical IANA timezone used to display accepted activity time. */
+            readonly account_timezone: string;
+            readonly items: readonly components["schemas"]["ActivityItem"][];
+            readonly next_cursor: components["schemas"]["ActivityCursor"] | null;
+        };
+        readonly ActivityStateChange: {
+            /** @enum {string} */
+            readonly field: "inbox_state";
+            /** @constant */
+            readonly kind: "state";
+            readonly new: string | null;
+            readonly old: string | null;
+        };
+        readonly ActivityTextChange: {
+            /** @enum {string} */
+            readonly field: "notes" | "title";
+            /** @constant */
+            readonly kind: "text";
+            readonly new: string | null;
+            readonly old: string | null;
+        };
         readonly AssignTaskOrganizationsCommand: {
             readonly base_values: components["schemas"]["OrganizationAssignmentValues"];
             readonly expected_revision: components["schemas"]["Revision"];
@@ -1200,6 +1306,36 @@ export interface operations {
             };
             readonly 400: components["responses"]["ProblemResponse"];
             readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly listTaskActivity: {
+        readonly parameters: {
+            readonly query?: {
+                readonly cursor?: components["schemas"]["ActivityCursor"];
+                readonly limit?: number;
+            };
+            readonly header?: never;
+            readonly path: {
+                readonly task_id: components["schemas"]["TaskIdentity"];
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Account-scoped canonical activity page */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["ActivityPage"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };

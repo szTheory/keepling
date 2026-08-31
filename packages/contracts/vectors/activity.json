@@ -1,0 +1,54 @@
+{
+  "activity_version": 1,
+  "cursor": {
+    "binds": [
+      "account_id",
+      "task_id",
+      "accepted_at",
+      "activity_id",
+      "activity_view_revision"
+    ],
+    "maximum_page_size": 50,
+    "order": [
+      "accepted_at_desc",
+      "activity_id_desc"
+    ],
+    "stale_problem_code": "activity_cursor_stale"
+  },
+  "types": [
+    "task_captured",
+    "task_details_updated",
+    "task_planned",
+    "task_unplanned",
+    "task_clarified",
+    "task_returned_to_inbox",
+    "task_completed",
+    "task_reopened",
+    "task_trashed",
+    "task_restored",
+    "task_undo_applied"
+  ],
+  "change_kinds": {
+    "completed_at": "instant",
+    "deadline_on": "date",
+    "inbox_state": "state",
+    "notes": "text",
+    "planned_on": "date",
+    "project_id": "organization",
+    "tag_ids": "organizations",
+    "title": "text",
+    "trashed_at": "instant"
+  },
+  "hostile_text": {
+    "input": "<img src=x onerror=alert(1)>",
+    "expected_text": "<img src=x onerror=alert(1)>"
+  },
+  "retention": "account_lifetime",
+  "separate_from": [
+    "command_receipts",
+    "persisted_conflicts",
+    "security_audit",
+    "sync_feed",
+    "telemetry"
+  ]
+}

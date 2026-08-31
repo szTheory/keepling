@@ -9,8 +9,11 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
   @behaviour Keepling.Application.Commands.Port
 
   alias Ecto.Adapters.SQL
+  alias Keepling.Application.Activity
   alias Keepling.Domain.{Organization, Task}
   alias Keepling.Repo
+
+  @behaviour Activity.Port
 
   @impl true
   def execute(command, context, decide) do
@@ -67,6 +70,45 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     end
   end
 
+  @impl Activity.Port
+  def list_task_activity(%{account_id: account_id}, task_id, options) do
+    case Repo.transact(fn repo ->
+           with {:ok, account_timezone, view_revision} <-
+                  activity_scope(repo, account_id, task_id),
+                :ok <- cursor_revision(options.cursor, view_revision),
+                {:ok, facts, next_keyset} <-
+                  activity_page(
+                    repo,
+                    account_id,
+                    task_id,
+                    options.cursor,
+                    options.limit
+                  ) do
+             {:ok,
+              %{
+                account_timezone: account_timezone,
+                facts: facts,
+                next_keyset: next_keyset,
+                view_revision: view_revision
+              }}
+           else
+             {:error, reason} -> Repo.rollback(reason)
+           end
+         end) do
+      {:ok, page} ->
+        {:ok, page}
+
+      {:error, reason} when reason in [:infrastructure_failure, :not_found, :stale_cursor] ->
+        {:error, reason}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
   @impl true
   def lookup_result(%{account_id: account_id}, mutation_id) do
     case SQL.query(
@@ -82,6 +124,169 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       {:ok, %{rows: []}} -> {:error, :not_found}
       {:error, _reason} -> {:error, :infrastructure_failure}
     end
+  end
+
+  defp activity_scope(repo, account_id, task_id) do
+    case SQL.query(
+           repo,
+           """
+           SELECT accounts.timezone, accounts.activity_view_revision
+           FROM tasks
+           JOIN accounts ON accounts.id = tasks.account_id
+           WHERE tasks.account_id = $1 AND tasks.id = $2
+           FOR SHARE OF accounts
+           """,
+           [account_id, dump_uuid(task_id)]
+         ) do
+      {:ok, %{rows: [[timezone, view_revision]]}} ->
+        {:ok, timezone, view_revision}
+
+      {:ok, %{rows: []}} ->
+        {:error, :not_found}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  end
+
+  defp cursor_revision(nil, _view_revision), do: :ok
+
+  defp cursor_revision(%{view_revision: view_revision}, view_revision), do: :ok
+
+  defp cursor_revision(_cursor, _view_revision), do: {:error, :stale_cursor}
+
+  defp activity_page(repo, account_id, task_id, cursor, limit) do
+    {keyset_sql, keyset_params} =
+      case cursor do
+        nil ->
+          {"", []}
+
+        %{accepted_at: accepted_at, activity_id: activity_id} ->
+          {"AND (accepted_at, id) < ($3, $4)", [accepted_at, activity_id]}
+      end
+
+    query =
+      """
+      SELECT id, mutation_id, activity_type, activity_version,
+             actor_type, actor_principal, actor_label, client_kind,
+             from_revision, to_revision, changed_fields, recovery_state,
+             undone_activity_id, accepted_at
+      FROM task_activities
+      WHERE account_id = $1 AND task_id = $2
+      #{keyset_sql}
+      ORDER BY accepted_at DESC, id DESC
+      LIMIT $#{3 + length(keyset_params)}
+      """
+
+    params =
+      [account_id, dump_uuid(task_id)] ++ keyset_params ++ [limit + 1]
+
+    case SQL.query(repo, query, params) do
+      {:ok, %{rows: rows}} ->
+        {page_rows, extra_rows} = Enum.split(rows, limit)
+        organization_references = activity_organization_references(repo, account_id, page_rows)
+        facts = Enum.map(page_rows, &activity_fact(&1, organization_references))
+
+        next_keyset =
+          case {page_rows, extra_rows} do
+            {[], _extra} -> nil
+            {_page, []} -> nil
+            {_page, [_extra | _rest]} -> page_rows |> List.last() |> activity_keyset()
+          end
+
+        {:ok, facts, next_keyset}
+
+      {:error, _reason} ->
+        {:error, :infrastructure_failure}
+    end
+  end
+
+  defp activity_fact(
+         [
+           id,
+           mutation_id,
+           activity_type,
+           activity_version,
+           actor_type,
+           actor_principal,
+           actor_label,
+           client_kind,
+           from_revision,
+           to_revision,
+           changed_fields,
+           recovery_state,
+           undone_activity_id,
+           accepted_at
+         ],
+         organization_references
+       ) do
+    %{
+      accepted_at: to_datetime(accepted_at),
+      activity_id: id,
+      actor_label: actor_label,
+      actor_principal: actor_principal,
+      actor_type: actor_type,
+      changed_fields: changed_fields,
+      client_kind: client_kind,
+      from_revision: from_revision,
+      mutation_id: load_uuid(mutation_id),
+      organization_references: organization_references,
+      recovery_state: recovery_state,
+      to_revision: to_revision,
+      type: activity_type,
+      undone_activity_id: undone_activity_id,
+      version: activity_version
+    }
+  end
+
+  defp activity_keyset([id | row_tail]) do
+    %{accepted_at: row_tail |> List.last() |> to_datetime(), activity_id: id}
+  end
+
+  defp activity_organization_references(repo, account_id, rows) do
+    ids =
+      rows
+      |> Enum.flat_map(fn row -> row |> Enum.at(10) |> activity_organization_ids() end)
+      |> Enum.uniq()
+
+    if ids == [] do
+      %{}
+    else
+      SQL.query!(
+        repo,
+        """
+        SELECT id, display_name, archived_at
+        FROM organizations
+        WHERE account_id = $1 AND id = ANY($2::uuid[])
+        """,
+        [account_id, Enum.map(ids, &dump_uuid/1)]
+      ).rows
+      |> Map.new(fn row ->
+        reference = organization_reference(row)
+        {reference["id"], reference}
+      end)
+    end
+  end
+
+  defp activity_organization_ids(changed_fields) do
+    project_ids =
+      changed_fields
+      |> Map.get("project_id", %{})
+      |> Map.take(["from", "to"])
+      |> Map.values()
+      |> Enum.reject(&is_nil/1)
+
+    tag_ids =
+      changed_fields
+      |> Map.get("tag_ids", %{})
+      |> Map.take(["from", "to"])
+      |> Map.values()
+      |> Enum.flat_map(fn
+        ids when is_list(ids) -> ids
+        _other -> []
+      end)
+
+    project_ids ++ tag_ids
   end
 
   defp first_delivery_or_replay(repo, command, context, fingerprint, decide) do
@@ -523,6 +728,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         ]
       )
 
+    bump_activity_view_revision(repo, context)
     organization_acknowledgement(command, organization_from_row(row), :accepted)
   end
 
@@ -566,15 +772,22 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
   end
 
   defp persist_activity(repo, command, context, activity) do
+    actor = activity_actor(context)
+    bump_activity_view_revision(repo, context)
+
     SQL.query!(
       repo,
       """
       INSERT INTO task_activities (
         account_id, task_id, mutation_id, activity_type, activity_version,
-        actor_type, client_kind, from_revision, to_revision, changed_fields,
+        actor_type, actor_principal, actor_label, client_kind,
+        from_revision, to_revision, changed_fields, recovery_state,
         accepted_at, inserted_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $11)
+      VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9,
+        $10, $11, $12::jsonb, 'not_available', $13, $13
+      )
       """,
       [
         context.account_id,
@@ -582,7 +795,9 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         dump_uuid(command.mutation_id),
         Atom.to_string(activity.type),
         activity.version,
-        context.actor_type,
+        actor.type,
+        actor.principal,
+        actor.label,
         context.client_kind,
         activity.from_revision,
         activity.to_revision,
@@ -590,6 +805,25 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         activity.accepted_at
       ]
     )
+  end
+
+  defp activity_actor(%{actor_type: "user"}),
+    do: %{label: "You", principal: "account_owner", type: "user"}
+
+  defp activity_actor(%{actor_type: "agent", actor_label: label, actor_principal: principal}),
+    do: %{label: label, principal: principal, type: "agent"}
+
+  defp bump_activity_view_revision(repo, context) do
+    %{num_rows: 1} =
+      SQL.query!(
+        repo,
+        """
+        UPDATE accounts
+        SET activity_view_revision = activity_view_revision + 1, updated_at = $2
+        WHERE id = $1
+        """,
+        [context.account_id, context.accepted_at]
+      )
   end
 
   defp acknowledgement(repo, account_id, command, task, outcome, status \\ 200) do

@@ -19,8 +19,7 @@ defmodule Keepling.Application.ActivityTest do
         %{account_id: @account_id, cursor_secret: @secret, task_id: @task_id}
       )
 
-    assert {:ok,
-            %{accepted_at: @accepted_at, activity_id: 42, view_revision: 7}} =
+    assert {:ok, %{accepted_at: @accepted_at, activity_id: 42, view_revision: 7}} =
              Activity.decode_cursor(cursor, %{
                account_id: @account_id,
                cursor_secret: @secret,
@@ -40,6 +39,16 @@ defmodule Keepling.Application.ActivityTest do
                cursor_secret: @secret,
                task_id: @task_id
              })
+  end
+
+  test "storage-neutral vectors and the application contract share one closed vocabulary" do
+    path = Path.expand("../../../../../packages/contracts/vectors/activity.json", __DIR__)
+    vectors = path |> File.read!() |> Jason.decode!()
+
+    assert vectors["activity_version"] == 1
+    assert vectors["types"] == Activity.activity_types()
+    assert vectors["cursor"]["maximum_page_size"] == 50
+    assert vectors["retention"] == "account_lifetime"
   end
 end
 
@@ -177,6 +186,18 @@ defmodule KeeplingWeb.ActivityBoundaryTest do
                %{
                  "changes" => [
                    %{
+                     "field" => "inbox_state",
+                     "kind" => "state",
+                     "new" => "inbox",
+                     "old" => nil
+                   },
+                   %{
+                     "field" => "notes",
+                     "kind" => "text",
+                     "new" => "",
+                     "old" => nil
+                   },
+                   %{
                      "field" => "title",
                      "kind" => "text",
                      "new" => "<img src=x onerror=alert(1)>",
@@ -280,7 +301,9 @@ defmodule KeeplingWeb.ActivityBoundaryTest do
                CommandStore
              )
 
-    assert conn |> recycle() |> get("/api/v1/tasks/#{Ecto.UUID.generate()}/activity")
+    assert conn
+           |> recycle()
+           |> get("/api/v1/tasks/#{Ecto.UUID.generate()}/activity")
            |> json_response(404) == %{
              "code" => "task_not_found",
              "detail" => "Refresh the task before trying again.",
@@ -290,6 +313,81 @@ defmodule KeeplingWeb.ActivityBoundaryTest do
              "title" => "Task not found",
              "type" => "/problems/task_not_found"
            }
+  end
+
+  test "organization deltas keep stable IDs while projecting current archived labels", %{
+    account_id: account_id
+  } do
+    task_id = Ecto.UUID.generate()
+    tag_id = Ecto.UUID.generate()
+
+    {:ok, %{status: 201}} =
+      dispatch(
+        account_id,
+        %{
+          kind: :tag,
+          mutation_id: Ecto.UUID.generate(),
+          name: "Errand",
+          organization_id: tag_id,
+          type: :create_organization,
+          version: 1
+        },
+        @accepted_at
+      )
+
+    {:ok, %{status: 201}} =
+      dispatch(
+        account_id,
+        %{
+          mutation_id: Ecto.UUID.generate(),
+          task_id: task_id,
+          title: "Buy batteries",
+          type: :capture_task,
+          version: 1
+        },
+        DateTime.add(@accepted_at, 1, :second)
+      )
+
+    {:ok, %{status: 200}} =
+      dispatch(
+        account_id,
+        %{
+          base_values: %{project_id: nil, tag_ids: []},
+          expected_revision: 1,
+          fields: %{project_id: nil, tag_ids: [tag_id]},
+          mutation_id: Ecto.UUID.generate(),
+          task_id: task_id,
+          type: :assign_task_organizations,
+          version: 1
+        },
+        DateTime.add(@accepted_at, 2, :second)
+      )
+
+    {:ok, %{status: 200}} =
+      dispatch(
+        account_id,
+        %{
+          expected_revision: 1,
+          mutation_id: Ecto.UUID.generate(),
+          organization_id: tag_id,
+          type: :archive_organization,
+          version: 1
+        },
+        DateTime.add(@accepted_at, 3, :second)
+      )
+
+    assert {:ok, %{items: [assignment | _earlier]}} =
+             Activity.list_task(
+               %{account_id: account_id, cursor_secret: String.duplicate("x", 32)},
+               task_id,
+               %{limit: 20},
+               CommandStore
+             )
+
+    assert [%{field: "tags", kind: "organizations", new: [tag], old: []}] =
+             assignment.changes
+
+    assert tag == %{"archived" => true, "id" => tag_id, "name" => "Errand"}
   end
 
   test "authentication failures are not task history", %{account_id: account_id} do

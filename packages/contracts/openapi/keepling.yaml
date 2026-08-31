@@ -246,6 +246,47 @@ paths:
                 $ref: '#/components/schemas/OrganizationsResponse'
         '401':
           $ref: '#/components/responses/ProblemResponse'
+  /tasks/{task_id}/activity:
+    parameters:
+      - in: path
+        name: task_id
+        required: true
+        schema:
+          $ref: '#/components/schemas/TaskIdentity'
+    get:
+      operationId: listTaskActivity
+      summary: Read canonical accepted task activity newest first
+      parameters:
+        - in: query
+          name: cursor
+          required: false
+          schema:
+            $ref: '#/components/schemas/ActivityCursor'
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        '200':
+          description: Account-scoped canonical activity page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityPage'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /commands/capture-task:
     post:
       operationId: captureTask
@@ -557,6 +598,291 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    ActivityActor:
+      type: object
+      additionalProperties: false
+      required:
+        - label
+        - principal
+        - type
+      properties:
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Server-derived human-facing actor label; clients cannot assert it.
+        principal:
+          type: string
+          enum:
+            - account_owner
+            - authorized_grant
+        type:
+          type: string
+          enum:
+            - user
+            - agent
+    ActivityCursor:
+      type: string
+      minLength: 1
+      maxLength: 1024
+      description: Opaque HMAC-authenticated account/task/revision-bound keyset cursor.
+    ActivityDateChange:
+      type: object
+      additionalProperties: false
+      required:
+        - field
+        - kind
+        - new
+        - old
+      properties:
+        field:
+          type: string
+          enum:
+            - deadline_on
+            - planned_on
+        kind:
+          type: string
+          const: date
+        new:
+          anyOf:
+            - type: string
+              format: date
+            - type: 'null'
+        old:
+          anyOf:
+            - type: string
+              format: date
+            - type: 'null'
+    ActivityIdentity:
+      type: integer
+      format: int64
+      minimum: 1
+    ActivityInstantChange:
+      type: object
+      additionalProperties: false
+      required:
+        - field
+        - kind
+        - new
+        - old
+      properties:
+        field:
+          type: string
+          enum:
+            - completed_at
+            - trashed_at
+        kind:
+          type: string
+          const: instant
+        new:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: 'null'
+        old:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: 'null'
+    ActivityItem:
+      type: object
+      additionalProperties: false
+      required:
+        - accepted_at
+        - activity_id
+        - actor
+        - changes
+        - client_kind
+        - from_revision
+        - mutation_id
+        - outcome
+        - recovery_state
+        - to_revision
+        - type
+        - undone_activity_id
+        - version
+      properties:
+        accepted_at:
+          type: string
+          format: date-time
+        activity_id:
+          $ref: '#/components/schemas/ActivityIdentity'
+        actor:
+          $ref: '#/components/schemas/ActivityActor'
+        changes:
+          type: array
+          minItems: 1
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/ActivityDateChange'
+              - $ref: '#/components/schemas/ActivityInstantChange'
+              - $ref: '#/components/schemas/ActivityOrganizationChange'
+              - $ref: '#/components/schemas/ActivityOrganizationsChange'
+              - $ref: '#/components/schemas/ActivityStateChange'
+              - $ref: '#/components/schemas/ActivityTextChange'
+        client_kind:
+          type: string
+          enum:
+            - web
+            - electron
+            - iphone
+            - mcp
+        from_revision:
+          anyOf:
+            - $ref: '#/components/schemas/Revision'
+            - type: 'null'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        outcome:
+          type: string
+          const: accepted
+        recovery_state:
+          type: string
+          enum:
+            - available
+            - not_available
+            - undone
+            - expired
+            - stale
+        to_revision:
+          $ref: '#/components/schemas/Revision'
+        type:
+          type: string
+          enum:
+            - task_captured
+            - task_details_updated
+            - task_planned
+            - task_unplanned
+            - task_clarified
+            - task_returned_to_inbox
+            - task_completed
+            - task_reopened
+            - task_trashed
+            - task_restored
+            - task_undo_applied
+        undone_activity_id:
+          anyOf:
+            - $ref: '#/components/schemas/ActivityIdentity'
+            - type: 'null'
+        version:
+          type: integer
+          const: 1
+    ActivityOrganizationChange:
+      type: object
+      additionalProperties: false
+      required:
+        - field
+        - kind
+        - new
+        - old
+      properties:
+        field:
+          type: string
+          const: project
+        kind:
+          type: string
+          const: organization
+        new:
+          anyOf:
+            - $ref: '#/components/schemas/TaskOrganizationReference'
+            - type: 'null'
+        old:
+          anyOf:
+            - $ref: '#/components/schemas/TaskOrganizationReference'
+            - type: 'null'
+    ActivityOrganizationsChange:
+      type: object
+      additionalProperties: false
+      required:
+        - field
+        - kind
+        - new
+        - old
+      properties:
+        field:
+          type: string
+          const: tags
+        kind:
+          type: string
+          const: organizations
+        new:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskOrganizationReference'
+        old:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskOrganizationReference'
+    ActivityPage:
+      type: object
+      additionalProperties: false
+      required:
+        - account_timezone
+        - items
+        - next_cursor
+      properties:
+        account_timezone:
+          type: string
+          minLength: 1
+          description: Canonical IANA timezone used to display accepted activity time.
+        items:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/ActivityItem'
+        next_cursor:
+          anyOf:
+            - $ref: '#/components/schemas/ActivityCursor'
+            - type: 'null'
+    ActivityStateChange:
+      type: object
+      additionalProperties: false
+      required:
+        - field
+        - kind
+        - new
+        - old
+      properties:
+        field:
+          type: string
+          enum:
+            - inbox_state
+        kind:
+          type: string
+          const: state
+        new:
+          anyOf:
+            - type: string
+            - type: 'null'
+        old:
+          anyOf:
+            - type: string
+            - type: 'null'
+    ActivityTextChange:
+      type: object
+      additionalProperties: false
+      required:
+        - field
+        - kind
+        - new
+        - old
+      properties:
+        field:
+          type: string
+          enum:
+            - notes
+            - title
+        kind:
+          type: string
+          const: text
+        new:
+          anyOf:
+            - type: string
+            - type: 'null'
+        old:
+          anyOf:
+            - type: string
+            - type: 'null'
     AssignTaskOrganizationsCommand:
       type: object
       additionalProperties: false

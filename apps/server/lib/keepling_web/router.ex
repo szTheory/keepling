@@ -54,6 +54,7 @@ defmodule KeeplingWeb.Router do
     get "/inbox", CommandController, :inbox
     get "/organizations", CommandController, :organizations
     get "/mutations/:mutation_id", CommandController, :mutation
+    get "/tasks/:task_id/activity", ActivityController, :index
   end
 
   scope "/api/v1", KeeplingWeb do
