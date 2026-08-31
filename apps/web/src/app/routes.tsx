@@ -298,7 +298,7 @@ function AppRoutes({
     return withInterruption(
       <>
         {authenticatedContent ? <div className="hidden lg:block">{authenticatedContent}</div> : null}
-        <div className="min-h-screen bg-card [&>main]:!static [&>main]:!min-h-0 [&>main]:!min-w-0 [&>main]:!w-auto [&>main]:!overflow-visible [&>main]:!border-0 lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:w-[calc(100%-41.5rem)] lg:min-w-[30rem] lg:overflow-y-auto lg:border-l lg:border-border">
+        <div className="min-h-screen bg-card [&>main]:!static [&>main]:!min-h-0 [&>main]:!min-w-0 [&>main]:!w-auto [&>main]:!overflow-visible [&>main]:!border-0 lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:w-[calc(100%-41.5rem)] lg:min-w-[30rem] lg:overflow-y-auto lg:border-l lg:border-border" key={taskId}>
           <TaskEditor
             csrfToken={csrfToken}
             onAcknowledged={onAcknowledged}

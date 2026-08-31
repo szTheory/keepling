@@ -17,6 +17,19 @@ type TaskFixture = {
   title: string
 }
 
+type Deferred<T> = {
+  promise: Promise<T>
+  resolve: (value: T) => void
+}
+
+const deferred = <T,>(): Deferred<T> => {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((accept) => {
+    resolve = accept
+  })
+  return { promise, resolve }
+}
+
 const task: TaskFixture = {
   captured_at: '2026-08-30T20:00:00Z',
   deadline_on: '2026-09-02',
@@ -618,6 +631,59 @@ describe('canonical task editor', () => {
 
     expect(await screen.findByRole('heading', { name: 'Edit task' })).toBeVisible()
     expect(screen.getByDisplayValue('Call dentist')).toBeVisible()
+  })
+
+  it('drops task A state before task B finishes loading and submits only task B identity', async () => {
+    const taskB = {
+      ...task,
+      id: '028d8b40-2f10-7b1a-9d71-263f4af77002',
+      revision: 9,
+      title: 'Send invoice',
+    }
+    const taskBResponse = deferred<Response>()
+    const commandBodies: Array<Record<string, unknown>> = []
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const path = String(input)
+      if (path === taskPath) return taskResponse()
+      if (path === `/api/v1/tasks/${taskB.id}`) return taskBResponse.promise
+      if (path.includes('/activity?')) return activityResponse()
+      if (path === '/api/v1/commands/edit-task') {
+        const request = JSON.parse(String(init?.body)) as Record<string, unknown>
+        commandBodies.push(request)
+        return jsonResponse({
+          ...acknowledgement({ ...taskB, revision: 10, title: String(request.fields && (request.fields as Record<string, unknown>).title) }),
+          mutation_id: request.mutation_id,
+          task_id: taskB.id,
+        })
+      }
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', `/tasks/${task.id}`)
+
+    render(<AppRoutes authenticated csrfToken="csrf" />)
+    const titleA = await screen.findByLabelText('Title')
+    const formA = titleA.closest('form')!
+    const saveA = screen.getByRole('button', { name: 'Save changes' })
+
+    window.history.replaceState({}, '', `/tasks/${taskB.id}`)
+    window.dispatchEvent(new PopStateEvent('popstate'))
+
+    expect(await screen.findByRole('status', { name: '' })).toHaveTextContent('Loading task…')
+    fireEvent.keyDown(formA, { ctrlKey: true, key: 'Enter' })
+    fireEvent.click(saveA)
+    expect(commandBodies).toHaveLength(0)
+
+    taskBResponse.resolve(jsonResponse(taskB))
+    const titleB = await screen.findByLabelText('Title')
+    expect(titleB).toHaveValue('Send invoice')
+    await user.clear(titleB)
+    await user.type(titleB, 'Send final invoice')
+    await user.click(screen.getByRole('button', { name: 'Save changes' }))
+
+    await waitFor(() => expect(commandBodies).toHaveLength(1))
+    expect(commandBodies[0]).toMatchObject({ expected_revision: 9, task_id: taskB.id })
   })
 
   it('renders task title and notes as plain text without creating hostile markup', async () => {
