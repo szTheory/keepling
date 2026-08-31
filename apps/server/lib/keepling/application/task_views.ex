@@ -38,11 +38,7 @@ defmodule Keepling.Application.TaskViews do
       )
       when direction in [:earlier, :later] and is_integer(revision) and revision > 0 and
              is_binary(task_id) do
-    with {:ok, _uuid} <- Ecto.UUID.cast(task_id) do
-      port.move_today(context, command)
-    else
-      _ -> {:error, :invalid_move}
-    end
+    port.move_today(context, command)
   end
 
   def move_today(_command, _context, _port), do: {:error, :invalid_move}
