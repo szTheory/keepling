@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "valid_for_seconds": 86400,
+  "supported": [
+    {"command": "edit_task", "inverse": "details", "label": "Undo task edit"},
+    {"command": "clarify_task", "inverse": "inbox", "label": "Undo clarification"},
+    {"command": "return_to_inbox", "inverse": "inbox", "label": "Undo return to Inbox"},
+    {"command": "plan_for_today", "inverse": "planning", "label": "Undo Today planning"},
+    {"command": "unplan_task", "inverse": "planning", "label": "Undo unplanning"},
+    {"command": "complete_task", "inverse": "completion", "label": "Undo completion"},
+    {"command": "reopen_task", "inverse": "completion", "label": "Undo reopening"},
+    {"command": "trash_task", "inverse": "trash", "label": "Undo Trash"},
+    {"command": "restore_task", "inverse": "trash", "label": "Undo restore"}
+  ],
+  "unsupported": [
+    "capture_task",
+    "edit_task_dates",
+    "assign_task_organizations",
+    "move_today_task",
+    "create_organization",
+    "rename_organization",
+    "archive_organization",
+    "unarchive_organization",
+    "resolve_task_conflict",
+    "undo_task"
+  ]
+}
