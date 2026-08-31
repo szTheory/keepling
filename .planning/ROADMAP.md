@@ -6,7 +6,7 @@ Keepling is built as six vertical proof increments. Each phase produces observab
 
 ### Phase 1: One Trustworthy Task
 
-**Goal:** A user can authenticate and complete the core task lifecycle through a real React → Phoenix → PostgreSQL browser slice.
+**Goal:** As a Keepling user, I want to manage one task end to end, so that I can trust every browser change.
 **Mode:** mvp
 **Requirements:** GTD-01..07, SRV-01, SRV-02 (semantic boundary + web/API proof), SRV-03, WEB-01..02, QUAL-01
 **UI hint:** yes
