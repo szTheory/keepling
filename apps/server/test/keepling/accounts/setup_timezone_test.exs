@@ -264,3 +264,180 @@ defmodule KeeplingWeb.SetupControllerTest do
     refute inspect(unavailable) =~ issued.token
   end
 end
+
+defmodule Keepling.Accounts.TimezoneTest do
+  use ExUnit.Case, async: false
+
+  import ExUnit.CaptureIO
+  import Keepling.ConcurrencyCase
+
+  alias Ecto.Adapters.SQL
+  alias Keepling.Accounts
+  alias Keepling.Repo
+
+  @now ~U[2026-08-30 19:00:00.000000Z]
+
+  setup do
+    reset_account_state()
+    create_account("America/New_York")
+    on_exit(&reset_account_state/0)
+    :ok
+  end
+
+  @tag timezone: true
+  test "timezone change reinterprets the account day without rewriting task time" do
+    boundary = ~U[2026-03-08 07:30:00.000000Z]
+    task_id = insert_task(boundary)
+
+    assert {:ok, ~D[2026-03-08]} = call(fn -> Accounts.account_date_at(boundary) end)
+
+    assert {:ok,
+            %{
+              activity_view_revision: 2,
+              timezone: "America/Los_Angeles",
+              today_view_revision: 2,
+              upcoming_view_revision: 2
+            }} =
+             call(fn ->
+               Accounts.change_timezone("America/Los_Angeles", accepted_at: @now)
+             end)
+
+    assert {:ok, ~D[2026-03-07]} = call(fn -> Accounts.account_date_at(boundary) end)
+    assert stored_task_time(task_id) == boundary
+
+    assert %{rows: [["timezone_changed", 1, accepted_at]]} =
+             query!("SELECT event_type, event_version, accepted_at FROM account_security_audits")
+
+    assert as_utc(accepted_at) == @now
+  end
+
+  @tag timezone: true
+  test "invalid IANA names and fixed offsets are exact no-ops" do
+    before = account_setting_state()
+
+    for invalid <- ["UTC-05:00", "+05:00", "device-default", "America/Not_A_Zone"] do
+      assert {:error, :invalid_timezone} =
+               call(fn -> Accounts.change_timezone(invalid, accepted_at: @now) end)
+    end
+
+    assert account_setting_state() == before
+    assert %{rows: [[0]]} = query!("SELECT count(*) FROM account_security_audits")
+  end
+
+  @tag timezone: true
+  test "concurrent changes serialize and invalidate every affected projection" do
+    barrier = start_barrier(2)
+
+    results =
+      for timezone <- ["America/Chicago", "America/Los_Angeles"] do
+        Task.async(fn ->
+          with_connection(fn backend_pid ->
+            :ok = await(barrier)
+
+            {backend_pid,
+             Accounts.change_timezone(timezone,
+               accepted_at: DateTime.add(@now, 30, :second)
+             )}
+          end)
+        end)
+      end
+      |> Enum.map(&Task.await(&1, 10_000))
+
+    assert results |> Enum.map(&elem(&1, 0)) |> Enum.uniq() |> length() == 2
+    assert Enum.all?(results, fn {_pid, result} -> match?({:ok, _}, result) end)
+
+    state = account_setting_state()
+    assert state.timezone in ["America/Chicago", "America/Los_Angeles"]
+    assert state.today_view_revision == 3
+    assert state.upcoming_view_revision == 3
+    assert state.activity_view_revision == 3
+    assert %{rows: [[2]]} = query!("SELECT count(*) FROM account_security_audits")
+  end
+
+  @tag timezone: true
+  test "operator task uses the shared command and prints no account identifier" do
+    raw_account_id = account_setting_state().id |> Ecto.UUID.load!()
+
+    output =
+      capture_io(fn ->
+        call(fn -> Mix.Tasks.Keepling.Timezone.run(["America/Chicago"]) end)
+      end)
+
+    assert output =~ "Account timezone updated."
+    assert output =~ "Affected views will refresh."
+    refute output =~ raw_account_id
+    assert account_setting_state().timezone == "America/Chicago"
+  end
+
+  defp create_account(timezone) do
+    issued =
+      call(fn -> Accounts.issue_setup_token(now: @now, ttl_seconds: 900) end)
+      |> then(fn {:ok, issued} -> issued end)
+
+    assert {:ok, %{timezone: ^timezone}} =
+             call(fn ->
+               Accounts.consume_setup(%{
+                 token: issued.token,
+                 password: "correct horse battery staple",
+                 timezone: timezone,
+                 accepted_at: DateTime.add(@now, 1, :second)
+               })
+             end)
+  end
+
+  defp insert_task(captured_at) do
+    task_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
+    account_id = account_setting_state().id
+
+    query!(
+      """
+      INSERT INTO tasks (
+        account_id, id, title, inbox_state, revision, captured_at, inserted_at, updated_at
+      )
+      VALUES ($1, $2, 'Keep the exact instant', 'inbox', 1, $3, $3, $3)
+      """,
+      [account_id, task_id, captured_at]
+    )
+
+    task_id
+  end
+
+  defp stored_task_time(task_id) do
+    %{rows: [[captured_at]]} = query!("SELECT captured_at FROM tasks WHERE id = $1", [task_id])
+    as_utc(captured_at)
+  end
+
+  defp account_setting_state do
+    %{rows: [[id, timezone, today, upcoming, activity]]} =
+      query!("""
+      SELECT id, timezone, today_view_revision, upcoming_view_revision,
+             activity_view_revision
+      FROM accounts
+      WHERE singleton_key = TRUE
+      """)
+
+    %{
+      activity_view_revision: activity,
+      id: id,
+      timezone: timezone,
+      today_view_revision: today,
+      upcoming_view_revision: upcoming
+    }
+  end
+
+  defp reset_account_state do
+    with_connection(fn _backend_pid ->
+      SQL.query!(Repo, "DELETE FROM accounts", [])
+      SQL.query!(Repo, "DELETE FROM account_setup", [])
+    end)
+  end
+
+  defp query!(statement, params \\ []) do
+    with_connection(fn _backend_pid -> SQL.query!(Repo, statement, params) end)
+  end
+
+  defp call(fun), do: with_connection(fn _backend_pid -> fun.() end)
+
+  defp as_utc(%DateTime{} = value), do: value
+  defp as_utc(%NaiveDateTime{} = value), do: DateTime.from_naive!(value, "Etc/UTC")
+end
