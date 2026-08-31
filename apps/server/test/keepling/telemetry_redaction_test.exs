@@ -14,6 +14,7 @@ defmodule Keepling.TelemetryRedactionTest do
   @hostile_identifier "00000000-0000-4000-8000-000000000099"
 
   setup do
+    SQL.query!(Repo, "DELETE FROM account_security_audits", [])
     SQL.query!(Repo, "DELETE FROM accounts", [])
     create_account(@password)
     if :ets.whereis(RateLimit) != :undefined, do: :ets.delete_all_objects(RateLimit)
@@ -33,6 +34,7 @@ defmodule Keepling.TelemetryRedactionTest do
 
     on_exit(fn ->
       :telemetry.detach(handler_id)
+      SQL.query!(Repo, "DELETE FROM account_security_audits", [])
       SQL.query!(Repo, "DELETE FROM accounts", [])
     end)
 
@@ -107,12 +109,13 @@ defmodule Keepling.TelemetryRedactionTest do
     assert %{rows: rows} =
              SQL.query!(
                Repo,
-               "SELECT event_type, event_version FROM account_security_audits ORDER BY id",
+               "SELECT event_type, event_version, account_id FROM account_security_audits ORDER BY id",
                []
              )
 
-    assert Enum.all?(rows, fn [event_type, version] ->
-             event_type in ["login_failed", "login_succeeded"] and version == 1
+    assert Enum.all?(rows, fn [event_type, version, account_id] ->
+             event_type in ["login_failed", "login_succeeded"] and version == 1 and
+               is_nil(account_id)
            end)
   end
 

@@ -311,6 +311,7 @@ defmodule KeeplingWeb.AuthLifecycleTest do
   end
 
   defp reset_account_state do
+    SQL.query!(Repo, "DELETE FROM account_security_audits", [])
     SQL.query!(Repo, "DELETE FROM accounts", [])
   end
 end
@@ -415,6 +416,9 @@ defmodule Keepling.Accounts.RecoveryRaceTest do
   end
 
   defp reset_account_state do
-    with_connection(fn _backend_pid -> SQL.query!(Repo, "DELETE FROM accounts", []) end)
+    with_connection(fn _backend_pid ->
+      SQL.query!(Repo, "DELETE FROM account_security_audits", [])
+      SQL.query!(Repo, "DELETE FROM accounts", [])
+    end)
   end
 end

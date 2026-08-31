@@ -252,6 +252,7 @@ defmodule Keepling.Accounts.SetupTest do
 
   defp reset_account_state do
     with_connection(fn _backend_pid ->
+      SQL.query!(Repo, "DELETE FROM account_security_audits", [])
       SQL.query!(Repo, "DELETE FROM accounts", [])
       SQL.query!(Repo, "DELETE FROM account_setup", [])
     end)
@@ -276,6 +277,7 @@ defmodule KeeplingWeb.SetupControllerTest do
   alias Keepling.Repo
 
   setup do
+    SQL.query!(Repo, "DELETE FROM account_security_audits", [])
     SQL.query!(Repo, "DELETE FROM accounts", [])
     SQL.query!(Repo, "DELETE FROM account_setup", [])
     :ok
@@ -476,6 +478,7 @@ defmodule Keepling.Accounts.TimezoneTest do
 
   defp reset_account_state do
     with_connection(fn _backend_pid ->
+      SQL.query!(Repo, "DELETE FROM account_security_audits", [])
       SQL.query!(Repo, "DELETE FROM accounts", [])
       SQL.query!(Repo, "DELETE FROM account_setup", [])
     end)

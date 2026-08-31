@@ -2,19 +2,28 @@ defmodule KeeplingWeb.AuthController do
   use KeeplingWeb, :controller
 
   alias Keepling.Accounts
+  alias Keepling.Accounts.RateLimit
   alias KeeplingWeb.Auth
 
   def setup(conn, params) do
-    with {:ok, setup} <- decode_setup(params),
+    with :ok <- RateLimit.admit(:setup, conn.remote_ip),
+         {:ok, setup} <- decode_setup(params),
          {:ok, result} <-
            Accounts.consume_setup(
              Map.put(setup, :accepted_at, DateTime.utc_now() |> DateTime.truncate(:microsecond))
            ) do
+      RateLimit.emit_decision(:setup, :accepted)
+
       conn
       |> put_status(201)
       |> json(%{status: "setup_complete", timezone: result.timezone})
     else
+      {:error, :rate_limited, _retry_after_ms} ->
+        invalid_setup(conn)
+
       {:error, :invalid_timezone} ->
+        RateLimit.emit_decision(:setup, :invalid)
+
         problem(
           conn,
           422,
@@ -24,15 +33,11 @@ defmodule KeeplingWeb.AuthController do
         )
 
       {:error, reason} when reason in [:invalid_password, :invalid_setup] ->
-        problem(
-          conn,
-          422,
-          "invalid_setup",
-          "Check the setup form and try again.",
-          "correct_setup"
-        )
+        RateLimit.emit_decision(:setup, :invalid)
+        invalid_setup(conn)
 
       {:error, :setup_unavailable} ->
+        RateLimit.emit_decision(:setup, :invalid)
         problem(conn, 422, "setup_unavailable", "Request a new setup link.", "request_setup_link")
 
       {:error, :infrastructure_failure} ->
@@ -41,22 +46,35 @@ defmodule KeeplingWeb.AuthController do
   end
 
   def login(conn, params) do
-    with {:ok, request} <- decode_login(params),
+    with :ok <- RateLimit.admit(:login, conn.remote_ip),
+         {:ok, request} <- decode_login(params),
          {:ok, session} <-
            Accounts.login(request.password,
              label: request.label,
              client_kind: request.client_kind
            ) do
+      RateLimit.emit_decision(:login, :accepted)
       authenticated(conn, session, "authenticated")
     else
-      {:error, :invalid_request} -> invalid_request(conn)
-      {:error, :authentication_failed} -> authentication_failed(conn)
-      {:error, :infrastructure_failure} -> infrastructure_problem(conn, "retry_login")
+      {:error, :rate_limited, _retry_after_ms} ->
+        authentication_failed(conn)
+
+      {:error, :invalid_request} ->
+        RateLimit.emit_decision(:login, :invalid)
+        authentication_failed(conn)
+
+      {:error, :authentication_failed} ->
+        RateLimit.emit_decision(:login, :invalid)
+        authentication_failed(conn)
+
+      {:error, :infrastructure_failure} ->
+        infrastructure_problem(conn, "retry_login")
     end
   end
 
   def recovery(conn, params) do
-    with {:ok, request} <- decode_recovery(params),
+    with :ok <- RateLimit.admit(:recovery, conn.remote_ip),
+         {:ok, request} <- decode_recovery(params),
          {:ok, session} <-
            Accounts.consume_recovery(%{
              accepted_at: DateTime.utc_now() |> DateTime.truncate(:microsecond),
@@ -65,10 +83,15 @@ defmodule KeeplingWeb.AuthController do
              password: request.password,
              token: request.token
            }) do
+      RateLimit.emit_decision(:recovery, :accepted)
       authenticated(conn, session, "recovery_complete")
     else
+      {:error, :rate_limited, _retry_after_ms} ->
+        recovery_unavailable(conn)
+
       {:error, :invalid_request} ->
-        invalid_request(conn)
+        RateLimit.emit_decision(:recovery, :invalid)
+        recovery_unavailable(conn)
 
       {:error, reason}
       when reason in [
@@ -77,6 +100,7 @@ defmodule KeeplingWeb.AuthController do
              :invalid_client_kind,
              :recovery_unavailable
            ] ->
+        RateLimit.emit_decision(:recovery, :invalid)
         recovery_unavailable(conn)
 
       {:error, :infrastructure_failure} ->
@@ -246,6 +270,16 @@ defmodule KeeplingWeb.AuthController do
       "invalid_request",
       "Send the closed version 1 authentication request.",
       "correct_request"
+    )
+  end
+
+  defp invalid_setup(conn) do
+    problem(
+      conn,
+      422,
+      "invalid_setup",
+      "Check the setup form and try again.",
+      "correct_setup"
     )
   end
 

@@ -58,6 +58,16 @@ defmodule Keepling.Repo.Migrations.ExpandAuthLifecycle do
              check: "expires_at > issued_at"
            )
 
+    execute(
+      "ALTER TABLE account_security_audits ALTER COLUMN account_id DROP NOT NULL",
+      """
+      UPDATE account_security_audits
+      SET account_id = (SELECT id FROM accounts WHERE singleton_key = TRUE)
+      WHERE account_id IS NULL;
+      ALTER TABLE account_security_audits ALTER COLUMN account_id SET NOT NULL
+      """
+    )
+
     drop constraint(:account_security_audits, :account_security_audit_closed_type)
 
     create constraint(:account_security_audits, :account_security_audit_closed_type,

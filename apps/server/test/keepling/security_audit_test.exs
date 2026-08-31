@@ -56,8 +56,6 @@ defmodule Keepling.SecurityAuditTest do
     assert retry_after_ms > 0 and retry_after_ms <= 60_000
     assert :ok = RateLimit.admit(:setup, source_one, policy: @fast_policy)
 
-    clear_rate_limit_table()
-
     source_limited_policy = %{
       account: {60_000, 10},
       source: {60_000, 1},
@@ -71,7 +69,7 @@ defmodule Keepling.SecurityAuditTest do
 
     assert :ok = RateLimit.admit(:recovery, source_two, policy: source_limited_policy)
 
-    serialized_entries = RateLimit |> :ets.tab2list() |> inspect()
+    serialized_entries = RateLimit |> :ets.tab2list() |> inspect(limit: :infinity)
 
     for namespace <- [
           "setup:account",
@@ -92,11 +90,20 @@ defmodule Keepling.SecurityAuditTest do
   test "limited and invalid login responses are identical and audits stay closed", %{conn: conn} do
     Application.put_env(:keepling, :rate_limit_policy, %{login: @fast_policy})
 
+    missing =
+      conn
+      |> trusted_request()
+      |> post("/api/v1/login", %{"version" => 1})
+
+    clear_rate_limit_table()
+
     first = login(conn, "incorrect password value")
     second = login(build_conn(), "another incorrect password value")
 
+    assert missing.status == 401
     assert first.status == 401
     assert second.status == 401
+    assert missing.resp_body == first.resp_body
     assert first.resp_body == second.resp_body
 
     assert Jason.decode!(first.resp_body) == %{
@@ -111,14 +118,54 @@ defmodule Keepling.SecurityAuditTest do
     assert %{rows: audit_rows} =
              SQL.query!(
                Repo,
-               "SELECT event_type, event_version FROM account_security_audits ORDER BY id",
+               "SELECT event_type, event_version, account_id FROM account_security_audits ORDER BY id",
                []
              )
 
     assert [
-             ["login_failed", 1],
-             ["rate_limited", 1]
+             ["login_failed", 1, nil],
+             ["rate_limited", 1, nil]
            ] = audit_rows
+  end
+
+  @tag rate_limit: true
+  test "limited and invalid recovery responses are identical", %{conn: conn} do
+    Application.put_env(:keepling, :rate_limit_policy, %{recovery: @fast_policy})
+
+    missing =
+      conn
+      |> trusted_request()
+      |> post("/api/v1/recovery", %{"version" => 1})
+
+    clear_rate_limit_table()
+
+    invalid =
+      build_conn()
+      |> trusted_request()
+      |> post("/api/v1/recovery", %{
+        "client_kind" => "web",
+        "label" => "Browser",
+        "password" => "replacement password manager value",
+        "token" => "invalid recovery token",
+        "version" => 1
+      })
+
+    limited =
+      build_conn()
+      |> trusted_request()
+      |> post("/api/v1/recovery", %{
+        "client_kind" => "web",
+        "label" => "Browser",
+        "password" => "another replacement password manager value",
+        "token" => "another invalid recovery token",
+        "version" => 1
+      })
+
+    assert missing.status == 422
+    assert invalid.status == 422
+    assert limited.status == 422
+    assert missing.resp_body == invalid.resp_body
+    assert invalid.resp_body == limited.resp_body
   end
 
   test "every cookie-authenticated mutation enforces both CSRF and origin", %{conn: conn} do
@@ -244,6 +291,7 @@ defmodule Keepling.SecurityAuditTest do
   end
 
   defp reset_account_state do
+    SQL.query!(Repo, "DELETE FROM account_security_audits", [])
     SQL.query!(Repo, "DELETE FROM accounts", [])
   end
 end

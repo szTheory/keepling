@@ -108,19 +108,25 @@ defmodule Keepling.Accounts do
            []
          ) do
       {:ok, %{rows: [[account_id, password_hash]]}} ->
-        if login_password_valid?(password) and Argon2.verify_pass(password, password_hash) do
-          case create_session(account_id, Keyword.put(opts, :now, now)) do
-            {:ok, _session} = result ->
-              record_security_audit(account_id, "login_succeeded", now)
-              result
+        cond do
+          not login_password_valid?(password) ->
+            Argon2.no_user_verify()
+            record_security_audit(account_id, "login_failed", now)
+            {:error, :authentication_failed}
 
-            {:error, _reason} ->
-              {:error, :infrastructure_failure}
-          end
-        else
-          Argon2.no_user_verify()
-          record_security_audit(account_id, "login_failed", now)
-          {:error, :authentication_failed}
+          Argon2.verify_pass(password, password_hash) ->
+            case create_session(account_id, Keyword.put(opts, :now, now)) do
+              {:ok, _session} = result ->
+                record_security_audit(account_id, "login_succeeded", now)
+                result
+
+              {:error, _reason} ->
+                {:error, :infrastructure_failure}
+            end
+
+          true ->
+            record_security_audit(account_id, "login_failed", now)
+            {:error, :authentication_failed}
         end
 
       {:ok, %{rows: []}} ->
@@ -212,13 +218,19 @@ defmodule Keepling.Accounts do
 
     case SQL.query(Repo, "SELECT password_hash FROM accounts WHERE id = $1", [account_id]) do
       {:ok, %{rows: [[password_hash]]}} ->
-        if login_password_valid?(password) and Argon2.verify_pass(password, password_hash) do
-          record_security_audit(account_id, "reauthenticated", now)
-          :ok
-        else
-          Argon2.no_user_verify()
-          record_security_audit(account_id, "login_failed", now)
-          {:error, :authentication_failed}
+        cond do
+          not login_password_valid?(password) ->
+            Argon2.no_user_verify()
+            record_security_audit(account_id, "login_failed", now)
+            {:error, :authentication_failed}
+
+          Argon2.verify_pass(password, password_hash) ->
+            record_security_audit(account_id, "reauthenticated", now)
+            :ok
+
+          true ->
+            record_security_audit(account_id, "login_failed", now)
+            {:error, :authentication_failed}
         end
 
       {:ok, %{rows: []}} ->
@@ -845,16 +857,16 @@ defmodule Keepling.Accounts do
     _error -> :ok
   end
 
-  defp insert_security_audit(repo, account_id, event_type, accepted_at) do
+  defp insert_security_audit(repo, _account_id, event_type, accepted_at) do
     SQL.query!(
       repo,
       """
       INSERT INTO account_security_audits (
-        account_id, event_type, event_version, accepted_at, inserted_at
+        event_type, event_version, accepted_at, inserted_at
       )
-      VALUES ($1, $2, 1, $3, $3)
+      VALUES ($1, 1, $2, $2)
       """,
-      [account_id, event_type, accepted_at]
+      [event_type, accepted_at]
     )
   end
 
@@ -917,11 +929,11 @@ defmodule Keepling.Accounts do
           repo,
           """
           INSERT INTO account_security_audits (
-            account_id, event_type, event_version, accepted_at, inserted_at
+            event_type, event_version, accepted_at, inserted_at
           )
-          VALUES ($1, 'timezone_changed', 1, $2, $2)
+          VALUES ('timezone_changed', 1, $1, $1)
           """,
-          [account_id, accepted_at]
+          [accepted_at]
         )
 
         {:ok, setting_result(timezone, today, upcoming, activity)}
