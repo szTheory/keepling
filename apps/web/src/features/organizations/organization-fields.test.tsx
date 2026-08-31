@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -80,6 +80,44 @@ afterEach(() => {
 })
 
 describe('organization assignment fields', () => {
+  it('registers and resumes the exact expired task assignment read', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input)
+      if (path === `/api/v1/tasks/${taskId}`) {
+        return fetchMock.mock.calls.filter(([candidate]) => String(candidate) === path).length === 1
+          ? jsonResponse(problem('authentication_required', 'Sign in again.', {
+              recovery_action: 'sign_in',
+              status: 401,
+            }), 401)
+          : jsonResponse(task)
+      }
+      if (path === '/api/v1/organizations') return jsonResponse({ organizations })
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+
+    render(
+      <OrganizationFields
+        csrfToken="expired-csrf"
+        onAuthenticationRequired={onAuthenticationRequired}
+        taskId={taskId}
+      />,
+    )
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    expect(screen.queryByText('Couldn’t load project and tags. Your task wasn’t changed.')).not.toBeInTheDocument()
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { authentication: string; kind: string; mutationId: string },
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'read' })
+    await resume('rotated-csrf')
+
+    expect(await screen.findByRole('heading', { name: 'Project and tags' })).toBeVisible()
+    expect(screen.getByRole('combobox', { name: 'Project' })).toHaveValue(archivedProjectId)
+  })
+
   const acceptedAssignment = (body: string) => {
     const request = JSON.parse(body) as { mutation_id: string }
     return {
@@ -355,6 +393,43 @@ describe('organization assignment fields', () => {
 })
 
 describe('organization management routes', () => {
+  it.each([
+    ['project', 'Projects'],
+    ['tag', 'Tags'],
+  ] as const)('registers and resumes the exact expired %s collection read', async (kind, title) => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse(problem('authentication_required', 'Sign in again.', {
+          recovery_action: 'sign_in',
+          status: 401,
+        }), 401),
+      )
+      .mockResolvedValueOnce(jsonResponse({ organizations }))
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+
+    render(
+      <OrganizationManager
+        csrfToken="expired-csrf"
+        kind={kind}
+        onAuthenticationRequired={onAuthenticationRequired}
+      />,
+    )
+
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    expect(screen.queryByText(`Couldn’t load ${kind}s. Nothing was changed.`)).not.toBeInTheDocument()
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { authentication: string; kind: string; mutationId: string },
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'read' })
+    await resume('rotated-csrf')
+
+    expect(await screen.findByRole('heading', { name: title })).toBeVisible()
+    expect(screen.getByDisplayValue(kind === 'project' ? 'Home' : 'Errand')).toBeVisible()
+  })
+
   it('reconciles accepted response loss for create, rename, archive, and unarchive by exact identity', async () => {
     const stored = new Map<string, Record<string, unknown>>()
     const commandBodies = new Map<string, string[]>()
