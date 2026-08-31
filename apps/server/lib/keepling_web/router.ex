@@ -26,12 +26,21 @@ defmodule KeeplingWeb.Router do
   end
 
   if Mix.env() == :test do
+    pipeline :test_fault do
+      plug KeeplingWeb.TestFaultController
+    end
+
     scope "/api/v1/test", KeeplingWeb do
       pipe_through [:api, :test_fixture]
 
       post "/session", CommandController, :test_session
     end
   end
+
+  mutation_pipelines =
+    if Mix.env() == :test,
+      do: [:api, :authenticated, :mutation, :test_fault],
+      else: [:api, :authenticated, :mutation]
 
   scope "/api/v1", KeeplingWeb do
     pipe_through [:api]
@@ -63,7 +72,7 @@ defmodule KeeplingWeb.Router do
   end
 
   scope "/api/v1", KeeplingWeb do
-    pipe_through [:api, :authenticated, :mutation]
+    pipe_through mutation_pipelines
 
     post "/commands/capture-task", CommandController, :capture_task
     post "/commands/edit-task", CommandController, :edit_task

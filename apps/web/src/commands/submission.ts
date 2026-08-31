@@ -139,6 +139,7 @@ const classifyKeeplingError = (
   error: unknown,
 ): SubmissionErrorClassification<KeeplingApiError> => {
   if (!(error instanceof KeeplingApiError)) return { kind: 'unknown' }
+  if (error.problem.status >= 500) return { kind: 'unknown' }
   if (error.problem.code === 'authentication_required') {
     return { kind: 'authentication_required' }
   }
