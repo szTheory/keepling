@@ -61,6 +61,7 @@ const acknowledgement = (mutationId: string, title = 'My title') => ({
 
 const installEditorFetch = (
   resolveConflict: (request: Record<string, unknown>) => Promise<Response> | Response,
+  lookupConflict?: (mutationId: string) => Promise<Response> | Response,
 ) => {
   let originalMutationId = ''
   const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
@@ -77,6 +78,9 @@ const installEditorFetch = (
     if (path === '/api/v1/commands/resolve-task-conflict') {
       const request = JSON.parse(String(init?.body)) as Record<string, unknown>
       return Promise.resolve(resolveConflict(request))
+    }
+    if (path.startsWith('/api/v1/mutations/') && lookupConflict) {
+      return Promise.resolve(lookupConflict(path.slice('/api/v1/mutations/'.length)))
     }
     throw new Error(`Unexpected request ${path}`)
   })
@@ -197,25 +201,39 @@ describe('inline task conflict resolution', () => {
     expect(screen.getByRole('button', { name: 'Save changes' })).toHaveFocus()
   })
 
-  it('retries an unknown resolution with the exact body and keeps an honest stale state visible', async () => {
+  it('checks a before-acceptance resolution receipt before replaying exact bytes', async () => {
     let attempts = 0
-    const { fetchMock } = installEditorFetch(() => {
-      attempts += 1
-      if (attempts === 1) throw new TypeError('response lost')
-      return jsonResponse(
+    const { fetchMock } = installEditorFetch(
+      () => {
+        attempts += 1
+        if (attempts === 1) throw new TypeError('response lost')
+        return jsonResponse(
+          {
+            code: 'task_conflict_stale',
+            current_revision: 3,
+            detail: 'Review the latest task before resolving the conflict again.',
+            recovery_action: 'review_task_conflict',
+            retryable: false,
+            status: 409,
+            title: 'Task changed after the conflict',
+            type: '/problems/task_conflict_stale',
+          },
+          409,
+        )
+      },
+      () => jsonResponse(
         {
-          code: 'task_conflict_stale',
-          current_revision: 3,
-          detail: 'Review the latest task before resolving the conflict again.',
-          recovery_action: 'review_task_conflict',
+          code: 'mutation_not_found',
+          detail: 'No receipt exists.',
+          recovery_action: 'retry_original_mutation',
           retryable: false,
-          status: 409,
-          title: 'Task changed after the conflict',
-          type: '/problems/task_conflict_stale',
+          status: 404,
+          title: 'Mutation not found',
+          type: '/problems/mutation_not_found',
         },
-        409,
-      )
-    })
+        404,
+      ),
+    )
     const user = userEvent.setup()
 
     render(<TaskEditor csrfToken="csrf" taskId={task.id} />)
@@ -237,6 +255,9 @@ describe('inline task conflict resolution', () => {
       )[0]?.[1]?.body,
     )
     await user.click(screen.getByRole('button', { name: 'Check again' }))
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).startsWith('/api/v1/mutations/')),
+    ).toBe(true)
     const resolutionCalls = fetchMock.mock.calls.filter(
       ([url]) => String(url) === '/api/v1/commands/resolve-task-conflict',
     )
@@ -247,5 +268,153 @@ describe('inline task conflict resolution', () => {
     )
     expect(screen.getByLabelText('Title')).toHaveValue('My title')
     expect(screen.getByRole('heading', { name: 'This task changed somewhere else.' })).toBeVisible()
+  })
+
+  it('settles an after-commit resolution from lookup without resending', async () => {
+    const bodies: string[] = []
+    let stored: ReturnType<typeof acknowledgement> | null = null
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const path = String(input)
+      if (path === '/api/v1/commands/resolve-task-conflict') {
+        const body = String(init?.body)
+        bodies.push(body)
+        const request = JSON.parse(body) as { mutation_id: string }
+        stored = acknowledgement(request.mutation_id)
+        throw new TypeError('response lost after commit')
+      }
+      if (path.startsWith('/api/v1/mutations/')) return jsonResponse(stored)
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAcknowledged = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <ConflictResolver
+        conflict={{
+          fields: conflictProblem().conflict.fields as TaskConflict['fields'],
+          id: conflictProblem().conflict.id,
+          latestRevision: 2,
+        }}
+        csrfToken="csrf"
+        onAcknowledged={onAcknowledged}
+        onKeepEditing={() => undefined}
+        taskId={task.id}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Use mine for Title' }))
+    await user.click(screen.getByRole('button', { name: 'Save resolution' }))
+    await user.click(await screen.findByRole('button', { name: 'Check again' }))
+
+    await waitFor(() => expect(onAcknowledged).toHaveBeenCalledOnce())
+    expect(bodies).toHaveLength(1)
+    const mutationId = (JSON.parse(bodies[0] ?? '{}') as { mutation_id: string }).mutation_id
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(`/api/v1/mutations/${mutationId}`)
+  })
+
+  it('marks authentication after dispatch submitted-unknown and resumes with receipt lookup', async () => {
+    const bodies: string[] = []
+    let stored: ReturnType<typeof acknowledgement> | null = null
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const path = String(input)
+      if (path === '/api/v1/commands/resolve-task-conflict') {
+        const body = String(init?.body)
+        bodies.push(body)
+        const request = JSON.parse(body) as { mutation_id: string }
+        stored = acknowledgement(request.mutation_id)
+        return jsonResponse(
+          {
+            code: 'authentication_required',
+            recovery_action: 'sign_in',
+            retryable: true,
+            status: 401,
+            title: 'Authentication required',
+            type: '/problems/authentication_required',
+          },
+          401,
+        )
+      }
+      if (path.startsWith('/api/v1/mutations/')) return jsonResponse(stored)
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAcknowledged = vi.fn()
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <ConflictResolver
+        conflict={{
+          fields: conflictProblem().conflict.fields as TaskConflict['fields'],
+          id: conflictProblem().conflict.id,
+          latestRevision: 2,
+        }}
+        csrfToken="expired-csrf"
+        onAcknowledged={onAcknowledged}
+        onAuthenticationRequired={onAuthenticationRequired}
+        onKeepEditing={() => undefined}
+        taskId={task.id}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Use mine for Title' }))
+    await user.click(screen.getByRole('button', { name: 'Save resolution' }))
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [intent, resume] = onAuthenticationRequired.mock.calls[0] as [
+      { authentication: string; kind: string; mutationId: string },
+      (csrfToken: string) => Promise<void>,
+    ]
+    expect(intent).toMatchObject({ authentication: 'sign_in', kind: 'submitted-unknown' })
+    await resume('new-csrf')
+
+    await waitFor(() => expect(onAcknowledged).toHaveBeenCalledOnce())
+    expect(bodies).toHaveLength(1)
+    expect(fetchMock.mock.calls[1]?.[0]).toBe(`/api/v1/mutations/${intent.mutationId}`)
+  })
+
+  it('does not settle an acknowledgement whose resolved conflict identity changed', async () => {
+    const wrongConflictId = '99999999-9999-4999-8999-999999999999'
+    let mutationId = ''
+    const fetchMock = vi.fn<typeof fetch>(async (input, init) => {
+      const path = String(input)
+      if (path === '/api/v1/commands/resolve-task-conflict') {
+        mutationId = (JSON.parse(String(init?.body)) as { mutation_id: string }).mutation_id
+      }
+      if (
+        path === '/api/v1/commands/resolve-task-conflict' ||
+        path === `/api/v1/mutations/${mutationId}`
+      ) {
+        return jsonResponse({
+          ...acknowledgement(mutationId),
+          resolved_conflict_id: wrongConflictId,
+        })
+      }
+      throw new Error(`Unexpected request ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const onAcknowledged = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <ConflictResolver
+        conflict={{
+          fields: conflictProblem().conflict.fields as TaskConflict['fields'],
+          id: conflictProblem().conflict.id,
+          latestRevision: 2,
+        }}
+        csrfToken="csrf"
+        onAcknowledged={onAcknowledged}
+        onKeepEditing={() => undefined}
+        taskId={task.id}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Use mine for Title' }))
+    await user.click(screen.getByRole('button', { name: 'Save resolution' }))
+    await user.click(await screen.findByRole('button', { name: 'Check again' }))
+
+    expect(await screen.findByText('Checking whether your resolution was saved…')).toBeVisible()
+    expect(onAcknowledged).not.toHaveBeenCalled()
   })
 })

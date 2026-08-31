@@ -2,15 +2,22 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   KeeplingApiError,
-  resolveTaskConflict,
+  getMutation,
+  prepareResolveTaskConflict,
+  submitPreparedTaskCommand,
   type CommandAcknowledgement,
   type ConflictResolutionSubmission,
+  type PreparedTaskCommand,
   type TaskConflict,
   type TaskConflictField,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
-import { authenticationRecoveryFor } from '@/commands/submission'
+import {
+  classifyKeeplingError,
+  createExactSubmission,
+  type ExactSubmission,
+} from '@/commands/submission'
 
 type ConflictResolverProps = {
   conflict: TaskConflict
@@ -31,6 +38,16 @@ type ResolutionState =
   | { kind: 'problem'; message: string }
   | { kind: 'stale' }
   | { kind: 'unknown' }
+
+type ResolutionSubmission = {
+  request: PreparedTaskCommand
+}
+
+type ResolutionExact = ExactSubmission<
+  PreparedTaskCommand,
+  CommandAcknowledgement,
+  KeeplingApiError
+>
 
 const fieldLabel = (field: TaskConflictField['field']) =>
   field === 'title' ? 'Title' : 'Notes'
@@ -85,9 +102,10 @@ function ConflictResolver({
   taskId,
 }: ConflictResolverProps) {
   const [selections, setSelections] = useState<ConflictResolutionSubmission['selections']>({})
-  const [submission, setSubmission] = useState<ConflictResolutionSubmission | null>(null)
+  const [submission, setSubmission] = useState<ResolutionSubmission | null>(null)
   const [state, setState] = useState<ResolutionState>({ kind: 'idle' })
   const headingRef = useRef<HTMLHeadingElement>(null)
+  const exactSubmission = useRef<ResolutionExact | null>(null)
 
   useEffect(() => {
     headingRef.current?.focus()
@@ -100,62 +118,81 @@ function ConflictResolver({
 
   const choose = (field: TaskConflictField['field'], selection: 'current' | 'mine') => {
     setSelections((current) => ({ ...current, [field]: selection }))
+    exactSubmission.current?.fence()
+    exactSubmission.current = null
     setSubmission(null)
     setState({ kind: 'idle' })
   }
 
-  const deliver = async (
-    current: ConflictResolutionSubmission,
-    activeCsrfToken = csrfToken,
-  ) => {
-    setSubmission(current)
-    setState({ kind: 'pending' })
-
-    try {
-      const acknowledgement = await resolveTaskConflict(current, activeCsrfToken)
-      if (
-        acknowledgement.mutationId !== current.mutationId ||
-        acknowledgement.taskId !== current.taskId ||
-        acknowledgement.resolvedConflictId !== current.conflictId
-      ) {
-        setState({ kind: 'unknown' })
-        return
-      }
-
+  const settle = async (exact: ResolutionExact) => {
+    const snapshot = exact.snapshot
+    if (snapshot.kind === 'acknowledged') {
+      exactSubmission.current = null
       setSubmission(null)
-      await onAcknowledged(acknowledgement)
-    } catch (error) {
-      if (!(error instanceof KeeplingApiError)) {
-        setState({ kind: 'unknown' })
-      } else if (authenticationRecoveryFor(error.problem.code)) {
-        const authentication = authenticationRecoveryFor(error.problem.code)!
-        setState({ kind: 'authentication' })
-        onAuthenticationRequired?.(
-          { authentication, kind: 'not-submitted', mutationId: current.mutationId },
-          (nextCsrfToken) => deliver(current, nextCsrfToken),
-        )
-      } else if (error.problem.code === 'task_conflict_stale') {
-        setState({ kind: 'stale' })
-      } else {
-        setState({ kind: 'problem', message: error.message })
-      }
+      await onAcknowledged(snapshot.acknowledgement)
+    } else if (snapshot.kind === 'unknown') {
+      setState({ kind: 'unknown' })
+    } else if (snapshot.kind === 'authentication_required') {
+      setState({ kind: 'authentication' })
+      onAuthenticationRequired?.(
+        {
+          authentication: snapshot.authentication,
+          kind: 'submitted-unknown',
+          mutationId: snapshot.request.mutationId,
+        },
+        async (nextCsrfToken) => {
+          await exact.resumeAfterAuthentication(nextCsrfToken)
+          await settle(exact)
+        },
+      )
+    } else if (
+      (snapshot.kind === 'conflict' || snapshot.kind === 'rejected') &&
+      snapshot.rejection.problem.code === 'task_conflict_stale'
+    ) {
+      setState({ kind: 'stale' })
+    } else if (snapshot.kind === 'conflict' || snapshot.kind === 'rejected') {
+      setState({ kind: 'problem', message: snapshot.rejection.message })
+    } else if (snapshot.kind === 'in_flight') {
+      setState({ kind: 'pending' })
     }
+  }
+
+  const deliver = async (exact: ResolutionExact, operation: 'check' | 'submit') => {
+    setState({ kind: 'pending' })
+    if (operation === 'check') await exact.check(csrfToken)
+    else await exact.submit(csrfToken)
+    await settle(exact)
   }
 
   const resolve = () => {
     if (!complete || state.kind === 'pending') return
 
-    const current =
-      submission ??
-      ({
+    let current = submission
+    if (!current) {
+      const command = {
         conflictId: conflict.id,
         latestRevision: conflict.latestRevision,
         mutationId: crypto.randomUUID(),
         selections: { ...selections },
         taskId,
-      } satisfies ConflictResolutionSubmission)
+      } satisfies ConflictResolutionSubmission
+      const request = prepareResolveTaskConflict(command)
+      current = { request }
+      setSubmission(current)
+      exactSubmission.current = createExactSubmission({
+        classifyError: classifyKeeplingError,
+        lookup: (original) => getMutation(original.mutationId),
+        matchesAcknowledgement: (acknowledgement) =>
+          acknowledgement.mutationId === request.mutationId &&
+          acknowledgement.taskId === request.taskId &&
+          acknowledgement.resolvedConflictId === command.conflictId,
+        request,
+        send: submitPreparedTaskCommand,
+      })
+    }
 
-    void deliver(current)
+    const exact = exactSubmission.current
+    if (exact) void deliver(exact, 'submit')
   }
 
   return (
@@ -224,7 +261,11 @@ function ConflictResolver({
       {state.kind === 'unknown' ? (
         <div className="mt-4" role="status">
           <p>Checking whether your resolution was saved…</p>
-          <Button className="mt-2" onClick={() => submission && void deliver(submission)} variant="outline">
+          <Button
+            className="mt-2"
+            onClick={() => exactSubmission.current && void deliver(exactSubmission.current, 'check')}
+            variant="outline"
+          >
             Check again
           </Button>
         </div>

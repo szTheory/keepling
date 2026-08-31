@@ -960,6 +960,23 @@ const resolveTaskConflict = async (
   )
 }
 
+const prepareResolveTaskConflict = (
+  submission: ConflictResolutionSubmission,
+): PreparedTaskCommand =>
+  prepareTaskCommand(
+    '/api/v1/commands/resolve-task-conflict',
+    {
+      conflict_id: submission.conflictId,
+      latest_revision: submission.latestRevision,
+      mutation_id: submission.mutationId,
+      selections: submission.selections,
+      task_id: submission.taskId,
+      version: 1,
+    } satisfies WireResolveTaskConflictCommand,
+    submission.mutationId,
+    submission.taskId,
+  )
+
 const editTaskDates = async (
   submission: EditTaskDatesSubmission,
   csrfToken: string,
@@ -1374,6 +1391,7 @@ export {
   prepareEditTaskDates,
   prepareLifecycleTask,
   preparePlanForToday,
+  prepareResolveTaskConflict,
   prepareRestoreTask,
   prepareTodayMove,
   moveTodayTask,
