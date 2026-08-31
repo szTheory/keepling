@@ -95,16 +95,19 @@ function AppRoutes({
   }
 
   const withInterruption = (content: ReactNode) => {
-    if (!interruption || !csrfToken) return content
-
-    const finish = (nextCsrfToken: string) => onReauthenticated(interruption, nextCsrfToken)
+    const finish = (nextCsrfToken: string) => {
+      if (interruption) onReauthenticated(interruption, nextCsrfToken)
+    }
 
     return (
       <>
-        <div aria-hidden="true">{content}</div>
-        <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 px-4 py-16">
-          <div className="mx-auto max-w-2xl">
-            {continuationError ? (
+        <div aria-hidden={interruption ? 'true' : undefined} className="contents">
+          {content}
+        </div>
+        {interruption && csrfToken ? (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-background/95 px-4 py-16">
+            <div className="mx-auto max-w-2xl">
+              {continuationError ? (
               <section
                 aria-labelledby="continuation-error-heading"
                 className="rounded-lg border border-border bg-card p-6"
@@ -125,17 +128,18 @@ function AppRoutes({
                   Try continuing again
                 </Button>
               </section>
-            ) : interruption.authentication === 'sign_in' ? (
-              <LoginForm continuation onAuthenticated={finish} />
-            ) : (
-              <Reauthenticate
-                csrfToken={csrfToken}
-                interruption={interruption}
-                onAuthenticated={onReauthenticated}
-              />
-            )}
+              ) : interruption.authentication === 'sign_in' ? (
+                <LoginForm continuation onAuthenticated={finish} />
+              ) : (
+                <Reauthenticate
+                  csrfToken={csrfToken}
+                  interruption={interruption}
+                  onAuthenticated={onReauthenticated}
+                />
+              )}
+            </div>
           </div>
-        </div>
+        ) : null}
       </>
     )
   }
