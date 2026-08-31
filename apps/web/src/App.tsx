@@ -3,36 +3,37 @@ import { useEffect, useState } from 'react'
 import {
   KeeplingApiError,
   getInbox,
-  getSession,
   type BrowserTask,
   type CaptureAcknowledgement,
 } from '@/api/keepling'
+import { AuthProvider, useAuth } from '@/app/AuthProvider'
+import AppRoutes from '@/app/routes'
 import QuickCapture from '@/features/capture/QuickCapture'
 
 type AppState =
   | { kind: 'loading' }
-  | { kind: 'authentication-required' }
   | { kind: 'error' }
-  | { csrfToken: string; kind: 'ready'; tasks: readonly BrowserTask[] }
+  | { kind: 'ready'; tasks: readonly BrowserTask[] }
 
-function App() {
+function InboxWorkspace() {
+  const auth = useAuth()
   const [state, setState] = useState<AppState>({ kind: 'loading' })
   const [announcement, setAnnouncement] = useState('')
 
   useEffect(() => {
     let active = true
 
-    void Promise.all([getSession(), getInbox()])
-      .then(([session, tasks]) => {
+    void getInbox()
+      .then((tasks) => {
         if (active) {
-          setState({ csrfToken: session.csrf_token, kind: 'ready', tasks })
+          setState({ kind: 'ready', tasks })
         }
       })
       .catch((error: unknown) => {
         if (!active) return
 
         if (error instanceof KeeplingApiError && error.problem.code === 'authentication_required') {
-          setState({ kind: 'authentication-required' })
+          auth.clearAuthentication()
         } else {
           setState({ kind: 'error' })
         }
@@ -41,7 +42,7 @@ function App() {
     return () => {
       active = false
     }
-  }, [])
+  }, [auth])
 
   const handleCaptured = (acknowledgement: CaptureAcknowledgement) => {
     setState((current) => {
@@ -101,8 +102,8 @@ function App() {
             </p>
           </div>
 
-          {state.kind === 'ready' ? (
-            <QuickCapture csrfToken={state.csrfToken} onCaptured={handleCaptured} />
+          {state.kind === 'ready' && auth.state.kind === 'authenticated' ? (
+            <QuickCapture csrfToken={auth.state.csrfToken} onCaptured={handleCaptured} />
           ) : null}
 
           <section aria-labelledby="inbox-list-heading" className="p-6">
@@ -114,12 +115,6 @@ function App() {
               <p className="mt-4" role="status">
                 Loading Inbox…
               </p>
-            ) : null}
-
-            {state.kind === 'authentication-required' ? (
-              <div className="mt-4 rounded-lg border border-border bg-card p-4" role="alert">
-                <p>Sign in again to finish saving. Your changes are still here.</p>
-              </div>
             ) : null}
 
             {state.kind === 'error' ? (
@@ -173,6 +168,52 @@ function App() {
         {announcement}
       </div>
     </>
+  )
+}
+
+function RoutedApp() {
+  const auth = useAuth()
+
+  if (auth.state.kind === 'loading') {
+    return (
+      <main className="p-6" id="main-content">
+        <p role="status">Loading Keepling…</p>
+      </main>
+    )
+  }
+
+  if (auth.state.kind === 'error') {
+    return (
+      <main className="p-6" id="main-content">
+        <div role="alert">
+          <p>Couldn’t check your session. Nothing was changed.</p>
+          <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={() => window.location.reload()} type="button">
+            Retry checking session
+          </button>
+        </div>
+      </main>
+    )
+  }
+
+  const authenticatedState = auth.state.kind === 'authenticated' ? auth.state : null
+
+  return (
+    <AppRoutes
+      authenticated={authenticatedState !== null}
+      authenticatedContent={authenticatedState ? <InboxWorkspace /> : undefined}
+      csrfToken={authenticatedState?.csrfToken}
+      interruption={auth.interruption}
+      onAuthenticated={auth.acceptAuthentication}
+      onReauthenticated={auth.completeReauthentication}
+    />
+  )
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <RoutedApp />
+    </AuthProvider>
   )
 }
 
