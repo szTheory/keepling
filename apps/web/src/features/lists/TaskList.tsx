@@ -12,9 +12,14 @@ import {
 import LifecycleActions, {
   type LifecycleReconciliation,
 } from '@/features/tasks/LifecycleActions'
+import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 
 type TaskListProps = {
   csrfToken?: string
+  onAuthenticationRequired?: (
+    intent: InterruptedIntent,
+    resume: (csrfToken: string) => Promise<void>,
+  ) => void
   view: TaskViewName
 }
 
@@ -97,7 +102,7 @@ const swap = (items: readonly TaskViewItem[], taskId: string, direction: 'earlie
   return reordered
 }
 
-function TaskList({ csrfToken, view }: TaskListProps) {
+function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) {
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [updating, setUpdating] = useState(false)
   const [loadMoreError, setLoadMoreError] = useState<'background' | 'stale' | null>(null)
@@ -359,6 +364,7 @@ function TaskList({ csrfToken, view }: TaskListProps) {
             <LifecycleActions
               csrfToken={csrfToken}
               onAcknowledged={reconcileLifecycle}
+              onAuthenticationRequired={onAuthenticationRequired}
               task={task}
             />
           ) : null}

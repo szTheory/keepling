@@ -155,14 +155,21 @@ test('@lifecycle-recovery preserves identity when authentication interrupts befo
   baseURL,
   page,
 }) => {
+  setAccountPassword()
   await authenticate(page, baseURL)
   const title = 'Authentication before acceptance'
   await captureTask(page, title)
 
-  let body = ''
+  const bodies: string[] = []
+  let armed = true
   await page.route('**/api/v1/commands/complete-task', async (route) => {
-    body = route.request().postData() ?? ''
-    await route.continue({ headers: faultHeaders(route, 'authentication_before_acceptance') })
+    bodies.push(route.request().postData() ?? '')
+    if (armed) {
+      armed = false
+      await route.continue({ headers: faultHeaders(route, 'authentication_before_acceptance') })
+    } else {
+      await route.continue()
+    }
   })
 
   await page.getByRole('button', { name: `Complete “${title}”` }).click()
@@ -171,23 +178,39 @@ test('@lifecycle-recovery preserves identity when authentication interrupts befo
   ).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign in and continue' })).toBeVisible()
 
-  const request = JSON.parse(body) as { mutation_id: string }
+  const request = JSON.parse(bodies[0] ?? '{}') as { mutation_id: string }
   const missing = await page.request.get(`/api/v1/mutations/${request.mutation_id}`)
   expect(missing.status()).toBe(404)
+
+  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+  await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
+  await page.getByLabel('Session label').fill('Before acceptance continuation')
+  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+
+  await expect(page.getByRole('button', { name: `Reopen “${title}”` })).toBeVisible()
+  expect(bodies).toHaveLength(2)
+  expect(bodies[1]).toBe(bodies[0])
 })
 
 test('@lifecycle-recovery preserves the stored identity when authentication interrupts after commit', async ({
   baseURL,
   page,
 }) => {
+  setAccountPassword()
   await authenticate(page, baseURL)
   const title = 'Authentication after commit'
   await captureTask(page, title)
 
-  let body = ''
+  const bodies: string[] = []
+  let armed = true
   await page.route('**/api/v1/commands/complete-task', async (route) => {
-    body = route.request().postData() ?? ''
-    await route.continue({ headers: faultHeaders(route, 'authentication_after_commit') })
+    bodies.push(route.request().postData() ?? '')
+    if (armed) {
+      armed = false
+      await route.continue({ headers: faultHeaders(route, 'authentication_after_commit') })
+    } else {
+      await route.continue()
+    }
   })
 
   await page.getByRole('button', { name: `Complete “${title}”` }).click()
@@ -196,13 +219,22 @@ test('@lifecycle-recovery preserves the stored identity when authentication inte
   ).toBeVisible()
   await expect(page.getByRole('button', { name: 'Sign in and continue' })).toBeVisible()
 
-  const request = JSON.parse(body) as { mutation_id: string }
+  const request = JSON.parse(bodies[0] ?? '{}') as { mutation_id: string }
   const stored = await page.request.get(`/api/v1/mutations/${request.mutation_id}`)
   expect(stored.ok()).toBe(true)
   expect(await stored.json()).toMatchObject({
     mutation_id: request.mutation_id,
     outcome: 'accepted',
   })
+
+  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+  await page.getByRole('textbox', { exact: true, name: 'Password' }).fill(continuationPassword)
+  await page.getByLabel('Session label').fill('After commit continuation')
+  await page.getByRole('button', { name: 'Sign in and continue' }).click()
+
+  await expect(page.getByRole('button', { name: `Reopen “${title}”` })).toBeVisible()
+  expect(bodies).toHaveLength(2)
+  expect(bodies[1]).toBe(bodies[0])
 })
 
 test('@lifecycle-recovery continues exact undo through a real login after session revocation', async ({
