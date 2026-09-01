@@ -22,6 +22,7 @@ type AppRoutesProps = {
     beginReauthentication: BeginReauthentication,
     routeContent?: WorkspaceLayoutContent,
   ) => ReactNode)
+  authenticatedContentOwnsRoutes?: boolean
   continuationError?: boolean
   createContinuationScope?: () => ContinuationScope
   csrfToken?: string
@@ -147,6 +148,7 @@ function InterruptionBoundary({
 function AppRoutes({
   authenticated,
   authenticatedContent,
+  authenticatedContentOwnsRoutes = false,
   continuationError = false,
   createContinuationScope,
   csrfToken,
@@ -197,10 +199,27 @@ function AppRoutes({
   }, [routeContinuationScope])
 
   const scopedAuthenticationRequired = routeContinuationScope.beginReauthentication
-  const renderAuthenticatedContent = (routeContent?: WorkspaceLayoutContent) =>
-    typeof authenticatedContent === 'function'
-      ? authenticatedContent(scopedAuthenticationRequired, routeContent)
-      : routeContent?.mainContent ?? authenticatedContent
+  const renderAuthenticatedContent = (routeContent?: WorkspaceLayoutContent) => {
+    if (
+      typeof authenticatedContent === 'function' &&
+      (!routeContent || authenticatedContentOwnsRoutes)
+    ) {
+      return authenticatedContent(scopedAuthenticationRequired, routeContent)
+    }
+    if (routeContent?.mainContent) return routeContent.mainContent
+    if (routeContent) {
+      return (
+        <main className="min-w-0" id="main-content" tabIndex={-1}>
+          {routeContent.detailSelected
+            ? routeContent.detailContent
+            : routeContent.listContent ?? routeContent.detailContent}
+        </main>
+      )
+    }
+    return typeof authenticatedContent === 'function'
+      ? authenticatedContent(scopedAuthenticationRequired)
+      : authenticatedContent
+  }
   const routedAuthenticatedContent = renderAuthenticatedContent()
 
   const handleAuthenticated = (nextCsrfToken: string) => {

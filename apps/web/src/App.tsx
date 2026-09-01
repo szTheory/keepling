@@ -230,6 +230,7 @@ function RoutedApp() {
             )
           : undefined
       }
+      authenticatedContentOwnsRoutes
       createContinuationScope={auth.createContinuationScope}
       csrfToken={authenticatedState?.csrfToken}
       continuationError={auth.continuationError}
