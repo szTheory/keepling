@@ -17,6 +17,8 @@ cookie_jar=
 session_cookie=
 csrf_token=
 task_id=
+recovery_output=
+recovery_login_credential=
 
 compose_run() {
   docker compose -f infra/compose/compose.yml -p "$project" "$@"
@@ -80,7 +82,7 @@ wait_for_ready() {
 }
 
 deploy_exact_digest() {
-  for command in docker curl jq uuidgen; do
+  for command in docker curl jq openssl uuidgen; do
     command -v "$command" >/dev/null 2>&1 || die "required command '$command' is unavailable"
   done
 
@@ -186,11 +188,11 @@ prove_user_smoke() {
   setup_token=$(printf '%s\n' "$setup_output" | sed -n '/^[A-Za-z0-9_-][A-Za-z0-9_-]*$/p' | tail -n 1)
   [ -n "$setup_token" ] || die "packaged release did not issue a setup capability"
 
-  password='deploy-proof-password-manager-value-000000000000000000000000'
-  setup_body=$(jq -cn --arg token "$setup_token" --arg password "$password" '{version:1,token:$token,password:$password,timezone:"America/New_York"}')
+  recovery_login_credential=$(openssl rand -hex 32)
+  setup_body=$(jq -cn --arg token "$setup_token" --arg password "$recovery_login_credential" '{version:1,token:$token,password:$password,timezone:"America/New_York"}')
   curl -fsS -H 'content-type: application/json' --data-binary "$setup_body" "$base_url/api/v1/setup" | jq -e '.status == "setup_complete"' >/dev/null || die "user setup smoke failed"
 
-  login_body=$(jq -cn --arg password "$password" '{version:1,client_kind:"web",label:"Deploy proof",password:$password}')
+  login_body=$(jq -cn --arg password "$recovery_login_credential" '{version:1,client_kind:"web",label:"Deploy proof",password:$password}')
   login_response=$(curl -fsS -c "$cookie_jar" -H "Origin: $origin_url" -H 'content-type: application/json' \
     --data-binary "$login_body" "$base_url/api/v1/login")
   csrf_token=$(printf '%s' "$login_response" | jq -r '.csrf_token // empty')
@@ -208,6 +210,64 @@ prove_user_smoke() {
   curl -fsS -H "Cookie: $session_cookie" "$base_url/api/v1/tasks/$task_id" | jq -e '.id == $id and .title == "Deploy proof task"' --arg id "$task_id" >/dev/null || die "read smoke did not return the captured task"
 }
 
+capture_recovery_package() {
+  [ -n "$recovery_output" ] || return 0
+  [ -d "$recovery_output" ] && [ -z "$(find "$recovery_output" -mindepth 1 -maxdepth 1 -print -quit)" ] ||
+    die "recovery output must be an empty directory"
+  case "$recovery_output" in
+    "$repository_root" | "$repository_root"/*) die "recovery output must remain outside the repository" ;;
+  esac
+
+  compose_run exec -T db pg_dump -U keepling -d keepling -Fc >"$recovery_output/recovery.dump"
+  chmod 600 "$recovery_output/recovery.dump"
+  [ -n "$recovery_login_credential" ] || die "recovery login credential was not retained from the proven setup"
+  # This sidecar is rehearsal authority, not backup payload. The caller must
+  # keep it outside object storage and delete it with the private run workspace.
+  printf '%s' "$recovery_login_credential" >"$recovery_output/rehearsal-login-credential"
+  chmod 600 "$recovery_output/rehearsal-login-credential"
+  dump_sha=$(shasum -a 256 "$recovery_output/recovery.dump" | awk '{print $1}')
+  credential_sha=$(shasum -a 256 "$recovery_output/rehearsal-login-credential" | awk '{print $1}')
+  source_epoch=$(compose_run exec -T db psql -U keepling -d keepling -Atc \
+    'SELECT epoch FROM sync_epochs WHERE singleton_key=TRUE' | tr -d '\r')
+  jq -n --arg dump_sha "$dump_sha" --arg credential_sha "$credential_sha" --arg task_id "$task_id" --arg source_epoch "$source_epoch" \
+    '{version:1,dump_sha256:$dump_sha,rehearsal_login_credential_sha256:$credential_sha,task_id:$task_id,source_epoch:$source_epoch,semantic:{login:true,read:true,write:true,undo:true,restored_login:false}}' \
+    >"$recovery_output/recovery-manifest.json"
+  chmod 600 "$recovery_output/recovery-manifest.json"
+}
+
+prove_recovery_login_fixture() {
+  [ -n "$recovery_output" ] || return 0
+  restored_database=keepling_recovery_proof
+  compose_run exec -T db dropdb --if-exists -U keepling "$restored_database" >/dev/null
+  compose_run exec -T db createdb -U keepling -O keepling "$restored_database" >/dev/null
+  compose_run exec -T db pg_restore -U keepling -d "$restored_database" \
+    --no-owner --no-privileges --exit-on-error <"$recovery_output/recovery.dump"
+  compose_run run --rm -T --no-deps \
+    -e "DATABASE_URL=ecto://keepling:deploy-proof-postgres-password@db:5432/$restored_database" \
+    -v "$recovery_output/rehearsal-login-credential:/run/keepling-rehearsal-login-credential:ro" \
+    app eval '
+      {:ok, _} = Application.ensure_all_started(:keepling)
+      credential = File.read!("/run/keepling-rehearsal-login-credential")
+      {:ok, _session} = Keepling.Accounts.login(credential)
+    ' >/dev/null
+  if compose_run run --rm -T --no-deps \
+    -e "DATABASE_URL=ecto://keepling:deploy-proof-postgres-password@db:5432/$restored_database" \
+    -v "$recovery_output/rehearsal-login-credential:/run/keepling-rehearsal-login-credential:ro" \
+    app eval '
+      {:ok, _} = Application.ensure_all_started(:keepling)
+      wrong_credential = File.read!("/run/keepling-rehearsal-login-credential") <> "-wrong"
+      {:ok, _session} = Keepling.Accounts.login(wrong_credential)
+    ' >/dev/null 2>&1; then
+    die "restored database accepted a credential that was not used by the proven setup"
+  fi
+  compose_run exec -T db dropdb --if-exists -U keepling "$restored_database" >/dev/null
+
+  manifest_tmp="$recovery_output/recovery-manifest.tmp"
+  jq '.semantic.restored_login = true' "$recovery_output/recovery-manifest.json" >"$manifest_tmp"
+  chmod 600 "$manifest_tmp"
+  mv "$manifest_tmp" "$recovery_output/recovery-manifest.json"
+}
+
 # Assert the GREEN implementation exposes every black-box behavior before it can
 # promote any artifact.
 for required_function in \
@@ -215,12 +275,21 @@ for required_function in \
   rollback_eligibility \
   deploy_exact_digest \
   prove_interrupted_retry \
-  prove_user_smoke; do
+  prove_user_smoke \
+  prove_recovery_login_fixture; do
   command -v "$required_function" >/dev/null 2>&1 ||
     die "RED: missing deployment behavior '$required_function'"
 done
 
-[ "${1:-}" = "--local" ] || die "usage: $0 --local"
+[ "${1:-}" = "--local" ] || die "usage: $0 --local [--recovery-output EMPTY_DIRECTORY]"
+case "$#" in
+  1) ;;
+  3)
+    [ "$2" = "--recovery-output" ] || die "usage: $0 --local [--recovery-output EMPTY_DIRECTORY]"
+    recovery_output=$3
+    ;;
+  *) die "usage: $0 --local [--recovery-output EMPTY_DIRECTORY]" ;;
+esac
 
 require_exact_digest 'keepling-server:latest' && die "mutable tags must be rejected"
 require_exact_digest 'ghcr.io/sztheory/keepling-server@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
@@ -238,5 +307,7 @@ fi
 deploy_exact_digest
 prove_user_smoke
 prove_interrupted_retry
+capture_recovery_package
+prove_recovery_login_fixture
 
 echo "Deploy verification passed: exact digest migration, readiness, interruption retry, user smoke, and rollback policy are proven"
