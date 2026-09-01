@@ -167,6 +167,36 @@ function SessionList({
     }
   }
 
+  const resumeRevocation = async (
+    action: Extract<SessionRecovery, { action: 'revoke' }>,
+    activeCsrfToken: string,
+  ) => {
+    setRecovery({ ...action, status: 'checking' })
+    setMessage('')
+
+    const sessions = await listSessions()
+    replaceSessions(sessions)
+    if (!sessions.some((session) => session.id === action.sessionId)) {
+      setRecovery(null)
+      setMessage(`${action.label} revoked.`)
+      return
+    }
+
+    await revokeSession(action.sessionId, activeCsrfToken)
+    setState((current) =>
+      current.kind === 'ready'
+        ? {
+            kind: 'ready',
+            sessions: current.sessions.filter(
+              (candidate) => candidate.id !== action.sessionId,
+            ),
+          }
+        : current,
+    )
+    setRecovery(null)
+    setMessage(`${action.label} revoked.`)
+  }
+
   useEffect(() => {
     let active = true
     void listSessions()
@@ -302,7 +332,13 @@ function SessionList({
         setRecovery(action)
         onAuthenticationRequired(
           { authentication, kind: 'action', mutationId: `session-revoke:${session.id}` },
-          async () => reconcile(action, false),
+          async (nextCsrfToken) => {
+            if (action.action === 'revoke') {
+              await resumeRevocation(action, nextCsrfToken)
+            } else {
+              await reconcile(action, false)
+            }
+          },
         )
         return
       }
