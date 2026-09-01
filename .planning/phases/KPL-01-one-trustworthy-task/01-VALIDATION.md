@@ -5,8 +5,8 @@ status: automated-complete-human-needed
 nyquist_compliant: false
 wave_0_complete: true
 created: 2026-08-30
-audited: 2026-08-31
-automated_tasks: 48/48
+audited: 2026-08-31T22:56:14-04:00
+automated_tasks: 60/60
 manual_uat: 0/3
 ---
 
@@ -81,19 +81,34 @@ manual_uat: 0/3
 | 01-22-T2 | 01-22 | 18 | GTD-03, SRV-03, WEB-02, QUAL-01 | T-KPL01-G22-01..03 | A committed Today move whose response is lost remains recoverable only by its original identity | `pnpm --filter @keepling/web test:e2e --grep @today-order-recovery` | `today-order-recovery.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
 | 01-23-T1 | 01-23 | 18 | SRV-01, SRV-03, WEB-02, QUAL-01 | T-KPL01-G23-01..05 | Uncertain rename, revoke, and logout reconcile authoritative inventory/authentication before definitive copy | `pnpm --filter @keepling/web test --run src/features/sessions/session-list.test.tsx` | `session-list.test.tsx` | ✅ passed — full phase gate 2026-08-31 |
 | 01-23-T2 | 01-23 | 18 | SRV-01, SRV-03, WEB-02, QUAL-01 | T-KPL01-G23-01..05 | Real after-commit session response loss converges without replaying writes and remains test-only | `./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix test test/keepling_web/test_fault_test.exs' && pnpm --filter @keepling/web test:e2e --grep @session-reconciliation` | `test_fault_test.exs`, `session-reconciliation.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
+| 01-24-T1 | 01-24 | 19 | WEB-02, QUAL-01 | T-KPL01-41 | Endpoint CSP constrains executable resources while hostile task, activity, and conflict values remain inert text | `./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix test test/keepling_web/security_headers_test.exs' && pnpm --filter @keepling/web test --run src/test/security-content.test.tsx` | `security_headers_test.exs`, `security-content.test.tsx` | ✅ passed — full phase gate 2026-08-31 |
+| 01-24-T2 | 01-24 | 19 | SRV-02, QUAL-01 | T-KPL01-28 | Every TaskViews PostgreSQL path consumes a finite timeout and maps cancellation to the stable content-free failure contract | `./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix test test/keepling/adapters/postgres/task_views_test.exs'` | `task_views_test.exs` | ✅ passed — full phase gate 2026-08-31 |
+| 01-24-T3 | 01-24 | 19 | SRV-01, WEB-01, WEB-02, QUAL-01 | T-KPL01-G20-04 | Route-owned authentication continuations dispose on route change/unmount and fence late settlement without canceling live owners | `pnpm --filter @keepling/web test --run src/features/auth/auth.test.tsx && pnpm --filter @keepling/web typecheck` | `auth.test.tsx` | ✅ passed — full phase gate 2026-08-31 |
+| 01-25-T1 | 01-25 | 20 | WEB-01, WEB-02, QUAL-01 | T-KPL01-25-01..03 | Narrow and compact-wide users reach every primary destination through a semantic keyboard-complete drawer | `pnpm --filter @keepling/web test --run src/test/ui-contract.test.tsx && pnpm --filter @keepling/web test:e2e --grep @responsive-route-matrix` | `ui-contract.test.tsx`, `responsive-route-matrix.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
+| 01-25-T2 | 01-25 | 20 | WEB-01, WEB-02, QUAL-01 | T-KPL01-25-02..03 | Tokenized 1024/1064 workspace boundaries preserve 360/480 panes, canonical routing, and independent scrolling | `pnpm --filter @keepling/web test --run src/test/ui-contract.test.tsx && pnpm --filter @keepling/web test:e2e --grep @responsive-route-matrix && pnpm --filter @keepling/web typecheck` | `ui-contract.test.tsx`, `responsive-route-matrix.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
+| 01-25-T3 | 01-25 | 20 | GTD-01..07, WEB-01, WEB-02, QUAL-01 | T-KPL01-25-01..03 | The authenticated route/viewport matrix proves landmarks, focus, scrolling, zero overflow, and axe results without claiming human perception | `pnpm --filter @keepling/web test:e2e --grep @responsive-route-matrix && pnpm --filter @keepling/web test --run src/test/ui-contract.test.tsx` | `responsive-route-matrix.spec.ts`, `ui-contract.test.tsx` | ✅ passed — full phase gate 2026-08-31 |
+| 01-26-T1 | 01-26 | 21 | GTD-01, WEB-01, WEB-02 | T-KPL01-26-01..04 | Dirty navigation and capture reauthentication use exact copy, safe initial focus, Escape cancellation, and acknowledgement-gated identity retention | `pnpm --filter @keepling/web test --run src/features/tasks/task-editor.test.tsx && pnpm --filter @keepling/web test:e2e --grep @modal-keyboard` | `task-editor.test.tsx`, `modal-keyboard.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
+| 01-26-T2 | 01-26 | 21 | SRV-01, SRV-03, WEB-02 | T-KPL01-26-01..04 | Logout and session revocation use the shared consequential dialog, correct endpoint semantics, single-flight activation, and focus return | `pnpm --filter @keepling/web test --run src/features/sessions/session-list.test.tsx src/test/ui-contract.test.tsx && pnpm --filter @keepling/web test:e2e --grep @modal-keyboard` | `session-list.test.tsx`, `ui-contract.test.tsx`, `modal-keyboard.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
+| 01-26-T3 | 01-26 | 21 | WEB-02, QUAL-01 | T-KPL01-26-01..04 | Shared buttons, dialogs, and shell styling consume declared semantic tokens and 44px targets | `pnpm --filter @keepling/web test --run src/test/ui-contract.test.tsx && pnpm --filter @keepling/web lint && pnpm --filter @keepling/web typecheck` | `ui-contract.test.tsx` | ✅ passed — full phase gate 2026-08-31 |
+| 01-27-T1 | 01-27 | 22 | SRV-01, WEB-02, QUAL-01 | T-KPL01-27-01..03 | Authentication surfaces use declared visual scales while retaining password-manager, recovery, and reauthentication semantics | `pnpm --filter @keepling/web test --run src/features/auth/auth.test.tsx src/test/ui-contract.test.tsx && pnpm --filter @keepling/web typecheck` | `auth.test.tsx`, `ui-contract.test.tsx` | ✅ passed — full phase gate 2026-08-31 |
+| 01-27-T2 | 01-27 | 22 | GTD-01..07, WEB-01, WEB-02 | T-KPL01-27-01..03 | List, organization, and activity hierarchy stays token-compliant without changing focus, pagination, announcements, or text safety | `pnpm --filter @keepling/web test --run src/test/ui-contract.test.tsx && pnpm --filter @keepling/web typecheck` | `ui-contract.test.tsx` | ✅ passed — full phase gate 2026-08-31 |
+| 01-27-T3 | 01-27 | 22 | WEB-01, WEB-02, QUAL-01 | T-KPL01-27-01..03 | Exhaustive production-TSX AST checks reject visual drift while conflict and uncertain-delivery state machines remain behaviorally green | `pnpm --filter @keepling/web test --run src/test/ui-contract.test.tsx && pnpm --filter @keepling/web test && pnpm --filter @keepling/web lint && pnpm --filter @keepling/web typecheck` | `ui-contract.test.tsx`, complete Vitest suite | ✅ passed — full phase gate 2026-08-31 |
 
 ## Post-Task / Phase Gate
 
 After every task-level command above has passed, run `./tooling/test-phase-1.sh --run` once as the consolidated phase gate; it complements rather than replaces the targeted task commands.
 
-## Fresh Final-Tree Automated Evidence — 2026-08-31
+## Fresh Final-Tree Automated Evidence — 2026-08-31 (`e866a22`)
 
 | Boundary | Command | Result |
 |---|---|---|
-| Complete fail-fast phase gate | `./tooling/test-phase-1.sh --run` | Exit 0: repository integrity, exact runtime, fresh migrations, 105 ExUnit, production-route isolation, contract drift, TypeScript, 129 Vitest, and 18 Playwright tests |
+| Complete fail-fast phase gate | `./tooling/test-phase-1.sh --run` | Exit 0 at 2026-08-31T22:55-04:00: repository integrity, Elixir 1.20.2 / OTP 29.0.5 / PostgreSQL 18.6, fresh migrations, 109/109 ExUnit, production-route isolation, contract drift, TypeScript, 147/147 Vitest, and 25/25 Playwright |
 | Plans 20–23 recovery E2E | Included in the complete gate | Authenticated reads, conflict choice, Today order, and session administration all passed against Phoenix/PostgreSQL |
-| Review-fix route identity | Included in 129 Vitest tests | Deferred task A→B and Inbox→Today settlement-order regressions passed |
-| Overflow regression | Included in 18 Playwright tests | 1023/1024/1063/1064, light/dark, and 200% zoom geometry oracle passed |
+| Review-fix route identity | Included in 147 Vitest tests | Deferred task A→B and Inbox→Today settlement-order regressions passed |
+| Plans 24–27 hardening and UI closure | Included in the complete gate | CSP/content safety, real PostgreSQL cancellation, continuation disposal, responsive route matrix, modal keyboard behavior, and exhaustive TSX token contract passed |
+| Test inventory | `rg --files` plus disabled-marker scan | 20 ExUnit files, 13 Vitest files, 11 Playwright files; zero skipped/disabled/only requirement tests found |
+| Repository web lint | `pnpm lint:web` | Exit 0 after the complete phase gate |
+| Overflow regression | Included in 25 Playwright tests | 1023/1024/1063/1064, light/dark, and 200% zoom geometry oracle passed |
 
 The final-tree audit found no missing, partial, disabled, or failing automated requirement test. No test file was generated because the existing behavioral suites already prove every automated PLAN truth and requirement lane; adding a redundant test would not close a gap.
 
@@ -101,26 +116,27 @@ The final-tree audit found no missing, partial, disabled, or failing automated r
 
 | Requirement | Source Plans | Automated Boundary | Status |
 |---|---|---|---|
-| GTD-01 | 05, 19 | Capture idempotency + real-stack skeleton/lifecycle | ✅ covered |
-| GTD-02 | 09, 10, 12, 19 | Edit, organization, date domain/component/E2E | ✅ covered |
-| GTD-03 | 12, 13, 19, 22 | Today date/order projections + after-commit recovery | ✅ covered |
-| GTD-04 | 12, 13, 19 | Account-timezone Today/Upcoming projections | ✅ covered |
-| GTD-05 | 14, 19 | Complete/reopen application, UI, and real-stack lifecycle | ✅ covered |
-| GTD-06 | 15, 19 | Durable Trash/restore preservation + UI | ✅ covered |
-| GTD-07 | 18, 19 | Revision-aware one-shot undo race + recovery UI | ✅ covered |
-| SRV-01 | 05–08, 17, 19, 20, 23 | Closed account/session authority, auth recovery, reconciliation | ✅ covered for Phase 1 |
-| SRV-02 | 02–06, 09–19 | Shared semantic boundary, PostgreSQL, Phoenix, contracts | ✅ covered for Phase 1 |
-| SRV-03 | 05–07, 09–23 | Stable receipts, conflict/ordering/session uncertainty | ✅ covered |
-| WEB-01 | 04–05, 09, 13–14, 17, 19 | Real browser daily loop against Phoenix/PostgreSQL | ✅ covered |
-| WEB-02 | 04, 08–23 | Loading/empty/error/auth/conflict/retry/focus/reflow states | ✅ automated coverage; human UAT pending |
-| QUAL-01 | 01–07, 11, 16–23 | Integrity, migrations, privacy, production isolation, all test layers | ✅ automated coverage; human UAT pending |
+| GTD-01 | 05, 19, 25–27 | Capture idempotency + real-stack skeleton/lifecycle + responsive/consequential UI contracts | ✅ covered |
+| GTD-02 | 09, 10, 12, 19, 25, 27 | Edit, organization, date domain/component/E2E + exhaustive UI contract | ✅ covered |
+| GTD-03 | 12, 13, 19, 22, 25, 27 | Today date/order projections + after-commit recovery + routed UI contract | ✅ covered |
+| GTD-04 | 12, 13, 19, 25, 27 | Account-timezone Today/Upcoming projections + routed UI contract | ✅ covered |
+| GTD-05 | 14, 19, 25, 27 | Complete/reopen application, UI, real-stack lifecycle, and route matrix | ✅ covered |
+| GTD-06 | 15, 19, 25, 27 | Durable Trash/restore preservation + routed UI | ✅ covered |
+| GTD-07 | 18, 19, 25, 27 | Revision-aware one-shot undo race + recovery/routed UI | ✅ covered |
+| SRV-01 | 05–08, 17, 19, 20, 23–24 | Closed account/session authority, auth recovery, reconciliation, and continuation disposal | ✅ covered for Phase 1 |
+| SRV-02 | 02–06, 09–19, 24 | Shared semantic boundary, PostgreSQL, Phoenix, contracts, CSP, and bounded reads | ✅ covered for Phase 1 |
+| SRV-03 | 05–07, 09–23, 26 | Stable receipts, conflict/ordering/session uncertainty, and exact consequential UI | ✅ covered |
+| WEB-01 | 04–05, 09, 13–14, 17, 19, 24–27 | Real browser daily loop plus hardened responsive route/modal coverage | ✅ covered |
+| WEB-02 | 04, 08–27 | Loading/empty/error/auth/conflict/retry/focus/reflow/content/modal/token states | ✅ automated coverage; human UAT pending |
+| QUAL-01 | 01–07, 11, 16–27 | Integrity, migrations, privacy, production isolation, all test layers, security/UI drift gates | ✅ automated coverage; human UAT pending |
 
 ## Validation Audit 2026-08-31
 
 | Metric | Count |
 |---|---:|
-| Plans mapped | 23/23 |
-| Plan tasks with automated commands | 48/48 |
+| Plans mapped | 27/27 |
+| Completed summaries audited | 27/27 |
+| Plan tasks with automated commands | 60/60 |
 | Phase requirements with automated coverage | 13/13 |
 | Automated gaps found | 0 |
 | Tests generated | 0 |
