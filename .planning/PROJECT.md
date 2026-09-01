@@ -19,7 +19,8 @@ Jon can trust Keepling as his daily task system on Mac and iPhone: capture is im
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ The browser task loop and Phoenix/PostgreSQL semantic boundary preserve task invariants, stable mutation results, explicit conflicts, and recoverable consequential actions — Phase KPL-01
+- ✓ High-value server, contract, component, accessibility, responsive, recovery, and real-stack browser behavior can be accepted through deterministic automation with zero required human UAT checkpoints — Phase KPL-01
 
 ### Active
 
@@ -73,9 +74,9 @@ The selected brand is Keepling: a small, dependable familiar that quietly keeps 
 | Name the product Keepling | Distinctive coined name with trusted-steward and playful-familiar meaning; works across product extensions | — Pending formal clearance |
 | Complete open source first | Maximizes trust, dogfooding, community, portfolio value, and low-friction iteration | — Pending validation |
 | Optional hosted convenience later | Preserves a business path without premature tenancy, billing, support, or control-plane work | — Pending demand |
-| One coordinating monorepo | Server, clients, contracts, tokens, infrastructure, and planning will co-evolve | — Pending implementation |
-| Phoenix/PostgreSQL modular monolith | Strong domain integrity, operational simplicity, and fit with Jon's expertise | — Pending implementation |
-| React for browser and Electron presentation | Shares expensive presentation work while platform adapters retain storage and lifecycle ownership | — Pending implementation |
+| One coordinating monorepo | Server, clients, contracts, tokens, infrastructure, and planning will co-evolve | ✓ Phase KPL-01 validated the server, web, contracts, tokens, and planning layout |
+| Phoenix/PostgreSQL modular monolith | Strong domain integrity, operational simplicity, and fit with Jon's expertise | ✓ Phase KPL-01 validated the domain/application, Ecto, Phoenix, and PostgreSQL boundaries |
+| React for browser and Electron presentation | Shares expensive presentation work while platform adapters retain storage and lifecycle ownership | ◐ Browser presentation validated in Phase KPL-01; packaged Electron proof remains Phase KPL-03 |
 | Native SwiftUI iPhone client | Reliable offline capture and native integration are non-negotiable; PWA is not the correctness baseline | — Pending implementation |
 | Electron Mac client | Recreates Jon's always-open Things workflow and leverages existing experience | — Pending implementation |
 | Explicit commands/events/change feed, not full event sourcing | Retains auditability and functional semantics without event-store cost | — Pending implementation |
@@ -104,5 +105,4 @@ This document evolves at phase transitions and milestone boundaries.
 5. Update context, risks, and evidence links.
 
 ---
-*Last updated: 2026-08-28 after project initialization and naming Keepling*
-
+*Last updated: 2026-08-31 after Phase KPL-01*
