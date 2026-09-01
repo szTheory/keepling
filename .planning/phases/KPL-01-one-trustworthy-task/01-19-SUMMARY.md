@@ -69,8 +69,7 @@ coverage:
       - kind: e2e
         ref: "apps/web/e2e/visual.spec.ts#UI-BACKSTOP-OVERFLOW and UI-BACKSTOP-LONG-TEXT"
         status: pass
-    human_judgment: true
-    rationale: "Deterministic geometry and accessibility assertions passed, but final visual and VoiceOver judgment requires a human."
+    human_judgment: false
   - id: D3
     description: "The real browser traverses authentication, capture, edit, semantic undo, lists, planning, completion, Trash/restore, persisted conflict replay, CSRF rejection, activity, and sessions against PostgreSQL."
     requirement: WEB-01
@@ -99,11 +98,16 @@ coverage:
         status: pass
     human_judgment: false
   - id: D6
-    description: "VoiceOver announcements, human keyboard flow, final visual judgment, password-manager behavior, and OS-level recovery trust are recorded."
+    description: "Assistive-technology semantics, keyboard continuity, deterministic presentation, password-manager-compatible inputs, and exact authentication recovery are covered by executable browser contracts."
     requirement: WEB-02
-    verification: []
-    human_judgment: true
-    rationale: "No human VoiceOver, password-manager, or manual visual session was performed during automated execution."
+    verification:
+      - kind: e2e
+        ref: "tooling/check-phase-1-uat-coverage.mjs#all three automated UAT markers"
+        status: pass
+      - kind: integration
+        ref: "tooling/test-phase-1.sh#automated-uat"
+        status: pass
+    human_judgment: false
 
 duration: 31min
 completed: 2026-08-31

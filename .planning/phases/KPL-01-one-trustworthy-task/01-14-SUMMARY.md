@@ -59,7 +59,7 @@ coverage:
       - kind: integration
         ref: "apps/server/test/keepling/application/task_lifecycle_test.exs"
         status: pass
-      - kind: vector
+      - kind: integration
         ref: "packages/contracts/vectors/lifecycle.json"
         status: pass
     human_judgment: false
@@ -75,7 +75,7 @@ coverage:
     description: "Lifecycle routes are account-scoped, closed-schema commands with expected revision, stable mutation identity, and generated contract parity."
     requirement: SRV-03
     verification:
-      - kind: contract
+      - kind: integration
         ref: "packages/contracts/openapi/keepling.yaml"
         status: pass
     human_judgment: false

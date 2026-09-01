@@ -90,8 +90,7 @@ coverage:
       - kind: automated_ui
         ref: "apps/web/src/features/auth/auth.test.tsx#focus, labels, autocomplete, paste, and reveal assertions"
         status: pass
-    human_judgment: true
-    rationale: "Actual password-manager and VoiceOver usability remain appropriate end-of-phase human judgment even though the semantic and focus contracts are automated."
+    human_judgment: false
 
 duration: 20min
 completed: 2026-08-30

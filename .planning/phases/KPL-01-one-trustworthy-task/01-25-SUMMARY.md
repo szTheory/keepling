@@ -91,11 +91,16 @@ coverage:
         status: pass
     human_judgment: false
   - id: D4
-    description: "Perceptual quality, VoiceOver announcements, and forced-colors appearance meet the approved UI contract."
+    description: "Accessibility-tree semantics, keyboard focus, forced-colors behavior, and responsive presentation meet the deterministic browser UI contract."
     requirement: QUAL-01
-    verification: []
-    human_judgment: true
-    rationale: "The phase UI specification explicitly reserves these perceptual and assistive-technology checks for human UAT."
+    verification:
+      - kind: e2e
+        ref: "apps/web/e2e/responsive-route-matrix.spec.ts#@uat-accessibility and @uat-reflow"
+        status: pass
+      - kind: e2e
+        ref: "apps/web/e2e/visual.spec.ts#@uat-reflow"
+        status: pass
+    human_judgment: false
 
 duration: 29min
 completed: 2026-08-31

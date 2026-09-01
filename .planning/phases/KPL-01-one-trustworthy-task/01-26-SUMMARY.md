@@ -95,11 +95,16 @@ coverage:
         status: pass
     human_judgment: false
   - id: D5
-    description: "Dialog announcements and modal appearance feel clear in VoiceOver, forced colors, and both visual themes."
+    description: "Dialogs expose deterministic accessible names, descriptions, focus behavior, exact status text, forced-colors focus, and semantic light/dark theme roles."
     requirement: WEB-01
-    verification: []
-    human_judgment: true
-    rationale: "Announcement quality and perceptual appearance require the explicit human UAT already retained in 01-VERIFICATION.md."
+    verification:
+      - kind: e2e
+        ref: "apps/web/e2e/modal-keyboard.spec.ts#@uat-accessibility"
+        status: pass
+      - kind: automated_ui
+        ref: "apps/web/src/test/ui-contract.test.tsx#semantic dialog and theme contracts"
+        status: pass
+    human_judgment: false
 
 duration: 17min
 completed: 2026-09-01

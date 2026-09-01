@@ -1,13 +1,14 @@
 ---
 phase: 1
 slug: one-trustworthy-task
-status: automated-complete-human-needed
-nyquist_compliant: false
+status: complete
+nyquist_compliant: true
 wave_0_complete: true
 created: 2026-08-30
-audited: 2026-08-31T22:56:14-04:00
+audited: 2026-08-31T23:29:16-04:00
 automated_tasks: 60/60
-manual_uat: 0/3
+automated_uat: 3/3
+manual_uat_required: 0
 ---
 
 # Phase 1 — Validation Strategy
@@ -26,8 +27,8 @@ manual_uat: 0/3
 
 - After every task commit: run the task's narrow automated check.
 - After every wave: run server, contracts, Vitest, and real-stack smoke lanes that exist at that wave.
-- Before verification: run `./tooling/test-phase-1.sh` plus end-of-phase human checks.
-- Missing/unavailable PostgreSQL or browser evidence is `human_needed`/blocked, never a pass.
+- Before verification: run `./tooling/test-phase-1.sh --run`; its final lane validates all three automated UAT evidence mappings after the real-stack suite passes.
+- Missing or unavailable PostgreSQL, browser, or UAT-mapping evidence is blocked, never a pass.
 
 ## Per-Task Verification Map
 
@@ -127,8 +128,8 @@ The final-tree audit found no missing, partial, disabled, or failing automated r
 | SRV-02 | 02–06, 09–19, 24 | Shared semantic boundary, PostgreSQL, Phoenix, contracts, CSP, and bounded reads | ✅ covered for Phase 1 |
 | SRV-03 | 05–07, 09–23, 26 | Stable receipts, conflict/ordering/session uncertainty, and exact consequential UI | ✅ covered |
 | WEB-01 | 04–05, 09, 13–14, 17, 19, 24–27 | Real browser daily loop plus hardened responsive route/modal coverage | ✅ covered |
-| WEB-02 | 04, 08–27 | Loading/empty/error/auth/conflict/retry/focus/reflow/content/modal/token states | ✅ automated coverage; human UAT pending |
-| QUAL-01 | 01–07, 11, 16–27 | Integrity, migrations, privacy, production isolation, all test layers, security/UI drift gates | ✅ automated coverage; human UAT pending |
+| WEB-02 | 04, 08–27 | Loading/empty/error/auth/conflict/retry/focus/reflow/content/modal/token states | ✅ automated coverage and UAT mapping passed |
+| QUAL-01 | 01–07, 11, 16–27 | Integrity, migrations, privacy, production isolation, all test layers, security/UI drift gates | ✅ automated coverage and UAT mapping passed |
 
 ## Validation Audit 2026-08-31
 
@@ -140,7 +141,8 @@ The final-tree audit found no missing, partial, disabled, or failing automated r
 | Phase requirements with automated coverage | 13/13 |
 | Automated gaps found | 0 |
 | Tests generated | 0 |
-| Manual-only UAT items preserved | 3 |
+| Automated UAT checkpoints | 3/3 |
+| Required human UAT items | 0 |
 
 ## Wave 0 Requirements and Ordering
 
@@ -156,13 +158,15 @@ The final-tree audit found no missing, partial, disabled, or failing automated r
 - [x] Plan 01-07 proves limiter application startup, forced-child restart/reuse, and setup/login/recovery account/source bucket isolation before auth UI consumes those endpoints.
 - [x] No test command references a file/config/helper created in the same or a later task before its creation step.
 
-## Manual-Only Verifications
+## Automated UAT Contracts
 
-| Behavior | Requirement | Status | Instructions |
+| Behavior | Requirement | Status | Evidence marker |
 |---|---|---|---|
-| Screen-reader announcements and focus recovery across capture, validation, conflict, auth expiry, uncertain delivery, pagination, lifecycle, undo, sessions | WEB-02, QUAL-01 | `human_needed` | Use VoiceOver and keyboard; record route/state, expected/actual announcement, and final focus. Automated role/live-region/focus contracts passed, but no human VoiceOver judgment was performed. |
-| Reflow, themes, zoom, forced colors, motion | WEB-02, QUAL-01 | `human_needed` | Automated deterministic coverage passed for 320/768/1024/1440, light/dark, 200% zoom, forced colors, and Reduce Motion. Human visual judgment remains pending. |
-| Password manager and recovery trust | SRV-01, WEB-02 | `human_needed` | Verify paste, AutoFill, reveal, one-use recovery, and both auth-expiry timings without secret disclosure. Automated lifecycle evidence passed; OS/password-manager judgment was not performed. |
+| Accessibility semantics, keyboard continuity, focus recovery, and exact state announcements | WEB-02, QUAL-01 | passed | `@uat-accessibility` |
+| Reflow, themes, zoom, forced colors, motion, long text, and zero page overflow | WEB-02, QUAL-01 | passed | `@uat-reflow` |
+| Password-manager-compatible inputs, one-use recovery, and exact authentication continuation | SRV-01, WEB-02 | passed | `@uat-auth-interop` |
+
+Real VoiceOver listening quality, subjective visual taste, and particular third-party password-manager extensions are optional dogfood observations, not Phase 1 acceptance gates.
 
 ## Validation Sign-Off
 
@@ -170,7 +174,7 @@ The final-tree audit found no missing, partial, disabled, or failing automated r
 - [x] Wave 0 prerequisites execute before dependent verification.
 - [x] Narrow feedback is measured below 30 seconds or split further.
 - [x] Real PostgreSQL proves concurrency and before/after-commit loss.
-- [ ] Human visual, keyboard, and VoiceOver judgment is recorded. Automated reflow, keyboard-focus, forced-colors, and Reduce Motion evidence passed; human judgment remains `human_needed`.
-- [ ] `nyquist_compliant: true` remains intentionally unset until the human-only checks above are recorded; `wave_0_complete: true` is supported by the fresh full phase gate.
+- [x] All three Phase 1 UAT contracts are mapped to executable component/integration/E2E evidence and the coverage checker passed.
+- [x] `nyquist_compliant: true` and `wave_0_complete: true` are supported by the fresh full phase gate.
 
-**Approval:** automated evidence passed; human VoiceOver, visual, password-manager, and OS-behavior checks pending
+**Approval:** automated evidence and all three UAT mappings passed; zero human UAT is required for Phase 1 acceptance

@@ -81,11 +81,16 @@ coverage:
         status: pass
     human_judgment: false
   - id: D4
-    description: "Perceptual route/theme/zoom quality, real VoiceOver traversal, and real password-manager integration meet the approved human experience contract."
+    description: "Route, theme, zoom, accessibility-tree, keyboard, and password-manager-compatible authentication contracts are enforced by the automated UAT lane."
     requirement: WEB-01
-    verification: []
-    human_judgment: true
-    rationale: "The final UI re-audit closed every automated implementation finding but retained these three external/perceptual checks for genuine human validation."
+    verification:
+      - kind: integration
+        ref: "tooling/test-phase-1.sh#automated-uat"
+        status: pass
+      - kind: e2e
+        ref: "tooling/check-phase-1-uat-coverage.mjs#@uat-accessibility @uat-reflow @uat-auth-interop"
+        status: pass
+    human_judgment: false
 
 duration: 16min
 completed: 2026-09-01

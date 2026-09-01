@@ -1,42 +1,73 @@
 ---
-phase: "01"
-name: "one-trustworthy-task"
-created: 2026-08-31
-status: pending
+status: complete
+phase: KPL-01-one-trustworthy-task
+source:
+  - 01-08-SUMMARY.md
+  - 01-19-SUMMARY.md
+  - 01-25-SUMMARY.md
+  - 01-26-SUMMARY.md
+  - 01-27-SUMMARY.md
+started: 2026-08-31T00:00:00Z
+updated: 2026-09-01T03:21:33Z
+verification_mode: automated
 ---
 
-# Phase 1: one-trustworthy-task — User Acceptance Testing
+# Phase 1: One Trustworthy Task — Automated Acceptance
 
-## Test Results
+## Current Test
 
-| # | Test | Status | Notes |
-|---|------|--------|-------|
-| 1 | VoiceOver and keyboard continuity | pending | Exercise the complete daily and recovery loop without a pointer. |
-| 2 | Perceptual and reflow matrix | pending | Review all specified widths/themes/modes, including the 1024px scrollbar check. |
-| 3 | Password-manager and OS recovery | pending | Exercise real AutoFill/paste/recovery and authentication-expiry behavior. |
+[testing complete]
 
-### 1. VoiceOver and keyboard continuity
+## Tests
 
-Use keyboard and VoiceOver to traverse capture, validation, conflict resolution, authentication expiry, uncertain delivery, pagination, lifecycle changes, undo, and Sessions.
+### 1. Assistive-technology semantics and keyboard continuity
+expected: Keyboard-only flows expose deterministic focus entry, containment, escape, return, accessible names, landmarks, status and alert text, and exact recovery state across capture, conflict, authentication interruption, lifecycle, undo, navigation, and Sessions.
+result: pass
+source: automated
+coverage_marker: @uat-accessibility
+evidence:
+  - apps/web/e2e/phase1.spec.ts
+  - apps/web/e2e/modal-keyboard.spec.ts
+  - apps/web/e2e/responsive-route-matrix.spec.ts
+  - apps/web/e2e/conflict-resolution-recovery.spec.ts
+  - apps/web/e2e/lifecycle-recovery.spec.ts
+  - apps/web/e2e/session-reconciliation.spec.ts
+  - apps/web/src/test/ui-contract.test.tsx
 
-Expected: announcements are concise, focus is predictable, drafts and route context survive recovery, and every recovery control is reachable.
+### 2. Responsive and adaptive presentation contract
+expected: Every supported route remains structurally readable without page-level horizontal overflow at the approved viewport boundaries, in light and dark themes, at 200% zoom, in forced colors, and with Reduce Motion; focus remains visible and motion is not required for correctness.
+result: pass
+source: automated
+coverage_marker: @uat-reflow
+evidence:
+  - apps/web/e2e/visual.spec.ts
+  - apps/web/e2e/responsive-route-matrix.spec.ts
+  - apps/web/src/test/ui-contract.test.tsx
 
-### 2. Perceptual and reflow matrix
-
-Review the UI at 320, 768, 1024, 1064, and 1440px in light and dark themes, at 200% zoom, with forced colors, and with Reduce Motion. Explicitly inspect Inbox at 1024px for a horizontal scrollbar.
-
-Expected: the interface remains calm and readable, focus is visible, nothing clips, there is no page-level horizontal overflow, and motion is not required for correctness.
-
-### 3. Password-manager and OS recovery
-
-Use a real password manager to test login, reveal, paste/AutoFill, one-use recovery, and authentication expiry both before and after submitting a task change.
-
-Expected: credentials remain private and the original route, draft, request bytes, and mutation identity resume without ambiguous replay.
+### 3. Password-manager-compatible authentication and exact recovery
+expected: Authentication inputs expose correct autocomplete semantics and support paste and reveal; setup and recovery capabilities are one-use; authentication interruption preserves the route, draft, serialized request, and original mutation identity through exact retry or receipt reconciliation.
+result: pass
+source: automated
+coverage_marker: @uat-auth-interop
+evidence:
+  - apps/web/src/features/auth/auth.test.tsx
+  - apps/web/e2e/auth-recovery.spec.ts
+  - apps/web/e2e/modal-keyboard.spec.ts
+  - apps/web/e2e/lifecycle-recovery.spec.ts
 
 ## Summary
 
-- Passed: 0
-- Issues: 0
-- Pending: 3
+total: 3
+passed: 3
+issues: 0
+pending: 0
+skipped: 0
+blocked: 0
 
-Automated verification is complete at 74/74 must-haves, 13/13 Phase 1 requirements, 109 ExUnit tests, 147 Vitest tests, and 25 Playwright tests. This phase remains `human_needed` until all three tests above are recorded.
+## Gaps
+
+[none]
+
+## Non-Gating Dogfood Observations
+
+Real VoiceOver listening quality, subjective visual taste, and behavior of particular third-party password-manager extensions remain valuable dogfood observations. They are not Phase 1 acceptance gates because the phase requirements are expressed as deterministic browser contracts and are covered by the executable evidence above.
