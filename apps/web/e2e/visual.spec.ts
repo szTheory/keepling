@@ -1,6 +1,6 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
 
-const viewports = [320, 768, 1024, 1440] as const
+const viewports = [320, 768, 1023, 1024, 1063, 1064, 1440] as const
 const themes = ['light', 'dark'] as const
 
 const authenticate = async (page: Page, baseURL: string | undefined) => {

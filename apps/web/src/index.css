@@ -146,7 +146,7 @@
 /* The 1024px seam cannot fit 224 + 360 + 480px simultaneously. Preserve the
    focal 480px detail measure and prevent page overflow with a compact list pane. */
 @media (min-width: 1024px) and (max-width: 1063px) {
-  #root > div.min-h-screen {
+  .keepling-inbox-workspace {
     grid-template-columns: var(--keepling-layout-nav) 320px minmax(var(--keepling-layout-detail-min), 1fr);
   }
 }

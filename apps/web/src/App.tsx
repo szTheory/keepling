@@ -98,7 +98,7 @@ function InboxWorkspace() {
         </a>
       </header>
 
-      <div className="min-h-screen lg:grid lg:grid-cols-[14rem_minmax(22.5rem,27.5rem)_minmax(30rem,1fr)]">
+      <div className="keepling-inbox-workspace min-h-screen lg:grid lg:grid-cols-[14rem_minmax(22.5rem,27.5rem)_minmax(30rem,1fr)]">
         <aside className="hidden border-r border-border bg-card p-6 lg:block">
           <p className="text-xl font-semibold">Keepling</p>
           <a
