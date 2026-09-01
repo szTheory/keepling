@@ -1,0 +1,49 @@
+{
+  "$schema": "../schemas/sync-state-machine.schema.json",
+  "version": 1,
+  "fixed_clock": "2026-09-01T12:00:00.000000Z",
+  "cases": [
+    {
+      "name": "durable mutation tracer",
+      "actions": [
+        {
+          "type": "local_accept",
+          "mutation": {
+            "mutation_id": "mutation-001",
+            "fingerprint": "a0f4b0c38d3fbfdca0c0c5812fe396d294eaa8e302f03a8ff5b92396a2e42f8f",
+            "command_bytes": "{\"type\":\"edit_task\",\"task_id\":\"task-001\",\"title\":\"Local title\"}",
+            "resource_keys": ["task:task-001"],
+            "dependencies": [],
+            "accepted_at": "2026-09-01T12:00:00.000000Z",
+            "effect": {
+              "entity_id": "task-001",
+              "snapshot": {"id": "task-001", "revision": 2, "title": "Local title"}
+            }
+          }
+        },
+        {
+          "type": "pull",
+          "page": {
+            "cursor": "cursor-002",
+            "changes": [
+              {
+                "entity_id": "task-001",
+                "snapshot": {"id": "task-001", "revision": 2, "title": "Remote title"}
+              }
+            ]
+          }
+        },
+        {"type": "ready_pushes"},
+        {
+          "type": "acknowledge",
+          "acknowledgement": {
+            "mutation_id": "mutation-001",
+            "fingerprint": "a0f4b0c38d3fbfdca0c0c5812fe396d294eaa8e302f03a8ff5b92396a2e42f8f",
+            "outcome": "accepted",
+            "snapshot": {"id": "task-001", "revision": 3, "title": "Local title"}
+          }
+        }
+      ]
+    }
+  ]
+}
