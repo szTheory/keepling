@@ -24,6 +24,7 @@ import {
   type TaskConflict,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
+import { AlertDialog } from '@/components/ui/alert-dialog'
 import { createTaskSubmission, type TaskSubmissionState } from '@/commands/submission'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 import MutationRecoveryPanel from '@/features/recovery/MutationRecoveryPanel'
@@ -102,6 +103,7 @@ function TaskEditor({
   const plannedOnRef = useRef<HTMLInputElement>(null)
   const deadlineOnRef = useRef<HTMLInputElement>(null)
   const stayRef = useRef<HTMLButtonElement>(null)
+  const navigationTriggerRef = useRef<HTMLElement>(null)
   const saveRef = useRef<HTMLButtonElement>(null)
   const currentPath = useRef(`${window.location.pathname}${window.location.search}`)
   const allowNavigation = useRef(false)
@@ -244,6 +246,8 @@ function TaskEditor({
       }
       const destination = `${window.location.pathname}${window.location.search}`
       window.history.pushState({}, '', currentPath.current)
+      navigationTriggerRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null
       setPendingNavigation(destination)
     }
 
@@ -262,17 +266,13 @@ function TaskEditor({
       const destination = new URL(anchor.href, window.location.href)
       if (destination.origin !== window.location.origin) return
       event.preventDefault()
+      navigationTriggerRef.current = anchor
       setPendingNavigation(`${destination.pathname}${destination.search}`)
     }
 
     document.addEventListener('click', guardLink, true)
     return () => document.removeEventListener('click', guardLink, true)
   }, [dirty])
-
-  useEffect(() => {
-    if (!pendingNavigation) return
-    stayRef.current?.focus()
-  }, [pendingNavigation])
 
   const changedValues = useMemo(() => {
     if (!acceptedTask) return { baseValues: {}, fields: {} }
@@ -540,7 +540,11 @@ function TaskEditor({
 
   const requestNavigation = (pathname: string) => {
     if (locked) return
-    if (dirty) setPendingNavigation(pathname)
+    if (dirty) {
+      navigationTriggerRef.current =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null
+      setPendingNavigation(pathname)
+    }
     else onNavigate(pathname)
   }
 
@@ -630,9 +634,7 @@ function TaskEditor({
       id={embedded ? undefined : 'main-content'}
     >
       <div
-        aria-hidden={pendingNavigation ? true : undefined}
         className="mx-auto max-w-3xl"
-        inert={pendingNavigation ? true : undefined}
       >
         <button
           className="keepling-narrow-back mb-6 min-h-[var(--keepling-layout-target)] font-semibold text-primary underline-offset-4 hover:underline"
@@ -841,38 +843,39 @@ function TaskEditor({
         ) : null}
       </div>
 
-      {pendingNavigation ? (
-        <div
-          aria-labelledby="dirty-navigation-title"
-          aria-modal="true"
-          className="fixed inset-0 z-50 grid place-items-center bg-foreground/30 p-4"
-          role="alertdialog"
-        >
-          <div className="w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-lg">
-            <h2 className="text-xl font-semibold" id="dirty-navigation-title">
-              You have unsaved changes.
-            </h2>
-            <p className="mt-2 text-muted-foreground">Save them before leaving this task?</p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Button ref={stayRef} onClick={() => setPendingNavigation(null)} variant="outline">
-                Stay here
-              </Button>
-              {!locked ? (
-                <Button onClick={() => void submit('edit', pendingNavigation)}>Save changes</Button>
-              ) : null}
-              <Button
-                onClick={() => {
-                  allowNavigation.current = true
-                  onNavigate(pendingNavigation)
-                }}
-                variant="destructive"
-              >
-                Discard changes
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <AlertDialog
+        actions={
+          pendingNavigation
+            ? [
+                {
+                  label: 'Keep editing',
+                  onClick: () => setPendingNavigation(null),
+                  ref: stayRef,
+                  variant: 'outline',
+                },
+                {
+                  disabled: locked,
+                  label: 'Save changes',
+                  onClick: () => void submit('edit', pendingNavigation),
+                },
+                {
+                  label: 'Discard changes',
+                  onClick: () => {
+                    allowNavigation.current = true
+                    onNavigate(pendingNavigation)
+                  },
+                  variant: 'destructive',
+                },
+              ]
+            : []
+        }
+        description="These edits haven’t been saved."
+        finalFocus={navigationTriggerRef}
+        initialFocus={stayRef}
+        onCancel={() => setPendingNavigation(null)}
+        open={pendingNavigation !== null}
+        title="Discard unsaved changes?"
+      />
     </Root>
   )
 }

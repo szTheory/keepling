@@ -259,7 +259,7 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
 
       {status.kind === 'authentication-required' ? (
         <div className="mt-4 rounded-lg border border-border bg-card p-4" role="status">
-          Sign in again. Keepling will check whether this task was saved.
+          Sign in again to finish saving. Your changes are still here.
         </div>
       ) : null}
     </section>
