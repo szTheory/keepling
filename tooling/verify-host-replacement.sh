@@ -404,6 +404,108 @@ stage_candidate_bundle() {
   echo "Host replacement bundle passed: exact canonical remote inputs staged privately"
 }
 
+normalize_provider_ownership() {
+  input_file=$1
+  counts_file=$2
+  output_file=$3
+  expected_run_id=$4
+  require_command python3
+  [ -r "$input_file" ] && [ -r "$counts_file" ] || die "provider ownership inputs are unreadable"
+  [ ! -e "$output_file" ] || die "normalized provider inventory target must be new"
+  case "$output_file" in
+    "$repository_root"|"$repository_root"/*) die "normalized provider inventory must remain outside the repository" ;;
+  esac
+
+  python3 - "$input_file" "$counts_file" "$output_file" "$expected_run_id" <<'PY' ||
+import ipaddress
+import json
+import os
+import re
+import sys
+import tempfile
+
+try:
+    input_path, counts_path, output_path, expected_run_id = sys.argv[1:]
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]{7,39}", expected_run_id):
+        raise ValueError
+    if os.path.getsize(input_path) > 65_536 or os.path.getsize(counts_path) > 16_384:
+        raise ValueError
+    with open(input_path, "r", encoding="utf-8") as stream:
+        provider = json.load(stream)
+    with open(counts_path, "r", encoding="utf-8") as stream:
+        counts = json.load(stream)
+    expected_provider_keys = {
+        "firewall_id", "id", "ipv4_address", "labels", "name",
+        "network_id", "primary_ip_id", "ssh_key_id", "volume_id",
+    }
+    expected_count_keys = {
+        "firewalls", "networks", "primary_ips", "servers", "ssh_keys", "volumes",
+    }
+    if not isinstance(provider, dict) or set(provider) != expected_provider_keys:
+        raise ValueError
+    if not isinstance(counts, dict) or set(counts) != expected_count_keys:
+        raise ValueError
+    if any(type(count) is not int or count != 1 for count in counts.values()):
+        raise ValueError
+    labels = provider["labels"]
+    expected_labels = {
+        "managed-by": "opentofu",
+        "keepling-run": expected_run_id,
+        "purpose": "host-replacement",
+    }
+    if labels != expected_labels:
+        raise ValueError
+    if not isinstance(provider["name"], str) or not provider["name"]:
+        raise ValueError
+    if not isinstance(provider["ipv4_address"], str):
+        raise ValueError
+    ipaddress.IPv4Address(provider["ipv4_address"])
+
+    def normalize(value):
+        if type(value) is int and value > 0:
+            return str(value)
+        if isinstance(value, str) and re.fullmatch(r"[1-9][0-9]*", value):
+            return value
+        raise ValueError
+
+    resources = {
+        "server_id": normalize(provider["id"]),
+        "primary_ip_id": normalize(provider["primary_ip_id"]),
+        "network_id": normalize(provider["network_id"]),
+        "volume_id": normalize(provider["volume_id"]),
+        "firewall_id": normalize(provider["firewall_id"]),
+        "ssh_key_id": normalize(provider["ssh_key_id"]),
+    }
+    inventory = {"version": 1, "resources": resources, "labels": labels}
+    directory = os.path.dirname(os.path.abspath(output_path))
+    if not os.path.isdir(directory) or os.path.exists(output_path):
+        raise ValueError
+    descriptor, temporary_path = tempfile.mkstemp(prefix=".provider-inventory.", dir=directory)
+    try:
+        os.fchmod(descriptor, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            descriptor = -1
+            json.dump(inventory, stream, separators=(",", ":"), sort_keys=True)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        if os.path.exists(output_path):
+            raise ValueError
+        os.rename(temporary_path, output_path)
+        temporary_path = None
+        os.chmod(output_path, 0o600)
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+        if temporary_path is not None:
+            os.unlink(temporary_path)
+except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError):
+    print("provider ownership normalization rejected input", file=sys.stderr)
+    sys.exit(1)
+PY
+    die "provider ownership output is incomplete, ambiguous, or unsafe"
+}
+
 verify_candidate_sequence() (
   bootstrap_runner=${KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER:-}
   image_runner=${KEEPLING_SEQUENCE_IMAGE_RUNNER:-}
@@ -516,6 +618,7 @@ dry_run() {
   ./infra/backup/mirror-snapshot.sh self-test >/dev/null
   ./tooling/verify-backup.sh --fixture local >/dev/null
   ./tooling/test-host-bootstrap.sh >/dev/null
+  ./tooling/test-provider-ownership.sh >/dev/null
   ./tooling/test-host-replacement-sequence.sh >/dev/null
   verify_selection
   verify_state_contract
@@ -572,6 +675,10 @@ case "${1:-}" in
   --state-self-test) [ "$#" -eq 1 ] || die "usage: $0 --state-self-test"; verify_state_contract ;;
   --bootstrap-gate) [ "$#" -eq 1 ] || die "usage: $0 --bootstrap-gate"; verify_bootstrap_gate ;;
   --stage-bundle) [ "$#" -eq 1 ] || die "usage: $0 --stage-bundle"; stage_candidate_bundle ;;
+  --normalize-provider-output)
+    [ "$#" -eq 5 ] || die "usage: $0 --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID"
+    normalize_provider_ownership "$2" "$3" "$4" "$5"
+    ;;
   --candidate-sequence) [ "$#" -eq 1 ] || die "usage: $0 --candidate-sequence"; verify_candidate_sequence ;;
   --credentialed)
     case "${2:-}" in
@@ -580,5 +687,5 @@ case "${1:-}" in
       *) die "usage: $0 --credentialed [--preflight]" ;;
     esac
     ;;
-  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --candidate-sequence | --credentialed [--preflight]" ;;
+  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID | --candidate-sequence | --credentialed [--preflight]" ;;
 esac
