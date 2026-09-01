@@ -15,3 +15,7 @@ DerivedData/
 !.env.example
 tmp/
 log/
+**/.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info

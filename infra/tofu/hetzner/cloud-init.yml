@@ -1,0 +1,32 @@
+#cloud-config
+# Bootstrap is intentionally bounded to replaceable runtime prerequisites. It
+# contains no credentials, database contents, backup material, or private key.
+package_update: true
+package_upgrade: false
+packages:
+  - ca-certificates
+  - curl
+  - docker.io
+  - docker-compose-v2
+
+write_files:
+  - path: /etc/keepling/release.env
+    owner: root:root
+    permissions: "0644"
+    content: |
+      KEEPLING_TESTED_OCI_DIGEST=${tested_oci_digest}
+      KEEPLING_TARGET_ARCHITECTURE=${architecture}
+  - path: /usr/local/sbin/keepling-bootstrap
+    owner: root:root
+    permissions: "0755"
+    content: |
+      #!/bin/sh
+      set -eu
+      install -d -o root -g root -m 0755 /srv/keepling
+      install -d -o root -g root -m 0700 /etc/keepling/secrets /etc/keepling/recovery
+      systemctl enable --now docker.service
+
+runcmd:
+  - [flock, --wait, "120", /run/keepling-bootstrap.lock, /usr/local/sbin/keepling-bootstrap]
+
+final_message: "Keepling replaceable-host runtime prerequisites are ready"
