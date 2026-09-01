@@ -11,6 +11,10 @@ defmodule Keepling.TelemetryRedactionTest do
   @hostile_password "HOSTILE_PASSWORD_SENTINEL_DO_NOT_EMIT"
   @hostile_token "HOSTILE_RECOVERY_TOKEN_SENTINEL_DO_NOT_EMIT"
   @hostile_title "HOSTILE_TASK_TITLE_SENTINEL_DO_NOT_EMIT"
+  @hostile_note "HOSTILE_TASK_NOTE_SENTINEL_DO_NOT_EMIT"
+  @hostile_prompt "HOSTILE_PROMPT_SENTINEL_DO_NOT_EMIT"
+  @hostile_cursor "HOSTILE_SYNC_CURSOR_SENTINEL_DO_NOT_EMIT"
+  @hostile_provider_error "HOSTILE_PROVIDER_ERROR_SENTINEL_DO_NOT_EMIT"
   @hostile_identifier "00000000-0000-4000-8000-000000000099"
 
   setup do
@@ -39,6 +43,122 @@ defmodule Keepling.TelemetryRedactionTest do
     end)
 
     :ok
+  end
+
+  test "sync success reset and exception diagnostics expose only bounded state facts" do
+    handler_id = "sync-redaction-#{System.unique_integer([:positive])}"
+    parent = self()
+
+    :ok =
+      :telemetry.attach(
+        handler_id,
+        [:keepling, :sync, :decision],
+        fn event, measurements, metadata, _config ->
+          send(parent, {:sync_telemetry, event, measurements, metadata})
+        end,
+        nil
+      )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
+
+    assert {:ok, %{changes: []}} =
+             KeeplingWeb.Telemetry.span_sync(:pull, fn -> {:ok, %{changes: []}} end)
+
+    assert {:reset_required, %{reason: @hostile_cursor}} =
+             KeeplingWeb.Telemetry.span_sync(:pull, fn ->
+               {:reset_required, %{reason: @hostile_cursor}}
+             end)
+
+    assert_raise RuntimeError, fn ->
+      KeeplingWeb.Telemetry.span_sync(:bootstrap, fn ->
+        raise @hostile_provider_error
+      end)
+    end
+
+    events = collect_sync_telemetry([])
+    assert length(events) == 3
+
+    for {event, measurements, metadata} <- events do
+      assert event == [:keepling, :sync, :decision]
+      assert measurements == %{count: 1}
+      assert Map.keys(metadata) |> Enum.sort() == [:operation, :outcome]
+      assert metadata.operation in [:bootstrap, :pull]
+      assert metadata.outcome in [:accepted, :reset_required, :exception]
+    end
+
+    diagnostic_text = inspect(events)
+
+    for forbidden <- [
+          @hostile_title,
+          @hostile_note,
+          @hostile_prompt,
+          @hostile_token,
+          @hostile_cursor,
+          @hostile_identifier,
+          @hostile_provider_error
+        ] do
+      refute diagnostic_text =~ forbidden
+    end
+  end
+
+  test "redaction vectors lock trust states, recovery facts, and accessible presentation" do
+    root = Path.expand("../../../..", __DIR__)
+
+    vectors =
+      root
+      |> Path.join("packages/contracts/vectors/redaction.json")
+      |> File.read!()
+      |> Jason.decode!()
+
+    assert vectors["states"] == %{
+             "compatibility" => ["supported", "deprecated_but_safe", "unsupported"],
+             "mutation" => [
+               "local_saved",
+               "checking",
+               "accepted",
+               "rejected",
+               "conflict",
+               "authentication_required",
+               "quarantined"
+             ],
+             "recovery" => [
+               "backup_unverified",
+               "restore_in_progress",
+               "restore_verified",
+               "restore_failed"
+             ],
+             "synchronization" => [
+               "starting",
+               "catching_up",
+               "ready",
+               "stale_last_good",
+               "retryable_failure"
+             ]
+           }
+
+    assert vectors["presentation"]["non_color_cue"] == true
+    assert vectors["presentation"]["keyboard_recovery"] == true
+    assert vectors["presentation"]["stable_focus_identity"] == true
+    assert vectors["presentation"]["concise_live_announcements"] == true
+    assert vectors["presentation"]["reduce_motion_alternative"] == true
+    assert vectors["presentation"]["destructive_default"] == "cancel"
+
+    for fact <- vectors["state_facts"] do
+      assert Map.keys(fact) |> Enum.sort() == [
+               "consequence",
+               "durable_location",
+               "next_action",
+               "state"
+             ]
+
+      assert Enum.all?(Map.values(fact), &(is_binary(&1) and &1 != ""))
+    end
+
+    serialized_diagnostics = Jason.encode!(vectors["diagnostic_examples"])
+
+    for forbidden <- vectors["hostile_sentinels"] do
+      refute serialized_diagnostics =~ forbidden
+    end
   end
 
   test "hostile credentials, tokens, task content, and identifiers never enter diagnostics", %{
@@ -131,7 +251,8 @@ defmodule Keepling.TelemetryRedactionTest do
 
     assert telemetry_sources == [
              "lib/keepling/accounts/rate_limit.ex",
-             "lib/keepling/accounts/security_audit.ex"
+             "lib/keepling/accounts/security_audit.ex",
+             "lib/keepling_web/telemetry.ex"
            ]
 
     rate_limit_source = File.read!(Path.join(root, "lib/keepling/accounts/rate_limit.ex"))
@@ -161,6 +282,15 @@ defmodule Keepling.TelemetryRedactionTest do
     receive do
       {:auth_telemetry, event, measurements, metadata} ->
         collect_auth_telemetry([{event, measurements, metadata} | acc])
+    after
+      0 -> Enum.reverse(acc)
+    end
+  end
+
+  defp collect_sync_telemetry(acc) do
+    receive do
+      {:sync_telemetry, event, measurements, metadata} ->
+        collect_sync_telemetry([{event, measurements, metadata} | acc])
     after
       0 -> Enum.reverse(acc)
     end
