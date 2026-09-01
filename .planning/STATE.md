@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-09-01T06:20:02.405Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-09-01T06:40:28.150Z"
 last_activity: 2026-09-01
 last_activity_desc: Phase KPL-02 execution started
-state_head: 339b32c3b64572a6dd0275f99d0b00f9c24f6a61
+state_head: 72b31b0d38a67abc3ddc8783b8b729b1ae6e35d2
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 38
-  completed_plans: 29
+  completed_plans: 30
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-02 (Synchronization and Replaceable Server) — EXECUTING
-Plan: 3 of 11
+Plan: 4 of 11
 Total Plans in Phase: 11
 Status: Executing Phase KPL-02
 Last activity: 2026-09-01 — Phase KPL-02 execution started
@@ -134,6 +134,10 @@ Progress: [██████████] 100%
 - [Phase 02]: Synchronization generation is installation-grant scoped so replay or revocation fences exactly one native installation without invalidating another.
 - [Phase 02]: Issuer, origin, stable server instance, account subject, and generation come only from server configuration and locked rows; closed public-client requests reject extra authority fields.
 - [Phase 02]: Consumed refresh hashes remain as lineage evidence, and the first replay revokes and advances the family fence exactly once.
+- [Phase 02]: [Phase KPL-02]: Every first delivery reserves one account sequence before semantic resource locks; ordinal zero is the terminal command outcome and related canonical envelopes follow deterministically.
+- [Phase 02]: [Phase KPL-02]: Feed cursors and bootstrap cursors are separate authenticated codecs bound to issuer, origin, server instance, account subject, installation generation, restore epoch, and protocol train.
+- [Phase 02]: [Phase KPL-02]: Bootstrap keyset order need not contain every concurrent write; strict feed catch-up after the captured high-water is the gap-free authority.
+- [Phase 02]: [Phase KPL-02]: Task organization removal emits membership tombstones while the owning task and Trash remain canonical snapshots.
 
 ### Retained Research
 
@@ -167,8 +171,8 @@ Run `$gsd-discuss-phase 2` from the repository root.
 
 ## Session
 
-**Last session:** 2026-09-01T06:20:02.337Z
-**Stopped at:** Completed 02-03-PLAN.md
+**Last session:** 2026-09-01T06:40:28.054Z
+**Stopped at:** Completed 02-02-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -204,3 +208,4 @@ Run `$gsd-discuss-phase 2` from the repository root.
 | Phase KPL-01 P27 | 16min | 3 tasks | 19 files |
 | Phase KPL-02 P01 | 17min | 3 tasks | 8 files |
 | Phase KPL-02 P03 | 12min | 2 tasks | 7 files |
+| Phase KPL-02 P02 | 16min | 3 tasks | 9 files |
