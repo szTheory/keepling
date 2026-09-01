@@ -51,6 +51,58 @@ const deferred = <Value,>() => {
 afterEach(() => vi.unstubAllGlobals())
 
 describe('uncertain session administration', () => {
+  it('uses the exact safe confirmation for another session and restores its trigger', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(sessionsResponse())
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(
+      <SessionList
+        csrfToken="csrf"
+        hasDirtyWork={false}
+        onLoggedOut={vi.fn()}
+        onRequestLogout={vi.fn()}
+      />,
+    )
+
+    const trigger = await screen.findByRole('button', { name: 'Revoke Phone' })
+    await user.click(trigger)
+    const dialog = screen.getByRole('alertdialog', { name: 'Revoke Phone?' })
+    expect(dialog).toHaveTextContent('Keepling on that device will need to sign in again.')
+    expect(dialog).not.toHaveTextContent(
+      'Revoke Phone? Keepling on that device will need to sign in again.',
+    )
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Keep session active' })).toHaveFocus(),
+    )
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(trigger).toHaveFocus())
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'DELETE')).toHaveLength(0)
+  })
+
+  it('delegates current-session logout without issuing a revoke request', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(sessionsResponse())
+    vi.stubGlobal('fetch', fetchMock)
+    const onRequestLogout = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <SessionList
+        csrfToken="csrf"
+        hasDirtyWork={false}
+        onLoggedOut={vi.fn()}
+        onRequestLogout={onRequestLogout}
+      />,
+    )
+
+    const trigger = await screen.findByRole('button', { name: 'Log out this browser' })
+    await user.click(trigger)
+
+    expect(onRequestLogout).toHaveBeenCalledOnce()
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'DELETE')).toHaveLength(0)
+  })
+
   it('serializes session writes and keeps both accepted labels in the projection', async () => {
     const firstRename = deferred<Response>()
     const fetchMock = vi

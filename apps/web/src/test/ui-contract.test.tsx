@@ -15,7 +15,11 @@ vi.mock('@/features/recovery/RecoveryStrip', () => ({
 }))
 
 vi.mock('@/features/sessions/SessionList', () => ({
-  default: () => <div>Session inventory</div>,
+  default: ({ onRequestLogout }: { onRequestLogout: () => void }) => (
+    <button onClick={onRequestLogout} type="button">
+      Log out this browser
+    </button>
+  ),
 }))
 
 const repositoryFile = (relativePath: string) =>
@@ -127,17 +131,43 @@ describe('approved Phase 1 UI contract', () => {
     }
   })
 
-  it('keeps dirty-navigation choice explicit and initially focuses Stay here', async () => {
+  it('keeps dirty-navigation choice exact and initially focuses Keep editing', async () => {
     const user = userEvent.setup()
     window.history.replaceState({}, '', '/settings/sessions')
     render(<AppShell csrfToken="csrf" hasDirtyWork onLoggedOut={vi.fn()} />)
 
     await user.click(screen.getByRole('link', { name: 'Inbox' }))
 
-    const dialog = screen.getByRole('alertdialog', { name: 'Unsaved changes' })
+    const dialog = screen.getByRole('alertdialog', { name: 'Discard unsaved changes?' })
+    expect(dialog).toHaveTextContent('These edits haven’t been saved.')
     expect(within(dialog).getByRole('button', { name: 'Save changes' })).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: 'Discard changes' })).toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: 'Stay here' })).toHaveFocus()
+    await waitFor(() =>
+      expect(within(dialog).getByRole('button', { name: 'Keep editing' })).toHaveFocus(),
+    )
+  })
+
+  it('makes current-browser logout explicit and preserves dirty-work choices', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/settings/sessions')
+    render(<AppShell csrfToken="csrf" hasDirtyWork onLoggedOut={vi.fn()} />)
+
+    const trigger = screen.getByRole('button', { name: 'Log out this browser' })
+    await user.click(trigger)
+
+    const dialog = screen.getByRole('alertdialog', { name: 'Log out this browser?' })
+    expect(dialog).toHaveTextContent(
+      'Unsaved edits remain unless you save them before this browser signs out.',
+    )
+    expect(within(dialog).getByRole('button', { name: 'Save changes' })).toBeVisible()
+    expect(
+      within(dialog).getByRole('button', { name: 'Discard changes and log out' }),
+    ).toBeVisible()
+    await waitFor(() =>
+      expect(within(dialog).getByRole('button', { name: 'Keep editing' })).toHaveFocus(),
+    )
+    await user.keyboard('{Escape}')
+    await waitFor(() => expect(trigger).toHaveFocus())
   })
 
   it('encodes theme, forced-color, zoom/reflow, focus, and reduced-motion contracts', () => {

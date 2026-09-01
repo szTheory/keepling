@@ -67,3 +67,30 @@ test('@modal-keyboard dirty editing and capture authentication use the exact saf
   await expect(page.getByRole('button', { name: 'Sign in and continue' })).toBeVisible()
   await expect(capture).toHaveValue('Authentication keeps capture text')
 })
+
+test('@modal-keyboard session confirmation contains focus and distinguishes logout', async ({
+  baseURL,
+  page,
+}) => {
+  await authenticate(page, baseURL)
+  await page.goto('/settings/sessions')
+
+  const revoke = page.getByRole('button', { name: /^Revoke / }).first()
+  await revoke.click()
+  const revokeDialog = page.getByRole('alertdialog')
+  await expect(revokeDialog).toContainText('Keepling on that device will need to sign in again.')
+  const keepActive = revokeDialog.getByRole('button', { name: 'Keep session active' })
+  await expect(keepActive).toBeFocused()
+  await page.keyboard.press('Shift+Tab')
+  await expect(revokeDialog.getByRole('button', { name: 'Revoke session' })).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(revoke).toBeFocused()
+
+  const logout = page.getByRole('button', { name: 'Log out this browser' })
+  await logout.click()
+  const logoutDialog = page.getByRole('alertdialog', { name: 'Log out this browser?' })
+  await expect(logoutDialog).toContainText('The current browser will sign out.')
+  await expect(logoutDialog.getByRole('button', { name: 'Keep editing' })).toBeFocused()
+  await page.keyboard.press('Escape')
+  await expect(logout).toBeFocused()
+})
