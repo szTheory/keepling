@@ -506,6 +506,38 @@ PY
     die "provider ownership output is incomplete, ambiguous, or unsafe"
 }
 
+resolve_plan_architecture() (
+  plan_file=$1
+  output_file=$2
+  [ -r "$plan_file" ] || die "evaluated plan is unreadable"
+  [ ! -e "$output_file" ] || die "resolved plan contract target must be new"
+  case "$output_file" in
+    /*) ;;
+    *) die "resolved plan contract target must be an absolute path" ;;
+  esac
+  case "$output_file" in
+    "$repository_root"|"$repository_root"/*) die "resolved plan contract must remain outside the repository" ;;
+  esac
+  [ "$(wc -c <"$plan_file" | tr -d ' ')" -le 33554432 ] || die "evaluated plan exceeds the bounded contract size"
+  output_directory=${output_file%/*}
+  [ -d "$output_directory" ] || die "resolved plan contract directory is unavailable"
+  temporary=$(mktemp "$output_directory/.resolved-plan-contract.XXXXXX")
+  trap 'rm -f -- "$temporary"' EXIT HUP INT TERM
+  chmod 600 "$temporary"
+  jq -e '
+    (.format_version | type == "string") and
+    .terraform_version == "1.12.6" and
+    (.variables | type == "object") and
+    (.variables.target_architecture | type == "object") and
+    (.variables.target_architecture.value | type == "string") and
+    .variables.target_architecture.value == "x86_64"
+  ' "$plan_file" >/dev/null || die "evaluated architecture contract is missing or unsupported"
+  jq -c '{version:1,target_architecture:.variables.target_architecture.value}' "$plan_file" >"$temporary"
+  mv "$temporary" "$output_file"
+  temporary=
+  trap - EXIT HUP INT TERM
+)
+
 verify_candidate_sequence() (
   bootstrap_runner=${KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER:-}
   image_runner=${KEEPLING_SEQUENCE_IMAGE_RUNNER:-}
@@ -619,6 +651,7 @@ dry_run() {
   ./tooling/verify-backup.sh --fixture local >/dev/null
   ./tooling/test-host-bootstrap.sh >/dev/null
   ./tooling/test-provider-ownership.sh >/dev/null
+  ./tooling/test-resolved-plan-contract.sh >/dev/null
   ./tooling/test-host-replacement-sequence.sh >/dev/null
   verify_selection
   verify_state_contract
@@ -679,6 +712,10 @@ case "${1:-}" in
     [ "$#" -eq 5 ] || die "usage: $0 --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID"
     normalize_provider_ownership "$2" "$3" "$4" "$5"
     ;;
+  --resolve-plan-architecture)
+    [ "$#" -eq 3 ] || die "usage: $0 --resolve-plan-architecture PLAN OUTPUT"
+    resolve_plan_architecture "$2" "$3"
+    ;;
   --candidate-sequence) [ "$#" -eq 1 ] || die "usage: $0 --candidate-sequence"; verify_candidate_sequence ;;
   --credentialed)
     case "${2:-}" in
@@ -687,5 +724,5 @@ case "${1:-}" in
       *) die "usage: $0 --credentialed [--preflight]" ;;
     esac
     ;;
-  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID | --candidate-sequence | --credentialed [--preflight]" ;;
+  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID | --resolve-plan-architecture PLAN OUTPUT | --candidate-sequence | --credentialed [--preflight]" ;;
 esac
