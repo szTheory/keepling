@@ -13,6 +13,15 @@ resource "hcloud_ssh_key" "replacement" {
   labels     = local.ownership_labels
 }
 
+resource "hcloud_primary_ip" "replacement" {
+  name              = "${local.resource_name}-ipv4"
+  type              = "ipv4"
+  location          = var.location
+  auto_delete       = false
+  delete_protection = false
+  labels            = local.ownership_labels
+}
+
 resource "hcloud_firewall" "replacement" {
   name   = "${local.resource_name}-edge"
   labels = local.ownership_labels
@@ -100,8 +109,9 @@ resource "hcloud_server" "replacement" {
   rebuild_protection = false
 
   public_net {
+    ipv4         = hcloud_primary_ip.replacement.id
     ipv4_enabled = true
-    ipv6_enabled = true
+    ipv6_enabled = false
   }
 
   lifecycle {

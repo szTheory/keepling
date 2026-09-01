@@ -20,4 +20,5 @@ terraform {
 
 provider "hcloud" {
   # HCLOUD_TOKEN is read by the provider. Never add it to configuration/state.
+  endpoint = var.hcloud_endpoint
 }

@@ -8,6 +8,13 @@ variable "location" {
   }
 }
 
+variable "hcloud_endpoint" {
+  description = "Optional private transport endpoint used only when the runtime cannot reach the provider directly."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
 variable "server_type" {
   description = "Measured x86 Hetzner server type selected before apply."
   type        = string

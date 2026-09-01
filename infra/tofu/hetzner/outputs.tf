@@ -10,11 +10,15 @@ output "replacement_ssh_key_identity" {
 output "candidate_identity" {
   description = "Bounded candidate identity consumed by the credentialed proof runner."
   value = {
-    id           = hcloud_server.replacement.id
-    name         = hcloud_server.replacement.name
-    ipv4_address = hcloud_server.replacement.ipv4_address
-    network_id   = hcloud_network.replacement.id
-    volume_id    = hcloud_volume.replacement.id
+    id            = hcloud_server.replacement.id
+    name          = hcloud_server.replacement.name
+    ipv4_address  = hcloud_server.replacement.ipv4_address
+    primary_ip_id = hcloud_primary_ip.replacement.id
+    network_id    = hcloud_network.replacement.id
+    volume_id     = hcloud_volume.replacement.id
+    firewall_id   = hcloud_firewall.replacement.id
+    ssh_key_id    = hcloud_ssh_key.replacement.id
+    labels        = local.ownership_labels
   }
   sensitive = true
 }

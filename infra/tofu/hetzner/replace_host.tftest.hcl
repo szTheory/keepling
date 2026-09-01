@@ -12,6 +12,13 @@ mock_provider "hcloud" {
     }
   }
 
+  mock_resource "hcloud_primary_ip" {
+    defaults = {
+      id         = "706"
+      ip_address = "192.0.2.10"
+    }
+  }
+
   mock_resource "hcloud_firewall" {
     defaults = {
       id = "705"
@@ -53,6 +60,11 @@ run "replacement_graph_is_owned_and_bounded" {
   assert {
     condition     = length(hcloud_server.replacement.ssh_keys) == 1 && tonumber(one(hcloud_server.replacement.ssh_keys)) == tonumber(hcloud_ssh_key.replacement.id)
     error_message = "the candidate must reference only the exact owned SSH key resource"
+  }
+
+  assert {
+    condition     = one(hcloud_server.replacement.public_net).ipv4 == hcloud_primary_ip.replacement.id && !one(hcloud_server.replacement.public_net).ipv6_enabled
+    error_message = "the candidate must own one explicit IPv4 and disable IPv6"
   }
 
   assert {
