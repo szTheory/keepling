@@ -1,9 +1,9 @@
 {
-	auto_https off
 	admin off
+	auto_https disable_redirects
 }
 
-:80 {
+(keepling_proxy) {
 	log {
 		output stdout
 		format json
@@ -17,4 +17,12 @@
 		header Retry-After "2"
 		respond "Keepling is briefly unavailable; retry the exact request.\n" 503
 	}
+}
+
+:80 {
+	import keepling_proxy
+}
+
+https://{$KEEPLING_HOST:localhost} {
+	import keepling_proxy
 }
