@@ -87,7 +87,9 @@ defmodule Keepling.Application.Ops.RestoreTest do
     refute inspect(run) =~ @target
   end
 
-  test "same-target attempts are mutually exclusive and separate targets may proceed", %{store: store} do
+  test "same-target attempts are mutually exclusive and separate targets may proceed", %{
+    store: store
+  } do
     assert {:ok, first} = Restore.begin(valid_input(), Store, store, random_bytes: &fixed_bytes/1)
     assert {:refused, "target_busy"} = Restore.begin(valid_input(), Store, store)
 
@@ -101,9 +103,10 @@ defmodule Keepling.Application.Ops.RestoreTest do
     assert first.target_digest != other.target_digest
   end
 
-  test "verification rotates the epoch transactionally before readiness and persists bounded proof", %{
-    store: store
-  } do
+  test "verification rotates the epoch transactionally before readiness and persists bounded proof",
+       %{
+         store: store
+       } do
     assert {:ok, run} = Restore.begin(valid_input(), Store, store, random_bytes: &fixed_bytes/1)
     assert run.ready == false
 
