@@ -18,9 +18,9 @@ provides:
 affects: [host-replacement, self-hosting, sync-bootstrap, deploy-preflight, recovery-health]
 
 actuals:
-  tokens: 8404
+  tokens: 8804
   tasks: 3
-  commits: 5
+  commits: 6
 
 tech-stack:
   added: [pgBackRest 2.59.1 policy]
@@ -63,7 +63,7 @@ coverage:
     requirement: OPS-04
     verification:
       - kind: unit
-        ref: "apps/server/test/keepling/application/ops/restore_test.exs#7 refusal, lease, idempotency, stale-epoch, and finalization tests"
+        ref: "apps/server/test/keepling/application/ops/restore_test.exs#9 refusal, UUID, lease, idempotency, stale-epoch, and finalization tests"
         status: pass
     human_judgment: false
   - id: D3
@@ -112,6 +112,7 @@ status: complete
 3. **Task 2 GREEN: Enforce isolated restore finalization** - `1c671b7` (feat)
 4. **Task 3: Prove logical, WAL, and PITR recovery** - `6d3e146` (test)
 5. **Task 1 verification cleanup: Normalize policy files** - `9b6d7ab` (style)
+6. **Post-plan regression fix: Restore application-layer UUID independence** - `644526d` (fix)
 
 ## Files Created/Modified
 
@@ -158,10 +159,18 @@ status: complete
 - **Verification:** All three restore lanes passed sequentially.
 - **Committed in:** `6d3e146`
 
+**4. [Rule 1 - Bug] Removed Ecto from application-layer UUID validation**
+- **Found during:** Wave 8 post-merge regression verification
+- **Issue:** `Keepling.Application.Ops.Restore` called `Ecto.UUID.cast/1`, violating the modular-monolith rule that application policy remains independent of storage adapters. The local formatter also emitted uppercase hexadecimal despite the canonical lowercase epoch contract.
+- **Fix:** Replaced the Ecto call with a local canonical lowercase UUID-v4 validator, normalized locally generated epoch hex to lowercase, and added focused accepted/malformed UUID cases.
+- **Files modified:** `apps/server/lib/keepling/application/ops/restore.ex`, `apps/server/test/keepling/application/ops/restore_test.exs`
+- **Verification:** Focused disposable restore passed; the complete server/architecture suite passed 172 tests including one property; contract, TypeScript, Vitest, Playwright, and automated-UAT gates also passed.
+- **Committed in:** `644526d`
+
 ---
 
-**Total deviations:** 3 auto-fixed (1 Rule 1, 1 Rule 2, 1 Rule 3)
-**Impact on plan:** Each fix was required for exact policy validation, stale-proof security, or deterministic disposable-target execution; no new service, provider dependency, or canonical store was introduced.
+**Total deviations:** 4 auto-fixed (2 Rule 1, 1 Rule 2, 1 Rule 3)
+**Impact on plan:** Each fix was required for exact policy validation, stale-proof security, boundary correctness, or deterministic disposable-target execution; no new service, provider dependency, or canonical store was introduced.
 
 ## Issues Encountered
 
@@ -193,5 +202,5 @@ Production operators must create separately credentialed Backblaze B2 and AWS S3
 ## Self-Check: PASSED
 
 - All eight recovery policy, application, vector, and proof artifacts plus this summary exist on disk.
-- All five task/TDD/verification commits are present in Git history.
+- All six task/TDD/verification/fix commits are present in Git history.
 - Coverage metadata parsed successfully with all three deliverables backed entirely by passing automated evidence.
