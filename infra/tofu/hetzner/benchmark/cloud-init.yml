@@ -1,0 +1,32 @@
+#cloud-config
+package_update: false
+package_upgrade: false
+
+write_files:
+  - path: /usr/local/sbin/keepling-benchmark-ready
+    owner: root:root
+    permissions: "0755"
+    content: |
+      #!/bin/sh
+      set -eu
+      attempts=0
+      while [ "$attempts" -lt 60 ]; do
+        set -- /dev/disk/by-id/scsi-0HC_Volume_*
+        if [ "$#" -eq 1 ] && [ -b "$1" ]; then
+          device=$1
+          break
+        fi
+        attempts=$((attempts + 1))
+        sleep 2
+      done
+      test -n "${device:-}"
+      test "$(blkid -s TYPE -o value "$device")" = ext4
+      install -d -o root -g root -m 0700 /srv/keepling-benchmark
+      mountpoint -q /srv/keepling-benchmark || mount "$device" /srv/keepling-benchmark
+      test -z "$(find /srv/keepling-benchmark -mindepth 1 -maxdepth 1 ! -name lost+found -print -quit)"
+      touch /run/keepling-benchmark-ready
+
+runcmd:
+  - [/usr/local/sbin/keepling-benchmark-ready]
+
+final_message: "Keepling disposable benchmark prerequisites are ready"

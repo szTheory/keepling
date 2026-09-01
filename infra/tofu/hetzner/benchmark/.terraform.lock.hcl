@@ -13,7 +13,6 @@ provider "registry.opentofu.org/hetznercloud/hcloud" {
     "h1:CPBOIltDqRCFo99PHVgt/8z5r+P3JyyiJygsbIozZC4=",
     "h1:KOFp1JbzZ6Xj2K80QL7HGJM6oG+oEo7tx3lIx3d5POM=",
     "h1:KvAWG1HTh3EO8PNymwQQ9+zpAQa3wRvzLvRjRM5jxq4=",
-    "h1:VzS022N04Szh1JTJuvq4pC3SAHg1/mOWc8VFIsrirfY=",
     "h1:Zxdt/lmDDS+Uty9kViYoYNxYRlC3CUk2v4l3+XPcibo=",
     "h1:gWVxkXIPIJcwAl74VMTz0hgaiJ/2feZIo4KMRQ+l9io=",
     "h1:oxpWvl0qfZplr759glEx537EqkkAgtagBtNsI8V13H8=",

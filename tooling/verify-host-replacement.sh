@@ -93,7 +93,7 @@ credentialed_apply() {
     die "billable provisioning requires KEEPLING_ALLOW_BILLABLE_APPLY=yes after an explicit checkpoint"
   [ "${KEEPLING_ALLOW_LIVE_DNS_MUTATION:-}" = yes ] ||
     die "DNS mutation requires KEEPLING_ALLOW_LIVE_DNS_MUTATION=yes after an explicit checkpoint"
-  jq -e '.status == "benchmark-verified" and .benchmark.restore_seconds <= .acceptance_limits.maximum_full_host_seconds' \
+  jq -e '.status == "benchmark-verified" and .benchmark.projected_restore_seconds <= .acceptance_limits.maximum_full_host_seconds' \
     infra/tofu/hetzner/selection.json >/dev/null ||
     die "billable apply is refused until a disposable candidate records a passing storage/restore benchmark"
   [ -r "${KEEPLING_TOFU_STATE_CREDENTIAL_FILE:-}" ] ||

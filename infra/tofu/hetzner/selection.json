@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "catalog-qualified-benchmark-pending",
+  "status": "benchmark-verified",
   "catalog_checked_at": "2026-09-01",
   "location": "nbg1",
   "server_type": "cx33",
@@ -22,6 +22,15 @@
     "maximum_rpo_seconds": 300
   },
   "benchmark": {
-    "status": "pending-billable-candidate"
+    "status": "passed",
+    "checked_at": "2026-09-01",
+    "fixture_mib": 4096,
+    "observed_cores": 4,
+    "observed_memory_kib": 7937220,
+    "write_mib_s": 290,
+    "read_mib_s": 302,
+    "projected_restore_seconds": 542,
+    "restore_budget_seconds": 14400,
+    "cleanup_verified": true
   }
 }
