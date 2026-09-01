@@ -5,7 +5,9 @@ ARG RUNTIME_IMAGE=debian:trixie-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e0
 
 FROM ${BUILDER_IMAGE} AS builder
 
+ARG KEEPLING_BUILD_ERL_FLAGS
 ENV MIX_ENV=prod
+ENV ERL_FLAGS=${KEEPLING_BUILD_ERL_FLAGS}
 WORKDIR /build
 
 RUN test "$(elixir -e 'IO.write(System.version())')" = "1.20.2" \

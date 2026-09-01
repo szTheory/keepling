@@ -17,6 +17,12 @@ for command in docker jq curl; do require_command "$command"; done
 
 revision=$(git rev-parse HEAD)
 image_tag=${KEEPLING_IMAGE_TAG:-keepling-server:plan-02-07}
+image_platform=${KEEPLING_IMAGE_PLATFORM:-linux/arm64}
+engine_architecture=$(docker info --format '{{.Architecture}}')
+emulation_erl_flags=
+case "$image_platform:$engine_architecture" in
+  linux/amd64:arm64 | linux/amd64:aarch64) emulation_erl_flags='+JMsingle true' ;;
+esac
 metadata_file=$(mktemp "${TMPDIR:-/tmp}/keepling-image-build.XXXXXX")
 database_root=$(mktemp -d "${TMPDIR:-/tmp}/keepling-image-postgres.XXXXXX")
 database_name="keepling-image-db-$$"
@@ -39,9 +45,10 @@ cleanup() {
 trap cleanup EXIT HUP INT TERM
 
 docker buildx build \
-  --platform "${KEEPLING_IMAGE_PLATFORM:-linux/arm64}" \
+  --platform "$image_platform" \
   --load \
   --metadata-file "$metadata_file" \
+  --build-arg "KEEPLING_BUILD_ERL_FLAGS=$emulation_erl_flags" \
   --build-arg "OCI_REVISION=$revision" \
   --tag "$image_tag" \
   --file infra/images/server/Dockerfile \
@@ -69,7 +76,7 @@ done
 
 [ "$(docker image inspect "$image_tag" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')" = "$revision" ] || die "image revision label does not match HEAD"
 
-if docker run --rm --entrypoint /bin/sh "$image_tag" -c 'command -v mix >/dev/null || find /app/lib/keepling-* -type f -name "Elixir.KeeplingWeb.TestFaultController.beam" | grep -q .' ; then
+if docker run --rm -e "ERL_FLAGS=$emulation_erl_flags" --entrypoint /bin/sh "$image_tag" -c 'command -v mix >/dev/null || find /app/lib/keepling-* -type f -name "Elixir.KeeplingWeb.TestFaultController.beam" | grep -q .' ; then
   die "runtime contains Mix or test-only controls"
 fi
 
@@ -87,12 +94,14 @@ done
 
 database_url="ecto://keepling:keepling-image-proof@host.docker.internal:$database_port/keepling"
 docker run --rm \
+  -e "ERL_FLAGS=$emulation_erl_flags" \
   -e DATABASE_URL="$database_url" -e SECRET_KEY_BASE="$secret_key_base" -e PHX_HOST=localhost \
   -e KEEPLING_OPERATOR_TOKEN="$operator_token" -e KEEPLING_SERVER_RELEASE=0.1.0 \
   -e KEEPLING_TESTED_OCI_DIGEST="$manifest_digest" -e KEEPLING_UPDATE_LOCATION=https://github.com/szTheory/keepling/releases \
   --entrypoint /app/bin/keepling "$image_tag" eval 'Application.ensure_loaded(:keepling); {:ok, _, _} = Ecto.Migrator.with_repo(Keepling.Repo, fn repo -> Ecto.Migrator.run(repo, :up, all: true) end)' >/dev/null
 
 docker run -d --name "$app_name" -p 127.0.0.1::4000 \
+  -e "ERL_FLAGS=$emulation_erl_flags" \
   -e DATABASE_URL="$database_url" -e SECRET_KEY_BASE="$secret_key_base" -e PHX_HOST=localhost \
   -e KEEPLING_OPERATOR_TOKEN="$operator_token" -e KEEPLING_SERVER_RELEASE=0.1.0 \
   -e KEEPLING_TESTED_OCI_DIGEST="$manifest_digest" -e KEEPLING_UPDATE_LOCATION=https://github.com/szTheory/keepling/releases \
