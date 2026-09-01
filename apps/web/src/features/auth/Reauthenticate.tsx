@@ -72,7 +72,7 @@ function Reauthenticate({ csrfToken, interruption, onAuthenticated }: Reauthenti
               ? 'Keepling will retry the original read after sign-in.'
               : 'Keepling will continue the original administration action.'}
       </p>
-      <form className="mt-5 space-y-4" onSubmit={(event) => void submit(event)}>
+      <form className="mt-4 space-y-4" onSubmit={(event) => void submit(event)}>
         <div className="space-y-2">
           <label className="block text-sm font-semibold" htmlFor="reauthenticate-password">
             Password
@@ -80,7 +80,7 @@ function Reauthenticate({ csrfToken, interruption, onAuthenticated }: Reauthenti
           <div className="flex gap-2">
             <input
               autoComplete="current-password"
-              className="min-h-11 min-w-0 flex-1 rounded-lg border border-input bg-card px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="min-h-11 min-w-0 flex-1 rounded-lg border border-input bg-card px-4 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               id="reauthenticate-password"
               onChange={(event) => setPassword(event.target.value)}
               ref={passwordRef}

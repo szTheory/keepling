@@ -97,7 +97,7 @@ function SetupForm({ token }: SetupFormProps) {
       <p className="mt-2 text-muted-foreground">
         This private setup link creates the sole account. There is no public registration.
       </p>
-      <form className="mt-8 space-y-5" onSubmit={(event) => void submit(event)}>
+      <form className="mt-8 space-y-4" onSubmit={(event) => void submit(event)}>
         <div className="space-y-2">
           <label className="block text-sm font-semibold" htmlFor="setup-password">
             Password
@@ -105,7 +105,7 @@ function SetupForm({ token }: SetupFormProps) {
           <div className="flex gap-2">
             <input
               autoComplete="new-password"
-              className="min-h-11 min-w-0 flex-1 rounded-lg border border-input bg-card px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="min-h-11 min-w-0 flex-1 rounded-lg border border-input bg-card px-4 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               id="setup-password"
               onChange={(event) => setPassword(event.target.value)}
               required
@@ -131,7 +131,7 @@ function SetupForm({ token }: SetupFormProps) {
           <input
             aria-describedby={timezoneError ? 'setup-timezone-help setup-timezone-error' : 'setup-timezone-help'}
             aria-invalid={timezoneError || undefined}
-            className="min-h-11 w-full rounded-lg border border-input bg-card px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="min-h-11 w-full rounded-lg border border-input bg-card px-4 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             id="setup-timezone"
             onChange={(event) => setTimezone(event.target.value)}
             placeholder="America/New_York"
