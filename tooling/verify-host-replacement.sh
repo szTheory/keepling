@@ -120,6 +120,137 @@ verify_state_contract() (
   fi
 )
 
+run_with_optional_argument() {
+  runner=$1
+  argument=$2
+  if [ -n "$argument" ]; then
+    "$runner" "$argument"
+  else
+    "$runner"
+  fi
+}
+
+capture_bootstrap_evidence() (
+  status_file=$1
+  evidence_file=$2
+  evidence_directory=$(dirname "$evidence_file")
+  [ -d "$evidence_directory" ] || {
+    echo "Host replacement verification failed: bootstrap evidence directory is missing" >&2
+    exit 1
+  }
+  case "$evidence_file" in
+    "$repository_root"|"$repository_root"/*)
+      echo "Host replacement verification failed: bootstrap evidence must remain outside the repository" >&2
+      exit 1
+      ;;
+  esac
+
+  evidence_tmp=$(mktemp "$evidence_directory/.bootstrap-evidence.XXXXXX")
+  trap 'rm -f -- "$evidence_tmp"' EXIT HUP INT TERM
+  if jq -e 'type == "object"' "$status_file" >/dev/null 2>&1; then
+    jq '
+      def stages: ["init-local", "init", "modules-config", "modules-final"];
+      def error_count($stage):
+        if (.[$stage].errors | type) == "array" then (.[$stage].errors | length) else 0 end;
+      def recoverable_count($stage):
+        if (.[$stage].recoverable_errors | type) == "object"
+        then ([.[$stage].recoverable_errors[] | if type == "array" then length else 0 end] | add // 0)
+        else 0
+        end;
+      def closed_status:
+        (.extended_status // .status // "unknown") as $status |
+        if ["not started", "running", "done", "error", "error - done", "error - running", "degraded done", "degraded running", "disabled"] | index($status)
+        then $status
+        else "unknown"
+        end;
+      {
+        version: 1,
+        bootstrap_status: closed_status,
+        failed_stages: [stages[] as $stage | select(error_count($stage) > 0) | $stage],
+        failed_modules: ([
+          .. | strings |
+          scan("package-update-upgrade-install|scripts-user|runcmd|write-files|bootcmd|ssh"; "i") |
+          ascii_downcase
+        ] | unique),
+        error_count: ([stages[] as $stage | error_count($stage)] | add // 0),
+        recoverable_error_count: ([stages[] as $stage | recoverable_count($stage)] | add // 0),
+        raw_detail_retained: false
+      }
+    ' "$status_file" >"$evidence_tmp"
+  else
+    jq -n '{version:1,bootstrap_status:"unknown",failed_stages:[],failed_modules:[],error_count:0,recoverable_error_count:0,raw_detail_retained:false}' >"$evidence_tmp"
+  fi
+  chmod 600 "$evidence_tmp"
+  mv "$evidence_tmp" "$evidence_file"
+  evidence_tmp=
+)
+
+bootstrap_failure() {
+  status_file=$1
+  capture_result=0
+  teardown_result=0
+  capture_bootstrap_evidence "$status_file" "$KEEPLING_BOOTSTRAP_EVIDENCE_FILE" || capture_result=$?
+  run_with_optional_argument "$KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER" "${KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER_ARGUMENT:-}" >/dev/null 2>&1 || teardown_result=$?
+  rm -f -- "$status_file"
+
+  [ "$teardown_result" -eq 0 ] || die "candidate teardown failed after bootstrap rejection"
+  [ "$capture_result" -eq 0 ] || die "candidate was torn down but bounded bootstrap evidence could not be written"
+  return 1
+}
+
+verify_bootstrap_gate() {
+  status_runner=${KEEPLING_BOOTSTRAP_STATUS_RUNNER:-}
+  teardown_runner=${KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER:-}
+  evidence_file=${KEEPLING_BOOTSTRAP_EVIDENCE_FILE:-}
+  [ -x "$status_runner" ] || die "bootstrap status runner is unavailable"
+  [ -x "$teardown_runner" ] || die "bootstrap teardown runner is unavailable"
+  [ -n "$evidence_file" ] || die "bootstrap evidence file is missing"
+
+  max_checks=${KEEPLING_BOOTSTRAP_MAX_CHECKS:-60}
+  retry_seconds=${KEEPLING_BOOTSTRAP_RETRY_SECONDS:-5}
+  case "$max_checks:$retry_seconds" in
+    *[!0-9:]*|:*|*:) die "bootstrap retry bounds must be non-negative integers" ;;
+  esac
+  [ "$max_checks" -gt 0 ] || die "bootstrap max checks must be positive"
+
+  check=0
+  while [ "$check" -lt "$max_checks" ]; do
+    check=$((check + 1))
+    status_file=$(mktemp "${TMPDIR:-/tmp}/keepling-bootstrap-status.XXXXXX")
+    status_result=0
+    run_with_optional_argument "$status_runner" "${KEEPLING_BOOTSTRAP_STATUS_RUNNER_ARGUMENT:-}" >"$status_file" 2>/dev/null || status_result=$?
+
+    if jq -e 'type == "object"' "$status_file" >/dev/null 2>&1; then
+      bootstrap_status=$(jq -r '.extended_status // .status // "unknown"' "$status_file")
+    else
+      bootstrap_status=unknown
+    fi
+
+    case "$bootstrap_status" in
+      done)
+        rm -f -- "$status_file"
+        return 0
+        ;;
+      error|error\ -*|degraded\ *|disabled|unknown)
+        bootstrap_failure "$status_file"
+        return 1
+        ;;
+      running|not\ started)
+        if [ "$status_result" -ne 0 ] || [ "$check" -eq "$max_checks" ]; then
+          bootstrap_failure "$status_file"
+          return 1
+        fi
+        rm -f -- "$status_file"
+        [ "$retry_seconds" -eq 0 ] || sleep "$retry_seconds"
+        ;;
+      *)
+        bootstrap_failure "$status_file"
+        return 1
+        ;;
+    esac
+  done
+}
+
 dry_run() {
   [ "$($TOFU_BIN version -json | jq -r '.terraform_version')" = "1.12.6" ] ||
     die "OpenTofu 1.12.6 is required"
@@ -130,6 +261,7 @@ dry_run() {
   ./infra/dns/cloudflare.sh self-test >/dev/null
   ./infra/backup/mirror-snapshot.sh self-test >/dev/null
   ./tooling/verify-backup.sh --fixture local >/dev/null
+  ./tooling/test-host-bootstrap.sh >/dev/null
   verify_selection
   verify_state_contract
   echo "Host replacement dry-run passed: provider graph, exact DNS identity, append-only mirror, and cost guard are deterministic"
@@ -183,6 +315,7 @@ for command in curl jq; do require_command "$command"; done
 case "${1:-}" in
   --dry-run) [ "$#" -eq 1 ] || die "usage: $0 --dry-run"; dry_run ;;
   --state-self-test) [ "$#" -eq 1 ] || die "usage: $0 --state-self-test"; verify_state_contract ;;
+  --bootstrap-gate) [ "$#" -eq 1 ] || die "usage: $0 --bootstrap-gate"; verify_bootstrap_gate ;;
   --credentialed)
     case "${2:-}" in
       --preflight) [ "$#" -eq 2 ] || die "usage: $0 --credentialed --preflight"; credentialed_preflight ;;
@@ -190,5 +323,5 @@ case "${1:-}" in
       *) die "usage: $0 --credentialed [--preflight]" ;;
     esac
     ;;
-  *) die "usage: $0 --dry-run | --state-self-test | --credentialed [--preflight]" ;;
+  *) die "usage: $0 --dry-run | --state-self-test | --bootstrap-gate | --credentialed [--preflight]" ;;
 esac
