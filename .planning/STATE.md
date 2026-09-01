@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-25-PLAN.md
-last_updated: "2026-09-01T01:38:10.948Z"
-last_activity: 2026-08-31
-last_activity_desc: Completed KPL-01-25-PLAN.md
-state_head: eaa9f8b913f0eb370fe1f11683079cb6c2a6851b
+stopped_at: Completed KPL-01-26-PLAN.md
+last_updated: "2026-09-01T02:02:57.667Z"
+last_activity: 2026-09-01
+last_activity_desc: Completed KPL-01-26-PLAN.md
+state_head: def47711ff3d842b7e3334a795b5a2b9a37811ca
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 27
-  completed_plans: 25
+  completed_plans: 26
 milestone_name: milestone
 ---
 
@@ -29,12 +29,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 25 of 27
+Plan: 26 of 27
 Total Plans in Phase: 27
 Status: Executing Phase KPL-01
-Last activity: 2026-08-31 — Completed KPL-01-25-PLAN.md
-Last Activity Description: Completed KPL-01-25-PLAN.md
-Progress: [█████████░] 93%
+Last activity: 2026-09-01 — Completed KPL-01-26-PLAN.md
+Last Activity Description: Completed KPL-01-26-PLAN.md
+Progress: [██████████] 96%
 
 ## Accumulated Context
 
@@ -120,6 +120,10 @@ Progress: [█████████░] 93%
 - [Phase 01]: Keep 1024–1063px on drawer navigation so the 360px list and 480px detail minimums remain intact.
 - [Phase 01]: Begin the persistent 224px navigation region at exactly 1064px and cap lists at 440px.
 - [Phase 01]: Use one shell-owned main landmark with embedded list and editor sections.
+- [Phase 01]: Consequential browser choices use one Base UI Alert Dialog wrapper with explicit safe initial and trigger-return focus.
+- [Phase 01]: Current-session removal delegates to AppShell logout; only another-session removal uses the revoke endpoint.
+- [Phase 01]: Authentication-required during uncertain logout reconciliation proves the current browser session is signed out.
+- [Phase 01]: Supporting shared colors remain semantic token roles without declaring a final brand palette.
 
 ### Retained Research
 
@@ -147,8 +151,8 @@ Run `$gsd-verify-work KPL-01` from the repository root.
 
 ## Session
 
-**Last session:** 2026-09-01T01:38:10.891Z
-**Stopped at:** Completed KPL-01-25-PLAN.md
+**Last session:** 2026-09-01T02:02:57.609Z
+**Stopped at:** Completed KPL-01-26-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -180,3 +184,4 @@ Run `$gsd-verify-work KPL-01` from the repository root.
 | Phase KPL-01 P23 | 8min | 2 tasks | 5 files |
 | Phase KPL-01 P24 | 20min | 3 tasks | 12 files |
 | Phase KPL-01 P25 | 29min | 3 tasks | 14 files |
+| Phase KPL-01-one-trustworthy-task P26 | 17min | 3 tasks | 14 files |
