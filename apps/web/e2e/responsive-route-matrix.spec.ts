@@ -49,7 +49,7 @@ for (const width of [320, 1024] as const) {
     await navigation.getByRole('link', { name: 'Today' }).focus()
     await page.keyboard.press('Enter')
     await expect(page).toHaveURL(/\/today$/)
-    await expect(page.getByRole('heading', { exact: true, name: 'Today' })).toBeVisible()
+    await expect(page.getByRole('heading', { exact: true, level: 1, name: 'Today' })).toBeVisible()
 
     const todayTrigger = page.getByRole('button', { name: 'Open navigation' })
     await todayTrigger.press('Enter')
@@ -162,7 +162,9 @@ test('@responsive-route-matrix exposes one accessible main across the full route
 
     for (const [path, heading] of routes) {
       await page.goto(path)
-      await expect(page.getByRole('heading', { exact: true, name: heading })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { exact: true, level: 1, name: heading }),
+      ).toBeVisible()
       await expect(page.getByRole('main')).toHaveCount(1)
 
       const overflow = await page.evaluate(() => ({
