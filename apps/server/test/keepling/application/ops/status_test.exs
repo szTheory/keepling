@@ -85,7 +85,10 @@ defmodule Keepling.Application.Ops.StatusTest do
     assert status["status"] == "degraded"
     assert status["code"] == "backup_rpo_not_met"
     assert status["exit_code"] == Ops.exit_code(:dependency)
-    assert status["remediation"] == ["Run `keepling ops backup --json` and inspect archive health."]
+
+    assert status["remediation"] == [
+             "Run `keepling ops backup --json` and inspect archive health."
+           ]
 
     deploy =
       Ops.run("deploy", valid_input("deploy"), FakePort, %{
@@ -145,6 +148,7 @@ defmodule Keepling.Application.Ops.StatusTest do
 
     assert :ok = OpsStore.record_restore_verification(proof)
     assert {:ok, inspection} = OpsStore.inspect(timeout_ms: 250)
+
     assert inspection["last_restore_verification"] == %{
              "completed_at" => "2026-09-01T07:00:00Z",
              "state" => "passed",
