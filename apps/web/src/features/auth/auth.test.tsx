@@ -576,6 +576,36 @@ describe('reauthentication interruption', () => {
 })
 
 describe('session administration', () => {
+  it('settles a lost logout response when the revoked browser can no longer authenticate', async () => {
+    const currentSession = {
+      client_kind: 'web',
+      coarse_activity: 'active_now',
+      created_at: '2026-08-30T18:00:00Z',
+      current: true,
+      id: 'session-current',
+      label: 'Home browser',
+    }
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(jsonResponse({ sessions: [currentSession] }))
+      .mockResolvedValueOnce(jsonResponse(problem('service_unavailable', 'Try again.', 503), 503))
+      .mockResolvedValueOnce(
+        jsonResponse(problem('authentication_required', 'Sign in again.', 401), 401),
+      )
+    vi.stubGlobal('fetch', fetchMock)
+    window.history.replaceState({}, '', '/settings/sessions')
+    const onLoggedOut = vi.fn()
+    const user = userEvent.setup()
+
+    render(<AppShell csrfToken="csrf" onLoggedOut={onLoggedOut} />)
+
+    await user.click(await screen.findByRole('button', { name: 'Log out this browser' }))
+    await user.click(screen.getByRole('button', { name: 'Log out' }))
+
+    await waitFor(() => expect(onLoggedOut).toHaveBeenCalledOnce())
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
   it('continues an expired session-list read through sign-in', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
