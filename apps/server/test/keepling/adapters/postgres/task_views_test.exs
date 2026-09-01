@@ -152,6 +152,26 @@ defmodule Keepling.Adapters.Postgres.TaskViewsTest do
              list_view(:completed, context(account_id), %{cursor: cursor, limit: 1})
   end
 
+  test "task-view PostgreSQL work is cancelled at the configured adapter bound" do
+    configured_timeout = Application.fetch_env!(:keepling, :task_view_query_timeout_ms)
+    assert is_integer(configured_timeout) and configured_timeout > 0
+
+    Application.put_env(:keepling, :task_view_query_timeout_ms, 25)
+
+    on_exit(fn ->
+      Application.put_env(:keepling, :task_view_query_timeout_ms, configured_timeout)
+    end)
+
+    started_at = System.monotonic_time(:millisecond)
+
+    assert {:error, :infrastructure_failure} =
+             with_connection(fn _backend_pid ->
+               PostgresTaskViews.test_delayed_query(0.2)
+             end)
+
+    assert System.monotonic_time(:millisecond) - started_at < 200
+  end
+
   test "concurrent Today moves have one revision winner and preserve unique positions", %{
     account_id: account_id
   } do
