@@ -179,4 +179,4 @@ Run `$gsd-verify-work KPL-01` from the repository root.
 | Phase KPL-01 P22 | 5min | 2 tasks | 3 files |
 | Phase KPL-01 P23 | 8min | 2 tasks | 5 files |
 | Phase KPL-01 P24 | 20min | 3 tasks | 12 files |
-| Phase KPL-01 P25 | 23min | 3 tasks | 12 files |
+| Phase KPL-01 P25 | 29min | 3 tasks | 14 files |

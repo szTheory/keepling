@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 28
+open_count: 27
 waived_count: 0
-fixed_count: 0
+fixed_count: 1
 total_count: 28
-last_updated: 2026-09-01T01:37:57.421Z
+last_updated: 2026-09-01T01:42:08.820Z
 ---
 
 # Broken Windows Ledger
@@ -41,7 +41,7 @@ last_updated: 2026-09-01T01:37:57.421Z
 | 24 | KPL-01 | deviation | tooling/test-phase-1.sh |  | Pinned disposable migration, compile, and ExUnit lanes to MIX_ENV=test | open |  | 2026-08-31T16:02:33.734Z |  |
 | 25 | KPL-01 | lint-warning | apps/web/src/features/lists/TaskList.tsx | 190 | Pre-existing react-hooks/set-state-in-effect lint violation in TaskList | open |  | 2026-08-31T22:38:58.822Z |  |
 | 26 | KPL-01 | lint-warning | apps/web/src/features/lists/TrashList.tsx | 91 | Pre-existing react-hooks/set-state-in-effect lint violation in TrashList | open |  | 2026-08-31T22:38:58.894Z |  |
-| 27 | KPL-01 | unmet-truth | apps/web/e2e/lifecycle-recovery.spec.ts | 422 | Session revocation remains visible after recent-authentication recovery in the full Phase 1 gate | open |  | 2026-09-01T01:37:57.347Z |  |
+| 27 | KPL-01 | unmet-truth | apps/web/e2e/lifecycle-recovery.spec.ts | 422 | Session revocation remains visible after recent-authentication recovery in the full Phase 1 gate | fixed |  | 2026-09-01T01:37:57.347Z | 2026-09-01T01:42:08.820Z |
 | 28 | KPL-01 | lint-warning | apps/web/src/app/AuthProvider.tsx | 259 | Repository ESLint fast-refresh export violation predates Plan 25 | open |  | 2026-09-01T01:37:57.421Z |  |
 
 ````json
@@ -365,10 +365,10 @@ last_updated: 2026-09-01T01:37:57.421Z
     "file": "apps/web/e2e/lifecycle-recovery.spec.ts",
     "line": 422,
     "description": "Session revocation remains visible after recent-authentication recovery in the full Phase 1 gate",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-01T01:37:57.347Z",
-    "resolved_at": null
+    "resolved_at": "2026-09-01T01:42:08.820Z"
   },
   {
     "id": 28,

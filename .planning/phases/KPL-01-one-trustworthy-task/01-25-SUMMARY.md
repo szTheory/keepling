@@ -15,9 +15,9 @@ provides:
 affects: [browser-ui, authenticated-routing, accessibility, phase-1-uat]
 
 actuals:
-  tokens: 10703
+  tokens: 11555
   tasks: 3
-  commits: 10
+  commits: 12
 
 tech-stack:
   added: []
@@ -41,6 +41,8 @@ key-files:
     - apps/web/src/test/ui-contract.test.tsx
     - packages/design-tokens/css.css
     - packages/design-tokens/tokens.json
+    - apps/web/src/features/sessions/SessionList.tsx
+    - apps/web/src/features/sessions/session-list.test.tsx
 
 key-decisions:
   - "Keep 1024–1063px on modal drawer navigation so the full 360px list and 480px detail minimums remain intact."
@@ -95,7 +97,7 @@ coverage:
     human_judgment: true
     rationale: "The phase UI specification explicitly reserves these perceptual and assistive-technology checks for human UAT."
 
-duration: 23min
+duration: 29min
 completed: 2026-08-31
 status: complete
 ---
@@ -106,11 +108,11 @@ status: complete
 
 ## Performance
 
-- **Duration:** 23 min
+- **Duration:** 29 min
 - **Started:** 2026-09-01T01:13:09Z
-- **Completed:** 2026-09-01T01:36:11Z
+- **Completed:** 2026-09-01T01:42:13Z
 - **Tasks:** 3
-- **Files modified:** 12
+- **Files modified:** 14
 
 ## Accomplishments
 
@@ -131,6 +133,8 @@ status: complete
 8. **Task 3 lint correction** — `ae8c2aa` (fix)
 9. **Task 3 standalone-route compatibility** — `e14a39a` (fix)
 10. **Task 3 seeded-heading determinism** — `eaa9f8b` (test)
+11. **Full-gate RED: pre-acceptance revocation recovery** — `24d938c` (test)
+12. **Full-gate GREEN: reconcile-before-retry revocation** — `39518a9` (fix)
 
 ## Files Created/Modified
 
@@ -144,6 +148,8 @@ status: complete
 - `packages/design-tokens/tokens.json`, `packages/design-tokens/css.css` — checked-in compact-wide and persistent-navigation breakpoints.
 - `apps/web/src/test/ui-contract.test.tsx` — static and component-level responsive-shell contract checks.
 - `apps/web/e2e/responsive-route-matrix.spec.ts` — keyboard, geometry, scroll, focus, overflow, landmark, and axe matrix.
+- `apps/web/src/features/sessions/SessionList.tsx` — reconciles a resumed revoke, then retries once with fresh CSRF only when the target remains active.
+- `apps/web/src/features/sessions/session-list.test.tsx` — distinguishes accepted/absent revocations from rejected/still-active revocations.
 
 ## Decisions Made
 
@@ -179,15 +185,23 @@ status: complete
 - **Verification:** focused responsive Playwright suite passes 5/5, including all 35 matrix cases.
 - **Committed in:** `eaa9f8b`
 
+**3. [Rule 1 - Bug] Resumed a session revocation rejected before acceptance**
+- **Found during:** Canonical full-gate verification
+- **Issue:** After recent-authentication recovery, session administration reconciled inventory but stopped when the target was still active, so an operation rejected by the recent-auth plug was never completed.
+- **Fix:** Reconcile inventory first; if the target is absent, accept the authoritative result without replay, and if it remains active, retry the revoke once with the fresh recent-auth CSRF token.
+- **Files modified:** `apps/web/src/features/sessions/SessionList.tsx`, `apps/web/src/features/sessions/session-list.test.tsx`
+- **Verification:** 33/33 focused session/auth tests, isolated real-stack lifecycle recovery, typecheck, and the canonical full Phase 1 gate pass.
+- **Committed in:** `24d938c`, `39518a9`
+
 ---
 
-**Total deviations:** 2 auto-fixed (2 Rule 1 bugs)
+**Total deviations:** 3 auto-fixed (3 Rule 1 bugs)
 **Impact on plan:** Both fixes preserve existing composition and deterministic verification; no feature scope was added.
 
 ## Issues Encountered
 
 - Repository-wide ESLint remains red on three pre-existing errors: `AuthProvider.tsx:259` fast-refresh export composition and the previously recorded `react-hooks/set-state-in-effect` patterns in `TaskList.tsx:224` and `TrashList.tsx:91`. Plan-local lint findings were fixed in `ae8c2aa`; the baseline items are recorded in `deferred-items.md`.
-- The full Phase 1 gate passes repository integrity, runtime preflight, 108 ExUnit tests, contract drift, typecheck, 137 Vitest tests, and all 5 responsive Playwright tests. It remains red because the unrelated existing `@lifecycle-recovery reauthenticates and completes the original session revocation` test fails consistently at `lifecycle-recovery.spec.ts:422`; an isolated rerun reproduced it. This is recorded in `deferred-items.md` and was not changed from this responsive plan.
+- The first full Phase 1 runs exposed a deterministic recent-auth session-revocation recovery bug. A reconcile-before-retry fix closed it while preserving no-replay behavior when authoritative inventory proves the original revoke already committed.
 
 ## Verification
 
@@ -195,7 +209,7 @@ status: complete
 - Focused responsive browser contract: 5/5 Playwright tests passed, including 35 route/viewport axe cases.
 - Affected regression suites: 55/55 Vitest tests passed.
 - TypeScript: passed.
-- Full Phase 1 gate: repository integrity passed; 108/108 ExUnit passed; contract drift passed; 137/137 Vitest passed; 22/23 Playwright passed, with the one unrelated deferred session-revocation failure above.
+- Full Phase 1 gate: repository integrity and runtime preflight passed; 108/108 ExUnit passed; contract drift and typecheck passed; 138/138 Vitest passed; 23/23 Playwright passed.
 - Repository-wide ESLint: executed; three pre-existing errors and two warnings remain as recorded above.
 
 ## Known Stubs
@@ -212,11 +226,11 @@ None - no external service configuration required.
 
 ## Next Phase Readiness
 
-The responsive workspace contract and route matrix are ready for the three explicitly human UAT items in `01-VERIFICATION.md`. Repository-wide release readiness remains blocked by the deferred lint baseline and session-revocation E2E failure; neither originates in Plan 25.
+The responsive workspace contract and route matrix are ready for the three explicitly human UAT items in `01-VERIFICATION.md`. The canonical Phase 1 executable gate is green; repository-wide ESLint still has the separately recorded baseline violations.
 
 ## Self-Check: PASSED
 
-All three created artifacts exist, all ten pre-metadata commits resolve in git history, and the summary passes `git diff --check`.
+All three created artifacts exist, all twelve implementation/test commits resolve in git history, and the summary passes `git diff --check`.
 
 ---
 *Phase: KPL-01-one-trustworthy-task*
