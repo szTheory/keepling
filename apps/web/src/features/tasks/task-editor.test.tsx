@@ -584,7 +584,7 @@ describe('canonical task editor', () => {
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
-  it('offers Save, Discard, and Stay for dirty navigation and scopes beforeunload', async () => {
+  it('offers the exact safe three-action contract for dirty navigation', async () => {
     const fetchMock = vi.fn((input: RequestInfo | URL) =>
       String(input) === taskPath
         ? Promise.resolve(taskResponse())
@@ -603,15 +603,25 @@ describe('canonical task editor', () => {
     window.dispatchEvent(beforeUnload)
     expect(beforeUnload.defaultPrevented).toBe(true)
 
+    const cancel = screen.getByRole('button', { name: 'Cancel editing' })
     fireEvent.keyDown(notes, { key: 'Escape' })
-    expect(screen.getByRole('alertdialog')).toHaveTextContent('You have unsaved changes.')
-    expect(screen.getByRole('button', { name: 'Stay here' })).toHaveFocus()
+    const dialog = screen.getByRole('alertdialog', { name: 'Discard unsaved changes?' })
+    expect(dialog).toHaveTextContent('These edits haven’t been saved.')
+    expect(screen.getByRole('button', { name: 'Keep editing' })).toHaveFocus()
     expect(screen.getByRole('button', { name: 'Save changes' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'Discard changes' })).toBeVisible()
-    await user.click(screen.getByRole('button', { name: 'Stay here' }))
+    await user.keyboard('{Escape}')
     expect(onNavigate).not.toHaveBeenCalled()
+    expect(notes).toHaveValue('Ask about Tuesday updated')
+    expect(cancel).toHaveFocus()
 
-    await user.click(screen.getByRole('button', { name: 'Cancel editing' }))
+    await user.click(cancel)
+    expect(screen.getByRole('button', { name: 'Keep editing' })).toHaveFocus()
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }))
+    expect(cancel).toHaveFocus()
+    expect(notes).toHaveValue('Ask about Tuesday updated')
+
+    await user.click(cancel)
     await user.click(screen.getByRole('button', { name: 'Discard changes' }))
     expect(onNavigate).toHaveBeenCalledWith('/')
   })
