@@ -35,4 +35,3 @@ verification:
   maximum_rpo_seconds: 300
   maximum_full_host_seconds: 14400
   healthy_only_after_disposable_restore: true
-

@@ -42,4 +42,3 @@ rules:
   recovery_credentials_in_app_container: forbidden
   recovery_credentials_shared_between_repositories: forbidden
   recovery_credentials_shared_with_application: forbidden
-

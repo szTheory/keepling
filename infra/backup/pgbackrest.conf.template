@@ -38,4 +38,3 @@ spool-path=/var/lib/keepling-backup/spool
 [keepling]
 pg1-path=/var/lib/postgresql/data
 pg1-port=5432
-
