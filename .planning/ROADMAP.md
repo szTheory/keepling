@@ -112,17 +112,46 @@ Plans:
 **Plans:** 11 plans
 
 Plans:
+**Wave 1**
+
 - [ ] 02-01-PLAN.md — Prove durable local sync semantics with storage-neutral vectors and a reference reducer.
-- [ ] 02-02-PLAN.md — Commit atomic ordered feed rows and deliver authenticated cursor/bootstrap recovery.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 02-03-PLAN.md — Freeze account fencing and implement separately revocable installation grants.
-- [ ] 02-04-PLAN.md — Deliver protocol-train negotiation and current/previous compatibility evidence.
-- [ ] 02-05-PLAN.md — Expose authenticated sync transport and privacy-safe semantic trust states.
-- [ ] 02-06-PLAN.md — Deliver inward operator semantics, health/status boundaries, and stable CLI verbs.
-- [ ] 02-07-PLAN.md — Package and locally deploy the immutable Caddy/Phoenix/PostgreSQL topology.
-- [ ] 02-08-PLAN.md — Prove encrypted backup, PITR, restore safety, and epoch rotation.
-- [ ] 02-09-PLAN.md — Provision and credentialedly rehearse full Hetzner host replacement and DNS cutover.
-- [ ] 02-10-PLAN.md — Bind every Phase 2 capability to required CI, scheduled recovery, and privacy evidence.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 02-02-PLAN.md — Commit atomic ordered feed rows and deliver authenticated cursor/bootstrap recovery.
 - [ ] 02-11-PLAN.md — Close native authorization-code, refresh/revocation, and bearer-authenticated grant transport.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 02-04-PLAN.md — Deliver protocol-train negotiation and current/previous compatibility evidence.
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 02-05-PLAN.md — Expose authenticated sync transport and privacy-safe semantic trust states.
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
+- [ ] 02-06-PLAN.md — Deliver inward operator semantics, health/status boundaries, and stable CLI verbs.
+
+**Wave 7** *(blocked on Wave 6 completion)*
+
+- [ ] 02-07-PLAN.md — Package and locally deploy the immutable Caddy/Phoenix/PostgreSQL topology.
+
+**Wave 8** *(blocked on Wave 7 completion)*
+
+- [ ] 02-08-PLAN.md — Prove encrypted backup, PITR, restore safety, and epoch rotation.
+
+**Wave 9** *(blocked on Wave 8 completion)*
+
+- [ ] 02-09-PLAN.md — Provision and credentialedly rehearse full Hetzner host replacement and DNS cutover.
+
+**Wave 10** *(blocked on Wave 9 completion)*
+
+- [ ] 02-10-PLAN.md — Bind every Phase 2 capability to required CI, scheduled recovery, and privacy evidence.
 
 **Success Criteria**:
 
