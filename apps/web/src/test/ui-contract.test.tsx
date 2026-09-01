@@ -30,6 +30,9 @@ const productionSource = (relativePath: string) =>
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/^\s*\/\/.*$/gm, '')
 
+const offScaleFeatureUtilities =
+  /\b(?:text-xs|font-medium|gap-(?:1\.5|2\.5|3|5)|space-[xy]-(?:1\.5|2\.5|3|5)|m[trblxy]?-(?:1\.5|2\.5|3|5)|p[trblxy]?-(?:1\.5|2\.5|3|5)|text-white)\b/
+
 describe('approved Phase 1 UI contract', () => {
   it('opens semantic primary navigation in a modal drawer and restores trigger focus', async () => {
     const user = userEvent.setup()
@@ -153,6 +156,21 @@ describe('approved Phase 1 UI contract', () => {
         new RegExp(`--${variable}: var\\(--keepling-color-[a-z-]+\\);`),
       )
     }
+  })
+
+  it('keeps every authentication surface on the declared type and spacing scales', () => {
+    const authentication = [
+      'apps/web/src/features/auth/LoginForm.tsx',
+      'apps/web/src/features/auth/Reauthenticate.tsx',
+      'apps/web/src/features/auth/RecoveryReset.tsx',
+      'apps/web/src/features/auth/SetupForm.tsx',
+    ]
+      .map(productionSource)
+      .join('\n')
+
+    expect(authentication).not.toMatch(offScaleFeatureUtilities)
+    expect(authentication).not.toMatch(/\b(?:h|size)-(?:6|7|8|9|10)\b/)
+    expect(authentication).not.toMatch(/\bmin-h-(?:6|7|8|9|10)\b/)
   })
 
   it('exposes reachable landmarks, navigation, 44px targets, and one live region', () => {
