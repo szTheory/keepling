@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { useRef } from 'react'
+import { StrictMode, useRef } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import AppShell from '@/app/AppShell'
@@ -185,7 +185,7 @@ describe('reauthentication interruption', () => {
     }
 
     const user = userEvent.setup()
-    render(<AuthProvider><Harness /></AuthProvider>)
+    render(<StrictMode><AuthProvider><Harness /></AuthProvider></StrictMode>)
     await user.click(screen.getByRole('button', { name: 'Register owned continuation' }))
     expect(screen.getByText('read:abandoned-owner')).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Dispose owner twice' }))
@@ -239,13 +239,14 @@ describe('reauthentication interruption', () => {
     }
 
     const user = userEvent.setup()
-    render(<AuthProvider><Harness /></AuthProvider>)
+    render(<StrictMode><AuthProvider><Harness /></AuthProvider></StrictMode>)
     await user.click(screen.getByRole('button', { name: 'Register route continuation' }))
     await user.click(screen.getByRole('button', { name: 'Drain route' }))
     await waitFor(() => expect(resume).toHaveBeenCalledOnce())
 
     window.history.pushState({}, '', '/today')
     window.dispatchEvent(new PopStateEvent('popstate'))
+    await screen.findByRole('heading', { level: 1, name: 'Today' })
     pending.reject(new Error('late abandoned failure'))
 
     await waitFor(() => expect(screen.getByText('settled')).toBeVisible())

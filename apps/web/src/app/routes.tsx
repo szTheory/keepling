@@ -156,6 +156,7 @@ function AppRoutes({
   const [locationKey, setLocationKey] = useState(
     `${window.location.pathname}${window.location.search}`,
   )
+  const scopeEffectVersions = useRef(new WeakMap<ContinuationScope, number>())
 
   useEffect(() => {
     const update = () => setLocationKey(`${window.location.pathname}${window.location.search}`)
@@ -177,10 +178,19 @@ function AppRoutes({
     }
   }, [createContinuationScope, onAuthenticationRequired, pathname])
 
-  useEffect(
-    () => () => routeContinuationScope.dispose(),
-    [routeContinuationScope],
-  )
+  useEffect(() => {
+    const versions = scopeEffectVersions.current
+    const version = (versions.get(routeContinuationScope) ?? 0) + 1
+    versions.set(routeContinuationScope, version)
+
+    return () => {
+      queueMicrotask(() => {
+        if (versions.get(routeContinuationScope) === version) {
+          routeContinuationScope.dispose()
+        }
+      })
+    }
+  }, [routeContinuationScope])
 
   const scopedAuthenticationRequired = routeContinuationScope.beginReauthentication
   const routedAuthenticatedContent =
