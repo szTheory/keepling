@@ -13,6 +13,15 @@ defmodule KeeplingWeb.SecurityHeadersTest do
     connect-src
   )
 
+  test "endpoint applies one browser execution policy to a successful static response", %{
+    conn: conn
+  } do
+    response = get(conn, "/robots.txt")
+
+    assert response.status == 200
+    assert [_policy] = get_resp_header(response, "content-security-policy")
+  end
+
   test "endpoint applies one browser execution policy to not-found and API responses", %{
     conn: conn
   } do
