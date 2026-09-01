@@ -13,7 +13,9 @@ defmodule KeeplingWeb.SecurityHeadersTest do
     connect-src
   )
 
-  test "endpoint applies one browser execution policy to not-found and API responses", %{conn: conn} do
+  test "endpoint applies one browser execution policy to not-found and API responses", %{
+    conn: conn
+  } do
     not_found = get(conn, "/missing-browser-shell")
     api = post(build_conn(), "/api/v1/setup", %{"version" => 1})
 

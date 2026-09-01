@@ -10,6 +10,8 @@ defmodule KeeplingWeb.Endpoint do
     secure: Mix.env() == :prod
   ]
 
+  plug KeeplingWeb.SecurityHeaders
+
   plug Plug.Static,
     at: "/",
     from: :keepling,
