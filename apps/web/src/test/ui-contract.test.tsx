@@ -25,6 +25,11 @@ vi.mock('@/features/sessions/SessionList', () => ({
 const repositoryFile = (relativePath: string) =>
   readFileSync(resolve(process.cwd(), '../..', relativePath), 'utf8')
 
+const productionSource = (relativePath: string) =>
+  repositoryFile(relativePath)
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
+
 describe('approved Phase 1 UI contract', () => {
   it('opens semantic primary navigation in a modal drawer and restores trigger focus', async () => {
     const user = userEvent.setup()
@@ -99,6 +104,55 @@ describe('approved Phase 1 UI contract', () => {
     expect(generatedTokens).toContain('--keepling-layout-persistent-nav-start: 1064px;')
     expect(generatedTokens).toContain('--keepling-color-canvas: #f7f2e8;')
     expect(generatedTokens).toContain('--keepling-dark-color-accent: #d29abf;')
+    expect(tokens.color.light).toMatchObject({
+      border: { $value: '#877b6d' },
+      destructiveText: { $value: '#ffffff' },
+      muted: { $value: '#eee8de' },
+      secondary: { $value: '#fffcf7' },
+    })
+    expect(tokens.color.dark).toMatchObject({
+      border: { $value: '#786f69' },
+      destructiveText: { $value: '#24201d' },
+      muted: { $value: '#312b27' },
+      secondary: { $value: '#24201d' },
+    })
+    expect(generatedTokens).toContain('--keepling-color-muted: #eee8de;')
+    expect(generatedTokens).toContain('--keepling-dark-color-border: #786f69;')
+  })
+
+  it('keeps shared buttons and consequential surfaces on declared visual values', () => {
+    const button = productionSource('apps/web/src/components/ui/button.tsx')
+    const consequentialSurfaces = [
+      'apps/web/src/components/ui/alert-dialog.tsx',
+      'apps/web/src/app/WorkspaceShell.tsx',
+      'apps/web/src/app/AppShell.tsx',
+      'apps/web/src/features/tasks/TaskEditor.tsx',
+    ]
+      .map(productionSource)
+      .join('\n')
+
+    expect(button).toContain('text-sm font-semibold')
+    expect(button).toContain('min-h-[var(--keepling-layout-target)]')
+    expect(button).toContain('text-destructive-foreground')
+    expect(button).not.toMatch(/\b(?:text-xs|font-medium|gap-1\.5|p[lr]-2\.5|h-[6-9]|size-[6-9])\b/)
+    expect(consequentialSurfaces).not.toMatch(/\b(?:text-white|font-medium|text-xs)\b/)
+    expect(consequentialSurfaces).not.toContain('41.5rem')
+
+    const css = productionSource('apps/web/src/index.css')
+    for (const variable of [
+      'secondary',
+      'secondary-foreground',
+      'muted',
+      'accent',
+      'accent-foreground',
+      'destructive-foreground',
+      'border',
+      'input',
+    ]) {
+      expect(css).toMatch(
+        new RegExp(`--${variable}: var\\(--keepling-color-[a-z-]+\\);`),
+      )
+    }
   })
 
   it('exposes reachable landmarks, navigation, 44px targets, and one live region', () => {
