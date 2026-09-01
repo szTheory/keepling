@@ -18,15 +18,23 @@ type AuthenticationState =
   | { kind: 'error' }
   | { csrfToken: string; kind: 'authenticated' }
 
+type BeginReauthentication = (
+  intent: InterruptedIntent,
+  resume: (csrfToken: string) => Promise<void>,
+) => () => void
+
+type ContinuationScope = {
+  beginReauthentication: BeginReauthentication
+  dispose: () => void
+}
+
 type AuthContextValue = {
   acceptAuthentication: (csrfToken: string) => void
-  beginReauthentication: (
-    intent: InterruptedIntent,
-    resume: (csrfToken: string) => Promise<void>,
-  ) => void
+  beginReauthentication: BeginReauthentication
   clearAuthentication: () => void
   completeReauthentication: (intent: InterruptedIntent, csrfToken: string) => Promise<void>
   continuationError: boolean
+  createContinuationScope: () => ContinuationScope
   interruption: InterruptedIntent | null
   retryContinuations: () => Promise<void>
   state: AuthenticationState
@@ -35,7 +43,12 @@ type AuthContextValue = {
 type ContinuationEntry = {
   generation: number
   intent: InterruptedIntent
+  owner: ContinuationOwner
   resume: (csrfToken: string) => Promise<void>
+}
+
+type ContinuationOwner = {
+  active: boolean
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -50,6 +63,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
   const drainRef = useRef<Promise<void> | null>(null)
   const generationRef = useRef(0)
   const continuationGenerationRef = useRef(0)
+  const globalOwnerRef = useRef<ContinuationOwner>({ active: true })
 
   useEffect(() => {
     let active = true
@@ -76,19 +90,57 @@ function AuthProvider({ children }: { children: ReactNode }) {
     setInterruption(null)
   }, [])
 
-  const beginReauthentication = useCallback(
-    (intent: InterruptedIntent, resume: (csrfToken: string) => Promise<void>) => {
+  const registerContinuation = useCallback(
+    (
+      owner: ContinuationOwner,
+      intent: InterruptedIntent,
+      resume: (csrfToken: string) => Promise<void>,
+    ) => {
+      if (!owner.active) return () => undefined
+
       const key = `${intent.kind}:${intent.mutationId}`
       continuationGenerationRef.current += 1
-      resumesRef.current.set(key, {
+      const entry = {
         generation: continuationGenerationRef.current,
         intent,
+        owner,
         resume,
-      })
+      }
+      resumesRef.current.set(key, entry)
       setInterruption((current) => current ?? intent)
+
+      let disposed = false
+      return () => {
+        if (disposed) return
+        disposed = true
+        if (resumesRef.current.get(key) === entry) resumesRef.current.delete(key)
+        setInterruption(resumesRef.current.values().next().value?.intent ?? null)
+      }
     },
     [],
   )
+
+  const beginReauthentication = useCallback<BeginReauthentication>(
+    (intent, resume) => registerContinuation(globalOwnerRef.current, intent, resume),
+    [registerContinuation],
+  )
+
+  const createContinuationScope = useCallback((): ContinuationScope => {
+    const owner: ContinuationOwner = { active: true }
+
+    return {
+      beginReauthentication: (intent, resume) => registerContinuation(owner, intent, resume),
+      dispose: () => {
+        if (!owner.active) return
+        owner.active = false
+
+        for (const [key, continuation] of resumesRef.current) {
+          if (continuation.owner === owner) resumesRef.current.delete(key)
+        }
+        setInterruption(resumesRef.current.values().next().value?.intent ?? null)
+      },
+    }
+  }, [registerContinuation])
 
   const clearAuthentication = useCallback(() => {
     generationRef.current += 1
@@ -113,6 +165,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
       while (generation === generationRef.current) {
         const pending = [...resumesRef.current.entries()].filter(
           ([, continuation]) =>
+            continuation.owner.active &&
             continuation.generation <= lastEligibleContinuation &&
             !attempted.has(continuation.generation),
         )
@@ -126,13 +179,18 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
         pending.forEach(([key, continuation], index) => {
           if (
+            continuation.owner.active &&
             outcomes[index]?.status === 'fulfilled' &&
             resumesRef.current.get(key) === continuation
           ) {
             resumesRef.current.delete(key)
           }
         })
-        failed ||= outcomes.some((outcome) => outcome.status === 'rejected')
+        failed ||=
+          outcomes.some(
+            (outcome, index) =>
+              pending[index]?.[1].owner.active && outcome.status === 'rejected',
+          )
       }
 
       if (generation !== generationRef.current) return
@@ -167,6 +225,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
       clearAuthentication,
       completeReauthentication,
       continuationError,
+      createContinuationScope,
       interruption,
       retryContinuations,
       state,
@@ -177,6 +236,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
       clearAuthentication,
       completeReauthentication,
       continuationError,
+      createContinuationScope,
       interruption,
       retryContinuations,
       state,
@@ -194,4 +254,10 @@ const useAuth = () => {
 
 // Auth state and its provider intentionally share this narrow composition module.
 // eslint-disable-next-line react-refresh/only-export-components
-export { AuthProvider, useAuth, type AuthenticationState }
+export {
+  AuthProvider,
+  useAuth,
+  type AuthenticationState,
+  type BeginReauthentication,
+  type ContinuationScope,
+}

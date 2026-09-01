@@ -7,6 +7,7 @@ import {
   type CaptureAcknowledgement,
 } from '@/api/keepling'
 import { AuthProvider, useAuth } from '@/app/AuthProvider'
+import type { BeginReauthentication } from '@/app/AuthProvider'
 import AppShell from '@/app/AppShell'
 import AppRoutes from '@/app/routes'
 import QuickCapture from '@/features/capture/QuickCapture'
@@ -16,9 +17,12 @@ type AppState =
   | { kind: 'error' }
   | { kind: 'ready'; tasks: readonly BrowserTask[] }
 
-function InboxWorkspace() {
+function InboxWorkspace({
+  onAuthenticationRequired,
+}: {
+  onAuthenticationRequired: BeginReauthentication
+}) {
   const auth = useAuth()
-  const { beginReauthentication } = auth
   const [state, setState] = useState<AppState>({ kind: 'loading' })
   const [announcement, setAnnouncement] = useState('')
 
@@ -35,7 +39,7 @@ function InboxWorkspace() {
         if (!active) return
 
         if (error instanceof KeeplingApiError && error.problem.code === 'authentication_required') {
-          beginReauthentication(
+          onAuthenticationRequired(
             { authentication: 'sign_in', kind: 'read', mutationId: 'inbox:list' },
             async () => {
               setState({ kind: 'ready', tasks: await getInbox() })
@@ -49,7 +53,7 @@ function InboxWorkspace() {
     return () => {
       active = false
     }
-  }, [beginReauthentication])
+  }, [onAuthenticationRequired])
 
   useEffect(() => {
     const updateTask = (event: Event) => {
@@ -149,7 +153,7 @@ function InboxWorkspace() {
           {state.kind === 'ready' && auth.state.kind === 'authenticated' ? (
             <QuickCapture
               csrfToken={auth.state.csrfToken}
-              onAuthenticationRequired={auth.beginReauthentication}
+              onAuthenticationRequired={onAuthenticationRequired}
               onCaptured={handleCaptured}
             />
           ) : null}
@@ -265,21 +269,25 @@ function RoutedApp() {
     <AppRoutes
       authenticated={authenticatedState !== null}
       authenticatedContent={
-        authenticatedState ? (
-          <AppShell
-            csrfToken={authenticatedState.csrfToken}
-            inboxContent={<InboxWorkspace />}
-            onAuthenticationRequired={auth.beginReauthentication}
-            onLoggedOut={handleLoggedOut}
-          />
-        ) : undefined
+        authenticatedState
+          ? (onAuthenticationRequired) => (
+              <AppShell
+                csrfToken={authenticatedState.csrfToken}
+                inboxContent={(
+                  <InboxWorkspace onAuthenticationRequired={onAuthenticationRequired} />
+                )}
+                onAuthenticationRequired={onAuthenticationRequired}
+                onLoggedOut={handleLoggedOut}
+              />
+            )
+          : undefined
       }
+      createContinuationScope={auth.createContinuationScope}
       csrfToken={authenticatedState?.csrfToken}
       continuationError={auth.continuationError}
       interruption={auth.interruption}
       onAcknowledged={handleTaskAcknowledged}
       onAuthenticated={auth.acceptAuthentication}
-      onAuthenticationRequired={auth.beginReauthentication}
       onReauthenticated={auth.completeReauthentication}
       onRetryContinuations={auth.retryContinuations}
     />

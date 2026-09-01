@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
+import type { BeginReauthentication, ContinuationScope } from '@/app/AuthProvider'
 import LoginForm from '@/features/auth/LoginForm'
 import Reauthenticate, { type InterruptedIntent } from '@/features/auth/Reauthenticate'
 import RecoveryReset from '@/features/auth/RecoveryReset'
@@ -16,8 +17,9 @@ import { Button } from '@/components/ui/button'
 
 type AppRoutesProps = {
   authenticated: boolean
-  authenticatedContent?: ReactNode
+  authenticatedContent?: ReactNode | ((beginReauthentication: BeginReauthentication) => ReactNode)
   continuationError?: boolean
+  createContinuationScope?: () => ContinuationScope
   csrfToken?: string
   interruption?: InterruptedIntent | null
   onAcknowledged?: (acknowledgement: CommandAcknowledgement) => void
@@ -142,6 +144,7 @@ function AppRoutes({
   authenticated,
   authenticatedContent,
   continuationError = false,
+  createContinuationScope,
   csrfToken,
   interruption,
   onAcknowledged = () => undefined,
@@ -162,6 +165,28 @@ function AppRoutes({
 
   const location = new URL(locationKey, window.location.origin)
   const { pathname } = location
+  const routeContinuationScope = useMemo<ContinuationScope>(() => {
+    if (createContinuationScope) return createContinuationScope()
+
+    return {
+      beginReauthentication: (intent, resume) => {
+        onAuthenticationRequired?.(intent, resume)
+        return () => undefined
+      },
+      dispose: () => undefined,
+    }
+  }, [createContinuationScope, onAuthenticationRequired, pathname])
+
+  useEffect(
+    () => () => routeContinuationScope.dispose(),
+    [routeContinuationScope],
+  )
+
+  const scopedAuthenticationRequired = routeContinuationScope.beginReauthentication
+  const routedAuthenticatedContent =
+    typeof authenticatedContent === 'function'
+      ? authenticatedContent(scopedAuthenticationRequired)
+      : authenticatedContent
 
   const handleAuthenticated = (nextCsrfToken: string) => {
     onAuthenticated(nextCsrfToken)
@@ -248,15 +273,15 @@ function AppRoutes({
     return <LoginForm onAuthenticated={handleAuthenticated} />
   }
 
-  if (pathname === '/today' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="today" onAuthenticationRequired={onAuthenticationRequired} view="today" />)
-  if (pathname === '/upcoming' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="upcoming" onAuthenticationRequired={onAuthenticationRequired} view="upcoming" />)
-  if (pathname === '/completed' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="completed" onAuthenticationRequired={onAuthenticationRequired} view="completed" />)
-  if (pathname === '/inbox' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="inbox" onAuthenticationRequired={onAuthenticationRequired} view="inbox" />)
+  if (pathname === '/today' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="today" onAuthenticationRequired={scopedAuthenticationRequired} view="today" />)
+  if (pathname === '/upcoming' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="upcoming" onAuthenticationRequired={scopedAuthenticationRequired} view="upcoming" />)
+  if (pathname === '/completed' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="completed" onAuthenticationRequired={scopedAuthenticationRequired} view="completed" />)
+  if (pathname === '/inbox' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="inbox" onAuthenticationRequired={scopedAuthenticationRequired} view="inbox" />)
   if (pathname === '/trash' && csrfToken) {
     return withInterruption(
       <TrashList
         csrfToken={csrfToken}
-        onAuthenticationRequired={onAuthenticationRequired}
+        onAuthenticationRequired={scopedAuthenticationRequired}
       />,
     )
   }
@@ -266,7 +291,7 @@ function AppRoutes({
       <OrganizationManager
         csrfToken={csrfToken}
         kind="project"
-        onAuthenticationRequired={onAuthenticationRequired}
+        onAuthenticationRequired={scopedAuthenticationRequired}
       />,
     )
   }
@@ -276,7 +301,7 @@ function AppRoutes({
       <OrganizationManager
         csrfToken={csrfToken}
         kind="tag"
-        onAuthenticationRequired={onAuthenticationRequired}
+        onAuthenticationRequired={scopedAuthenticationRequired}
       />,
     )
   }
@@ -287,7 +312,7 @@ function AppRoutes({
     return withInterruption(
       <OrganizationFields
         csrfToken={csrfToken}
-        onAuthenticationRequired={onAuthenticationRequired}
+        onAuthenticationRequired={scopedAuthenticationRequired}
         taskId={assignmentTaskId}
       />,
     )
@@ -297,17 +322,17 @@ function AppRoutes({
   if (taskId && csrfToken) {
     return withInterruption(
       <>
-        {authenticatedContent ? <div className="hidden lg:block">{authenticatedContent}</div> : null}
+        {routedAuthenticatedContent ? <div className="hidden lg:block">{routedAuthenticatedContent}</div> : null}
         <div className="min-h-screen bg-card [&>main]:!static [&>main]:!min-h-0 [&>main]:!min-w-0 [&>main]:!w-auto [&>main]:!overflow-visible [&>main]:!border-0 lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:w-[calc(100%-41.5rem)] lg:min-w-[30rem] lg:overflow-y-auto lg:border-l lg:border-border" key={taskId}>
           <TaskEditor
             csrfToken={csrfToken}
             onAcknowledged={onAcknowledged}
-            onAuthenticationRequired={onAuthenticationRequired}
+            onAuthenticationRequired={scopedAuthenticationRequired}
             onNavigate={navigate}
             taskId={taskId}
           />
           <ActivityList
-            onAuthenticationRequired={onAuthenticationRequired}
+            onAuthenticationRequired={scopedAuthenticationRequired}
             taskId={taskId}
           />
         </div>
@@ -315,7 +340,7 @@ function AppRoutes({
     )
   }
 
-  return withInterruption(authenticatedContent ?? (
+  return withInterruption(routedAuthenticatedContent ?? (
     <main className="p-6" id="main-content">
       <h1 className="text-[1.75rem] font-semibold">Keepling</h1>
     </main>
