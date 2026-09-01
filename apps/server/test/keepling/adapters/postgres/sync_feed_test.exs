@@ -22,9 +22,10 @@ defmodule Keepling.Adapters.Postgres.SyncFeedTest do
     %{account_id: account_id}
   end
 
-  test "first delivery commits terminal outcomes and stable envelopes while replay appends nothing", %{
-    account_id: account_id
-  } do
+  test "first delivery commits terminal outcomes and stable envelopes while replay appends nothing",
+       %{
+         account_id: account_id
+       } do
     task_id = Ecto.UUID.generate()
     mutation_id = Ecto.UUID.generate()
 
@@ -123,9 +124,10 @@ defmodule Keepling.Adapters.Postgres.SyncFeedTest do
            end)
   end
 
-  test "rollback exposes no feed position and concurrent backends allocate a gap-free account order", %{
-    account_id: account_id
-  } do
+  test "rollback exposes no feed position and concurrent backends allocate a gap-free account order",
+       %{
+         account_id: account_id
+       } do
     assert {:error, :forced_rollback} =
              with_connection(fn _backend_pid ->
                Repo.transact(fn repo ->

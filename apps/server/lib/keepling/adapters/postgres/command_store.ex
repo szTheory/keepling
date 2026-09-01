@@ -9,6 +9,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
   @behaviour Keepling.Application.Commands.Port
 
   alias Ecto.Adapters.SQL
+  alias Keepling.Adapters.Postgres.SyncFeed
   alias Keepling.Application.{Activity, Undo}
   alias Keepling.Domain.{Organization, Task, TaskDates}
   alias Keepling.Repo
@@ -386,8 +387,12 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
       )
 
     case inserted.rows do
-      [[_mutation_id]] -> execute_first_delivery(repo, command, context, decide)
-      [] -> replay(repo, command, context, fingerprint)
+      [[_mutation_id]] ->
+        {:ok, sequence} = SyncFeed.reserve_sequence(repo, context.account_id, context.accepted_at)
+        execute_first_delivery(repo, command, context, decide, sequence)
+
+      [] ->
+        replay(repo, command, context, fingerprint)
     end
   end
 
@@ -408,7 +413,19 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
 
     case inserted.rows do
       [[_mutation_id]] ->
+        {:ok, sequence} = SyncFeed.reserve_sequence(repo, context.account_id, context.accepted_at)
         result = apply_undo_delivery(repo, command, context, apply_inverse)
+
+        :ok =
+          SyncFeed.append_terminal(
+            repo,
+            context.account_id,
+            sequence,
+            command,
+            result,
+            context.accepted_at
+          )
+
         finalize_receipt(repo, context.account_id, command.mutation_id, result)
         {:ok, public_result(result)}
 
@@ -417,7 +434,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     end
   end
 
-  defp execute_first_delivery(repo, command, context, decide) do
+  defp execute_first_delivery(repo, command, context, decide, sequence) do
     accepted_command =
       command
       |> Map.put(:accepted_at, context.accepted_at)
@@ -453,6 +470,16 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
               decide_existing(repo, accepted_command, context, current, accepted_command, decide)
           end
       end
+
+    :ok =
+      SyncFeed.append_terminal(
+        repo,
+        context.account_id,
+        sequence,
+        command,
+        result,
+        context.accepted_at
+      )
 
     finalize_receipt(repo, context.account_id, command.mutation_id, result)
     {:ok, public_result(result)}
