@@ -25,6 +25,7 @@
     --color-input: var(--input);
     --color-border: var(--border);
     --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
     --color-accent-foreground: var(--accent-foreground);
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
@@ -57,15 +58,16 @@
     --popover-foreground: var(--keepling-color-text);
     --primary: var(--keepling-color-accent);
     --primary-foreground: var(--keepling-color-accent-text);
-    --secondary: #fffcf7;
-    --secondary-foreground: #211e1a;
-    --muted: #eee8de;
+    --secondary: var(--keepling-color-secondary);
+    --secondary-foreground: var(--keepling-color-secondary-text);
+    --muted: var(--keepling-color-muted);
     --muted-foreground: var(--keepling-color-muted-text);
-    --accent: #eee8de;
-    --accent-foreground: #211e1a;
+    --accent: var(--keepling-color-muted);
+    --accent-foreground: var(--keepling-color-text);
     --destructive: var(--keepling-color-destructive);
-    --border: #877b6d;
-    --input: #877b6d;
+    --destructive-foreground: var(--keepling-color-destructive-text);
+    --border: var(--keepling-color-border);
+    --input: var(--keepling-color-border);
     --ring: var(--keepling-color-accent);
     --chart-1: oklch(0.869 0.005 56.366);
     --chart-2: oklch(0.553 0.013 58.071);
@@ -77,9 +79,9 @@
     --sidebar-foreground: var(--keepling-color-text);
     --sidebar-primary: var(--keepling-color-accent);
     --sidebar-primary-foreground: var(--keepling-color-accent-text);
-    --sidebar-accent: #eee8de;
-    --sidebar-accent-foreground: #211e1a;
-    --sidebar-border: #877b6d;
+    --sidebar-accent: var(--keepling-color-muted);
+    --sidebar-accent-foreground: var(--keepling-color-text);
+    --sidebar-border: var(--keepling-color-border);
     --sidebar-ring: var(--keepling-color-accent);
 }
 
@@ -92,15 +94,16 @@
     --popover-foreground: var(--keepling-color-text);
     --primary: var(--keepling-color-accent);
     --primary-foreground: var(--keepling-color-accent-text);
-    --secondary: var(--keepling-color-surface);
-    --secondary-foreground: var(--keepling-color-text);
-    --muted: #312b27;
+    --secondary: var(--keepling-color-secondary);
+    --secondary-foreground: var(--keepling-color-secondary-text);
+    --muted: var(--keepling-color-muted);
     --muted-foreground: var(--keepling-color-muted-text);
-    --accent: #312b27;
+    --accent: var(--keepling-color-muted);
     --accent-foreground: var(--keepling-color-text);
     --destructive: var(--keepling-color-destructive);
-    --border: #786f69;
-    --input: #786f69;
+    --destructive-foreground: var(--keepling-color-destructive-text);
+    --border: var(--keepling-color-border);
+    --input: var(--keepling-color-border);
     --ring: var(--keepling-color-accent);
     --chart-1: oklch(0.869 0.005 56.366);
     --chart-2: oklch(0.553 0.013 58.071);
@@ -111,9 +114,9 @@
     --sidebar-foreground: var(--keepling-color-text);
     --sidebar-primary: var(--keepling-color-accent);
     --sidebar-primary-foreground: var(--keepling-color-accent-text);
-    --sidebar-accent: #312b27;
+    --sidebar-accent: var(--keepling-color-muted);
     --sidebar-accent-foreground: var(--keepling-color-text);
-    --sidebar-border: #786f69;
+    --sidebar-border: var(--keepling-color-border);
     --sidebar-ring: var(--keepling-color-accent);
 }
 

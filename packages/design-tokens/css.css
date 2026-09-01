@@ -25,16 +25,24 @@
   --keepling-motion-reduced: 100ms;
   --keepling-color-canvas: #f7f2e8;
   --keepling-color-surface: #fffcf7;
+  --keepling-color-secondary: #fffcf7;
+  --keepling-color-secondary-text: #211e1a;
+  --keepling-color-muted: #eee8de;
   --keepling-color-text: #211e1a;
   --keepling-color-muted-text: #696158;
+  --keepling-color-border: #877b6d;
   --keepling-color-accent: #6f4a63;
   --keepling-color-accent-text: #fff8e9;
   --keepling-color-destructive: #a33b32;
   --keepling-color-destructive-text: #ffffff;
   --keepling-dark-color-canvas: #1c1917;
   --keepling-dark-color-surface: #24201d;
+  --keepling-dark-color-secondary: #24201d;
+  --keepling-dark-color-secondary-text: #f5efe5;
+  --keepling-dark-color-muted: #312b27;
   --keepling-dark-color-text: #f5efe5;
   --keepling-dark-color-muted-text: #c7bbae;
+  --keepling-dark-color-border: #786f69;
   --keepling-dark-color-accent: #d29abf;
   --keepling-dark-color-accent-text: #201b22;
   --keepling-dark-color-destructive: #f2a39b;
@@ -45,8 +53,12 @@
   :root:not(.light) {
     --keepling-color-canvas: var(--keepling-dark-color-canvas);
     --keepling-color-surface: var(--keepling-dark-color-surface);
+    --keepling-color-secondary: var(--keepling-dark-color-secondary);
+    --keepling-color-secondary-text: var(--keepling-dark-color-secondary-text);
+    --keepling-color-muted: var(--keepling-dark-color-muted);
     --keepling-color-text: var(--keepling-dark-color-text);
     --keepling-color-muted-text: var(--keepling-dark-color-muted-text);
+    --keepling-color-border: var(--keepling-dark-color-border);
     --keepling-color-accent: var(--keepling-dark-color-accent);
     --keepling-color-accent-text: var(--keepling-dark-color-accent-text);
     --keepling-color-destructive: var(--keepling-dark-color-destructive);
@@ -57,8 +69,12 @@
 .dark {
   --keepling-color-canvas: var(--keepling-dark-color-canvas);
   --keepling-color-surface: var(--keepling-dark-color-surface);
+  --keepling-color-secondary: var(--keepling-dark-color-secondary);
+  --keepling-color-secondary-text: var(--keepling-dark-color-secondary-text);
+  --keepling-color-muted: var(--keepling-dark-color-muted);
   --keepling-color-text: var(--keepling-dark-color-text);
   --keepling-color-muted-text: var(--keepling-dark-color-muted-text);
+  --keepling-color-border: var(--keepling-dark-color-border);
   --keepling-color-accent: var(--keepling-dark-color-accent);
   --keepling-color-accent-text: var(--keepling-dark-color-accent-text);
   --keepling-color-destructive: var(--keepling-dark-color-destructive);
