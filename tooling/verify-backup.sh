@@ -36,7 +36,11 @@ require_line "$schedule" "  wal_retention_days: 14"
 require_line "$schedule" "  daily_retention_days: 30"
 require_line "$schedule" "  weekly_retention_weeks: 12"
 require_line "$schedule" "    cadence: \"15 05 * * *\""
-require_line "$schedule" "    object_lock: compliance"
+require_line "$schedule" "    provider: cloudflare_r2"
+require_line "$schedule" "    mode: append_only_dated_snapshots"
+require_line "$schedule" "    mutable_pgbackrest_repository: false"
+require_line "$schedule" "    object_lock_days: 90"
+require_line "$schedule" "    object_lock_activation: after_contract_and_restore_proof"
 require_line "$schedule" "  healthy_only_after_disposable_restore: true"
 require_line "$schedule" "  newest_logical: daily"
 require_line "$schedule" "  latest_wal: daily"
@@ -44,10 +48,17 @@ require_line "$schedule" "  historical_pitr: weekly_seeded_random"
 require_line "$schedule" "  maximum_rpo_seconds: 300"
 require_line "$schedule" "  maximum_full_host_seconds: 14400"
 require_line "$config" "repo1-cipher-type=aes-256-cbc"
-require_line "$config" "repo2-cipher-type=aes-256-cbc"
 require_line "$config" "repo1-retention-archive=14"
-require_line "$config" "repo2-retention-archive=14"
 require_line "$config" "archive-timeout=60"
+require_line "$config" 'repo1-s3-endpoint=${KEEPLING_BACKUP_PRIMARY_ENDPOINT}'
+require_line "$config" 'repo1-s3-region=${KEEPLING_BACKUP_PRIMARY_REGION}'
+
+if grep -Eq '^repo2-|aws_s3|s3\.amazonaws\.com' "$config" "$schedule" "$manifest"; then
+  die "mutable second pgBackRest repository or stale AWS mirror policy remains"
+fi
+
+[ -x infra/backup/mirror-snapshot.sh ] || die "append-only mirror adapter is missing or not executable"
+infra/backup/mirror-snapshot.sh self-test >/dev/null
 
 [ "$(grep -c '^  - id:' "$manifest")" -eq 7 ] || die "durable-state inventory is incomplete"
 for id in postgresql_volume physical_repository_primary physical_repository_mirror opentofu_state dns_inputs encryption_keys secret_manifest; do
@@ -66,4 +77,4 @@ case "$(sed -n 's/^[[:space:]]*image: postgres:\(.*\)$/\1/p' infra/compose/compo
   *) die "Compose PostgreSQL is not pinned to 18.6" ;;
 esac
 
-printf '%s\n' "Backup policy verification passed: encrypted independent repositories, exact cadence/retention, and seven durable locations"
+printf '%s\n' "Backup policy verification passed: parameterized encrypted primary, append-only independent mirror, exact cadence/retention, and seven durable locations"

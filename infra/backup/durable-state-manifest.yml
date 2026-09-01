@@ -13,7 +13,8 @@ locations:
   - id: physical_repository_mirror
     class: recovery
     owner: backup-runtime
-    provider: aws_s3_independent_account
+    provider: cloudflare_r2_independent_account
+    representation: append_only_dated_snapshot
     backup_required: true
   - id: opentofu_state
     class: infrastructure

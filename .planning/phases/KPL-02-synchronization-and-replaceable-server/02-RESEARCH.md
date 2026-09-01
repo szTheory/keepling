@@ -560,7 +560,7 @@ Compose documents `healthcheck`, `condition: service_healthy`, `stop_grace_perio
 
 1. **Which two off-host repositories satisfy versioning/object-lock, client-side encryption, independent-account mirroring, and recovery credentials?**
    - What we know: D-37 locks the required properties; pgBackRest supports S3-compatible repositories and multiple repositories. [CITED: https://pgbackrest.org/user-guide.html]
-   - RESOLVED: Plan 02-08 Task 1 selects Backblaze B2 as the encrypted primary repository and AWS S3 with Object Lock in an independent account as the mirror, with lifecycle/retention configuration tracked under `infra/backup/`; Plan 02-09 Task 2 remains the honest credential checkpoint, and Plan 02-08 Task 3 plus Plan 02-09 Task 3 require real cross-provider restore evidence before acceptance.
+   - SUPERSEDED BY PLAN 02-09 LIVE PROVIDER VALIDATION: use a parameterized encrypted S3-compatible primary repository plus independently credentialed append-only dated mirror snapshots. The mirror is deliberately not a mutable pgBackRest repo2; prefix-scoped retention is activated only after its publish/restore contract passes. Plan 02-09 Task 2 remains the honest credential checkpoint, and complete cross-provider restore evidence remains required before acceptance.
 
 2. **What are the initial feed page size, offline grace, and low-water pruning batch?**
    - What we know: retention must exceed the released-client window plus documented offline grace and safe bootstrap must always remain available.

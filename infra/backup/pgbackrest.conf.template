@@ -4,8 +4,8 @@
 # never environment variables or mounts on the Keepling application service.
 [global]
 repo1-type=s3
-repo1-s3-endpoint=s3.us-west-004.backblazeb2.com
-repo1-s3-region=us-west-004
+repo1-s3-endpoint=${KEEPLING_BACKUP_PRIMARY_ENDPOINT}
+repo1-s3-region=${KEEPLING_BACKUP_PRIMARY_REGION}
 repo1-s3-bucket=${KEEPLING_BACKUP_PRIMARY_BUCKET}
 repo1-s3-key=${FILE:/run/keepling-recovery/primary-access-key}
 repo1-s3-key-secret=${FILE:/run/keepling-recovery/primary-secret-key}
@@ -15,19 +15,6 @@ repo1-retention-full=2
 repo1-retention-diff=14
 repo1-retention-archive=14
 repo1-retention-archive-type=time
-
-repo2-type=s3
-repo2-s3-endpoint=s3.amazonaws.com
-repo2-s3-region=${KEEPLING_BACKUP_MIRROR_REGION}
-repo2-s3-bucket=${KEEPLING_BACKUP_MIRROR_BUCKET}
-repo2-s3-key=${FILE:/run/keepling-recovery/mirror-access-key}
-repo2-s3-key-secret=${FILE:/run/keepling-recovery/mirror-secret-key}
-repo2-cipher-type=aes-256-cbc
-repo2-cipher-pass=${FILE:/run/keepling-recovery/mirror-cipher-pass}
-repo2-retention-full=2
-repo2-retention-diff=14
-repo2-retention-archive=14
-repo2-retention-archive-type=time
 
 archive-async=y
 archive-timeout=60

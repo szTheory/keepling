@@ -155,7 +155,7 @@ Progress: [██████████] 100%
 - [Phase 02]: KPL-02-07 promotes only an exact tested OCI digest and names the same digest in migration, app, and operator metadata.
 - [Phase 02]: KPL-02-07 keeps PostgreSQL private with all durable database and Caddy state in explicit host-backed named volumes.
 - [Phase 02]: KPL-02-07 permits rollback only when the prior tested digest includes the migrated schema and protocol target; otherwise operators forward-fix.
-- [Phase 02]: Recovery uses encrypted Backblaze B2 primary storage and an independently credentialed AWS S3 Object Lock mirror; recovery credentials never reach the app container.
+- [Phase 02]: Recovery uses a parameterized encrypted S3-compatible primary and independently credentialed append-only dated mirror snapshots; recovery credentials never reach the app container, and mirror retention is activated only after restore proof.
 - [Phase 02]: Restore readiness requires an exclusive target lease, complete semantic proof, and transactional finalization of a fresh synchronization epoch.
 - [Phase 02]: Completed restore verification is idempotently keyed by source digest, digested target, and verifier version.
 

@@ -21,11 +21,13 @@ repositories:
     versioning: true
     credential_scope: recovery_primary_only
   mirror:
-    provider: aws_s3
+    provider: cloudflare_r2
     account: independent
     encrypted_client_side: true
-    versioning: true
-    object_lock: compliance
+    mode: append_only_dated_snapshots
+    mutable_pgbackrest_repository: false
+    object_lock_days: 90
+    object_lock_activation: after_contract_and_restore_proof
     credential_scope: recovery_mirror_only
     cadence: "15 05 * * *"
 verification:
