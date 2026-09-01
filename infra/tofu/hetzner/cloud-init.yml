@@ -24,7 +24,24 @@ write_files:
       set -eu
       install -d -o root -g root -m 0755 /srv/keepling
       install -d -o root -g root -m 0700 /etc/keepling/secrets /etc/keepling/recovery
+      install -d -o root -g root -m 0700 /var/lib/keepling
       systemctl enable --now docker.service
+      systemctl is-enabled --quiet docker.service
+      systemctl is-active --quiet docker.service
+      test "$(stat -c '%U:%G:%a' /srv/keepling)" = "root:root:755"
+      test "$(stat -c '%U:%G:%a' /etc/keepling/secrets)" = "root:root:700"
+      test "$(stat -c '%U:%G:%a' /etc/keepling/recovery)" = "root:root:700"
+      test "$(stat -c '%U:%G:%a' /var/lib/keepling)" = "root:root:700"
+      grep -Fx 'KEEPLING_TESTED_OCI_DIGEST=${tested_oci_digest}' /etc/keepling/release.env >/dev/null
+      grep -Fx 'KEEPLING_TARGET_ARCHITECTURE=${architecture}' /etc/keepling/release.env >/dev/null
+      sentinel_tmp=$(mktemp /var/lib/keepling/.bootstrap-complete.XXXXXX)
+      trap 'rm -f -- "$sentinel_tmp"' EXIT HUP INT TERM
+      printf '%s\n' '{"version":1,"status":"complete"}' >"$sentinel_tmp"
+      chown root:root "$sentinel_tmp"
+      chmod 0600 "$sentinel_tmp"
+      mv -f "$sentinel_tmp" /var/lib/keepling/bootstrap-complete.json
+      sentinel_tmp=
+      trap - EXIT HUP INT TERM
 
 runcmd:
   - [flock, --wait, "120", /run/keepling-bootstrap.lock, /usr/local/sbin/keepling-bootstrap]

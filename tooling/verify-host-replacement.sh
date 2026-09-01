@@ -3,7 +3,7 @@ set -eu
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
-TOFU_BIN=${TOFU_BIN:-tofu}
+TOFU_BIN=${TOFU_BIN:-}
 
 die() {
   echo "Host replacement verification failed: $*" >&2
@@ -132,7 +132,10 @@ run_with_optional_argument() {
 
 capture_bootstrap_evidence() (
   status_file=$1
-  evidence_file=$2
+  status_rc=$2
+  effect_file=$3
+  effect_rc=$4
+  evidence_file=$5
   evidence_directory=$(dirname "$evidence_file")
   [ -d "$evidence_directory" ] || {
     echo "Host replacement verification failed: bootstrap evidence directory is missing" >&2
@@ -146,9 +149,15 @@ capture_bootstrap_evidence() (
   esac
 
   evidence_tmp=$(mktemp "$evidence_directory/.bootstrap-evidence.XXXXXX")
-  trap 'rm -f -- "$evidence_tmp"' EXIT HUP INT TERM
+  normalized_effect=$(mktemp "$evidence_directory/.bootstrap-effects.XXXXXX")
+  trap 'rm -f -- "$evidence_tmp" "$normalized_effect"' EXIT HUP INT TERM
+  if jq -e 'type == "object"' "$effect_file" >/dev/null 2>&1; then
+    jq '{cloud_init_version:(.cloud_init_version // "unknown"),sentinel:(.sentinel // false),docker_active:(.docker_active // false),required_paths:(.required_paths // false),release_digest_matches:(.release_digest_matches // false),release_architecture_matches:(.release_architecture_matches // false)}' "$effect_file" >"$normalized_effect"
+  else
+    jq -n '{cloud_init_version:"unknown",sentinel:false,docker_active:false,required_paths:false,release_digest_matches:false,release_architecture_matches:false}' >"$normalized_effect"
+  fi
   if jq -e 'type == "object"' "$status_file" >/dev/null 2>&1; then
-    jq '
+    jq --argjson status_rc "$status_rc" --argjson effect_rc "$effect_rc" --slurpfile effects "$normalized_effect" '
       def stages: ["init-local", "init", "modules-config", "modules-final"];
       def error_count($stage):
         if (.[$stage].errors | type) == "array" then (.[$stage].errors | length) else 0 end;
@@ -158,27 +167,61 @@ capture_bootstrap_evidence() (
         else 0
         end;
       def closed_status:
-        (.extended_status // .status // "unknown") as $status |
+        (if (.status | type) == "string" and (.extended_status | type) == "string" and
+          ((.status == "not started" and .extended_status == "not started") or
+           (.status == "running" and (.extended_status == "running" or .extended_status == "degraded running")) or
+           (.status == "done" and (.extended_status == "done" or .extended_status == "degraded done")) or
+           (.status == "error" and (.extended_status == "error" or .extended_status == "error - running" or .extended_status == "error - done")) or
+           (.status == "disabled" and .extended_status == "disabled"))
+         then .extended_status else "unknown" end) as $status |
         if ["not started", "running", "done", "error", "error - done", "error - running", "degraded done", "degraded running", "disabled"] | index($status)
         then $status
         else "unknown"
         end;
+      def safe_version:
+        ((.cloud_init_version // $effects[0].cloud_init_version // "unknown") | tostring) as $version |
+        if ($version | test("^[0-9]+([.][0-9]+){1,3}([+~._-][A-Za-z0-9]+)*$")) then $version else "unknown" end;
+      def effect_boolean($name):
+        if (($effects[0][$name] // false) | type) == "boolean" then ($effects[0][$name] // false) else false end;
       {
-        version: 1,
+        version: 2,
+        cloud_init_version: safe_version,
         bootstrap_status: closed_status,
+        status_rc: $status_rc,
         failed_stages: [stages[] as $stage | select(error_count($stage) > 0) | $stage],
         failed_modules: ([
-          .. | strings |
-          scan("package-update-upgrade-install|scripts-user|runcmd|write-files|bootcmd|ssh"; "i") |
-          ascii_downcase
+          .. | strings as $text |
+          [
+            {name:"metadata",pattern:"metadata"},
+            {name:"datasource",pattern:"datasource"},
+            {name:"network-connectivity",pattern:"network|connectivity"},
+            {name:"systemd",pattern:"systemd|systemctl"},
+            {name:"package-install",pattern:"package-update-upgrade-install|package install|apt"},
+            {name:"scripts-user",pattern:"scripts-user"},
+            {name:"runcmd",pattern:"runcmd"},
+            {name:"write-files",pattern:"write-files"}
+          ][] as $classification |
+          select($text | test($classification.pattern; "i")) |
+          $classification.name
         ] | unique),
-        error_count: ([stages[] as $stage | error_count($stage)] | add // 0),
-        recoverable_error_count: ([stages[] as $stage | recoverable_count($stage)] | add // 0),
+        error_count: ([((.errors | if type == "array" then length else 0 end)), ([stages[] as $stage | error_count($stage)] | add // 0)] | max),
+        unknown_error_count: ([stages[] as $stage | .[$stage].errors[]? |
+          select((type != "string") or (test("metadata|datasource|network|connectivity|systemd|systemctl|package-update-upgrade-install|package install|apt|scripts-user|runcmd|write-files"; "i") | not))] | length),
+        recoverable_error_count: ([((.recoverable_errors | if type == "object" then ([.[] | if type == "array" then length else 0 end] | add // 0) else 0 end)), ([stages[] as $stage | recoverable_count($stage)] | add // 0)] | max),
+        effect_check_rc: $effect_rc,
+        effects: {
+          sentinel: effect_boolean("sentinel"),
+          docker_active: effect_boolean("docker_active"),
+          required_paths: effect_boolean("required_paths"),
+          release_digest_matches: effect_boolean("release_digest_matches"),
+          release_architecture_matches: effect_boolean("release_architecture_matches")
+        },
         raw_detail_retained: false
       }
     ' "$status_file" >"$evidence_tmp"
   else
-    jq -n '{version:1,bootstrap_status:"unknown",failed_stages:[],failed_modules:[],error_count:0,recoverable_error_count:0,raw_detail_retained:false}' >"$evidence_tmp"
+    jq -n --argjson status_rc "$status_rc" --argjson effect_rc "$effect_rc" --slurpfile effects "$normalized_effect" \
+      '{version:2,cloud_init_version:(if ($effects[0].cloud_init_version | type) == "string" and ($effects[0].cloud_init_version | test("^[0-9]+([.][0-9]+){1,3}([+~._-][A-Za-z0-9]+)*$")) then $effects[0].cloud_init_version else "unknown" end),bootstrap_status:"unknown",status_rc:$status_rc,failed_stages:[],failed_modules:[],error_count:0,unknown_error_count:0,recoverable_error_count:0,effect_check_rc:$effect_rc,effects:{sentinel:($effects[0].sentinel == true),docker_active:($effects[0].docker_active == true),required_paths:($effects[0].required_paths == true),release_digest_matches:($effects[0].release_digest_matches == true),release_architecture_matches:($effects[0].release_architecture_matches == true)},raw_detail_retained:false}' >"$evidence_tmp"
   fi
   chmod 600 "$evidence_tmp"
   mv "$evidence_tmp" "$evidence_file"
@@ -187,11 +230,15 @@ capture_bootstrap_evidence() (
 
 bootstrap_failure() {
   status_file=$1
+  status_rc=$2
   capture_result=0
   teardown_result=0
-  capture_bootstrap_evidence "$status_file" "$KEEPLING_BOOTSTRAP_EVIDENCE_FILE" || capture_result=$?
+  effect_file=$(mktemp "${TMPDIR:-/tmp}/keepling-bootstrap-effects.XXXXXX")
+  effect_result=0
+  run_with_optional_argument "$KEEPLING_BOOTSTRAP_EFFECT_RUNNER" "${KEEPLING_BOOTSTRAP_EFFECT_RUNNER_ARGUMENT:-}" >"$effect_file" 2>/dev/null || effect_result=$?
+  capture_bootstrap_evidence "$status_file" "$status_rc" "$effect_file" "$effect_result" "$KEEPLING_BOOTSTRAP_EVIDENCE_FILE" || capture_result=$?
   run_with_optional_argument "$KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER" "${KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER_ARGUMENT:-}" >/dev/null 2>&1 || teardown_result=$?
-  rm -f -- "$status_file"
+  rm -f -- "$status_file" "$effect_file"
 
   [ "$teardown_result" -eq 0 ] || die "candidate teardown failed after bootstrap rejection"
   [ "$capture_result" -eq 0 ] || die "candidate was torn down but bounded bootstrap evidence could not be written"
@@ -200,9 +247,11 @@ bootstrap_failure() {
 
 verify_bootstrap_gate() {
   status_runner=${KEEPLING_BOOTSTRAP_STATUS_RUNNER:-}
+  effect_runner=${KEEPLING_BOOTSTRAP_EFFECT_RUNNER:-}
   teardown_runner=${KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER:-}
   evidence_file=${KEEPLING_BOOTSTRAP_EVIDENCE_FILE:-}
   [ -x "$status_runner" ] || die "bootstrap status runner is unavailable"
+  [ -x "$effect_runner" ] || die "bootstrap effect-check runner is unavailable"
   [ -x "$teardown_runner" ] || die "bootstrap teardown runner is unavailable"
   [ -n "$evidence_file" ] || die "bootstrap evidence file is missing"
 
@@ -220,36 +269,75 @@ verify_bootstrap_gate() {
     status_result=0
     run_with_optional_argument "$status_runner" "${KEEPLING_BOOTSTRAP_STATUS_RUNNER_ARGUMENT:-}" >"$status_file" 2>/dev/null || status_result=$?
 
-    if jq -e 'type == "object"' "$status_file" >/dev/null 2>&1; then
-      bootstrap_status=$(jq -r '.extended_status // .status // "unknown"' "$status_file")
-    else
-      bootstrap_status=unknown
-    fi
+    decision=$(jq -er --argjson rc "$status_result" '
+      . as $root |
+      def stages: ["init-local", "init", "modules-config", "modules-final"];
+      def pair_valid:
+        (($root.status == "not started" and $root.extended_status == "not started") or
+         ($root.status == "running" and ($root.extended_status == "running" or $root.extended_status == "degraded running")) or
+         ($root.status == "done" and ($root.extended_status == "done" or $root.extended_status == "degraded done")) or
+         ($root.status == "error" and ($root.extended_status == "error" or $root.extended_status == "error - running" or $root.extended_status == "error - done")) or
+         ($root.status == "disabled" and $root.extended_status == "disabled"));
+      def stage_valid($stage):
+        ($root[$stage] | type) == "object" and
+        ($root[$stage].errors | type) == "array" and
+        all($root[$stage].errors[]; type == "string") and
+        ($root[$stage].recoverable_errors | type) == "object" and
+        all($root[$stage].recoverable_errors[]; type == "array" and all(.[]; type == "string"));
+      def present_stages_valid:
+        [stages[] as $stage | (($root | has($stage) | not) or stage_valid($stage))] | all;
+      def all_stages_present:
+        [stages[] as $stage | ($root | has($stage))] | all;
+      def aggregate_valid:
+        ($root.errors | type) == "array" and
+        all($root.errors[]; type == "string") and
+        ($root.recoverable_errors | type) == "object" and
+        all($root.recoverable_errors[]; type == "array" and all(.[]; type == "string"));
+      def structurally_valid:
+        ($root | type) == "object" and ($root.status | type) == "string" and
+        ($root.extended_status | type) == "string" and pair_valid and aggregate_valid and present_stages_valid;
+      def errors: ($root.errors | length) + ([stages[] as $stage | $root[$stage].errors[]?] | length);
+      def recoverable: ([$root.recoverable_errors[]?[]] | length) + ([stages[] as $stage | $root[$stage].recoverable_errors[]?[]] | length);
+      if structurally_valid | not then "reject"
+      elif (.extended_status == "error" or .extended_status == "error - running" or .extended_status == "error - done") then "reject"
+      elif .extended_status == "done" and all_stages_present and $rc == 0 and errors == 0 and recoverable == 0 then "effects"
+      elif .extended_status == "done" then "reject"
+      elif (.extended_status == "not started" or .extended_status == "running") and $rc == 0 and errors == 0 and recoverable == 0 then "poll"
+      elif .extended_status == "degraded running" and ($rc == 0 or $rc == 2) and errors == 0 and recoverable > 0 then "poll"
+      else "reject"
+      end
+    ' "$status_file" 2>/dev/null || printf '%s' reject)
 
-    case "$bootstrap_status" in
-      done)
-        rm -f -- "$status_file"
-        return 0
-        ;;
-      error|error\ -\ done|degraded\ done|disabled|unknown)
-        bootstrap_failure "$status_file"
+    case "$decision" in
+      effects)
+        effect_file=$(mktemp "${TMPDIR:-/tmp}/keepling-bootstrap-effects.XXXXXX")
+        effect_result=0
+        run_with_optional_argument "$effect_runner" "${KEEPLING_BOOTSTRAP_EFFECT_RUNNER_ARGUMENT:-}" >"$effect_file" 2>/dev/null || effect_result=$?
+        if [ "$effect_result" -eq 0 ] && jq -e '
+          type == "object" and .version == 1 and
+          (.cloud_init_version | type) == "string" and
+          (.cloud_init_version | test("^[0-9]+([.][0-9]+){1,3}([+~._-][A-Za-z0-9]+)*$")) and
+          .sentinel == true and .docker_active == true and .required_paths == true and
+          .release_digest_matches == true and .release_architecture_matches == true
+        ' "$effect_file" >/dev/null 2>&1; then
+          capture_bootstrap_evidence "$status_file" "$status_result" "$effect_file" "$effect_result" "$evidence_file"
+          rm -f -- "$status_file" "$effect_file"
+          return 0
+        fi
+        rm -f -- "$effect_file"
+        bootstrap_failure "$status_file" "$status_result"
         return 1
         ;;
-      running|not\ started|error\ -\ running|degraded\ running)
-        if { [ "$bootstrap_status" = running ] || [ "$bootstrap_status" = 'not started' ]; } &&
-          [ "$status_result" -ne 0 ]; then
-          bootstrap_failure "$status_file"
-          return 1
-        fi
+      poll)
         if [ "$check" -eq "$max_checks" ]; then
-          bootstrap_failure "$status_file"
+          bootstrap_failure "$status_file" "$status_result"
           return 1
         fi
         rm -f -- "$status_file"
         [ "$retry_seconds" -eq 0 ] || sleep "$retry_seconds"
         ;;
       *)
-        bootstrap_failure "$status_file"
+        bootstrap_failure "$status_file" "$status_result"
         return 1
         ;;
     esac
@@ -359,13 +447,71 @@ verify_candidate_sequence() (
   echo "Host replacement sequence passed: candidate gates, DNS rehearsal, and teardown completed in order"
 )
 
-dry_run() {
+require_pinned_executable() {
+  label=$1
+  executable=$2
+  case "$executable" in
+    /*) [ -x "$executable" ] || die "$label pinned executable is unavailable" ;;
+    *) die "$label must be an explicit absolute executable path" ;;
+  esac
+}
+
+verify_cloud_init_preflight() (
+  schema_bin=${CLOUD_INIT_SCHEMA_BIN:-}
+  schema_version=${CLOUD_INIT_SCHEMA_VERSION:-}
+  require_pinned_executable "cloud-init schema validator" "$schema_bin"
+  case "$schema_version" in
+    ''|*[!0-9A-Za-z.+~_-]*) die "CLOUD_INIT_SCHEMA_VERSION must pin the schema validator version" ;;
+  esac
+  reported_version=$($schema_bin --version 2>&1) || die "cloud-init schema validator version check failed"
+  printf '%s\n' "$reported_version" | grep -F "$schema_version" >/dev/null ||
+    die "cloud-init schema validator version does not match CLOUD_INIT_SCHEMA_VERSION"
+
+  rendered=$(mktemp "${TMPDIR:-/tmp}/keepling-cloud-config.XXXXXX")
+  trap 'rm -f -- "$rendered"' EXIT HUP INT TERM
+  chmod 600 "$rendered"
+  # shellcheck disable=SC2016 # Match OpenTofu template tokens literally.
+  sed \
+    -e 's/${tested_oci_digest}/sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/g' \
+    -e 's/${architecture}/x86_64/g' \
+    infra/tofu/hetzner/cloud-init.yml >"$rendered"
+
+  if ! grep -F 'systemctl enable --now docker.service' "$rendered" >/dev/null ||
+    ! grep -F 'systemctl is-active --quiet docker.service' "$rendered" >/dev/null ||
+    ! grep -F '/var/lib/keepling/bootstrap-complete.json' "$rendered" >/dev/null ||
+    ! grep -F '{"version":1,"status":"complete"}' "$rendered" >/dev/null; then
+    die "rendered cloud-config is missing the Keepling completion contract"
+  fi
+  "$schema_bin" schema --config-file "$rendered" >/dev/null ||
+    die "rendered cloud-config failed the pinned cloud-init schema validator"
+)
+
+verify_pinned_tofu() {
+  require_pinned_executable "OpenTofu" "$TOFU_BIN"
   [ "$($TOFU_BIN version -json | jq -r '.terraform_version')" = "1.12.6" ] ||
     die "OpenTofu 1.12.6 is required"
+  provider_dir=${HCLOUD_PROVIDER_PLUGIN_DIR:-}
+  case "$provider_dir" in
+    /*) [ -d "$provider_dir" ] || die "pinned provider plugin directory is unavailable" ;;
+    *) die "HCLOUD_PROVIDER_PLUGIN_DIR must be an explicit absolute directory" ;;
+  esac
+  configured_provider_version=$(awk '/source  = "hetznercloud\/hcloud"/{found=1; next} found && /version = "= [0-9.]+"/{gsub(/[^0-9.]/, "", $0); print; exit}' infra/tofu/hetzner/versions.tf)
+  locked_provider_version=$(awk '/provider "registry.opentofu.org\/hetznercloud\/hcloud"/{found=1; next} found && /version/{gsub(/[^0-9.]/, "", $0); print; exit}' infra/tofu/hetzner/.terraform.lock.hcl)
+  [ -n "$configured_provider_version" ] && [ "$configured_provider_version" = "$locked_provider_version" ] ||
+    die "tracked hcloud provider constraint and lock resolution disagree"
+  find "$provider_dir" -type f -name "terraform-provider-hcloud_v${configured_provider_version}*" -perm -111 -print -quit |
+    grep -q . || die "the tracked pinned hcloud provider is unavailable"
+}
+
+dry_run() {
+  verify_cloud_init_preflight
+  verify_pinned_tofu
+  tofu_data=$(mktemp -d "${TMPDIR:-/tmp}/keepling-tofu-data.XXXXXX")
+  trap 'rm -rf -- "$tofu_data"' EXIT HUP INT TERM
   "$TOFU_BIN" -chdir=infra/tofu/hetzner fmt -check -recursive
-  "$TOFU_BIN" -chdir=infra/tofu/hetzner init -backend=false >/dev/null
-  "$TOFU_BIN" -chdir=infra/tofu/hetzner validate >/dev/null
-  "$TOFU_BIN" -chdir=infra/tofu/hetzner test >/dev/null
+  TF_DATA_DIR="$tofu_data" "$TOFU_BIN" -chdir=infra/tofu/hetzner init -backend=false -lockfile=readonly -plugin-dir="$HCLOUD_PROVIDER_PLUGIN_DIR" >/dev/null
+  TF_DATA_DIR="$tofu_data" "$TOFU_BIN" -chdir=infra/tofu/hetzner validate >/dev/null
+  TF_DATA_DIR="$tofu_data" "$TOFU_BIN" -chdir=infra/tofu/hetzner test >/dev/null
   ./infra/dns/cloudflare.sh self-test >/dev/null
   ./infra/backup/mirror-snapshot.sh self-test >/dev/null
   ./tooling/verify-backup.sh --fixture local >/dev/null
@@ -419,10 +565,10 @@ credentialed_apply() {
 }
 
 for command in curl jq; do require_command "$command"; done
-[ -x "$TOFU_BIN" ] || command -v "$TOFU_BIN" >/dev/null 2>&1 || die "OpenTofu command is unavailable"
 
 case "${1:-}" in
   --dry-run) [ "$#" -eq 1 ] || die "usage: $0 --dry-run"; dry_run ;;
+  --cloud-init-preflight) [ "$#" -eq 1 ] || die "usage: $0 --cloud-init-preflight"; verify_cloud_init_preflight ;;
   --state-self-test) [ "$#" -eq 1 ] || die "usage: $0 --state-self-test"; verify_state_contract ;;
   --bootstrap-gate) [ "$#" -eq 1 ] || die "usage: $0 --bootstrap-gate"; verify_bootstrap_gate ;;
   --stage-bundle) [ "$#" -eq 1 ] || die "usage: $0 --stage-bundle"; stage_candidate_bundle ;;
@@ -434,5 +580,5 @@ case "${1:-}" in
       *) die "usage: $0 --credentialed [--preflight]" ;;
     esac
     ;;
-  *) die "usage: $0 --dry-run | --state-self-test | --bootstrap-gate | --stage-bundle | --candidate-sequence | --credentialed [--preflight]" ;;
+  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --candidate-sequence | --credentialed [--preflight]" ;;
 esac
