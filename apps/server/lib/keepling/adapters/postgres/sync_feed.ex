@@ -12,6 +12,31 @@ defmodule Keepling.Adapters.Postgres.SyncFeed do
 
   @maximum_page_size 200
 
+  @authorization_fields [
+    :issuer,
+    :origin,
+    :server_instance,
+    :subject,
+    :generation,
+    :sync_epoch,
+    :protocol_train
+  ]
+
+  @spec authorize_namespace(map(), map()) :: :ok | {:error, :namespace_mismatch}
+  def authorize_namespace(supplied, authoritative)
+      when is_map(supplied) and is_map(authoritative) do
+    if Map.take(supplied, @authorization_fields) ==
+         Map.take(authoritative, @authorization_fields) and
+         Enum.all?(@authorization_fields, &Map.has_key?(supplied, &1)) and
+         Enum.all?(@authorization_fields, &Map.has_key?(authoritative, &1)) do
+      :ok
+    else
+      {:error, :namespace_mismatch}
+    end
+  end
+
+  def authorize_namespace(_supplied, _authoritative), do: {:error, :namespace_mismatch}
+
   @spec reserve_sequence(Ecto.Repo.t(), binary(), DateTime.t()) :: {:ok, pos_integer()}
   def reserve_sequence(repo, account_id, accepted_at) do
     SQL.query!(
