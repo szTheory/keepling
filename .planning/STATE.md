@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-24-PLAN.md
-last_updated: "2026-09-01T01:10:25.419Z"
+stopped_at: Completed KPL-01-25-PLAN.md
+last_updated: "2026-09-01T01:38:10.948Z"
 last_activity: 2026-08-31
-last_activity_desc: Completed KPL-01-24-PLAN.md
-state_head: 5b56f9c39a95391de2e24c74c5d71a6cbd87f61f
+last_activity_desc: Completed KPL-01-25-PLAN.md
+state_head: eaa9f8b913f0eb370fe1f11683079cb6c2a6851b
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 27
-  completed_plans: 24
+  completed_plans: 25
 milestone_name: milestone
 ---
 
@@ -29,12 +29,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 24 of 27
+Plan: 25 of 27
 Total Plans in Phase: 27
 Status: Executing Phase KPL-01
-Last activity: 2026-08-31 — Completed KPL-01-24-PLAN.md
-Last Activity Description: Completed KPL-01-24-PLAN.md
-Progress: [█████████░] 89%
+Last activity: 2026-08-31 — Completed KPL-01-25-PLAN.md
+Last Activity Description: Completed KPL-01-25-PLAN.md
+Progress: [█████████░] 93%
 
 ## Accumulated Context
 
@@ -117,6 +117,9 @@ Progress: [█████████░] 89%
 - [Phase 01]: Apply one explicit same-origin CSP before Plug.Static so the application shell and API share the same restrictive execution boundary.
 - [Phase 01]: Route every TaskViews transaction and SQL call through wrappers consuming the same positive 10-second production timeout.
 - [Phase 01]: Dispose authentication continuations by route owner while fencing authentication generation and owner liveness, including React Strict Mode rehearsal.
+- [Phase 01]: Keep 1024–1063px on drawer navigation so the 360px list and 480px detail minimums remain intact.
+- [Phase 01]: Begin the persistent 224px navigation region at exactly 1064px and cap lists at 440px.
+- [Phase 01]: Use one shell-owned main landmark with embedded list and editor sections.
 
 ### Retained Research
 
@@ -144,8 +147,8 @@ Run `$gsd-verify-work KPL-01` from the repository root.
 
 ## Session
 
-**Last session:** 2026-09-01T01:10:25.362Z
-**Stopped at:** Completed KPL-01-24-PLAN.md
+**Last session:** 2026-09-01T01:38:10.891Z
+**Stopped at:** Completed KPL-01-25-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -176,3 +179,4 @@ Run `$gsd-verify-work KPL-01` from the repository root.
 | Phase KPL-01 P22 | 5min | 2 tasks | 3 files |
 | Phase KPL-01 P23 | 8min | 2 tasks | 5 files |
 | Phase KPL-01 P24 | 20min | 3 tasks | 12 files |
+| Phase KPL-01 P25 | 23min | 3 tasks | 12 files |

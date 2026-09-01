@@ -7,13 +7,13 @@
 
 ### Personal GTD domain
 
-- [ ] **GTD-01**: User can capture a task with a title into Inbox and immediately receive a stable task identity.
-- [ ] **GTD-02**: User can clarify a task by editing its title, notes, project membership, tags, and temporal fields supported by v1.
+- [x] **GTD-01**: User can capture a task with a title into Inbox and immediately receive a stable task identity.
+- [x] **GTD-02**: User can clarify a task by editing its title, notes, project membership, tags, and temporal fields supported by v1.
 - [x] **GTD-03**: User can deliberately place or remove a task in Today without conflating that choice with its deadline.
-- [ ] **GTD-04**: User can inspect upcoming scheduled tasks and deadlines using explicit timezone-aware semantics.
-- [ ] **GTD-05**: User can complete and reopen a task as idempotent domain transitions.
-- [ ] **GTD-06**: User can trash and restore a task without immediate hard deletion.
-- [ ] **GTD-07**: User can undo supported consequential mutations using a bounded, revision-aware handle.
+- [x] **GTD-04**: User can inspect upcoming scheduled tasks and deadlines using explicit timezone-aware semantics.
+- [x] **GTD-05**: User can complete and reopen a task as idempotent domain transitions.
+- [x] **GTD-06**: User can trash and restore a task without immediate hard deletion.
+- [x] **GTD-07**: User can undo supported consequential mutations using a bounded, revision-aware handle.
 
 ### Identity and server authority
 

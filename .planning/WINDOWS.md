@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 26
+open_count: 28
 waived_count: 0
 fixed_count: 0
-total_count: 26
-last_updated: 2026-08-31T22:38:58.894Z
+total_count: 28
+last_updated: 2026-09-01T01:37:57.421Z
 ---
 
 # Broken Windows Ledger
@@ -41,6 +41,8 @@ last_updated: 2026-08-31T22:38:58.894Z
 | 24 | KPL-01 | deviation | tooling/test-phase-1.sh |  | Pinned disposable migration, compile, and ExUnit lanes to MIX_ENV=test | open |  | 2026-08-31T16:02:33.734Z |  |
 | 25 | KPL-01 | lint-warning | apps/web/src/features/lists/TaskList.tsx | 190 | Pre-existing react-hooks/set-state-in-effect lint violation in TaskList | open |  | 2026-08-31T22:38:58.822Z |  |
 | 26 | KPL-01 | lint-warning | apps/web/src/features/lists/TrashList.tsx | 91 | Pre-existing react-hooks/set-state-in-effect lint violation in TrashList | open |  | 2026-08-31T22:38:58.894Z |  |
+| 27 | KPL-01 | unmet-truth | apps/web/e2e/lifecycle-recovery.spec.ts | 422 | Session revocation remains visible after recent-authentication recovery in the full Phase 1 gate | open |  | 2026-09-01T01:37:57.347Z |  |
+| 28 | KPL-01 | lint-warning | apps/web/src/app/AuthProvider.tsx | 259 | Repository ESLint fast-refresh export violation predates Plan 25 | open |  | 2026-09-01T01:37:57.421Z |  |
 
 ````json
 [
@@ -354,6 +356,30 @@ last_updated: 2026-08-31T22:38:58.894Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-08-31T22:38:58.894Z",
+    "resolved_at": null
+  },
+  {
+    "id": 27,
+    "kind": "unmet-truth",
+    "phase": "KPL-01",
+    "file": "apps/web/e2e/lifecycle-recovery.spec.ts",
+    "line": 422,
+    "description": "Session revocation remains visible after recent-authentication recovery in the full Phase 1 gate",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T01:37:57.347Z",
+    "resolved_at": null
+  },
+  {
+    "id": 28,
+    "kind": "lint-warning",
+    "phase": "KPL-01",
+    "file": "apps/web/src/app/AuthProvider.tsx",
+    "line": 259,
+    "description": "Repository ESLint fast-refresh export violation predates Plan 25",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T01:37:57.421Z",
     "resolved_at": null
   }
 ]
