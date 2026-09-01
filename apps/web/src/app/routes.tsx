@@ -173,6 +173,8 @@ function AppRoutes({
   const location = new URL(locationKey, window.location.origin)
   const { pathname } = location
   const routeContinuationScope = useMemo<ContinuationScope>(() => {
+    // Route ownership deliberately creates and disposes one continuation scope per pathname.
+    void pathname
     if (createContinuationScope) return createContinuationScope()
 
     return {
@@ -267,7 +269,7 @@ function AppRoutes({
                   Couldn’t finish restoring everything. Your work is still here.
                 </p>
                 <Button
-                  className="mt-5 min-h-11"
+                  className="mt-4 min-h-11"
                   onClick={() => void onRetryContinuations()}
                   type="button"
                   variant="outline"

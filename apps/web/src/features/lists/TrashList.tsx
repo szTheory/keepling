@@ -88,6 +88,8 @@ function TrashList({ csrfToken, onAuthenticationRequired }: TrashListProps) {
   }, [onAuthenticationRequired])
 
   useEffect(() => {
+    // Initial Trash reads are the external synchronization owned by this effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load()
   }, [load])
 

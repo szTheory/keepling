@@ -605,7 +605,7 @@ function TaskEditor({
       <Root aria-label={embedded ? 'Task editor' : undefined} className="p-6" id={embedded ? undefined : 'main-content'}>
         <div role="alert">
           <p>Couldn’t load this task. Your tasks weren’t changed.</p>
-          <Button className="mt-3" onClick={() => onNavigate('/')} variant="outline">
+          <Button className="mt-4" onClick={() => onNavigate('/')} variant="outline">
             Return to Inbox
           </Button>
         </div>
@@ -661,7 +661,7 @@ function TaskEditor({
           {firstError ? (
             <div className="rounded-lg border border-destructive p-4" role="alert">
               <p className="font-semibold">Review the highlighted fields.</p>
-              <ul className="mt-2 list-disc pl-5">
+              <ul className="mt-2 list-disc pl-6">
                 {fieldErrors.title ? (
                   <li>
                     <a className="underline" href="#task-editor-title">
@@ -701,7 +701,7 @@ function TaskEditor({
             <input
               aria-describedby={fieldErrors.title ? 'task-editor-title-error' : undefined}
               aria-invalid={fieldErrors.title ? true : undefined}
-              className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="min-h-11 w-full rounded-lg border border-input bg-background px-4 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               id="task-editor-title"
               maxLength={512}
               onChange={(event) => setDraft((current) => ({ ...current, title: event.target.value }))}
@@ -723,7 +723,7 @@ function TaskEditor({
             <textarea
               aria-describedby={fieldErrors.notes ? 'task-editor-notes-error' : undefined}
               aria-invalid={fieldErrors.notes ? true : undefined}
-              className="min-h-40 w-full resize-y rounded-lg border border-input bg-background px-3 py-2 text-base leading-6 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="min-h-40 w-full resize-y rounded-lg border border-input bg-background px-4 py-2 text-base leading-6 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               id="task-editor-notes"
               maxLength={50_000}
               onChange={(event) => setDraft((current) => ({ ...current, notes: event.target.value }))}
@@ -753,7 +753,7 @@ function TaskEditor({
                     fieldErrors.plannedOn ? 'task-editor-planned-on-error' : undefined
                   }
                   aria-invalid={fieldErrors.plannedOn ? true : undefined}
-                  className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="min-h-11 w-full rounded-lg border border-input bg-background px-4 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   id="task-editor-planned-on"
                   inputMode="numeric"
                   onChange={(event) =>
@@ -779,7 +779,7 @@ function TaskEditor({
                     fieldErrors.deadlineOn ? 'task-editor-deadline-on-error' : undefined
                   }
                   aria-invalid={fieldErrors.deadlineOn ? true : undefined}
-                  className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="min-h-11 w-full rounded-lg border border-input bg-background px-4 py-2 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   id="task-editor-deadline-on"
                   inputMode="numeric"
                   onChange={(event) =>
@@ -798,7 +798,7 @@ function TaskEditor({
               </div>
             </div>
             {dateWarning ? (
-              <p className="rounded-lg border border-border bg-muted p-3 text-sm" role="status">
+              <p className="rounded-lg border border-border bg-muted p-4 text-sm" role="status">
                 Planned date is after the deadline. Both dates will be saved.
               </p>
             ) : null}
@@ -806,7 +806,7 @@ function TaskEditor({
 
           {dirty ? <p className="text-sm font-semibold text-muted-foreground">Unsaved changes</p> : null}
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-4">
             <Button disabled={!dirty || locked} ref={saveRef} type="submit">
               {recoveryState?.kind === 'in_flight' ? 'Saving…' : 'Save changes'}
             </Button>

@@ -373,7 +373,7 @@ function SessionList({
     return (
       <div className="rounded-lg border border-border bg-card p-4" role="alert">
         <p>Couldn’t load Sessions. Nothing was changed.</p>
-        <Button className="mt-3 min-h-11" onClick={() => void retryLoad()} variant="outline">
+        <Button className="mt-4 min-h-11" onClick={() => void retryLoad()} variant="outline">
           Retry loading Sessions
         </Button>
       </div>
@@ -395,7 +395,7 @@ function SessionList({
           </p>
           {recovery.status === 'unknown' ? (
             <Button
-              className="mt-3 min-h-11"
+              className="mt-4 min-h-11"
               onClick={() => void reconcile(recovery)}
               variant="outline"
             >
@@ -426,7 +426,7 @@ function SessionList({
                         </span>
                       ) : null}
                     </div>
-                    <dl className="mt-3 grid gap-1 text-sm text-muted-foreground">
+                    <dl className="mt-4 grid gap-1 text-sm text-muted-foreground">
                       <div className="flex gap-2">
                         <dt className="font-semibold text-foreground">Client</dt>
                         <dd>{clientKind(session.clientKind)}</dd>
@@ -460,13 +460,13 @@ function SessionList({
                   </Button>
                 </div>
 
-                <div className="mt-4 flex flex-wrap items-end gap-3">
+                <div className="mt-4 flex flex-wrap items-end gap-4">
                   <div className="min-w-56 flex-1 space-y-2">
                     <label className="block text-sm font-semibold" htmlFor={`session-label-${session.id}`}>
                       Label for {session.label}
                     </label>
                     <input
-                      className="min-h-11 w-full rounded-lg border border-input bg-card px-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="min-h-11 w-full rounded-lg border border-input bg-card px-4 text-base outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       id={`session-label-${session.id}`}
                       maxLength={200}
                       disabled={busySessionId !== null || recovery !== null}

@@ -50,7 +50,7 @@ function NavigationLinks({
         return (
           <a
             aria-current={current ? 'page' : undefined}
-            className={`${index === 0 ? '' : 'mt-2 '}flex min-h-[var(--keepling-layout-target)] min-w-0 items-center truncate border-l-2 pl-3 text-[length:var(--keepling-type-label)] font-semibold ${current ? 'border-primary bg-accent' : 'border-transparent'}`}
+            className={`${index === 0 ? '' : 'mt-2 '}flex min-h-[var(--keepling-layout-target)] min-w-0 items-center truncate border-l-2 pl-4 text-[length:var(--keepling-type-label)] font-semibold ${current ? 'border-primary bg-accent' : 'border-transparent'}`}
             href={href}
             key={href}
             onClick={(event) => onNavigate?.(event, href)}
@@ -78,7 +78,7 @@ function WorkspaceShell({
   return (
     <>
       <a
-        className="fixed left-4 top-0 z-[60] -translate-y-full rounded-b-lg bg-primary px-4 py-3 text-primary-foreground focus:translate-y-0 motion-reduce:transition-none"
+        className="fixed left-4 top-0 z-[60] -translate-y-full rounded-b-lg bg-primary px-4 py-4 text-primary-foreground focus:translate-y-0 motion-reduce:transition-none"
         href="#main-content"
       >
         Skip to main content

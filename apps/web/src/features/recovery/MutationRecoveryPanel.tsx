@@ -12,7 +12,7 @@ function MutationRecoveryPanel({ onCheck, onSignIn, state }: MutationRecoveryPan
     return (
       <div className="mt-6 rounded-lg border border-border p-4" role="status">
         <p>Checking whether your change was saved…</p>
-        <Button className="mt-3" onClick={onCheck} variant="outline">
+        <Button className="mt-4" onClick={onCheck} variant="outline">
           Check again
         </Button>
       </div>
@@ -23,7 +23,7 @@ function MutationRecoveryPanel({ onCheck, onSignIn, state }: MutationRecoveryPan
     return (
       <div className="mt-6 rounded-lg border border-border p-4" role="alert">
         <p>Sign in again. Keepling will check whether your change was saved.</p>
-        <Button className="mt-3" onClick={onSignIn} variant="outline">
+        <Button className="mt-4" onClick={onSignIn} variant="outline">
           Sign in and continue
         </Button>
       </div>

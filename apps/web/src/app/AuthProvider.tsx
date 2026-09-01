@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- Provider state and its sole consumer hook intentionally share this private composition boundary. */
 import {
   useCallback,
   createContext,
@@ -252,8 +253,6 @@ const useAuth = () => {
   return value
 }
 
-// Auth state and its provider intentionally share this narrow composition module.
-// eslint-disable-next-line react-refresh/only-export-components
 export {
   AuthProvider,
   useAuth,

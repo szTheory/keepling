@@ -68,7 +68,7 @@ function ConflictValue({
   const needsDisclosure = valueNeedsDisclosure(value)
 
   return (
-    <div className="min-w-0 rounded-lg border border-border bg-background p-3">
+    <div className="min-w-0 rounded-lg border border-border bg-background p-4">
       <h4 className="text-sm font-semibold">{label}</h4>
       <p
         className={`mt-2 whitespace-pre-wrap break-words text-base ${
@@ -217,7 +217,7 @@ function ConflictResolver({
       </h2>
       <p className="mt-2">Review the affected fields before saving again.</p>
 
-      <div className="mt-5 space-y-5">
+      <div className="mt-4 space-y-4">
         {conflict.fields.map((field) => {
           const label = fieldLabel(field.field)
           const selection = selections[field.field]
@@ -225,7 +225,7 @@ function ConflictResolver({
           return (
             <fieldset className="rounded-lg border border-border p-4" key={field.field}>
               <legend className="px-1 text-base font-semibold">{label}</legend>
-              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+              <div className="mt-2 grid gap-4 sm:grid-cols-2">
                 <ConflictValue
                   id={`task-conflict-${conflict.id}-${field.field}-mine`}
                   label="Your version"
@@ -237,10 +237,10 @@ function ConflictResolver({
                   value={field.current}
                 />
               </div>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="mt-4 flex flex-wrap gap-2">
                 <button
                   aria-pressed={selection === 'mine'}
-                  className={`min-h-11 rounded-lg border-2 px-3 text-sm font-semibold ${
+                  className={`min-h-11 rounded-lg border-2 px-4 text-sm font-semibold ${
                     selection === 'mine' ? 'border-primary' : 'border-border'
                   }`}
                   disabled={resolutionLocked}
@@ -251,7 +251,7 @@ function ConflictResolver({
                 </button>
                 <button
                   aria-pressed={selection === 'current'}
-                  className={`min-h-11 rounded-lg border-2 px-3 text-sm font-semibold ${
+                  className={`min-h-11 rounded-lg border-2 px-4 text-sm font-semibold ${
                     selection === 'current' ? 'border-primary' : 'border-border'
                   }`}
                   disabled={resolutionLocked}
@@ -294,7 +294,7 @@ function ConflictResolver({
         </div>
       ) : null}
 
-      <div className="mt-5 flex flex-wrap gap-3">
+      <div className="mt-4 flex flex-wrap gap-4">
         <Button disabled={!complete || resolutionLocked} onClick={resolve} type="button">
           {state.kind === 'pending' ? 'Saving resolution…' : 'Save resolution'}
         </Button>

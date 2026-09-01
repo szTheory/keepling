@@ -221,6 +221,8 @@ function TaskList({ csrfToken, embedded = false, onAuthenticationRequired, view 
   )
 
   useEffect(() => {
+    // Initial and view-keyed reads are the external synchronization owned by this effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load()
   }, [load])
 

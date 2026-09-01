@@ -120,7 +120,7 @@ function InboxWorkspace({
               <div className="mt-4 rounded-lg border border-border bg-card p-4" role="alert">
                 <p>Couldn’t load Inbox. Your tasks weren’t changed.</p>
                 <button
-                  className="mt-3 min-h-11 font-semibold text-primary underline"
+                  className="mt-4 min-h-11 font-semibold text-primary underline"
                   onClick={() => window.location.reload()}
                   type="button"
                 >
@@ -141,7 +141,7 @@ function InboxWorkspace({
             {state.kind === 'ready' && state.tasks.length > 0 ? (
               <ul className="mt-4 divide-y divide-border">
                 {state.tasks.map((task) => (
-                  <li className="flex min-h-[3.25rem] items-center py-3" key={task.id}>
+                  <li className="flex min-h-[3.25rem] items-center py-4" key={task.id}>
                     <a
                       className="break-words text-base leading-6 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                       href={`/tasks/${encodeURIComponent(task.id)}`}
@@ -191,7 +191,7 @@ function RoutedApp() {
       <main className="p-6" id="main-content">
         <div role="alert">
           <p>Couldn’t check your session. Nothing was changed.</p>
-          <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={() => window.location.reload()} type="button">
+          <button className="mt-4 min-h-11 font-semibold text-primary underline" onClick={() => window.location.reload()} type="button">
             Retry checking session
           </button>
         </div>

@@ -203,7 +203,7 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
           <textarea
             aria-describedby={message ? errorId : undefined}
             aria-invalid={message ? true : undefined}
-            className="min-h-11 w-full resize-y rounded-lg border border-input bg-card px-3 py-2 text-base leading-6 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="min-h-11 w-full resize-y rounded-lg border border-input bg-card px-4 py-2 text-base leading-6 text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             id={fieldId}
             maxLength={512}
             onChange={(event) => setDraft(event.target.value)}
@@ -227,7 +227,7 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-2">
             <p className="text-sm font-semibold text-muted-foreground">Destination: Inbox</p>
-            <label className="flex min-h-11 items-center gap-3 text-sm font-semibold">
+            <label className="flex min-h-11 items-center gap-4 text-sm font-semibold">
               <input
                 checked={addToToday}
                 className="size-5 rounded border-input accent-primary"
@@ -251,7 +251,7 @@ function QuickCapture({ csrfToken, onAuthenticationRequired, onCaptured }: Quick
       {status.kind === 'unknown' ? (
         <div className="mt-4 rounded-lg border border-border bg-card p-4" role="status">
           <p>Checking whether your change was saved…</p>
-          <Button className="mt-3 min-h-11" onClick={() => void checkAgain()} variant="outline">
+          <Button className="mt-4 min-h-11" onClick={() => void checkAgain()} variant="outline">
             Check again
           </Button>
         </div>

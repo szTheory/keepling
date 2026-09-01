@@ -84,6 +84,10 @@ const semanticArbitraryClassAllowlist = {
     contract: 'secondary',
     reason: 'The quiet secondary hover derives from semantic theme roles.',
   },
+  'leading-[1.2]': {
+    contract: '1.2',
+    reason: 'Display titles use the UI-SPEC display line height.',
+  },
   'min-h-[3.25rem]': {
     contract: '52px',
     reason: 'Task rows have the UI-SPEC 52px minimum independent of control targets.',
@@ -275,7 +279,7 @@ describe('approved Phase 1 UI contract', () => {
   })
 
   it('rejects visual-contract drift across every production TSX class region', () => {
-    const tokenTruth = JSON.stringify(tokens)
+    const tokenTruth = `${JSON.stringify(tokens)}\n${repositoryFile('.planning/phases/KPL-01-one-trustworthy-task/01-UI-SPEC.md')}`
     for (const [utility, exception] of Object.entries(semanticArbitraryClassAllowlist)) {
       expect(exception.reason, `${utility} requires a semantic reason`).not.toHaveLength(0)
       if (exception.contract !== 'stacking-only') {
