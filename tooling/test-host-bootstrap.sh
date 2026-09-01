@@ -112,6 +112,42 @@ fi
 [ ! -e "$forbidden_evidence" ] ||
   die "unsafe in-repository bootstrap evidence was written"
 
+cat >"$fixture_root/status-error-running" <<'EOF'
+#!/usr/bin/env sh
+set -eu
+count_file=$1
+count=$(cat "$count_file")
+count=$((count + 1))
+printf '%s\n' "$count" >"$count_file"
+if [ "$count" -eq 1 ]; then
+  status='error - running'
+else
+  status='error - done'
+fi
+printf '{"status":"%s","extended_status":"%s","init-local":{"errors":[],"recoverable_errors":{}},"init":{"errors":[],"recoverable_errors":{}},"modules-config":{"errors":[],"recoverable_errors":{}},"modules-final":{"errors":["scripts-user"],"recoverable_errors":{}}}\n' "$status" "$status"
+exit 1
+EOF
+chmod 700 "$fixture_root/status-error-running"
+printf '0\n' >"$fixture_root/status-count"
+printf '0\n' >"$fixture_root/teardown-count"
+if KEEPLING_BOOTSTRAP_STATUS_RUNNER="$fixture_root/status-error-running" \
+  KEEPLING_BOOTSTRAP_STATUS_RUNNER_ARGUMENT="$fixture_root/status-count" \
+  KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER="$fixture_root/teardown" \
+  KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER_ARGUMENT="$fixture_root/teardown-count" \
+  KEEPLING_BOOTSTRAP_EVIDENCE_FILE="$fixture_root/error-running-evidence.json" \
+  KEEPLING_BOOTSTRAP_MAX_CHECKS=3 \
+  KEEPLING_BOOTSTRAP_RETRY_SECONDS=0 \
+  ./tooling/verify-host-replacement.sh --bootstrap-gate >/dev/null 2>&1; then
+  die "terminal error after transitional error-running was accepted"
+fi
+[ "$(cat "$fixture_root/status-count")" = 2 ] ||
+  die "error-running was treated as terminal instead of being rechecked"
+[ "$(cat "$fixture_root/teardown-count")" = 1 ] ||
+  die "terminal error after error-running did not teardown exactly once"
+jq -e '.bootstrap_status == "error - done" and .failed_stages == ["modules-final"]' \
+  "$fixture_root/error-running-evidence.json" >/dev/null ||
+  die "terminal evidence did not replace the transitional error-running snapshot"
+
 mkdir "$fixture_root/bundle-sources" "$fixture_root/bundle"
 printf '%s' image >"$fixture_root/bundle-sources/noncanonical-image"
 printf '%s' dump >"$fixture_root/bundle-sources/noncanonical-dump"

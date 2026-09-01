@@ -231,12 +231,17 @@ verify_bootstrap_gate() {
         rm -f -- "$status_file"
         return 0
         ;;
-      error|error\ -*|degraded\ *|disabled|unknown)
+      error|error\ -\ done|degraded\ done|disabled|unknown)
         bootstrap_failure "$status_file"
         return 1
         ;;
-      running|not\ started)
-        if [ "$status_result" -ne 0 ] || [ "$check" -eq "$max_checks" ]; then
+      running|not\ started|error\ -\ running|degraded\ running)
+        if { [ "$bootstrap_status" = running ] || [ "$bootstrap_status" = 'not started' ]; } &&
+          [ "$status_result" -ne 0 ]; then
+          bootstrap_failure "$status_file"
+          return 1
+        fi
+        if [ "$check" -eq "$max_checks" ]; then
           bootstrap_failure "$status_file"
           return 1
         fi
