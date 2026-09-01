@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "status": "catalog-qualified-benchmark-pending",
+  "catalog_checked_at": "2026-09-01",
+  "location": "nbg1",
+  "server_type": "cx33",
+  "architecture": "x86_64",
+  "cores": 4,
+  "memory_gb": 8,
+  "root_disk_gb": 80,
+  "data_volume_gb": 160,
+  "catalog_cost": {
+    "currency": "EUR",
+    "server_hourly_gross": 0.016,
+    "server_monthly_gross": 9.99,
+    "volume_per_gb_month_gross": 0.0767,
+    "ipv4_hourly_gross": 0.001,
+    "estimated_rehearsal_hourly_gross": 0.0339
+  },
+  "acceptance_limits": {
+    "maximum_full_host_seconds": 14400,
+    "maximum_rpo_seconds": 300
+  },
+  "benchmark": {
+    "status": "pending-billable-candidate"
+  }
+}
