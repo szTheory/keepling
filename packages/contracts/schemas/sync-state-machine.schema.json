@@ -4,21 +4,107 @@
   "title": "Keepling synchronization state-machine vectors",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "fixed_clock", "cases"],
+  "required": ["$schema", "version", "fixed_clock", "cases"],
   "properties": {
+    "$schema": {"const": "../schemas/sync-state-machine.schema.json"},
     "version": {"const": 1},
     "fixed_clock": {"type": "string", "format": "date-time"},
-    "cases": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": ["name", "actions"],
-        "properties": {
-          "name": {"type": "string", "minLength": 1},
-          "actions": {"type": "array", "minItems": 1, "items": {"type": "object"}}
+    "cases": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/case"}}
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "actions", "expect"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "actions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "oneOf": [
+              {"$ref": "#/$defs/localAccept"}, {"$ref": "#/$defs/pull"},
+              {"$ref": "#/$defs/readyPushes"}, {"$ref": "#/$defs/acknowledge"},
+              {"$ref": "#/$defs/fence"}, {"$ref": "#/$defs/relaunch"}
+            ]
+          }
+        },
+        "expect": {"$ref": "#/$defs/expectation"}
+      }
+    },
+    "localAccept": {
+      "type": "object", "additionalProperties": false, "required": ["type", "mutation"],
+      "properties": {"type": {"const": "local_accept"}, "mutation": {"$ref": "#/$defs/mutation"}}
+    },
+    "pull": {
+      "type": "object", "additionalProperties": false, "required": ["type", "page"],
+      "properties": {
+        "type": {"const": "pull"},
+        "page": {
+          "type": "object", "additionalProperties": false, "required": ["cursor", "changes"],
+          "properties": {
+            "cursor": {"type": "string", "minLength": 1},
+            "changes": {"type": "array", "maxItems": 50, "items": {"$ref": "#/$defs/change"}}
+          }
         }
+      }
+    },
+    "readyPushes": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": {"type": {"const": "ready_pushes"}}
+    },
+    "acknowledge": {
+      "type": "object", "additionalProperties": false, "required": ["type", "acknowledgement"],
+      "properties": {"type": {"const": "acknowledge"}, "acknowledgement": {"$ref": "#/$defs/acknowledgement"}}
+    },
+    "fence": {
+      "type": "object", "additionalProperties": false, "required": ["type", "reason"],
+      "properties": {"type": {"const": "fence"}, "reason": {"type": ["string", "null"]}}
+    },
+    "relaunch": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": {"type": {"const": "relaunch"}}
+    },
+    "mutation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mutation_id", "fingerprint", "command_bytes", "resource_keys", "dependencies", "accepted_at", "effect"],
+      "properties": {
+        "mutation_id": {"type": "string", "minLength": 1},
+        "fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "command_bytes": {"type": "string", "minLength": 1},
+        "resource_keys": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "dependencies": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "accepted_at": {"type": "string", "format": "date-time"},
+        "effect": {
+          "type": "object", "additionalProperties": false, "required": ["entity_id", "snapshot"],
+          "properties": {"entity_id": {"type": "string", "minLength": 1}, "snapshot": {"$ref": "#/$defs/snapshot"}}
+        }
+      }
+    },
+    "acknowledgement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mutation_id", "fingerprint", "outcome", "snapshot"],
+      "properties": {
+        "mutation_id": {"type": "string", "minLength": 1},
+        "fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "outcome": {"enum": ["accepted", "already_satisfied", "rejected", "stale", "conflict"]},
+        "snapshot": {"$ref": "#/$defs/snapshot"}
+      }
+    },
+    "change": {
+      "type": "object", "additionalProperties": false, "required": ["entity_id", "snapshot"],
+      "properties": {"entity_id": {"type": "string", "minLength": 1}, "snapshot": {"$ref": "#/$defs/snapshot"}}
+    },
+    "snapshot": {
+      "type": "object", "required": ["id", "revision"],
+      "properties": {"id": {"type": "string", "minLength": 1}, "revision": {"type": "integer", "minimum": 0}}
+    },
+    "expectation": {
+      "type": "object", "additionalProperties": false, "required": ["cursor", "outbox", "ready_pushes"],
+      "properties": {
+        "cursor": {"type": ["string", "null"]},
+        "outbox": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "ready_pushes": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
       }
     }
   }

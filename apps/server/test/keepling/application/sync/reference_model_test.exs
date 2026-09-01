@@ -149,6 +149,22 @@ defmodule Keepling.Application.Sync.ReferenceModelTest do
              mutation["command_bytes"]
   end
 
+  test "every named synchronization vector executes and matches its closed expectation" do
+    vectors = @vectors_path |> File.read!() |> Jason.decode!()
+
+    for vector <- vectors["cases"] do
+      assert {:ok, scenario} = SyncScenario.run(vector), vector["name"]
+
+      actual = %{
+        "cursor" => scenario.state["cursor"],
+        "outbox" => Enum.map(scenario.state["outbox"], & &1["mutation_id"]),
+        "ready_pushes" => Enum.map(scenario.ready_pushes, & &1["mutation_id"])
+      }
+
+      assert actual == vector["expect"], vector["name"]
+    end
+  end
+
   property "generated action sequences preserve identity, FIFO, dependencies, and revisions" do
     check all(
             steps <-

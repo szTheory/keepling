@@ -43,7 +43,175 @@
             "snapshot": {"id": "task-001", "revision": 3, "title": "Local title"}
           }
         }
-      ]
+      ],
+      "expect": {
+        "cursor": "cursor-002",
+        "outbox": [],
+        "ready_pushes": ["mutation-001"]
+      }
+    },
+    {
+      "name": "overlapping Today-order lanes preserve FIFO while a disjoint task progresses",
+      "actions": [
+        {
+          "type": "local_accept",
+          "mutation": {
+            "mutation_id": "mutation-a",
+            "fingerprint": "26d8e61aa3b146643080214faaecf9e731ec7d93c355a9100feb1fa0164facaa",
+            "command_bytes": "{\"mutation_id\":\"mutation-a\",\"type\":\"edit_task\",\"task_id\":\"task-a\"}",
+            "resource_keys": ["task:task-a", "today-order"],
+            "dependencies": [],
+            "accepted_at": "2026-09-01T12:00:00.000000Z",
+            "effect": {
+              "entity_id": "task-a",
+              "snapshot": {"id": "task-a", "revision": 1}
+            }
+          }
+        },
+        {
+          "type": "local_accept",
+          "mutation": {
+            "mutation_id": "mutation-b",
+            "fingerprint": "7cd4c7101f92f988f90be3a27b1782c7c19910b700c5871cd139c6decfbb034b",
+            "command_bytes": "{\"mutation_id\":\"mutation-b\",\"type\":\"edit_task\",\"task_id\":\"task-b\"}",
+            "resource_keys": ["task:task-b", "today-order"],
+            "dependencies": [],
+            "accepted_at": "2026-09-01T12:00:01.000000Z",
+            "effect": {
+              "entity_id": "task-b",
+              "snapshot": {"id": "task-b", "revision": 1}
+            }
+          }
+        },
+        {
+          "type": "local_accept",
+          "mutation": {
+            "mutation_id": "mutation-c",
+            "fingerprint": "50605046591a6ebfb72bd014d21ac70d29377eed680ff100715b67bb3fe97295",
+            "command_bytes": "{\"mutation_id\":\"mutation-c\",\"type\":\"edit_task\",\"task_id\":\"task-c\"}",
+            "resource_keys": ["task:task-c"],
+            "dependencies": [],
+            "accepted_at": "2026-09-01T12:00:02.000000Z",
+            "effect": {
+              "entity_id": "task-c",
+              "snapshot": {"id": "task-c", "revision": 1}
+            }
+          }
+        },
+        {"type": "ready_pushes"}
+      ],
+      "expect": {
+        "cursor": null,
+        "outbox": ["mutation-a", "mutation-b", "mutation-c"],
+        "ready_pushes": ["mutation-a", "mutation-c"]
+      }
+    },
+    {
+      "name": "failed prerequisite blocks its descendant without stopping an unrelated lane",
+      "actions": [
+        {
+          "type": "local_accept",
+          "mutation": {
+            "mutation_id": "mutation-parent",
+            "fingerprint": "d5057ac215f0e31395e45552bf7e552406a7fac2820afc7ab73e3928ca5b3b47",
+            "command_bytes": "{\"mutation_id\":\"mutation-parent\",\"type\":\"edit_task\",\"task_id\":\"task-parent\"}",
+            "resource_keys": ["task:task-parent"],
+            "dependencies": [],
+            "accepted_at": "2026-09-01T12:00:00.000000Z",
+            "effect": {
+              "entity_id": "task-parent",
+              "snapshot": {"id": "task-parent", "revision": 1}
+            }
+          }
+        },
+        {
+          "type": "local_accept",
+          "mutation": {
+            "mutation_id": "mutation-child",
+            "fingerprint": "e5dff8e97437bdb7988017a843e1221fd7b9871ec36a2775e4775d3024055b66",
+            "command_bytes": "{\"mutation_id\":\"mutation-child\",\"type\":\"edit_task\",\"task_id\":\"task-child\"}",
+            "resource_keys": ["task:task-child"],
+            "dependencies": ["mutation-parent"],
+            "accepted_at": "2026-09-01T12:00:01.000000Z",
+            "effect": {
+              "entity_id": "task-child",
+              "snapshot": {"id": "task-child", "revision": 1}
+            }
+          }
+        },
+        {
+          "type": "local_accept",
+          "mutation": {
+            "mutation_id": "mutation-unrelated",
+            "fingerprint": "4208ad6f6995f28fba94a5c58d93f819da5bc5ad5a6fb9da6a510362ef37b809",
+            "command_bytes": "{\"mutation_id\":\"mutation-unrelated\",\"type\":\"edit_task\",\"task_id\":\"task-unrelated\"}",
+            "resource_keys": ["task:task-unrelated"],
+            "dependencies": [],
+            "accepted_at": "2026-09-01T12:00:02.000000Z",
+            "effect": {
+              "entity_id": "task-unrelated",
+              "snapshot": {"id": "task-unrelated", "revision": 1}
+            }
+          }
+        },
+        {
+          "type": "acknowledge",
+          "acknowledgement": {
+            "mutation_id": "mutation-parent",
+            "fingerprint": "d5057ac215f0e31395e45552bf7e552406a7fac2820afc7ab73e3928ca5b3b47",
+            "outcome": "conflict",
+            "snapshot": {"id": "task-parent", "revision": 2}
+          }
+        },
+        {"type": "ready_pushes"}
+      ],
+      "expect": {
+        "cursor": null,
+        "outbox": ["mutation-child", "mutation-unrelated"],
+        "ready_pushes": ["mutation-unrelated"]
+      }
+    },
+    {
+      "name": "relaunch and authentication pause retain exact pending intent",
+      "actions": [
+        {
+          "type": "local_accept",
+          "mutation": {
+            "mutation_id": "mutation-relaunch",
+            "fingerprint": "65e01a90347dc18ca98fe3966fb01afd97c965b29a18c4ec4dd08d6231539a58",
+            "command_bytes": "{\"mutation_id\":\"mutation-relaunch\",\"type\":\"edit_task\",\"task_id\":\"task-relaunch\"}",
+            "resource_keys": ["task:task-relaunch"],
+            "dependencies": [],
+            "accepted_at": "2026-09-01T12:00:00.000000Z",
+            "effect": {
+              "entity_id": "task-relaunch",
+              "snapshot": {"id": "task-relaunch", "revision": 2}
+            }
+          }
+        },
+        {"type": "relaunch"},
+        {
+          "type": "pull",
+          "page": {
+            "cursor": "cursor-relaunch",
+            "changes": [
+              {
+                "entity_id": "task-relaunch",
+                "snapshot": {"id": "task-relaunch", "revision": 1}
+              }
+            ]
+          }
+        },
+        {"type": "fence", "reason": "authentication_required"},
+        {"type": "ready_pushes"},
+        {"type": "fence", "reason": null},
+        {"type": "ready_pushes"}
+      ],
+      "expect": {
+        "cursor": "cursor-relaunch",
+        "outbox": ["mutation-relaunch"],
+        "ready_pushes": ["mutation-relaunch"]
+      }
     }
   ]
 }

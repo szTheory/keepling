@@ -51,7 +51,8 @@ defmodule Keepling.MixProject do
       {:bandit, "~> 1.5"},
       {:argon2_elixir, "== 4.1.3"},
       {:tzdata, "== 1.1.4"},
-      {:hammer, "== 7.4.1"}
+      {:hammer, "== 7.4.1"},
+      {:stream_data, "== 1.4.0", only: :test}
     ]
   end
 

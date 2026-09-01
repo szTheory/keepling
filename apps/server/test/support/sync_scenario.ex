@@ -34,7 +34,21 @@ defmodule Keepling.SyncScenario do
   end
 
   defp apply_action(scenario, %{"type" => "ready_pushes"}) do
-    {:ok, %{scenario | ready_pushes: ReferenceModel.ready_pushes(scenario.state)}}
+    case ReferenceModel.ready_pushes(scenario.state) do
+      ready when is_list(ready) -> {:ok, %{scenario | ready_pushes: ready}}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp apply_action(scenario, %{"type" => "fence", "reason" => reason}) do
+    with {:ok, state} <- ReferenceModel.fence(scenario.state, reason) do
+      {:ok, %{scenario | state: state}}
+    end
+  end
+
+  defp apply_action(scenario, %{"type" => "relaunch"}) do
+    durable = :erlang.term_to_binary(scenario.state, [:deterministic])
+    {:ok, %{scenario | state: :erlang.binary_to_term(durable, [:safe])}}
   end
 
   defp apply_action(scenario, %{"type" => "acknowledge", "acknowledgement" => acknowledgement}) do
