@@ -11,9 +11,22 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
 
   @maximum_today_section 500
 
+  if Mix.env() == :test do
+    @doc false
+    def test_delayed_query(delay_seconds) do
+      case query(Repo, "SELECT pg_sleep($1)", [delay_seconds]) do
+        {:ok, _result} -> :ok
+        {:error, _reason} -> {:error, :infrastructure_failure}
+      end
+    rescue
+      _error in [DBConnection.ConnectionError, Postgrex.Error] ->
+        {:error, :infrastructure_failure}
+    end
+  end
+
   @impl true
   def list_tasks(%{account_id: account_id, accepted_at: accepted_at}, view, options) do
-    case Repo.transact(fn repo ->
+    case transact(fn repo ->
            with {:ok, scope} <- account_scope(repo, account_id, accepted_at, view),
                 :ok <- cursor_revision(options.cursor, scope),
                 {:ok, items, next_keyset} <-
@@ -41,7 +54,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
 
   @impl true
   def lookup_today_result(%{account_id: account_id}, mutation_id) do
-    case SQL.query(
+    case query(
            Repo,
            """
            SELECT task_id, outcome, order_revision
@@ -88,7 +101,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
         :erlang.term_to_binary({task_id, direction, expected_revision}, [:deterministic])
       )
 
-    case Repo.transact(fn repo ->
+    case transact(fn repo ->
            with {:ok, timezone, order_revision} <- lock_today_scope(repo, account_id) do
              case today_move_replay(repo, account_id, mutation_id, fingerprint) do
                {:replay, result} ->
@@ -178,7 +191,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
         persist_today_order(repo, account_id, section, moved_ids, accepted_at)
 
         %{rows: [[next_revision]]} =
-          SQL.query!(
+          query!(
             repo,
             """
             UPDATE accounts
@@ -195,7 +208,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
   end
 
   defp today_move_replay(repo, account_id, mutation_id, fingerprint) do
-    case SQL.query!(
+    case query!(
            repo,
            """
            SELECT fingerprint, outcome, order_revision
@@ -226,7 +239,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
         {:error, reason} -> {Atom.to_string(reason), nil}
       end
 
-    SQL.query!(
+    query!(
       repo,
       """
       INSERT INTO today_order_receipts (
@@ -246,7 +259,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
   end
 
   defp account_scope(repo, account_id, accepted_at, view) do
-    case SQL.query(
+    case query(
            repo,
            """
            SELECT timezone, inbox_view_revision, today_view_revision,
@@ -308,7 +321,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
     limit_parameter = 2 + length(keyset_params)
 
     rows =
-      SQL.query!(
+      query!(
         repo,
         """
         SELECT id, title, revision, captured_at, planned_on, deadline_on
@@ -332,7 +345,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
     limit_parameter = 3 + length(keyset_params)
 
     rows =
-      SQL.query!(
+      query!(
         repo,
         """
         WITH eligible AS (
@@ -377,7 +390,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
     limit_parameter = 3 + length(keyset_params)
 
     rows =
-      SQL.query!(
+      query!(
         repo,
         """
         WITH eligible AS (
@@ -418,7 +431,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
     limit_parameter = 2 + length(keyset_params)
 
     rows =
-      SQL.query!(
+      query!(
         repo,
         """
         SELECT id, title, revision, captured_at, planned_on, deadline_on, completed_at
@@ -563,7 +576,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
   end
 
   defp lock_today_scope(repo, account_id) do
-    case SQL.query(
+    case query(
            repo,
            "SELECT timezone, today_order_revision FROM accounts WHERE id = $1 FOR UPDATE",
            [account_id]
@@ -578,7 +591,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
   defp expected_order_revision(_expected, _actual), do: {:error, :order_stale}
 
   defp today_section(repo, account_id, task_id, account_day) do
-    case SQL.query(
+    case query(
            repo,
            """
            SELECT CASE
@@ -600,7 +613,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
 
   defp today_section_task_ids(repo, account_id, section, account_day) do
     rows =
-      SQL.query!(
+      query!(
         repo,
         """
         SELECT tasks.id
@@ -647,7 +660,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
   end
 
   defp persist_today_order(repo, account_id, section, task_ids, accepted_at) do
-    SQL.query!(
+    query!(
       repo,
       "DELETE FROM today_task_order WHERE account_id = $1 AND section = $2",
       [account_id, section]
@@ -656,7 +669,7 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
     task_ids
     |> Enum.with_index(1)
     |> Enum.each(fn {task_id, position} ->
-      SQL.query!(
+      query!(
         repo,
         """
         INSERT INTO today_task_order (
@@ -666,6 +679,24 @@ defmodule Keepling.Adapters.Postgres.TaskViews do
         [account_id, dump_uuid(task_id), section, position, accepted_at]
       )
     end)
+  end
+
+  defp transact(fun), do: Repo.transact(fun, query_options())
+
+  defp query(repo, statement, params),
+    do: SQL.query(repo, statement, params, query_options())
+
+  defp query!(repo, statement, params),
+    do: SQL.query!(repo, statement, params, query_options())
+
+  defp query_options do
+    timeout = Application.fetch_env!(:keepling, :task_view_query_timeout_ms)
+
+    if is_integer(timeout) and timeout > 0 do
+      [timeout: timeout]
+    else
+      raise ArgumentError, "task-view query timeout must be a positive integer"
+    end
   end
 
   defp optional_date(nil), do: nil

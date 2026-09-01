@@ -2,7 +2,8 @@ import Config
 
 config :keepling,
   ecto_repos: [Keepling.Repo],
-  generators: [timestamp_type: :utc_datetime_usec, binary_id: true]
+  generators: [timestamp_type: :utc_datetime_usec, binary_id: true],
+  task_view_query_timeout_ms: 10_000
 
 # Plan 01-03 owns these web modules. Declaring their configuration here keeps
 # environment ownership complete without pulling transport code into the core.
