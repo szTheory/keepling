@@ -130,3 +130,46 @@ test('@responsive-route-matrix narrow task Back restores the originating row and
   await expect(rowLink).toBeFocused()
   expect(await page.evaluate(() => window.scrollY)).toBe(scrollBefore)
 })
+
+test('@responsive-route-matrix exposes one accessible main across the full route and viewport matrix', async ({
+  baseURL,
+  page,
+}) => {
+  await authenticate(page, baseURL)
+  const row = await capture(page, 'Responsive matrix task')
+  await row.getByRole('link').click()
+  const taskPath = new URL(page.url()).pathname
+
+  const routes = [
+    ['/inbox', 'Inbox'],
+    ['/today', 'Today'],
+    ['/upcoming', 'Upcoming'],
+    ['/completed', 'Completed'],
+    ['/trash', 'Trash'],
+    ['/settings/sessions', 'Sessions'],
+    [taskPath, 'Edit task'],
+  ] as const
+
+  for (const width of [320, 768, 1024, 1064, 1440] as const) {
+    await page.setViewportSize({ height: 900, width })
+
+    for (const [path, heading] of routes) {
+      await page.goto(path)
+      await expect(page.getByRole('heading', { exact: true, name: heading })).toBeVisible()
+      await expect(page.getByRole('main')).toHaveCount(1)
+
+      const overflow = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }))
+      expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth)
+
+      const accessibility = await new AxeBuilder({ page }).analyze()
+      expect(
+        accessibility.violations.filter(
+          ({ impact }) => impact === 'serious' || impact === 'critical',
+        ),
+      ).toEqual([])
+    }
+  }
+})
