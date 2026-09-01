@@ -21,7 +21,7 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
     )
 
     reset_account_state()
-    create_account()
+    account_id = create_account()
 
     on_exit(fn ->
       reset_account_state()
@@ -31,7 +31,7 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
         else: Application.delete_env(:keepling, :device_grants)
     end)
 
-    :ok
+    %{account_id: account_id}
   end
 
   @tag :transport
@@ -136,6 +136,106 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
            |> json_response(200)
 
     assert bearer(build_conn(), grant_b["access_token"])
+           |> get("/api/v1/device-grants")
+           |> response(401)
+  end
+
+  test "bearer pipeline assigns only the server-authenticated grant namespace", %{
+    conn: conn,
+    account_id: account_id
+  } do
+    grant = conn |> login() |> authorize("namespace-installation", "electron") |> exchange()
+
+    response =
+      build_conn()
+      |> bearer(grant["access_token"])
+      |> put_req_header("x-keepling-issuer", "https://client-asserted.invalid")
+      |> put_req_header("x-keepling-origin", "https://client-origin.invalid")
+      |> put_req_header("x-keepling-server-instance", "client-server")
+      |> put_req_header("x-keepling-account-subject", Ecto.UUID.generate())
+      |> put_req_header("x-keepling-generation", "999")
+      |> get("/api/v1/device-grants", %{
+        "issuer" => "https://query-asserted.invalid",
+        "generation" => "999"
+      })
+
+    assert response.status == 200
+    assert is_binary(response.assigns.current_device_grant_id)
+
+    assert response.assigns.device_grant_namespace == %{
+             generation: 1,
+             issuer: "https://issuer.keepling.invalid",
+             origin: "https://server.keepling.invalid",
+             server_instance: "server-instance-transport",
+             subject: Ecto.UUID.load!(account_id)
+           }
+  end
+
+  test "bearer boundary rejects every non-current credential form and ignores browser cookies", %{
+    conn: conn
+  } do
+    browser = login(conn)
+    grant = browser |> authorize("boundary-installation", "iphone") |> exchange()
+
+    assert browser |> recycle() |> get("/api/v1/device-grants") |> response(401)
+    assert get(build_conn(), "/api/v1/device-grants") |> response(401)
+
+    for malformed <- ["Basic opaque", "Bearer", "Bearer ", "bearer #{grant["access_token"]}"] do
+      assert build_conn()
+             |> put_req_header("authorization", malformed)
+             |> get("/api/v1/device-grants")
+             |> response(401)
+    end
+
+    assert build_conn()
+           |> put_req_header("authorization", "Bearer #{grant["access_token"]}")
+           |> prepend_req_headers([{"authorization", "Bearer another"}])
+           |> get("/api/v1/device-grants")
+           |> response(401)
+
+    expired = browser |> authorize("expired-installation", "electron") |> exchange()
+
+    SQL.query!(
+      Repo,
+      "UPDATE device_grants SET access_expires_at = $2 WHERE access_token_hash = $1",
+      [
+        :crypto.hash(:sha256, expired["access_token"]),
+        DateTime.utc_now() |> DateTime.add(-1, :second) |> DateTime.truncate(:microsecond)
+      ]
+    )
+
+    assert build_conn()
+           |> bearer(expired["access_token"])
+           |> get("/api/v1/device-grants")
+           |> response(401)
+
+    rotated =
+      build_conn()
+      |> post("/oauth/token", %{
+        "grant_type" => "refresh_token",
+        "refresh_token" => grant["refresh_token"]
+      })
+      |> json_response(200)
+
+    assert build_conn()
+           |> bearer(grant["access_token"])
+           |> get("/api/v1/device-grants")
+           |> response(401)
+
+    assert build_conn()
+           |> bearer(rotated["access_token"])
+           |> get("/api/v1/device-grants")
+           |> response(200)
+
+    assert build_conn()
+           |> post("/oauth/token", %{
+             "grant_type" => "refresh_token",
+             "refresh_token" => grant["refresh_token"]
+           })
+           |> response(401)
+
+    assert build_conn()
+           |> bearer(rotated["access_token"])
            |> get("/api/v1/device-grants")
            |> response(401)
   end
