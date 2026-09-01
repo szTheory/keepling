@@ -109,7 +109,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05
 **UI hint:** no
-**Plans:** 1/11 plans executed
+**Plans:** 2/11 plans executed
 
 Plans:
 **Wave 1**
@@ -118,7 +118,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 02-03-PLAN.md — Freeze account fencing and implement separately revocable installation grants.
+- [x] 02-03-PLAN.md — Freeze account fencing and implement separately revocable installation grants.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 

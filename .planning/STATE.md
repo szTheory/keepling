@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-09-01T05:55:09.792Z"
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-09-01T06:20:02.405Z"
 last_activity: 2026-09-01
 last_activity_desc: Phase KPL-02 execution started
-state_head: 0705252a741cbebac6b0b53db9dc260b08667915
+state_head: 339b32c3b64572a6dd0275f99d0b00f9c24f6a61
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 38
-  completed_plans: 28
+  completed_plans: 29
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-02 (Synchronization and Replaceable Server) — EXECUTING
-Plan: 2 of 11
+Plan: 3 of 11
 Total Plans in Phase: 11
 Status: Executing Phase KPL-02
 Last activity: 2026-09-01 — Phase KPL-02 execution started
@@ -131,6 +131,9 @@ Progress: [██████████] 100%
 - [Phase 02]: [Phase KPL-02]: Ready pushes are bounded to 25 and pulls to 50 changes; overlapping resource keys preserve FIFO while disjoint lanes progress.
 - [Phase 02]: [Phase KPL-02]: Only accepted and already_satisfied outcomes satisfy durable dependencies.
 - [Phase 02]: [Phase KPL-02]: Immutable command bytes must carry the same mutation identity as their durable envelope and SHA-256 fingerprint.
+- [Phase 02]: Synchronization generation is installation-grant scoped so replay or revocation fences exactly one native installation without invalidating another.
+- [Phase 02]: Issuer, origin, stable server instance, account subject, and generation come only from server configuration and locked rows; closed public-client requests reject extra authority fields.
+- [Phase 02]: Consumed refresh hashes remain as lineage evidence, and the first replay revokes and advances the family fence exactly once.
 
 ### Retained Research
 
@@ -164,8 +167,8 @@ Run `$gsd-discuss-phase 2` from the repository root.
 
 ## Session
 
-**Last session:** 2026-09-01T05:55:09.732Z
-**Stopped at:** Completed 02-01-PLAN.md
+**Last session:** 2026-09-01T06:20:02.337Z
+**Stopped at:** Completed 02-03-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -200,3 +203,4 @@ Run `$gsd-discuss-phase 2` from the repository root.
 | Phase KPL-01-one-trustworthy-task P26 | 17min | 3 tasks | 14 files |
 | Phase KPL-01 P27 | 16min | 3 tasks | 19 files |
 | Phase KPL-02 P01 | 17min | 3 tasks | 8 files |
+| Phase KPL-02 P03 | 12min | 2 tasks | 7 files |

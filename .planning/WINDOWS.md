@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 28
+open_count: 31
 waived_count: 0
 fixed_count: 4
-total_count: 32
-last_updated: 2026-09-01T05:55:08.534Z
+total_count: 35
+last_updated: 2026-09-01T06:19:46.857Z
 ---
 
 # Broken Windows Ledger
@@ -47,6 +47,9 @@ last_updated: 2026-09-01T05:55:08.534Z
 | 30 | KPL-01 | deviation | apps/web/src/app/AuthProvider.tsx |  | Plan-required repository lint gate required scoped ownership directives for pre-existing findings. | open |  | 2026-09-01T02:22:51.264Z |  |
 | 31 | KPL-02 | deviation | apps/server/lib/keepling/application/sync/reference_model.ex |  | Corrected invalid Elixir string-literal typespec discovered during Task 1 compilation | open |  | 2026-09-01T05:55:08.453Z |  |
 | 32 | KPL-02 | deviation | apps/server/lib/keepling/application/sync/reference_model.ex |  | Bound immutable command bytes to the outer durable mutation identity | open |  | 2026-09-01T05:55:08.534Z |  |
+| 33 | KPL-02 | deviation | apps/server/lib/keepling/accounts/security_audit.ex |  | Extended the closed security-audit vocabulary for bounded device-grant facts | open |  | 2026-09-01T06:19:46.697Z |  |
+| 34 | KPL-02 | deviation | apps/server/lib/keepling/accounts/device_grant.ex |  | Made repeated refresh replay fencing idempotent after the first generation advance | open |  | 2026-09-01T06:19:46.778Z |  |
+| 35 | KPL-02 | deviation | apps/server/lib/keepling/accounts/device_grant.ex |  | Rejected extra public-client secret and namespace assertion fields | open |  | 2026-09-01T06:19:46.857Z |  |
 
 ````json
 [
@@ -432,6 +435,42 @@ last_updated: 2026-09-01T05:55:08.534Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-01T05:55:08.534Z",
+    "resolved_at": null
+  },
+  {
+    "id": 33,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "apps/server/lib/keepling/accounts/security_audit.ex",
+    "line": null,
+    "description": "Extended the closed security-audit vocabulary for bounded device-grant facts",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T06:19:46.697Z",
+    "resolved_at": null
+  },
+  {
+    "id": 34,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "apps/server/lib/keepling/accounts/device_grant.ex",
+    "line": null,
+    "description": "Made repeated refresh replay fencing idempotent after the first generation advance",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T06:19:46.778Z",
+    "resolved_at": null
+  },
+  {
+    "id": 35,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "apps/server/lib/keepling/accounts/device_grant.ex",
+    "line": null,
+    "description": "Rejected extra public-client secret and namespace assertion fields",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T06:19:46.857Z",
     "resolved_at": null
   }
 ]
