@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 
 import type { BeginReauthentication, ContinuationScope } from '@/app/AuthProvider'
+import type { WorkspaceLayoutContent } from '@/app/WorkspaceShell'
 import LoginForm from '@/features/auth/LoginForm'
 import Reauthenticate, { type InterruptedIntent } from '@/features/auth/Reauthenticate'
 import RecoveryReset from '@/features/auth/RecoveryReset'
@@ -19,7 +20,7 @@ type AppRoutesProps = {
   authenticated: boolean
   authenticatedContent?: ReactNode | ((
     beginReauthentication: BeginReauthentication,
-    routeContent?: ReactNode,
+    routeContent?: WorkspaceLayoutContent,
   ) => ReactNode)
   continuationError?: boolean
   createContinuationScope?: () => ContinuationScope
@@ -196,10 +197,10 @@ function AppRoutes({
   }, [routeContinuationScope])
 
   const scopedAuthenticationRequired = routeContinuationScope.beginReauthentication
-  const renderAuthenticatedContent = (routeContent?: ReactNode) =>
+  const renderAuthenticatedContent = (routeContent?: WorkspaceLayoutContent) =>
     typeof authenticatedContent === 'function'
       ? authenticatedContent(scopedAuthenticationRequired, routeContent)
-      : routeContent ?? authenticatedContent
+      : routeContent?.mainContent ?? authenticatedContent
   const routedAuthenticatedContent = renderAuthenticatedContent()
 
   const handleAuthenticated = (nextCsrfToken: string) => {
@@ -287,36 +288,54 @@ function AppRoutes({
     return <LoginForm onAuthenticated={handleAuthenticated} />
   }
 
-  if (pathname === '/today' && csrfToken) return withInterruption(renderAuthenticatedContent(<TaskList csrfToken={csrfToken} key="today" onAuthenticationRequired={scopedAuthenticationRequired} view="today" />))
-  if (pathname === '/upcoming' && csrfToken) return withInterruption(renderAuthenticatedContent(<TaskList csrfToken={csrfToken} key="upcoming" onAuthenticationRequired={scopedAuthenticationRequired} view="upcoming" />))
-  if (pathname === '/completed' && csrfToken) return withInterruption(renderAuthenticatedContent(<TaskList csrfToken={csrfToken} key="completed" onAuthenticationRequired={scopedAuthenticationRequired} view="completed" />))
-  if (pathname === '/inbox' && csrfToken) return withInterruption(renderAuthenticatedContent(<TaskList csrfToken={csrfToken} key="inbox" onAuthenticationRequired={scopedAuthenticationRequired} view="inbox" />))
+  const listLayout = (view: 'completed' | 'inbox' | 'today' | 'upcoming') => ({
+    detailContent: (
+      <section aria-labelledby="detail-heading" className="p-8">
+        <h2 className="text-xl font-semibold" id="detail-heading">Task details</h2>
+        <p className="mt-2 max-w-xl text-muted-foreground">
+          Select a task to review its accepted details.
+        </p>
+      </section>
+    ),
+    listContent: <TaskList csrfToken={csrfToken} key={view} onAuthenticationRequired={scopedAuthenticationRequired} view={view} />,
+  })
+
+  if (pathname === '/today' && csrfToken) return withInterruption(renderAuthenticatedContent(listLayout('today')))
+  if (pathname === '/upcoming' && csrfToken) return withInterruption(renderAuthenticatedContent(listLayout('upcoming')))
+  if (pathname === '/completed' && csrfToken) return withInterruption(renderAuthenticatedContent(listLayout('completed')))
+  if (pathname === '/inbox' && csrfToken) return withInterruption(renderAuthenticatedContent(listLayout('inbox')))
   if (pathname === '/trash' && csrfToken) {
     return withInterruption(
-      renderAuthenticatedContent(<TrashList
-        csrfToken={csrfToken}
-        onAuthenticationRequired={scopedAuthenticationRequired}
-      />),
+      renderAuthenticatedContent({
+        mainContent: <TrashList
+          csrfToken={csrfToken}
+          onAuthenticationRequired={scopedAuthenticationRequired}
+        />,
+      }),
     )
   }
 
   if (pathname === '/projects' && csrfToken) {
     return withInterruption(
-      renderAuthenticatedContent(<OrganizationManager
-        csrfToken={csrfToken}
-        kind="project"
-        onAuthenticationRequired={scopedAuthenticationRequired}
-      />),
+      renderAuthenticatedContent({
+        mainContent: <OrganizationManager
+          csrfToken={csrfToken}
+          kind="project"
+          onAuthenticationRequired={scopedAuthenticationRequired}
+        />,
+      }),
     )
   }
 
   if (pathname === '/tags' && csrfToken) {
     return withInterruption(
-      renderAuthenticatedContent(<OrganizationManager
-        csrfToken={csrfToken}
-        kind="tag"
-        onAuthenticationRequired={scopedAuthenticationRequired}
-      />),
+      renderAuthenticatedContent({
+        mainContent: <OrganizationManager
+          csrfToken={csrfToken}
+          kind="tag"
+          onAuthenticationRequired={scopedAuthenticationRequired}
+        />,
+      }),
     )
   }
 
@@ -324,32 +343,47 @@ function AppRoutes({
   const assignmentTaskId = decodeRoutePart(assignmentMatch?.[1])
   if (assignmentTaskId && csrfToken) {
     return withInterruption(
-      renderAuthenticatedContent(<OrganizationFields
-        csrfToken={csrfToken}
-        onAuthenticationRequired={scopedAuthenticationRequired}
-        taskId={assignmentTaskId}
-      />),
+      renderAuthenticatedContent({
+        mainContent: <OrganizationFields
+          csrfToken={csrfToken}
+          onAuthenticationRequired={scopedAuthenticationRequired}
+          taskId={assignmentTaskId}
+        />,
+      }),
     )
   }
 
   const taskId = routeToken(pathname, '/tasks/')
   if (taskId && csrfToken) {
+    const historyView = (window.history.state as { keeplingListView?: unknown } | null)?.keeplingListView
+    const returnView = ['completed', 'inbox', 'today', 'upcoming'].includes(String(historyView))
+      ? historyView as 'completed' | 'inbox' | 'today' | 'upcoming'
+      : 'inbox'
+
     return withInterruption(
-      renderAuthenticatedContent(
-        <div className="min-h-screen bg-card [&>main]:!static [&>main]:!min-h-0 [&>main]:!min-w-0 [&>main]:!w-auto [&>main]:!overflow-visible [&>main]:!border-0 lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:w-[calc(100%-41.5rem)] lg:min-w-[30rem] lg:overflow-y-auto lg:border-l lg:border-border" key={taskId}>
+      renderAuthenticatedContent({
+        detailContent: <div className="min-h-full bg-card" key={taskId}>
           <TaskEditor
             csrfToken={csrfToken}
             onAcknowledged={onAcknowledged}
             onAuthenticationRequired={scopedAuthenticationRequired}
             onNavigate={navigate}
+            returnViewLabel={{ completed: 'Completed', inbox: 'Inbox', today: 'Today', upcoming: 'Upcoming' }[returnView]}
             taskId={taskId}
           />
           <ActivityList
             onAuthenticationRequired={scopedAuthenticationRequired}
             taskId={taskId}
           />
-        </div>
-      ),
+        </div>,
+        detailSelected: true,
+        listContent: <TaskList
+          csrfToken={csrfToken}
+          key={returnView}
+          onAuthenticationRequired={scopedAuthenticationRequired}
+          view={returnView}
+        />,
+      }),
     )
   }
 

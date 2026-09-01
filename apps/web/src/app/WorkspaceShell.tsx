@@ -15,8 +15,18 @@ export const navigationItems = [
 
 type WorkspaceShellProps = {
   children: ReactNode
+  detailContent?: ReactNode
+  detailSelected?: boolean
+  listContent?: ReactNode
   onNavigate?: (event: MouseEvent<HTMLAnchorElement>, href: string) => void
   pathname: string
+}
+
+export type WorkspaceLayoutContent = {
+  detailContent?: ReactNode
+  detailSelected?: boolean
+  listContent?: ReactNode
+  mainContent?: ReactNode
 }
 
 const isCurrentRoute = (pathname: string, href: string) =>
@@ -55,7 +65,14 @@ function NavigationLinks({
   )
 }
 
-function WorkspaceShell({ children, onNavigate, pathname }: WorkspaceShellProps) {
+function WorkspaceShell({
+  children,
+  detailContent,
+  detailSelected = false,
+  listContent,
+  onNavigate,
+  pathname,
+}: WorkspaceShellProps) {
   const firstDrawerLinkRef = useRef<HTMLAnchorElement>(null)
 
   return (
@@ -93,7 +110,10 @@ function WorkspaceShell({ children, onNavigate, pathname }: WorkspaceShellProps)
       </header>
 
       <div className="keepling-workspace-shell min-h-screen">
-        <aside className="keepling-persistent-navigation border-r border-border bg-card p-6">
+        <aside
+          className="keepling-persistent-navigation border-r border-border bg-card p-6"
+          data-workspace-region="navigation"
+        >
           <p className="text-[length:var(--keepling-type-heading)] font-semibold">Keepling</p>
           <a
             className="mt-8 flex min-h-[var(--keepling-layout-target)] items-center justify-center rounded-lg bg-primary px-4 text-[length:var(--keepling-type-label)] font-semibold text-primary-foreground"
@@ -105,7 +125,20 @@ function WorkspaceShell({ children, onNavigate, pathname }: WorkspaceShellProps)
             <NavigationLinks label="Keepling" onNavigate={onNavigate} pathname={pathname} />
           </div>
         </aside>
-        <div className="keepling-workspace-content min-w-0">{children}</div>
+        <div className="keepling-workspace-content min-w-0">
+          {listContent ? (
+            <div
+              className={`keepling-workspace-panes${detailSelected ? ' has-selected-detail' : ''}`}
+            >
+              <div className="keepling-list-region min-w-0" data-workspace-region="list">
+                {listContent}
+              </div>
+              <div className="keepling-detail-region min-w-0" data-workspace-region="detail">
+                {detailContent}
+              </div>
+            </div>
+          ) : children}
+        </div>
       </div>
     </>
   )

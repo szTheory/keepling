@@ -10,7 +10,7 @@ import type { UndoAvailability, UndoResult } from '@/api/keepling'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 import RecoveryStrip from '@/features/recovery/RecoveryStrip'
 import SessionList from '@/features/sessions/SessionList'
-import WorkspaceShell from '@/app/WorkspaceShell'
+import WorkspaceShell, { type WorkspaceLayoutContent } from '@/app/WorkspaceShell'
 
 type AppShellProps = {
   csrfToken: string
@@ -23,7 +23,7 @@ type AppShellProps = {
     resume: (csrfToken: string) => Promise<void>,
   ) => void
   onSaveDirtyWork?: () => void
-  routeContent?: ReactNode
+  routeContent?: WorkspaceLayoutContent
 }
 
 function AppShell({
@@ -103,7 +103,7 @@ function AppShell({
     navigate(href)
   }
 
-  const content = pathname === '/settings/sessions' ? (
+  const content: WorkspaceLayoutContent = pathname === '/settings/sessions' ? { mainContent: (
     <main className="min-w-0 bg-background px-4 py-8 sm:px-6 lg:px-8" id="main-content" tabIndex={-1}>
       <div className="mx-auto max-w-3xl">
         <h1 className="text-[1.75rem] font-semibold leading-[1.2]">Sessions</h1>
@@ -120,12 +120,18 @@ function AppShell({
         </section>
       </div>
     </main>
-  ) : routeContent ?? inboxContent
+  ) } : routeContent ?? { mainContent: inboxContent }
 
   return (
     <>
-      <WorkspaceShell onNavigate={guardNavigation} pathname={pathname}>
-        {content ?? (
+      <WorkspaceShell
+        detailContent={content.detailContent}
+        detailSelected={content.detailSelected}
+        listContent={content.listContent}
+        onNavigate={guardNavigation}
+        pathname={pathname}
+      >
+        {content.mainContent ?? (
           <main className="p-6" id="main-content" tabIndex={-1}>
             <h1 className="text-[1.75rem] font-semibold">Keepling</h1>
           </main>

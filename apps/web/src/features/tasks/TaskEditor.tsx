@@ -31,12 +31,14 @@ import ConflictResolver from '@/features/tasks/ConflictResolver'
 
 type TaskEditorProps = {
   csrfToken: string
+  onBack?: () => void
   onAcknowledged?: (acknowledgement: CommandAcknowledgement) => void
   onAuthenticationRequired?: (
     intent: InterruptedIntent,
     resume: (csrfToken: string) => Promise<void>,
   ) => void
   onNavigate?: (pathname: string) => void
+  returnViewLabel?: string
   taskId: string
 }
 
@@ -72,9 +74,11 @@ const defaultNavigate = (pathname: string) => {
 
 function TaskEditor({
   csrfToken,
+  onBack = () => window.history.back(),
   onAcknowledged = () => undefined,
   onAuthenticationRequired,
   onNavigate = defaultNavigate,
+  returnViewLabel = 'Inbox',
   taskId,
 }: TaskEditorProps) {
   const [loadState, setLoadState] = useState<LoadState>({ kind: 'loading' })
@@ -615,7 +619,7 @@ function TaskEditor({
 
   return (
     <main
-      className="min-h-screen bg-card px-4 py-8 sm:px-6 lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:w-[calc(100%-41.5rem)] lg:min-w-[30rem] lg:overflow-y-auto lg:border-l lg:border-border lg:px-8"
+      className="min-h-full min-w-0 bg-card px-4 py-8 sm:px-6 lg:px-8"
       id="main-content"
     >
       <div
@@ -623,6 +627,13 @@ function TaskEditor({
         className="mx-auto max-w-3xl"
         inert={pendingNavigation ? true : undefined}
       >
+        <button
+          className="keepling-narrow-back mb-6 min-h-[var(--keepling-layout-target)] font-semibold text-primary underline-offset-4 hover:underline"
+          onClick={onBack}
+          type="button"
+        >
+          Back to {returnViewLabel}
+        </button>
         <p className="text-sm font-semibold text-muted-foreground">Inbox</p>
         <h1 className="mt-2 text-[1.75rem] font-semibold leading-[1.2]">Edit task</h1>
 

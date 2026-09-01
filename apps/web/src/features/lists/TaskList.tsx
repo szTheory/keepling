@@ -146,6 +146,31 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
   const viewCopy = copy[view]
   const moveLocked = todayMoveIsLocked(moveSubmissionState)
 
+  useEffect(() => {
+    if (state.kind !== 'ready') return
+    const historyState = window.history.state as {
+      keeplingListScrollY?: unknown
+      keeplingListView?: unknown
+      keeplingReturnFocusId?: unknown
+    } | null
+    if (
+      historyState?.keeplingListView !== view ||
+      typeof historyState.keeplingReturnFocusId !== 'string'
+    ) return
+
+    const taskId = historyState.keeplingReturnFocusId
+    const scrollY = typeof historyState.keeplingListScrollY === 'number'
+      ? historyState.keeplingListScrollY
+      : 0
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo({ left: 0, top: scrollY })
+      rowLinks.current.get(taskId)?.focus()
+    })
+    const { keeplingListScrollY: _scrollY, keeplingReturnFocusId: _focusId, ...rest } = historyState
+    window.history.replaceState(rest, '')
+    return () => cancelAnimationFrame(frame)
+  }, [state, view])
+
   const beginReadAuthentication = useCallback(
     (resume: () => Promise<void>) => {
       onAuthenticationRequired?.(
@@ -437,6 +462,24 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
           <a
             className="break-words text-base leading-6 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
             href={`/tasks/${encodeURIComponent(task.id)}`}
+            onClick={(event) => {
+              event.preventDefault()
+              window.history.replaceState(
+                {
+                  ...(window.history.state as object | null),
+                  keeplingListScrollY: window.scrollY,
+                  keeplingListView: view,
+                  keeplingReturnFocusId: task.id,
+                },
+                '',
+              )
+              window.history.pushState(
+                { keeplingListView: view },
+                '',
+                `/tasks/${encodeURIComponent(task.id)}`,
+              )
+              window.dispatchEvent(new PopStateEvent('popstate'))
+            }}
             ref={(node) => {
               if (node) rowLinks.current.set(task.id, node)
               else rowLinks.current.delete(task.id)

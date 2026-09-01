@@ -11,11 +11,13 @@
   --keepling-type-body: 16px;
   --keepling-type-heading: 20px;
   --keepling-type-display: 28px;
+  --keepling-layout-compact-wide-start: 1024px;
   --keepling-layout-nav: 224px;
   --keepling-layout-list-min: 360px;
   --keepling-layout-list-max: 440px;
   --keepling-layout-detail-min: 480px;
   --keepling-layout-form-max: 720px;
+  --keepling-layout-persistent-nav-start: 1064px;
   --keepling-layout-target: 44px;
   --keepling-layout-task-row-min: 52px;
   --keepling-motion-direct: 160ms;
