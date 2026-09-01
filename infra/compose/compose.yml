@@ -4,7 +4,7 @@ x-app-environment: &app-environment
   PHX_HOST: ${KEEPLING_HOST:-localhost}
   PHX_URL_PORT: ${KEEPLING_HTTPS_PORT:-443}
   KEEPLING_SERVER_RELEASE: ${KEEPLING_SERVER_RELEASE:-0.1.0}
-  KEEPLING_TESTED_OCI_DIGEST: ${KEEPLING_SERVER_DIGEST:-sha256:f35a88fc9b56f0404c3458a6268c6dd1030e441c346807663c4f44571cd8f3d4}
+  KEEPLING_TESTED_OCI_DIGEST: ${KEEPLING_SERVER_DIGEST:-sha256:3df6e26b590ea322aafabf116d39014717f629d859283b82c139cd62f6e2be10}
   KEEPLING_UPDATE_LOCATION: ${KEEPLING_UPDATE_LOCATION:-https://github.com/szTheory/keepling/releases}
 
 x-app-secrets: &app-secrets
@@ -47,7 +47,7 @@ services:
       - no-new-privileges:true
 
   migrate:
-    image: ${KEEPLING_SERVER_IMAGE:-sha256:f35a88fc9b56f0404c3458a6268c6dd1030e441c346807663c4f44571cd8f3d4}
+    image: ${KEEPLING_SERVER_IMAGE:-sha256:3df6e26b590ea322aafabf116d39014717f629d859283b82c139cd62f6e2be10}
     restart: "no"
     environment: *app-environment
     secrets: *app-secrets
@@ -67,7 +67,7 @@ services:
       - no-new-privileges:true
 
   app:
-    image: ${KEEPLING_SERVER_IMAGE:-sha256:f35a88fc9b56f0404c3458a6268c6dd1030e441c346807663c4f44571cd8f3d4}
+    image: ${KEEPLING_SERVER_IMAGE:-sha256:3df6e26b590ea322aafabf116d39014717f629d859283b82c139cd62f6e2be10}
     restart: unless-stopped
     init: true
     environment: *app-environment
