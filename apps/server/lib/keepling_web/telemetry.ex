@@ -18,6 +18,7 @@ defmodule KeeplingWeb.Telemetry do
 
   def metrics do
     [
+      counter("keepling.sync.decision.count", tags: [:operation, :outcome]),
       summary("phoenix.endpoint.start.system_time", unit: {:native, :millisecond}),
       summary("phoenix.endpoint.stop.duration", unit: {:native, :millisecond}),
       summary("phoenix.router_dispatch.start.system_time",
@@ -58,6 +59,37 @@ defmodule KeeplingWeb.Telemetry do
       summary("vm.total_run_queue_lengths.io")
     ]
   end
+
+  @doc "Runs one synchronization transport decision with closed, bounded diagnostics."
+  @spec span_sync(:bootstrap | :pull, (-> result)) :: result when result: term()
+  def span_sync(operation, fun) when operation in [:bootstrap, :pull] and is_function(fun, 0) do
+    result = fun.()
+    emit_sync(operation, outcome(result))
+    result
+  rescue
+    error ->
+      emit_sync(operation, :exception)
+      reraise error, __STACKTRACE__
+  catch
+    kind, reason ->
+      emit_sync(operation, :exception)
+      :erlang.raise(kind, reason, __STACKTRACE__)
+  end
+
+  defp emit_sync(operation, outcome) do
+    :telemetry.execute(
+      [:keepling, :sync, :decision],
+      %{count: 1},
+      %{operation: operation, outcome: outcome}
+    )
+  end
+
+  defp outcome({:ok, _body}), do: :accepted
+  defp outcome({:reset_required, _reason}), do: :reset_required
+  defp outcome({:quarantined, _reason}), do: :quarantined
+  defp outcome({:error, reason}) when reason in [:invalid_limit, :invalid_pull], do: :rejected
+  defp outcome({:error, _reason}), do: :unavailable
+  defp outcome(_result), do: :rejected
 
   defp periodic_measurements, do: []
 end

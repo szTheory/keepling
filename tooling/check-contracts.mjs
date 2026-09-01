@@ -25,8 +25,12 @@ const compatibilityVectors = resolve(
   repositoryRoot,
   'packages/contracts/vectors/compatibility.json',
 )
+const redactionVectors = resolve(
+  repositoryRoot,
+  'packages/contracts/vectors/redaction.json',
+)
 
-for (const path of [source, generated, syncSchema, syncVectors, compatibilityVectors]) {
+for (const path of [source, generated, syncSchema, syncVectors, compatibilityVectors, redactionVectors]) {
   try {
     accessSync(path, constants.R_OK)
   } catch {
@@ -300,6 +304,41 @@ const validateCompatibilityVectors = (vectors) => {
   return { cases: vectors.cases.length, codecs: vectors.codec_fixtures.length, lanes: vectors.matrix.lanes.length, laneInputs }
 }
 
+const exactStateSets = {
+  mutation: ['local_saved', 'checking', 'accepted', 'rejected', 'conflict', 'authentication_required', 'quarantined'],
+  synchronization: ['starting', 'catching_up', 'ready', 'stale_last_good', 'retryable_failure'],
+  compatibility: ['supported', 'deprecated_but_safe', 'unsupported'],
+  recovery: ['backup_unverified', 'restore_in_progress', 'restore_verified', 'restore_failed'],
+}
+
+const validateRedactionVectors = (vectors) => {
+  exactKeys(
+    vectors,
+    ['version', 'covered_decisions', 'states', 'state_facts', 'presentation', 'technical_details', 'diagnostic_examples', 'hostile_sentinels'],
+    'redaction vectors',
+  )
+  if (vectors.version !== 1) fail('redaction version must be 1')
+  exactKeys(vectors.states, Object.keys(exactStateSets), 'redaction states')
+  for (const [kind, expected] of Object.entries(exactStateSets)) {
+    if (JSON.stringify(vectors.states[kind]) !== JSON.stringify(expected)) fail(`${kind} trust states drifted`)
+  }
+  if (!Array.isArray(vectors.state_facts) || vectors.state_facts.length !== 19) fail('every trust state requires one fact')
+  const knownStates = new Set(Object.values(exactStateSets).flat())
+  const factStates = new Set()
+  vectors.state_facts.forEach((fact, index) => {
+    exactKeys(fact, ['state', 'durable_location', 'consequence', 'next_action'], `redaction.state_facts[${index}]`)
+    if (!knownStates.has(fact.state) || factStates.has(fact.state)) fail('trust state facts must be exhaustive and unique')
+    factStates.add(fact.state)
+    for (const key of ['durable_location', 'consequence', 'next_action']) nonEmptyString(fact[key], `redaction.${key}`)
+  })
+  uniqueStrings(vectors.hostile_sentinels, 'redaction.hostile_sentinels', { nonEmpty: true })
+  const diagnosticText = JSON.stringify(vectors.diagnostic_examples)
+  for (const sentinel of vectors.hostile_sentinels) {
+    if (diagnosticText.includes(sentinel)) fail('hostile sentinel entered diagnostic fixture')
+  }
+  return vectors.state_facts.length
+}
+
 const schema = JSON.parse(readFileSync(syncSchema, 'utf8'))
 if (schema.$schema !== 'https://json-schema.org/draft/2020-12/schema' || !schema.$defs?.case) {
   fail('schema must be a closed Draft 2020-12 state-machine contract')
@@ -309,6 +348,8 @@ const vectors = JSON.parse(readFileSync(syncVectors, 'utf8'))
 const executedSyncCases = validateSyncVectors(vectors)
 const compatibility = JSON.parse(readFileSync(compatibilityVectors, 'utf8'))
 const executedCompatibility = validateCompatibilityVectors(compatibility)
+const redaction = JSON.parse(readFileSync(redactionVectors, 'utf8'))
+const executedRedactionFacts = validateRedactionVectors(redaction)
 
 const malformed = structuredClone(vectors)
 malformed.cases[0].actions[0].type = 'unknown_action'
@@ -326,6 +367,15 @@ try {
   fail('known vacuous compatibility lane was accepted')
 } catch (error) {
   if (!String(error.message).includes('executed zero cases')) throw error
+}
+
+const malformedRedaction = structuredClone(redaction)
+malformedRedaction.states.mutation.push('unknown_state')
+try {
+  validateRedactionVectors(malformedRedaction)
+  fail('known malformed trust state fixture was accepted')
+} catch (error) {
+  if (!String(error.message).includes('trust states drifted')) throw error
 }
 
 const result = spawnSync(
@@ -356,6 +406,6 @@ if (result.status !== 0) {
 }
 
 process.stdout.write(
-  `Contract drift check passed: OpenAPI agrees; ${executedSyncCases} sync cases, ${executedCompatibility.cases} compatibility cases, ${executedCompatibility.codecs} codec fixtures, and ${executedCompatibility.lanes} skew lanes validated\n`,
+  `Contract drift check passed: OpenAPI agrees; ${executedSyncCases} sync cases, ${executedCompatibility.cases} compatibility cases, ${executedCompatibility.codecs} codec fixtures, ${executedCompatibility.lanes} skew lanes, and ${executedRedactionFacts} trust facts validated\n`,
 )
 for (const input of executedCompatibility.laneInputs) process.stdout.write(`Compatibility lane: ${input}\n`)

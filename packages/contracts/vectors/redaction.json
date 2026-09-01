@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "covered_decisions": ["D-49", "D-50", "D-51", "D-52", "D-53", "D-54"],
+  "states": {
+    "mutation": ["local_saved", "checking", "accepted", "rejected", "conflict", "authentication_required", "quarantined"],
+    "synchronization": ["starting", "catching_up", "ready", "stale_last_good", "retryable_failure"],
+    "compatibility": ["supported", "deprecated_but_safe", "unsupported"],
+    "recovery": ["backup_unverified", "restore_in_progress", "restore_verified", "restore_failed"]
+  },
+  "state_facts": [
+    {"state": "local_saved", "durable_location": "this_device", "consequence": "change_retained", "next_action": "wait_for_server_check"},
+    {"state": "checking", "durable_location": "this_device", "consequence": "server_acceptance_unknown", "next_action": "keep_exact_intent"},
+    {"state": "accepted", "durable_location": "server", "consequence": "change_confirmed", "next_action": "none"},
+    {"state": "rejected", "durable_location": "this_device", "consequence": "server_did_not_accept", "next_action": "review_reason"},
+    {"state": "conflict", "durable_location": "device_and_server", "consequence": "one_change_needs_choice", "next_action": "choose_resolution"},
+    {"state": "authentication_required", "durable_location": "this_device", "consequence": "network_work_paused", "next_action": "sign_in"},
+    {"state": "quarantined", "durable_location": "this_device", "consequence": "intent_will_not_replay_here", "next_action": "inspect_export_or_remove"},
+    {"state": "starting", "durable_location": "this_device", "consequence": "recovering_local_state", "next_action": "wait"},
+    {"state": "catching_up", "durable_location": "device_and_server", "consequence": "bounded_pages_remaining", "next_action": "continue_sync"},
+    {"state": "ready", "durable_location": "device_and_server", "consequence": "last_check_complete", "next_action": "none"},
+    {"state": "stale_last_good", "durable_location": "this_device", "consequence": "showing_last_confirmed_state", "next_action": "retry_later"},
+    {"state": "retryable_failure", "durable_location": "this_device", "consequence": "intent_retained", "next_action": "retry"},
+    {"state": "supported", "durable_location": "server_contract", "consequence": "safe_operation", "next_action": "continue"},
+    {"state": "deprecated_but_safe", "durable_location": "server_contract", "consequence": "safe_during_support_window", "next_action": "update_when_convenient"},
+    {"state": "unsupported", "durable_location": "this_device", "consequence": "pending_intent_preserved", "next_action": "upgrade_client_or_server"},
+    {"state": "backup_unverified", "durable_location": "backup_repository", "consequence": "recovery_not_proven", "next_action": "run_restore_verification"},
+    {"state": "restore_in_progress", "durable_location": "isolated_restore_target", "consequence": "not_ready_for_traffic", "next_action": "wait_for_verification"},
+    {"state": "restore_verified", "durable_location": "isolated_restore_target", "consequence": "recovery_proven", "next_action": "review_cutover"},
+    {"state": "restore_failed", "durable_location": "isolated_restore_target", "consequence": "do_not_cut_over", "next_action": "inspect_sanitized_details"}
+  ],
+  "presentation": {
+    "non_color_cue": true,
+    "keyboard_recovery": true,
+    "stable_focus_identity": true,
+    "predictable_focus_restoration": true,
+    "concise_live_announcements": true,
+    "exact_counts_and_timestamps": true,
+    "wcag_2_2_aa_contrast": true,
+    "dynamic_type_and_zoom": true,
+    "reduce_motion_alternative": true,
+    "destructive_default": "cancel",
+    "routine_success_quiet": true
+  },
+  "technical_details": {
+    "allowed": ["sanitized_error_code", "compatibility_range", "last_successful_contact", "local_server_status", "backup_restore_time", "verification_result"],
+    "ordinary_copy_forbidden": ["mutation_identity", "revision", "cursor", "feed_position", "token_family", "tombstone", "postgresql", "container", "restore_plumbing"]
+  },
+  "diagnostic_examples": [
+    {"surface": "log", "event": "sync_decision", "metadata": {"operation": "pull", "outcome": "reset_required"}},
+    {"surface": "metric", "event": "sync_decision", "metadata": {"operation": "bootstrap", "outcome": "accepted"}},
+    {"surface": "trace", "event": "sync_decision", "metadata": {"operation": "pull", "outcome": "unavailable"}},
+    {"surface": "problem", "event": "sync_reset", "metadata": {"code": "sync_cursor_tampered", "recovery_action": "bootstrap"}}
+  ],
+  "hostile_sentinels": [
+    "HOSTILE_TASK_TITLE_SENTINEL_DO_NOT_EMIT",
+    "HOSTILE_TASK_NOTE_SENTINEL_DO_NOT_EMIT",
+    "HOSTILE_PROMPT_SENTINEL_DO_NOT_EMIT",
+    "HOSTILE_RECOVERY_TOKEN_SENTINEL_DO_NOT_EMIT",
+    "HOSTILE_SYNC_CURSOR_SENTINEL_DO_NOT_EMIT",
+    "00000000-0000-4000-8000-000000000099",
+    "HOSTILE_PROVIDER_ERROR_SENTINEL_DO_NOT_EMIT"
+  ]
+}

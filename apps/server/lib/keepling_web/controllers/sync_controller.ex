@@ -3,6 +3,7 @@ defmodule KeeplingWeb.SyncController do
 
   alias Keepling.Adapters.Postgres.SyncFeed
   alias Keepling.Application.Sync
+  alias KeeplingWeb.Telemetry
 
   @pull_default 200
   @pull_maximum 200
@@ -70,8 +71,11 @@ defmodule KeeplingWeb.SyncController do
     %{active: "v1", keys: %{"v1" => secret}}
   end
 
-  defp invoke(:pull, context, options), do: Sync.pull(context, options, SyncFeed)
-  defp invoke(:bootstrap, context, options), do: Sync.bootstrap(context, options, SyncFeed)
+  defp invoke(:pull, context, options),
+    do: Telemetry.span_sync(:pull, fn -> Sync.pull(context, options, SyncFeed) end)
+
+  defp invoke(:bootstrap, context, options),
+    do: Telemetry.span_sync(:bootstrap, fn -> Sync.bootstrap(context, options, SyncFeed) end)
 
   defp render_result(conn, {:ok, body}), do: json(conn, body)
 

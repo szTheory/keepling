@@ -1285,6 +1285,32 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    MutationTrustState:
+      type: string
+      enum: [local_saved, checking, accepted, rejected, conflict, authentication_required, quarantined]
+    SynchronizationTrustState:
+      type: string
+      enum: [starting, catching_up, ready, stale_last_good, retryable_failure]
+    CompatibilityTrustState:
+      type: string
+      enum: [supported, deprecated_but_safe, unsupported]
+    RecoveryTrustState:
+      type: string
+      enum: [backup_unverified, restore_in_progress, restore_verified, restore_failed]
+    TrustStateFact:
+      type: object
+      additionalProperties: false
+      required: [consequence, durable_location, next_action, state]
+      properties:
+        consequence: {type: string, minLength: 1}
+        durable_location: {type: string, minLength: 1}
+        next_action: {type: string, minLength: 1}
+        state:
+          oneOf:
+            - $ref: '#/components/schemas/MutationTrustState'
+            - $ref: '#/components/schemas/SynchronizationTrustState'
+            - $ref: '#/components/schemas/CompatibilityTrustState'
+            - $ref: '#/components/schemas/RecoveryTrustState'
     SyncCursor:
       type: string
       minLength: 1
@@ -1482,11 +1508,7 @@ components:
         - update_location
       properties:
         compatibility_state:
-          type: string
-          enum:
-            - supported
-            - deprecated_but_safe
-            - unsupported
+          $ref: '#/components/schemas/CompatibilityTrustState'
         deprecation_deadline:
           anyOf:
             - type: string

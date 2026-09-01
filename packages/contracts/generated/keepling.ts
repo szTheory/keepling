@@ -932,8 +932,7 @@ export interface components {
         /** @enum {string} */
         readonly CompatibilityRecoveryCode: "continue" | "client_update_available" | "client_upgrade_required" | "server_upgrade_required";
         readonly CompatibilityResponse: {
-            /** @enum {string} */
-            readonly compatibility_state: "supported" | "deprecated_but_safe" | "unsupported";
+            readonly compatibility_state: components["schemas"]["CompatibilityTrustState"];
             readonly deprecation_deadline: string | null;
             /** @constant */
             readonly pending_intent: "preserved_locally";
@@ -952,6 +951,8 @@ export interface components {
             /** Format: uri */
             readonly update_location: string;
         };
+        /** @enum {string} */
+        readonly CompatibilityTrustState: "supported" | "deprecated_but_safe" | "unsupported";
         readonly ConflictField: {
             readonly base: string | null;
             readonly current: string | null;
@@ -1031,6 +1032,8 @@ export interface components {
          */
         readonly MutationIdentity: string;
         readonly MutationResult: components["schemas"]["CommandAcknowledgement"] | components["schemas"]["OrganizationAcknowledgement"] | components["schemas"]["UndoNoChange"];
+        /** @enum {string} */
+        readonly MutationTrustState: "local_saved" | "checking" | "accepted" | "rejected" | "conflict" | "authentication_required" | "quarantined";
         readonly NativeAuthorizationCode: string;
         readonly NativeAuthorizationCodeExchangeRequest: {
             readonly code: components["schemas"]["NativeAuthorizationCode"];
@@ -1144,6 +1147,8 @@ export interface components {
             /** @constant */
             readonly version: 1;
         };
+        /** @enum {string} */
+        readonly RecoveryTrustState: "backup_unverified" | "restore_in_progress" | "restore_verified" | "restore_failed";
         readonly RenameOrganizationCommand: {
             readonly expected_revision: components["schemas"]["Revision"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
@@ -1267,6 +1272,8 @@ export interface components {
             readonly coverage_cursor: components["schemas"]["SyncCursor"] | null;
             readonly has_more: boolean;
         };
+        /** @enum {string} */
+        readonly SynchronizationTrustState: "starting" | "catching_up" | "ready" | "stale_last_good" | "retryable_failure";
         readonly SyncOrganizationSnapshot: {
             readonly archived_at: string | null;
             readonly id: components["schemas"]["OrganizationIdentity"];
@@ -1397,6 +1404,12 @@ export interface components {
         };
         readonly TrashResponse: {
             readonly tasks: readonly components["schemas"]["TaskSnapshot"][];
+        };
+        readonly TrustStateFact: {
+            readonly consequence: string;
+            readonly durable_location: string;
+            readonly next_action: string;
+            readonly state: components["schemas"]["MutationTrustState"] | components["schemas"]["SynchronizationTrustState"] | components["schemas"]["CompatibilityTrustState"] | components["schemas"]["RecoveryTrustState"];
         };
         readonly UndoAvailability: {
             /** Format: date-time */
