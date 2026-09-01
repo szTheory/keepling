@@ -233,7 +233,9 @@ chmod 600 "$effect_tree/var/lib/keepling/bootstrap-complete.json"
 printf '%s\n' '#!/usr/bin/env sh' 'exit 0' >"$fixture_root/systemctl"
 printf '%s\n' '#!/usr/bin/env sh' 'printf "%s\n" "cloud-init 25.1.4"' >"$fixture_root/cloud-init"
 chmod 700 "$fixture_root/systemctl" "$fixture_root/cloud-init"
-effect_owner="$(id -un):$(id -gn)"
+effect_owner=$(stat -f '%Su:%Sg' "$effect_tree/var/lib/keepling/bootstrap-complete.json" 2>/dev/null ||
+  stat -c '%U:%G' "$effect_tree/var/lib/keepling/bootstrap-complete.json" 2>/dev/null) ||
+  die "fixture owner/group could not be derived portably"
 KEEPLING_EFFECT_TEST_MODE=yes KEEPLING_EFFECT_ROOT="$effect_tree" KEEPLING_EFFECT_EXPECTED_OWNER="$effect_owner" \
   KEEPLING_EFFECT_SYSTEMCTL_BIN="$fixture_root/systemctl" KEEPLING_EFFECT_CLOUD_INIT_BIN="$fixture_root/cloud-init" \
   KEEPLING_EXPECTED_OCI_DIGEST=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
