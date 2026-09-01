@@ -25,11 +25,12 @@ created: "2026-08-31"
 
 ## Threat Register Summary
 
-| Severity | Total | Closed | Open |
-|---|---:|---:|---:|
-| High | 59 | 59 | 0 |
-| Medium | 11 | 11 | 0 |
-| **Total** | **70** | **70** | **0** |
+| Severity | Total | Mitigated | Accepted | Open |
+|---|---:|---:|---:|---:|
+| High | 60 | 60 | 0 | 0 |
+| Medium | 22 | 22 | 0 | 0 |
+| Low | 5 | 1 | 4 | 0 |
+| **Total** | **87** | **83** | **4** | **0** |
 
 ### Closed entries (70)
 
@@ -43,7 +44,14 @@ None.
 
 ## Accepted Risks Log
 
-No accepted risks. All plan-time dispositions are `mitigate`.
+| Threat ID | Severity | Boundary | Accepted rationale |
+|---|---:|---|---|
+| `T-KPL01-24-SC` | low | Dependency supply chain | Plan 24 installed no package and changed no dependency; its security work used existing platform and repository capabilities. |
+| `T-KPL01-25-SC` | low | Dependency supply chain | Plan 25 reused the already-installed Base UI package for the navigation drawer; no install occurred. |
+| `T-KPL01-26-SC` | low | Dependency supply chain | Plan 26 reused the already-installed Base UI package for alert dialogs; no install occurred. |
+| `T-KPL01-27-SC` | low | Dependency supply chain | Plan 27 was a mechanical source normalization and introduced no package or external service. |
+
+These are explicit plan-time `accept` dispositions, not unreviewed implementation risks. The final audit verified that the stated dependency posture remained true.
 
 ## Security Audit Trail
 
@@ -51,12 +59,13 @@ No accepted risks. All plan-time dispositions are `mitigate`.
 |---|---:|---:|---:|---:|---|
 | 2026-08-31 | 70 | 67 | 3 | 1 | gsd-security-auditor |
 | 2026-08-31 | 70 | 70 | 0 | 0 | gsd-security-auditor |
+| 2026-09-01 | 87 | 83 mitigated + 4 accepted | 0 | 0 | gsd-security-auditor |
 
 ## Sign-Off
 
 - [x] All threats have a disposition.
-- [x] No risks were silently accepted or transferred.
+- [x] All accepted risks are explicitly logged with their plan-time rationale.
 - [x] `threats_open: 0` confirmed.
 - [x] `status: verified` set in frontmatter.
 
-**Approval:** verified after Plan 01-24 remediation and re-audit.
+**Approval:** verified after Plans 01-24 through 01-27, review iteration 4, and final threat re-audit.
