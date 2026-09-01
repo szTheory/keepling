@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "fixed_clock": "2026-09-01T12:00:00Z",
+  "cases": [
+    {
+      "name": "dogfood current train exact boundary",
+      "policy": {
+        "now": "2026-09-01T12:00:00Z",
+        "server_release": "0.2.0-dev",
+        "tested_oci_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "distribution": "dogfood",
+        "current_protocol_train": 2,
+        "previous_protocol_train": 1,
+        "previous_superseded_at": null,
+        "deprecation_deadline": null,
+        "emergency_override": null,
+        "supported_protocols": {
+          "read": {"minimum": 1, "maximum": 2},
+          "write": {"minimum": 1, "maximum": 2},
+          "sync": {"minimum": 1, "maximum": 2}
+        },
+        "schema_range": {"minimum": 1, "maximum": 3},
+        "platform_minimum_builds": {"electron": 17, "iphone": 23},
+        "update_location": "https://keepling.example/downloads"
+      },
+      "claims": {"minimum_protocol_train": 2, "maximum_protocol_train": 2},
+      "expect": {
+        "compatibility_state": "supported",
+        "selected_protocol_train": 2,
+        "recovery_code": "continue",
+        "retryable": false,
+        "pending_intent": "preserved_locally"
+      }
+    },
+    {
+      "name": "highest distributed intersection wins",
+      "policy": {
+        "now": "2026-09-01T12:00:00Z",
+        "server_release": "0.2.0",
+        "tested_oci_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "distribution": "distributed",
+        "current_protocol_train": 2,
+        "previous_protocol_train": 1,
+        "previous_superseded_at": "2026-06-15T12:00:00Z",
+        "deprecation_deadline": "2026-09-13T12:00:00Z",
+        "emergency_override": null,
+        "supported_protocols": {
+          "read": {"minimum": 1, "maximum": 2},
+          "write": {"minimum": 1, "maximum": 2},
+          "sync": {"minimum": 1, "maximum": 2}
+        },
+        "schema_range": {"minimum": 1, "maximum": 3},
+        "platform_minimum_builds": {"electron": 17, "iphone": 23},
+        "update_location": "https://keepling.example/downloads"
+      },
+      "claims": {"minimum_protocol_train": 1, "maximum_protocol_train": 2},
+      "expect": {
+        "compatibility_state": "supported",
+        "selected_protocol_train": 2,
+        "recovery_code": "continue",
+        "retryable": false,
+        "pending_intent": "preserved_locally"
+      }
+    },
+    {
+      "name": "previous train remains safe at exact deadline",
+      "policy": {
+        "now": "2026-09-13T12:00:00Z",
+        "server_release": "0.2.0",
+        "tested_oci_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "distribution": "distributed",
+        "current_protocol_train": 2,
+        "previous_protocol_train": 1,
+        "previous_superseded_at": "2026-06-15T12:00:00Z",
+        "deprecation_deadline": "2026-09-13T12:00:00Z",
+        "emergency_override": null,
+        "supported_protocols": {
+          "read": {"minimum": 1, "maximum": 2},
+          "write": {"minimum": 1, "maximum": 2},
+          "sync": {"minimum": 1, "maximum": 2}
+        },
+        "schema_range": {"minimum": 1, "maximum": 3},
+        "platform_minimum_builds": {"electron": 17, "iphone": 23},
+        "update_location": "https://keepling.example/downloads"
+      },
+      "claims": {"minimum_protocol_train": 1, "maximum_protocol_train": 1},
+      "expect": {
+        "compatibility_state": "deprecated_but_safe",
+        "selected_protocol_train": 1,
+        "recovery_code": "client_update_available",
+        "retryable": false,
+        "pending_intent": "preserved_locally"
+      }
+    },
+    {
+      "name": "older client must upgrade without retry",
+      "policy": {
+        "now": "2026-09-14T12:00:00Z",
+        "server_release": "0.2.0",
+        "tested_oci_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "distribution": "distributed",
+        "current_protocol_train": 2,
+        "previous_protocol_train": 1,
+        "previous_superseded_at": "2026-06-15T12:00:00Z",
+        "deprecation_deadline": "2026-09-13T12:00:00Z",
+        "emergency_override": null,
+        "supported_protocols": {
+          "read": {"minimum": 1, "maximum": 2},
+          "write": {"minimum": 1, "maximum": 2},
+          "sync": {"minimum": 1, "maximum": 2}
+        },
+        "schema_range": {"minimum": 1, "maximum": 3},
+        "platform_minimum_builds": {"electron": 17, "iphone": 23},
+        "update_location": "https://keepling.example/downloads"
+      },
+      "claims": {"minimum_protocol_train": 1, "maximum_protocol_train": 1},
+      "expect": {
+        "compatibility_state": "unsupported",
+        "selected_protocol_train": null,
+        "recovery_code": "client_upgrade_required",
+        "retryable": false,
+        "pending_intent": "preserved_locally"
+      }
+    },
+    {
+      "name": "newer client requires a server upgrade",
+      "policy": {
+        "now": "2026-09-01T12:00:00Z",
+        "server_release": "0.2.0",
+        "tested_oci_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "distribution": "distributed",
+        "current_protocol_train": 2,
+        "previous_protocol_train": 1,
+        "previous_superseded_at": "2026-06-15T12:00:00Z",
+        "deprecation_deadline": "2026-09-13T12:00:00Z",
+        "emergency_override": null,
+        "supported_protocols": {
+          "read": {"minimum": 1, "maximum": 2},
+          "write": {"minimum": 1, "maximum": 2},
+          "sync": {"minimum": 1, "maximum": 2}
+        },
+        "schema_range": {"minimum": 1, "maximum": 3},
+        "platform_minimum_builds": {"electron": 17, "iphone": 23},
+        "update_location": "https://keepling.example/downloads"
+      },
+      "claims": {"minimum_protocol_train": 3, "maximum_protocol_train": 4},
+      "expect": {
+        "compatibility_state": "unsupported",
+        "selected_protocol_train": null,
+        "recovery_code": "server_upgrade_required",
+        "retryable": false,
+        "pending_intent": "preserved_locally"
+      }
+    },
+    {
+      "name": "documented security emergency shortens the previous train",
+      "policy": {
+        "now": "2026-09-01T12:00:00Z",
+        "server_release": "0.2.0-security",
+        "tested_oci_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        "distribution": "distributed",
+        "current_protocol_train": 2,
+        "previous_protocol_train": 1,
+        "previous_superseded_at": "2026-08-15T12:00:00Z",
+        "deprecation_deadline": "2026-11-13T12:00:00Z",
+        "emergency_override": {
+          "effective_at": "2026-09-01T11:00:00Z",
+          "evidence": "KPL-SEC-2026-001",
+          "notice_location": "https://keepling.example/security/KPL-SEC-2026-001",
+          "preserve_local_intent": true
+        },
+        "supported_protocols": {
+          "read": {"minimum": 1, "maximum": 2},
+          "write": {"minimum": 1, "maximum": 2},
+          "sync": {"minimum": 1, "maximum": 2}
+        },
+        "schema_range": {"minimum": 1, "maximum": 3},
+        "platform_minimum_builds": {"electron": 17, "iphone": 23},
+        "update_location": "https://keepling.example/downloads"
+      },
+      "claims": {"minimum_protocol_train": 1, "maximum_protocol_train": 1},
+      "expect": {
+        "compatibility_state": "unsupported",
+        "selected_protocol_train": null,
+        "recovery_code": "client_upgrade_required",
+        "retryable": false,
+        "pending_intent": "preserved_locally"
+      }
+    }
+  ]
+}
