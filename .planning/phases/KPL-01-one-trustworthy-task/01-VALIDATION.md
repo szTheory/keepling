@@ -5,6 +5,9 @@ status: automated-complete-human-needed
 nyquist_compliant: false
 wave_0_complete: true
 created: 2026-08-30
+audited: 2026-08-31
+automated_tasks: 48/48
+manual_uat: 0/3
 ---
 
 # Phase 1 — Validation Strategy
@@ -69,23 +72,59 @@ created: 2026-08-30
 | 01-19-T1 | 01-19 | 17 | WEB-02, QUAL-01 | T-KPL01-41, T-KPL01-44 | Responsive semantic tokens, focus, themes, and motion contract | `pnpm --filter @keepling/web test --run src/test/ui-contract.test.tsx` | ❌ Planned — token output/component test created by task | ✅ passed — full phase gate 2026-08-31 |
 | 01-19-T2 | 01-19 | 17 | WEB-02, QUAL-01 | T-KPL01-41, T-KPL01-44 | Separate overflow and long-text visual/a11y evidence | `pnpm --filter @keepling/web test:e2e --grep @visual-contract` | ❌ Planned — visual E2E file created by task | ✅ passed — full phase gate 2026-08-31 |
 | 01-19-T3 | 01-19 | 17 | WEB-01, QUAL-01 | T-KPL01-41..44 | Targeted lifecycle, long-sequence, and telemetry evidence covers new tests | `./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix test test/keepling/domain/long_sequence_test.exs test/keepling/telemetry_redaction_test.exs' && pnpm --filter @keepling/web test:e2e --grep @phase1-lifecycle` | ❌ Planned — focused server/E2E files created by task | ✅ passed — full phase gate 2026-08-31 |
+| 01-20-T1 | 01-20 | 18 | SRV-01, WEB-02, QUAL-01 | T-KPL01-G20-01..03 | Expired task-detail and activity reads resume exact route, draft, and cursor context through real authentication | `pnpm --filter @keepling/web test --run src/features/tasks/task-editor.test.tsx src/features/activity/activity-list.test.tsx && pnpm --filter @keepling/web test:e2e --grep @authenticated-read-task` | `task-editor.test.tsx`, `activity-list.test.tsx`, `authenticated-read-recovery.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
+| 01-20-T2 | 01-20 | 18 | SRV-01, WEB-02, QUAL-01 | T-KPL01-G20-01..03 | Assignment, Projects, and Tags reads recover their original task or organization context | `pnpm --filter @keepling/web test --run src/features/organizations/organization-fields.test.tsx && pnpm --filter @keepling/web test:e2e --grep @authenticated-read-organizations` | `organization-fields.test.tsx`, `authenticated-read-recovery.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
+| 01-20-T3 | 01-20 | 18 | SRV-01, WEB-02, QUAL-01 | T-KPL01-G20-01..03 | One credential rotation drains concurrent compatible continuations exactly once and keeps failures retryable | `pnpm --filter @keepling/web test --run src/features/auth/auth.test.tsx && pnpm --filter @keepling/web test:e2e --grep @authenticated-read-concurrent` | `auth.test.tsx`, `authenticated-read-recovery.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
+| 01-21-T1 | 01-21 | 18 | SRV-03, WEB-02, QUAL-01 | T-KPL01-G21-01..03 | A dispatched conflict choice is immutable while its exact result is nonterminal | `pnpm --filter @keepling/web test --run src/features/tasks/conflict-resolver.test.tsx` | `conflict-resolver.test.tsx` | ✅ passed — full phase gate 2026-08-31 |
+| 01-21-T2 | 01-21 | 18 | SRV-03, WEB-02, QUAL-01 | T-KPL01-G21-01..03 | After-commit conflict response loss reconciles the original choice and mutation identity exactly once | `pnpm --filter @keepling/web test:e2e --grep @conflict-resolution-recovery` | `conflict-resolution-recovery.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
+| 01-22-T1 | 01-22 | 18 | GTD-03, SRV-03, WEB-02, QUAL-01 | T-KPL01-G22-01..03 | Every Today ordering control is globally locked while one exact move is unresolved | `pnpm --filter @keepling/web test --run src/features/lists/task-lists.test.tsx` | `task-lists.test.tsx` | ✅ passed — full phase gate 2026-08-31 |
+| 01-22-T2 | 01-22 | 18 | GTD-03, SRV-03, WEB-02, QUAL-01 | T-KPL01-G22-01..03 | A committed Today move whose response is lost remains recoverable only by its original identity | `pnpm --filter @keepling/web test:e2e --grep @today-order-recovery` | `today-order-recovery.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
+| 01-23-T1 | 01-23 | 18 | SRV-01, SRV-03, WEB-02, QUAL-01 | T-KPL01-G23-01..05 | Uncertain rename, revoke, and logout reconcile authoritative inventory/authentication before definitive copy | `pnpm --filter @keepling/web test --run src/features/sessions/session-list.test.tsx` | `session-list.test.tsx` | ✅ passed — full phase gate 2026-08-31 |
+| 01-23-T2 | 01-23 | 18 | SRV-01, SRV-03, WEB-02, QUAL-01 | T-KPL01-G23-01..05 | Real after-commit session response loss converges without replaying writes and remains test-only | `./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix test test/keepling_web/test_fault_test.exs' && pnpm --filter @keepling/web test:e2e --grep @session-reconciliation` | `test_fault_test.exs`, `session-reconciliation.spec.ts` | ✅ passed — full phase gate 2026-08-31 |
 
 ## Post-Task / Phase Gate
 
-After every task-level command above has passed, run `./tooling/test-phase-1.sh` once as the consolidated phase gate; it is not a substitute for the targeted Task 01-19-T3 feedback command.
+After every task-level command above has passed, run `./tooling/test-phase-1.sh --run` once as the consolidated phase gate; it complements rather than replaces the targeted task commands.
 
-## Fresh Automated Evidence — 2026-08-31
+## Fresh Final-Tree Automated Evidence — 2026-08-31
 
 | Boundary | Command | Result |
 |---|---|---|
-| Task 01-19 semantic UI contract | `pnpm --filter @keepling/web test --run src/test/ui-contract.test.tsx` | 1 file, 4 tests passed |
-| Task editor canonical acknowledgement | `pnpm --filter @keepling/web test --run src/features/tasks/task-editor.test.tsx` | 1 file, 11 tests passed; undo acknowledgement repaints the mounted editor without reload |
-| Independent overflow/long-text evidence | `pnpm --filter @keepling/web test:e2e --grep @visual-contract` | 2 Playwright tests passed with separate `UI-BACKSTOP-OVERFLOW` and `UI-BACKSTOP-LONG-TEXT` evidence |
-| Long sequence and telemetry privacy | `mix test test/keepling/domain/long_sequence_test.exs test/keepling/telemetry_redaction_test.exs` under the runtime preflight and test environment | 3 ExUnit tests passed |
-| Real-stack Phase 1 lifecycle | `pnpm --filter @keepling/web test:e2e --grep @phase1-lifecycle` | 1 Playwright test passed, including immediate semantic-undo reconciliation |
-| Complete fail-fast phase gate | `./tooling/test-phase-1.sh --run` | Passed: repository integrity, migrations, 95 ExUnit tests, production-route isolation, contract drift, TypeScript, 75 Vitest tests, and 10 Playwright tests |
+| Complete fail-fast phase gate | `./tooling/test-phase-1.sh --run` | Exit 0: repository integrity, exact runtime, fresh migrations, 105 ExUnit, production-route isolation, contract drift, TypeScript, 129 Vitest, and 18 Playwright tests |
+| Plans 20–23 recovery E2E | Included in the complete gate | Authenticated reads, conflict choice, Today order, and session administration all passed against Phoenix/PostgreSQL |
+| Review-fix route identity | Included in 129 Vitest tests | Deferred task A→B and Inbox→Today settlement-order regressions passed |
+| Overflow regression | Included in 18 Playwright tests | 1023/1024/1063/1064, light/dark, and 200% zoom geometry oracle passed |
 
-The first full-run attempt exposed a runner wiring error: `mix ecto.migrate` inherited the development environment and failed fast because `KEEPLING_DEV_DATABASE_URL` was intentionally absent. The runner now pins the entire migration/compile/test lane to `MIX_ENV=test`; the clean rerun above passed against its disposable PostgreSQL instance.
+The final-tree audit found no missing, partial, disabled, or failing automated requirement test. No test file was generated because the existing behavioral suites already prove every automated PLAN truth and requirement lane; adding a redundant test would not close a gap.
+
+## Requirement Coverage
+
+| Requirement | Source Plans | Automated Boundary | Status |
+|---|---|---|---|
+| GTD-01 | 05, 19 | Capture idempotency + real-stack skeleton/lifecycle | ✅ covered |
+| GTD-02 | 09, 10, 12, 19 | Edit, organization, date domain/component/E2E | ✅ covered |
+| GTD-03 | 12, 13, 19, 22 | Today date/order projections + after-commit recovery | ✅ covered |
+| GTD-04 | 12, 13, 19 | Account-timezone Today/Upcoming projections | ✅ covered |
+| GTD-05 | 14, 19 | Complete/reopen application, UI, and real-stack lifecycle | ✅ covered |
+| GTD-06 | 15, 19 | Durable Trash/restore preservation + UI | ✅ covered |
+| GTD-07 | 18, 19 | Revision-aware one-shot undo race + recovery UI | ✅ covered |
+| SRV-01 | 05–08, 17, 19, 20, 23 | Closed account/session authority, auth recovery, reconciliation | ✅ covered for Phase 1 |
+| SRV-02 | 02–06, 09–19 | Shared semantic boundary, PostgreSQL, Phoenix, contracts | ✅ covered for Phase 1 |
+| SRV-03 | 05–07, 09–23 | Stable receipts, conflict/ordering/session uncertainty | ✅ covered |
+| WEB-01 | 04–05, 09, 13–14, 17, 19 | Real browser daily loop against Phoenix/PostgreSQL | ✅ covered |
+| WEB-02 | 04, 08–23 | Loading/empty/error/auth/conflict/retry/focus/reflow states | ✅ automated coverage; human UAT pending |
+| QUAL-01 | 01–07, 11, 16–23 | Integrity, migrations, privacy, production isolation, all test layers | ✅ automated coverage; human UAT pending |
+
+## Validation Audit 2026-08-31
+
+| Metric | Count |
+|---|---:|
+| Plans mapped | 23/23 |
+| Plan tasks with automated commands | 48/48 |
+| Phase requirements with automated coverage | 13/13 |
+| Automated gaps found | 0 |
+| Tests generated | 0 |
+| Manual-only UAT items preserved | 3 |
 
 ## Wave 0 Requirements and Ordering
 
