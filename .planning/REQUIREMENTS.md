@@ -26,7 +26,7 @@
 
 ### Browser tracer
 
-- [ ] **WEB-01**: User can use an online browser interface to capture, view Inbox and Today, edit, complete, and reopen tasks against the real Phoenix/PostgreSQL system.
+- [x] **WEB-01**: User can use an online browser interface to capture, view Inbox and Today, edit, complete, and reopen tasks against the real Phoenix/PostgreSQL system.
 - [x] **WEB-02**: User sees clear empty, loading, validation, authentication-expired, stale, conflict, and retry states wherever those states apply.
 
 ### Mac desktop
