@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 34
+open_count: 37
 waived_count: 0
 fixed_count: 4
-total_count: 38
-last_updated: 2026-09-01T07:13:47.518Z
+total_count: 41
+last_updated: 2026-09-01T08:35:49.877Z
 ---
 
 # Broken Windows Ledger
@@ -53,6 +53,9 @@ last_updated: 2026-09-01T07:13:47.518Z
 | 36 | KPL-02 | deviation | apps/server/lib/keepling/application.ex |  | Compatibility configuration is validated before application supervision starts | open |  | 2026-09-01T07:13:47.287Z |  |
 | 37 | KPL-02 | deviation | tooling/check-contracts.mjs |  | Compatibility contract gate rejects vacuous or malformed skew evidence | open |  | 2026-09-01T07:13:47.399Z |  |
 | 38 | KPL-02 | deviation | tooling/test-compatibility.sh |  | Migration count probe uses explicit PostgreSQL inputs and numeric output isolation | open |  | 2026-09-01T07:13:47.518Z |  |
+| 39 | KPL-02 | deviation | infra/caddy/Caddyfile |  | Preserved local HTTP proof without disabling production HTTPS automation | open |  | 2026-09-01T08:35:49.662Z |  |
+| 40 | KPL-02 | deviation | tooling/verify-deploy.sh |  | Emitted the setup capability from the running release node | open |  | 2026-09-01T08:35:49.770Z |  |
+| 41 | KPL-02 | deviation | tooling/verify-deploy.sh |  | Matched the established direct task-read response contract | open |  | 2026-09-01T08:35:49.877Z |  |
 
 ````json
 [
@@ -510,6 +513,42 @@ last_updated: 2026-09-01T07:13:47.518Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-01T07:13:47.518Z",
+    "resolved_at": null
+  },
+  {
+    "id": 39,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "infra/caddy/Caddyfile",
+    "line": null,
+    "description": "Preserved local HTTP proof without disabling production HTTPS automation",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T08:35:49.662Z",
+    "resolved_at": null
+  },
+  {
+    "id": 40,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "tooling/verify-deploy.sh",
+    "line": null,
+    "description": "Emitted the setup capability from the running release node",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T08:35:49.770Z",
+    "resolved_at": null
+  },
+  {
+    "id": 41,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "tooling/verify-deploy.sh",
+    "line": null,
+    "description": "Matched the established direct task-read response contract",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T08:35:49.877Z",
     "resolved_at": null
   }
 ]

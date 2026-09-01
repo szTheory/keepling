@@ -60,9 +60,9 @@
 
 ### Self-hosting and operations
 
-- [ ] **OPS-01**: Operator can run the supported app-plus-PostgreSQL topology locally using pinned containers, explicit health checks, and no hidden durable state.
+- [x] **OPS-01**: Operator can run the supported app-plus-PostgreSQL topology locally using pinned containers, explicit health checks, and no hidden durable state.
 - [ ] **OPS-02**: Operator can provision the reference Hetzner VM, firewall, network, and bootstrap declaratively with OpenTofu/Terraform and minimal manual steps.
-- [ ] **OPS-03**: Operator can deploy an immutable tested image, run explicit migrations, wait for readiness, and execute a user-level smoke with honest short-interruption semantics.
+- [x] **OPS-03**: Operator can deploy an immutable tested image, run explicit migrations, wait for readiness, and execute a user-level smoke with honest short-interruption semantics.
 - [x] **OPS-04**: Operator can use documented preflight, doctor, backup, restore, restore-verify, upgrade, and disaster-recovery commands with stable actionable errors.
 - [x] **OPS-05**: Operator can inspect liveness, readiness, version, schema compatibility, backup age, last restore verification, and privacy-safe diagnostics without default-on remote telemetry.
 

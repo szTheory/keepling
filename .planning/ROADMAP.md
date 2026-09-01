@@ -109,7 +109,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05
 **UI hint:** no
-**Plans:** 7/11 plans executed
+**Plans:** 8/11 plans executed
 
 Plans:
 **Wave 1**
@@ -139,7 +139,7 @@ Plans:
 
 **Wave 7** *(blocked on Wave 6 completion)*
 
-- [ ] 02-07-PLAN.md — Package and locally deploy the immutable Caddy/Phoenix/PostgreSQL topology.
+- [x] 02-07-PLAN.md — Package and locally deploy the immutable Caddy/Phoenix/PostgreSQL topology.
 
 **Wave 8** *(blocked on Wave 7 completion)*
 
