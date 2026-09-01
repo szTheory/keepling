@@ -1,0 +1,45 @@
+#!/usr/bin/env sh
+set -eu
+
+script_dir=$(CDPATH='' cd -P "$(dirname "$0")" && pwd)
+repository_root=$(git -C "$script_dir" rev-parse --show-toplevel)
+
+if [ -n "${KEEPLING_RELEASE_BIN:-}" ]; then
+  encoded_args=
+
+  for argument in "$@"; do
+    encoded=$(printf '%s' "$argument" | base64 | tr -d '\n')
+
+    if [ -z "$encoded_args" ]; then
+      encoded_args=$encoded
+    else
+      encoded_args="$encoded_args:$encoded"
+    fi
+  done
+
+  export KEEPLING_OPS_ARGS_BASE64=$encoded_args
+  exec "$KEEPLING_RELEASE_BIN" eval 'Keepling.Release.ops_from_env()'
+fi
+
+temporary_output=$(mktemp /tmp/keepling-ops.source.XXXXXX)
+
+cleanup() {
+  case "$temporary_output" in
+    /tmp/keepling-ops.source.*) rm -f -- "$temporary_output" ;;
+    *) exit 70 ;;
+  esac
+}
+trap cleanup EXIT HUP INT TERM
+
+set +e
+"$repository_root/tooling/runtime-preflight.sh" --exec -- sh -c '
+  repository_root=$1
+  shift
+  cd "$repository_root/apps/server"
+  exec mix keepling.ops "$@"
+' sh "$repository_root" "$@" >"$temporary_output"
+exit_code=$?
+set -e
+
+sed '1{/^Runtime preflight passed:/d;}' "$temporary_output"
+exit "$exit_code"

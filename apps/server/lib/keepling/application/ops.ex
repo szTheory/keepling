@@ -34,6 +34,19 @@ defmodule Keepling.Application.Ops do
   @spec exit_code(atom()) :: non_neg_integer()
   def exit_code(class), do: Map.fetch!(@exit_codes, class)
 
+  @doc "Returns the closed usage result without reflecting untrusted arguments."
+  @spec invalid_result(String.t()) :: map()
+  def invalid_result(operation) when is_binary(operation) do
+    failure(
+      if(operation in @verbs, do: operation, else: "unknown"),
+      "invalid_arguments",
+      :usage,
+      false,
+      ["Use `keepling ops --help` for the accepted arguments."],
+      %{}
+    )
+  end
+
   @spec run(String.t(), map(), module(), map() | keyword()) :: map()
   def run(operation, input, port, options)
       when operation in @verbs and is_map(input) and is_atom(port) do

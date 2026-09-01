@@ -4,6 +4,7 @@ set -eu
 script_dir=$(CDPATH='' cd -P "$(dirname "$0")" && pwd)
 repository_root=$(git -C "$script_dir" rev-parse --show-toplevel)
 ops="$repository_root/tooling/keepling-ops"
+runtime_preflight="$repository_root/tooling/runtime-preflight.sh"
 
 fail() {
   echo "Ops CLI test failed: $*" >&2
@@ -27,7 +28,10 @@ trap cleanup EXIT HUP INT TERM
 release_path="$temporary_root/release"
 release_log="$temporary_root/release-build.log"
 
-(
+"$runtime_preflight" --exec -- sh -c '
+  repository_root=$1
+  release_path=$2
+  release_log=$3
   cd "$repository_root/apps/server"
   MIX_ENV=test mix ecto.create --quiet
   MIX_ENV=test mix ecto.migrate --quiet
@@ -36,11 +40,11 @@ release_log="$temporary_root/release-build.log"
     SECRET_KEY_BASE="$KEEPLING_TEST_SECRET_KEY_BASE" \
     PHX_HOST=localhost \
     KEEPLING_SERVER_RELEASE=0.1.0-dev \
-    KEEPLING_TESTED_OCI_DIGEST="sha256:$(printf '%064d' 0)" \
+    KEEPLING_TESTED_OCI_DIGEST="sha256:$(printf "%064d" 0)" \
     KEEPLING_UPDATE_LOCATION=https://github.com/szTheory/keepling/releases \
     KEEPLING_OPERATOR_TOKEN=0123456789abcdef0123456789abcdef \
     MIX_ENV=prod mix release --overwrite --path "$release_path" >"$release_log" 2>&1
-) || {
+' sh "$repository_root" "$release_path" "$release_log" || {
   sed -n '1,220p' "$release_log" >&2
   fail "release build failed"
 }
