@@ -159,6 +159,46 @@ defmodule Keepling.Application.Ops.RestoreTest do
     assert Store.state(store).runs[run.run_id].ready == false
   end
 
+  test "canonical lowercase version-four epochs are accepted without storage dependencies", %{
+    store: store
+  } do
+    assert {:ok, run} = Restore.begin(valid_input(), Store, store)
+    assert run.previous_sync_epoch == "00000000-0000-4000-8000-0000000000e1"
+    assert {:ok, completed} = Restore.finalize(run, valid_proof(), Store, store)
+
+    assert completed.sync_epoch =~
+             ~r/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+  end
+
+  test "malformed and noncanonical epochs fail before mutation or finalization", %{store: store} do
+    malformed = [
+      nil,
+      "",
+      "000000000000400080000000000000e1",
+      "00000000-0000-4000-8000-0000000000E1",
+      "00000000-0000-3000-8000-0000000000e1",
+      "00000000-0000-4000-7000-0000000000e1",
+      "00000000-0000-4000-8000-0000000000e1-extra",
+      "not-a-uuid"
+    ]
+
+    for epoch <- malformed do
+      assert {:refused, "stale_epoch"} =
+               Restore.begin(Map.put(valid_input(), "current_sync_epoch", epoch), Store, store)
+    end
+
+    assert Store.state(store) == %{completed: %{}, leases: %{}, runs: %{}}
+    assert {:ok, run} = Restore.begin(valid_input(), Store, store)
+
+    for epoch <- malformed do
+      assert {:refused, "stale_epoch"} =
+               Restore.finalize(run, valid_proof(epoch), Store, store)
+    end
+
+    assert Store.state(store).completed == %{}
+    assert Store.state(store).runs[run.run_id].ready == false
+  end
+
   test "rerunning completed verification is read-only and idempotent", %{store: store} do
     assert {:ok, run} = Restore.begin(valid_input(), Store, store)
     assert {:ok, completed} = Restore.finalize(run, valid_proof(), Store, store)

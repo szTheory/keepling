@@ -9,6 +9,7 @@ defmodule Keepling.Application.Ops.Restore do
   """
 
   @digest ~r/^sha256:[0-9a-f]{64}$/
+  @uuid_v4 ~r/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
   @semantic ~w(history login read schema undo write)
 
   defmodule Port do
@@ -248,7 +249,8 @@ defmodule Keepling.Application.Ops.Restore do
     )
   end
 
-  defp hex(value, width), do: value |> Integer.to_string(16) |> String.pad_leading(width, "0")
+  defp hex(value, width),
+    do: value |> Integer.to_string(16) |> String.downcase() |> String.pad_leading(width, "0")
 
   defp random_hex(options, bytes),
     do: options |> random_bytes(bytes) |> Base.encode16(case: :lower)
@@ -274,7 +276,7 @@ defmodule Keepling.Application.Ops.Restore do
 
   defp valid_timestamp?(_value), do: false
 
-  defp valid_uuid?(value) when is_binary(value), do: match?({:ok, _}, Ecto.UUID.cast(value))
+  defp valid_uuid?(value) when is_binary(value), do: Regex.match?(@uuid_v4, value)
   defp valid_uuid?(_value), do: false
 
   defp valid_override?(
