@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "refusals": [
+    {"name": "live destination", "input": {"target_class": "live"}, "outcome": "destination_live"},
+    {"name": "nonempty destination", "input": {"target_empty": false}, "outcome": "destination_nonempty"},
+    {"name": "ambiguous source and target", "input": {"source_target_distinct": false}, "outcome": "source_target_ambiguous"},
+    {"name": "missing WAL", "input": {"wal_complete": false}, "outcome": "missing_wal"},
+    {"name": "unverified selection", "input": {"source_verified": false}, "outcome": "source_unverified"},
+    {"name": "mutable image", "input": {"image_immutable": false}, "outcome": "mutable_image"},
+    {"name": "expired compatibility", "input": {"compatibility": "expired"}, "outcome": "compatibility_expired"},
+    {"name": "side effects enabled", "input": {"production_side_effects": true}, "outcome": "production_side_effects_enabled"}
+  ],
+  "failures": [
+    "wrong_key",
+    "corrupt_manifest",
+    "missing_wal_segment",
+    "stale_epoch",
+    "semantic_smoke_incomplete"
+  ],
+  "verified": {
+    "outcome": "verified",
+    "epoch_finalized": true,
+    "readiness": true,
+    "semantic_smoke": ["history", "login", "read", "schema", "undo", "write"]
+  }
+}
