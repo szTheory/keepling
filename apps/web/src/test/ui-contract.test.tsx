@@ -22,6 +22,39 @@ const repositoryFile = (relativePath: string) =>
   readFileSync(resolve(process.cwd(), '../..', relativePath), 'utf8')
 
 describe('approved Phase 1 UI contract', () => {
+  it('opens semantic primary navigation in a modal drawer and restores trigger focus', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState({}, '', '/today')
+    render(<AppShell csrfToken="csrf" onLoggedOut={vi.fn()} />)
+
+    const trigger = screen.getByRole('button', { name: 'Open navigation' })
+    await user.click(trigger)
+
+    const navigation = screen.getByRole('navigation', { name: 'Primary navigation' })
+    for (const label of [
+      'Inbox',
+      'Today',
+      'Upcoming',
+      'Projects',
+      'Tags',
+      'Completed',
+      'Trash',
+      'Sessions',
+    ]) {
+      expect(within(navigation).getByRole('link', { name: label })).toBeInTheDocument()
+    }
+    expect(within(navigation).getByRole('link', { name: 'Today' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(within(navigation).getByRole('link', { name: 'Inbox' })).toHaveFocus()
+
+    await user.tab({ shift: true })
+    expect(within(navigation).getByRole('button', { name: 'Close navigation' })).toHaveFocus()
+    await user.keyboard('{Escape}')
+    expect(trigger).toHaveFocus()
+  })
+
   it('keeps DTCG source and generated CSS in exact semantic sync', () => {
     const generatedTokens = repositoryFile('packages/design-tokens/css.css')
     expect(Object.values(tokens.space).map(({ $value }) => $value)).toEqual([
