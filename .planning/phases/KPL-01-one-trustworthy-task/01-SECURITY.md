@@ -1,8 +1,8 @@
 ---
 phase: "KPL-01"
 slug: "one-trustworthy-task"
-status: blocked
-threats_open: 1
+status: verified
+threats_open: 0
 asvs_level: 1
 block_on: high
 register_authored_at_plan_time: true
@@ -27,23 +27,19 @@ created: "2026-08-31"
 
 | Severity | Total | Closed | Open |
 |---|---:|---:|---:|
-| High | 59 | 58 | 1 |
-| Medium | 11 | 9 | 2 |
-| **Total** | **70** | **67** | **3** |
+| High | 59 | 59 | 0 |
+| Medium | 11 | 11 | 0 |
+| **Total** | **70** | **70** | **0** |
 
-### Closed entries (67)
+### Closed entries (70)
 
-`T-KPL01-SC`, `T-KPL01-01`, `T-KPL01-RT`, `T-KPL01-02`, `T-KPL01-03`, `T-KPL01-04`, `T-KPL01-05` (two plan entries), `T-KPL01-06`, `T-KPL01-07` (two plan entries), `T-KPL01-08`, `T-KPL01-09`, `T-KPL01-10`, `T-KPL01-11` (two plan entries), `T-KPL01-12` (two plan entries), `T-KPL01-13` (two plan entries), `T-KPL01-14` (two plan entries), `T-KPL01-15`, `T-KPL01-16`, `T-KPL01-17`, `T-KPL01-18` (two plan entries), `T-KPL01-19` (two plan entries), `T-KPL01-20` through `T-KPL01-27`, `T-KPL01-29` through `T-KPL01-40`, `T-KPL01-42` through `T-KPL01-44`, `T-KPL01-G20-01` through `T-KPL01-G20-03`, `T-KPL01-G21-01` through `T-KPL01-G21-04`, `T-KPL01-G22-01` through `T-KPL01-G22-03`, and `T-KPL01-G23-01` through `T-KPL01-G23-05`.
+`T-KPL01-SC`, `T-KPL01-01`, `T-KPL01-RT`, `T-KPL01-02`, `T-KPL01-03`, `T-KPL01-04`, `T-KPL01-05` (two plan entries), `T-KPL01-06`, `T-KPL01-07` (two plan entries), `T-KPL01-08`, `T-KPL01-09`, `T-KPL01-10`, `T-KPL01-11` (two plan entries), `T-KPL01-12` (two plan entries), `T-KPL01-13` (two plan entries), `T-KPL01-14` (two plan entries), `T-KPL01-15`, `T-KPL01-16`, `T-KPL01-17`, `T-KPL01-18` (two plan entries), `T-KPL01-19` (two plan entries), `T-KPL01-20` through `T-KPL01-44`, `T-KPL01-G20-01` through `T-KPL01-G20-04`, `T-KPL01-G21-01` through `T-KPL01-G21-04`, `T-KPL01-G22-01` through `T-KPL01-G22-03`, and `T-KPL01-G23-01` through `T-KPL01-G23-05`.
 
-Verified controls include exact dependency/runtime gates, environment validation, inward architecture boundaries, account-scoped authorization, CSRF/origin checks, hash-only capabilities, idempotent receipts, persisted conflicts, HMAC cursors, test-only fault isolation, telemetry redaction, exact browser recovery, and authoritative session reconciliation. Evidence remains in the owning PLAN/SUMMARY files and implementation tests.
+Verified controls include exact dependency/runtime gates, environment validation, inward architecture boundaries, account-scoped authorization, CSRF/origin checks, hash-only capabilities, idempotent receipts, persisted conflicts, HMAC cursors, test-only fault isolation, telemetry redaction, exact browser recovery, authoritative session reconciliation, restrictive endpoint CSP, bounded task-view query timeouts, and route-owned authentication continuation disposal. Evidence remains in the owning PLAN/SUMMARY files and implementation tests.
 
 ### Open entries
 
-| Threat ID | Category | Component | Severity | Disposition | Required mitigation | Status |
-|---|---|---|---|---|---|---|
-| T-KPL01-41 | Tampering | Untrusted UI content | high | mitigate | Text-only rendering, CSP, hostile fixtures, visual/component assertions | open — blocking: text-only tests exist, but no Content-Security-Policy control was found |
-| T-KPL01-28 | Denial | List queries | medium | mitigate | Bounded keyset pages, indexes, and query-timeout evidence | open — non-blocking: bounds/indexes exist, but no query timeout evidence was found |
-| T-KPL01-G20-04 | Denial | Repeated authentication failures | medium | mitigate | Deduplicate keys and fence queued continuations on logout/unmount | open — non-blocking: logout clearing exists, but no unregister/unmount cleanup exists |
+None.
 
 ## Accepted Risks Log
 
@@ -54,12 +50,13 @@ No accepted risks. All plan-time dispositions are `mitigate`.
 | Audit Date | Threats Total | Closed | Open | Blocking Open | Run By |
 |---|---:|---:|---:|---:|---|
 | 2026-08-31 | 70 | 67 | 3 | 1 | gsd-security-auditor |
+| 2026-08-31 | 70 | 70 | 0 | 0 | gsd-security-auditor |
 
 ## Sign-Off
 
 - [x] All threats have a disposition.
 - [x] No risks were silently accepted or transferred.
-- [ ] `threats_open: 0` confirmed.
-- [ ] `status: verified` set in frontmatter.
+- [x] `threats_open: 0` confirmed.
+- [x] `status: verified` set in frontmatter.
 
-**Approval:** blocked pending remediation and re-audit.
+**Approval:** verified after Plan 01-24 remediation and re-audit.
