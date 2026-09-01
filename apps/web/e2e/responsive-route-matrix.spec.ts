@@ -19,7 +19,7 @@ const capture = async (page: Page, title: string) => {
 }
 
 for (const width of [320, 1024] as const) {
-  test(`@responsive-route-matrix ${width}px drawer reaches primary routes by keyboard`, async ({
+  test(`@responsive-route-matrix @uat-accessibility ${width}px drawer reaches primary routes by keyboard`, async ({
     baseURL,
     page,
   }) => {
@@ -65,7 +65,7 @@ for (const width of [320, 1024] as const) {
   })
 }
 
-test('@responsive-route-matrix preserves the amended compact-wide workspace boundaries', async ({
+test('@responsive-route-matrix @uat-reflow preserves the amended compact-wide workspace boundaries', async ({
   baseURL,
   page,
 }) => {
@@ -141,7 +141,7 @@ test('@responsive-route-matrix narrow task Back restores the originating row and
   expect(await page.evaluate(() => window.scrollY)).toBe(scrollBefore)
 })
 
-test('@responsive-route-matrix exposes one accessible main across the full route and viewport matrix', async ({
+test('@responsive-route-matrix @uat-accessibility @uat-reflow exposes one accessible main across the full route and viewport matrix', async ({
   baseURL,
   page,
 }) => {

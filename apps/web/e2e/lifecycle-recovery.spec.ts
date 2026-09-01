@@ -170,7 +170,7 @@ test('@lifecycle-recovery reconciles one stored result after an after-commit dis
   expect(await replay.json()).toEqual(await stored.json())
 })
 
-test('@lifecycle-recovery preserves identity when authentication interrupts before acceptance', async ({
+test('@lifecycle-recovery @uat-auth-interop preserves identity when authentication interrupts before acceptance', async ({
   baseURL,
   page,
 }) => {
@@ -211,7 +211,7 @@ test('@lifecycle-recovery preserves identity when authentication interrupts befo
   expect(bodies[1]).toBe(bodies[0])
 })
 
-test('@lifecycle-recovery preserves the stored identity when authentication interrupts after commit', async ({
+test('@lifecycle-recovery @uat-auth-interop preserves the stored identity when authentication interrupts after commit', async ({
   baseURL,
   page,
 }) => {
@@ -255,7 +255,7 @@ test('@lifecycle-recovery preserves the stored identity when authentication inte
   expect(bodies).toHaveLength(1)
 })
 
-test('@lifecycle-recovery continues exact undo through a real login after session revocation', async ({
+test('@lifecycle-recovery @uat-accessibility @uat-auth-interop continues exact undo through a real login after session revocation', async ({
   baseURL,
   page,
 }) => {

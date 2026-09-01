@@ -38,7 +38,7 @@ const faultHeaders = (route: Route) => ({
   'x-keepling-test-fault-token': faultToken,
 })
 
-test('@conflict-resolution-recovery reconciles the original choice after its committed response is lost', async ({
+test('@conflict-resolution-recovery @uat-accessibility reconciles the original choice after its committed response is lost', async ({
   baseURL,
   page,
 }) => {

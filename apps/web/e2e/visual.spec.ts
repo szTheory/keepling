@@ -32,7 +32,7 @@ const record = async (
   })
 }
 
-test('@visual-contract UI-BACKSTOP-OVERFLOW proves reflow, themes, focus, and motion independently', async ({
+test('@visual-contract @uat-reflow UI-BACKSTOP-OVERFLOW proves reflow, themes, focus, and motion independently', async ({
   baseURL,
   page,
 }, testInfo) => {
@@ -96,7 +96,7 @@ test('@visual-contract UI-BACKSTOP-OVERFLOW proves reflow, themes, focus, and mo
   })
 })
 
-test('@visual-contract UI-BACKSTOP-LONG-TEXT proves content and controls remain readable independently', async ({
+test('@visual-contract @uat-reflow UI-BACKSTOP-LONG-TEXT proves content and controls remain readable independently', async ({
   baseURL,
   page,
 }, testInfo) => {

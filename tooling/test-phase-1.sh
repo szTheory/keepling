@@ -14,6 +14,7 @@ list_lanes() {
   echo "web-typecheck         TypeScript project references"
   echo "web-units             complete Vitest/jsdom suite"
   echo "web-e2e               complete Playwright real-stack suite"
+  echo "automated-uat         UAT checkpoints mapped to passing executable evidence"
 }
 
 phase_database_root=''
@@ -75,6 +76,7 @@ run_lanes() {
   pnpm --filter @keepling/web typecheck
   pnpm --filter @keepling/web test --run --passWithNoTests
   pnpm --filter @keepling/web test:e2e
+  node tooling/check-phase-1-uat-coverage.mjs
   echo "Phase 1 server, contract, browser, privacy, and production-isolation lanes passed"
 }
 

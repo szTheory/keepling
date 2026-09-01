@@ -26,7 +26,7 @@ const command = (
     },
   })
 
-test('@phase1-lifecycle traverses the complete real-stack browser lifecycle', async ({
+test('@phase1-lifecycle @uat-accessibility traverses the complete real-stack browser lifecycle', async ({
   baseURL,
   page,
 }, testInfo) => {

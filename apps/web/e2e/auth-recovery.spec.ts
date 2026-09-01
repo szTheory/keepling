@@ -41,7 +41,7 @@ const issueLink = (task: 'keepling.setup_token' | 'keepling.recover', baseURL: s
   return link
 }
 
-test('@auth-recovery consumes real setup and recovery links once and administers sessions', async ({
+test('@auth-recovery @uat-auth-interop consumes real setup and recovery links once and administers sessions', async ({
   baseURL,
   browser,
   page,

@@ -23,7 +23,7 @@ const afterCommitHeaders = (route: Route) => ({
   'x-keepling-test-fault-token': faultToken,
 })
 
-test('@session-reconciliation converges rename, revoke, and logout after committed responses are lost', async ({
+test('@session-reconciliation @uat-accessibility converges rename, revoke, and logout after committed responses are lost', async ({
   baseURL,
   browser,
   page,

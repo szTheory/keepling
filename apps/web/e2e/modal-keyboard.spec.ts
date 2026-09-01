@@ -22,7 +22,7 @@ const faultHeaders = (route: Route) => ({
   'x-keepling-test-fault-token': faultToken,
 })
 
-test('@modal-keyboard dirty editing and capture authentication use the exact safe contracts', async ({
+test('@modal-keyboard @uat-accessibility @uat-auth-interop dirty editing and capture authentication use the exact safe contracts', async ({
   baseURL,
   page,
 }) => {
@@ -68,7 +68,7 @@ test('@modal-keyboard dirty editing and capture authentication use the exact saf
   await expect(capture).toHaveValue('Authentication keeps capture text')
 })
 
-test('@modal-keyboard session confirmation contains focus and distinguishes logout', async ({
+test('@modal-keyboard @uat-accessibility session confirmation contains focus and distinguishes logout', async ({
   baseURL,
   page,
 }) => {
