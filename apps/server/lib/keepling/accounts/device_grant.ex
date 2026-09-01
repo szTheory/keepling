@@ -252,6 +252,59 @@ defmodule Keepling.Accounts.DeviceGrant do
 
   def revoke(_account_id, _grant_id, _opts), do: {:error, :device_grant_not_found}
 
+  @spec revoke_installation(binary(), String.t(), keyword()) ::
+          {:ok, map()} | {:error, atom()}
+  def revoke_installation(account_id, installation_id, opts \\ [])
+
+  def revoke_installation(account_id, installation_id, opts)
+      when is_binary(account_id) and is_binary(installation_id) and installation_id != "" do
+    now = opts |> Keyword.get(:now, DateTime.utc_now()) |> truncate_utc!()
+
+    case Repo.transact(fn repo ->
+           case SQL.query!(
+                  repo,
+                  """
+                  SELECT id, revoked_at
+                  FROM device_grants
+                  WHERE account_id = $1 AND installation_id = $2
+                  FOR UPDATE
+                  """,
+                  [account_id, installation_id]
+                ).rows do
+             [] ->
+               {:error, :device_grant_not_found}
+
+             rows ->
+               if Enum.any?(rows, fn [_id, revoked_at] -> revoked_at == nil end) do
+                 SQL.query!(
+                   repo,
+                   """
+                   UPDATE device_grants
+                   SET revoked_at = $3, generation = generation + 1,
+                       access_token_hash = NULL, access_expires_at = NULL, updated_at = $3
+                   WHERE account_id = $1 AND installation_id = $2 AND revoked_at IS NULL
+                   """,
+                   [account_id, installation_id, now]
+                 )
+
+                 SecurityAudit.record_required!(repo, "device_grant_revoked", now)
+               end
+
+               {:ok, %{status: "device_grant_revoked"}}
+           end
+         end) do
+      {:ok, result} -> {:ok, result}
+      {:error, :device_grant_not_found} -> {:error, :device_grant_not_found}
+      {:error, _reason} -> {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  def revoke_installation(_account_id, _installation_id, _opts),
+    do: {:error, :device_grant_not_found}
+
   @spec list(binary()) :: [map()]
   def list(account_id) when is_binary(account_id) do
     %{rows: rows} =

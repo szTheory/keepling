@@ -344,6 +344,42 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/device-grants": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** List separately visible native installation grants */
+        readonly get: operations["listDeviceGrants"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/device-grants/{installation_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly installation_id: components["schemas"]["InstallationIdentity"];
+            };
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        /** Idempotently revoke one exact installation grant family */
+        readonly delete: operations["revokeDeviceGrant"];
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/inbox": {
         readonly parameters: {
             readonly query?: never;
@@ -406,6 +442,57 @@ export interface paths {
         readonly get: operations["getMutation"];
         readonly put?: never;
         readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/oauth/authorize": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Authorize one native public-client installation through the browser session */
+        readonly get: operations["authorizeNativeInstallation"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/oauth/token": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Exchange an exact redirect, state, and S256 verifier for opaque grant credentials */
+        readonly post: operations["exchangeNativeAuthorizationCode"];
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/oauth/token/refresh": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        /** Rotate one native installation refresh credential */
+        readonly post: operations["refreshNativeGrant"];
         readonly delete?: never;
         readonly options?: never;
         readonly head?: never;
@@ -810,6 +897,25 @@ export interface components {
             /** @constant */
             readonly version: 1;
         };
+        /** Format: uuid */
+        readonly DeviceGrantIdentity: string;
+        readonly DeviceGrantRevocationResponse: {
+            readonly installation_id: components["schemas"]["InstallationIdentity"];
+            /** @constant */
+            readonly status: "device_grant_revoked";
+        };
+        readonly DeviceGrantsResponse: {
+            readonly device_grants: readonly components["schemas"]["DeviceGrantSummary"][];
+        };
+        readonly DeviceGrantSummary: {
+            readonly client_kind: components["schemas"]["NativeClientIdentity"];
+            /** Format: int64 */
+            readonly generation: number;
+            readonly id: components["schemas"]["DeviceGrantIdentity"];
+            readonly installation_id: components["schemas"]["InstallationIdentity"];
+            readonly label: string;
+            readonly revoked: boolean;
+        };
         readonly EditTaskCommand: {
             readonly base_values: components["schemas"]["TaskDetailValues"];
             readonly expected_revision: components["schemas"]["Revision"];
@@ -831,6 +937,7 @@ export interface components {
         readonly InboxResponse: {
             readonly tasks: readonly components["schemas"]["TaskSnapshot"][];
         };
+        readonly InstallationIdentity: string;
         readonly LoginRequest: {
             /** @constant */
             readonly client_kind: "web";
@@ -846,7 +953,34 @@ export interface components {
          */
         readonly MutationIdentity: string;
         readonly MutationResult: components["schemas"]["CommandAcknowledgement"] | components["schemas"]["OrganizationAcknowledgement"] | components["schemas"]["UndoNoChange"];
+        readonly NativeAuthorizationCode: string;
+        readonly NativeAuthorizationCodeExchangeRequest: {
+            readonly code: components["schemas"]["NativeAuthorizationCode"];
+            readonly code_verifier: components["schemas"]["PkceVerifier"];
+            /** @constant */
+            readonly grant_type: "authorization_code";
+            /** Format: uri */
+            readonly redirect_uri: string;
+            readonly state: components["schemas"]["NativeAuthorizationState"];
+        };
+        readonly NativeAuthorizationState: string;
+        /** @enum {string} */
+        readonly NativeClientIdentity: "electron" | "iphone";
+        readonly NativeRefreshRequest: {
+            /** @constant */
+            readonly grant_type: "refresh_token";
+            readonly refresh_token: components["schemas"]["OpaqueGrantCredential"];
+        };
+        readonly NativeTokenResponse: {
+            readonly access_token: components["schemas"]["OpaqueGrantCredential"];
+            /** @constant */
+            readonly expires_in: 900;
+            readonly refresh_token: components["schemas"]["OpaqueGrantCredential"];
+            /** @constant */
+            readonly token_type: "Bearer";
+        };
         readonly NullableCivilDate: components["schemas"]["CivilDate"] | null;
+        readonly OpaqueGrantCredential: string;
         readonly OrganizationAcknowledgement: {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly organization_id: components["schemas"]["OrganizationIdentity"];
@@ -888,6 +1022,8 @@ export interface components {
             readonly id: components["schemas"]["ConflictIdentity"];
             readonly latest_revision: components["schemas"]["Revision"];
         };
+        readonly PkceChallenge: string;
+        readonly PkceVerifier: string;
         readonly PlanForTodayRequest: {
             readonly base_planned_on: components["schemas"]["NullableCivilDate"];
             readonly expected_revision: components["schemas"]["Revision"];
@@ -1765,6 +1901,53 @@ export interface operations {
             readonly 409: components["responses"]["ProblemResponse"];
         };
     };
+    readonly listDeviceGrants: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Installation grant inventory without credential material */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["DeviceGrantsResponse"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly revokeDeviceGrant: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly installation_id: components["schemas"]["InstallationIdentity"];
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Installation grant is revoked */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["DeviceGrantRevocationResponse"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly getInbox: {
         readonly parameters: {
             readonly query?: never;
@@ -1874,6 +2057,91 @@ export interface operations {
             readonly 404: components["responses"]["ProblemResponse"];
             readonly 409: components["responses"]["ProblemResponse"];
             readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly authorizeNativeInstallation: {
+        readonly parameters: {
+            readonly query: {
+                readonly client_id: components["schemas"]["NativeClientIdentity"];
+                readonly code_challenge: components["schemas"]["PkceChallenge"];
+                readonly code_challenge_method: "S256";
+                readonly installation_id: components["schemas"]["InstallationIdentity"];
+                readonly label: string;
+                readonly redirect_uri: string;
+                readonly response_type: "code";
+                readonly state: components["schemas"]["NativeAuthorizationState"];
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Exact registered redirect with one-use authorization code and preserved state */
+            readonly 302: {
+                headers: {
+                    readonly Location: string;
+                    readonly [name: string]: unknown;
+                };
+                content?: never;
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly exchangeNativeAuthorizationCode: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["NativeAuthorizationCodeExchangeRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Opaque short-lived access and rotating refresh credentials */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["NativeTokenResponse"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly refreshNativeGrant: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody: {
+            readonly content: {
+                readonly "application/json": components["schemas"]["NativeRefreshRequest"];
+            };
+        };
+        readonly responses: {
+            /** @description Rotated opaque access and refresh credentials */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["NativeTokenResponse"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };

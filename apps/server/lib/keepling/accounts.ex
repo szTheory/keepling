@@ -48,6 +48,11 @@ defmodule Keepling.Accounts do
     to: DeviceGrant,
     as: :revoke
 
+  @doc "Idempotently revokes every grant family for one visible installation identity."
+  defdelegate revoke_device_installation(account_id, installation_id, opts \\ []),
+    to: DeviceGrant,
+    as: :revoke_installation
+
   @doc "Lists separately visible installation grants without exposing credential material."
   defdelegate list_device_grants(account_id), to: DeviceGrant, as: :list
 

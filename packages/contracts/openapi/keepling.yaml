@@ -9,6 +9,165 @@ servers:
   - url: /api/v1
     description: Same-origin Keepling API
 paths:
+  /oauth/authorize:
+    get:
+      operationId: authorizeNativeInstallation
+      summary: Authorize one native public-client installation through the browser session
+      servers:
+        - url: /
+      parameters:
+        - in: query
+          name: response_type
+          required: true
+          schema:
+            type: string
+            const: code
+        - in: query
+          name: client_id
+          required: true
+          schema:
+            $ref: '#/components/schemas/NativeClientIdentity'
+        - in: query
+          name: installation_id
+          required: true
+          schema:
+            $ref: '#/components/schemas/InstallationIdentity'
+        - in: query
+          name: label
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+        - in: query
+          name: redirect_uri
+          required: true
+          schema:
+            type: string
+            format: uri
+        - in: query
+          name: state
+          required: true
+          schema:
+            $ref: '#/components/schemas/NativeAuthorizationState'
+        - in: query
+          name: code_challenge
+          required: true
+          schema:
+            $ref: '#/components/schemas/PkceChallenge'
+        - in: query
+          name: code_challenge_method
+          required: true
+          schema:
+            type: string
+            const: S256
+      responses:
+        '302':
+          description: Exact registered redirect with one-use authorization code and preserved state
+          headers:
+            Location:
+              required: true
+              schema:
+                type: string
+                format: uri
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /oauth/token:
+    post:
+      operationId: exchangeNativeAuthorizationCode
+      summary: Exchange an exact redirect, state, and S256 verifier for opaque grant credentials
+      servers:
+        - url: /
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NativeAuthorizationCodeExchangeRequest'
+      responses:
+        '200':
+          description: Opaque short-lived access and rotating refresh credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NativeTokenResponse'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /oauth/token/refresh:
+    post:
+      operationId: refreshNativeGrant
+      summary: Rotate one native installation refresh credential
+      servers:
+        - url: /
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NativeRefreshRequest'
+      responses:
+        '200':
+          description: Rotated opaque access and refresh credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NativeTokenResponse'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /device-grants:
+    get:
+      operationId: listDeviceGrants
+      summary: List separately visible native installation grants
+      security:
+        - DeviceBearer: []
+      responses:
+        '200':
+          description: Installation grant inventory without credential material
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceGrantsResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /device-grants/{installation_id}:
+    parameters:
+      - in: path
+        name: installation_id
+        required: true
+        schema:
+          $ref: '#/components/schemas/InstallationIdentity'
+    delete:
+      operationId: revokeDeviceGrant
+      summary: Idempotently revoke one exact installation grant family
+      security:
+        - DeviceBearer: []
+      responses:
+        '200':
+          description: Installation grant is revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceGrantRevocationResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /setup:
     post:
       operationId: completeSetup
@@ -997,6 +1156,12 @@ paths:
         '503':
           $ref: '#/components/responses/ProblemResponse'
 components:
+  securitySchemes:
+    DeviceBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: Opaque short-lived native installation access credential.
   parameters:
     TaskViewCursorParameter:
       in: query
@@ -1020,6 +1185,145 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    DeviceGrantIdentity:
+      type: string
+      format: uuid
+    DeviceGrantRevocationResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - installation_id
+        - status
+      properties:
+        installation_id:
+          $ref: '#/components/schemas/InstallationIdentity'
+        status:
+          type: string
+          const: device_grant_revoked
+    DeviceGrantSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - client_kind
+        - generation
+        - id
+        - installation_id
+        - label
+        - revoked
+      properties:
+        client_kind:
+          $ref: '#/components/schemas/NativeClientIdentity'
+        generation:
+          type: integer
+          format: int64
+          minimum: 1
+        id:
+          $ref: '#/components/schemas/DeviceGrantIdentity'
+        installation_id:
+          $ref: '#/components/schemas/InstallationIdentity'
+        label:
+          type: string
+          minLength: 1
+          maxLength: 200
+        revoked:
+          type: boolean
+    DeviceGrantsResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - device_grants
+      properties:
+        device_grants:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeviceGrantSummary'
+    InstallationIdentity:
+      type: string
+      minLength: 1
+      maxLength: 200
+    NativeAuthorizationCode:
+      type: string
+      minLength: 43
+      maxLength: 43
+      pattern: '^[A-Za-z0-9_-]+$'
+    NativeAuthorizationCodeExchangeRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - code_verifier
+        - grant_type
+        - redirect_uri
+        - state
+      properties:
+        code:
+          $ref: '#/components/schemas/NativeAuthorizationCode'
+        code_verifier:
+          $ref: '#/components/schemas/PkceVerifier'
+        grant_type:
+          type: string
+          const: authorization_code
+        redirect_uri:
+          type: string
+          format: uri
+        state:
+          $ref: '#/components/schemas/NativeAuthorizationState'
+    NativeAuthorizationState:
+      type: string
+      minLength: 43
+      maxLength: 512
+      pattern: '^[A-Za-z0-9_-]+$'
+    NativeClientIdentity:
+      type: string
+      enum:
+        - electron
+        - iphone
+    NativeRefreshRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - grant_type
+        - refresh_token
+      properties:
+        grant_type:
+          type: string
+          const: refresh_token
+        refresh_token:
+          $ref: '#/components/schemas/OpaqueGrantCredential'
+    NativeTokenResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - access_token
+        - expires_in
+        - refresh_token
+        - token_type
+      properties:
+        access_token:
+          $ref: '#/components/schemas/OpaqueGrantCredential'
+        expires_in:
+          type: integer
+          const: 900
+        refresh_token:
+          $ref: '#/components/schemas/OpaqueGrantCredential'
+        token_type:
+          type: string
+          const: Bearer
+    OpaqueGrantCredential:
+      type: string
+      minLength: 43
+      maxLength: 43
+      pattern: '^[A-Za-z0-9_-]+$'
+    PkceChallenge:
+      type: string
+      minLength: 43
+      maxLength: 43
+      pattern: '^[A-Za-z0-9_-]+$'
+    PkceVerifier:
+      type: string
+      minLength: 43
+      maxLength: 128
+      pattern: '^[A-Za-z0-9._~-]+$'
     ActivityActor:
       type: object
       additionalProperties: false

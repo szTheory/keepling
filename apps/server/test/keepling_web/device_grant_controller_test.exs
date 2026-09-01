@@ -94,7 +94,10 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
       })
 
     assert %{"code" => "refresh_replay_detected"} = json_response(fenced, 401)
-    assert bearer(build_conn(), rotated["access_token"]) |> get("/api/v1/device-grants") |> response(401)
+
+    assert bearer(build_conn(), rotated["access_token"])
+           |> get("/api/v1/device-grants")
+           |> response(401)
 
     grant_b = browser |> authorize("installation-b", "iphone") |> exchange()
 
@@ -104,18 +107,29 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
              |> json_response(200)
 
     assert Enum.map(grants, & &1["installation_id"]) == ["installation-a", "installation-b"]
-    refute Enum.any?(grants, &(Map.has_key?(&1, "access_token") or Map.has_key?(&1, "refresh_token")))
 
-    for _attempt <- 1..2 do
-      revoked =
-        bearer(build_conn(), grant_b["access_token"])
-        |> delete("/api/v1/device-grants/installation-a")
+    refute Enum.any?(
+             grants,
+             &(Map.has_key?(&1, "access_token") or Map.has_key?(&1, "refresh_token"))
+           )
 
-      assert %{
-               "installation_id" => "installation-a",
-               "status" => "device_grant_revoked"
-             } = json_response(revoked, 200)
-    end
+    revoked =
+      bearer(build_conn(), grant_b["access_token"])
+      |> delete("/api/v1/device-grants/installation-a")
+
+    assert %{
+             "installation_id" => "installation-a",
+             "status" => "device_grant_revoked"
+           } = json_response(revoked, 200)
+
+    revoked_again =
+      bearer(build_conn(), grant_b["access_token"])
+      |> delete("/api/v1/device-grants/installation-a")
+
+    assert %{
+             "installation_id" => "installation-a",
+             "status" => "device_grant_revoked"
+           } = json_response(revoked_again, 200)
 
     assert bearer(build_conn(), grant_b["access_token"])
            |> delete("/api/v1/device-grants/installation-b")

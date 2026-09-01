@@ -53,6 +53,26 @@ defmodule KeeplingWeb.Router do
     post "/setup", AuthController, :setup
   end
 
+  scope "/oauth", KeeplingWeb do
+    pipe_through [:api]
+
+    post "/token", DeviceGrantController, :token
+    post "/token/refresh", DeviceGrantController, :token
+  end
+
+  scope "/oauth", KeeplingWeb do
+    pipe_through [:api, :authenticated]
+
+    get "/authorize", DeviceGrantController, :authorize
+  end
+
+  scope "/api/v1", KeeplingWeb do
+    pipe_through [:api]
+
+    get "/device-grants", DeviceGrantController, :list
+    delete "/device-grants/:installation_id", DeviceGrantController, :revoke
+  end
+
   scope "/api/v1", KeeplingWeb do
     pipe_through [:api, :mutation]
 
