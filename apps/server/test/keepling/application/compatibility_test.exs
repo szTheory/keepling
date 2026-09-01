@@ -69,7 +69,9 @@ defmodule Keepling.Application.CompatibilityTest do
       |> put_in(["platform_minimum_builds", "iphone"], 9_999)
 
     claims = %{"minimum_protocol_train" => 1, "maximum_protocol_train" => 2}
-    assert Compatibility.negotiate(claims, changed_builds) == Compatibility.negotiate(claims, policy())
+
+    assert Compatibility.negotiate(claims, changed_builds) ==
+             Compatibility.negotiate(claims, policy())
   end
 
   defp policy do
