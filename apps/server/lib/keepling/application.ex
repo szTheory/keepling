@@ -5,6 +5,10 @@ defmodule Keepling.Application do
 
   @impl true
   def start(_type, _args) do
+    :keepling
+    |> Application.fetch_env!(:compatibility)
+    |> Keepling.Application.Compatibility.validate_config!()
+
     children = [
       Keepling.Repo,
       Keepling.Accounts.SecurityAudit,

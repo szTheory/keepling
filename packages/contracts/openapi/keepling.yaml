@@ -9,6 +9,34 @@ servers:
   - url: /api/v1
     description: Same-origin Keepling API
 paths:
+  /compatibility:
+    get:
+      operationId: getCompatibility
+      summary: Negotiate the highest safe protocol train against authoritative server metadata
+      servers:
+        - url: /
+      parameters:
+        - in: query
+          name: minimum_protocol_train
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+        - in: query
+          name: maximum_protocol_train
+          required: true
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Authoritative release, protocol, schema, platform, and recovery metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompatibilityResponse'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
   /oauth/authorize:
     get:
       operationId: authorizeNativeInstallation
@@ -1185,6 +1213,123 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    CompatibilityResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - compatibility_state
+        - deprecation_deadline
+        - pending_intent
+        - platform_minimum_builds
+        - protocol_policy
+        - recovery_code
+        - recovery_codes
+        - retryable
+        - schema_range
+        - selected_protocol_train
+        - server_release
+        - supported_protocols
+        - tested_oci_digest
+        - update_location
+      properties:
+        compatibility_state:
+          type: string
+          enum:
+            - supported
+            - deprecated_but_safe
+            - unsupported
+        deprecation_deadline:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: 'null'
+        pending_intent:
+          type: string
+          const: preserved_locally
+        platform_minimum_builds:
+          $ref: '#/components/schemas/PlatformMinimumBuilds'
+        protocol_policy:
+          type: string
+          enum:
+            - unstable_current_dogfood
+            - current_and_previous_90_days
+        recovery_code:
+          $ref: '#/components/schemas/CompatibilityRecoveryCode'
+        recovery_codes:
+          type: array
+          minItems: 4
+          maxItems: 4
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/CompatibilityRecoveryCode'
+        retryable:
+          type: boolean
+          const: false
+        schema_range:
+          $ref: '#/components/schemas/CompatibilityRange'
+        selected_protocol_train:
+          anyOf:
+            - type: integer
+              minimum: 0
+            - type: 'null'
+        server_release:
+          type: string
+          minLength: 1
+        supported_protocols:
+          $ref: '#/components/schemas/SupportedProtocols'
+        tested_oci_digest:
+          type: string
+          pattern: '^sha256:[0-9a-f]{64}$'
+        update_location:
+          type: string
+          format: uri
+    CompatibilityRange:
+      type: object
+      additionalProperties: false
+      required:
+        - maximum
+        - minimum
+      properties:
+        maximum:
+          type: integer
+          minimum: 1
+        minimum:
+          type: integer
+          minimum: 1
+    CompatibilityRecoveryCode:
+      type: string
+      enum:
+        - continue
+        - client_update_available
+        - client_upgrade_required
+        - server_upgrade_required
+    PlatformMinimumBuilds:
+      type: object
+      additionalProperties: false
+      required:
+        - electron
+        - iphone
+      properties:
+        electron:
+          type: integer
+          minimum: 0
+        iphone:
+          type: integer
+          minimum: 0
+    SupportedProtocols:
+      type: object
+      additionalProperties: false
+      required:
+        - read
+        - sync
+        - write
+      properties:
+        read:
+          $ref: '#/components/schemas/CompatibilityRange'
+        sync:
+          $ref: '#/components/schemas/CompatibilityRange'
+        write:
+          $ref: '#/components/schemas/CompatibilityRange'
     DeviceGrantIdentity:
       type: string
       format: uuid

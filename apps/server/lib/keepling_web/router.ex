@@ -51,6 +51,12 @@ defmodule KeeplingWeb.Router do
       do: [:api, :authenticated, :mutation, :recent_auth, :test_fault],
       else: [:api, :authenticated, :mutation, :recent_auth]
 
+  scope "/", KeeplingWeb do
+    pipe_through [:api]
+
+    get "/compatibility", CompatibilityController, :show
+  end
+
   scope "/api/v1", KeeplingWeb do
     pipe_through [:api]
 

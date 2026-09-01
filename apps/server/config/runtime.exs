@@ -83,6 +83,20 @@ endpoint_url =
 
 config :keepling, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
+compatibility = Application.fetch_env!(:keepling, :compatibility)
+
+compatibility =
+  if environment == :prod do
+    compatibility
+    |> Map.put("server_release", System.get_env("KEEPLING_SERVER_RELEASE"))
+    |> Map.put("tested_oci_digest", System.get_env("KEEPLING_TESTED_OCI_DIGEST"))
+    |> Map.put("update_location", System.get_env("KEEPLING_UPDATE_LOCATION"))
+  else
+    compatibility
+  end
+
+config :keepling, :compatibility, compatibility
+
 config :keepling, KeeplingWeb.Endpoint,
   server: enabled?.("PHX_SERVER"),
   url: endpoint_url,

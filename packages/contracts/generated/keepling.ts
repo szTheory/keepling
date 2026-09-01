@@ -327,6 +327,23 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/compatibility": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Negotiate the highest safe protocol train against authoritative server metadata */
+        readonly get: operations["getCompatibility"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/completed": {
         readonly parameters: {
             readonly query?: never;
@@ -874,6 +891,33 @@ export interface components {
             readonly undo?: components["schemas"]["UndoAvailability"];
             readonly warnings: readonly components["schemas"]["Warning"][];
         };
+        readonly CompatibilityRange: {
+            readonly maximum: number;
+            readonly minimum: number;
+        };
+        /** @enum {string} */
+        readonly CompatibilityRecoveryCode: "continue" | "client_update_available" | "client_upgrade_required" | "server_upgrade_required";
+        readonly CompatibilityResponse: {
+            /** @enum {string} */
+            readonly compatibility_state: "supported" | "deprecated_but_safe" | "unsupported";
+            readonly deprecation_deadline: string | null;
+            /** @constant */
+            readonly pending_intent: "preserved_locally";
+            readonly platform_minimum_builds: components["schemas"]["PlatformMinimumBuilds"];
+            /** @enum {string} */
+            readonly protocol_policy: "unstable_current_dogfood" | "current_and_previous_90_days";
+            readonly recovery_code: components["schemas"]["CompatibilityRecoveryCode"];
+            readonly recovery_codes: readonly components["schemas"]["CompatibilityRecoveryCode"][];
+            /** @constant */
+            readonly retryable: false;
+            readonly schema_range: components["schemas"]["CompatibilityRange"];
+            readonly selected_protocol_train: number | null;
+            readonly server_release: string;
+            readonly supported_protocols: components["schemas"]["SupportedProtocols"];
+            readonly tested_oci_digest: string;
+            /** Format: uri */
+            readonly update_location: string;
+        };
         readonly ConflictField: {
             readonly base: string | null;
             readonly current: string | null;
@@ -1032,6 +1076,10 @@ export interface components {
             /** @constant */
             readonly version: 1;
         };
+        readonly PlatformMinimumBuilds: {
+            readonly electron: number;
+            readonly iphone: number;
+        };
         readonly Problem: {
             readonly active_unfinished_task_count?: number;
             readonly affected_fields?: readonly ("completed_at" | "inbox_state" | "notes" | "project_id" | "tag_ids" | "title" | "trashed_at")[];
@@ -1134,6 +1182,11 @@ export interface components {
             /** @constant */
             readonly status: "setup_complete";
             readonly timezone: string;
+        };
+        readonly SupportedProtocols: {
+            readonly read: components["schemas"]["CompatibilityRange"];
+            readonly sync: components["schemas"]["CompatibilityRange"];
+            readonly write: components["schemas"]["CompatibilityRange"];
         };
         readonly TaskDateValues: {
             readonly deadline_on?: components["schemas"]["NullableCivilDate"];
@@ -1874,6 +1927,30 @@ export interface operations {
             readonly 409: components["responses"]["ProblemResponse"];
             readonly 422: components["responses"]["ProblemResponse"];
             readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly getCompatibility: {
+        readonly parameters: {
+            readonly query: {
+                readonly maximum_protocol_train: number;
+                readonly minimum_protocol_train: number;
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Authoritative release, protocol, schema, platform, and recovery metadata */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["CompatibilityResponse"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
         };
     };
     readonly getCompleted: {
