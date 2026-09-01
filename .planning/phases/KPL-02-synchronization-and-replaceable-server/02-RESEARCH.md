@@ -556,32 +556,27 @@ Compose documents `healthcheck`, `condition: service_healthy`, `stop_grace_perio
 | A5 | One amd64 Hetzner VM is the first reference architecture. [ASSUMED] | Environment / Deployment | Cost/performance or multi-arch image constraints may favor arm64; benchmark and restore-test before locking. |
 | A6 | A one-minute `archive_timeout` plus pgBackRest async archive will meet the five-minute RPO under measured network conditions. [ASSUMED] | Backup | Object-store/network lag may exceed RPO; acceptance must measure archive visibility and recoverable target, not configuration. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Which two off-host repositories satisfy versioning/object-lock, client-side encryption, independent-account mirroring, and recovery credentials?**
    - What we know: D-37 locks the required properties; pgBackRest supports S3-compatible repositories and multiple repositories. [CITED: https://pgbackrest.org/user-guide.html]
-   - What's unclear: exact primary/secondary providers, lifecycle rules, egress, object-lock API compatibility, and restore credential delivery.
-   - Recommendation: make provider selection a Wave 0 evidence task; use fake/local S3-compatible storage only for contract tests, then run one real encrypted cross-provider restore before acceptance.
+   - RESOLVED: Plan 02-08 Task 1 selects Backblaze B2 as the encrypted primary repository and AWS S3 with Object Lock in an independent account as the mirror, with lifecycle/retention configuration tracked under `infra/backup/`; Plan 02-09 Task 2 remains the honest credential checkpoint, and Plan 02-08 Task 3 plus Plan 02-09 Task 3 require real cross-provider restore evidence before acceptance.
 
 2. **What are the initial feed page size, offline grace, and low-water pruning batch?**
    - What we know: retention must exceed the released-client window plus documented offline grace and safe bootstrap must always remain available.
-   - What's unclear: actual change volume and client update lag do not exist before dogfood.
-   - Recommendation: choose conservative bounded defaults as explicit configuration, emit low-water/status, and do not enable destructive pruning until volume measurements and reset vectors pass.
+   - RESOLVED: Plan 02-02 Task 2 freezes an initial 200-envelope pull page, 30-day offline grace beyond the active compatibility window, and 1,000-row pruning batch; destructive pruning remains disabled until low-water/status measurements and reset/bootstrap vectors pass.
 
 3. **What exact native refresh lifetime and sender constraint should Phase 2 implement before native adapters exist?**
    - What we know: public-client authorization code + exact redirect + state + S256 PKCE and rotating hash-stored refresh lineage are locked.
-   - What's unclear: device-bound sender constraints and platform credential behavior need Mac/iPhone evidence.
-   - Recommendation: implement protocol/storage seams and lifecycle vectors now; keep sender constraint configurable and defer claims about platform binding/erasure.
+   - RESOLVED: Plan 02-03 Task 2 freezes 15-minute access credentials, 30-day refresh inactivity, and 90-day absolute refresh-family lifetime. Phase 2 requires exact redirect/state/S256 PKCE and rotation/replay fencing but makes no device-bound sender-constraint claim before native-adapter evidence, consistent with D-23.
 
 4. **Which DNS provider and cutover mechanism will support the host-replacement rehearsal?**
    - What we know: DNS changes only after candidate verification; OpenTofu should own supported provider inputs where practical.
-   - What's unclear: current domain/provider authority and credentials are not present in the environment.
-   - Recommendation: plan a pluggable DNS port with one chosen adapter or a documented manual checkpoint; the rehearsal must still time and record the cutover.
+   - RESOLVED: Plan 02-09 Tasks 2-3 select the Cloudflare DNS v4 API outward adapter at `infra/dns/cloudflare.sh`; the blocking checkpoint supplies only file/env references, and the runner must read the authoritative record, retain its value and TTL, stage the update, verify authoritative and recursive propagation, and exercise rollback before the old host can be retired.
 
 5. **What exact Hetzner location/type meets restore and sustained workload needs?**
    - What we know: location/type are explicitly discretionary and current `hcloud` uses `location`, not `datacenter`. [CITED: https://github.com/hetznercloud/terraform-provider-hcloud/releases]
-   - What's unclear: CPU architecture, disk IOPS, backup/restore throughput, and current price/availability.
-   - Recommendation: benchmark candidate VM storage and full restore with representative synthetic data; do not choose solely by monthly price.
+   - RESOLVED: Plan 02-09 Task 2 supplies the authority needed for measurement; Plan 02-09 Task 3 records the pre-mutation selection in `infra/tofu/hetzner/selection.json` after testing current availability and representative storage/restore throughput for `nbg1` x86 candidates, and refuses apply until that selection satisfies the four-hour restore objective. No live sizing claim is made before the checkpoint runs.
 
 ## Environment Availability
 

@@ -14,5 +14,9 @@
 | S3-compatible object versioning and object-lock retention | INTEGRATE | Required by the locked off-host recovery policy. |
 | S3-compatible cross-account/provider mirror copy and verification | INTEGRATE | Required for the independent daily recovery mirror. |
 | Object-store public access or application-container credentials | OPT-OUT | Recovery objects remain private and backup/restore credentials are host-owned and least privilege. |
-| DNS record read, staged update, propagation check, and rollback | INTEGRATE | Required for the complete host-replacement and DNS rehearsal. |
-| DNS zone registration, billing, email, analytics, and traffic steering | OPT-OUT | Phase 2 changes one existing service record and does not own registrar or advanced traffic-management capabilities. |
+| Cloudflare zone read and exact DNS-record list/read | INTEGRATE | Required to resolve one unambiguous authoritative record and retain its original content, proxied state, and TTL before mutation. |
+| Cloudflare DNS-record update | INTEGRATE | Required to stage the verified candidate address through the tracked v4 API adapter. |
+| Cloudflare authoritative and recursive propagation read | INTEGRATE | Required to prove both cutover and rollback visibility before the old host can be retired. |
+| Cloudflare DNS-record rollback update | INTEGRATE | Required to restore the retained original content, proxied state, and TTL and verify rollback propagation. |
+| Cloudflare DNS-record create/delete | OPT-OUT | Phase 2 updates and restores one existing service record; it does not create or delete records. |
+| Cloudflare registrar and advanced services | OPT-OUT | Zone registration, billing, email, analytics, and traffic steering are outside the host-replacement rehearsal. |
