@@ -26,6 +26,50 @@ vi.mock('@/features/sessions/SessionList', () => ({
 const repositoryFile = (relativePath: string) =>
   readFileSync(resolve(process.cwd(), '../..', relativePath), 'utf8')
 
+type TokenGroup = Record<string, { $value: string }>
+
+const cssTokenName = (name: string) => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+
+const tokenDeclarations = (group: TokenGroup, prefix: string) =>
+  Object.entries(group).map(
+    ([name, token]) => `  --keepling-${prefix}-${cssTokenName(name)}: ${token.$value};`,
+  )
+
+const generateDesignTokenCss = (source: typeof tokens) => {
+  const lightColorNames = Object.keys(source.color.light)
+  const rootDeclarations = [
+    ...tokenDeclarations(source.space, 'space'),
+    ...tokenDeclarations(source.typography, 'type'),
+    ...tokenDeclarations(source.layout, 'layout'),
+    ...tokenDeclarations(source.motion, 'motion'),
+    ...tokenDeclarations(source.color.light, 'color'),
+    ...tokenDeclarations(source.color.dark, 'dark-color'),
+  ].join('\n')
+  const darkAliases = lightColorNames
+    .map((name) => {
+      const cssName = cssTokenName(name)
+      return `    --keepling-color-${cssName}: var(--keepling-dark-color-${cssName});`
+    })
+    .join('\n')
+  const explicitDarkAliases = darkAliases.replace(/^ {4}/gm, '  ')
+
+  return `/* Generated from tokens.json. Keep values storage-neutral and semantic. */
+:root {
+${rootDeclarations}
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+${darkAliases}
+  }
+}
+
+.dark {
+${explicitDarkAliases}
+}
+`
+}
+
 const productionSource = (relativePath: string) =>
   repositoryFile(relativePath)
     .replace(/\/\*[\s\S]*?\*\//g, '')
@@ -166,6 +210,7 @@ describe('approved Phase 1 UI contract', () => {
 
   it('keeps DTCG source and generated CSS in exact semantic sync', () => {
     const generatedTokens = repositoryFile('packages/design-tokens/css.css')
+    expect(generatedTokens).toBe(generateDesignTokenCss(tokens))
     expect(Object.values(tokens.space).map(({ $value }) => $value)).toEqual([
       '4px',
       '8px',
@@ -195,11 +240,6 @@ describe('approved Phase 1 UI contract', () => {
       overlay: { $value: '180ms' },
       reduced: { $value: '100ms' },
     })
-    expect(generatedTokens).toContain('--keepling-layout-nav: 224px;')
-    expect(generatedTokens).toContain('--keepling-layout-compact-wide-start: 1024px;')
-    expect(generatedTokens).toContain('--keepling-layout-persistent-nav-start: 1064px;')
-    expect(generatedTokens).toContain('--keepling-color-canvas: #f7f2e8;')
-    expect(generatedTokens).toContain('--keepling-dark-color-accent: #d29abf;')
     expect(tokens.color.light).toMatchObject({
       border: { $value: '#877b6d' },
       destructiveText: { $value: '#ffffff' },
@@ -212,8 +252,6 @@ describe('approved Phase 1 UI contract', () => {
       muted: { $value: '#312b27' },
       secondary: { $value: '#24201d' },
     })
-    expect(generatedTokens).toContain('--keepling-color-muted: #eee8de;')
-    expect(generatedTokens).toContain('--keepling-dark-color-border: #786f69;')
   })
 
   it('keeps shared buttons and consequential surfaces on declared visual values', () => {
