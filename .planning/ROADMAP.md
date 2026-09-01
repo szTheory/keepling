@@ -109,7 +109,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05
 **UI hint:** no
-**Plans:** 3/11 plans executed
+**Plans:** 4/11 plans executed
 
 Plans:
 **Wave 1**
@@ -123,7 +123,7 @@ Plans:
 **Wave 3** *(blocked on Wave 2 completion)*
 
 - [x] 02-02-PLAN.md — Commit atomic ordered feed rows and deliver authenticated cursor/bootstrap recovery.
-- [ ] 02-11-PLAN.md — Close native authorization-code, refresh/revocation, and bearer-authenticated grant transport.
+- [x] 02-11-PLAN.md — Close native authorization-code, refresh/revocation, and bearer-authenticated grant transport.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
