@@ -37,6 +37,87 @@ defmodule Keepling.Adapters.Postgres.SyncFeed do
 
   def authorize_namespace(_supplied, _authoritative), do: {:error, :namespace_mismatch}
 
+  @spec authorize_bootstrap(map()) :: :ok | {:error, atom()}
+  def authorize_bootstrap(%{
+        account_id: account_id,
+        namespace: supplied,
+        authoritative_namespace: authoritative
+      }) do
+    with :ok <- authorize_namespace(supplied, authoritative),
+         {:ok, account_subject} <- Ecto.UUID.load(account_id),
+         true <- account_subject == authoritative.subject do
+      :ok
+    else
+      _ -> {:error, :namespace_mismatch}
+    end
+  end
+
+  def authorize_bootstrap(_context), do: {:error, :namespace_mismatch}
+
+  @spec capture_high_water(map()) :: {:ok, map()} | {:error, atom()}
+  def capture_high_water(context) do
+    with :ok <- authorize_bootstrap(context),
+         {:ok, %{rows: rows}} <-
+           SQL.query(
+             Repo,
+             """
+             SELECT sequence, ordinal
+             FROM sync_changes
+             WHERE account_id = $1
+             ORDER BY sequence DESC, ordinal DESC
+             LIMIT 1
+             """,
+             [context.account_id]
+           ) do
+      case rows do
+        [[sequence, ordinal]] -> {:ok, %{sequence: sequence, ordinal: ordinal}}
+        [] -> {:ok, %{sequence: 0, ordinal: -1}}
+      end
+    else
+      {:error, :namespace_mismatch} -> {:error, :namespace_mismatch}
+      {:error, _reason} -> {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  @spec bootstrap_page(map(), map(), nil | map(), pos_integer()) ::
+          {:ok, map()} | {:error, atom()}
+  def bootstrap_page(context, high_water, keyset, limit)
+      when is_integer(limit) and limit >= 1 and limit <= 100 do
+    with :ok <- authorize_bootstrap(context),
+         {entity_type, entity_id} <- bootstrap_keyset(keyset),
+         {:ok, %{rows: rows}} <-
+           SQL.query(
+             Repo,
+             bootstrap_query(),
+             [context.account_id, entity_type, dump_optional_uuid(entity_id), limit + 1]
+           ) do
+      {page_rows, extra_rows} = Enum.split(rows, limit)
+      entities = Enum.map(page_rows, &bootstrap_entity/1)
+
+      next_keyset =
+        case {List.last(entities), extra_rows} do
+          {%{"entity_id" => id, "entity_type" => type}, [_extra | _]} ->
+            %{entity_type: type, entity_id: id}
+
+          _ ->
+            nil
+        end
+
+      {:ok, %{entities: entities, high_water: high_water, next_keyset: next_keyset}}
+    else
+      {:error, :namespace_mismatch} -> {:error, :namespace_mismatch}
+      {:error, _reason} -> {:error, :infrastructure_failure}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  def bootstrap_page(_context, _high_water, _keyset, _limit), do: {:error, :invalid_limit}
+
   @spec reserve_sequence(Ecto.Repo.t(), binary(), DateTime.t()) :: {:ok, pos_integer()}
   def reserve_sequence(repo, account_id, accepted_at) do
     SQL.query!(
@@ -228,6 +309,79 @@ defmodule Keepling.Adapters.Postgres.SyncFeed do
        do: {sequence, ordinal}
 
   defp position_values(_invalid), do: raise(ArgumentError, "invalid feed position")
+
+  defp bootstrap_keyset(nil), do: {nil, nil}
+
+  defp bootstrap_keyset(%{entity_type: entity_type, entity_id: entity_id})
+       when entity_type in ["organization", "task"] and is_binary(entity_id),
+       do: {entity_type, entity_id}
+
+  defp bootstrap_keyset(_invalid), do: raise(ArgumentError, "invalid bootstrap keyset")
+
+  defp bootstrap_query do
+    """
+    WITH canonical_entities AS (
+      SELECT
+        'organization'::text AS entity_type,
+        organizations.id AS entity_id,
+        organizations.revision AS entity_revision,
+        jsonb_build_object(
+          'id', organizations.id::text,
+          'kind', organizations.kind,
+          'name', organizations.display_name,
+          'archived_at', organizations.archived_at,
+          'revision', organizations.revision
+        ) AS snapshot
+      FROM organizations
+      WHERE organizations.account_id = $1
+
+      UNION ALL
+
+      SELECT
+        'task'::text AS entity_type,
+        tasks.id AS entity_id,
+        tasks.revision AS entity_revision,
+        jsonb_build_object(
+          'id', tasks.id::text,
+          'title', tasks.title,
+          'notes', tasks.notes,
+          'inbox_state', tasks.inbox_state,
+          'revision', tasks.revision,
+          'captured_at', tasks.captured_at,
+          'planned_on', tasks.planned_on,
+          'deadline_on', tasks.deadline_on,
+          'completed_at', tasks.completed_at,
+          'trashed_at', tasks.trashed_at,
+          'project_id', tasks.project_id,
+          'tag_ids', COALESCE(
+            (
+              SELECT jsonb_agg(task_tags.tag_id::text ORDER BY task_tags.tag_id)
+              FROM task_tags
+              WHERE task_tags.account_id = tasks.account_id
+                AND task_tags.task_id = tasks.id
+            ),
+            '[]'::jsonb
+          )
+        ) AS snapshot
+      FROM tasks
+      WHERE tasks.account_id = $1
+    )
+    SELECT entity_type, entity_id, entity_revision, snapshot
+    FROM canonical_entities
+    WHERE $2::text IS NULL OR (entity_type, entity_id) > ($2::text, $3::uuid)
+    ORDER BY entity_type ASC, entity_id ASC
+    LIMIT $4
+    """
+  end
+
+  defp bootstrap_entity([entity_type, entity_id, entity_revision, snapshot]) do
+    %{
+      "entity_id" => load_uuid(entity_id),
+      "entity_type" => entity_type,
+      "kind" => "#{entity_type}_snapshot",
+      "snapshot" => Map.put(snapshot, "revision", entity_revision)
+    }
+  end
 
   defp change_from_row([
          sequence,

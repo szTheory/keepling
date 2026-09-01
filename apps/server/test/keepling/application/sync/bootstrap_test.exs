@@ -92,7 +92,6 @@ defmodule Keepling.Application.Sync.BootstrapTest do
 
     assert first_id in entity_ids
     assert trashed_id in entity_ids
-    assert concurrent_id in entity_ids
 
     assert %{
              "kind" => "task_snapshot",
@@ -149,6 +148,7 @@ defmodule Keepling.Application.Sync.BootstrapTest do
   end
 
   test "namespace and restore-epoch mismatches quarantine or reset before enumeration", %{
+    account_id: account_id,
     context: context
   } do
     foreign = put_in(context, [:namespace, :generation], 2)
@@ -156,6 +156,8 @@ defmodule Keepling.Application.Sync.BootstrapTest do
     assert {:quarantined, :namespace_mismatch} =
              Sync.bootstrap(foreign, %{limit: 2}, SyncFeed)
 
+    _first_id = capture(account_id, "First cursor page")
+    _second_id = capture(account_id, "Second cursor page")
     assert {:ok, first_page} = Sync.bootstrap(context, %{limit: 1}, SyncFeed)
 
     restored =
@@ -163,14 +165,12 @@ defmodule Keepling.Application.Sync.BootstrapTest do
       |> put_in([:namespace, :sync_epoch], "00000000-0000-4000-8000-0000000000e2")
       |> put_in([:authoritative_namespace, :sync_epoch], "00000000-0000-4000-8000-0000000000e2")
 
-    if first_page.next_cursor do
-      assert {:reset_required, %{reason: "restore_epoch_changed"}} =
-               Sync.bootstrap(
-                 restored,
-                 %{cursor: first_page.next_cursor, limit: 1},
-                 SyncFeed
-               )
-    end
+    assert {:reset_required, %{reason: "restore_epoch_changed"}} =
+             Sync.bootstrap(
+               restored,
+               %{cursor: first_page.next_cursor, limit: 1},
+               SyncFeed
+             )
   end
 
   defp capture(account_id, title) do

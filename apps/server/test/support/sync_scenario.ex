@@ -7,6 +7,35 @@ defmodule Keepling.SyncScenario do
   """
 
   alias Keepling.Application.Sync.ReferenceModel
+  alias Keepling.Application.Sync
+
+  @spec collect_bootstrap(map(), map(), module()) :: {:ok, [map()]} | {:error, term()}
+  def collect_bootstrap(context, options, port) do
+    collect_bootstrap(context, options, port, [], 0)
+  end
+
+  defp collect_bootstrap(_context, _options, _port, _pages, page_count)
+       when page_count >= 1_000,
+       do: {:error, :bootstrap_page_limit_exceeded}
+
+  defp collect_bootstrap(context, options, port, pages, page_count) do
+    case Sync.bootstrap(context, options, port) do
+      {:ok, %{next_cursor: nil} = page} ->
+        {:ok, pages ++ [page]}
+
+      {:ok, %{next_cursor: cursor} = page} ->
+        collect_bootstrap(
+          context,
+          %{cursor: cursor, limit: Map.get(options, :limit, 50)},
+          port,
+          pages ++ [page],
+          page_count + 1
+        )
+
+      other ->
+        other
+    end
+  end
 
   @spec run(map()) :: {:ok, map()} | {:error, term()}
   def run(%{"actions" => actions}) when is_list(actions) do
