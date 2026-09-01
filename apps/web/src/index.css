@@ -187,7 +187,9 @@
   }
 
   .keepling-workspace-content {
+    height: 100%;
     min-height: 0;
+    overflow: hidden;
   }
 
   .keepling-workspace-panes {

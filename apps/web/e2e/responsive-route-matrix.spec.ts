@@ -65,14 +65,14 @@ for (const width of [320, 1024] as const) {
   })
 }
 
-test('@responsive-route-matrix preserves the amended 1024 and 1064 workspace boundaries', async ({
+test('@responsive-route-matrix preserves the amended compact-wide workspace boundaries', async ({
   baseURL,
   page,
 }) => {
   await authenticate(page, baseURL)
   const row = await capture(page, 'Boundary workspace task')
 
-  for (const width of [1024, 1064, 1440] as const) {
+  for (const width of [1024, 1063, 1064, 1440] as const) {
     await page.setViewportSize({ height: 900, width })
     await row.getByRole('link').click()
 
@@ -88,7 +88,7 @@ test('@responsive-route-matrix preserves the amended 1024 and 1064 workspace bou
     expect(dimensions[1]?.width).toBeGreaterThanOrEqual(360)
     expect(dimensions[1]?.width).toBeLessThanOrEqual(440)
     expect(dimensions[2]?.width).toBeGreaterThanOrEqual(480)
-    if (width === 1024) {
+    if (width <= 1063) {
       await expect(page.getByRole('button', { name: 'Open navigation' })).toBeVisible()
       await expect(navigation).toBeHidden()
     } else {
@@ -105,9 +105,12 @@ test('@responsive-route-matrix preserves the amended 1024 and 1064 workspace bou
 
     const overflow = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,
+      scrollHeight: document.documentElement.scrollHeight,
       scrollWidth: document.documentElement.scrollWidth,
+      viewportHeight: window.innerHeight,
     }))
     expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth)
+    expect(overflow.scrollHeight).toBeLessThanOrEqual(overflow.viewportHeight)
     await page.goto('/')
   }
 })

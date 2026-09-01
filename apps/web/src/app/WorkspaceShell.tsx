@@ -109,7 +109,7 @@ function WorkspaceShell({
         </a>
       </header>
 
-      <div className="keepling-workspace-shell min-h-screen">
+      <div className="keepling-workspace-shell">
         <aside
           className="keepling-persistent-navigation border-r border-border bg-card p-6"
           data-workspace-region="navigation"
