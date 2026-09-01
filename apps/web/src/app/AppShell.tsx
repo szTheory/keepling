@@ -6,7 +6,15 @@ import {
   type ReactNode,
 } from 'react'
 
-import type { UndoAvailability, UndoResult } from '@/api/keepling'
+import {
+  KeeplingApiError,
+  listSessions,
+  logout,
+  type BrowserSession,
+  type UndoAvailability,
+  type UndoResult,
+} from '@/api/keepling'
+import { AlertDialog, type AlertDialogAction } from '@/components/ui/alert-dialog'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 import RecoveryStrip from '@/features/recovery/RecoveryStrip'
 import SessionList from '@/features/sessions/SessionList'
@@ -22,7 +30,7 @@ type AppShellProps = {
     intent: InterruptedIntent,
     resume: (csrfToken: string) => Promise<void>,
   ) => void
-  onSaveDirtyWork?: () => void
+  onSaveDirtyWork?: () => Promise<void> | void
   routeContent?: WorkspaceLayoutContent
 }
 
@@ -38,18 +46,22 @@ function AppShell({
 }: AppShellProps) {
   const [pathname, setPathname] = useState(window.location.pathname)
   const [latestUndo, setLatestUndo] = useState<UndoAvailability | null>(null)
-  const [pendingHref, setPendingHref] = useState<string | null>(null)
+  const [pendingAction, setPendingAction] = useState<
+    | { href: string; kind: 'navigate' }
+    | { kind: 'logout'; session: BrowserSession }
+    | null
+  >(null)
+  const [logoutBusy, setLogoutBusy] = useState(false)
+  const [logoutMessage, setLogoutMessage] = useState('')
   const stayButtonRef = useRef<HTMLButtonElement>(null)
+  const confirmationTriggerRef = useRef<HTMLElement>(null)
+  const logoutInFlightRef = useRef(false)
 
   useEffect(() => {
     const update = () => setPathname(window.location.pathname)
     window.addEventListener('popstate', update)
     return () => window.removeEventListener('popstate', update)
   }, [])
-
-  useEffect(() => {
-    if (pendingHref) stayButtonRef.current?.focus()
-  }, [pendingHref])
 
   useEffect(() => {
     const rememberLatest = (event: Event) => {
@@ -91,16 +103,71 @@ function AppShell({
   const guardNavigation = (event: MouseEvent<HTMLAnchorElement>, href: string) => {
     if (!hasDirtyWork || isCurrent(href)) return
     event.preventDefault()
-    setPendingHref(href)
+    confirmationTriggerRef.current = event.currentTarget
+    setPendingAction({ href, kind: 'navigate' })
   }
 
-  const finishNavigation = (disposition: 'discard' | 'save') => {
-    if (!pendingHref) return
-    if (disposition === 'save') onSaveDirtyWork()
+  const finishNavigation = async (href: string, disposition: 'discard' | 'save') => {
+    if (disposition === 'save') await onSaveDirtyWork()
     else onDiscardDirtyWork()
-    const href = pendingHref
-    setPendingHref(null)
+    setPendingAction(null)
     navigate(href)
+  }
+
+  const reconcileLogout = async (session: BrowserSession, allowRetry: boolean, activeCsrfToken: string) => {
+    const sessions = await listSessions()
+    if (!sessions.some((candidate) => candidate.id === session.id)) {
+      setLogoutMessage('The previous browser session was logged out.')
+      return
+    }
+    if (!allowRetry) {
+      setLogoutMessage('The previous browser session remains active.')
+      return
+    }
+    await logout(activeCsrfToken)
+    onLoggedOut()
+  }
+
+  const performLogout = async (session: BrowserSession, activeCsrfToken = csrfToken) => {
+    if (logoutInFlightRef.current) return
+    logoutInFlightRef.current = true
+    setLogoutBusy(true)
+    setLogoutMessage('')
+    try {
+      await logout(activeCsrfToken)
+      onLoggedOut()
+    } catch (error) {
+      const authentication =
+        error instanceof KeeplingApiError && error.problem.code === 'authentication_required'
+          ? 'sign_in'
+          : error instanceof KeeplingApiError &&
+              error.problem.code === 'recent_authentication_required'
+            ? 'reauthenticate'
+            : null
+      if (authentication && onAuthenticationRequired) {
+        onAuthenticationRequired(
+          { authentication, kind: 'action', mutationId: `session-logout:${session.id}` },
+          async (nextCsrfToken) => {
+            await reconcileLogout(session, true, nextCsrfToken)
+          },
+        )
+      } else {
+        try {
+          await reconcileLogout(session, false, activeCsrfToken)
+        } catch {
+          setLogoutMessage('Keepling could not confirm whether this browser was logged out.')
+        }
+      }
+    } finally {
+      logoutInFlightRef.current = false
+      setLogoutBusy(false)
+      setPendingAction(null)
+    }
+  }
+
+  const requestLogout = (session: BrowserSession, trigger: HTMLElement) => {
+    confirmationTriggerRef.current = trigger
+    setPendingAction({ kind: 'logout', session })
   }
 
   const content: WorkspaceLayoutContent = pathname === '/settings/sessions' ? { mainContent: (
@@ -116,6 +183,7 @@ function AppShell({
             hasDirtyWork={hasDirtyWork}
             onAuthenticationRequired={onAuthenticationRequired}
             onLoggedOut={onLoggedOut}
+            onRequestLogout={requestLogout}
           />
         </section>
       </div>
@@ -138,46 +206,76 @@ function AppShell({
         )}
       </WorkspaceShell>
       {recovery}
+      {logoutMessage ? <p className="p-4" role="status">{logoutMessage}</p> : null}
       <div aria-atomic="true" aria-live="polite" className="sr-only" role="status" />
-      {pendingHref ? (
-        <div
-          aria-labelledby="dirty-navigation-title"
-          aria-modal="true"
-          className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-4"
-          role="alertdialog"
-        >
-          <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
-            <h2 className="text-[length:var(--keepling-type-heading)] font-semibold" id="dirty-navigation-title">
-              Unsaved changes
-            </h2>
-            <p className="mt-2">Save changes before leaving this page?</p>
-            <div className="mt-6 flex flex-wrap justify-end gap-2">
-              <button
-                className="min-h-[var(--keepling-layout-target)] rounded-lg border border-border px-4 font-semibold"
-                onClick={() => finishNavigation('save')}
-                type="button"
-              >
-                Save changes
-              </button>
-              <button
-                className="min-h-[var(--keepling-layout-target)] rounded-lg bg-destructive px-4 font-semibold text-white"
-                onClick={() => finishNavigation('discard')}
-                type="button"
-              >
-                Discard changes
-              </button>
-              <button
-                className="min-h-[var(--keepling-layout-target)] rounded-lg border border-border px-4 font-semibold"
-                onClick={() => setPendingHref(null)}
-                ref={stayButtonRef}
-                type="button"
-              >
-                Stay here
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <AlertDialog
+        actions={((): AlertDialogAction[] => {
+          if (!pendingAction) return []
+          const keepEditing: AlertDialogAction = {
+            label: 'Keep editing',
+            onClick: () => setPendingAction(null),
+            ref: stayButtonRef,
+            variant: 'outline',
+          }
+          if (pendingAction.kind === 'navigate') {
+            return [
+              keepEditing,
+              {
+                label: 'Save changes',
+                onClick: () => void finishNavigation(pendingAction.href, 'save'),
+              },
+              {
+                label: 'Discard changes',
+                onClick: () => void finishNavigation(pendingAction.href, 'discard'),
+                variant: 'destructive',
+              },
+            ]
+          }
+          if (!hasDirtyWork) {
+            return [
+              keepEditing,
+              {
+                disabled: logoutBusy,
+                label: 'Log out',
+                onClick: () => void performLogout(pendingAction.session),
+                variant: 'destructive',
+              },
+            ]
+          }
+          return [
+            keepEditing,
+            {
+              disabled: logoutBusy,
+              label: 'Save changes',
+              onClick: async () => {
+                await onSaveDirtyWork()
+                await performLogout(pendingAction.session)
+              },
+            },
+            {
+              disabled: logoutBusy,
+              label: 'Discard changes and log out',
+              onClick: () => {
+                onDiscardDirtyWork()
+                void performLogout(pendingAction.session)
+              },
+              variant: 'destructive',
+            },
+          ]
+        })()}
+        description={
+          pendingAction?.kind === 'logout'
+            ? hasDirtyWork
+              ? 'Unsaved edits remain unless you save them before this browser signs out.'
+              : 'The current browser will sign out. Saved tasks will remain in Keepling.'
+            : 'These edits haven’t been saved.'
+        }
+        finalFocus={confirmationTriggerRef}
+        initialFocus={stayButtonRef}
+        onCancel={() => setPendingAction(null)}
+        open={pendingAction !== null}
+        title={pendingAction?.kind === 'logout' ? 'Log out this browser?' : 'Discard unsaved changes?'}
+      />
     </>
   )
 }

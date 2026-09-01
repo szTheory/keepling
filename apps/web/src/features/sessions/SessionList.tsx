@@ -9,6 +9,7 @@ import {
   type BrowserSession,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
+import { AlertDialog } from '@/components/ui/alert-dialog'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 
 type SessionListProps = {
@@ -19,6 +20,7 @@ type SessionListProps = {
     resume: (csrfToken: string) => Promise<void>,
   ) => void
   onLoggedOut: () => void
+  onRequestLogout?: (session: BrowserSession, trigger: HTMLElement) => void
 }
 
 type Confirmation = { kind: 'logout'; session: BrowserSession } | { kind: 'revoke'; session: BrowserSession }
@@ -64,8 +66,10 @@ function SessionList({
   hasDirtyWork,
   onAuthenticationRequired,
   onLoggedOut,
+  onRequestLogout,
 }: SessionListProps) {
   const keepActiveRef = useRef<HTMLButtonElement>(null)
+  const confirmationTriggerRef = useRef<HTMLElement>(null)
   const writeInFlightRef = useRef(false)
   const [state, setState] = useState<
     | { kind: 'loading' }
@@ -225,10 +229,6 @@ function SessionList({
       active = false
     }
   }, [onAuthenticationRequired])
-
-  useEffect(() => {
-    if (confirmation) keepActiveRef.current?.focus()
-  }, [confirmation])
 
   const saveLabel = async (session: BrowserSession, activeCsrfToken = csrfToken) => {
     if (state.kind !== 'ready' || writeInFlightRef.current) return
@@ -446,9 +446,14 @@ function SessionList({
                   <Button
                     className="min-h-11"
                     disabled={busySessionId !== null || recovery !== null}
-                    onClick={() =>
+                    onClick={(event) => {
+                      if (session.current && onRequestLogout) {
+                        onRequestLogout(session, event.currentTarget)
+                        return
+                      }
+                      confirmationTriggerRef.current = event.currentTarget
                       setConfirmation({ kind: session.current ? 'logout' : 'revoke', session })
-                    }
+                    }}
                     variant="destructive"
                   >
                     {session.current ? 'Log out this browser' : `Revoke ${session.label}`}
@@ -492,50 +497,49 @@ function SessionList({
         </ul>
       )}
 
-      {confirmation ? (
-        <div
-          aria-labelledby="session-confirmation-heading"
-          aria-modal="true"
-          className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
-          role="alertdialog"
-        >
-          <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
-            <h2 className="text-xl font-semibold" id="session-confirmation-heading">
-              {confirmation.kind === 'revoke'
-                ? `Revoke ${confirmation.session.label}?`
-                : 'Log out this browser?'}
-            </h2>
-            <p className="mt-2">
-              {confirmation.kind === 'revoke'
-                ? `Revoke ${confirmation.session.label}? Keepling on that device will need to sign in again.`
-                : hasDirtyWork
-                  ? 'Log out and discard unsaved changes? Saved tasks will remain in Keepling.'
-                  : 'The current browser will need to sign in again. Saved tasks will remain in Keepling.'}
-            </p>
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <Button
-                disabled={recovery !== null}
-                onClick={() => setConfirmation(null)}
-                ref={keepActiveRef}
-                variant="outline"
-              >
-                {confirmation.kind === 'revoke' ? 'Keep session active' : 'Stay here'}
-              </Button>
-              <Button
-                disabled={busySessionId === confirmation.session.id || recovery !== null}
-                onClick={() => void confirmAction()}
-                variant="destructive"
-              >
-                {confirmation.kind === 'revoke'
-                  ? 'Revoke session'
-                  : hasDirtyWork
-                    ? 'Discard changes and log out'
-                    : 'Log out'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <AlertDialog
+        actions={
+          confirmation
+            ? [
+                {
+                  disabled: recovery !== null,
+                  label: confirmation.kind === 'revoke' ? 'Keep session active' : 'Keep editing',
+                  onClick: () => setConfirmation(null),
+                  ref: keepActiveRef,
+                  variant: 'outline',
+                },
+                {
+                  disabled:
+                    busySessionId === confirmation.session.id || recovery !== null,
+                  label:
+                    confirmation.kind === 'revoke'
+                      ? 'Revoke session'
+                      : hasDirtyWork
+                        ? 'Discard changes and log out'
+                        : 'Log out',
+                  onClick: () => void confirmAction(),
+                  variant: 'destructive',
+                },
+              ]
+            : []
+        }
+        description={
+          confirmation?.kind === 'revoke'
+            ? 'Keepling on that device will need to sign in again.'
+            : hasDirtyWork
+              ? 'Unsaved edits remain unless you save them before this browser signs out.'
+              : 'The current browser will sign out. Saved tasks will remain in Keepling.'
+        }
+        finalFocus={confirmationTriggerRef}
+        initialFocus={keepActiveRef}
+        onCancel={() => setConfirmation(null)}
+        open={confirmation !== null}
+        title={
+          confirmation?.kind === 'revoke'
+            ? `Revoke ${confirmation.session.label}?`
+            : 'Log out this browser?'
+        }
+      />
 
       <div aria-atomic="true" aria-live="polite" className="sr-only">
         {message}

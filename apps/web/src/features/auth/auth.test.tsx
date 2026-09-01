@@ -744,18 +744,22 @@ describe('session administration', () => {
     )
 
     await user.click(screen.getByRole('button', { name: 'Revoke Travel phone' }))
-    expect(screen.getByRole('alertdialog')).toHaveTextContent(
-      'Revoke Travel phone? Keepling on that device will need to sign in again.',
+    expect(screen.getByRole('alertdialog', { name: 'Revoke Travel phone?' })).toHaveTextContent(
+      'Keepling on that device will need to sign in again.',
     )
-    expect(screen.getByRole('button', { name: 'Keep session active' })).toHaveFocus()
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Keep session active' })).toHaveFocus(),
+    )
     await user.click(screen.getByRole('button', { name: 'Revoke session' }))
     await waitFor(() => expect(screen.queryByDisplayValue('Travel phone')).not.toBeInTheDocument())
 
     await user.click(screen.getByRole('button', { name: 'Log out this browser' }))
-    expect(screen.getByRole('alertdialog')).toHaveTextContent(
-      'Log out and discard unsaved changes? Saved tasks will remain in Keepling.',
+    expect(screen.getByRole('alertdialog', { name: 'Log out this browser?' })).toHaveTextContent(
+      'Unsaved edits remain unless you save them before this browser signs out.',
     )
-    expect(screen.getByRole('button', { name: 'Stay here' })).toHaveFocus()
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Keep editing' })).toHaveFocus(),
+    )
     await user.click(screen.getByRole('button', { name: 'Discard changes and log out' }))
     await waitFor(() => expect(onLoggedOut).toHaveBeenCalledOnce())
   })
