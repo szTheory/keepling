@@ -1,6 +1,6 @@
 # Phase KPL-01 — UI Review
 
-**Audited:** 2026-09-01
+**Audited:** 2026-08-31T23:39:12-04:00
 **Baseline:** approved `01-UI-SPEC.md`
 **Screenshots:** not captured (no Keepling dev server at ports 3000, 5173, or 8080; port 8080 served an unrelated Traefik dashboard)
 **Audit mode:** fresh code audit plus current automated UI evidence; subjective external observations are non-gating dogfood
@@ -97,6 +97,6 @@ Registry audit: 0 third-party blocks checked, no flags. `apps/web/components.jso
 
 ## Verification Run
 
-`pnpm --filter @keepling/web test --run src/test/ui-contract.test.tsx` — **12/12 passed** on 2026-09-01.
+`./tooling/test-phase-1.sh --run` — **109/109 ExUnit, 147/147 Vitest, 25/25 real-stack Playwright, and 3/3 automated UAT mappings passed** on 2026-08-31. The Playwright lane exercised the accessibility, reflow, authentication-interoperability, modal-keyboard, responsive-route, lifecycle-recovery, conflict-recovery, session-reconciliation, and visual-contract evidence used by this audit.
 
 No implementation file was modified during this audit.
