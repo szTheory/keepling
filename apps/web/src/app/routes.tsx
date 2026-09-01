@@ -17,7 +17,10 @@ import { Button } from '@/components/ui/button'
 
 type AppRoutesProps = {
   authenticated: boolean
-  authenticatedContent?: ReactNode | ((beginReauthentication: BeginReauthentication) => ReactNode)
+  authenticatedContent?: ReactNode | ((
+    beginReauthentication: BeginReauthentication,
+    routeContent?: ReactNode,
+  ) => ReactNode)
   continuationError?: boolean
   createContinuationScope?: () => ContinuationScope
   csrfToken?: string
@@ -193,10 +196,11 @@ function AppRoutes({
   }, [routeContinuationScope])
 
   const scopedAuthenticationRequired = routeContinuationScope.beginReauthentication
-  const routedAuthenticatedContent =
+  const renderAuthenticatedContent = (routeContent?: ReactNode) =>
     typeof authenticatedContent === 'function'
-      ? authenticatedContent(scopedAuthenticationRequired)
-      : authenticatedContent
+      ? authenticatedContent(scopedAuthenticationRequired, routeContent)
+      : routeContent ?? authenticatedContent
+  const routedAuthenticatedContent = renderAuthenticatedContent()
 
   const handleAuthenticated = (nextCsrfToken: string) => {
     onAuthenticated(nextCsrfToken)
@@ -283,36 +287,36 @@ function AppRoutes({
     return <LoginForm onAuthenticated={handleAuthenticated} />
   }
 
-  if (pathname === '/today' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="today" onAuthenticationRequired={scopedAuthenticationRequired} view="today" />)
-  if (pathname === '/upcoming' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="upcoming" onAuthenticationRequired={scopedAuthenticationRequired} view="upcoming" />)
-  if (pathname === '/completed' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="completed" onAuthenticationRequired={scopedAuthenticationRequired} view="completed" />)
-  if (pathname === '/inbox' && csrfToken) return withInterruption(<TaskList csrfToken={csrfToken} key="inbox" onAuthenticationRequired={scopedAuthenticationRequired} view="inbox" />)
+  if (pathname === '/today' && csrfToken) return withInterruption(renderAuthenticatedContent(<TaskList csrfToken={csrfToken} key="today" onAuthenticationRequired={scopedAuthenticationRequired} view="today" />))
+  if (pathname === '/upcoming' && csrfToken) return withInterruption(renderAuthenticatedContent(<TaskList csrfToken={csrfToken} key="upcoming" onAuthenticationRequired={scopedAuthenticationRequired} view="upcoming" />))
+  if (pathname === '/completed' && csrfToken) return withInterruption(renderAuthenticatedContent(<TaskList csrfToken={csrfToken} key="completed" onAuthenticationRequired={scopedAuthenticationRequired} view="completed" />))
+  if (pathname === '/inbox' && csrfToken) return withInterruption(renderAuthenticatedContent(<TaskList csrfToken={csrfToken} key="inbox" onAuthenticationRequired={scopedAuthenticationRequired} view="inbox" />))
   if (pathname === '/trash' && csrfToken) {
     return withInterruption(
-      <TrashList
+      renderAuthenticatedContent(<TrashList
         csrfToken={csrfToken}
         onAuthenticationRequired={scopedAuthenticationRequired}
-      />,
+      />),
     )
   }
 
   if (pathname === '/projects' && csrfToken) {
     return withInterruption(
-      <OrganizationManager
+      renderAuthenticatedContent(<OrganizationManager
         csrfToken={csrfToken}
         kind="project"
         onAuthenticationRequired={scopedAuthenticationRequired}
-      />,
+      />),
     )
   }
 
   if (pathname === '/tags' && csrfToken) {
     return withInterruption(
-      <OrganizationManager
+      renderAuthenticatedContent(<OrganizationManager
         csrfToken={csrfToken}
         kind="tag"
         onAuthenticationRequired={scopedAuthenticationRequired}
-      />,
+      />),
     )
   }
 
@@ -320,19 +324,18 @@ function AppRoutes({
   const assignmentTaskId = decodeRoutePart(assignmentMatch?.[1])
   if (assignmentTaskId && csrfToken) {
     return withInterruption(
-      <OrganizationFields
+      renderAuthenticatedContent(<OrganizationFields
         csrfToken={csrfToken}
         onAuthenticationRequired={scopedAuthenticationRequired}
         taskId={assignmentTaskId}
-      />,
+      />),
     )
   }
 
   const taskId = routeToken(pathname, '/tasks/')
   if (taskId && csrfToken) {
     return withInterruption(
-      <>
-        {routedAuthenticatedContent ? <div className="hidden lg:block">{routedAuthenticatedContent}</div> : null}
+      renderAuthenticatedContent(
         <div className="min-h-screen bg-card [&>main]:!static [&>main]:!min-h-0 [&>main]:!min-w-0 [&>main]:!w-auto [&>main]:!overflow-visible [&>main]:!border-0 lg:fixed lg:inset-y-0 lg:right-0 lg:z-20 lg:w-[calc(100%-41.5rem)] lg:min-w-[30rem] lg:overflow-y-auto lg:border-l lg:border-border" key={taskId}>
           <TaskEditor
             csrfToken={csrfToken}
@@ -346,7 +349,7 @@ function AppRoutes({
             taskId={taskId}
           />
         </div>
-      </>,
+      ),
     )
   }
 

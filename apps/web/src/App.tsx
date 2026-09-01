@@ -88,60 +88,7 @@ function InboxWorkspace({
 
   return (
     <>
-      <a
-        className="fixed left-4 top-0 z-50 -translate-y-full rounded-b-lg bg-primary px-4 py-3 text-primary-foreground focus:translate-y-0"
-        href="#main-content"
-      >
-        Skip to main content
-      </a>
-
-      <header className="flex min-h-16 items-center justify-between border-b border-border bg-card px-4 lg:hidden">
-        <p className="text-xl font-semibold">Keepling</p>
-        <a className="font-semibold text-primary underline-offset-4 hover:underline" href="#quick-capture">
-          Add task
-        </a>
-      </header>
-
-      <div className="keepling-inbox-workspace min-h-screen lg:grid lg:grid-cols-[14rem_minmax(22.5rem,27.5rem)_minmax(30rem,1fr)]">
-        <aside className="hidden border-r border-border bg-card p-6 lg:block">
-          <p className="text-xl font-semibold">Keepling</p>
-          <a
-            className="mt-8 flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            href="#quick-capture"
-          >
-            Add task
-          </a>
-          <nav aria-label="Primary" className="mt-8">
-            <a
-              aria-current="page"
-              className="flex min-h-11 items-center border-l-2 border-primary pl-3 font-semibold"
-              href="/"
-            >
-              Inbox
-            </a>
-            {[
-              ['/today', 'Today'],
-              ['/upcoming', 'Upcoming'],
-              ['/completed', 'Completed'],
-            ].map(([href, label]) => (
-              <a
-                className="mt-2 flex min-h-11 items-center border-l-2 border-transparent pl-3 font-semibold"
-                href={href}
-                key={href}
-              >
-                {label}
-              </a>
-            ))}
-            <p className="mt-6 px-3 text-sm font-semibold text-muted-foreground">Settings</p>
-            <a
-              className="mt-2 flex min-h-11 items-center border-l-2 border-transparent pl-3 font-semibold"
-              href="/settings/sessions"
-            >
-              Sessions
-            </a>
-          </nav>
-        </aside>
-
+      <div className="keepling-inbox-workspace min-h-screen">
         <main className="min-w-0 bg-background" id="main-content" tabIndex={-1}>
           <div className="border-b border-border px-6 py-8">
             <h1 className="text-[1.75rem] font-semibold leading-[1.2]">Inbox</h1>
@@ -210,7 +157,7 @@ function InboxWorkspace({
 
         <section
           aria-labelledby="detail-heading"
-          className="hidden min-w-0 border-l border-border bg-card p-8 lg:block"
+          className="keepling-detail-placeholder min-w-0 border-l border-border bg-card p-8"
         >
           <h2 className="text-xl font-semibold" id="detail-heading">
             Task details
@@ -270,7 +217,7 @@ function RoutedApp() {
       authenticated={authenticatedState !== null}
       authenticatedContent={
         authenticatedState
-          ? (onAuthenticationRequired) => (
+          ? (onAuthenticationRequired, routeContent) => (
               <AppShell
                 csrfToken={authenticatedState.csrfToken}
                 inboxContent={(
@@ -278,6 +225,7 @@ function RoutedApp() {
                 )}
                 onAuthenticationRequired={onAuthenticationRequired}
                 onLoggedOut={handleLoggedOut}
+                routeContent={routeContent}
               />
             )
           : undefined

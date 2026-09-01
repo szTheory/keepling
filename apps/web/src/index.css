@@ -136,18 +136,46 @@
   }
 }
 
-@media (max-width: 1023px) {
-  .keepling-workspace {
+.keepling-compact-header {
+  display: flex;
+}
+
+.keepling-persistent-navigation {
+  display: none;
+}
+
+.keepling-workspace-content,
+.keepling-workspace-shell {
+  min-width: 0;
+}
+
+.keepling-detail-placeholder {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .keepling-inbox-workspace {
+    display: grid;
+    grid-template-columns: var(--keepling-layout-list-min) minmax(var(--keepling-layout-detail-min), 1fr);
+  }
+
+  .keepling-detail-placeholder {
     display: block;
-    min-width: 0;
   }
 }
 
-/* The 1024px seam cannot fit 224 + 360 + 480px simultaneously. Preserve the
-   focal 480px detail measure and prevent page overflow with a compact list pane. */
-@media (min-width: 1024px) and (max-width: 1063px) {
-  .keepling-inbox-workspace {
-    grid-template-columns: var(--keepling-layout-nav) 320px minmax(var(--keepling-layout-detail-min), 1fr);
+@media (min-width: 1064px) {
+  .keepling-compact-header {
+    display: none;
+  }
+
+  .keepling-persistent-navigation {
+    display: block;
+  }
+
+  .keepling-workspace-shell {
+    display: grid;
+    grid-template-columns: var(--keepling-layout-nav) minmax(0, 1fr);
   }
 }
 

@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -47,10 +47,14 @@ describe('approved Phase 1 UI contract', () => {
       'aria-current',
       'page',
     )
-    expect(within(navigation).getByRole('link', { name: 'Inbox' })).toHaveFocus()
+    await waitFor(() => {
+      expect(within(navigation).getByRole('link', { name: 'Inbox' })).toHaveFocus()
+    })
 
     await user.tab({ shift: true })
-    expect(within(navigation).getByRole('button', { name: 'Close navigation' })).toHaveFocus()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Close navigation' })).toHaveFocus()
+    })
     await user.keyboard('{Escape}')
     expect(trigger).toHaveFocus()
   })
@@ -138,7 +142,8 @@ describe('approved Phase 1 UI contract', () => {
     expect(css).toContain('@media (prefers-color-scheme: dark)')
     expect(css).toContain('@media (forced-colors: active)')
     expect(css).toContain('@media (prefers-reduced-motion: reduce)')
-    expect(css).toContain('@media (max-width: 1023px)')
+    expect(css).toContain('@media (min-width: 1024px)')
+    expect(css).toContain('@media (min-width: 1064px)')
     expect(css).toContain('outline: 2px solid var(--ring)')
     expect(css).toContain('min-width: 0')
     expect(css).toContain('overflow-x: hidden')

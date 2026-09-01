@@ -31,7 +31,7 @@ for (const width of [320, 1024] as const) {
     )
 
     await page.keyboard.press('Shift+Tab')
-    await expect(navigation.getByRole('button', { name: 'Close navigation' })).toBeFocused()
+    await expect(page.getByRole('button', { name: 'Close navigation' })).toBeFocused()
     await page.keyboard.press('Escape')
     await expect(trigger).toBeFocused()
     await expect(page).toHaveURL(/\/$/)
@@ -40,7 +40,7 @@ for (const width of [320, 1024] as const) {
     await navigation.getByRole('link', { name: 'Today' }).focus()
     await page.keyboard.press('Enter')
     await expect(page).toHaveURL(/\/today$/)
-    await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible()
+    await expect(page.getByRole('heading', { exact: true, name: 'Today' })).toBeVisible()
 
     const todayTrigger = page.getByRole('button', { name: 'Open navigation' })
     await todayTrigger.press('Enter')
