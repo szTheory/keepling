@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-09-01T05:20:59.472Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-09-01T05:55:09.792Z"
 last_activity: 2026-09-01
-last_activity_desc: Phase KPL-02 planning complete — 11 plans ready
-state_head: 3f00ab399ccb8ffd8a19313f815f43c25590afd6
+last_activity_desc: Phase KPL-02 execution started
+state_head: 0705252a741cbebac6b0b53db9dc260b08667915
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 38
-  completed_plans: 27
+  completed_plans: 28
 milestone_name: milestone
 ---
 
@@ -24,16 +24,16 @@ milestone_name: milestone
 See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 **Core value:** Jon can trust Keepling as his daily task system on Mac and iPhone: capture is immediate, accepted changes are never silently lost or overwritten, and both human and agent actions remain inspectable and recoverable.  
-**Current focus:** Phase 2 — Synchronization and Replaceable Server
+**Current focus:** Phase KPL-02 — Synchronization and Replaceable Server
 
 ## Current Position
 
-Phase: KPL-02 (Synchronization and Replaceable Server) — READY TO EXECUTE
-Plan: Not started
+Phase: KPL-02 (Synchronization and Replaceable Server) — EXECUTING
+Plan: 2 of 11
 Total Plans in Phase: 11
-Status: Ready to execute
-Last activity: 2026-08-31 — Phase KPL-01 complete, transitioned to Phase 2
-Last Activity Description: Phase KPL-02 planning complete — 11 plans ready
+Status: Executing Phase KPL-02
+Last activity: 2026-09-01 — Phase KPL-02 execution started
+Last Activity Description: Phase KPL-02 execution started
 Progress: [██████████] 100%
 
 ## Accumulated Context
@@ -127,6 +127,10 @@ Progress: [██████████] 100%
 - [Phase 01]: [Phase KPL-01]: Production UI drift is enforced by a TypeScript-AST scan of executable className regions, not raw comments or fixtures.
 - [Phase 01]: [Phase KPL-01]: Arbitrary visual utilities require a named semantic reason and a declared token or UI-SPEC contract value.
 - [Phase 01]: [Phase KPL-01]: Conflict and uncertain-delivery state machines remain unchanged by mechanical presentation normalization.
+- [Phase 02]: [Phase KPL-02]: Reference synchronization state uses closed JSON-compatible string-keyed maps so clients share behavior without sharing persistence records.
+- [Phase 02]: [Phase KPL-02]: Ready pushes are bounded to 25 and pulls to 50 changes; overlapping resource keys preserve FIFO while disjoint lanes progress.
+- [Phase 02]: [Phase KPL-02]: Only accepted and already_satisfied outcomes satisfy durable dependencies.
+- [Phase 02]: [Phase KPL-02]: Immutable command bytes must carry the same mutation identity as their durable envelope and SHA-256 fingerprint.
 
 ### Retained Research
 
@@ -160,9 +164,9 @@ Run `$gsd-discuss-phase 2` from the repository root.
 
 ## Session
 
-**Last session:** 2026-09-01T04:05:21.460Z
-**Stopped at:** Phase 2 context gathered
-**Resume file:** .planning/phases/KPL-02-synchronization-and-replaceable-server/02-CONTEXT.md
+**Last session:** 2026-09-01T05:55:09.732Z
+**Stopped at:** Completed 02-01-PLAN.md
+**Resume file:** None
 
 ## Performance Metrics
 
@@ -195,3 +199,4 @@ Run `$gsd-discuss-phase 2` from the repository root.
 | Phase KPL-01 P25 | 29min | 3 tasks | 14 files |
 | Phase KPL-01-one-trustworthy-task P26 | 17min | 3 tasks | 14 files |
 | Phase KPL-01 P27 | 16min | 3 tasks | 19 files |
+| Phase KPL-02 P01 | 17min | 3 tasks | 8 files |

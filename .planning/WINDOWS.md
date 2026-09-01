@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 26
+open_count: 28
 waived_count: 0
 fixed_count: 4
-total_count: 30
-last_updated: 2026-09-01T02:23:20.983Z
+total_count: 32
+last_updated: 2026-09-01T05:55:08.534Z
 ---
 
 # Broken Windows Ledger
@@ -45,6 +45,8 @@ last_updated: 2026-09-01T02:23:20.983Z
 | 28 | KPL-01 | lint-warning | apps/web/src/app/AuthProvider.tsx | 259 | Repository ESLint fast-refresh export violation predates Plan 25 | fixed |  | 2026-09-01T01:37:57.421Z | 2026-09-01T02:23:20.983Z |
 | 29 | KPL-01 | deviation | apps/web/src/test/ui-contract.test.tsx |  | Exhaustive production-tree gate required mechanical scale closure outside the ten initially listed feature files. | open |  | 2026-09-01T02:22:51.183Z |  |
 | 30 | KPL-01 | deviation | apps/web/src/app/AuthProvider.tsx |  | Plan-required repository lint gate required scoped ownership directives for pre-existing findings. | open |  | 2026-09-01T02:22:51.264Z |  |
+| 31 | KPL-02 | deviation | apps/server/lib/keepling/application/sync/reference_model.ex |  | Corrected invalid Elixir string-literal typespec discovered during Task 1 compilation | open |  | 2026-09-01T05:55:08.453Z |  |
+| 32 | KPL-02 | deviation | apps/server/lib/keepling/application/sync/reference_model.ex |  | Bound immutable command bytes to the outer durable mutation identity | open |  | 2026-09-01T05:55:08.534Z |  |
 
 ````json
 [
@@ -406,6 +408,30 @@ last_updated: 2026-09-01T02:23:20.983Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-01T02:22:51.264Z",
+    "resolved_at": null
+  },
+  {
+    "id": 31,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "apps/server/lib/keepling/application/sync/reference_model.ex",
+    "line": null,
+    "description": "Corrected invalid Elixir string-literal typespec discovered during Task 1 compilation",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T05:55:08.453Z",
+    "resolved_at": null
+  },
+  {
+    "id": 32,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "apps/server/lib/keepling/application/sync/reference_model.ex",
+    "line": null,
+    "description": "Bound immutable command bytes to the outer durable mutation identity",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T05:55:08.534Z",
     "resolved_at": null
   }
 ]

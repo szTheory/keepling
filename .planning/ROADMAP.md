@@ -109,12 +109,12 @@ Plans:
 **Mode:** mvp
 **Requirements:** SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05
 **UI hint:** no
-**Plans:** 11 plans
+**Plans:** 1/11 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — Prove durable local sync semantics with storage-neutral vectors and a reference reducer.
+- [x] 02-01-PLAN.md — Prove durable local sync semantics with storage-neutral vectors and a reference reducer.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -222,7 +222,7 @@ Plans:
 | Phase | Status | Requirements | Progress |
 |-------|--------|--------------|----------|
 | 1. One Trustworthy Task | Complete    | 13 | 74% |
-| 2. Synchronization and Replaceable Server | ○ Pending | 12 | 0% |
+| 2. Synchronization and Replaceable Server | In Progress| 12 | 0% |
 | 3. Mac Daily Loop | ○ Pending | 7 | 0% |
 | 4. Native iPhone Daily Loop | ○ Pending | 4 | 0% |
 | 5. Safe Agent Access | ○ Pending | 5 | 0% |
