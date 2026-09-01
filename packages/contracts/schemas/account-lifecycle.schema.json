@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keepling.dev/contracts/account-lifecycle.schema.json",
+  "title": "Keepling account namespace and lifecycle vectors",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "version", "namespace_fields", "covered_decisions", "cases"],
+  "properties": {
+    "$schema": {"const": "../schemas/account-lifecycle.schema.json"},
+    "version": {"const": 1},
+    "namespace_fields": {
+      "const": ["issuer", "origin", "server_instance", "subject", "generation"]
+    },
+    "covered_decisions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"enum": ["D-16", "D-17", "D-18", "D-19", "D-20", "D-21"]}
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/case"}
+    }
+  },
+  "$defs": {
+    "namespace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["issuer", "origin", "server_instance", "subject", "generation", "outbox", "conflicts", "quarantined"],
+      "properties": {
+        "issuer": {"type": "string", "minLength": 1},
+        "origin": {"type": "string", "format": "uri"},
+        "server_instance": {"type": "string", "minLength": 1},
+        "subject": {"type": "string", "minLength": 1},
+        "generation": {"type": "integer", "minimum": 1},
+        "outbox": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "conflicts": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "quarantined": {"type": "boolean"}
+      }
+    },
+    "action": {
+      "oneOf": [
+        {"$ref": "#/$defs/localAccept"},
+        {"$ref": "#/$defs/simpleBeginLogout"},
+        {"$ref": "#/$defs/simpleRevocationUncertain"},
+        {"$ref": "#/$defs/simpleRevocationConfirmed"},
+        {"$ref": "#/$defs/simpleRelaunch"},
+        {"$ref": "#/$defs/namespacedAuthenticate"},
+        {"$ref": "#/$defs/namespacedResume"},
+        {"$ref": "#/$defs/namespacedReadyPushes"},
+        {"$ref": "#/$defs/namespacedLateAcknowledgement"},
+        {"$ref": "#/$defs/simpleAccessExpired"},
+        {"$ref": "#/$defs/simpleGrantRevoked"},
+        {"$ref": "#/$defs/simpleDeviceLossRevoked"},
+        {"$ref": "#/$defs/simpleRequestRemoval"},
+        {"$ref": "#/$defs/simpleCancelRemoval"},
+        {"$ref": "#/$defs/simpleConfirmRemoval"},
+        {"$ref": "#/$defs/dirtyDraft"},
+        {"$ref": "#/$defs/simpleBeginLogoutWithDraft"},
+        {"$ref": "#/$defs/simpleNoop"}
+      ]
+    },
+    "localAccept": {
+      "type": "object", "additionalProperties": false, "required": ["type", "namespace", "mutation"],
+      "properties": {"type": {"const": "local_accept"}, "namespace": {"type": "string"}, "mutation": {"type": "string"}}
+    },
+    "namespacedAuthenticate": {"$ref": "#/$defs/namespacedAction", "properties": {"type": {"const": "authenticate"}}},
+    "namespacedResume": {"$ref": "#/$defs/namespacedAction", "properties": {"type": {"const": "resume_same_namespace"}}},
+    "namespacedReadyPushes": {"$ref": "#/$defs/namespacedAction", "properties": {"type": {"const": "ready_pushes"}}},
+    "namespacedLateAcknowledgement": {"$ref": "#/$defs/namespacedAction", "properties": {"type": {"const": "late_acknowledgement"}}},
+    "namespacedAction": {
+      "type": "object", "additionalProperties": false, "required": ["type", "namespace"],
+      "properties": {"type": {"type": "string"}, "namespace": {"type": "string", "minLength": 1}}
+    },
+    "dirtyDraft": {
+      "type": "object", "additionalProperties": false, "required": ["type", "count"],
+      "properties": {"type": {"const": "dirty_draft"}, "count": {"type": "integer", "minimum": 1}}
+    },
+    "simpleBeginLogout": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "begin_logout"}}},
+    "simpleRevocationUncertain": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "revocation_uncertain"}}},
+    "simpleRevocationConfirmed": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "revocation_confirmed"}}},
+    "simpleRelaunch": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "relaunch"}}},
+    "simpleAccessExpired": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "access_expired"}}},
+    "simpleGrantRevoked": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "grant_revoked"}}},
+    "simpleDeviceLossRevoked": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "device_loss_revoked"}}},
+    "simpleRequestRemoval": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "request_local_removal"}}},
+    "simpleCancelRemoval": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "cancel_local_removal"}}},
+    "simpleConfirmRemoval": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "confirm_local_removal"}}},
+    "simpleBeginLogoutWithDraft": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "begin_logout_with_draft"}}},
+    "simpleNoop": {"$ref": "#/$defs/simpleAction", "properties": {"type": {"const": "noop"}}},
+    "simpleAction": {
+      "type": "object", "additionalProperties": false, "required": ["type"],
+      "properties": {"type": {"type": "string"}}
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "initial_namespace", "initial_namespaces", "initial_drafts", "actions", "expect"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "initial_namespace": {"type": ["string", "null"]},
+        "initial_namespaces": {"type": "object", "additionalProperties": {"$ref": "#/$defs/namespace"}},
+        "initial_drafts": {"type": "integer", "minimum": 0},
+        "actions": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/action"}},
+        "expect": {"$ref": "#/$defs/expectation"}
+      }
+    },
+    "expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active_namespace", "drafts", "namespaces", "ready_pushes", "recovery_actions", "removal_prompt", "status"],
+      "properties": {
+        "active_namespace": {"type": ["string", "null"]},
+        "drafts": {"type": "integer", "minimum": 0},
+        "namespaces": {"type": "object", "additionalProperties": {"$ref": "#/$defs/namespace"}},
+        "ready_pushes": {"type": "array", "items": {"type": "string"}},
+        "recovery_actions": {"type": "array", "items": {"enum": ["retry_revocation", "sign_in", "inspect", "export", "remove", "save", "discard", "keep_working"]}},
+        "removal_prompt": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "object", "additionalProperties": false, "required": ["default", "unsynced_count", "conflict_count"], "properties": {"default": {"const": "cancel"}, "unsynced_count": {"type": "integer", "minimum": 0}, "conflict_count": {"type": "integer", "minimum": 0}}}
+          ]
+        },
+        "status": {"enum": ["ready", "fenced", "sign_out_pending", "signed_out", "quarantined", "authentication_required", "permanent_authorization_loss", "local_data_removed", "draft_decision_required"]}
+      }
+    }
+  }
+}

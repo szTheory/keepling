@@ -9,8 +9,18 @@ defmodule Keepling.Accounts.DeviceGrantTest do
   @tag :vectors
   test "account lifecycle vectors fence every namespace and preserve recoverable intent" do
     vectors = @vectors_path |> File.read!() |> Jason.decode!()
+    schema =
+      @vectors_path
+      |> Path.join("../../schemas/account-lifecycle.schema.json")
+      |> Path.expand()
+      |> File.read!()
+      |> Jason.decode!()
 
     assert vectors["version"] == 1
+    assert vectors["$schema"] == "../schemas/account-lifecycle.schema.json"
+    assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
+    assert schema["additionalProperties"] == false
+    assert schema["$defs"]["action"]["oneOf"] |> length() == 18
     assert vectors["namespace_fields"] == [
              "issuer",
              "origin",
@@ -80,6 +90,11 @@ defmodule Keepling.Accounts.DeviceGrantTest do
   defp apply_action(%{"type" => "relaunch"}, state), do: state
 
   defp apply_action(%{"type" => "authenticate", "namespace" => key}, state) do
+    state =
+      if state.active_namespace && state.active_namespace != key,
+        do: quarantine_active(state),
+        else: state
+
     namespace = Map.fetch!(state.namespaces, key)
 
     state

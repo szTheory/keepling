@@ -1,0 +1,104 @@
+{
+  "$schema": "../schemas/account-lifecycle.schema.json",
+  "version": 1,
+  "namespace_fields": ["issuer", "origin", "server_instance", "subject", "generation"],
+  "covered_decisions": ["D-16", "D-17", "D-18", "D-19", "D-20", "D-21"],
+  "cases": [
+    {
+      "name": "empty outbox confirmed logout",
+      "initial_namespace": "a",
+      "initial_namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": [], "conflicts": [], "quarantined": false}},
+      "initial_drafts": 0,
+      "actions": [{"type": "begin_logout"}, {"type": "revocation_confirmed"}],
+      "expect": {"active_namespace": null, "drafts": 0, "namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": [], "conflicts": [], "quarantined": true}}, "ready_pushes": [], "recovery_actions": [], "removal_prompt": null, "status": "signed_out"}
+    },
+    {
+      "name": "pending outbox uncertain revocation",
+      "initial_namespace": "a",
+      "initial_namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1"], "conflicts": [], "quarantined": false}},
+      "initial_drafts": 0,
+      "actions": [{"type": "begin_logout"}, {"type": "revocation_uncertain"}],
+      "expect": {"active_namespace": "a", "drafts": 0, "namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1"], "conflicts": [], "quarantined": true}}, "ready_pushes": [], "recovery_actions": ["retry_revocation"], "removal_prompt": null, "status": "sign_out_pending"}
+    },
+    {
+      "name": "relaunch while quarantined",
+      "initial_namespace": "a",
+      "initial_namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1"], "conflicts": [], "quarantined": false}},
+      "initial_drafts": 0,
+      "actions": [{"type": "begin_logout"}, {"type": "revocation_uncertain"}, {"type": "relaunch"}],
+      "expect": {"active_namespace": "a", "drafts": 0, "namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1"], "conflicts": [], "quarantined": true}}, "ready_pushes": [], "recovery_actions": ["retry_revocation"], "removal_prompt": null, "status": "sign_out_pending"}
+    },
+    {
+      "name": "same account recovery",
+      "initial_namespace": "a",
+      "initial_namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1"], "conflicts": [], "quarantined": false}},
+      "initial_drafts": 0,
+      "actions": [{"type": "access_expired"}, {"type": "authenticate", "namespace": "a"}, {"type": "resume_same_namespace", "namespace": "a"}, {"type": "ready_pushes", "namespace": "a"}],
+      "expect": {"active_namespace": "a", "drafts": 0, "namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1"], "conflicts": [], "quarantined": false}}, "ready_pushes": ["m-1"], "recovery_actions": [], "removal_prompt": null, "status": "ready"}
+    },
+    {
+      "name": "account A to B to A",
+      "initial_namespace": "a",
+      "initial_namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-a"], "conflicts": [], "quarantined": false}, "b": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-b", "generation": 1, "outbox": [], "conflicts": [], "quarantined": false}},
+      "initial_drafts": 0,
+      "actions": [{"type": "authenticate", "namespace": "b"}, {"type": "ready_pushes", "namespace": "a"}, {"type": "authenticate", "namespace": "a"}, {"type": "resume_same_namespace", "namespace": "a"}, {"type": "ready_pushes", "namespace": "a"}],
+      "expect": {"active_namespace": "a", "drafts": 0, "namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-a"], "conflicts": [], "quarantined": false}, "b": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-b", "generation": 1, "outbox": [], "conflicts": [], "quarantined": true}}, "ready_pushes": ["m-a"], "recovery_actions": [], "removal_prompt": null, "status": "ready"}
+    },
+    {
+      "name": "duplicate subject across servers",
+      "initial_namespace": "server-a",
+      "initial_namespaces": {"server-a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "same-subject", "generation": 1, "outbox": ["m-a"], "conflicts": [], "quarantined": false}, "server-b": {"issuer": "issuer-b", "origin": "https://b.invalid", "server_instance": "server-b", "subject": "same-subject", "generation": 1, "outbox": [], "conflicts": [], "quarantined": false}},
+      "initial_drafts": 0,
+      "actions": [{"type": "authenticate", "namespace": "server-b"}, {"type": "ready_pushes", "namespace": "server-a"}],
+      "expect": {"active_namespace": "server-b", "drafts": 0, "namespaces": {"server-a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "same-subject", "generation": 1, "outbox": ["m-a"], "conflicts": [], "quarantined": true}, "server-b": {"issuer": "issuer-b", "origin": "https://b.invalid", "server_instance": "server-b", "subject": "same-subject", "generation": 1, "outbox": [], "conflicts": [], "quarantined": false}}, "ready_pushes": [], "recovery_actions": [], "removal_prompt": null, "status": "ready"}
+    },
+    {
+      "name": "late acknowledgement after fencing",
+      "initial_namespace": "a",
+      "initial_namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1"], "conflicts": [], "quarantined": false}},
+      "initial_drafts": 0,
+      "actions": [{"type": "begin_logout"}, {"type": "late_acknowledgement", "namespace": "a"}],
+      "expect": {"active_namespace": "a", "drafts": 0, "namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1"], "conflicts": [], "quarantined": true}}, "ready_pushes": [], "recovery_actions": [], "removal_prompt": null, "status": "fenced"}
+    },
+    {
+      "name": "definitive grant revocation",
+      "initial_namespace": "a",
+      "initial_namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1"], "conflicts": ["c-1"], "quarantined": false}},
+      "initial_drafts": 0,
+      "actions": [{"type": "grant_revoked"}, {"type": "ready_pushes", "namespace": "a"}],
+      "expect": {"active_namespace": "a", "drafts": 0, "namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1"], "conflicts": ["c-1"], "quarantined": true}}, "ready_pushes": [], "recovery_actions": ["inspect", "export", "remove"], "removal_prompt": null, "status": "permanent_authorization_loss"}
+    },
+    {
+      "name": "device loss revocation",
+      "initial_namespace": "a",
+      "initial_namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": [], "conflicts": [], "quarantined": false}},
+      "initial_drafts": 0,
+      "actions": [{"type": "device_loss_revoked"}],
+      "expect": {"active_namespace": "a", "drafts": 0, "namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": [], "conflicts": [], "quarantined": true}}, "ready_pushes": [], "recovery_actions": ["inspect", "export", "remove"], "removal_prompt": null, "status": "permanent_authorization_loss"}
+    },
+    {
+      "name": "local removal prompt counts pending truth",
+      "initial_namespace": "a",
+      "initial_namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1", "m-2"], "conflicts": ["c-1"], "quarantined": true}},
+      "initial_drafts": 0,
+      "actions": [{"type": "request_local_removal"}],
+      "expect": {"active_namespace": "a", "drafts": 0, "namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1", "m-2"], "conflicts": ["c-1"], "quarantined": true}}, "ready_pushes": [], "recovery_actions": [], "removal_prompt": {"default": "cancel", "unsynced_count": 2, "conflict_count": 1}, "status": "ready"}
+    },
+    {
+      "name": "confirmed local removal",
+      "initial_namespace": "a",
+      "initial_namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["m-1"], "conflicts": ["c-1"], "quarantined": true}},
+      "initial_drafts": 0,
+      "actions": [{"type": "request_local_removal"}, {"type": "cancel_local_removal"}, {"type": "request_local_removal"}, {"type": "confirm_local_removal"}],
+      "expect": {"active_namespace": null, "drafts": 0, "namespaces": {}, "ready_pushes": [], "recovery_actions": [], "removal_prompt": null, "status": "local_data_removed"}
+    },
+    {
+      "name": "dirty text is distinct from locally accepted intent",
+      "initial_namespace": "a",
+      "initial_namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["accepted-mutation"], "conflicts": [], "quarantined": false}},
+      "initial_drafts": 0,
+      "actions": [{"type": "dirty_draft", "count": 1}, {"type": "begin_logout_with_draft"}],
+      "expect": {"active_namespace": "a", "drafts": 1, "namespaces": {"a": {"issuer": "issuer-a", "origin": "https://a.invalid", "server_instance": "server-a", "subject": "subject-a", "generation": 1, "outbox": ["accepted-mutation"], "conflicts": [], "quarantined": false}}, "ready_pushes": [], "recovery_actions": ["save", "discard", "keep_working"], "removal_prompt": null, "status": "draft_decision_required"}
+    }
+  ]
+}
