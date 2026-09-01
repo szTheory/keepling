@@ -109,7 +109,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05
 **UI hint:** no
-**Plans:** 4/11 plans executed
+**Plans:** 5/11 plans executed
 
 Plans:
 **Wave 1**
@@ -127,7 +127,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 02-04-PLAN.md — Deliver protocol-train negotiation and current/previous compatibility evidence.
+- [x] 02-04-PLAN.md — Deliver protocol-train negotiation and current/previous compatibility evidence.
 
 **Wave 5** *(blocked on Wave 4 completion)*
 

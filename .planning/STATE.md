@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Completed 02-11-PLAN.md
-last_updated: "2026-09-01T06:53:36.975Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-09-01T07:14:04.064Z"
 last_activity: 2026-09-01
 last_activity_desc: Phase KPL-02 execution started
-state_head: 9d49c5432b8a6b6ccda091be387a72cd36b95bf1
+state_head: cbc3c56234bbb3af65515a1f5bd6fdbf2b12fa59
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 38
-  completed_plans: 31
+  completed_plans: 32
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-02 (Synchronization and Replaceable Server) — EXECUTING
-Plan: 5 of 11
+Plan: 6 of 11
 Total Plans in Phase: 11
 Status: Executing Phase KPL-02
 Last activity: 2026-09-01 — Phase KPL-02 execution started
@@ -141,6 +141,9 @@ Progress: [██████████] 100%
 - [Phase KPL-02]: Native client_id is closed to electron or iphone and maps only to the application-owned client kind; no secret or namespace assertion enters issuance.
 - [Phase KPL-02]: Both OAuth grant types execute through POST /oauth/token, while /oauth/token/refresh is an exact documented alias that gives refreshNativeGrant its required generated operation identity.
 - [Phase KPL-02]: The bearer pipeline assigns only current_device_grant_id and the five-field server namespace returned by the account application; downstream transports never reconstruct authority from request data.
+- [Phase 02]: The active protocol floor comes only from server distribution state, the inclusive deprecation deadline, or a documented evidence-bearing security emergency; marketing/build versions remain metadata-only.
+- [Phase 02]: The unversioned compatibility route accepts exactly one client min/max train range and publishes a closed release-only response without private state.
+- [Phase 02]: Rollback eligibility requires an exact immutable OCI digest plus both schema and protocol inclusion.
 
 ### Retained Research
 
@@ -174,8 +177,8 @@ Run `$gsd-discuss-phase 2` from the repository root.
 
 ## Session
 
-**Last session:** 2026-09-01T06:53:36.884Z
-**Stopped at:** Completed 02-11-PLAN.md
+**Last session:** 2026-09-01T07:14:03.972Z
+**Stopped at:** Completed 02-04-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -213,3 +216,4 @@ Run `$gsd-discuss-phase 2` from the repository root.
 | Phase KPL-02 P03 | 12min | 2 tasks | 7 files |
 | Phase KPL-02 P02 | 16min | 3 tasks | 9 files |
 | Phase KPL-02 P11 | 10min | 2 tasks | 8 files |
+| Phase KPL-02 P04 | 15min | 3 tasks | 13 files |

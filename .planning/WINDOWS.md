@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 31
+open_count: 34
 waived_count: 0
 fixed_count: 4
-total_count: 35
-last_updated: 2026-09-01T06:19:46.857Z
+total_count: 38
+last_updated: 2026-09-01T07:13:47.518Z
 ---
 
 # Broken Windows Ledger
@@ -50,6 +50,9 @@ last_updated: 2026-09-01T06:19:46.857Z
 | 33 | KPL-02 | deviation | apps/server/lib/keepling/accounts/security_audit.ex |  | Extended the closed security-audit vocabulary for bounded device-grant facts | open |  | 2026-09-01T06:19:46.697Z |  |
 | 34 | KPL-02 | deviation | apps/server/lib/keepling/accounts/device_grant.ex |  | Made repeated refresh replay fencing idempotent after the first generation advance | open |  | 2026-09-01T06:19:46.778Z |  |
 | 35 | KPL-02 | deviation | apps/server/lib/keepling/accounts/device_grant.ex |  | Rejected extra public-client secret and namespace assertion fields | open |  | 2026-09-01T06:19:46.857Z |  |
+| 36 | KPL-02 | deviation | apps/server/lib/keepling/application.ex |  | Compatibility configuration is validated before application supervision starts | open |  | 2026-09-01T07:13:47.287Z |  |
+| 37 | KPL-02 | deviation | tooling/check-contracts.mjs |  | Compatibility contract gate rejects vacuous or malformed skew evidence | open |  | 2026-09-01T07:13:47.399Z |  |
+| 38 | KPL-02 | deviation | tooling/test-compatibility.sh |  | Migration count probe uses explicit PostgreSQL inputs and numeric output isolation | open |  | 2026-09-01T07:13:47.518Z |  |
 
 ````json
 [
@@ -471,6 +474,42 @@ last_updated: 2026-09-01T06:19:46.857Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-01T06:19:46.857Z",
+    "resolved_at": null
+  },
+  {
+    "id": 36,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "apps/server/lib/keepling/application.ex",
+    "line": null,
+    "description": "Compatibility configuration is validated before application supervision starts",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T07:13:47.287Z",
+    "resolved_at": null
+  },
+  {
+    "id": 37,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "tooling/check-contracts.mjs",
+    "line": null,
+    "description": "Compatibility contract gate rejects vacuous or malformed skew evidence",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T07:13:47.399Z",
+    "resolved_at": null
+  },
+  {
+    "id": 38,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "tooling/test-compatibility.sh",
+    "line": null,
+    "description": "Migration count probe uses explicit PostgreSQL inputs and numeric output isolation",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T07:13:47.518Z",
     "resolved_at": null
   }
 ]
