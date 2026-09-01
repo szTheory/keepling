@@ -112,4 +112,42 @@ fi
 [ ! -e "$forbidden_evidence" ] ||
   die "unsafe in-repository bootstrap evidence was written"
 
+mkdir "$fixture_root/bundle-sources" "$fixture_root/bundle"
+printf '%s' image >"$fixture_root/bundle-sources/noncanonical-image"
+printf '%s' dump >"$fixture_root/bundle-sources/noncanonical-dump"
+printf '%s' credential >"$fixture_root/bundle-sources/noncanonical-credential"
+printf '%s' compose >"$fixture_root/bundle-sources/noncanonical-compose"
+printf '%s' caddy >"$fixture_root/bundle-sources/noncanonical-caddy"
+printf '%s' override >"$fixture_root/bundle-sources/source-override-name"
+printf '%s' '#!/bin/sh' >"$fixture_root/bundle-sources/noncanonical-runner"
+
+KEEPLING_BUNDLE_IMAGE_SOURCE="$fixture_root/bundle-sources/noncanonical-image" \
+  KEEPLING_BUNDLE_RECOVERY_SOURCE="$fixture_root/bundle-sources/noncanonical-dump" \
+  KEEPLING_BUNDLE_LOGIN_CREDENTIAL_SOURCE="$fixture_root/bundle-sources/noncanonical-credential" \
+  KEEPLING_BUNDLE_COMPOSE_SOURCE="$fixture_root/bundle-sources/noncanonical-compose" \
+  KEEPLING_BUNDLE_CADDY_SOURCE="$fixture_root/bundle-sources/noncanonical-caddy" \
+  KEEPLING_BUNDLE_OVERRIDE_SOURCE="$fixture_root/bundle-sources/source-override-name" \
+  KEEPLING_BUNDLE_RUNNER_SOURCE="$fixture_root/bundle-sources/noncanonical-runner" \
+  KEEPLING_BUNDLE_DESTINATION="$fixture_root/bundle" \
+  ./tooling/verify-host-replacement.sh --stage-bundle >/dev/null
+
+find "$fixture_root/bundle" -mindepth 1 -maxdepth 1 -type f -exec basename {} \; | sort >"$fixture_root/bundle-actual"
+cat >"$fixture_root/bundle-expected" <<'EOF'
+Caddyfile
+compose-override.yml
+compose.yml
+image.tar.gz
+new-login-credential
+recovery.dump
+remote-prepare.sh
+EOF
+cmp -s "$fixture_root/bundle-expected" "$fixture_root/bundle-actual" ||
+  die "candidate bundle did not normalize every exact remote basename"
+cmp -s "$fixture_root/bundle-sources/source-override-name" "$fixture_root/bundle/compose-override.yml" ||
+  die "candidate bundle did not preserve the normalized override payload"
+[ "$(stat -f '%Lp' "$fixture_root/bundle/new-login-credential")" = 600 ] ||
+  die "candidate bundle exposed the transient login credential"
+[ "$(stat -f '%Lp' "$fixture_root/bundle/remote-prepare.sh")" = 700 ] ||
+  die "candidate bundle runner is not owner-executable"
+
 echo "Host bootstrap regression passed: terminal failure is fail-fast, redacted, DNS-safe, and teardown-first"

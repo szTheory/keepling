@@ -251,6 +251,42 @@ verify_bootstrap_gate() {
   done
 }
 
+stage_candidate_bundle() {
+  destination=${KEEPLING_BUNDLE_DESTINATION:-}
+  [ -d "$destination" ] || die "candidate bundle destination is missing"
+  [ -z "$(find "$destination" -mindepth 1 -maxdepth 1 -print -quit)" ] ||
+    die "candidate bundle destination must be empty"
+  case "$destination" in
+    "$repository_root"|"$repository_root"/*) die "candidate bundle must remain outside the repository" ;;
+  esac
+
+  image_source=${KEEPLING_BUNDLE_IMAGE_SOURCE:-}
+  recovery_source=${KEEPLING_BUNDLE_RECOVERY_SOURCE:-}
+  credential_source=${KEEPLING_BUNDLE_LOGIN_CREDENTIAL_SOURCE:-}
+  compose_source=${KEEPLING_BUNDLE_COMPOSE_SOURCE:-}
+  caddy_source=${KEEPLING_BUNDLE_CADDY_SOURCE:-}
+  override_source=${KEEPLING_BUNDLE_OVERRIDE_SOURCE:-}
+  runner_source=${KEEPLING_BUNDLE_RUNNER_SOURCE:-}
+  for source_file in \
+    "$image_source" "$recovery_source" "$credential_source" \
+    "$compose_source" "$caddy_source" "$override_source" "$runner_source"; do
+    [ -f "$source_file" ] && [ -r "$source_file" ] || die "candidate bundle source is unreadable"
+  done
+
+  umask 077
+  install -m 0600 "$image_source" "$destination/image.tar.gz"
+  install -m 0600 "$recovery_source" "$destination/recovery.dump"
+  install -m 0600 "$credential_source" "$destination/new-login-credential"
+  install -m 0600 "$compose_source" "$destination/compose.yml"
+  install -m 0600 "$caddy_source" "$destination/Caddyfile"
+  install -m 0600 "$override_source" "$destination/compose-override.yml"
+  install -m 0700 "$runner_source" "$destination/remote-prepare.sh"
+
+  [ "$(find "$destination" -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d ' ')" -eq 7 ] ||
+    die "candidate bundle is incomplete"
+  echo "Host replacement bundle passed: exact canonical remote inputs staged privately"
+}
+
 dry_run() {
   [ "$($TOFU_BIN version -json | jq -r '.terraform_version')" = "1.12.6" ] ||
     die "OpenTofu 1.12.6 is required"
@@ -316,6 +352,7 @@ case "${1:-}" in
   --dry-run) [ "$#" -eq 1 ] || die "usage: $0 --dry-run"; dry_run ;;
   --state-self-test) [ "$#" -eq 1 ] || die "usage: $0 --state-self-test"; verify_state_contract ;;
   --bootstrap-gate) [ "$#" -eq 1 ] || die "usage: $0 --bootstrap-gate"; verify_bootstrap_gate ;;
+  --stage-bundle) [ "$#" -eq 1 ] || die "usage: $0 --stage-bundle"; stage_candidate_bundle ;;
   --credentialed)
     case "${2:-}" in
       --preflight) [ "$#" -eq 2 ] || die "usage: $0 --credentialed --preflight"; credentialed_preflight ;;
@@ -323,5 +360,5 @@ case "${1:-}" in
       *) die "usage: $0 --credentialed [--preflight]" ;;
     esac
     ;;
-  *) die "usage: $0 --dry-run | --state-self-test | --bootstrap-gate | --credentialed [--preflight]" ;;
+  *) die "usage: $0 --dry-run | --state-self-test | --bootstrap-gate | --stage-bundle | --credentialed [--preflight]" ;;
 esac
