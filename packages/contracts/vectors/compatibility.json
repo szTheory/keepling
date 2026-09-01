@@ -67,10 +67,10 @@
       },
       {
         "name": "new-client-old-server",
-        "client_range": {"minimum_protocol_train": 2, "maximum_protocol_train": 2},
-        "server_case": "previous train remains safe at exact deadline",
+        "client_range": {"minimum_protocol_train": 3, "maximum_protocol_train": 3},
+        "server_case": "newer client requires a server upgrade",
         "artifact": "previous",
-        "target": {"schema": 3, "protocol_train": 2},
+        "target": {"schema": 3, "protocol_train": 3},
         "expected_negotiation_code": "server_upgrade_required",
         "expected_artifact_code": "rollback_protocol_incompatible",
         "case_count": 2

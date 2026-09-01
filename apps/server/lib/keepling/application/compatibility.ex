@@ -61,6 +61,40 @@ defmodule Keepling.Application.Compatibility do
     raise ArgumentError, "compatibility policy must be a map"
   end
 
+  @spec artifact_compatibility(map(), map()) :: map()
+  def artifact_compatibility(
+        %{
+          "tested_oci_digest" => digest,
+          "schema_range" => schema_range,
+          "protocol_range" => protocol_range
+        },
+        %{"schema" => schema, "protocol_train" => protocol_train}
+      ) do
+    code =
+      cond do
+        not (is_binary(digest) and Regex.match?(~r/^sha256:[0-9a-f]{64}$/, digest)) ->
+          "untrusted_artifact_digest"
+
+        not within_range?(schema, schema_range) ->
+          "rollback_schema_incompatible"
+
+        not within_range?(protocol_train, protocol_range) ->
+          "rollback_protocol_incompatible"
+
+        true ->
+          "compatible_artifact"
+      end
+
+    %{
+      "eligible" => code == "compatible_artifact",
+      "code" => code,
+      "retryable" => false,
+      "tested_oci_digest" => digest,
+      "schema" => schema,
+      "protocol_train" => protocol_train
+    }
+  end
+
   @spec negotiate(map(), map()) :: map()
   def negotiate(
         %{
@@ -254,6 +288,12 @@ defmodule Keepling.Application.Compatibility do
   defp range!(_range, label, _options) do
     raise ArgumentError, "#{label} must be a closed increasing integer range"
   end
+
+  defp within_range?(value, %{"minimum" => minimum, "maximum" => maximum})
+       when is_integer(value) and is_integer(minimum) and is_integer(maximum),
+       do: value >= minimum and value <= maximum
+
+  defp within_range?(_value, _range), do: false
 
   defp platform_builds!(%{"electron" => electron, "iphone" => iphone})
        when is_integer(electron) and electron >= 0 and is_integer(iphone) and iphone >= 0,

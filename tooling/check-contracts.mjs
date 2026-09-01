@@ -21,8 +21,12 @@ const syncVectors = resolve(
   repositoryRoot,
   'packages/contracts/vectors/sync.json',
 )
+const compatibilityVectors = resolve(
+  repositoryRoot,
+  'packages/contracts/vectors/compatibility.json',
+)
 
-for (const path of [source, generated, syncSchema, syncVectors]) {
+for (const path of [source, generated, syncSchema, syncVectors, compatibilityVectors]) {
   try {
     accessSync(path, constants.R_OK)
   } catch {
@@ -32,7 +36,7 @@ for (const path of [source, generated, syncSchema, syncVectors]) {
 }
 
 const fail = (message) => {
-  throw new Error(`Sync contract validation failed: ${message}`)
+  throw new Error(`Contract validation failed: ${message}`)
 }
 
 const exactKeys = (value, allowed, context) => {
@@ -169,6 +173,133 @@ const validateSyncVectors = (vectors) => {
   return vectors.cases.length
 }
 
+const integerRange = (range, context) => {
+  exactKeys(range, ['minimum', 'maximum'], context)
+  if (!Number.isInteger(range.minimum) || !Number.isInteger(range.maximum) || range.minimum < 1 || range.minimum > range.maximum) {
+    fail(`${context} must be an increasing positive integer range`)
+  }
+}
+
+const compatibilityResult = (result, context) => {
+  exactKeys(
+    result,
+    ['compatibility_state', 'selected_protocol_train', 'recovery_code', 'retryable', 'pending_intent'],
+    context,
+  )
+  if (!['supported', 'deprecated_but_safe', 'unsupported'].includes(result.compatibility_state)) {
+    fail(`${context}.compatibility_state is unknown`)
+  }
+  if (!['continue', 'client_update_available', 'client_upgrade_required', 'server_upgrade_required'].includes(result.recovery_code)) {
+    fail(`${context}.recovery_code is unknown`)
+  }
+  if (result.retryable !== false || result.pending_intent !== 'preserved_locally') {
+    fail(`${context} must preserve local intent without automatic retry`)
+  }
+}
+
+const compatibilityPolicy = (policy, context) => {
+  exactKeys(
+    policy,
+    [
+      'now', 'server_release', 'tested_oci_digest', 'distribution', 'current_protocol_train',
+      'previous_protocol_train', 'previous_superseded_at', 'deprecation_deadline', 'emergency_override',
+      'supported_protocols', 'schema_range', 'platform_minimum_builds', 'update_location',
+    ],
+    context,
+  )
+  dateTime(policy.now, `${context}.now`)
+  nonEmptyString(policy.server_release, `${context}.server_release`)
+  if (!/^sha256:[0-9a-f]{64}$/.test(policy.tested_oci_digest ?? '')) fail(`${context}.tested_oci_digest must be exact`)
+  if (!['dogfood', 'distributed'].includes(policy.distribution)) fail(`${context}.distribution is unknown`)
+  if (!Number.isInteger(policy.current_protocol_train) || policy.current_protocol_train < 1) fail(`${context}.current_protocol_train is invalid`)
+  exactKeys(policy.supported_protocols, ['read', 'write', 'sync'], `${context}.supported_protocols`)
+  for (const kind of ['read', 'write', 'sync']) integerRange(policy.supported_protocols[kind], `${context}.supported_protocols.${kind}`)
+  integerRange(policy.schema_range, `${context}.schema_range`)
+  exactKeys(policy.platform_minimum_builds, ['electron', 'iphone'], `${context}.platform_minimum_builds`)
+  if (!Number.isInteger(policy.platform_minimum_builds.electron) || !Number.isInteger(policy.platform_minimum_builds.iphone)) {
+    fail(`${context}.platform_minimum_builds must be integers`)
+  }
+  nonEmptyString(policy.update_location, `${context}.update_location`)
+}
+
+const validateCompatibilityVectors = (vectors) => {
+  exactKeys(vectors, ['version', 'fixed_clock', 'codec_fixtures', 'artifacts', 'matrix', 'cases'], 'compatibility vectors')
+  if (vectors.version !== 1) fail('compatibility version must be 1')
+  dateTime(vectors.fixed_clock, 'compatibility fixed_clock')
+
+  if (!Array.isArray(vectors.cases) || vectors.cases.length === 0) fail('zero compatibility negotiation cases executed')
+  const caseNames = new Set()
+  vectors.cases.forEach((vector, index) => {
+    const context = `compatibility.cases[${index}]`
+    exactKeys(vector, ['name', 'policy', 'claims', 'expect'], context)
+    nonEmptyString(vector.name, `${context}.name`)
+    if (caseNames.has(vector.name)) fail(`duplicate compatibility case name: ${vector.name}`)
+    caseNames.add(vector.name)
+    compatibilityPolicy(vector.policy, `${context}.policy`)
+    exactKeys(vector.claims, ['minimum_protocol_train', 'maximum_protocol_train'], `${context}.claims`)
+    if (!Number.isInteger(vector.claims.minimum_protocol_train) ||
+        !Number.isInteger(vector.claims.maximum_protocol_train) ||
+        vector.claims.minimum_protocol_train > vector.claims.maximum_protocol_train) {
+      fail(`${context}.claims must be an increasing integer range`)
+    }
+    compatibilityResult(vector.expect, `${context}.expect`)
+  })
+
+  if (!Array.isArray(vectors.codec_fixtures) || vectors.codec_fixtures.length !== 2) {
+    fail('current and previous codec fixtures are both required')
+  }
+  const fixtureTrains = []
+  vectors.codec_fixtures.forEach((fixture, index) => {
+    const context = `compatibility.codec_fixtures[${index}]`
+    exactKeys(fixture, ['name', 'protocol_train', 'cursor_codec', 'receipt_codec', 'receipt', 'generated_response'], context)
+    nonEmptyString(fixture.name, `${context}.name`)
+    if (!Number.isInteger(fixture.protocol_train)) fail(`${context}.protocol_train is invalid`)
+    if (fixture.cursor_codec !== 1 || fixture.receipt_codec !== 1) fail(`${context} uses an unsupported retained codec`)
+    const receipt = JSON.parse(fixture.receipt)
+    if (receipt.protocol_train !== fixture.protocol_train || receipt.outcome !== 'accepted') fail(`${context}.receipt does not match its train`)
+    compatibilityResult(fixture.generated_response, `${context}.generated_response`)
+    fixtureTrains.push(fixture.protocol_train)
+  })
+  if (fixtureTrains.join(',') !== '1,2') fail('codec fixtures must retain previous train 1 and current train 2')
+
+  exactKeys(vectors.artifacts, ['current', 'previous'], 'compatibility.artifacts')
+  for (const [name, artifact] of Object.entries(vectors.artifacts)) {
+    const context = `compatibility.artifacts.${name}`
+    exactKeys(artifact, ['tested_oci_digest', 'schema_range', 'protocol_range'], context)
+    if (!/^sha256:[0-9a-f]{64}$/.test(artifact.tested_oci_digest ?? '')) fail(`${context}.tested_oci_digest must be exact`)
+    integerRange(artifact.schema_range, `${context}.schema_range`)
+    integerRange(artifact.protocol_range, `${context}.protocol_range`)
+  }
+
+  exactKeys(vectors.matrix, ['lanes', 'known_bad'], 'compatibility.matrix')
+  if (!Array.isArray(vectors.matrix.lanes) || vectors.matrix.lanes.length === 0) fail('zero compatibility matrix lanes executed')
+  const laneInputs = []
+  vectors.matrix.lanes.forEach((lane, index) => {
+    const context = `compatibility.matrix.lanes[${index}]`
+    exactKeys(
+      lane,
+      ['name', 'client_range', 'server_case', 'artifact', 'target', 'expected_negotiation_code', 'expected_artifact_code', 'case_count'],
+      context,
+    )
+    nonEmptyString(lane.name, `${context}.name`)
+    if (!caseNames.has(lane.server_case)) fail(`${context}.server_case is unknown`)
+    if (!Object.hasOwn(vectors.artifacts, lane.artifact)) fail(`${context}.artifact is unknown`)
+    if (!Number.isInteger(lane.case_count) || lane.case_count <= 0) fail(`${context} executed zero cases`)
+    exactKeys(lane.client_range, ['minimum_protocol_train', 'maximum_protocol_train'], `${context}.client_range`)
+    exactKeys(lane.target, ['schema', 'protocol_train'], `${context}.target`)
+    if (!Number.isInteger(lane.target.schema) || !Number.isInteger(lane.target.protocol_train)) fail(`${context}.target inputs must be integers`)
+    laneInputs.push(`${lane.name}[digest=${vectors.artifacts[lane.artifact].tested_oci_digest},schema=${lane.target.schema},train=${lane.target.protocol_train},cases=${lane.case_count}]`)
+  })
+
+  const knownBad = vectors.matrix.known_bad
+  exactKeys(knownBad, ['name', 'artifact', 'target', 'expected_artifact_code'], 'compatibility.matrix.known_bad')
+  if (knownBad.expected_artifact_code !== 'rollback_schema_incompatible') fail('known-bad rollback must fail with rollback_schema_incompatible')
+  const badArtifact = vectors.artifacts[knownBad.artifact]
+  if (!badArtifact || knownBad.target.schema <= badArtifact.schema_range.maximum) fail('known-bad rollback pair is not actually incompatible')
+
+  return { cases: vectors.cases.length, codecs: vectors.codec_fixtures.length, lanes: vectors.matrix.lanes.length, laneInputs }
+}
+
 const schema = JSON.parse(readFileSync(syncSchema, 'utf8'))
 if (schema.$schema !== 'https://json-schema.org/draft/2020-12/schema' || !schema.$defs?.case) {
   fail('schema must be a closed Draft 2020-12 state-machine contract')
@@ -176,6 +307,8 @@ if (schema.$schema !== 'https://json-schema.org/draft/2020-12/schema' || !schema
 
 const vectors = JSON.parse(readFileSync(syncVectors, 'utf8'))
 const executedSyncCases = validateSyncVectors(vectors)
+const compatibility = JSON.parse(readFileSync(compatibilityVectors, 'utf8'))
+const executedCompatibility = validateCompatibilityVectors(compatibility)
 
 const malformed = structuredClone(vectors)
 malformed.cases[0].actions[0].type = 'unknown_action'
@@ -184,6 +317,15 @@ try {
   fail('known malformed synchronization fixture was accepted')
 } catch (error) {
   if (!String(error.message).includes('type is unknown')) throw error
+}
+
+const malformedCompatibility = structuredClone(compatibility)
+malformedCompatibility.matrix.lanes[0].case_count = 0
+try {
+  validateCompatibilityVectors(malformedCompatibility)
+  fail('known vacuous compatibility lane was accepted')
+} catch (error) {
+  if (!String(error.message).includes('executed zero cases')) throw error
 }
 
 const result = spawnSync(
@@ -214,5 +356,6 @@ if (result.status !== 0) {
 }
 
 process.stdout.write(
-  `Contract drift check passed: OpenAPI agrees and ${executedSyncCases} synchronization vector cases validated\n`,
+  `Contract drift check passed: OpenAPI agrees; ${executedSyncCases} sync cases, ${executedCompatibility.cases} compatibility cases, ${executedCompatibility.codecs} codec fixtures, and ${executedCompatibility.lanes} skew lanes validated\n`,
 )
+for (const input of executedCompatibility.laneInputs) process.stdout.write(`Compatibility lane: ${input}\n`)
