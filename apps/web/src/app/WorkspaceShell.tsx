@@ -127,8 +127,10 @@ function WorkspaceShell({
         </aside>
         <div className="keepling-workspace-content min-w-0">
           {listContent ? (
-            <div
+            <main
               className={`keepling-workspace-panes${detailSelected ? ' has-selected-detail' : ''}`}
+              id="main-content"
+              tabIndex={-1}
             >
               <div className="keepling-list-region min-w-0" data-workspace-region="list">
                 {listContent}
@@ -136,7 +138,7 @@ function WorkspaceShell({
               <div className="keepling-detail-region min-w-0" data-workspace-region="detail">
                 {detailContent}
               </div>
-            </div>
+            </main>
           ) : children}
         </div>
       </div>

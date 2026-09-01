@@ -72,7 +72,7 @@ test('@responsive-route-matrix preserves the amended 1024 and 1064 workspace bou
   await authenticate(page, baseURL)
   const row = await capture(page, 'Boundary workspace task')
 
-  for (const width of [1024, 1064] as const) {
+  for (const width of [1024, 1064, 1440] as const) {
     await page.setViewportSize({ height: 900, width })
     await row.getByRole('link').click()
 
@@ -86,6 +86,7 @@ test('@responsive-route-matrix preserves the amended 1024 and 1064 workspace bou
     ])
 
     expect(dimensions[1]?.width).toBeGreaterThanOrEqual(360)
+    expect(dimensions[1]?.width).toBeLessThanOrEqual(440)
     expect(dimensions[2]?.width).toBeGreaterThanOrEqual(480)
     if (width === 1024) {
       await expect(page.getByRole('button', { name: 'Open navigation' })).toBeVisible()
@@ -95,6 +96,12 @@ test('@responsive-route-matrix preserves the amended 1024 and 1064 workspace bou
       await expect(navigation).toBeVisible()
       expect(dimensions[0]?.width).toBe(224)
     }
+
+    const paneScrolling = await Promise.all([
+      list.evaluate((element) => getComputedStyle(element).overflowY),
+      detail.evaluate((element) => getComputedStyle(element).overflowY),
+    ])
+    expect(paneScrolling).toEqual(['auto', 'auto'])
 
     const overflow = await page.evaluate(() => ({
       clientWidth: document.documentElement.clientWidth,

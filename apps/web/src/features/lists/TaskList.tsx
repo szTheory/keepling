@@ -26,6 +26,7 @@ import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 
 type TaskListProps = {
   csrfToken?: string
+  embedded?: boolean
   onAuthenticationRequired?: (
     intent: InterruptedIntent,
     resume: (csrfToken: string) => Promise<void>,
@@ -128,7 +129,7 @@ const swap = (items: readonly TaskViewItem[], taskId: string, direction: 'earlie
   return reordered
 }
 
-function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) {
+function TaskList({ csrfToken, embedded = false, onAuthenticationRequired, view }: TaskListProps) {
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [updating, setUpdating] = useState(false)
   const [lifecycleLocked, setLifecycleLocked] = useState(false)
@@ -586,21 +587,16 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
     </section>
   ) : null
 
+  const Root = embedded ? 'section' : 'main'
+
   return (
-    <main className="min-h-screen min-w-0 bg-background px-4 py-8 sm:px-6 lg:px-8" id="main-content" tabIndex={-1}>
+    <Root
+      aria-label={embedded ? `${viewCopy.title} task list` : undefined}
+      className="min-h-full min-w-0 bg-background px-4 py-8 sm:px-6 lg:px-8"
+      id={embedded ? undefined : 'main-content'}
+      tabIndex={-1}
+    >
       <div className="mx-auto max-w-3xl">
-        <nav aria-label="Primary" className="mb-8 flex flex-wrap gap-x-6 gap-y-2 border-b border-border pb-4">
-          {(['inbox', 'today', 'upcoming', 'completed'] as const).map((destination) => (
-            <a
-              aria-current={view === destination ? 'page' : undefined}
-              className={`min-h-11 content-center font-semibold underline-offset-4 hover:underline ${view === destination ? 'border-b-2 border-primary' : ''}`}
-              href={`/${destination}`}
-              key={destination}
-            >
-              {copy[destination].title}
-            </a>
-          ))}
-        </nav>
         <h1 className="text-[1.75rem] font-semibold leading-[1.2]" ref={heading} tabIndex={-1}>{viewCopy.title}</h1>
         <p className="mt-2 text-muted-foreground">{viewCopy.description}</p>
 
@@ -680,7 +676,7 @@ function TaskList({ csrfToken, onAuthenticationRequired, view }: TaskListProps) 
         ) : null}
       </div>
       <div aria-atomic="true" aria-live="polite" className="sr-only">{announcement}</div>
-    </main>
+    </Root>
   )
 }
 

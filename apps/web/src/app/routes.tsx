@@ -297,7 +297,7 @@ function AppRoutes({
         </p>
       </section>
     ),
-    listContent: <TaskList csrfToken={csrfToken} key={view} onAuthenticationRequired={scopedAuthenticationRequired} view={view} />,
+    listContent: <TaskList csrfToken={csrfToken} embedded key={view} onAuthenticationRequired={scopedAuthenticationRequired} view={view} />,
   })
 
   if (pathname === '/today' && csrfToken) return withInterruption(renderAuthenticatedContent(listLayout('today')))
@@ -365,6 +365,7 @@ function AppRoutes({
         detailContent: <div className="min-h-full bg-card" key={taskId}>
           <TaskEditor
             csrfToken={csrfToken}
+            embedded
             onAcknowledged={onAcknowledged}
             onAuthenticationRequired={scopedAuthenticationRequired}
             onNavigate={navigate}
@@ -379,6 +380,7 @@ function AppRoutes({
         detailSelected: true,
         listContent: <TaskList
           csrfToken={csrfToken}
+          embedded
           key={returnView}
           onAuthenticationRequired={scopedAuthenticationRequired}
           view={returnView}

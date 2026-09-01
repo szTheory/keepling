@@ -31,6 +31,7 @@ import ConflictResolver from '@/features/tasks/ConflictResolver'
 
 type TaskEditorProps = {
   csrfToken: string
+  embedded?: boolean
   onBack?: () => void
   onAcknowledged?: (acknowledgement: CommandAcknowledgement) => void
   onAuthenticationRequired?: (
@@ -74,6 +75,7 @@ const defaultNavigate = (pathname: string) => {
 
 function TaskEditor({
   csrfToken,
+  embedded = false,
   onBack = () => window.history.back(),
   onAcknowledged = () => undefined,
   onAuthenticationRequired,
@@ -585,23 +587,25 @@ function TaskEditor({
   }
 
   if (loadState.kind === 'loading') {
+    const Root = embedded ? 'section' : 'main'
     return (
-      <main className="p-6" id="main-content">
+      <Root aria-label={embedded ? 'Task editor' : undefined} className="p-6" id={embedded ? undefined : 'main-content'}>
         <p role="status">Loading task…</p>
-      </main>
+      </Root>
     )
   }
 
   if (loadState.kind === 'error') {
+    const Root = embedded ? 'section' : 'main'
     return (
-      <main className="p-6" id="main-content">
+      <Root aria-label={embedded ? 'Task editor' : undefined} className="p-6" id={embedded ? undefined : 'main-content'}>
         <div role="alert">
           <p>Couldn’t load this task. Your tasks weren’t changed.</p>
           <Button className="mt-3" onClick={() => onNavigate('/')} variant="outline">
             Return to Inbox
           </Button>
         </div>
-      </main>
+      </Root>
     )
   }
 
@@ -617,10 +621,13 @@ function TaskEditor({
     validCivilDate(draft.deadlineOn) &&
     draft.plannedOn > draft.deadlineOn
 
+  const Root = embedded ? 'section' : 'main'
+
   return (
-    <main
+    <Root
+      aria-label={embedded ? 'Task editor' : undefined}
       className="min-h-full min-w-0 bg-card px-4 py-8 sm:px-6 lg:px-8"
-      id="main-content"
+      id={embedded ? undefined : 'main-content'}
     >
       <div
         aria-hidden={pendingNavigation ? true : undefined}
@@ -866,7 +873,7 @@ function TaskEditor({
           </div>
         </div>
       ) : null}
-    </main>
+    </Root>
   )
 }
 

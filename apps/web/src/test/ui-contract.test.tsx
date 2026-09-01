@@ -164,4 +164,18 @@ describe('approved Phase 1 UI contract', () => {
     expect(`${css}\n${routes}\n${editor}`).not.toContain('41.5rem')
     expect(css).not.toMatch(/(?:320px|20rem)/)
   })
+
+  it('routes authenticated list and task surfaces through one shell-owned main landmark', () => {
+    const app = repositoryFile('apps/web/src/App.tsx')
+    const routes = repositoryFile('apps/web/src/app/routes.tsx')
+    const shell = repositoryFile('apps/web/src/app/WorkspaceShell.tsx')
+
+    expect(app).toContain('routeContent={routeContent}')
+    expect(routes).toContain("renderAuthenticatedContent(listLayout('inbox'))")
+    expect(routes).toContain('<TaskEditor')
+    expect(routes).toContain('embedded')
+    expect(shell).toContain('<main')
+    expect(shell).toContain('id="main-content"')
+    expect(routes).not.toMatch(/return withInterruption\(\s*<(?:TaskList|TaskEditor)/)
+  })
 })
