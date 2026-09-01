@@ -1,5 +1,6 @@
 defmodule Keepling.Application.Sync.ReferenceModelTest do
   use ExUnit.Case, async: true
+  use ExUnitProperties
 
   alias Keepling.Application.Sync.ReferenceModel
   alias Keepling.SyncScenario
@@ -148,6 +149,38 @@ defmodule Keepling.Application.Sync.ReferenceModelTest do
              mutation["command_bytes"]
   end
 
+  property "generated action sequences preserve identity, FIFO, dependencies, and revisions" do
+    check all(
+            steps <-
+              list_of(
+                member_of([
+                  :accept_a,
+                  :accept_b,
+                  :accept_shared_a,
+                  :accept_shared_b,
+                  :accept_parent,
+                  :accept_child,
+                  :pull_a_1,
+                  :pull_a_2,
+                  :pull_a_older,
+                  :ack_a,
+                  :conflict_parent,
+                  :fence,
+                  :unfence
+                ]),
+                min_length: 1,
+                max_length: 80
+              ),
+            max_runs: 60
+          ) do
+      Enum.reduce(steps, ReferenceModel.new(), fn step, state ->
+        next = property_step(state, step)
+        assert_reference_invariants(state, next)
+        next
+      end)
+    end
+  end
+
   defp tracer_mutation do
     @vectors_path
     |> File.read!()
@@ -197,5 +230,130 @@ defmodule Keepling.Application.Sync.ReferenceModelTest do
       "outcome" => "accepted",
       "snapshot" => mutation["effect"]["snapshot"]
     }
+  end
+
+  defp property_step(state, :accept_a),
+    do: accept_or_retain(state, mutation("mutation-a", ["task:task-a"], []))
+
+  defp property_step(state, :accept_b),
+    do: accept_or_retain(state, mutation("mutation-b", ["task:task-b"], []))
+
+  defp property_step(state, :accept_shared_a),
+    do:
+      accept_or_retain(
+        state,
+        mutation("mutation-shared-a", ["task:task-a", "today-order"], [])
+      )
+
+  defp property_step(state, :accept_shared_b),
+    do:
+      accept_or_retain(
+        state,
+        mutation("mutation-shared-b", ["task:task-b", "today-order"], [])
+      )
+
+  defp property_step(state, :accept_parent),
+    do: accept_or_retain(state, mutation("mutation-parent", ["task:task-parent"], []))
+
+  defp property_step(state, :accept_child),
+    do:
+      accept_or_retain(
+        state,
+        mutation("mutation-child", ["task:task-child"], ["mutation-parent"])
+      )
+
+  defp property_step(state, :pull_a_1), do: pull_or_retain(state, 1)
+  defp property_step(state, :pull_a_2), do: pull_or_retain(state, 2)
+  defp property_step(state, :pull_a_older), do: pull_or_retain(state, 0)
+
+  defp property_step(state, :ack_a) do
+    acknowledge_or_retain(state, "mutation-a", "accepted")
+  end
+
+  defp property_step(state, :conflict_parent) do
+    acknowledge_or_retain(state, "mutation-parent", "conflict")
+  end
+
+  defp property_step(state, :fence),
+    do: ReferenceModel.fence(state, "authentication_required") |> elem(1)
+
+  defp property_step(state, :unfence), do: ReferenceModel.fence(state, nil) |> elem(1)
+
+  defp accept_or_retain(state, mutation) do
+    case ReferenceModel.local_accept(state, mutation) do
+      {:ok, "local_saved", next} -> next
+      {:error, _reason, ^state} -> state
+    end
+  end
+
+  defp pull_or_retain(state, revision) do
+    page = %{
+      "cursor" => "cursor-#{revision}",
+      "changes" => [
+        %{
+          "entity_id" => "task-a",
+          "snapshot" => %{"id" => "task-a", "revision" => revision}
+        }
+      ]
+    }
+
+    ReferenceModel.pull(state, page) |> elem(1)
+  end
+
+  defp acknowledge_or_retain(state, mutation_id, outcome) do
+    case Enum.find(state["outbox"], &(&1["mutation_id"] == mutation_id)) do
+      nil ->
+        state
+
+      queued ->
+        queued
+        |> accepted()
+        |> Map.put("outcome", outcome)
+        |> then(&ReferenceModel.acknowledge(state, &1))
+        |> elem(1)
+    end
+  end
+
+  defp assert_reference_invariants(previous, current) do
+    for queued <- current["outbox"] do
+      journal = current["journal"][queued["mutation_id"]]
+      assert journal["outcome"] == "pending"
+      assert journal["command_bytes"] == queued["command_bytes"]
+      assert journal["fingerprint"] == queued["fingerprint"]
+      assert queued["resource_keys"] == Enum.sort(Enum.uniq(queued["resource_keys"]))
+
+      assert Enum.all?(queued["dependencies"], &Map.has_key?(current["journal"], &1))
+    end
+
+    for {entity_id, snapshot} <- previous["canonical_shadow"] do
+      assert get_in(current, ["canonical_shadow", entity_id, "revision"]) >= snapshot["revision"]
+    end
+
+    case ReferenceModel.ready_pushes(current) do
+      ready when is_list(ready) -> assert_ready_invariants(current, ready)
+      {:error, reason} -> flunk("generated valid state became invalid: #{inspect(reason)}")
+    end
+  end
+
+  defp assert_ready_invariants(state, ready) do
+    for mutation <- ready do
+      index = Enum.find_index(state["outbox"], &(&1["mutation_id"] == mutation["mutation_id"]))
+
+      assert state["fence"] == nil
+
+      assert Enum.all?(mutation["dependencies"], fn dependency_id ->
+               get_in(state, ["journal", dependency_id, "outcome"]) in [
+                 "accepted",
+                 "already_satisfied"
+               ]
+             end)
+
+      assert Enum.all?(Enum.take(state["outbox"], index), fn earlier ->
+               MapSet.disjoint?(
+                 MapSet.new(earlier["resource_keys"]),
+                 MapSet.new(mutation["resource_keys"])
+               )
+             end)
+    end
   end
 end
