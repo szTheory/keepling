@@ -167,8 +167,10 @@ function TaskList({ csrfToken, embedded = false, onAuthenticationRequired, view 
       window.scrollTo({ left: 0, top: scrollY })
       rowLinks.current.get(taskId)?.focus()
     })
-    const { keeplingListScrollY: _scrollY, keeplingReturnFocusId: _focusId, ...rest } = historyState
-    window.history.replaceState(rest, '')
+    const restoredHistoryState = { ...historyState }
+    delete restoredHistoryState.keeplingListScrollY
+    delete restoredHistoryState.keeplingReturnFocusId
+    window.history.replaceState(restoredHistoryState, '')
     return () => cancelAnimationFrame(frame)
   }, [state, view])
 

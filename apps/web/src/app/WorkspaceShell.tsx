@@ -2,7 +2,7 @@ import { useRef, type MouseEvent, type ReactNode } from 'react'
 
 import { Drawer } from '@/components/ui/drawer'
 
-export const navigationItems = [
+const navigationItems = [
   ['/', 'Inbox'],
   ['/today', 'Today'],
   ['/upcoming', 'Upcoming'],
