@@ -109,7 +109,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05
 **UI hint:** no
-**Plans:** 5/11 plans executed
+**Plans:** 6/11 plans executed
 
 Plans:
 **Wave 1**
@@ -131,7 +131,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 02-05-PLAN.md — Expose authenticated sync transport and privacy-safe semantic trust states.
+- [x] 02-05-PLAN.md — Expose authenticated sync transport and privacy-safe semantic trust states.
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
