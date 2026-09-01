@@ -1,6 +1,118 @@
 {
   "version": 1,
   "fixed_clock": "2026-09-01T12:00:00Z",
+  "codec_fixtures": [
+    {
+      "name": "previous",
+      "protocol_train": 1,
+      "cursor_codec": 1,
+      "receipt_codec": 1,
+      "receipt": "{\"mutation_id\":\"fixture-previous\",\"outcome\":\"accepted\",\"protocol_train\":1,\"revision\":7}",
+      "generated_response": {
+        "compatibility_state": "deprecated_but_safe",
+        "selected_protocol_train": 1,
+        "recovery_code": "client_update_available",
+        "retryable": false,
+        "pending_intent": "preserved_locally"
+      }
+    },
+    {
+      "name": "current",
+      "protocol_train": 2,
+      "cursor_codec": 1,
+      "receipt_codec": 1,
+      "receipt": "{\"mutation_id\":\"fixture-current\",\"outcome\":\"accepted\",\"protocol_train\":2,\"revision\":8}",
+      "generated_response": {
+        "compatibility_state": "supported",
+        "selected_protocol_train": 2,
+        "recovery_code": "continue",
+        "retryable": false,
+        "pending_intent": "preserved_locally"
+      }
+    }
+  ],
+  "artifacts": {
+    "current": {
+      "tested_oci_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "schema_range": {"minimum": 1, "maximum": 3},
+      "protocol_range": {"minimum": 1, "maximum": 2}
+    },
+    "previous": {
+      "tested_oci_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "schema_range": {"minimum": 1, "maximum": 3},
+      "protocol_range": {"minimum": 1, "maximum": 1}
+    }
+  },
+  "matrix": {
+    "lanes": [
+      {
+        "name": "old-client-new-server",
+        "client_range": {"minimum_protocol_train": 1, "maximum_protocol_train": 1},
+        "server_case": "highest distributed intersection wins",
+        "artifact": "current",
+        "target": {"schema": 3, "protocol_train": 1},
+        "expected_negotiation_code": "client_update_available",
+        "expected_artifact_code": "compatible_artifact",
+        "case_count": 2
+      },
+      {
+        "name": "current-client-current-server",
+        "client_range": {"minimum_protocol_train": 2, "maximum_protocol_train": 2},
+        "server_case": "highest distributed intersection wins",
+        "artifact": "current",
+        "target": {"schema": 3, "protocol_train": 2},
+        "expected_negotiation_code": "continue",
+        "expected_artifact_code": "compatible_artifact",
+        "case_count": 2
+      },
+      {
+        "name": "new-client-old-server",
+        "client_range": {"minimum_protocol_train": 2, "maximum_protocol_train": 2},
+        "server_case": "previous train remains safe at exact deadline",
+        "artifact": "previous",
+        "target": {"schema": 3, "protocol_train": 2},
+        "expected_negotiation_code": "server_upgrade_required",
+        "expected_artifact_code": "rollback_protocol_incompatible",
+        "case_count": 2
+      },
+      {
+        "name": "old-image-new-schema",
+        "client_range": {"minimum_protocol_train": 1, "maximum_protocol_train": 1},
+        "server_case": "previous train remains safe at exact deadline",
+        "artifact": "previous",
+        "target": {"schema": 3, "protocol_train": 1},
+        "expected_negotiation_code": "client_update_available",
+        "expected_artifact_code": "compatible_artifact",
+        "case_count": 2
+      },
+      {
+        "name": "new-image-old-schema",
+        "client_range": {"minimum_protocol_train": 2, "maximum_protocol_train": 2},
+        "server_case": "highest distributed intersection wins",
+        "artifact": "current",
+        "target": {"schema": 2, "protocol_train": 2},
+        "expected_negotiation_code": "continue",
+        "expected_artifact_code": "compatible_artifact",
+        "case_count": 2
+      },
+      {
+        "name": "rollback-image-current-schema",
+        "client_range": {"minimum_protocol_train": 1, "maximum_protocol_train": 1},
+        "server_case": "previous train remains safe at exact deadline",
+        "artifact": "previous",
+        "target": {"schema": 3, "protocol_train": 1},
+        "expected_negotiation_code": "client_update_available",
+        "expected_artifact_code": "compatible_artifact",
+        "case_count": 2
+      }
+    ],
+    "known_bad": {
+      "name": "rollback-image-too-old-for-schema",
+      "artifact": "previous",
+      "target": {"schema": 4, "protocol_train": 1},
+      "expected_artifact_code": "rollback_schema_incompatible"
+    }
+  },
   "cases": [
     {
       "name": "dogfood current train exact boundary",
