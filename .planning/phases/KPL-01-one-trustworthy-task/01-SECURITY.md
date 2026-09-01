@@ -7,6 +7,7 @@ asvs_level: 1
 block_on: high
 register_authored_at_plan_time: true
 created: "2026-08-31"
+audited: "2026-08-31T23:39:12-04:00"
 ---
 
 # Phase KPL-01 — Security
@@ -60,6 +61,7 @@ These are explicit plan-time `accept` dispositions, not unreviewed implementatio
 | 2026-08-31 | 70 | 67 | 3 | 1 | gsd-security-auditor |
 | 2026-08-31 | 70 | 70 | 0 | 0 | gsd-security-auditor |
 | 2026-09-01 | 87 | 83 mitigated + 4 accepted | 0 | 0 | gsd-security-auditor |
+| 2026-08-31 verify-work refresh | 87 | 83 mitigated + 4 accepted | 0 | 0 | inline ASVS L1 recheck + full automated gate |
 
 ## Sign-Off
 
@@ -69,3 +71,5 @@ These are explicit plan-time `accept` dispositions, not unreviewed implementatio
 - [x] `status: verified` set in frontmatter.
 
 **Approval:** verified after Plans 01-24 through 01-27, review iteration 4, and final threat re-audit.
+
+Fresh verify-work evidence at 2026-08-31T23:39:12-04:00 passed repository integrity, 109/109 server tests, contract drift, 147/147 browser-unit/component tests, 25/25 real-stack browser tests, privacy/production-isolation checks, and 3/3 automated UAT mappings. No implementation or threat-register change invalidated the existing ASVS L1 dispositions.
