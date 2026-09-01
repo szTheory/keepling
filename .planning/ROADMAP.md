@@ -109,7 +109,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05
 **UI hint:** no
-**Plans:** 10 plans
+**Plans:** 11 plans
 
 Plans:
 - [ ] 02-01-PLAN.md — Prove durable local sync semantics with storage-neutral vectors and a reference reducer.
@@ -122,6 +122,7 @@ Plans:
 - [ ] 02-08-PLAN.md — Prove encrypted backup, PITR, restore safety, and epoch rotation.
 - [ ] 02-09-PLAN.md — Provision and credentialedly rehearse full Hetzner host replacement and DNS cutover.
 - [ ] 02-10-PLAN.md — Bind every Phase 2 capability to required CI, scheduled recovery, and privacy evidence.
+- [ ] 02-11-PLAN.md — Close native authorization-code, refresh/revocation, and bearer-authenticated grant transport.
 
 **Success Criteria**:
 
