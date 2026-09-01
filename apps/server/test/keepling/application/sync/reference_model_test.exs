@@ -30,7 +30,9 @@ defmodule Keepling.Application.Sync.ReferenceModelTest do
   @tag :tracer
   test "mismatched acknowledgement cannot remove immutable intent" do
     mutation = tracer_mutation()
-    assert {:ok, "local_saved", pending} = ReferenceModel.local_accept(ReferenceModel.new(), mutation)
+
+    assert {:ok, "local_saved", pending} =
+             ReferenceModel.local_accept(ReferenceModel.new(), mutation)
 
     mismatch = %{
       "mutation_id" => mutation["mutation_id"],
