@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { useRef } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import AppShell from '@/app/AppShell'
@@ -23,6 +24,16 @@ const problem = (code: string, detail: string, status = 422) => ({
   title: 'Request could not be completed',
   type: `https://keepling.test/problems/${code}`,
 })
+
+const deferred = <Value,>() => {
+  let resolve!: (value: Value) => void
+  let reject!: (reason?: unknown) => void
+  const promise = new Promise<Value>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise
+    reject = rejectPromise
+  })
+  return { promise, reject, resolve }
+}
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -126,6 +137,121 @@ describe('closed browser authentication', () => {
 })
 
 describe('reauthentication interruption', () => {
+  it('returns idempotent owner disposers that exclude abandoned continuations', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({ csrf_token: 'initial-csrf', status: 'authenticated' }),
+      ),
+    )
+    const resume = vi.fn().mockResolvedValue(undefined)
+    const intent = {
+      authentication: 'sign_in',
+      kind: 'read',
+      mutationId: 'read:abandoned-owner',
+    } satisfies InterruptedIntent
+
+    function Harness() {
+      const auth = useAuth()
+      const scope = useRef<ReturnType<typeof auth.createContinuationScope> | null>(null)
+      scope.current ??= auth.createContinuationScope()
+
+      return (
+        <>
+          <button
+            onClick={() => scope.current?.beginReauthentication(intent, resume)}
+            type="button"
+          >
+            Register owned continuation
+          </button>
+          <button
+            onClick={() => {
+              scope.current?.dispose()
+              scope.current?.dispose()
+            }}
+            type="button"
+          >
+            Dispose owner twice
+          </button>
+          <button
+            onClick={() => void auth.completeReauthentication(intent, 'rotated-csrf')}
+            type="button"
+          >
+            Complete authentication
+          </button>
+          <output>{auth.interruption?.mutationId ?? 'settled'}</output>
+        </>
+      )
+    }
+
+    const user = userEvent.setup()
+    render(<AuthProvider><Harness /></AuthProvider>)
+    await user.click(screen.getByRole('button', { name: 'Register owned continuation' }))
+    expect(screen.getByText('read:abandoned-owner')).toBeVisible()
+    await user.click(screen.getByRole('button', { name: 'Dispose owner twice' }))
+    await user.click(screen.getByRole('button', { name: 'Complete authentication' }))
+
+    expect(resume).not.toHaveBeenCalled()
+    expect(screen.getByText('settled')).toBeVisible()
+  })
+
+  it('disposes a routed owner during an active drain and ignores late rejection', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        jsonResponse({ csrf_token: 'initial-csrf', status: 'authenticated' }),
+      ),
+    )
+    const pending = deferred<void>()
+    const resume = vi.fn(() => pending.promise)
+    const intent = {
+      authentication: 'sign_in',
+      kind: 'read',
+      mutationId: 'read:routed-owner',
+    } satisfies InterruptedIntent
+
+    function Harness() {
+      const auth = useAuth()
+      return (
+        <>
+          <button
+            onClick={() => void auth.completeReauthentication(intent, 'rotated-csrf')}
+            type="button"
+          >
+            Drain route
+          </button>
+          <output>{auth.continuationError ? 'failed' : auth.interruption?.mutationId ?? 'settled'}</output>
+          <AppRoutes
+            authenticated
+            authenticatedContent={(beginReauthentication) => (
+              <button
+                onClick={() => beginReauthentication(intent, resume)}
+                type="button"
+              >
+                Register route continuation
+              </button>
+            )}
+            createContinuationScope={auth.createContinuationScope}
+            csrfToken="initial-csrf"
+          />
+        </>
+      )
+    }
+
+    const user = userEvent.setup()
+    render(<AuthProvider><Harness /></AuthProvider>)
+    await user.click(screen.getByRole('button', { name: 'Register route continuation' }))
+    await user.click(screen.getByRole('button', { name: 'Drain route' }))
+    await waitFor(() => expect(resume).toHaveBeenCalledOnce())
+
+    window.history.pushState({}, '', '/today')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    pending.reject(new Error('late abandoned failure'))
+
+    await waitFor(() => expect(screen.getByText('settled')).toBeVisible())
+    expect(screen.queryByText('failed')).not.toBeInTheDocument()
+  })
+
   it('makes retained content inert, contains keyboard focus, and restores prior focus', async () => {
     const interruption = {
       authentication: 'sign_in',
