@@ -39,7 +39,7 @@ start_stack() {
 }
 
 usage() {
-  echo "Usage: $0 --check-config | --start" >&2
+  echo "Usage: $0 --check-config | --start | --verify-image | --compose [COMMAND...]" >&2
   exit 2
 }
 
@@ -51,6 +51,15 @@ case "${1:-}" in
   --start)
     [ "$#" -eq 1 ] || usage
     start_stack
+    ;;
+  --verify-image)
+    [ "$#" -eq 1 ] || usage
+    exec ./tooling/verify-image.sh
+    ;;
+  --compose)
+    shift
+    [ "$#" -gt 0 ] || usage
+    exec docker compose -f infra/compose/compose.yml "$@"
     ;;
   *)
     usage

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keepling.dev/schemas/server-image-metadata-v1.json",
+  "title": "Keepling tested server image metadata",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "repository_revision", "image_reference", "manifest_digest", "platforms", "release", "protocol_range", "schema_range", "verified_at"],
+  "properties": {
+    "version": {"const": 1},
+    "repository_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "image_reference": {"type": "string", "pattern": "^[^@[:space:]]+@sha256:[0-9a-f]{64}$"},
+    "manifest_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "platforms": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["linux/amd64", "linux/arm64"]}},
+    "release": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$"},
+    "protocol_range": {"$ref": "#/$defs/range"},
+    "schema_range": {"$ref": "#/$defs/range"},
+    "verified_at": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum", "maximum"],
+      "properties": {
+        "minimum": {"type": "integer", "minimum": 1},
+        "maximum": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}
