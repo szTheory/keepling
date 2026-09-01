@@ -1,11 +1,11 @@
 ---
 phase: 1
 slug: one-trustworthy-task
-status: complete
+status: validated
 nyquist_compliant: true
 wave_0_complete: true
 created: 2026-08-30
-audited: 2026-08-31T23:29:16-04:00
+audited: 2026-08-31T23:39:12-04:00
 automated_tasks: 60/60
 automated_uat: 3/3
 manual_uat_required: 0
@@ -143,6 +143,12 @@ The final-tree audit found no missing, partial, disabled, or failing automated r
 | Tests generated | 0 |
 | Automated UAT checkpoints | 3/3 |
 | Required human UAT items | 0 |
+
+### Verify-work refresh — 2026-08-31T23:39:12-04:00
+
+- Fresh full gate passed: 109/109 ExUnit, 147/147 Vitest, and 25/25 real-stack Playwright tests.
+- Contract drift, repository integrity, runtime, privacy, production-isolation, and all 3/3 automated UAT mappings passed.
+- Automated gaps found: 0. Tests generated: 0. Required human UAT items: 0.
 
 ## Wave 0 Requirements and Ordering
 
