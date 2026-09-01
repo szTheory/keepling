@@ -104,3 +104,29 @@ test('@responsive-route-matrix preserves the amended 1024 and 1064 workspace bou
     await page.goto('/')
   }
 })
+
+test('@responsive-route-matrix narrow task Back restores the originating row and scroll', async ({
+  baseURL,
+  page,
+}) => {
+  await authenticate(page, baseURL)
+  await capture(page, 'Narrow return target')
+  await page.setViewportSize({ height: 360, width: 320 })
+  await page.goto('/inbox')
+
+  const rowLink = page.getByRole('link', { name: 'Narrow return target' })
+  await rowLink.scrollIntoViewIfNeeded()
+  await rowLink.focus()
+  const scrollBefore = await page.evaluate(() => window.scrollY)
+  await page.keyboard.press('Enter')
+
+  await expect(page).toHaveURL(/\/tasks\//)
+  await expect(page.getByRole('heading', { name: 'Edit task' })).toBeVisible()
+  const back = page.getByRole('button', { name: 'Back to Inbox' })
+  await back.focus()
+  await page.keyboard.press('Enter')
+
+  await expect(page).toHaveURL(/\/inbox$/)
+  await expect(rowLink).toBeFocused()
+  expect(await page.evaluate(() => window.scrollY)).toBe(scrollBefore)
+})
