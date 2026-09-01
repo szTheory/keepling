@@ -55,6 +55,9 @@ defmodule KeeplingWeb.Router do
     pipe_through [:api]
 
     get "/compatibility", CompatibilityController, :show
+    get "/health/live", HealthController, :live
+    get "/health/ready", HealthController, :ready
+    get "/ops/status", HealthController, :status
   end
 
   scope "/api/v1", KeeplingWeb do

@@ -97,6 +97,27 @@ compatibility =
 
 config :keepling, :compatibility, compatibility
 
+operator_status_token =
+  case {environment, System.get_env("KEEPLING_OPERATOR_TOKEN")} do
+    {:prod, nil} -> fetch_required!.("KEEPLING_OPERATOR_TOKEN")
+    {:prod, ""} -> fetch_required!.("KEEPLING_OPERATOR_TOKEN")
+    {_environment, value} -> value
+  end
+
+operator_status_token_hash =
+  case operator_status_token do
+    nil ->
+      nil
+
+    token when byte_size(token) >= 32 ->
+      :crypto.hash(:sha256, token)
+
+    _ ->
+      raise "configuration error in #{environment}: KEEPLING_OPERATOR_TOKEN must be at least 32 bytes"
+  end
+
+config :keepling, :operator_status_token_hash, operator_status_token_hash
+
 config :keepling, KeeplingWeb.Endpoint,
   server: enabled?.("PHX_SERVER"),
   url: endpoint_url,
