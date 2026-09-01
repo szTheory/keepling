@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 27
+open_count: 26
 waived_count: 0
-fixed_count: 1
-total_count: 28
-last_updated: 2026-09-01T01:42:08.820Z
+fixed_count: 4
+total_count: 30
+last_updated: 2026-09-01T02:23:20.983Z
 ---
 
 # Broken Windows Ledger
@@ -39,10 +39,12 @@ last_updated: 2026-09-01T01:42:08.820Z
 | 22 | KPL-01 | deviation | apps/web/src/index.css |  | Resolved the 1024px wide-shell overflow seam with a compact list column | open |  | 2026-08-31T16:02:33.525Z |  |
 | 23 | KPL-01 | deviation | apps/web/src/features/tasks/TaskEditor.tsx |  | Reconciled mounted editor state immediately after semantic undo acknowledgement | open |  | 2026-08-31T16:02:33.629Z |  |
 | 24 | KPL-01 | deviation | tooling/test-phase-1.sh |  | Pinned disposable migration, compile, and ExUnit lanes to MIX_ENV=test | open |  | 2026-08-31T16:02:33.734Z |  |
-| 25 | KPL-01 | lint-warning | apps/web/src/features/lists/TaskList.tsx | 190 | Pre-existing react-hooks/set-state-in-effect lint violation in TaskList | open |  | 2026-08-31T22:38:58.822Z |  |
-| 26 | KPL-01 | lint-warning | apps/web/src/features/lists/TrashList.tsx | 91 | Pre-existing react-hooks/set-state-in-effect lint violation in TrashList | open |  | 2026-08-31T22:38:58.894Z |  |
+| 25 | KPL-01 | lint-warning | apps/web/src/features/lists/TaskList.tsx | 190 | Pre-existing react-hooks/set-state-in-effect lint violation in TaskList | fixed |  | 2026-08-31T22:38:58.822Z | 2026-09-01T02:23:20.832Z |
+| 26 | KPL-01 | lint-warning | apps/web/src/features/lists/TrashList.tsx | 91 | Pre-existing react-hooks/set-state-in-effect lint violation in TrashList | fixed |  | 2026-08-31T22:38:58.894Z | 2026-09-01T02:23:20.907Z |
 | 27 | KPL-01 | unmet-truth | apps/web/e2e/lifecycle-recovery.spec.ts | 422 | Session revocation remains visible after recent-authentication recovery in the full Phase 1 gate | fixed |  | 2026-09-01T01:37:57.347Z | 2026-09-01T01:42:08.820Z |
-| 28 | KPL-01 | lint-warning | apps/web/src/app/AuthProvider.tsx | 259 | Repository ESLint fast-refresh export violation predates Plan 25 | open |  | 2026-09-01T01:37:57.421Z |  |
+| 28 | KPL-01 | lint-warning | apps/web/src/app/AuthProvider.tsx | 259 | Repository ESLint fast-refresh export violation predates Plan 25 | fixed |  | 2026-09-01T01:37:57.421Z | 2026-09-01T02:23:20.983Z |
+| 29 | KPL-01 | deviation | apps/web/src/test/ui-contract.test.tsx |  | Exhaustive production-tree gate required mechanical scale closure outside the ten initially listed feature files. | open |  | 2026-09-01T02:22:51.183Z |  |
+| 30 | KPL-01 | deviation | apps/web/src/app/AuthProvider.tsx |  | Plan-required repository lint gate required scoped ownership directives for pre-existing findings. | open |  | 2026-09-01T02:22:51.264Z |  |
 
 ````json
 [
@@ -341,10 +343,10 @@ last_updated: 2026-09-01T01:42:08.820Z
     "file": "apps/web/src/features/lists/TaskList.tsx",
     "line": 190,
     "description": "Pre-existing react-hooks/set-state-in-effect lint violation in TaskList",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-08-31T22:38:58.822Z",
-    "resolved_at": null
+    "resolved_at": "2026-09-01T02:23:20.832Z"
   },
   {
     "id": 26,
@@ -353,10 +355,10 @@ last_updated: 2026-09-01T01:42:08.820Z
     "file": "apps/web/src/features/lists/TrashList.tsx",
     "line": 91,
     "description": "Pre-existing react-hooks/set-state-in-effect lint violation in TrashList",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-08-31T22:38:58.894Z",
-    "resolved_at": null
+    "resolved_at": "2026-09-01T02:23:20.907Z"
   },
   {
     "id": 27,
@@ -377,9 +379,33 @@ last_updated: 2026-09-01T01:42:08.820Z
     "file": "apps/web/src/app/AuthProvider.tsx",
     "line": 259,
     "description": "Repository ESLint fast-refresh export violation predates Plan 25",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-01T01:37:57.421Z",
+    "resolved_at": "2026-09-01T02:23:20.983Z"
+  },
+  {
+    "id": 29,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/web/src/test/ui-contract.test.tsx",
+    "line": null,
+    "description": "Exhaustive production-tree gate required mechanical scale closure outside the ten initially listed feature files.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T02:22:51.183Z",
+    "resolved_at": null
+  },
+  {
+    "id": 30,
+    "kind": "deviation",
+    "phase": "KPL-01",
+    "file": "apps/web/src/app/AuthProvider.tsx",
+    "line": null,
+    "description": "Plan-required repository lint gate required scoped ownership directives for pre-existing findings.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-01T02:22:51.264Z",
     "resolved_at": null
   }
 ]

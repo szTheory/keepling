@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 01
 current_phase_name: One Trustworthy Task
 status: executing
-stopped_at: Completed KPL-01-26-PLAN.md
-last_updated: "2026-09-01T02:02:57.667Z"
+stopped_at: Completed KPL-01-27-PLAN.md
+last_updated: "2026-09-01T02:22:33.882Z"
 last_activity: 2026-09-01
 last_activity_desc: Completed KPL-01-26-PLAN.md
-state_head: def47711ff3d842b7e3334a795b5a2b9a37811ca
+state_head: c6da4261c8cd51c6e30cdb4e123f384698e3eefb
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 27
-  completed_plans: 26
+  completed_plans: 27
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-28)
 ## Current Position
 
 Phase: KPL-01 (One Trustworthy Task) — EXECUTING
-Plan: 26 of 27
+Plan: 27 of 27
 Total Plans in Phase: 27
 Status: Executing Phase KPL-01
 Last activity: 2026-09-01 — Completed KPL-01-26-PLAN.md
@@ -124,6 +124,9 @@ Progress: [██████████] 96%
 - [Phase 01]: Current-session removal delegates to AppShell logout; only another-session removal uses the revoke endpoint.
 - [Phase 01]: Authentication-required during uncertain logout reconciliation proves the current browser session is signed out.
 - [Phase 01]: Supporting shared colors remain semantic token roles without declaring a final brand palette.
+- [Phase 01]: [Phase KPL-01]: Production UI drift is enforced by a TypeScript-AST scan of executable className regions, not raw comments or fixtures.
+- [Phase 01]: [Phase KPL-01]: Arbitrary visual utilities require a named semantic reason and a declared token or UI-SPEC contract value.
+- [Phase 01]: [Phase KPL-01]: Conflict and uncertain-delivery state machines remain unchanged by mechanical presentation normalization.
 
 ### Retained Research
 
@@ -151,8 +154,8 @@ Run `$gsd-verify-work KPL-01` from the repository root.
 
 ## Session
 
-**Last session:** 2026-09-01T02:02:57.609Z
-**Stopped at:** Completed KPL-01-26-PLAN.md
+**Last session:** 2026-09-01T02:22:33.825Z
+**Stopped at:** Completed KPL-01-27-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -185,3 +188,4 @@ Run `$gsd-verify-work KPL-01` from the repository root.
 | Phase KPL-01 P24 | 20min | 3 tasks | 12 files |
 | Phase KPL-01 P25 | 29min | 3 tasks | 14 files |
 | Phase KPL-01-one-trustworthy-task P26 | 17min | 3 tasks | 14 files |
+| Phase KPL-01 P27 | 16min | 3 tasks | 19 files |
