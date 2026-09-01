@@ -234,6 +234,7 @@ defmodule Keepling.Adapters.Postgres.SyncFeed do
     ]
     |> maybe_append_snapshot(body)
     |> maybe_append_conflict(body)
+    |> maybe_append_collection_tombstones(command, body)
     |> maybe_append_undo(body)
   end
 
@@ -286,6 +287,63 @@ defmodule Keepling.Adapters.Postgres.SyncFeed do
   end
 
   defp maybe_append_conflict(envelopes, _body), do: envelopes
+
+  defp maybe_append_collection_tombstones(
+         envelopes,
+         %{type: :assign_task_organizations} = command,
+         %{"outcome" => outcome} = body
+       )
+       when outcome in ["accepted", "already_satisfied"] do
+    removed_project =
+      case {command.base_values.project_id, command.fields.project_id} do
+        {project_id, replacement} when is_binary(project_id) and project_id != replacement ->
+          [
+            collection_tombstone(
+              "task_project",
+              project_id,
+              command.task_id,
+              project_id,
+              body["revision"]
+            )
+          ]
+
+        _ ->
+          []
+      end
+
+    removed_tags =
+      command.base_values.tag_ids
+      |> MapSet.new()
+      |> MapSet.difference(MapSet.new(command.fields.tag_ids))
+      |> Enum.sort()
+      |> Enum.map(fn tag_id ->
+        collection_tombstone(
+          "task_tags",
+          tag_id,
+          command.task_id,
+          tag_id,
+          body["revision"]
+        )
+      end)
+
+    envelopes ++ removed_project ++ removed_tags
+  end
+
+  defp maybe_append_collection_tombstones(envelopes, _command, _body), do: envelopes
+
+  defp collection_tombstone(collection, entity_id, task_id, organization_id, revision) do
+    %{
+      kind: "collection_tombstone",
+      entity_type: "collection_membership",
+      entity_id: entity_id,
+      entity_revision: revision,
+      payload: %{
+        "collection" => collection,
+        "organization_id" => organization_id,
+        "task_id" => task_id
+      }
+    }
+  end
 
   defp maybe_append_undo(envelopes, %{"undo" => undo}) when is_map(undo) do
     envelopes ++

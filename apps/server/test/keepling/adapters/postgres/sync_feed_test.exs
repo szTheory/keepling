@@ -124,6 +124,73 @@ defmodule Keepling.Adapters.Postgres.SyncFeedTest do
            end)
   end
 
+  test "canonical collection removal emits a tombstone while the task remains a snapshot", %{
+    account_id: account_id
+  } do
+    tag_id = Ecto.UUID.generate()
+    task_id = Ecto.UUID.generate()
+
+    assert {:ok, %{status: 201}} =
+             dispatch(account_id, %{
+               kind: :tag,
+               mutation_id: Ecto.UUID.generate(),
+               name: "Errand",
+               organization_id: tag_id,
+               type: :create_organization,
+               version: 1
+             })
+
+    assert {:ok, %{status: 201}} =
+             dispatch(account_id, %{
+               mutation_id: Ecto.UUID.generate(),
+               task_id: task_id,
+               title: "Buy batteries",
+               type: :capture_task,
+               version: 1
+             })
+
+    assert {:ok, %{status: 200}} =
+             dispatch(account_id, %{
+               base_values: %{project_id: nil, tag_ids: []},
+               expected_revision: 1,
+               fields: %{project_id: nil, tag_ids: [tag_id]},
+               mutation_id: Ecto.UUID.generate(),
+               task_id: task_id,
+               type: :assign_task_organizations,
+               version: 1
+             })
+
+    removal_mutation_id = Ecto.UUID.generate()
+
+    assert {:ok, %{status: 200}} =
+             dispatch(account_id, %{
+               base_values: %{project_id: nil, tag_ids: [tag_id]},
+               expected_revision: 2,
+               fields: %{project_id: nil, tag_ids: []},
+               mutation_id: removal_mutation_id,
+               task_id: task_id,
+               type: :assign_task_organizations,
+               version: 1
+             })
+
+    assert {:ok, %{changes: changes}} = list_after(account_id)
+    removal_changes = Enum.filter(changes, &(&1.mutation_id == removal_mutation_id))
+
+    assert Enum.map(removal_changes, & &1.kind) == [
+             "command_outcome",
+             "task_snapshot",
+             "collection_tombstone"
+           ]
+
+    assert %{entity_id: ^tag_id, payload: tombstone} = List.last(removal_changes)
+
+    assert tombstone == %{
+             "collection" => "task_tags",
+             "organization_id" => tag_id,
+             "task_id" => task_id
+           }
+  end
+
   test "rollback exposes no feed position and concurrent backends allocate a gap-free account order",
        %{
          account_id: account_id
