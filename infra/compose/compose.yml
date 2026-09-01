@@ -1,6 +1,7 @@
 name: keepling
 
 x-app-environment: &app-environment
+  ERL_FLAGS: ${KEEPLING_RUNTIME_ERL_FLAGS:-}
   PHX_HOST: ${KEEPLING_HOST:-localhost}
   PHX_URL_PORT: ${KEEPLING_HTTPS_PORT:-443}
   KEEPLING_SERVER_RELEASE: ${KEEPLING_SERVER_RELEASE:-0.1.0}

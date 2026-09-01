@@ -88,6 +88,13 @@ deploy_exact_digest() {
   docker image inspect "$image_tag" >/dev/null 2>&1 || ./tooling/verify-image.sh
   image_id=$(docker image inspect "$image_tag" --format '{{.Id}}')
   require_exact_digest "$image_id" || die "local promotion input is mutable"
+  image_architecture=$(docker image inspect "$image_tag" --format '{{.Architecture}}')
+  engine_architecture=$(docker info --format '{{.Architecture}}')
+  KEEPLING_RUNTIME_ERL_FLAGS=
+  case "$image_architecture:$engine_architecture" in
+    amd64:arm64 | amd64:aarch64) KEEPLING_RUNTIME_ERL_FLAGS='+JMsingle true' ;;
+  esac
+  export KEEPLING_RUNTIME_ERL_FLAGS
 
   proof_root=$(mktemp -d "${TMPDIR:-/tmp}/keepling-deploy-proof.XXXXXX")
   project="keepling-deploy-$$"
