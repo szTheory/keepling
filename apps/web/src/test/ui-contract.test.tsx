@@ -1,10 +1,11 @@
 /// <reference types="node" />
 
-import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { readFileSync, readdirSync } from 'node:fs'
+import { join, relative, resolve } from 'node:path'
 
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import ts from 'typescript'
 import { describe, expect, it, vi } from 'vitest'
 
 import tokens from '../../../../packages/design-tokens/tokens.json'
@@ -32,6 +33,94 @@ const productionSource = (relativePath: string) =>
 
 const offScaleFeatureUtilities =
   /\b(?:text-xs|font-medium|gap-(?:1\.5|2\.5|3|5)|space-[xy]-(?:1\.5|2\.5|3|5)|m[trblxy]?-(?:1\.5|2\.5|3|5)|p[trblxy]?-(?:1\.5|2\.5|3|5)|text-white)\b/
+
+const productionTsxFiles = () => {
+  const sourceRoot = resolve(process.cwd(), 'src')
+  const files: string[] = []
+  const visit = (directory: string) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name)
+      if (entry.isDirectory()) {
+        if (entry.name !== 'test' && entry.name !== 'generated') visit(path)
+      } else if (
+        entry.name.endsWith('.tsx') &&
+        !entry.name.endsWith('.test.tsx') &&
+        !entry.name.endsWith('.spec.tsx')
+      ) {
+        files.push(path)
+      }
+    }
+  }
+
+  visit(sourceRoot)
+  return files.sort()
+}
+
+const classNameRegions = (path: string) => {
+  const source = readFileSync(path, 'utf8')
+  const sourceFile = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
+  const regions: string[] = []
+  const visit = (node: ts.Node) => {
+    if (
+      ts.isJsxAttribute(node) &&
+      node.name.getText(sourceFile) === 'className' &&
+      node.initializer
+    ) {
+      regions.push(node.initializer.getText(sourceFile))
+    }
+    ts.forEachChild(node, visit)
+  }
+
+  visit(sourceFile)
+  return regions.join('\n')
+}
+
+const semanticArbitraryClassAllowlist = {
+  'duration-[var(--keepling-motion-overlay)]': {
+    contract: '180ms',
+    reason: 'Dialog and drawer motion use the named overlay duration token.',
+  },
+  'hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]': {
+    contract: 'secondary',
+    reason: 'The quiet secondary hover derives from semantic theme roles.',
+  },
+  'min-h-[3.25rem]': {
+    contract: '52px',
+    reason: 'Task rows have the UI-SPEC 52px minimum independent of control targets.',
+  },
+  'min-h-[var(--keepling-layout-target)]': {
+    contract: '44px',
+    reason: 'Interactive controls consume the named minimum-target token.',
+  },
+  'text-[1.75rem]': {
+    contract: '28px',
+    reason: 'Route and authentication titles use the UI-SPEC display size.',
+  },
+  'text-[length:var(--keepling-type-heading)]': {
+    contract: '20px',
+    reason: 'Shell headings consume the named heading token.',
+  },
+  'text-[length:var(--keepling-type-label)]': {
+    contract: '14px',
+    reason: 'Navigation and control labels consume the named label token.',
+  },
+  'w-[min(22rem,calc(100vw-var(--keepling-space-xl)))]': {
+    contract: '32px',
+    reason: 'The modal navigation drawer preserves the named narrow-screen gutter.',
+  },
+  'w-[var(--keepling-layout-target)]': {
+    contract: '44px',
+    reason: 'Icon buttons consume the named minimum-target token.',
+  },
+  'w-[var(--keepling-space-2xl)]': {
+    contract: '48px',
+    reason: 'The large icon button consumes a declared spacing token.',
+  },
+  'z-[60]': {
+    contract: 'stacking-only',
+    reason: 'The skip link stacking level is not a spatial or typography value.',
+  },
+} as const
 
 describe('approved Phase 1 UI contract', () => {
   it('opens semantic primary navigation in a modal drawer and restores trigger focus', async () => {
@@ -182,6 +271,39 @@ describe('approved Phase 1 UI contract', () => {
     ]) {
       const match = productionSource(relativePath).match(offScaleFeatureUtilities)
       expect(match?.[0], `${relativePath}: ${match?.[0]}`).toBeUndefined()
+    }
+  })
+
+  it('rejects visual-contract drift across every production TSX class region', () => {
+    const tokenTruth = JSON.stringify(tokens)
+    for (const [utility, exception] of Object.entries(semanticArbitraryClassAllowlist)) {
+      expect(exception.reason, `${utility} requires a semantic reason`).not.toHaveLength(0)
+      if (exception.contract !== 'stacking-only') {
+        expect(tokenTruth, `${utility} must cite a declared token value`).toContain(exception.contract)
+      }
+    }
+
+    for (const path of productionTsxFiles()) {
+      const source = classNameRegions(path)
+      const repositoryPath = relative(resolve(process.cwd(), '../..'), path)
+      const offScale = source.match(offScaleFeatureUtilities)?.[0]
+      expect(offScale, `${repositoryPath}: ${offScale}`).toBeUndefined()
+      const fixedWorkspace = source.includes('41.5rem') ? '41.5rem' : undefined
+      expect(fixedWorkspace, `${repositoryPath}: ${fixedWorkspace}`).toBeUndefined()
+
+      const smallTarget = source.match(/\b(?:h|size)-(?:6|7|8|9|10)\b/)?.[0]
+      expect(smallTarget, `${repositoryPath}: ${smallTarget}`).toBeUndefined()
+
+      const arbitraryUtilities = source.match(/[^\s"'`]+-\[[^\]\s]+\][^\s"'`]*/g) ?? []
+      for (const utility of arbitraryUtilities) {
+        if (utility.startsWith('[') || utility.includes('aria-[') || utility.includes('data-[')) {
+          continue
+        }
+        expect(
+          utility in semanticArbitraryClassAllowlist,
+          `${repositoryPath}: undocumented arbitrary utility ${utility}`,
+        ).toBe(true)
+      }
     }
   })
 
