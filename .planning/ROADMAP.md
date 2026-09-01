@@ -109,7 +109,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05
 **UI hint:** no
-**Plans:** 6/11 plans executed
+**Plans:** 7/11 plans executed
 
 Plans:
 **Wave 1**
@@ -135,7 +135,7 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
-- [ ] 02-06-PLAN.md — Deliver inward operator semantics, health/status boundaries, and stable CLI verbs.
+- [x] 02-06-PLAN.md — Deliver inward operator semantics, health/status boundaries, and stable CLI verbs.
 
 **Wave 7** *(blocked on Wave 6 completion)*
 

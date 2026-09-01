@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Completed 02-05-PLAN.md
-last_updated: "2026-09-01T07:30:42.192Z"
+stopped_at: Completed KPL-02-06-PLAN.md
+last_updated: "2026-09-01T07:52:29.010Z"
 last_activity: 2026-09-01
 last_activity_desc: Phase KPL-02 execution started
-state_head: 0f1fc237a74b6edcdb82de62d609619a92bde516
+state_head: db1b1bc172d570a27b67a3835097179604992b33
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 38
-  completed_plans: 33
+  completed_plans: 34
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-02 (Synchronization and Replaceable Server) — EXECUTING
-Plan: 7 of 11
+Plan: 8 of 11
 Total Plans in Phase: 11
 Status: Executing Phase KPL-02
 Last activity: 2026-09-01 — Phase KPL-02 execution started
@@ -148,6 +148,10 @@ Progress: [██████████] 100%
 - [Phase 02]: [Phase KPL-02]: Feed coverage advances only to the last returned ordered envelope and remains separate from acknowledgement settlement.
 - [Phase 02]: [Phase KPL-02]: Sync diagnostics expose only closed operation and outcome metadata across success and failure paths.
 - [Phase 02]: [Phase KPL-02]: D-49 trust states are generated wire vocabulary; D-50 through D-54 remain storage-neutral presentation and privacy vectors for platform clients.
+- [Phase 02]: [Phase KPL-02]: Operational exit classes are frozen as success 0, usage 2, safety refusal 10, dependency 20, compatibility 30, recovery 40, and execution 50.
+- [Phase 02]: [Phase KPL-02]: Public readiness excludes backup and WAL freshness; those facts degrade operator status and refuse deploy preflight instead.
+- [Phase 02]: [Phase KPL-02]: Operator HTTP status uses a distinct minimum-32-byte credential retained only as a SHA-256 hash in application configuration.
+- [Phase 02]: [Phase KPL-02]: Source and release commands share one Elixir parser, renderer, policy, and exit contract; release inspection starts only Ecto and Repo through Ecto.Migrator.with_repo/3.
 
 ### Retained Research
 
@@ -181,8 +185,8 @@ Run `$gsd-discuss-phase 2` from the repository root.
 
 ## Session
 
-**Last session:** 2026-09-01T07:30:42.102Z
-**Stopped at:** Completed 02-05-PLAN.md
+**Last session:** 2026-09-01T07:52:28.920Z
+**Stopped at:** Completed KPL-02-06-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -222,3 +226,4 @@ Run `$gsd-discuss-phase 2` from the repository root.
 | Phase KPL-02 P11 | 10min | 2 tasks | 8 files |
 | Phase KPL-02 P04 | 15min | 3 tasks | 13 files |
 | Phase KPL-02 P05 | 13min | 2 tasks | 12 files |
+| Phase KPL-02 P06 | 17min | 3 tasks | 12 files |
