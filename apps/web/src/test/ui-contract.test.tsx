@@ -77,10 +77,12 @@ describe('approved Phase 1 UI contract', () => {
       '28px',
     ])
     expect(tokens.layout).toMatchObject({
+      compactWideStart: { $value: '1024px' },
       detailMin: { $value: '480px' },
       listMax: { $value: '440px' },
       listMin: { $value: '360px' },
       nav: { $value: '224px' },
+      persistentNavStart: { $value: '1064px' },
       target: { $value: '44px' },
     })
     expect(tokens.motion).toMatchObject({
@@ -89,6 +91,8 @@ describe('approved Phase 1 UI contract', () => {
       reduced: { $value: '100ms' },
     })
     expect(generatedTokens).toContain('--keepling-layout-nav: 224px;')
+    expect(generatedTokens).toContain('--keepling-layout-compact-wide-start: 1024px;')
+    expect(generatedTokens).toContain('--keepling-layout-persistent-nav-start: 1064px;')
     expect(generatedTokens).toContain('--keepling-color-canvas: #f7f2e8;')
     expect(generatedTokens).toContain('--keepling-dark-color-accent: #d29abf;')
   })
@@ -147,5 +151,17 @@ describe('approved Phase 1 UI contract', () => {
     expect(css).toContain('outline: 2px solid var(--ring)')
     expect(css).toContain('min-width: 0')
     expect(css).toContain('overflow-x: hidden')
+  })
+
+  it('keeps the canonical workspace free of 320px fallbacks and fixed-width arithmetic', () => {
+    const css = repositoryFile('apps/web/src/index.css')
+    const routes = repositoryFile('apps/web/src/app/routes.tsx')
+    const editor = repositoryFile('apps/web/src/features/tasks/TaskEditor.tsx')
+
+    expect(css).toContain(
+      'grid-template-columns: minmax(var(--keepling-layout-list-min), var(--keepling-layout-list-max)) minmax(var(--keepling-layout-detail-min), 1fr)',
+    )
+    expect(`${css}\n${routes}\n${editor}`).not.toContain('41.5rem')
+    expect(css).not.toMatch(/(?:320px|20rem)/)
   })
 })
