@@ -53,7 +53,7 @@ defmodule Keepling.Application.Ops.Restore do
   def finalize(run, proof, port, context, options)
       when is_map(run) and is_map(proof) and is_atom(port) do
     with :ok <- valid_pending_run(run),
-         :ok <- validate_proof(proof),
+         :ok <- validate_proof(run, proof),
          {:ok, epoch} <- fresh_epoch(proof["old_sync_epoch"], options, 3),
          bounded <- bounded_proof(run, proof),
          {:ok, completed} <- port.finalize_restore(run, bounded, epoch, context),
@@ -115,6 +115,9 @@ defmodule Keepling.Application.Ops.Restore do
           not positive_integer?(input["verifier_version"]) ->
         {:refused, "compatibility_unverified"}
 
+      not valid_uuid?(input["current_sync_epoch"]) ->
+        {:refused, "stale_epoch"}
+
       not valid_timestamp?(input["recovery_point"]) or not valid_timestamp?(input["started_at"]) ->
         {:refused, "timestamp_invalid"}
 
@@ -135,7 +138,7 @@ defmodule Keepling.Application.Ops.Restore do
 
   defp valid_pending_run(_run), do: {:refused, "invalid_restore_run"}
 
-  defp validate_proof(proof) do
+  defp validate_proof(run, proof) do
     semantic = proof["semantic"]
 
     cond do
@@ -146,6 +149,9 @@ defmodule Keepling.Application.Ops.Restore do
         {:refused, "wrong_key_or_checksum"}
 
       not valid_uuid?(proof["old_sync_epoch"]) ->
+        {:refused, "stale_epoch"}
+
+      proof["old_sync_epoch"] != run.previous_sync_epoch ->
         {:refused, "stale_epoch"}
 
       not is_map(semantic) or Enum.any?(@semantic, &(semantic[&1] != true)) ->
@@ -174,6 +180,7 @@ defmodule Keepling.Application.Ops.Restore do
       outcome_code: "restore_started",
       override_code: if(is_map(override), do: override["reason"], else: nil),
       production_side_effects: false,
+      previous_sync_epoch: input["current_sync_epoch"],
       protocol_train: input["protocol_train"],
       ready: false,
       recovery_point: input["recovery_point"],

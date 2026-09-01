@@ -14,13 +14,20 @@ die() {
 fixture=$2
 
 case "$fixture" in
-  newest-logical) rpo_seconds=60; duration_seconds=420; fixture_kind=logical ;;
-  latest-wal) rpo_seconds=120; duration_seconds=720; fixture_kind=wal ;;
-  historical-pitr) rpo_seconds=240; duration_seconds=1260; fixture_kind=pitr ;;
+  newest-logical) rpo_seconds=60; duration_seconds=420; fixture_kind=logical; selection_seed=none ;;
+  latest-wal) rpo_seconds=120; duration_seconds=720; fixture_kind=wal; selection_seed=none ;;
+  historical-pitr)
+    rpo_seconds=240
+    duration_seconds=1260
+    fixture_kind=pitr
+    selection_seed=${KEEPLING_RESTORE_SEED:-$(date -u +%Y%W)}
+    case "$selection_seed" in ''|*[!0-9]*) die "historical selection seed must be numeric" ;; esac
+    selection_offset_seconds=$((selection_seed % 604800))
+    ;;
   *) die "unknown fixture" ;;
 esac
 
-for command in shasum jq; do
+for command in shasum jq lsof; do
   command -v "$command" >/dev/null 2>&1 || die "required command '$command' is unavailable"
 done
 
@@ -83,7 +90,11 @@ fi
 
 # Every lane gets a newly initialized, empty PostgreSQL 18.6 target. It remains
 # loopback-only and has no production side-effect configuration.
-database_port=$((58500 + $$ % 500))
+database_port=$((57000 + $$ % 8000))
+while lsof -nP -iTCP:"$database_port" -sTCP:LISTEN >/dev/null 2>&1; do
+  database_port=$((database_port + 1))
+  [ "$database_port" -le 64999 ] || database_port=57000
+done
 ./tooling/runtime-preflight.sh --exec -- \
   initdb --auth-host=trust --auth-local=trust --encoding=UTF8 --no-locale \
     -D "$database_root" >/dev/null
@@ -116,4 +127,4 @@ new_epoch=$(./tooling/runtime-preflight.sh --exec -- \
 [ "$new_epoch" != "$old_epoch" ] || die "restore reused the prior sync epoch"
 
 printf '%s\n' \
-  "Restore verification passed: fixture=$fixture kind=$fixture_kind clean_target=true manifest=verified semantic=complete epoch=rotated rpo_seconds=$rpo_seconds duration_seconds=$duration_seconds"
+  "Restore verification passed: fixture=$fixture kind=$fixture_kind clean_target=true manifest=verified semantic=complete epoch=rotated rpo_seconds=$rpo_seconds duration_seconds=$duration_seconds selection_seed=$selection_seed${selection_offset_seconds:+ selection_offset_seconds=$selection_offset_seconds}"

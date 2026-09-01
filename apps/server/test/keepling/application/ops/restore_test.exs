@@ -148,6 +148,17 @@ defmodule Keepling.Application.Ops.RestoreTest do
     assert Store.state(store).runs[run.run_id].ready == false
   end
 
+  test "a stale but well-formed pre-restore epoch is refused before finalization", %{store: store} do
+    assert {:ok, run} = Restore.begin(valid_input(), Store, store)
+
+    stale =
+      valid_proof("00000000-0000-4000-8000-0000000000e2")
+
+    assert {:refused, "stale_epoch"} = Restore.finalize(run, stale, Store, store)
+    assert Store.state(store).completed == %{}
+    assert Store.state(store).runs[run.run_id].ready == false
+  end
+
   test "rerunning completed verification is read-only and idempotent", %{store: store} do
     assert {:ok, run} = Restore.begin(valid_input(), Store, store)
     assert {:ok, completed} = Restore.finalize(run, valid_proof(), Store, store)
@@ -171,6 +182,7 @@ defmodule Keepling.Application.Ops.RestoreTest do
       "image_digest" => @image,
       "image_immutable" => true,
       "compatibility" => "current",
+      "current_sync_epoch" => "00000000-0000-4000-8000-0000000000e1",
       "schema_version" => 4,
       "protocol_train" => 1,
       "verifier_version" => 1,
