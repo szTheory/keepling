@@ -9,6 +9,9 @@ defmodule Keepling.Application.Sync.ReferenceModel do
   """
 
   @terminal_outcomes ~w(accepted already_satisfied rejected stale conflict)
+  @successful_outcomes ~w(accepted already_satisfied)
+  @maximum_pull_changes 50
+  @maximum_ready_pushes 25
 
   @type state :: %{required(String.t()) => term()}
 
@@ -29,6 +32,7 @@ defmodule Keepling.Application.Sync.ReferenceModel do
           {:ok, String.t(), state()} | {:error, atom(), state()}
   def local_accept(state, mutation) when is_map(state) and is_map(mutation) do
     with :ok <- validate_mutation(mutation),
+         :ok <- validate_dependencies_exist(state, mutation["dependencies"]),
          false <- Map.has_key?(state["journal"], mutation["mutation_id"]) do
       mutation_id = mutation["mutation_id"]
 
@@ -58,7 +62,7 @@ defmodule Keepling.Application.Sync.ReferenceModel do
 
   @spec pull(state(), map()) :: {:ok, state()} | {:error, atom(), state()}
   def pull(state, %{"cursor" => cursor, "changes" => changes})
-      when is_binary(cursor) and is_list(changes) do
+      when is_binary(cursor) and is_list(changes) and length(changes) <= @maximum_pull_changes do
     with {:ok, shadow} <- apply_changes(state["canonical_shadow"], changes) do
       next = state |> Map.put("canonical_shadow", shadow) |> Map.put("cursor", cursor)
       {:ok, replay_visible(next)}
@@ -67,11 +71,27 @@ defmodule Keepling.Application.Sync.ReferenceModel do
     end
   end
 
+  def pull(state, %{"changes" => changes})
+      when is_list(changes) and length(changes) > @maximum_pull_changes,
+      do: {:error, :pull_page_too_large, state}
+
   def pull(state, _page), do: {:error, :invalid_pull, state}
 
-  @spec ready_pushes(state()) :: [map()]
+  @spec ready_pushes(state()) :: [map()] | {:error, atom()}
   def ready_pushes(%{"fence" => fence}) when not is_nil(fence), do: []
-  def ready_pushes(%{"outbox" => outbox}) when is_list(outbox), do: outbox
+
+  def ready_pushes(%{"outbox" => outbox} = state) when is_list(outbox) do
+    with :ok <- validate_dependency_graph(state) do
+      outbox
+      |> Enum.with_index()
+      |> Enum.filter(fn {mutation, index} ->
+        dependencies_satisfied?(state, mutation) and
+          lane_is_unblocked?(outbox, mutation, index)
+      end)
+      |> Enum.map(&elem(&1, 0))
+      |> Enum.take(@maximum_ready_pushes)
+    end
+  end
 
   @spec acknowledge(state(), map()) ::
           {:ok, state()} | {:error, atom(), state()}
@@ -89,7 +109,9 @@ defmodule Keepling.Application.Sync.ReferenceModel do
 
   def acknowledge(state, _acknowledgement), do: {:error, :invalid_acknowledgement, state}
 
-  @spec fence(state(), String.t()) :: {:ok, state()}
+  @spec fence(state(), String.t() | nil) :: {:ok, state()}
+  def fence(state, nil), do: {:ok, Map.put(state, "fence", nil)}
+
   def fence(state, reason) when is_binary(reason) and byte_size(reason) > 0 do
     {:ok, Map.put(state, "fence", reason)}
   end
@@ -153,6 +175,7 @@ defmodule Keepling.Application.Sync.ReferenceModel do
            mutation["command_bytes"],
          fingerprint when is_binary(fingerprint) <- mutation["fingerprint"],
          ^fingerprint <- digest(command_bytes),
+         {:ok, %{"mutation_id" => ^mutation_id}} <- Jason.decode(command_bytes),
          resource_keys when is_list(resource_keys) and resource_keys != [] <-
            mutation["resource_keys"],
          true <- Enum.all?(resource_keys, &(is_binary(&1) and byte_size(&1) > 0)),
@@ -166,6 +189,71 @@ defmodule Keepling.Application.Sync.ReferenceModel do
     else
       _invalid -> {:error, :invalid_mutation}
     end
+  end
+
+  defp validate_dependencies_exist(state, dependencies) do
+    if Enum.all?(dependencies, &Map.has_key?(state["journal"], &1)) do
+      :ok
+    else
+      {:error, :orphan_dependency}
+    end
+  end
+
+  defp validate_dependency_graph(state) do
+    nodes = Map.keys(state["journal"]) |> MapSet.new()
+    graph = state["dependencies"]
+
+    cond do
+      not is_map(graph) or MapSet.new(Map.keys(graph)) != nodes ->
+        {:error, :invalid_dependency_graph}
+
+      Enum.any?(graph, fn {_mutation_id, dependencies} ->
+        not is_list(dependencies) or Enum.any?(dependencies, &(not MapSet.member?(nodes, &1)))
+      end) ->
+        {:error, :orphan_dependency}
+
+      dependency_cycle?(graph) ->
+        {:error, :dependency_cycle}
+
+      true ->
+        :ok
+    end
+  end
+
+  defp dependency_cycle?(graph), do: remove_dependency_roots(graph) != %{}
+
+  defp remove_dependency_roots(graph) do
+    roots = for {mutation_id, []} <- graph, do: mutation_id
+
+    if roots == [] do
+      graph
+    else
+      root_set = MapSet.new(roots)
+
+      graph
+      |> Map.drop(roots)
+      |> Map.new(fn {mutation_id, dependencies} ->
+        {mutation_id, Enum.reject(dependencies, &MapSet.member?(root_set, &1))}
+      end)
+      |> remove_dependency_roots()
+    end
+  end
+
+  defp dependencies_satisfied?(state, mutation) do
+    Enum.all?(mutation["dependencies"], fn dependency_id ->
+      get_in(state, ["journal", dependency_id, "outcome"]) in @successful_outcomes
+    end)
+  end
+
+  defp lane_is_unblocked?(outbox, mutation, index) do
+    earlier = Enum.take(outbox, index)
+    resource_keys = MapSet.new(mutation["resource_keys"])
+
+    Enum.all?(earlier, fn queued ->
+      queued["resource_keys"]
+      |> MapSet.new()
+      |> MapSet.disjoint?(resource_keys)
+    end)
   end
 
   defp digest(command_bytes) do

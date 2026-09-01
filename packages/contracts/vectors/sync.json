@@ -10,8 +10,8 @@
           "type": "local_accept",
           "mutation": {
             "mutation_id": "mutation-001",
-            "fingerprint": "a0f4b0c38d3fbfdca0c0c5812fe396d294eaa8e302f03a8ff5b92396a2e42f8f",
-            "command_bytes": "{\"type\":\"edit_task\",\"task_id\":\"task-001\",\"title\":\"Local title\"}",
+            "fingerprint": "1b92baa691b8972b619e7b7876e07b995cf50021a7990ec526e656f954fdd058",
+            "command_bytes": "{\"mutation_id\":\"mutation-001\",\"type\":\"edit_task\",\"task_id\":\"task-001\",\"title\":\"Local title\"}",
             "resource_keys": ["task:task-001"],
             "dependencies": [],
             "accepted_at": "2026-09-01T12:00:00.000000Z",
@@ -38,7 +38,7 @@
           "type": "acknowledge",
           "acknowledgement": {
             "mutation_id": "mutation-001",
-            "fingerprint": "a0f4b0c38d3fbfdca0c0c5812fe396d294eaa8e302f03a8ff5b92396a2e42f8f",
+            "fingerprint": "1b92baa691b8972b619e7b7876e07b995cf50021a7990ec526e656f954fdd058",
             "outcome": "accepted",
             "snapshot": {"id": "task-001", "revision": 3, "title": "Local title"}
           }
