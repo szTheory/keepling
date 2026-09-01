@@ -173,6 +173,18 @@ describe('approved Phase 1 UI contract', () => {
     expect(authentication).not.toMatch(/\bmin-h-(?:6|7|8|9|10)\b/)
   })
 
+  it('keeps list, activity, and organization surfaces on the declared scales', () => {
+    for (const relativePath of [
+      'apps/web/src/features/activity/ActivityList.tsx',
+      'apps/web/src/features/lists/TaskList.tsx',
+      'apps/web/src/features/lists/TrashList.tsx',
+      'apps/web/src/features/organizations/OrganizationFields.tsx',
+    ]) {
+      const match = productionSource(relativePath).match(offScaleFeatureUtilities)
+      expect(match?.[0], `${relativePath}: ${match?.[0]}`).toBeUndefined()
+    }
+  })
+
   it('exposes reachable landmarks, navigation, 44px targets, and one live region', () => {
     window.history.replaceState({}, '', '/settings/sessions')
     render(<AppShell csrfToken="csrf" onLoggedOut={vi.fn()} />)
