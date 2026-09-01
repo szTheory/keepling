@@ -109,7 +109,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05
 **UI hint:** no
-**Plans:** 8/11 plans executed
+**Plans:** 9/11 plans executed
 
 Plans:
 **Wave 1**
@@ -143,7 +143,7 @@ Plans:
 
 **Wave 8** *(blocked on Wave 7 completion)*
 
-- [ ] 02-08-PLAN.md — Prove encrypted backup, PITR, restore safety, and epoch rotation.
+- [x] 02-08-PLAN.md — Prove encrypted backup, PITR, restore safety, and epoch rotation.
 
 **Wave 9** *(blocked on Wave 8 completion)*
 

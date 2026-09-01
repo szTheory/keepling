@@ -55,7 +55,7 @@
 ### Data ownership and recovery
 
 - [ ] **DATA-01**: User can export all personal Keepling data in a versioned, documented, neutral format without needing internal database knowledge.
-- [ ] **DATA-02**: Operator can create a portable PostgreSQL backup, restore it into a disposable environment, and automatically verify schema, representative task/history consistency, login, read, and safe write/undo behavior.
+- [x] **DATA-02**: Operator can create a portable PostgreSQL backup, restore it into a disposable environment, and automatically verify schema, representative task/history consistency, login, read, and safe write/undo behavior.
 - [ ] **DATA-03**: Operator can determine every durable state location and replace the application host without repairing a snowflake machine.
 
 ### Self-hosting and operations

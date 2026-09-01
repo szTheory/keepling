@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Completed KPL-02-07-PLAN.md
-last_updated: "2026-09-01T08:36:03.276Z"
+stopped_at: Completed KPL-02-08-PLAN.md
+last_updated: "2026-09-01T08:50:34.880Z"
 last_activity: 2026-09-01
 last_activity_desc: Phase KPL-02 execution started
-state_head: 8e4aef87e88897edb96c3ef5f47200eedc09ea22
+state_head: 9b6d7ab84a8dd578f50a35c01c8cbf052ea5017b
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 38
-  completed_plans: 35
+  completed_plans: 36
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-02 (Synchronization and Replaceable Server) — EXECUTING
-Plan: 9 of 11
+Plan: 10 of 11
 Total Plans in Phase: 11
 Status: Executing Phase KPL-02
 Last activity: 2026-09-01 — Phase KPL-02 execution started
@@ -155,6 +155,9 @@ Progress: [██████████] 100%
 - [Phase 02]: KPL-02-07 promotes only an exact tested OCI digest and names the same digest in migration, app, and operator metadata.
 - [Phase 02]: KPL-02-07 keeps PostgreSQL private with all durable database and Caddy state in explicit host-backed named volumes.
 - [Phase 02]: KPL-02-07 permits rollback only when the prior tested digest includes the migrated schema and protocol target; otherwise operators forward-fix.
+- [Phase 02]: Recovery uses encrypted Backblaze B2 primary storage and an independently credentialed AWS S3 Object Lock mirror; recovery credentials never reach the app container.
+- [Phase 02]: Restore readiness requires an exclusive target lease, complete semantic proof, and transactional finalization of a fresh synchronization epoch.
+- [Phase 02]: Completed restore verification is idempotently keyed by source digest, digested target, and verifier version.
 
 ### Retained Research
 
@@ -188,8 +191,8 @@ Run `$gsd-discuss-phase 2` from the repository root.
 
 ## Session
 
-**Last session:** 2026-09-01T08:36:03.187Z
-**Stopped at:** Completed KPL-02-07-PLAN.md
+**Last session:** 2026-09-01T08:50:34.787Z
+**Stopped at:** Completed KPL-02-08-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -231,3 +234,4 @@ Run `$gsd-discuss-phase 2` from the repository root.
 | Phase KPL-02 P05 | 13min | 2 tasks | 12 files |
 | Phase KPL-02 P06 | 17min | 3 tasks | 12 files |
 | Phase KPL-02 P07 | 37min | 3 tasks | 8 files |
+| Phase KPL-02 P08 | 9min | 3 tasks | 8 files |
