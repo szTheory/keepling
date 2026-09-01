@@ -6,11 +6,14 @@ shadcn_initialized: true
 preset: "base-rhea / Base UI / Stone (effective code bLTj5vaS)"
 created: 2026-08-30
 reviewed_at: "2026-08-30T20:21:09Z"
+amended_at: "2026-08-31"
 ---
 
 # Phase KPL-01 — UI Design Contract
 
 > Approved visual and interaction contract for One Trustworthy Task. Verified across all six UI quality dimensions and the post-verification UI-consideration probe.
+
+> **2026-08-31 amendment:** The responsive seam now preserves the approved 224/360/480 minimums by using drawer navigation at 1024–1063px and beginning the persistent three-region workspace at 1064px. D-12 controls the dirty-work action set; capture authentication and session revocation copy below are exact contracts.
 
 ---
 
@@ -94,7 +97,7 @@ All semantic pairings must meet WCAG 2.2 AA in light and dark modes. State never
 
 ## Responsive Workspace Contract
 
-### Wide viewport — 1024px and above
+### Wide viewport — 1064px and above
 
 Use a three-region list-and-detail workspace:
 
@@ -106,11 +109,15 @@ The selected task/editor is the workspace focal point: it occupies the largest r
 
 The list and detail panes scroll independently. The route remains canonical: selecting a task updates the URL and browser history even when its editor appears beside the list. Pane boundaries use separators, not separate floating cards.
 
+### Compact-wide viewport — 1024px through 1063px
+
+Preserve the 360px minimum task-list pane and 480px minimum detail pane by using the semantic navigation drawer instead of a persistent 224px sidebar. The list and detail remain side by side, scroll independently, and keep the same canonical task route. Global Add task and all primary/secondary destinations remain available from the compact header/drawer. Sessions uses its drawer treatment rather than stacking below the workspace. No compact-wide rule may substitute a 320px list pane or reduce the 480px detail minimum.
+
 ### Narrow viewport — below 1024px
 
 Show one routed surface at a time. A compact header opens semantic navigation in a drawer. Selecting a task navigates to the same canonical task editor as a full page; browser Back returns to the prior list and stable scroll/focus position. Use 16px horizontal page padding below 640px and 24px from 640–1023px. No horizontal page scrolling is permitted at 320px CSS width.
 
-Dirty navigation intercepts route changes, Back, nav selection, task selection, and logout with the same Save changes / Discard changes / Stay here decision. It never saves on blur.
+Dirty navigation intercepts route changes, Back, nav selection, task selection, and logout with the same `Save changes` / `Discard changes` / `Keep editing` decision. The dialog heading is `Discard unsaved changes?`, the body is `These edits haven’t been saved.`, and initial focus is `Keep editing`. It never saves on blur.
 
 ### Navigation
 
@@ -122,7 +129,7 @@ Primary navigation order is Inbox, Today, Upcoming, Completed. Secondary navigat
 
 | Component | Contract |
 |-----------|----------|
-| App shell | Semantic header/nav/main landmarks; wide three-region layout and narrow routed layout |
+| App shell | Semantic header/nav/main landmarks; persistent three-region layout at 1064px+, drawer-nav list/detail layout at 1024–1063px, and one-surface routed layout below 1024px |
 | Quick capture | Global title field, visible Inbox destination, optional Add to Today checkbox/switch, Add task action; separate from full editor |
 | Task list | `ul`/`li`, never ARIA grid; fixed semantic sections, stable keyed rows, explicit Load more |
 | Task row | 44px completion button, title, metadata/reason text, overflow actions; whole row is not a nested button |
@@ -133,7 +140,7 @@ Primary navigation order is Inbox, Today, Upcoming, Completed. Secondary navigat
 | State panel | Persistent inline information for updating, unknown result, auth expiry, stale cursor, conflict, and unrecoverable failure |
 | Conflict resolver | Inline at the top of the editor, not a transient dialog; compares affected fields only |
 | Activity list | Newest first; actor, semantic action, exact outcome, accepted account-timezone time, recovery state; explicit Load earlier activity |
-| Dirty-work dialog | Save changes, Discard changes, Stay here; initial focus on Stay here |
+| Dirty-work dialog | Heading `Discard unsaved changes?`; body `These edits haven’t been saved.`; actions `Save changes`, `Discard changes`, `Keep editing`; initial focus on `Keep editing` |
 | Session list | Current marker, editable label, client kind, created time, coarse recent activity, Revoke session |
 | Empty state | Text-led and compact; no logo or mascot dependency |
 
@@ -246,10 +253,10 @@ Never use `Oops`, `Something went wrong`, `probably`, or celebratory productivit
 | Action | Confirmation approach and exact copy |
 |--------|--------------------------------------|
 | Move one task to Trash | No pre-confirmation because the action is recoverable; after acknowledgement show `Task moved to Trash. Undo trash` persistently |
-| Discard editor changes | Alert dialog: `Discard unsaved changes? These edits haven’t been saved.` Actions: `Keep editing` and destructive `Discard changes` |
-| Log out with dirty work | Alert dialog: `Log out and discard unsaved changes? Saved tasks will remain in Keepling.` Actions: `Stay here` and destructive `Discard changes and log out` |
-| Revoke another session | Alert dialog: `Revoke {session label}? Keepling on that device will need to sign in again.` Actions: `Keep session active` and destructive `Revoke session` |
-| Revoke current session | Use the logout flow and name that the current browser will sign out |
+| Discard editor changes | Alert dialog heading `Discard unsaved changes?`; body `These edits haven’t been saved.` Actions: `Save changes`, destructive `Discard changes`, and `Keep editing`; initial focus `Keep editing` |
+| Log out with dirty work | Use the same D-12 dirty-work action set: `Save changes`, destructive `Discard changes and log out`, and `Keep editing`; initial focus `Keep editing`. The dialog explicitly says unsaved edits remain unless saved before logout. |
+| Revoke another session | Alert dialog heading `Revoke {session label}?`; body `Keepling on that device will need to sign in again.` Actions: `Keep session active` and destructive `Revoke session`; initial focus `Keep session active` |
+| Revoke current session | Use the existing logout flow, not the other-session revoke command. The confirmation must explicitly say the current browser will sign out. |
 | Archive project/tag | Inline confirmation naming what changes; `Archive {name}? It won’t appear in new assignments.` Existing assignments remain visible. A blocked project archive names the unfinished-task count and changes nothing |
 
 There is no hard-delete or purge control in Phase 1.
@@ -294,7 +301,7 @@ Probe input: 8 authored UI surfaces with explicit element-kind confirmation. Res
 | Populated | Task and activity collections | ✅ explicit | Lists use semantic rows with separators, fixed view grouping, stable identities, explicit reason metadata, and Load more rather than card grids or infinite scroll |
 | Partial | Forms and collections | ✅ explicit | Missing optional fields render as absent rather than placeholder facts; last accepted rows remain during partial refresh; nonconflicting draft fields survive validation, auth, and conflict resolution |
 | Zero / one / many | Task and activity collections | ✅ explicit | Zero uses authoritative empty states; one keeps the same headings/row geometry; many paginates with explicit Load more and deterministic focus on the first appended item |
-| Overflow | Lists, navigation, static status/activity content | 🧪 backstop | Visual tests at 320/768/1024/1440px cover two-line task-title clamp, one-line nav truncation with full accessible value, wrapped state copy, independent pane scrolling, and no horizontal page overflow |
+| Overflow | Lists, navigation, static status/activity content | 🧪 backstop | Visual tests at 320/768/1024/1064/1440px cover two-line task-title clamp, one-line nav truncation with full accessible value, wrapped state copy, independent pane scrolling, and no horizontal page overflow. The 1024px case proves drawer navigation plus 360/480 list/detail; the 1064px case proves the first 224/360/480 persistent three-region layout. |
 | Long text | Capture/editor, task rows, nav, activity, controls | 🧪 backstop | Held-out accessibility/visual tests use 200-character titles, 10k-character notes, long project/tag/session labels, and long localized-style action text; full content remains editable/readable and action labels reflow without clipping |
 
 ---
@@ -314,7 +321,7 @@ Do not use `add --all`. Any later third-party registry or block is outside this 
 
 - Representative Playwright coverage against real Phoenix/PostgreSQL for populated, authoritative empty, initial loading, background updating/failure, validation, stale cursor/order, conflict, expired authentication, unknown delivery, retry, and duplicate submission states.
 - Keyboard and focus-restoration assertions for row removal, Load more, dirty navigation, conflict resolution, dialogs/drawers, and narrow-route Back behavior.
-- Visual snapshots for both themes at 320, 768, 1024, and 1440px, plus Reduce Motion and forced-colors checks.
+- Visual snapshots for both themes at 320, 768, 1024, 1064, and 1440px, plus Reduce Motion and forced-colors checks. At 1024–1063px assert drawer navigation with 360/480 list/detail minimums; at 1064px and above assert persistent 224/360/480 three-region composition.
 - Automated contrast checks on actual rendered semantic pairings, including muted text, disabled controls, destructive controls, focus rings, and dark mode.
 - Copy assertions distinguish acknowledged, unknown, rejected, stale, conflict, and authentication-required results; no test may treat a missing response as failure.
 - Untrusted-content fixtures prove titles, notes, project/tag names, and activity values render as text rather than executable markup.
