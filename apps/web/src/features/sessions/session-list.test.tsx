@@ -307,6 +307,44 @@ describe('uncertain session administration', () => {
     expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'DELETE')).toHaveLength(1)
   })
 
+  it('retries a revocation after reauthentication when inventory proves it was not accepted', async () => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(sessionsResponse())
+      .mockResolvedValueOnce(jsonResponse(problem('recent_authentication_required', 401), 401))
+      .mockResolvedValueOnce(sessionsResponse())
+      .mockResolvedValueOnce(jsonResponse({ status: 'session_revoked' }))
+    vi.stubGlobal('fetch', fetchMock)
+    const onAuthenticationRequired = vi.fn()
+    const user = userEvent.setup()
+
+    render(
+      <SessionList
+        csrfToken="expired-recent-csrf"
+        hasDirtyWork={false}
+        onAuthenticationRequired={onAuthenticationRequired}
+        onLoggedOut={vi.fn()}
+      />,
+    )
+
+    await user.click(await screen.findByRole('button', { name: 'Revoke Phone' }))
+    await user.click(screen.getByRole('button', { name: 'Revoke session' }))
+    await waitFor(() => expect(onAuthenticationRequired).toHaveBeenCalledOnce())
+    const [, resume] = onAuthenticationRequired.mock.calls[0] as [
+      unknown,
+      (csrfToken: string) => Promise<void>,
+    ]
+    await resume('fresh-recent-csrf')
+
+    expect(await screen.findByText('Phone revoked.')).toBeVisible()
+    expect(screen.queryByLabelText('Label for Phone')).not.toBeInTheDocument()
+    expect(
+      fetchMock.mock.calls
+        .filter(([, init]) => init?.method === 'DELETE')
+        .map(([, init]) => new Headers(init?.headers).get('x-csrf-token')),
+    ).toEqual(['expired-recent-csrf', 'fresh-recent-csrf'])
+  })
+
   it('reports an uncertain revocation as active only after inventory proves presence', async () => {
     const fetchMock = vi
       .fn<typeof fetch>()
