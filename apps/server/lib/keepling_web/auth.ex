@@ -16,6 +16,7 @@ defmodule KeeplingWeb.Auth do
   def call(conn, :require_recent_auth), do: require_recent_auth(conn)
   def call(conn, :require_trusted_origin), do: require_trusted_origin(conn)
   def call(conn, :require_test_fixture), do: require_test_fixture(conn)
+  def call(conn, :authenticate_device_grant), do: authenticate_device_grant(conn)
 
   def establish_session(conn, session) do
     Plug.CSRFProtection.delete_csrf_token()
@@ -69,6 +70,34 @@ defmodule KeeplingWeb.Auth do
     |> assign(:current_account_id, session.account_id)
     |> assign(:current_session_id, session.session_id)
     |> assign(:recently_authenticated?, Map.get(session, :recently_authenticated?, true))
+  end
+
+  defp authenticate_device_grant(conn) do
+    with ["Bearer " <> credential] when credential != "" <-
+           get_req_header(conn, "authorization"),
+         {:ok, authenticated} <- Accounts.authenticate_device_access(credential) do
+      conn
+      |> assign(:current_device_grant_id, authenticated.grant_id)
+      |> assign(:device_grant_namespace, authenticated.namespace)
+    else
+      {:error, :infrastructure_failure} ->
+        conn
+        |> authentication_problem(
+          "device_authentication_unavailable",
+          "Device authentication unavailable",
+          "retry"
+        )
+        |> halt()
+
+      _reason ->
+        conn
+        |> authentication_problem(
+          "device_authentication_required",
+          "Device authentication required",
+          "reauthorize_device"
+        )
+        |> halt()
+    end
   end
 
   defp require_authenticated(%{assigns: %{current_account_id: _account_id}} = conn), do: conn

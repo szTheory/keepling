@@ -84,25 +84,23 @@ defmodule KeeplingWeb.DeviceGrantController do
         "restart_authorization"
       )
 
-  def list(conn, _params) do
-    with {:ok, authenticated} <- authenticate_bearer(conn) do
-      grants =
-        authenticated.namespace.subject
-        |> account_id!()
-        |> Accounts.list_device_grants()
-        |> Enum.map(&grant_response/1)
+  def list(%{assigns: %{device_grant_namespace: namespace}} = conn, _params) do
+    grants =
+      namespace.subject
+      |> account_id!()
+      |> Accounts.list_device_grants()
+      |> Enum.map(&grant_response/1)
 
-      json(conn, %{device_grants: grants})
-    else
-      _reason -> bearer_problem(conn)
-    end
+    json(conn, %{device_grants: grants})
   end
 
-  def revoke(conn, %{"installation_id" => installation_id}) do
-    with {:ok, authenticated} <- authenticate_bearer(conn),
-         {:ok, result} <-
+  def revoke(
+        %{assigns: %{device_grant_namespace: namespace}} = conn,
+        %{"installation_id" => installation_id}
+      ) do
+    with {:ok, result} <-
            Accounts.revoke_device_installation(
-             account_id!(authenticated.namespace.subject),
+             account_id!(namespace.subject),
              installation_id
            ) do
       json(conn, Map.put(result, :installation_id, installation_id))
@@ -110,18 +108,8 @@ defmodule KeeplingWeb.DeviceGrantController do
       {:error, :device_grant_not_found} ->
         problem(conn, 404, "device_grant_not_found", "Device grant not found", "refresh_grants")
 
-      _reason ->
-        bearer_problem(conn)
-    end
-  end
-
-  defp authenticate_bearer(conn) do
-    case get_req_header(conn, "authorization") do
-      ["Bearer " <> credential] when credential != "" ->
-        Accounts.authenticate_device_access(credential)
-
-      _other ->
-        {:error, :authentication_required}
+      {:error, :infrastructure_failure} ->
+        infrastructure_problem(conn)
     end
   end
 
@@ -159,16 +147,6 @@ defmodule KeeplingWeb.DeviceGrantController do
   defp decode_query(query), do: URI.decode_query(query)
 
   defp account_id!(subject), do: Ecto.UUID.dump!(subject)
-
-  defp bearer_problem(conn),
-    do:
-      problem(
-        conn,
-        401,
-        "device_authentication_required",
-        "Device authentication required",
-        "reauthorize_device"
-      )
 
   defp invalid_credential_problem(conn, code),
     do:

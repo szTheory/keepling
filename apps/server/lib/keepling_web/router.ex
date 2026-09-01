@@ -20,6 +20,10 @@ defmodule KeeplingWeb.Router do
     plug KeeplingWeb.Auth, :require_recent_auth
   end
 
+  pipeline :device_grant_authenticated do
+    plug KeeplingWeb.Auth, :authenticate_device_grant
+  end
+
   pipeline :test_fixture do
     plug KeeplingWeb.Auth, :require_test_fixture
     plug :protect_from_forgery
@@ -67,7 +71,7 @@ defmodule KeeplingWeb.Router do
   end
 
   scope "/api/v1", KeeplingWeb do
-    pipe_through [:api]
+    pipe_through [:api, :device_grant_authenticated]
 
     get "/device-grants", DeviceGrantController, :list
     delete "/device-grants/:installation_id", DeviceGrantController, :revoke

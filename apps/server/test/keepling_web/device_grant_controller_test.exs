@@ -321,6 +321,8 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
       """,
       [account_id, Argon2.hash_pwd_salt(@password), now]
     )
+
+    account_id
   end
 
   defp reset_account_state do
