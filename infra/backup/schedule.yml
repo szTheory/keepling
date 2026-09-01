@@ -1,0 +1,38 @@
+version: 1
+runtime:
+  pgbackrest: 2.59.1
+  postgresql: 18.6
+physical:
+  archive_boundary_seconds: 60
+  full: "0 02 * * 0"
+  differential: "0 02 * * 1-6"
+  retention_days: 14
+  wal_retention_days: 14
+logical:
+  format: custom
+  daily: "30 03 * * *"
+  daily_retention_days: 30
+  weekly: "0 04 * * 0"
+  weekly_retention_weeks: 12
+repositories:
+  primary:
+    provider: backblaze_b2
+    encrypted_client_side: true
+    versioning: true
+    credential_scope: recovery_primary_only
+  mirror:
+    provider: aws_s3
+    account: independent
+    encrypted_client_side: true
+    versioning: true
+    object_lock: compliance
+    credential_scope: recovery_mirror_only
+    cadence: "15 05 * * *"
+verification:
+  newest_logical: daily
+  latest_wal: daily
+  historical_pitr: weekly_seeded_random
+  maximum_rpo_seconds: 300
+  maximum_full_host_seconds: 14400
+  healthy_only_after_disposable_restore: true
+

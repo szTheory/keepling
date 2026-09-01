@@ -1,0 +1,45 @@
+version: 1
+locations:
+  - id: postgresql_volume
+    class: canonical
+    owner: postgres
+    path: /srv/keepling/postgres
+    backup_required: true
+  - id: physical_repository_primary
+    class: recovery
+    owner: backup-runtime
+    provider: backblaze_b2
+    backup_required: true
+  - id: physical_repository_mirror
+    class: recovery
+    owner: backup-runtime
+    provider: aws_s3_independent_account
+    backup_required: true
+  - id: opentofu_state
+    class: infrastructure
+    owner: operator
+    path: /srv/keepling/tofu-state
+    backup_required: true
+  - id: dns_inputs
+    class: infrastructure
+    owner: operator
+    path: /etc/keepling/dns
+    backup_required: true
+  - id: encryption_keys
+    class: recovery-secret
+    owner: root
+    path: /etc/keepling/recovery/keys
+    mode: "0700"
+    backup_required: true
+  - id: secret_manifest
+    class: recovery-secret
+    owner: root
+    path: /etc/keepling/recovery/manifest
+    mode: "0600"
+    backup_required: true
+rules:
+  canonical_state_in_container: forbidden
+  recovery_credentials_in_app_container: forbidden
+  recovery_credentials_shared_between_repositories: forbidden
+  recovery_credentials_shared_with_application: forbidden
+
