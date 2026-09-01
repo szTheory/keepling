@@ -115,7 +115,19 @@ function AppShell({
   }
 
   const reconcileLogout = async (session: BrowserSession, allowRetry: boolean, activeCsrfToken: string) => {
-    const sessions = await listSessions()
+    let sessions: readonly BrowserSession[]
+    try {
+      sessions = await listSessions()
+    } catch (error) {
+      if (
+        error instanceof KeeplingApiError &&
+        error.problem.code === 'authentication_required'
+      ) {
+        onLoggedOut()
+        return
+      }
+      throw error
+    }
     if (!sessions.some((candidate) => candidate.id === session.id)) {
       setLogoutMessage('The previous browser session was logged out.')
       return
