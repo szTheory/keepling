@@ -85,6 +85,11 @@ tdd_checkpoint:
   found: pnpm --filter @keepling/web exec playwright test e2e/visual.spec.ts --grep UI-BACKSTOP-OVERFLOW passed 1/1 on fresh execution; the oracle covers 1023/1024/1063/1064 boundary neighbors, light/dark themes, and 200% zoom.
   implication: Automatic resolution is supported by fresh executable evidence. No human visual confirmation was performed; the manual Inbox scrollbar check remains pending advisory UAT.
 
+- timestamp: 2026-08-31T20:08:40-04:00
+  checked: Semantic knowledge-base indexing availability
+  found: Project configuration has mempalace.enabled=false.
+  implication: MemPalace indexing was skipped explicitly; .planning/debug/knowledge-base.md remains the durable recall fallback.
+
 ## Eliminated
 
 - hypothesis: The 200-character task title creates unbreakable intrinsic width.
