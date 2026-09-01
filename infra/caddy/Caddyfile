@@ -1,0 +1,20 @@
+{
+	auto_https off
+	admin off
+}
+
+:80 {
+	log {
+		output stdout
+		format json
+	}
+
+	reverse_proxy app:4000 {
+		header_up X-Forwarded-Proto https
+	}
+
+	handle_errors {
+		header Retry-After "2"
+		respond "Keepling is briefly unavailable; retry the exact request.\n" 503
+	}
+}

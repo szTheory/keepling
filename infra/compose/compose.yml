@@ -1,0 +1,163 @@
+name: keepling
+
+x-app-environment: &app-environment
+  PHX_HOST: ${KEEPLING_HOST:-localhost}
+  PHX_URL_PORT: ${KEEPLING_HTTPS_PORT:-443}
+  KEEPLING_SERVER_RELEASE: ${KEEPLING_SERVER_RELEASE:-0.1.0}
+  KEEPLING_TESTED_OCI_DIGEST: ${KEEPLING_SERVER_DIGEST:-sha256:f35a88fc9b56f0404c3458a6268c6dd1030e441c346807663c4f44571cd8f3d4}
+  KEEPLING_UPDATE_LOCATION: ${KEEPLING_UPDATE_LOCATION:-https://github.com/szTheory/keepling/releases}
+
+x-app-secrets: &app-secrets
+  - database_url
+  - secret_key_base
+  - operator_token
+
+x-app-entrypoint: &app-entrypoint
+  - /bin/sh
+  - -ec
+  - |
+    export DATABASE_URL="$$(cat /run/secrets/database_url)"
+    export SECRET_KEY_BASE="$$(cat /run/secrets/secret_key_base)"
+    export KEEPLING_OPERATOR_TOKEN="$$(cat /run/secrets/operator_token)"
+    exec /app/bin/keepling "$@"
+  - keepling-entrypoint
+
+services:
+  db:
+    image: postgres:18.6-bookworm@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keepling
+      POSTGRES_USER: keepling
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keepling -d keepling"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 3s
+    stop_grace_period: 60s
+    security_opt:
+      - no-new-privileges:true
+
+  migrate:
+    image: ${KEEPLING_SERVER_IMAGE:-sha256:f35a88fc9b56f0404c3458a6268c6dd1030e441c346807663c4f44571cd8f3d4}
+    restart: "no"
+    environment: *app-environment
+    secrets: *app-secrets
+    entrypoint: *app-entrypoint
+    command:
+      - eval
+      - 'Application.ensure_loaded(:keepling); {:ok, _, _} = Ecto.Migrator.with_repo(Keepling.Repo, fn repo -> Ecto.Migrator.run(repo, :up, all: true) end)'
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - database
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+
+  app:
+    image: ${KEEPLING_SERVER_IMAGE:-sha256:f35a88fc9b56f0404c3458a6268c6dd1030e441c346807663c4f44571cd8f3d4}
+    restart: unless-stopped
+    init: true
+    environment: *app-environment
+    secrets: *app-secrets
+    entrypoint: *app-entrypoint
+    command: ["start"]
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - edge
+      - database
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    healthcheck:
+      test:
+        - CMD
+        - /app/bin/keepling
+        - rpc
+        - 'case Keepling.Application.Ops.readiness(Keepling.Adapters.Postgres.OpsStore, %{timeout_ms: 250}) do %{"status" => "ready"} -> :ok; result -> raise "not ready: #{inspect(result["code"])}" end'
+      interval: 3s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+
+  caddy:
+    image: caddy:2.11.4-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
+        restart: false
+    ports:
+      - "${KEEPLING_HTTP_BIND:-127.0.0.1:8080}:80"
+      - "${KEEPLING_HTTPS_BIND:-127.0.0.1:8443}:443"
+    volumes:
+      - ../caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+    healthcheck:
+      test: ["CMD", "caddy", "version"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    stop_grace_period: 15s
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  edge: {}
+  database:
+    internal: true
+
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${KEEPLING_POSTGRES_DATA_DIR:-/srv/keepling/postgres}
+  caddy_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${KEEPLING_CADDY_DATA_DIR:-/srv/keepling/caddy/data}
+  caddy_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${KEEPLING_CADDY_CONFIG_DIR:-/srv/keepling/caddy/config}
+
+secrets:
+  postgres_password:
+    file: ${KEEPLING_POSTGRES_PASSWORD_FILE:-/etc/keepling/secrets/postgres-password}
+  database_url:
+    file: ${KEEPLING_DATABASE_URL_FILE:-/etc/keepling/secrets/database-url}
+  secret_key_base:
+    file: ${KEEPLING_SECRET_KEY_BASE_FILE:-/etc/keepling/secrets/secret-key-base}
+  operator_token:
+    file: ${KEEPLING_OPERATOR_TOKEN_FILE:-/etc/keepling/secrets/operator-token}
