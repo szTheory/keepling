@@ -42,6 +42,7 @@ type AuthContextValue = {
 }
 
 type ContinuationEntry = {
+  failed: boolean
   generation: number
   intent: InterruptedIntent
   owner: ContinuationOwner
@@ -65,6 +66,14 @@ function AuthProvider({ children }: { children: ReactNode }) {
   const generationRef = useRef(0)
   const continuationGenerationRef = useRef(0)
   const globalOwnerRef = useRef<ContinuationOwner>({ active: true })
+
+  const syncContinuationState = useCallback(() => {
+    const continuations = [...resumesRef.current.values()].filter(
+      (continuation) => continuation.owner.active,
+    )
+    setContinuationError(continuations.some((continuation) => continuation.failed))
+    setInterruption(continuations[0]?.intent ?? null)
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -102,23 +111,24 @@ function AuthProvider({ children }: { children: ReactNode }) {
       const key = `${intent.kind}:${intent.mutationId}`
       continuationGenerationRef.current += 1
       const entry = {
+        failed: false,
         generation: continuationGenerationRef.current,
         intent,
         owner,
         resume,
       }
       resumesRef.current.set(key, entry)
-      setInterruption((current) => current ?? intent)
+      syncContinuationState()
 
       let disposed = false
       return () => {
         if (disposed) return
         disposed = true
         if (resumesRef.current.get(key) === entry) resumesRef.current.delete(key)
-        setInterruption(resumesRef.current.values().next().value?.intent ?? null)
+        syncContinuationState()
       }
     },
-    [],
+    [syncContinuationState],
   )
 
   const beginReauthentication = useCallback<BeginReauthentication>(
@@ -138,10 +148,10 @@ function AuthProvider({ children }: { children: ReactNode }) {
         for (const [key, continuation] of resumesRef.current) {
           if (continuation.owner === owner) resumesRef.current.delete(key)
         }
-        setInterruption(resumesRef.current.values().next().value?.intent ?? null)
+        syncContinuationState()
       },
     }
-  }, [registerContinuation])
+  }, [registerContinuation, syncContinuationState])
 
   const clearAuthentication = useCallback(() => {
     generationRef.current += 1
@@ -161,8 +171,6 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
     const drain = (async () => {
       const attempted = new Set<number>()
-      let failed = false
-
       while (generation === generationRef.current) {
         const pending = [...resumesRef.current.entries()].filter(
           ([, continuation]) =>
@@ -179,24 +187,26 @@ function AuthProvider({ children }: { children: ReactNode }) {
         if (generation !== generationRef.current) return
 
         pending.forEach(([key, continuation], index) => {
+          const outcome = outcomes[index]
           if (
             continuation.owner.active &&
-            outcomes[index]?.status === 'fulfilled' &&
+            outcome?.status === 'rejected' &&
+            resumesRef.current.get(key) === continuation
+          ) {
+            continuation.failed = true
+          }
+          if (
+            continuation.owner.active &&
+            outcome?.status === 'fulfilled' &&
             resumesRef.current.get(key) === continuation
           ) {
             resumesRef.current.delete(key)
           }
         })
-        failed ||=
-          outcomes.some(
-            (outcome, index) =>
-              pending[index]?.[1].owner.active && outcome.status === 'rejected',
-          )
       }
 
       if (generation !== generationRef.current) return
-      setContinuationError(failed)
-      setInterruption(resumesRef.current.values().next().value?.intent ?? null)
+      syncContinuationState()
     })()
       .finally(() => {
         if (drainRef.current === drain) drainRef.current = null
@@ -204,7 +214,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
 
     drainRef.current = drain
     return drain
-  }, [])
+  }, [syncContinuationState])
 
   const completeReauthentication = useCallback(
     async (_intent: InterruptedIntent, csrfToken: string) => {

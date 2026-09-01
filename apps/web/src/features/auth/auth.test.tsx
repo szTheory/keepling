@@ -253,6 +253,93 @@ describe('reauthentication interruption', () => {
     expect(screen.queryByText('failed')).not.toBeInTheDocument()
   })
 
+  it('clears a disposed route failure before a fresh sign-in continuation', async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const path = String(input)
+      if (path === '/api/v1/session') {
+        return jsonResponse({ csrf_token: 'initial-csrf', status: 'authenticated' })
+      }
+      if (path === '/api/v1/login') {
+        return jsonResponse({ csrf_token: 'fresh-csrf', status: 'authenticated' })
+      }
+      throw new Error(`Unexpected request: ${path}`)
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const failedResume = vi.fn().mockRejectedValue(new Error('expired session state'))
+    const freshResume = vi.fn().mockResolvedValue(undefined)
+    const failedIntent = {
+      authentication: 'sign_in',
+      kind: 'read',
+      mutationId: 'read:failed-route',
+    } satisfies InterruptedIntent
+    const freshIntent = {
+      authentication: 'sign_in',
+      kind: 'read',
+      mutationId: 'read:fresh-route',
+    } satisfies InterruptedIntent
+
+    function Harness() {
+      const auth = useAuth()
+      return (
+        <>
+          <button
+            onClick={() => void auth.completeReauthentication(failedIntent, 'expired-csrf')}
+            type="button"
+          >
+            Resume failed route
+          </button>
+          <AppRoutes
+            authenticated
+            authenticatedContent={(beginReauthentication) => (
+              <>
+                <button
+                  onClick={() => beginReauthentication(failedIntent, failedResume)}
+                  type="button"
+                >
+                  Register failed route
+                </button>
+                <button
+                  onClick={() => beginReauthentication(freshIntent, freshResume)}
+                  type="button"
+                >
+                  Register fresh route
+                </button>
+              </>
+            )}
+            authenticatedContentOwnsRoutes
+            continuationError={auth.continuationError}
+            createContinuationScope={auth.createContinuationScope}
+            csrfToken={auth.state.kind === 'authenticated' ? auth.state.csrfToken : 'initial-csrf'}
+            interruption={auth.interruption}
+            onReauthenticated={auth.completeReauthentication}
+            onRetryContinuations={auth.retryContinuations}
+          />
+        </>
+      )
+    }
+
+    const user = userEvent.setup()
+    render(<AuthProvider><Harness /></AuthProvider>)
+    await user.click(screen.getByRole('button', { name: 'Register failed route' }))
+    await user.click(screen.getByRole('button', { name: 'Resume failed route' }))
+    await screen.findByRole('heading', { name: 'Recovery needs another try' })
+
+    window.history.pushState({}, '', '/today')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'Recovery needs another try' })).not.toBeInTheDocument()
+    })
+    await user.click(screen.getByRole('button', { name: 'Register fresh route' }))
+
+    expect(screen.getByRole('heading', { name: 'Sign in to continue' })).toBeVisible()
+    await user.type(screen.getByLabelText('Password'), 'fresh password')
+    await user.type(screen.getByLabelText('Session label'), 'Fresh browser')
+    await user.click(screen.getByRole('button', { name: 'Sign in and continue' }))
+
+    await waitFor(() => expect(freshResume).toHaveBeenCalledWith('fresh-csrf'))
+    expect(failedResume).toHaveBeenCalledOnce()
+  })
+
   it('makes retained content inert, contains keyboard focus, and restores prior focus', async () => {
     const interruption = {
       authentication: 'sign_in',
