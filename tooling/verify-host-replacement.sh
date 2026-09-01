@@ -253,11 +253,17 @@ verify_bootstrap_gate() {
 
 stage_candidate_bundle() {
   destination=${KEEPLING_BUNDLE_DESTINATION:-}
+  manifest_file=${KEEPLING_BUNDLE_MANIFEST_FILE:-}
   [ -d "$destination" ] || die "candidate bundle destination is missing"
   [ -z "$(find "$destination" -mindepth 1 -maxdepth 1 -print -quit)" ] ||
     die "candidate bundle destination must be empty"
+  [ -n "$manifest_file" ] && [ ! -e "$manifest_file" ] ||
+    die "candidate bundle manifest target must be new"
   case "$destination" in
     "$repository_root"|"$repository_root"/*) die "candidate bundle must remain outside the repository" ;;
+  esac
+  case "$manifest_file" in
+    "$repository_root"|"$repository_root"/*) die "candidate bundle manifest must remain outside the repository" ;;
   esac
 
   image_source=${KEEPLING_BUNDLE_IMAGE_SOURCE:-}
@@ -284,8 +290,69 @@ stage_candidate_bundle() {
 
   [ "$(find "$destination" -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d ' ')" -eq 7 ] ||
     die "candidate bundle is incomplete"
+
+  manifest_tmp=$(mktemp "$(dirname "$manifest_file")/.candidate-bundle-manifest.XXXXXX")
+  trap 'rm -f -- "$manifest_tmp"' EXIT HUP INT TERM
+  files_json='[]'
+  for name in Caddyfile compose-override.yml compose.yml image.tar.gz new-login-credential recovery.dump remote-prepare.sh; do
+    file="$destination/$name"
+    sha256=$(shasum -a 256 "$file" | awk '{print $1}')
+    mode=$(stat -f '%Lp' "$file" 2>/dev/null || stat -c '%a' "$file")
+    size=$(wc -c <"$file" | tr -d ' ')
+    files_json=$(printf '%s' "$files_json" | jq \
+      --arg name "$name" --arg sha256 "$sha256" --arg mode "$mode" --argjson size "$size" \
+      '. + [{name:$name,sha256:$sha256,mode:$mode,size:$size}]')
+  done
+  printf '%s' "$files_json" | jq '{version:1,complete:(length == 7),files:.}' >"$manifest_tmp"
+  chmod 600 "$manifest_tmp"
+  mv "$manifest_tmp" "$manifest_file"
+  manifest_tmp=
+  trap - EXIT HUP INT TERM
   echo "Host replacement bundle passed: exact canonical remote inputs staged privately"
 }
+
+verify_candidate_sequence() (
+  bootstrap_runner=${KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER:-}
+  image_runner=${KEEPLING_SEQUENCE_IMAGE_RUNNER:-}
+  restore_runner=${KEEPLING_SEQUENCE_RESTORE_RUNNER:-}
+  runtime_runner=${KEEPLING_SEQUENCE_RUNTIME_RUNNER:-}
+  semantic_runner=${KEEPLING_SEQUENCE_SEMANTIC_RUNNER:-}
+  dns_runner=${KEEPLING_SEQUENCE_DNS_RUNNER:-}
+  teardown_runner=${KEEPLING_SEQUENCE_TEARDOWN_RUNNER:-}
+  for runner in \
+    "$bootstrap_runner" "$image_runner" "$restore_runner" "$runtime_runner" \
+    "$semantic_runner" "$dns_runner" "$teardown_runner"; do
+    [ -x "$runner" ] || die "candidate sequence runner is unavailable"
+  done
+
+  teardown_attempted=false
+  teardown_once() {
+    if [ "$teardown_attempted" = false ]; then
+      teardown_attempted=true
+      "$teardown_runner"
+    fi
+  }
+  # Invoked indirectly by the signal/exit trap below.
+  # shellcheck disable=SC2329
+  cleanup_sequence() {
+    result=$?
+    trap - EXIT HUP INT TERM
+    teardown_once || result=1
+    exit "$result"
+  }
+  trap cleanup_sequence EXIT HUP INT TERM
+
+  "$bootstrap_runner"
+  "$image_runner"
+  "$restore_runner"
+  "$runtime_runner"
+  "$semantic_runner"
+  # DNS is intentionally unreachable until every candidate proof above passes.
+  "$dns_runner"
+  teardown_once
+  trap - EXIT HUP INT TERM
+  echo "Host replacement sequence passed: candidate gates, DNS rehearsal, and teardown completed in order"
+)
 
 dry_run() {
   [ "$($TOFU_BIN version -json | jq -r '.terraform_version')" = "1.12.6" ] ||
@@ -298,6 +365,7 @@ dry_run() {
   ./infra/backup/mirror-snapshot.sh self-test >/dev/null
   ./tooling/verify-backup.sh --fixture local >/dev/null
   ./tooling/test-host-bootstrap.sh >/dev/null
+  ./tooling/test-host-replacement-sequence.sh >/dev/null
   verify_selection
   verify_state_contract
   echo "Host replacement dry-run passed: provider graph, exact DNS identity, append-only mirror, and cost guard are deterministic"
@@ -353,6 +421,7 @@ case "${1:-}" in
   --state-self-test) [ "$#" -eq 1 ] || die "usage: $0 --state-self-test"; verify_state_contract ;;
   --bootstrap-gate) [ "$#" -eq 1 ] || die "usage: $0 --bootstrap-gate"; verify_bootstrap_gate ;;
   --stage-bundle) [ "$#" -eq 1 ] || die "usage: $0 --stage-bundle"; stage_candidate_bundle ;;
+  --candidate-sequence) [ "$#" -eq 1 ] || die "usage: $0 --candidate-sequence"; verify_candidate_sequence ;;
   --credentialed)
     case "${2:-}" in
       --preflight) [ "$#" -eq 2 ] || die "usage: $0 --credentialed --preflight"; credentialed_preflight ;;
@@ -360,5 +429,5 @@ case "${1:-}" in
       *) die "usage: $0 --credentialed [--preflight]" ;;
     esac
     ;;
-  *) die "usage: $0 --dry-run | --state-self-test | --bootstrap-gate | --stage-bundle | --credentialed [--preflight]" ;;
+  *) die "usage: $0 --dry-run | --state-self-test | --bootstrap-gate | --stage-bundle | --candidate-sequence | --credentialed [--preflight]" ;;
 esac

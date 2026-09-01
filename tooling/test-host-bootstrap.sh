@@ -129,6 +129,7 @@ KEEPLING_BUNDLE_IMAGE_SOURCE="$fixture_root/bundle-sources/noncanonical-image" \
   KEEPLING_BUNDLE_OVERRIDE_SOURCE="$fixture_root/bundle-sources/source-override-name" \
   KEEPLING_BUNDLE_RUNNER_SOURCE="$fixture_root/bundle-sources/noncanonical-runner" \
   KEEPLING_BUNDLE_DESTINATION="$fixture_root/bundle" \
+  KEEPLING_BUNDLE_MANIFEST_FILE="$fixture_root/bundle-manifest.json" \
   ./tooling/verify-host-replacement.sh --stage-bundle >/dev/null
 
 find "$fixture_root/bundle" -mindepth 1 -maxdepth 1 -type f -exec basename {} \; | sort >"$fixture_root/bundle-actual"
@@ -149,5 +150,18 @@ cmp -s "$fixture_root/bundle-sources/source-override-name" "$fixture_root/bundle
   die "candidate bundle exposed the transient login credential"
 [ "$(stat -f '%Lp' "$fixture_root/bundle/remote-prepare.sh")" = 700 ] ||
   die "candidate bundle runner is not owner-executable"
+jq -e '
+  .version == 1 and
+  .complete == true and
+  (.files | length) == 7 and
+  ([.files[].name] | sort) == ["Caddyfile", "compose-override.yml", "compose.yml", "image.tar.gz", "new-login-credential", "recovery.dump", "remote-prepare.sh"] and
+  ([.files[] | select(.name == "new-login-credential")][0].mode == "600") and
+  ([.files[] | select(.name == "remote-prepare.sh")][0].mode == "700") and
+  ([.files[].sha256] | all(test("^[0-9a-f]{64}$")))
+' "$fixture_root/bundle-manifest.json" >/dev/null ||
+  die "candidate bundle manifest is missing, incomplete, or unbounded"
+if grep -Fq "$fixture_root" "$fixture_root/bundle-manifest.json"; then
+  die "candidate bundle manifest retained private source paths"
+fi
 
 echo "Host bootstrap regression passed: terminal failure is fail-fast, redacted, DNS-safe, and teardown-first"
