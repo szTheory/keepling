@@ -101,7 +101,7 @@ const ChangeDetails = ({ changes }: { changes: readonly ActivityChange[] }) => {
   const visibleChanges = changes.filter((change) => change.kind !== 'text')
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {visibleChanges.length > 0 ? (
         <dl className="space-y-2">
           {visibleChanges.map((change) => (
@@ -124,14 +124,14 @@ const ChangeDetails = ({ changes }: { changes: readonly ActivityChange[] }) => {
 
       {textChanges.length > 0 ? (
         <details className="text-sm">
-          <summary className="min-h-11 cursor-pointer py-3 font-semibold text-primary">
+          <summary className="min-h-11 cursor-pointer py-4 font-semibold text-primary">
             Show change
           </summary>
           <dl className="space-y-4 border-l border-border pl-4">
             {textChanges.map((change) => (
               <div key={change.field}>
                 <dt className="font-semibold">{fieldCopy[change.field]}</dt>
-                <dd className="mt-1 grid gap-3 sm:grid-cols-2">
+                <dd className="mt-1 grid gap-4 sm:grid-cols-2">
                   <div>
                     <span className="block text-muted-foreground">Before</span>
                     <ChangeValue value={change.old} />
@@ -162,7 +162,7 @@ const ActivityItem = ({
   activity: TaskActivity
 }) => (
   <li
-    className="space-y-3 border-b border-border py-5 [content-visibility:auto] [contain-intrinsic-size:auto_180px]"
+    className="space-y-4 border-b border-border py-4 [content-visibility:auto] [contain-intrinsic-size:auto_180px]"
     data-activity-id={activity.activityId}
     tabIndex={-1}
   >
@@ -187,10 +187,10 @@ const ActivityItem = ({
     <ChangeDetails changes={activity.changes} />
 
     <details className="text-sm">
-      <summary className="min-h-11 cursor-pointer py-3 font-semibold text-primary">
+      <summary className="min-h-11 cursor-pointer py-4 font-semibold text-primary">
         Technical details
       </summary>
-      <dl className="space-y-3 border-l border-border pl-4 tabular-nums">
+      <dl className="space-y-4 border-l border-border pl-4 tabular-nums">
         <div>
           <dt className="font-semibold">Revision</dt>
           <dd>
@@ -390,7 +390,7 @@ function ActivityListForTask({ onAuthenticationRequired, taskId }: ActivityListP
         <h2 className="text-xl font-semibold" id="activity-heading">
           Activity
         </h2>
-        <div className="mt-4 space-y-3" role="alert">
+        <div className="mt-4 space-y-4" role="alert">
           <p>Couldn’t load activity. Your tasks weren’t changed.</p>
           <Button onClick={() => void retryInitial()} type="button" variant="outline">
             Retry loading activity
@@ -429,7 +429,7 @@ function ActivityListForTask({ onAuthenticationRequired, taskId }: ActivityListP
       ) : null}
 
       {viewState === 'stale' ? (
-        <div className="mt-4 space-y-3 border border-border p-4" role="alert">
+        <div className="mt-4 space-y-4 border border-border p-4" role="alert">
           <p>This view changed before more items could load.</p>
           <Button onClick={() => void refresh()} type="button" variant="outline">
             Refresh view
@@ -438,7 +438,7 @@ function ActivityListForTask({ onAuthenticationRequired, taskId }: ActivityListP
       ) : null}
 
       {viewState === 'earlier-error' ? (
-        <div className="mt-4 space-y-3 border border-border p-4" role="alert">
+        <div className="mt-4 space-y-4 border border-border p-4" role="alert">
           <p>Couldn’t load earlier activity. Showing the last loaded version.</p>
           <Button onClick={() => void loadEarlier()} type="button" variant="outline">
             Retry loading earlier activity
@@ -454,7 +454,7 @@ function ActivityListForTask({ onAuthenticationRequired, taskId }: ActivityListP
 
       {page?.nextCursor && !['stale', 'refreshing'].includes(viewState) ? (
         <Button
-          className="mt-5"
+          className="mt-4"
           disabled={viewState === 'loading-earlier'}
           onClick={() => void loadEarlier()}
           type="button"

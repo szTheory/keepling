@@ -280,7 +280,7 @@ function TrashList({ csrfToken, onAuthenticationRequired }: TrashListProps) {
               const message = recoveryMessage(recovery)
 
               return (
-                <li className="flex min-h-14 items-start justify-between gap-4 py-3" key={task.id}>
+                <li className="flex min-h-14 items-start justify-between gap-4 py-4" key={task.id}>
                   <div className="min-w-0">
                     <p className="break-words">{task.title}</p>
                     {task.trashedAt ? (

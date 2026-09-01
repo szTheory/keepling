@@ -459,7 +459,7 @@ function TaskList({ csrfToken, embedded = false, onAuthenticationRequired, view 
   }
 
   const taskRow = (task: TaskViewItem) => (
-    <li className="min-h-[3.25rem] border-b border-border py-3" key={task.id}>
+    <li className="min-h-[3.25rem] border-b border-border py-4" key={task.id}>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <a
@@ -546,7 +546,7 @@ function TaskList({ csrfToken, embedded = false, onAuthenticationRequired, view 
               <h2 className="text-xl font-semibold" id={`${section}-heading`}>
                 {section === 'overdue' ? 'Overdue' : 'Today'}
               </h2>
-              <ul aria-label={`${section === 'overdue' ? 'Overdue' : 'Today'} tasks`} className="mt-3">
+              <ul aria-label={`${section === 'overdue' ? 'Overdue' : 'Today'} tasks`} className="mt-4">
                 {page.items.filter((task) => task.section === section).map(taskRow)}
               </ul>
             </section>
@@ -570,7 +570,7 @@ function TaskList({ csrfToken, embedded = false, onAuthenticationRequired, view 
               <h2 className="text-xl font-semibold" id={`upcoming-${date}`}>
                 {longDate(date)}
               </h2>
-              <ul aria-label={`${longDate(date)} tasks`} className="mt-3">
+              <ul aria-label={`${longDate(date)} tasks`} className="mt-4">
                 {tasks.map(taskRow)}
               </ul>
             </section>
@@ -585,7 +585,7 @@ function TaskList({ csrfToken, embedded = false, onAuthenticationRequired, view 
   const completedTodaySection = completedToday.length > 0 ? (
     <section aria-labelledby="completed-today-heading" className="mt-8">
       <h2 className="text-xl font-semibold" id="completed-today-heading">Completed today</h2>
-      <ul aria-label="Completed today tasks" className="mt-3">{completedToday.map(taskRow)}</ul>
+      <ul aria-label="Completed today tasks" className="mt-4">{completedToday.map(taskRow)}</ul>
     </section>
   ) : null
 
@@ -611,7 +611,7 @@ function TaskList({ csrfToken, embedded = false, onAuthenticationRequired, view 
                 ? 'Sign in again to load this view. Your tasks weren’t changed.'
                 : `Couldn’t load ${viewCopy.title}. Your tasks weren’t changed.`}
             </p>
-            <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={() => void load()} type="button">
+            <button className="mt-4 min-h-11 font-semibold text-primary underline" onClick={() => void load()} type="button">
               {state.authenticationRequired ? 'Sign in again' : `Retry loading ${viewCopy.title}`}
             </button>
           </div>
@@ -642,7 +642,7 @@ function TaskList({ csrfToken, embedded = false, onAuthenticationRequired, view 
                 ? 'This view changed before more items could load.'
                 : 'Couldn’t update this view. Showing the last loaded version.'}
             </p>
-            <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={() => void refreshAfterStale()} type="button">
+            <button className="mt-4 min-h-11 font-semibold text-primary underline" onClick={() => void refreshAfterStale()} type="button">
               {loadMoreError === 'stale' ? 'Refresh view' : `Retry updating ${viewCopy.title}`}
             </button>
           </div>
@@ -660,17 +660,17 @@ function TaskList({ csrfToken, embedded = false, onAuthenticationRequired, view 
                   : 'Couldn’t move this task. Nothing was changed.'}
             </p>
             {moveError === 'stale' ? (
-              <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={() => void load(true)} type="button">
+              <button className="mt-4 min-h-11 font-semibold text-primary underline" onClick={() => void load(true)} type="button">
                 Refresh Today
               </button>
             ) : null}
             {moveError === 'unknown' ? (
-              <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={() => void checkUnknownMove()} type="button">
+              <button className="mt-4 min-h-11 font-semibold text-primary underline" onClick={() => void checkUnknownMove()} type="button">
                 Check again
               </button>
             ) : null}
             {moveError === 'authentication' && moveSubmissionState?.kind === 'authentication_required' ? (
-              <button className="mt-3 min-h-11 font-semibold text-primary underline" onClick={authenticateMove} type="button">
+              <button className="mt-4 min-h-11 font-semibold text-primary underline" onClick={authenticateMove} type="button">
                 Sign in and continue
               </button>
             ) : null}

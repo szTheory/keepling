@@ -326,7 +326,7 @@ function OrganizationFields({
               Project
             </label>
             <select
-              className="min-h-11 w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="min-h-11 w-full rounded-lg border border-input bg-background px-4 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               disabled={assignmentState.kind === 'submitting' || assignmentState.kind === 'recovering'}
               id="task-project"
               onChange={(event) =>
@@ -343,7 +343,7 @@ function OrganizationFields({
             </select>
           </div>
 
-          <fieldset className="space-y-3">
+          <fieldset className="space-y-4">
             <legend className="text-sm font-semibold">Tags</legend>
             {tags.length === 0 ? (
               <p className="text-muted-foreground">No tags are available.</p>
@@ -351,7 +351,7 @@ function OrganizationFields({
               tags.map((tag) => {
                 const selected = draft.tagIds.includes(tag.id)
                 return (
-                  <label className="flex min-h-11 items-center gap-3" key={tag.id}>
+                  <label className="flex min-h-11 items-center gap-4" key={tag.id}>
                     <input
                       aria-label={`${tag.name}${tag.archived ? ' — Archived' : ''}`}
                       checked={selected}
@@ -645,13 +645,13 @@ function OrganizationManager({
           Names are labels. Keepling keeps assignments attached to stable identities.
         </p>
 
-        <form className="mt-8 flex flex-wrap items-end gap-3" onSubmit={create}>
+        <form className="mt-8 flex flex-wrap items-end gap-4" onSubmit={create}>
           <div className="min-w-64 flex-1 space-y-2">
             <label className="block text-sm font-semibold" htmlFor={`new-${label}-name`}>
               New {label} name
             </label>
             <input
-              className="min-h-11 w-full rounded-lg border border-input bg-card px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="min-h-11 w-full rounded-lg border border-input bg-card px-4 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               disabled={pendingAction !== null}
               id={`new-${label}-name`}
               maxLength={200}
@@ -672,7 +672,7 @@ function OrganizationManager({
           <div className="mt-6 rounded-lg border p-4" role="status">
             <p>Checking whether the organization change was saved…</p>
             <Button
-              className="mt-3 min-h-11"
+              className="mt-4 min-h-11"
               onClick={() => void checkPending()}
               type="button"
               variant="outline"
@@ -698,13 +698,13 @@ function OrganizationManager({
         {!loading ? (
           <ul className="mt-8 divide-y divide-border">
             {organizations.map((organization) => (
-              <li className="py-5" key={organization.id}>
-                <div className="flex flex-wrap items-center gap-3">
+              <li className="py-4" key={organization.id}>
+                <div className="flex flex-wrap items-center gap-4">
                   <label className="sr-only" htmlFor={`rename-${organization.id}`}>
                     Rename {organization.name}
                   </label>
                   <input
-                    className="min-h-11 min-w-56 flex-1 rounded-lg border border-input bg-card px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="min-h-11 min-w-56 flex-1 rounded-lg border border-input bg-card px-4 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     disabled={pendingAction !== null}
                     id={`rename-${organization.id}`}
                     maxLength={200}
@@ -757,7 +757,7 @@ function OrganizationManager({
                     <p className="mt-1 text-sm text-muted-foreground">
                       Existing assignments remain visible.
                     </p>
-                    <div className="mt-3 flex flex-wrap gap-3">
+                    <div className="mt-4 flex flex-wrap gap-4">
                       <Button
                         className="min-h-11"
                         disabled={pendingAction !== null || busyId !== null}
