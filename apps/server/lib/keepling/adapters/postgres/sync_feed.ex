@@ -54,6 +54,50 @@ defmodule Keepling.Adapters.Postgres.SyncFeed do
 
   def authorize_bootstrap(_context), do: {:error, :namespace_mismatch}
 
+  @spec synchronization_context(map(), pos_integer()) :: {:ok, map()} | {:error, atom()}
+  def synchronization_context(namespace, protocol_train)
+      when is_map(namespace) and is_integer(protocol_train) and protocol_train >= 1 do
+    with subject when is_binary(subject) <- Map.get(namespace, :subject),
+         {:ok, account_id} <- Ecto.UUID.dump(subject),
+         {:ok, %{rows: [[epoch, low_sequence, low_ordinal]]}} <-
+           SQL.query(
+             Repo,
+             """
+             SELECT sync_epochs.epoch,
+                    COALESCE(sync_accounts.low_water_sequence, 0),
+                    COALESCE(sync_accounts.low_water_ordinal, -1)
+             FROM sync_epochs
+             LEFT JOIN sync_accounts ON sync_accounts.account_id = $1
+             WHERE sync_epochs.singleton_key = TRUE AND sync_epochs.finalized = TRUE
+             """,
+             [account_id]
+           ) do
+      authoritative =
+        namespace
+        |> Map.put(:sync_epoch, load_uuid(epoch))
+        |> Map.put(:protocol_train, protocol_train)
+
+      {:ok,
+       %{
+         account_id: account_id,
+         authoritative_namespace: authoritative,
+         low_water: %{sequence: low_sequence, ordinal: low_ordinal},
+         namespace: authoritative
+       }}
+    else
+      :error -> {:error, :namespace_mismatch}
+      {:ok, %{rows: []}} -> {:error, :sync_epoch_unavailable}
+      {:error, _reason} -> {:error, :infrastructure_failure}
+      _invalid -> {:error, :namespace_mismatch}
+    end
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] ->
+      {:error, :infrastructure_failure}
+  end
+
+  def synchronization_context(_namespace, _protocol_train),
+    do: {:error, :namespace_mismatch}
+
   @spec capture_high_water(map()) :: {:ok, map()} | {:error, atom()}
   def capture_high_water(context) do
     with :ok <- authorize_bootstrap(context),
@@ -199,14 +243,16 @@ defmodule Keepling.Adapters.Postgres.SyncFeed do
            ORDER BY sequence ASC, ordinal ASC
            LIMIT $4
            """,
-           [account_id, sequence, ordinal, limit]
+           [account_id, sequence, ordinal, limit + 1]
          ) do
       {:ok, %{rows: rows}} ->
-        changes = Enum.map(rows, &change_from_row/1)
+        {page_rows, extra_rows} = Enum.split(rows, limit)
+        changes = Enum.map(page_rows, &change_from_row/1)
 
         {:ok,
          %{
            changes: changes,
+           has_more: extra_rows != [],
            high_water: position_of(List.last(changes))
          }}
 

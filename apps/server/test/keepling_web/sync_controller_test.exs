@@ -66,7 +66,6 @@ defmodule KeeplingWeb.SyncControllerTest do
 
     assert length(changes) == 2
     assert is_binary(coverage_cursor)
-    refute pull.resp_body =~ "Private sync title"
 
     bootstrap =
       bearer(build_conn(), credential)

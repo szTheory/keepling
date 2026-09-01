@@ -81,6 +81,8 @@ defmodule KeeplingWeb.Router do
 
     get "/device-grants", DeviceGrantController, :list
     delete "/device-grants/:installation_id", DeviceGrantController, :revoke
+    get "/sync", SyncController, :pull
+    get "/sync/bootstrap", SyncController, :bootstrap
   end
 
   scope "/api/v1", KeeplingWeb do

@@ -196,6 +196,54 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
         '503':
           $ref: '#/components/responses/ProblemResponse'
+  /sync:
+    get:
+      operationId: pullSyncPage
+      summary: Pull one bounded account-scoped synchronization page
+      security:
+        - DeviceBearer: []
+      parameters:
+        - $ref: '#/components/parameters/SyncCursorParameter'
+        - $ref: '#/components/parameters/SyncPullLimitParameter'
+      responses:
+        '200':
+          description: Ordered changes and exact feed coverage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncFeedPage'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /sync/bootstrap:
+    get:
+      operationId: bootstrapSync
+      summary: Read one bounded page of canonical synchronization state
+      security:
+        - DeviceBearer: []
+      parameters:
+        - $ref: '#/components/parameters/SyncCursorParameter'
+        - $ref: '#/components/parameters/SyncBootstrapLimitParameter'
+      responses:
+        '200':
+          description: Canonical bootstrap entities bound to one high-water position
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncBootstrapPage'
+        '400':
+          $ref: '#/components/responses/ProblemResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '409':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /setup:
     post:
       operationId: completeSetup
@@ -1191,6 +1239,30 @@ components:
       bearerFormat: opaque
       description: Opaque short-lived native installation access credential.
   parameters:
+    SyncCursorParameter:
+      in: query
+      name: cursor
+      required: false
+      schema:
+        $ref: '#/components/schemas/SyncCursor'
+    SyncPullLimitParameter:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 200
+    SyncBootstrapLimitParameter:
+      in: query
+      name: limit
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
     TaskViewCursorParameter:
       in: query
       name: cursor
@@ -1213,6 +1285,183 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    SyncCursor:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: Opaque authenticated feed or bootstrap position bound to the server-derived installation namespace.
+    SyncPosition:
+      type: object
+      additionalProperties: false
+      required:
+        - ordinal
+        - sequence
+      properties:
+        ordinal:
+          type: integer
+          minimum: -1
+        sequence:
+          type: integer
+          format: int64
+          minimum: 0
+    SyncFeedPage:
+      type: object
+      additionalProperties: false
+      required:
+        - changes
+        - coverage_cursor
+        - has_more
+      properties:
+        changes:
+          type: array
+          maxItems: 200
+          items:
+            $ref: '#/components/schemas/SyncFeedEnvelope'
+        coverage_cursor:
+          anyOf:
+            - $ref: '#/components/schemas/SyncCursor'
+            - type: 'null'
+        has_more:
+          type: boolean
+    SyncFeedEnvelope:
+      type: object
+      additionalProperties: false
+      required:
+        - entity_id
+        - entity_revision
+        - entity_type
+        - inserted_at
+        - kind
+        - mutation_id
+        - ordinal
+        - payload
+        - sequence
+      properties:
+        entity_id:
+          anyOf:
+            - type: string
+              format: uuid
+            - type: 'null'
+        entity_revision:
+          anyOf:
+            - $ref: '#/components/schemas/Revision'
+            - type: 'null'
+        entity_type:
+          anyOf:
+            - type: string
+              enum: [command, task, organization, conflict, collection_membership, undo]
+            - type: 'null'
+        inserted_at:
+          type: string
+          format: date-time
+        kind:
+          type: string
+          enum: [command_outcome, task_snapshot, organization_snapshot, conflict_snapshot, collection_tombstone, undo_metadata]
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        ordinal:
+          type: integer
+          minimum: 0
+        payload:
+          oneOf:
+            - $ref: '#/components/schemas/SyncCommandOutcomePayload'
+            - $ref: '#/components/schemas/SyncTaskSnapshot'
+            - $ref: '#/components/schemas/SyncOrganizationSnapshot'
+            - $ref: '#/components/schemas/PersistedConflict'
+            - $ref: '#/components/schemas/SyncCollectionTombstone'
+            - $ref: '#/components/schemas/SyncUndoMetadata'
+        sequence:
+          type: integer
+          format: int64
+          minimum: 1
+    SyncCommandOutcomePayload:
+      type: object
+      additionalProperties: false
+      required: [result, status]
+      properties:
+        result:
+          $ref: '#/components/schemas/MutationResult'
+        status:
+          type: integer
+          minimum: 200
+          maximum: 599
+    SyncTaskSnapshot:
+      type: object
+      additionalProperties: false
+      required: [captured_at, completed_at, deadline_on, id, inbox_state, notes, planned_on, project_id, revision, tag_ids, title, trashed_at]
+      properties:
+        captured_at: {type: string, format: date-time}
+        completed_at:
+          anyOf: [{type: string, format: date-time}, {type: 'null'}]
+        deadline_on:
+          $ref: '#/components/schemas/NullableCivilDate'
+        id:
+          $ref: '#/components/schemas/TaskIdentity'
+        inbox_state: {type: string, enum: [inbox, clarified]}
+        notes: {type: string}
+        planned_on:
+          $ref: '#/components/schemas/NullableCivilDate'
+        project_id:
+          anyOf: [{$ref: '#/components/schemas/OrganizationIdentity'}, {type: 'null'}]
+        revision:
+          $ref: '#/components/schemas/Revision'
+        tag_ids:
+          type: array
+          uniqueItems: true
+          items: {$ref: '#/components/schemas/OrganizationIdentity'}
+        title: {type: string}
+        trashed_at:
+          anyOf: [{type: string, format: date-time}, {type: 'null'}]
+    SyncOrganizationSnapshot:
+      type: object
+      additionalProperties: false
+      required: [archived_at, id, kind, name, revision]
+      properties:
+        archived_at:
+          anyOf: [{type: string, format: date-time}, {type: 'null'}]
+        id: {$ref: '#/components/schemas/OrganizationIdentity'}
+        kind: {$ref: '#/components/schemas/OrganizationKind'}
+        name: {$ref: '#/components/schemas/OrganizationName'}
+        revision: {$ref: '#/components/schemas/Revision'}
+    SyncCollectionTombstone:
+      type: object
+      additionalProperties: false
+      required: [collection, organization_id, task_id]
+      properties:
+        collection: {type: string, enum: [task_project, task_tags]}
+        organization_id: {$ref: '#/components/schemas/OrganizationIdentity'}
+        task_id: {$ref: '#/components/schemas/TaskIdentity'}
+    SyncUndoMetadata:
+      type: object
+      additionalProperties: false
+      required: [expires_at, label]
+      properties:
+        expires_at: {type: string, format: date-time}
+        label: {type: string, minLength: 1, maxLength: 200}
+    SyncBootstrapPage:
+      type: object
+      additionalProperties: false
+      required: [entities, high_water, next_cursor]
+      properties:
+        entities:
+          type: array
+          maxItems: 100
+          items: {$ref: '#/components/schemas/SyncBootstrapEntity'}
+        high_water: {$ref: '#/components/schemas/SyncPosition'}
+        next_cursor:
+          anyOf: [{$ref: '#/components/schemas/SyncCursor'}, {type: 'null'}]
+    SyncBootstrapEntity:
+      type: object
+      additionalProperties: false
+      required: [entity_id, entity_type, kind, snapshot]
+      properties:
+        entity_id: {type: string, format: uuid}
+        entity_type: {type: string, enum: [organization, task]}
+        kind: {type: string, enum: [organization_snapshot, task_snapshot]}
+        snapshot:
+          oneOf:
+            - $ref: '#/components/schemas/SyncOrganizationSnapshot'
+            - $ref: '#/components/schemas/SyncTaskSnapshot'
     CompatibilityResponse:
       type: object
       additionalProperties: false

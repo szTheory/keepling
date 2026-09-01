@@ -20,7 +20,42 @@ defmodule Keepling.Application.Sync do
     @callback capture_high_water(map()) :: {:ok, map()} | {:error, atom()}
     @callback bootstrap_page(map(), map(), nil | map(), pos_integer()) ::
                 {:ok, map()} | {:error, atom()}
+    @callback list_after(binary(), nil | map(), pos_integer()) ::
+                {:ok, map()} | {:error, atom()}
   end
+
+  alias Keepling.Application.Sync.Cursor
+
+  @spec pull(map(), map(), module()) ::
+          {:ok, map()} | {:quarantined, atom()} | {:reset_required, map()} | {:error, atom()}
+  def pull(context, options, port) when is_map(context) and is_map(options) do
+    with {:ok, limit} <- pull_limit(options),
+         :ok <- authorize(port, context),
+         {:ok, position} <- pull_position(context, options),
+         {:ok, page} <- port.list_after(context.account_id, position, limit) do
+      coverage_cursor =
+        case page.high_water do
+          nil ->
+            Map.get(options, :cursor)
+
+          high_water ->
+            Cursor.encode(high_water, context.namespace, context.cursor_keyring, context.now)
+        end
+
+      {:ok,
+       %{
+         changes: page.changes,
+         coverage_cursor: coverage_cursor,
+         has_more: Map.get(page, :has_more, false)
+       }}
+    else
+      {:error, :namespace_mismatch} -> {:quarantined, :namespace_mismatch}
+      {:reset_required, reason} -> {:reset_required, reason}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  def pull(_context, _options, _port), do: {:error, :invalid_pull}
 
   @spec bootstrap(map(), map(), module()) ::
           {:ok, map()} | {:quarantined, atom()} | {:reset_required, map()} | {:error, atom()}
@@ -153,5 +188,21 @@ defmodule Keepling.Application.Sync do
       limit when is_integer(limit) and limit >= 1 and limit <= @maximum_limit -> {:ok, limit}
       _invalid -> {:error, :invalid_limit}
     end
+  end
+
+  defp pull_limit(options) do
+    case Map.get(options, :limit, 200) do
+      limit when is_integer(limit) and limit >= 1 and limit <= 200 -> {:ok, limit}
+      _invalid -> {:error, :invalid_limit}
+    end
+  end
+
+  defp pull_position(_context, %{cursor: nil}), do: {:ok, nil}
+  defp pull_position(_context, options) when not is_map_key(options, :cursor), do: {:ok, nil}
+
+  defp pull_position(context, %{cursor: cursor}) do
+    Cursor.decode(cursor, context.namespace, context.cursor_keyring, context.now,
+      low_water: Map.get(context, :low_water)
+    )
   end
 end

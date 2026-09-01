@@ -638,6 +638,40 @@ export interface paths {
         readonly patch?: never;
         readonly trace?: never;
     };
+    readonly "/sync": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Pull one bounded account-scoped synchronization page */
+        readonly get: operations["pullSyncPage"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/sync/bootstrap": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /** Read one bounded page of canonical synchronization state */
+        readonly get: operations["bootstrapSync"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/tasks/{task_id}": {
         readonly parameters: {
             readonly query?: never;
@@ -1188,6 +1222,84 @@ export interface components {
             readonly sync: components["schemas"]["CompatibilityRange"];
             readonly write: components["schemas"]["CompatibilityRange"];
         };
+        readonly SyncBootstrapEntity: {
+            /** Format: uuid */
+            readonly entity_id: string;
+            /** @enum {string} */
+            readonly entity_type: "organization" | "task";
+            /** @enum {string} */
+            readonly kind: "organization_snapshot" | "task_snapshot";
+            readonly snapshot: components["schemas"]["SyncOrganizationSnapshot"] | components["schemas"]["SyncTaskSnapshot"];
+        };
+        readonly SyncBootstrapPage: {
+            readonly entities: readonly components["schemas"]["SyncBootstrapEntity"][];
+            readonly high_water: components["schemas"]["SyncPosition"];
+            readonly next_cursor: components["schemas"]["SyncCursor"] | null;
+        };
+        readonly SyncCollectionTombstone: {
+            /** @enum {string} */
+            readonly collection: "task_project" | "task_tags";
+            readonly organization_id: components["schemas"]["OrganizationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+        };
+        readonly SyncCommandOutcomePayload: {
+            readonly result: components["schemas"]["MutationResult"];
+            readonly status: number;
+        };
+        /** @description Opaque authenticated feed or bootstrap position bound to the server-derived installation namespace. */
+        readonly SyncCursor: string;
+        readonly SyncFeedEnvelope: {
+            readonly entity_id: string | null;
+            readonly entity_revision: components["schemas"]["Revision"] | null;
+            readonly entity_type: ("command" | "task" | "organization" | "conflict" | "collection_membership" | "undo") | null;
+            /** Format: date-time */
+            readonly inserted_at: string;
+            /** @enum {string} */
+            readonly kind: "command_outcome" | "task_snapshot" | "organization_snapshot" | "conflict_snapshot" | "collection_tombstone" | "undo_metadata";
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly ordinal: number;
+            readonly payload: components["schemas"]["SyncCommandOutcomePayload"] | components["schemas"]["SyncTaskSnapshot"] | components["schemas"]["SyncOrganizationSnapshot"] | components["schemas"]["PersistedConflict"] | components["schemas"]["SyncCollectionTombstone"] | components["schemas"]["SyncUndoMetadata"];
+            /** Format: int64 */
+            readonly sequence: number;
+        };
+        readonly SyncFeedPage: {
+            readonly changes: readonly components["schemas"]["SyncFeedEnvelope"][];
+            readonly coverage_cursor: components["schemas"]["SyncCursor"] | null;
+            readonly has_more: boolean;
+        };
+        readonly SyncOrganizationSnapshot: {
+            readonly archived_at: string | null;
+            readonly id: components["schemas"]["OrganizationIdentity"];
+            readonly kind: components["schemas"]["OrganizationKind"];
+            readonly name: components["schemas"]["OrganizationName"];
+            readonly revision: components["schemas"]["Revision"];
+        };
+        readonly SyncPosition: {
+            readonly ordinal: number;
+            /** Format: int64 */
+            readonly sequence: number;
+        };
+        readonly SyncTaskSnapshot: {
+            /** Format: date-time */
+            readonly captured_at: string;
+            readonly completed_at: string | null;
+            readonly deadline_on: components["schemas"]["NullableCivilDate"];
+            readonly id: components["schemas"]["TaskIdentity"];
+            /** @enum {string} */
+            readonly inbox_state: "inbox" | "clarified";
+            readonly notes: string;
+            readonly planned_on: components["schemas"]["NullableCivilDate"];
+            readonly project_id: components["schemas"]["OrganizationIdentity"] | null;
+            readonly revision: components["schemas"]["Revision"];
+            readonly tag_ids: readonly components["schemas"]["OrganizationIdentity"][];
+            readonly title: string;
+            readonly trashed_at: string | null;
+        };
+        readonly SyncUndoMetadata: {
+            /** Format: date-time */
+            readonly expires_at: string;
+            readonly label: string;
+        };
         readonly TaskDateValues: {
             readonly deadline_on?: components["schemas"]["NullableCivilDate"];
             readonly planned_on?: components["schemas"]["NullableCivilDate"];
@@ -1335,6 +1447,9 @@ export interface components {
         };
     };
     parameters: {
+        readonly SyncBootstrapLimitParameter: number;
+        readonly SyncCursorParameter: components["schemas"]["SyncCursor"];
+        readonly SyncPullLimitParameter: number;
         readonly TaskViewCursorParameter: components["schemas"]["TaskViewCursor"];
         readonly TaskViewLimitParameter: number;
     };
@@ -2422,6 +2537,60 @@ export interface operations {
             };
             readonly 400: components["responses"]["ProblemResponse"];
             readonly 422: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly pullSyncPage: {
+        readonly parameters: {
+            readonly query?: {
+                readonly cursor?: components["parameters"]["SyncCursorParameter"];
+                readonly limit?: components["parameters"]["SyncPullLimitParameter"];
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Ordered changes and exact feed coverage */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["SyncFeedPage"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly bootstrapSync: {
+        readonly parameters: {
+            readonly query?: {
+                readonly cursor?: components["parameters"]["SyncCursorParameter"];
+                readonly limit?: components["parameters"]["SyncBootstrapLimitParameter"];
+            };
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Canonical bootstrap entities bound to one high-water position */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["SyncBootstrapPage"];
+                };
+            };
+            readonly 400: components["responses"]["ProblemResponse"];
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 409: components["responses"]["ProblemResponse"];
             readonly 503: components["responses"]["ProblemResponse"];
         };
     };
