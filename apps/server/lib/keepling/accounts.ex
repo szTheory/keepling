@@ -9,6 +9,7 @@ defmodule Keepling.Accounts do
 
   alias Ecto.Adapters.SQL
   alias Keepling.Accounts.Account
+  alias Keepling.Accounts.DeviceGrant
   alias Keepling.Accounts.SecurityAudit
   alias Keepling.Repo
 
@@ -25,6 +26,30 @@ defmodule Keepling.Accounts do
   @maximum_recovery_ttl_seconds 3_600
   @session_activity_write_interval_seconds 60 * 60
   @client_kinds ["web", "electron", "iphone", "mcp"]
+
+  @doc "Issues a short-lived authorization code for one native public-client installation."
+  defdelegate issue_device_authorization(account_id, params, opts \\ []),
+    to: DeviceGrant,
+    as: :issue
+
+  @doc "Exchanges an exact redirect/state/S256 PKCE authorization code."
+  defdelegate exchange_device_authorization(params, opts \\ []), to: DeviceGrant, as: :exchange
+
+  @doc "Rotates one refresh lineage and detects replay under its grant-family lock."
+  defdelegate refresh_device_grant(refresh_token, opts \\ []), to: DeviceGrant, as: :refresh
+
+  @doc "Authenticates one short-lived native access credential."
+  defdelegate authenticate_device_access(access_token, opts \\ []),
+    to: DeviceGrant,
+    as: :authenticate_access
+
+  @doc "Revokes exactly one visible installation grant and advances its namespace fence."
+  defdelegate revoke_device_grant(account_id, grant_id, opts \\ []),
+    to: DeviceGrant,
+    as: :revoke
+
+  @doc "Lists separately visible installation grants without exposing credential material."
+  defdelegate list_device_grants(account_id), to: DeviceGrant, as: :list
 
   @spec issue_setup_token(keyword()) ::
           {:ok, %{token: String.t(), expires_at: DateTime.t()}}

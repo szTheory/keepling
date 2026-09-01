@@ -43,6 +43,7 @@ defmodule Keepling.Accounts.DeviceGrantTest do
   @tag :vectors
   test "account lifecycle vectors fence every namespace and preserve recoverable intent" do
     vectors = @vectors_path |> File.read!() |> Jason.decode!()
+
     schema =
       @vectors_path
       |> Path.join("../../schemas/account-lifecycle.schema.json")
@@ -55,6 +56,7 @@ defmodule Keepling.Accounts.DeviceGrantTest do
     assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
     assert schema["additionalProperties"] == false
     assert schema["$defs"]["action"]["oneOf"] |> length() == 18
+
     assert vectors["namespace_fields"] == [
              "issuer",
              "origin",
@@ -87,6 +89,22 @@ defmodule Keepling.Accounts.DeviceGrantTest do
 
   test "authorization exchange validates exact redirect, state, and S256 PKCE and stores only hashes" do
     account_id = create_account()
+
+    assert {:error, :invalid_authorization_request} =
+             Accounts.issue_device_authorization(
+               account_id,
+               authorization_request("installation-a", "electron")
+               |> Map.put(:client_secret, "must-not-be-accepted"),
+               now: @now
+             )
+
+    assert {:error, :invalid_authorization_request} =
+             Accounts.issue_device_authorization(
+               account_id,
+               authorization_request("installation-a", "electron")
+               |> Map.put(:issuer, "https://client-asserted.invalid"),
+               now: @now
+             )
 
     assert {:ok, authorization} =
              Accounts.issue_device_authorization(
@@ -179,14 +197,19 @@ defmodule Keepling.Accounts.DeviceGrantTest do
                now: DateTime.add(@now, 61, :second)
              )
 
+    assert {:error, :refresh_replay_detected} =
+             Accounts.refresh_device_grant(grant_a.refresh_token,
+               now: DateTime.add(@now, 62, :second)
+             )
+
     assert {:error, :authentication_required} =
              Accounts.authenticate_device_access(rotated.access_token,
-               now: DateTime.add(@now, 62, :second)
+               now: DateTime.add(@now, 63, :second)
              )
 
     assert {:ok, authenticated_b} =
              Accounts.authenticate_device_access(grant_b.access_token,
-               now: DateTime.add(@now, 62, :second)
+               now: DateTime.add(@now, 63, :second)
              )
 
     assert authenticated_b.grant_id == grant_b.id
@@ -239,14 +262,17 @@ defmodule Keepling.Accounts.DeviceGrantTest do
 
     assert id == grant_a.id
 
-    assert %{rows: [events]} =
+    assert %{rows: [[events]]} =
              SQL.query!(
                Repo,
                "SELECT array_agg(event_type ORDER BY id) FROM account_security_audits",
                []
              )
 
-    assert Enum.all?(events, &(&1 in ~w(device_grant_issued device_grant_refreshed device_grant_replay_revoked device_grant_revoked)))
+    assert Enum.all?(
+             events,
+             &(&1 in ~w(device_grant_issued device_grant_refreshed device_grant_replay_revoked device_grant_revoked))
+           )
   end
 
   defp authorize_and_exchange(account_id, installation_id, client_kind) do
@@ -312,7 +338,10 @@ defmodule Keepling.Accounts.DeviceGrantTest do
     }
   end
 
-  defp apply_lifecycle_action(%{"type" => "local_accept", "namespace" => key, "mutation" => mutation}, state) do
+  defp apply_lifecycle_action(
+         %{"type" => "local_accept", "namespace" => key, "mutation" => mutation},
+         state
+       ) do
     update_namespace(state, key, fn namespace ->
       Map.update(namespace, "outbox", [mutation], &(&1 ++ [mutation]))
     end)

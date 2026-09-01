@@ -23,6 +23,10 @@ defmodule Keepling.Accounts.SecurityAudit do
     recovery_issued
     recovery_succeeded
     session_revoked
+    device_grant_issued
+    device_grant_refreshed
+    device_grant_replay_revoked
+    device_grant_revoked
   )
 
   @type health :: %{
