@@ -67,6 +67,7 @@ const trackedInputs = run(
     'ls-files',
     '-z',
     'apps/desktop',
+    '.npmrc',
     'package.json',
     'pnpm-lock.yaml',
     'pnpm-workspace.yaml',

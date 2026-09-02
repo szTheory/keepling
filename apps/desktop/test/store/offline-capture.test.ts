@@ -1,6 +1,6 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import { NodeSqliteLocalStore } from '../../store-worker/local-store.ts'
@@ -50,7 +50,7 @@ describe('NodeSqliteLocalStore', () => {
     store.acceptCapture(mutation)
     store.close()
 
-    const changedMigration = join(new URL('.', paths.migrationPath).pathname, 'changed.sql')
+    const changedMigration = join(dirname(paths.databasePath), 'changed.sql')
     writeFileSync(changedMigration, `${readFileSync(paths.migrationPath, 'utf8')}\n-- drift\n`)
     expect(() => new NodeSqliteLocalStore({ ...paths, migrationPath: changedMigration })).toThrow(
       /migration checksum mismatch/,
