@@ -538,6 +538,112 @@ resolve_plan_architecture() (
   trap - EXIT HUP INT TERM
 )
 
+resolve_image_archive_contract() {
+  archive_file=$1
+  output_file=$2
+  require_command python3
+  [ -r "$archive_file" ] || die "image archive is unreadable"
+  [ ! -e "$output_file" ] || die "image archive contract target must be new"
+  case "$output_file" in
+    /*) ;;
+    *) die "image archive contract target must be an absolute path" ;;
+  esac
+  case "$output_file" in
+    "$repository_root"|"$repository_root"/*) die "image archive contract must remain outside the repository" ;;
+  esac
+
+  python3 - "$archive_file" "$output_file" <<'PY' ||
+import hashlib
+import json
+import os
+import re
+import sys
+import tarfile
+import tempfile
+
+try:
+    archive_path, output_path = sys.argv[1:]
+    archive_size = os.path.getsize(archive_path)
+    if archive_size <= 0 or archive_size > 8 * 1024 * 1024 * 1024:
+        raise ValueError
+    archive_hash = hashlib.sha256()
+    with open(archive_path, "rb") as stream:
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            archive_hash.update(block)
+    with tarfile.open(archive_path, "r:*") as archive:
+        manifest_member = archive.getmember("manifest.json")
+        if not manifest_member.isfile() or manifest_member.size > 65_536:
+            raise ValueError
+        manifest = json.load(archive.extractfile(manifest_member))
+        if not isinstance(manifest, list) or len(manifest) != 1 or not isinstance(manifest[0], dict):
+            raise ValueError
+        entry = manifest[0]
+        required_manifest_keys = {"Config", "RepoTags", "Layers"}
+        allowed_manifest_keys = required_manifest_keys | {"LayerSources"}
+        if not required_manifest_keys.issubset(entry) or not set(entry).issubset(allowed_manifest_keys):
+            raise ValueError
+        if "LayerSources" in entry and not isinstance(entry["LayerSources"], dict):
+            raise ValueError
+        if entry["RepoTags"] != ["keepling-server:plan-02-09-amd64"]:
+            raise ValueError
+        if not isinstance(entry["Layers"], list) or not entry["Layers"]:
+            raise ValueError
+        config_name = entry["Config"]
+        if not isinstance(config_name, str) or config_name.startswith("/") or ".." in config_name.split("/"):
+            raise ValueError
+        config_member = archive.getmember(config_name)
+        if not config_member.isfile() or config_member.size > 1024 * 1024:
+            raise ValueError
+        config_bytes = archive.extractfile(config_member).read()
+        config = json.loads(config_bytes)
+        config_hash = hashlib.sha256(config_bytes).hexdigest()
+        config_basename = config_name.rsplit("/", 1)[-1]
+        if config_basename.endswith(".json"):
+            config_basename = config_basename[:-5]
+        if config_basename != config_hash:
+            raise ValueError
+        labels = config.get("config", {}).get("Labels")
+        revision = labels.get("org.opencontainers.image.revision") if isinstance(labels, dict) else None
+        if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{7,64}", revision):
+            raise ValueError
+        if config.get("architecture") != "amd64" or config.get("os") != "linux":
+            raise ValueError
+        contract = {
+            "version": 1,
+            "archive_sha256": archive_hash.hexdigest(),
+            "image_id": "sha256:" + config_hash,
+            "revision": revision,
+            "architecture": "amd64",
+        }
+    directory = os.path.dirname(os.path.abspath(output_path))
+    if not os.path.isdir(directory) or os.path.exists(output_path):
+        raise ValueError
+    descriptor, temporary_path = tempfile.mkstemp(prefix=".image-archive-contract.", dir=directory)
+    try:
+        os.fchmod(descriptor, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            descriptor = -1
+            json.dump(contract, stream, separators=(",", ":"), sort_keys=True)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        if os.path.exists(output_path):
+            raise ValueError
+        os.rename(temporary_path, output_path)
+        temporary_path = None
+        os.chmod(output_path, 0o600)
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+        if temporary_path is not None:
+            os.unlink(temporary_path)
+except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError, tarfile.TarError):
+    print("image archive contract rejected input", file=sys.stderr)
+    sys.exit(1)
+PY
+    die "image archive contract is incomplete or unsafe"
+}
+
 verify_candidate_sequence() (
   bootstrap_runner=${KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER:-}
   image_runner=${KEEPLING_SEQUENCE_IMAGE_RUNNER:-}
@@ -652,6 +758,8 @@ dry_run() {
   ./tooling/test-host-bootstrap.sh >/dev/null
   ./tooling/test-provider-ownership.sh >/dev/null
   ./tooling/test-resolved-plan-contract.sh >/dev/null
+  ./tooling/test-image-archive-contract.sh >/dev/null
+  ./tooling/test-remote-prepare-observability.sh >/dev/null
   ./tooling/test-host-replacement-sequence.sh >/dev/null
   verify_selection
   verify_state_contract
@@ -716,6 +824,10 @@ case "${1:-}" in
     [ "$#" -eq 3 ] || die "usage: $0 --resolve-plan-architecture PLAN OUTPUT"
     resolve_plan_architecture "$2" "$3"
     ;;
+  --resolve-image-archive)
+    [ "$#" -eq 3 ] || die "usage: $0 --resolve-image-archive ARCHIVE OUTPUT"
+    resolve_image_archive_contract "$2" "$3"
+    ;;
   --candidate-sequence) [ "$#" -eq 1 ] || die "usage: $0 --candidate-sequence"; verify_candidate_sequence ;;
   --credentialed)
     case "${2:-}" in
@@ -724,5 +836,5 @@ case "${1:-}" in
       *) die "usage: $0 --credentialed [--preflight]" ;;
     esac
     ;;
-  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID | --resolve-plan-architecture PLAN OUTPUT | --candidate-sequence | --credentialed [--preflight]" ;;
+  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID | --resolve-plan-architecture PLAN OUTPUT | --resolve-image-archive ARCHIVE OUTPUT | --candidate-sequence | --credentialed [--preflight]" ;;
 esac
