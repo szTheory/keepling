@@ -86,6 +86,106 @@ expected_state_addresses() {
     hcloud_volume_attachment.replacement
 }
 
+plan_shape_is_valid() {
+  plan=$1
+  [ -f "$plan" ] && [ -r "$plan" ] || return 1
+  plan_size=$(wc -c <"$plan" | tr -d '[:space:]')
+  case "$plan_size" in
+    ''|*[!0-9]*) return 1 ;;
+  esac
+  [ "$plan_size" -gt 0 ] && [ "$plan_size" -le 8388608 ] || return 1
+
+  expected=$(expected_state_addresses | jq -Rsc 'split("\n") | map(select(length > 0))') || return 1
+  if jq -e --argjson expected "$expected" '
+    .format_version == "1.2" and
+    .terraform_version == "1.12.6" and
+    (.resource_changes | type == "array") and
+    ($expected | length > 0 and length <= 64 and length == (unique | length)) and
+    (.resource_changes | length <= 64) and
+    (.resource_changes | all(
+      type == "object" and
+      (.address | type == "string") and
+      (.change | type == "object") and
+      (.change.actions | type == "array" and . == ["create"])
+    )) and
+    ([.resource_changes[].address] | length == (unique | length)) and
+    ([.resource_changes[].address] | sort) == ($expected | sort)
+  ' "$plan" >/dev/null 2>&1; then
+    return 0
+  fi
+  return 1
+}
+
+validate_plan_shape() {
+  plan_shape_is_valid "$1" || die "evaluated plan shape contract is invalid"
+  echo "Host replacement plan shape passed"
+}
+
+state_addresses_are_exact() {
+  state_list=$1
+  [ -f "$state_list" ] && [ -r "$state_list" ] || return 1
+  state_size=$(wc -c <"$state_list" | tr -d '[:space:]')
+  case "$state_size" in
+    ''|*[!0-9]*) return 1 ;;
+  esac
+  [ "$state_size" -gt 0 ] && [ "$state_size" -le 65536 ] || return 1
+  actual=$(sed '/^[[:space:]]*$/d' "$state_list")
+  [ -n "$actual" ] || return 1
+  printf '%s\n' "$actual" | awk '
+    !/^hcloud_[a-z_]+\.[a-z0-9_-]+$/ { exit 1 }
+    seen[$0]++ { exit 1 }
+    END { if (NR > 64) exit 1 }
+  ' || return 1
+  [ "$(printf '%s\n' "$actual" | sort)" = "$(expected_state_addresses | sort)" ]
+}
+
+validate_state_addresses() {
+  state_addresses_are_exact "$1" || die "durable state address contract is invalid"
+  echo "Host replacement state addresses passed"
+}
+
+verify_plan_shape_contract() (
+  fixture_root=$(mktemp -d "${TMPDIR:-/tmp}/keepling-plan-shape.XXXXXX")
+  trap 'rm -rf -- "$fixture_root"' EXIT HUP INT TERM
+  expected_state_addresses | jq -Rn '
+    [inputs | {address:.,change:{actions:["create"]}}] |
+    {format_version:"1.2",terraform_version:"1.12.6",resource_changes:.}
+  ' >"$fixture_root/valid.json"
+  plan_shape_is_valid "$fixture_root/valid.json" || die "exact tracked create graph was rejected"
+
+  expect_invalid_plan_shape() {
+    name=$1
+    fixture=$2
+    if plan_shape_is_valid "$fixture"; then
+      die "$name plan shape was accepted"
+    fi
+  }
+
+  jq '.resource_changes += [{address:"hcloud_server_network.replacement",change:{actions:["create"]}}]' \
+    "$fixture_root/valid.json" >"$fixture_root/stale-list.json"
+  jq 'del(.resource_changes[-1])' "$fixture_root/valid.json" >"$fixture_root/missing.json"
+  jq '.resource_changes += [{address:"hcloud_unexpected.replacement",change:{actions:["create"]}}]' \
+    "$fixture_root/valid.json" >"$fixture_root/extra.json"
+  jq '.resource_changes += [.resource_changes[0]]' "$fixture_root/valid.json" >"$fixture_root/duplicate.json"
+  jq '.resource_changes[0].change.actions=["update"]' "$fixture_root/valid.json" >"$fixture_root/update.json"
+  jq '.resource_changes[0].change.actions=["delete"]' "$fixture_root/valid.json" >"$fixture_root/delete.json"
+  jq '.resource_changes[0].change.actions=["delete","create"]' "$fixture_root/valid.json" >"$fixture_root/replace.json"
+  jq '.resource_changes[0].change.actions=["no-op"]' "$fixture_root/valid.json" >"$fixture_root/no-op.json"
+  jq '.format_version="1.1"' "$fixture_root/valid.json" >"$fixture_root/wrong-format.json"
+  jq '.terraform_version="1.12.5"' "$fixture_root/valid.json" >"$fixture_root/wrong-version.json"
+  jq 'del(.resource_changes[0].change.actions)' "$fixture_root/valid.json" >"$fixture_root/missing-actions.json"
+  jq '.resource_changes={}' "$fixture_root/valid.json" >"$fixture_root/wrong-changes-type.json"
+  printf '{malformed\n' >"$fixture_root/malformed.json"
+  dd if=/dev/zero of="$fixture_root/unbounded.json" bs=1048576 count=9 2>/dev/null
+
+  for name in stale-list missing extra duplicate update delete replace no-op wrong-format wrong-version \
+    missing-actions wrong-changes-type malformed unbounded; do
+    expect_invalid_plan_shape "$name" "$fixture_root/$name.json"
+  done
+
+  echo "Host replacement plan shape regression passed"
+)
+
 state_contract_decision() {
   state_list=$1
   provider_counts=$2
@@ -128,6 +228,12 @@ verify_state_contract() (
   jq -n '{servers:2,volumes:1,primary_ips:1,networks:1,firewalls:1,ssh_keys:1}' >"$fixture_root/ambiguous"
   jq -n '{servers:0,volumes:0,primary_ips:0,networks:0,firewalls:0,ssh_keys:0}' >"$fixture_root/absent"
   jq -n --arg run_id replacement-proof '{version:1,run_id:$run_id,resources:{servers:{id:1,labels:{"keepling-run":$run_id}},volumes:{id:2,labels:{"keepling-run":$run_id}},primary_ips:{id:3,labels:{"keepling-run":$run_id}},networks:{id:4,labels:{"keepling-run":$run_id}},firewalls:{id:5,labels:{"keepling-run":$run_id}},ssh_keys:{id:6,labels:{"keepling-run":$run_id}}}}' >"$fixture_root/inventory"
+
+  state_addresses_are_exact "$fixture_root/complete" || die "exact tracked state addresses were rejected"
+  sed '$d' "$fixture_root/complete" >"$fixture_root/incomplete"
+  if state_addresses_are_exact "$fixture_root/incomplete"; then
+    die "incomplete durable state addresses were accepted"
+  fi
 
   [ "$(state_contract_decision "$fixture_root/complete" "$fixture_root/live")" = state-driven-destroy-required ] ||
     die "complete durable state did not require state-driven teardown"
@@ -820,6 +926,7 @@ dry_run() {
   ./tooling/test-host-bootstrap.sh >/dev/null
   ./tooling/test-host-bootstrap-diagnostics.sh >/dev/null
   ./tooling/test-provider-ownership.sh >/dev/null
+  ./tooling/test-plan-shape-contract.sh >/dev/null
   ./tooling/test-resolved-plan-contract.sh >/dev/null
   ./tooling/test-image-archive-contract.sh >/dev/null
   ./tooling/test-remote-prepare-observability.sh >/dev/null
@@ -884,6 +991,15 @@ case "${1:-}" in
     [ "$#" -eq 5 ] || die "usage: $0 --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID"
     normalize_provider_ownership "$2" "$3" "$4" "$5"
     ;;
+  --validate-plan-shape)
+    [ "$#" -eq 2 ] || die "usage: $0 --validate-plan-shape PLAN_JSON"
+    validate_plan_shape "$2"
+    ;;
+  --validate-state-addresses)
+    [ "$#" -eq 2 ] || die "usage: $0 --validate-state-addresses STATE_LIST"
+    validate_state_addresses "$2"
+    ;;
+  --plan-shape-self-test) [ "$#" -eq 1 ] || die "usage: $0 --plan-shape-self-test"; verify_plan_shape_contract ;;
   --resolve-plan-architecture)
     [ "$#" -eq 3 ] || die "usage: $0 --resolve-plan-architecture PLAN OUTPUT"
     resolve_plan_architecture "$2" "$3"
@@ -900,5 +1016,5 @@ case "${1:-}" in
       *) die "usage: $0 --credentialed [--preflight]" ;;
     esac
     ;;
-  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID | --resolve-plan-architecture PLAN OUTPUT | --resolve-image-archive ARCHIVE OUTPUT | --candidate-sequence | --credentialed [--preflight]" ;;
+  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID | --validate-plan-shape PLAN_JSON | --plan-shape-self-test | --validate-state-addresses STATE_LIST | --resolve-plan-architecture PLAN OUTPUT | --resolve-image-archive ARCHIVE OUTPUT | --candidate-sequence | --credentialed [--preflight]" ;;
 esac
