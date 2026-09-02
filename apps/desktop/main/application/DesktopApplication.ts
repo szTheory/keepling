@@ -236,7 +236,16 @@ class DesktopApplication {
   }
 
   async snapshot(): Promise<WorkspaceSnapshot> {
-    return this.#localStore.snapshot()
+    // D-22: a broken local store must NEVER present a false empty workspace.
+    // Publish the closed `store_unavailable` recovery state and reject --
+    // never resolve with `{ tasks: [] }` on failure.
+    try {
+      const snapshot = await this.#localStore.snapshot()
+      return snapshot
+    } catch (error) {
+      this.publishPresentation({ kind: 'store_unavailable' })
+      throw error
+    }
   }
 
   async editTask(command: EditTaskCommand): Promise<WorkspaceSnapshot> {
@@ -352,8 +361,20 @@ class DesktopApplication {
   }
 
   async reconcile(): Promise<{ settled: number }> {
+    // D-22: a store-open/query failure at startup must degrade to the
+    // closed `store_unavailable` recovery state, never an unhandled
+    // rejection out of `bootstrap()` -- this is the FIRST call the desktop
+    // entry point makes against the local store, so it must be the most
+    // defensive one.
+    let pending: PendingMutation[]
+    try {
+      pending = await this.#localStore.pendingMutations()
+    } catch (error) {
+      this.publishPresentation({ kind: 'store_unavailable' })
+      return { settled: 0 }
+    }
     let settled = 0
-    for (const mutation of await this.#localStore.pendingMutations()) {
+    for (const mutation of pending) {
       const acknowledgement = await this.#sync.acknowledge?.(mutation) ?? null
       if (
         acknowledgement === null ||
@@ -367,7 +388,6 @@ class DesktopApplication {
     }
     return { settled }
   }
-
 
   async runSyncPass(): Promise<{ pulled: number; settled: number }> {
     if (!this.#sync.pull || !this.#sync.push || !this.#localStore.applyPull || !this.#localStore.readyMutations) {

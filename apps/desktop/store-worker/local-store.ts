@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { mkdirSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 
@@ -28,6 +28,81 @@ type LocalStoreOptions = {
   migrationPath: string | URL
 }
 
+/**
+ * Closed, storage-neutral fault classification (D-22/D-37/D-38, T-KPL03-05-04).
+ * Never expands beyond this vocabulary -- the recovery shell exposes exactly
+ * one generic "Local store unavailable" state (UI-SPEC) regardless of which
+ * code applies, so this only needs to be stable enough for diagnostics and
+ * for tests to assert real SQLite/filesystem faults land in the right
+ * bucket. `unknown` is the safe default for anything unrecognized -- it
+ * still routes to the SAME closed recovery state, never a silent reset.
+ */
+type StoreFailureCode =
+  | 'busy'
+  | 'corruption'
+  | 'disk_full'
+  | 'integrity_failure'
+  | 'migration_checksum_drift'
+  | 'permission_denied'
+  | 'read_only'
+  | 'unknown'
+
+const classifyStoreFailure = (error: unknown): StoreFailureCode => {
+  const message = (error instanceof Error ? error.message : String(error)).toLowerCase()
+  if (message.includes('checksum mismatch')) return 'migration_checksum_drift'
+  if (message.includes('invariant check failed')) return 'integrity_failure'
+  if (message.includes('malformed') || message.includes('not a database') || message.includes('corrupt')) return 'corruption'
+  if (message.includes('disk') && (message.includes('full') || message.includes('space'))) return 'disk_full'
+  if (message.includes('enospc') || message.includes('no space left')) return 'disk_full'
+  if (message.includes('readonly') || message.includes('read-only') || message.includes('read only')) return 'read_only'
+  if (
+    message.includes('permission denied') ||
+    message.includes('eacces') ||
+    message.includes('eperm') ||
+    message.includes('unable to open database file')
+  ) return 'permission_denied'
+  if (message.includes('locked') || message.includes('busy')) return 'busy'
+  return 'unknown'
+}
+
+/**
+ * Pure, instance-free derivation of the exact durable file inventory for a
+ * namespace's local store (D-38: database, WAL, and SHM are one unit; a
+ * stray `-journal` can exist after an interrupted rollback-journal-mode
+ * fallback). Exported standalone -- not only an instance method -- so
+ * whole-unit removal (D-24) is reachable even when the store failed to
+ * OPEN in the first place (corruption, checksum drift, permission denial):
+ * "Remove data from this Mac" must still be able to find and delete its own
+ * files without first requiring a healthy `NodeSqliteLocalStore` instance.
+ */
+const deriveLocalFilePaths = (databasePath: string): string[] => [
+  databasePath, `${databasePath}-wal`, `${databasePath}-shm`, `${databasePath}-journal`,
+]
+
+/**
+ * D-24/D-38 whole-unit removal. MUST be called only after the database
+ * connection (if any) is closed -- this never unlinks a live database, it
+ * only deletes an already-closed file inventory. Each path is attempted
+ * independently so one failure (e.g. an external process holding a handle)
+ * does not abort attempts on the rest, and every attempt is reported so the
+ * caller can verify absence and offer a retry rather than claim silent
+ * success.
+ */
+const removeLocalFilesAt = (databasePath: string): { remaining: string[]; removed: string[] } => {
+  const removed: string[] = []
+  const remaining: string[] = []
+  for (const path of deriveLocalFilePaths(databasePath)) {
+    try {
+      if (existsSync(path)) rmSync(path, { force: true })
+      if (existsSync(path)) remaining.push(path)
+      else removed.push(path)
+    } catch {
+      remaining.push(path)
+    }
+  }
+  return { remaining, removed }
+}
+
 type ProjectionRow = {
   completed_at: string | null
   notes: string
@@ -50,8 +125,10 @@ type MutationRow = {
 
 class NodeSqliteLocalStore {
   readonly #database: DatabaseSync
+  readonly #databasePath: string
 
   constructor(options: LocalStoreOptions) {
+    this.#databasePath = options.databasePath
     mkdirSync(dirname(options.databasePath), { recursive: true })
     this.#database = new DatabaseSync(options.databasePath, {
       allowExtension: false,
@@ -64,6 +141,7 @@ class NodeSqliteLocalStore {
   }
 
   acceptCapture(mutation: PendingMutation): LocalAcceptance {
+    this.#assertNotFenced()
     this.#validateMutation(mutation)
     this.#database.exec('BEGIN IMMEDIATE')
     try {
@@ -350,6 +428,7 @@ class NodeSqliteLocalStore {
   }
 
   editTask(command: EditTaskCommand): WorkspaceSnapshot {
+    this.#assertNotFenced()
     const title = command.title.trim()
     if (title.length === 0 || [...title].length > 512) throw new Error('invalid task title')
     if ([...command.notes].length > 50_000) throw new Error('invalid task notes')
@@ -369,6 +448,7 @@ class NodeSqliteLocalStore {
   }
 
   applyLifecycle(command: LifecycleCommand): WorkspaceSnapshot {
+    this.#assertNotFenced()
     this.#database.exec('BEGIN IMMEDIATE')
     try {
       const before = this.#requireProjectionRow(command.taskId)
@@ -395,6 +475,7 @@ class NodeSqliteLocalStore {
   }
 
   applyMoveToday(command: MoveTodayCommand): WorkspaceSnapshot {
+    this.#assertNotFenced()
     this.#database.exec('BEGIN IMMEDIATE')
     try {
       const before = this.#requireProjectionRow(command.taskId)
@@ -410,6 +491,7 @@ class NodeSqliteLocalStore {
   }
 
   undoLastLocalAction(): { applied: boolean; snapshot: WorkspaceSnapshot } {
+    this.#assertNotFenced()
     this.#database.exec('BEGIN IMMEDIATE')
     try {
       const stored = this.#database.prepare(`
@@ -453,6 +535,7 @@ class NodeSqliteLocalStore {
   }
 
   resolveConflict(input: { choice: 'current' | 'mine'; conflictId: string }): WorkspaceSnapshot {
+    this.#assertNotFenced()
     this.#database.exec('BEGIN IMMEDIATE')
     try {
       const row = this.#database.prepare(`
@@ -534,6 +617,26 @@ class NodeSqliteLocalStore {
 
   close(): void {
     this.#database.close()
+  }
+
+  /** See the standalone `deriveLocalFilePaths` -- kept as an instance convenience. */
+  listLocalFilePaths(): string[] {
+    return deriveLocalFilePaths(this.#databasePath)
+  }
+
+  /**
+   * D-24/D-38 whole-unit removal. MUST be called only after `close()` -- see
+   * the standalone `removeLocalFilesAt`, which this delegates to.
+   */
+  removeLocalFiles(): { remaining: string[]; removed: string[] } {
+    return removeLocalFilesAt(this.#databasePath)
+  }
+
+  #assertNotFenced(): void {
+    const fenced = this.#database.prepare(`
+      SELECT value FROM namespace_metadata WHERE key = 'sync_fence'
+    `).get() as { value: string } | undefined
+    if (fenced) throw new Error(`local writes are fenced: ${fenced.value}`)
   }
 
   #applyMigration(migrationPath: string | URL): void {
@@ -659,5 +762,5 @@ class NodeSqliteLocalStore {
   }
 }
 
-export { NodeSqliteLocalStore }
-export type { LocalStoreOptions }
+export { classifyStoreFailure, deriveLocalFilePaths, NodeSqliteLocalStore, removeLocalFilesAt }
+export type { LocalStoreOptions, StoreFailureCode }
