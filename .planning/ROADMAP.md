@@ -167,7 +167,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 4/12 plans executed
+**Plans:** 5/12 plans executed
 
 Plans:
 **Wave 1**
@@ -188,7 +188,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 03-09-PLAN.md — Extract the presentation-only ClientFacade and one shared workspace slice.
+- [x] 03-09-PLAN.md — Extract the presentation-only ClientFacade and one shared workspace slice.
 
 **Wave 6** *(blocked on Wave 5 completion)*
 

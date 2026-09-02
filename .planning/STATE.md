@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: Paused after KPL-03-02; Wave 4 regression passed, capability gates pending
-last_updated: "2026-09-02T19:20:27.521Z"
+stopped_at: Completed KPL-03-09-PLAN.md (Wave 5 presentation-only extraction boundary)
+last_updated: "2026-09-02T19:49:52.405Z"
 last_activity: 2026-09-02
 last_activity_desc: Phase KPL-03 execution started
-state_head: db529f54712ce4eb6a0531690cde6053f77925df
+state_head: 6e80f9b3bfda5e822ee29d6d45760fd6136bdeb8
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 50
-  completed_plans: 41
+  completed_plans: 42
 milestone_name: milestone
 ---
 
@@ -29,10 +29,10 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-03 (Mac Daily Loop) — EXECUTING
-Plan: 5 of 12
+Plan: 6 of 12
 Total Plans in Phase: 12
 Status: Executing Phase KPL-03
-Last activity: 2026-09-02 — Phase KPL-03 execution started
+Last activity: 2026-09-02 — Phase KPL-03 execution resumed (wave continue)
 Last Activity Description: Phase KPL-03 execution started
 Progress: [█████████░] 97%
 
@@ -174,6 +174,8 @@ Progress: [█████████░] 97%
 - [Phase 03]: Desktop storage activates only the complete five-field namespace returned by authenticated server token responses; client-derived authority is forbidden.
 - [Phase 03]: Sign-out fences local intent and clears credentials before best-effort remote revocation.
 - [Phase 03]: Synchronization and recovery UI consume one monotonic main-owned closed presentation projection.
+- [Phase 03]: The ClientFacade extraction boundary is presentation-only and frozen: packages/web-ui exposes only named snapshot/subscription plus task/navigation/recovery operations, verified by a source-scan import-boundary test.
+- [Phase 03]: The shared Workspace/CaptureForm/TaskList slice is proven via a browser adapter and a deterministic desktop-facade fixture but is not wired into the production Inbox route yet; WorkspaceShell exposes it behind an explicit useSharedWorkspace opt-in for future workspace expansion.
 
 ### Retained Research
 
@@ -207,9 +209,9 @@ Run the three pending KPL-03 Wave 4 capability gates (`verify.schema-drift`, `ve
 
 ## Session
 
-**Last session:** 2026-09-02T19:20:27.211Z
-**Stopped at:** Paused after KPL-03-02; Wave 4 regression passed, capability gates pending
-**Resume file:** .planning/phases/KPL-03-mac-daily-loop/.continue-here.md
+**Last session:** 2026-09-02T19:49:52.296Z
+**Stopped at:** Completed KPL-03-09-PLAN.md (Wave 5 presentation-only extraction boundary)
+**Resume file:** None
 
 ## Performance Metrics
 
@@ -256,3 +258,4 @@ Run the three pending KPL-03 Wave 4 capability gates (`verify.schema-drift`, `ve
 | Phase KPL-03 P12 | 7min | 2 tasks | 5 files |
 | Phase KPL-03 P01 | 12h 11m | 3 tasks | 16 files |
 | Phase KPL-03 P02 | 26min | 3 tasks | 18 files |
+| Phase KPL-03 P09 | 62min | 2 tasks | 14 files |
