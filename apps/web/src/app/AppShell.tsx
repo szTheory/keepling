@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
   type MouseEvent,
@@ -14,6 +15,7 @@ import {
   type UndoAvailability,
   type UndoResult,
 } from '@/api/keepling'
+import { createBrowserClientFacade } from '@/adapters/browserClientFacade'
 import { AlertDialog, type AlertDialogAction } from '@/components/ui/alert-dialog'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 import RecoveryStrip from '@/features/recovery/RecoveryStrip'
@@ -45,7 +47,14 @@ function AppShell({
   routeContent,
 }: AppShellProps) {
   const [pathname, setPathname] = useState(window.location.pathname)
-  const [latestUndo, setLatestUndo] = useState<UndoAvailability | null>(null)
+  // The presentation-only ClientFacade adapter (D-26/D-27) is the seam
+  // recovery/undo availability now flows through, instead of AppShell
+  // reading window CustomEvents directly. The underlying event mechanism,
+  // timing, and payload are unchanged.
+  const clientFacade = useMemo(() => createBrowserClientFacade(csrfToken), [csrfToken])
+  const [latestUndo, setLatestUndo] = useState<UndoAvailability | null>(
+    clientFacade.getRecoveryAvailability(),
+  )
   const [pendingAction, setPendingAction] = useState<
     | { href: string; kind: 'navigate' }
     | { kind: 'logout'; session: BrowserSession }
@@ -63,14 +72,7 @@ function AppShell({
     return () => window.removeEventListener('popstate', update)
   }, [])
 
-  useEffect(() => {
-    const rememberLatest = (event: Event) => {
-      setLatestUndo((event as CustomEvent<UndoAvailability>).detail)
-    }
-
-    window.addEventListener('keepling:undo-available', rememberLatest)
-    return () => window.removeEventListener('keepling:undo-available', rememberLatest)
-  }, [])
+  useEffect(() => clientFacade.subscribeRecovery(setLatestUndo), [clientFacade])
 
   const handleUndoSettled = (result: UndoResult) => {
     if (result.kind === 'acknowledged') {
@@ -205,6 +207,7 @@ function AppShell({
   return (
     <>
       <WorkspaceShell
+        clientFacade={clientFacade}
         detailContent={content.detailContent}
         detailSelected={content.detailSelected}
         listContent={content.listContent}

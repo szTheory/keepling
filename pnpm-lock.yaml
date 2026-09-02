@@ -158,6 +158,8 @@ importers:
         specifier: 4.1.11
         version: 4.1.11(@types/node@24.13.3)(jsdom@30.0.1)(vite@8.2.2(@types/node@24.13.3)(jiti@2.7.0)(terser@5.51.2))
 
+  packages/web-ui: {}
+
 packages:
 
   '@adobe/css-tools@4.5.0':
