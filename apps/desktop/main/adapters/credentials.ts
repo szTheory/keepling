@@ -71,6 +71,13 @@ class SafeStorageCredentialAdapter implements CredentialPort {
   async clear(): Promise<void> {
     await this.#remove(this.#filePath)
   }
+
+  settingsDisclosure(): { copy: string; kind: 'unsigned_dogfood' } {
+    return {
+      copy: 'This unsigned dogfood build may not keep sign-in through an app replacement. Your tasks and pending changes remain saved on this Mac.',
+      kind: 'unsigned_dogfood',
+    }
+  }
 }
 
 export { SafeStorageCredentialAdapter }
