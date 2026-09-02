@@ -34,7 +34,7 @@ action: Add the reasoned no-external-API declaration required by the coverage ga
 
 verify:
   - `node tooling/check-phase-1-uat-coverage.mjs`
-  - `node /Users/jon/.codex/gsd-core/bin/gsd-tools.cjs check api-coverage.verify-pre .planning/phases/KPL-01-one-trustworthy-task --raw`
+  - `node /Users/jon/.claude/gsd-core/bin/gsd-tools.cjs check api-coverage.verify-pre .planning/phases/KPL-01-one-trustworthy-task --raw`
 
 done: The API gate passes and removing or renaming any required UAT evidence makes the automated-UAT lane fail.
 
