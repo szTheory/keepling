@@ -1,13 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
-import type { ClientFacade, WorkspaceSnapshotView, WorkspaceTaskView } from '../ClientFacade'
+import type { ClientFacade, WorkspaceRoute, WorkspaceSnapshotView } from '../ClientFacade'
 import CaptureForm from '../capture/CaptureForm'
+import ConflictResolver from '../tasks/ConflictResolver'
+import TaskEditor, { type TaskEditorHandle } from '../tasks/TaskEditor'
 import TaskList from '../tasks/TaskList'
+import SyncRecovery from '../recovery/SyncRecovery'
 
 /**
- * Responsive Inbox capture/list/detail presentation (D-04/D-05, UI-SPEC "Main
- * Window Contract"). It renders through the shared ClientFacade only and is
- * consumed unchanged by the browser adapter and the Electron renderer.
+ * Responsive workspace presentation (D-04/D-05, UI-SPEC "Main Window
+ * Contract"). Composes Inbox/Today/Trash navigation, the task list, the task
+ * detail editor, inline conflict resolution, and the recovery strip through
+ * the shared ClientFacade only. It renders unchanged by the browser adapter
+ * and the Electron renderer.
  */
 type WorkspaceProps = {
   facade: ClientFacade
@@ -39,69 +44,192 @@ const useBreakpoint = (): Breakpoint => {
   return breakpoint
 }
 
-const syncStatusLabel = (status: WorkspaceTaskView['syncStatus']): string => {
-  if (status === 'synced') return 'Synced'
-  if (status === 'saved_on_this_mac') return 'Saved on this Mac'
-  return 'Draft'
+const routeLabel = (route: WorkspaceRoute): string => {
+  if (route === 'today') return 'Today'
+  if (route === 'trash') return 'Trash'
+  return 'Inbox'
 }
+
+const emptyCopy: Record<WorkspaceRoute, { body: string; title: string }> = {
+  inbox: { body: 'Captured tasks appear here until you move them out.', title: 'Inbox Is Clear' },
+  today: { body: 'Add a task to Today to see it here.', title: 'Nothing Planned for Today' },
+  trash: { body: 'Tasks you move to Trash appear here until restored.', title: 'Trash Is Empty' },
+}
+
+type PendingNavigation = { kind: 'route'; route: WorkspaceRoute } | { kind: 'select'; taskId: string | null }
 
 function Workspace({ facade }: WorkspaceProps) {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshotView>(() => facade.getSnapshot())
+  const [dirty, setDirty] = useState(false)
+  const [pendingNavigation, setPendingNavigation] = useState<PendingNavigation | null>(null)
+  const [focusTaskId, setFocusTaskId] = useState<string | null>(null)
   const breakpoint = useBreakpoint()
+  const editorRef = useRef<TaskEditorHandle>(null)
+  const headingRef = useRef<HTMLHeadingElement>(null)
+  const previousTasksRef = useRef(snapshot.tasks)
 
   useEffect(() => facade.subscribe(setSnapshot), [facade])
 
-  const selectedTask = useMemo(
-    () => snapshot.tasks.find((task) => task.id === snapshot.selectedTaskId) ?? null,
-    [snapshot.selectedTaskId, snapshot.tasks],
+  const routeTasks = useMemo(
+    () =>
+      snapshot.tasks.filter((task) => {
+        if (snapshot.route === 'trash') return task.trashedAt !== null
+        if (task.trashedAt !== null) return false
+        if (snapshot.route === 'today') return task.planned && task.completedAt === null
+        return !task.planned
+      }),
+    [snapshot.route, snapshot.tasks],
   )
 
-  // Below 1024px show one routed surface at a time (D-04); at and above it,
-  // list and detail stay independently visible and independently scrollable.
+  const selectedTask = useMemo(
+    () => routeTasks.find((task) => task.id === snapshot.selectedTaskId) ?? null,
+    [routeTasks, snapshot.selectedTaskId],
+  )
+
+  // When a task falls out of the current route view (completed, trashed, or
+  // moved), restore focus by stable identity: the row now at the same
+  // position, else the previous row, else the list heading (D-14).
+  useEffect(() => {
+    const previous = previousTasksRef.current
+    previousTasksRef.current = snapshot.tasks
+    if (snapshot.selectedTaskId === null) return
+    const stillVisible = routeTasks.some((task) => task.id === snapshot.selectedTaskId)
+    if (stillVisible) return
+    const removedIndex = previous.findIndex((task) => task.id === snapshot.selectedTaskId)
+    const next =
+      routeTasks[Math.min(removedIndex, routeTasks.length - 1)] ??
+      routeTasks[routeTasks.length - 1] ??
+      null
+    facade.selectTask(null)
+    if (next) setFocusTaskId(next.id)
+    else headingRef.current?.focus()
+  }, [facade, routeTasks, snapshot.selectedTaskId, snapshot.tasks])
+
   const showList = breakpoint !== 'compact' || selectedTask === null
   const showDetail = breakpoint !== 'compact' || selectedTask !== null
 
+  const attemptNavigation = async (navigation: PendingNavigation) => {
+    if (!dirty) {
+      commitNavigation(navigation)
+      return
+    }
+    setPendingNavigation(navigation)
+  }
+
+  const commitNavigation = (navigation: PendingNavigation) => {
+    if (navigation.kind === 'route') facade.setRoute(navigation.route)
+    else facade.selectTask(navigation.taskId)
+  }
+
+  const resolvePendingSave = async () => {
+    const saved = (await editorRef.current?.save()) ?? true
+    if (saved && pendingNavigation) {
+      commitNavigation(pendingNavigation)
+      setPendingNavigation(null)
+    }
+  }
+
+  const resolvePendingDiscard = () => {
+    editorRef.current?.discard()
+    if (pendingNavigation) commitNavigation(pendingNavigation)
+    setPendingNavigation(null)
+  }
+
+  const handleBack = () => {
+    void attemptNavigation({ kind: 'select', taskId: null })
+  }
+
+  const handleEscape = () => {
+    if (selectedTask === null) return
+    void attemptNavigation({ kind: 'select', taskId: null })
+  }
+
   return (
     <main data-workspace-breakpoint={breakpoint} id="main-content" tabIndex={-1}>
+      <nav aria-label="Workspace destinations" data-workspace-region="nav">
+        {(['inbox', 'today', 'trash'] as const).map((route) => (
+          <button
+            aria-current={snapshot.route === route ? 'true' : undefined}
+            data-workspace-nav={route}
+            key={route}
+            onClick={() => void attemptNavigation({ kind: 'route', route })}
+            type="button"
+          >
+            {routeLabel(route)}
+          </button>
+        ))}
+      </nav>
+
+      {snapshot.conflict !== null ? (
+        <ConflictResolver conflict={snapshot.conflict} facade={facade} />
+      ) : null}
+
       {showList ? (
-        <section aria-label="Inbox" data-workspace-region="list">
-          <CaptureForm facade={facade} />
-          {snapshot.tasks.length === 0 ? (
-            <div data-workspace-empty="inbox">
-              <h2>Inbox Is Clear</h2>
-              <p>Captured tasks appear here until you move them out.</p>
+        <section aria-label={routeLabel(snapshot.route)} data-workspace-region="list">
+          {snapshot.route === 'inbox' ? <CaptureForm facade={facade} /> : null}
+          {routeTasks.length === 0 ? (
+            <div data-workspace-empty={snapshot.route}>
+              <h2 ref={headingRef} tabIndex={-1}>
+                {emptyCopy[snapshot.route].title}
+              </h2>
+              <p>{emptyCopy[snapshot.route].body}</p>
             </div>
           ) : (
             <TaskList
-              onSelect={(taskId) => facade.selectTask(taskId)}
+              focusTaskId={focusTaskId}
+              onSelect={(taskId) => void attemptNavigation({ kind: 'select', taskId })}
               selectedTaskId={snapshot.selectedTaskId}
-              tasks={snapshot.tasks}
+              tasks={routeTasks}
             />
           )}
         </section>
       ) : null}
       {showDetail ? (
-        <section aria-label="Task detail" data-workspace-region="detail">
+        <section
+          aria-label="Task detail"
+          data-workspace-region="detail"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              handleEscape()
+            }
+          }}
+        >
           {selectedTask === null ? (
             <>
               <h2>Choose a Task</h2>
               <p>Select a task from the list to view or edit it.</p>
             </>
           ) : (
-            <article aria-labelledby="workspace-detail-title">
-              <h2 id="workspace-detail-title">{selectedTask.title}</h2>
+            <>
               {breakpoint === 'compact' ? (
-                <button onClick={() => facade.selectTask(null)} type="button">
+                <button onClick={handleBack} type="button">
                   Back
                 </button>
               ) : null}
-              {selectedTask.notes === '' ? null : <p>{selectedTask.notes}</p>}
-              <p data-workspace-sync-status={selectedTask.syncStatus}>
-                {syncStatusLabel(selectedTask.syncStatus)}
-              </p>
-            </article>
+              <h2 id="workspace-detail-title">{selectedTask.title}</h2>
+              <TaskEditor facade={facade} onDirtyChange={setDirty} ref={editorRef} task={selectedTask} />
+            </>
           )}
         </section>
+      ) : null}
+
+      <SyncRecovery facade={facade} />
+
+      {pendingNavigation !== null ? (
+        <div aria-label="Discard unsaved changes?" data-workspace-dirty-dialog="true" role="alertdialog">
+          <h2>Discard unsaved changes?</h2>
+          <p>These edits haven't been saved.</p>
+          <button onClick={() => void resolvePendingSave()} type="button">
+            Save Changes
+          </button>
+          <button onClick={resolvePendingDiscard} type="button">
+            Discard Changes
+          </button>
+          <button onClick={() => setPendingNavigation(null)} type="button">
+            Keep Editing
+          </button>
+        </div>
       ) : null}
     </main>
   )

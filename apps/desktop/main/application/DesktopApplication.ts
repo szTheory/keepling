@@ -13,10 +13,39 @@ type WorkspaceTask = {
   id: string
   syncStatus: SyncStatus
   title: string
+  completedAt?: string | null
+  notes?: string
+  planned?: boolean
+  trashedAt?: string | null
 }
 
 type WorkspaceSnapshot = {
   tasks: WorkspaceTask[]
+}
+
+type EditTaskCommand = {
+  notes: string
+  taskId: string
+  title: string
+}
+
+type LifecycleKind = 'complete' | 'reopen' | 'restore' | 'trash'
+
+type LifecycleCommand = {
+  kind: LifecycleKind
+  taskId: string
+}
+
+type MoveTodayCommand = {
+  planned: boolean
+  taskId: string
+}
+
+type ConflictRecord = {
+  conflictId: string
+  current: string
+  mine: string
+  taskId: string
 }
 
 type CaptureCommand = {
@@ -76,6 +105,18 @@ interface LocalStorePort {
   acknowledge(acknowledgement: SyncAcknowledgement): Promise<WorkspaceSnapshot>
   acknowledgeSync?(acknowledgement: SyncAcknowledgement): Promise<void> | void
   applyPull?(page: PullPage): Promise<void> | void
+  /** Local-only durable task edit (D-03: commit-first, never claims "Synced"). */
+  editTask?(command: EditTaskCommand): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
+  /** Local-only durable lifecycle transition (complete/reopen/trash/restore). */
+  applyLifecycle?(command: LifecycleCommand): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
+  /** Local-only durable Today placement. */
+  applyMoveToday?(command: MoveTodayCommand): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
+  /** Reverses the latest recorded local edit/lifecycle action, if any. */
+  undoLastLocalAction?(): Promise<{ applied: boolean; snapshot: WorkspaceSnapshot }> | { applied: boolean; snapshot: WorkspaceSnapshot }
+  /** Lists open sync conflicts awaiting a mine/current choice. */
+  listConflicts?(): Promise<ConflictRecord[]> | ConflictRecord[]
+  /** Commits the chosen field value for a sync conflict and clears it. */
+  resolveConflict?(input: { choice: 'current' | 'mine'; conflictId: string }): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
   pendingMutations(): Promise<PendingMutation[]>
   readyMutations?(): Promise<SyncMutation[]> | SyncMutation[]
   setSyncFence?(reason: string | null): Promise<void> | void
@@ -177,6 +218,51 @@ class DesktopApplication {
     return this.#localStore.snapshot()
   }
 
+  async editTask(command: EditTaskCommand): Promise<WorkspaceSnapshot> {
+    const title = command.title.trim()
+    if (title.length === 0 || [...title].length > 512) {
+      throw new Error('task title must contain between 1 and 512 Unicode scalar values')
+    }
+    if (!this.#localStore.editTask) throw new Error('task editing is unavailable')
+    // D-03 boundary: durable commit before "Saved on this Mac" is reported.
+    const snapshot = await this.#localStore.editTask({ ...command, title })
+    this.publishPresentation({ kind: 'local_saved', pendingCount: 1 })
+    return snapshot
+  }
+
+  async applyLifecycle(command: LifecycleCommand): Promise<WorkspaceSnapshot> {
+    if (!this.#localStore.applyLifecycle) throw new Error('task lifecycle actions are unavailable')
+    const snapshot = await this.#localStore.applyLifecycle(command)
+    this.publishPresentation({ kind: 'local_saved', pendingCount: 1 })
+    return snapshot
+  }
+
+  async moveToday(command: MoveTodayCommand): Promise<WorkspaceSnapshot> {
+    if (!this.#localStore.applyMoveToday) throw new Error('Today placement is unavailable')
+    const snapshot = await this.#localStore.applyMoveToday(command)
+    this.publishPresentation({ kind: 'local_saved', pendingCount: 1 })
+    return snapshot
+  }
+
+  async undoLastLocalAction(): Promise<{ applied: boolean; snapshot: WorkspaceSnapshot }> {
+    if (!this.#localStore.undoLastLocalAction) throw new Error('undo is unavailable')
+    const result = await this.#localStore.undoLastLocalAction()
+    if (result.applied) this.publishPresentation({ kind: 'local_saved', pendingCount: 1 })
+    return result
+  }
+
+  async listConflicts(): Promise<ConflictRecord[]> {
+    if (!this.#localStore.listConflicts) return []
+    return this.#localStore.listConflicts()
+  }
+
+  async resolveConflict(input: { choice: 'current' | 'mine'; conflictId: string }): Promise<WorkspaceSnapshot> {
+    if (!this.#localStore.resolveConflict) throw new Error('conflict resolution is unavailable')
+    const snapshot = await this.#localStore.resolveConflict(input)
+    this.publishPresentation({ kind: 'local_saved', pendingCount: 1 })
+    return snapshot
+  }
+
   async activateNamespace(namespace: SyncNamespace): Promise<boolean> {
     if (!this.#localStore.bindNamespace) throw new Error('namespace binding is unavailable')
     const bound = await this.#localStore.bindNamespace(namespace)
@@ -262,10 +348,15 @@ class DesktopApplication {
 export { DesktopApplication, SYNC_LIMITS, computeSyncBackoff }
 export type {
   CaptureCommand,
+  ConflictRecord,
   CredentialPort,
   DesktopApplicationOptions,
+  EditTaskCommand,
+  LifecycleCommand,
+  LifecycleKind,
   LocalAcceptance,
   LocalStorePort,
+  MoveTodayCommand,
   PendingMutation,
   PullPage,
   SyncMutation,

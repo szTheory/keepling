@@ -66,8 +66,8 @@ describe('workspace-tracer: shared Inbox capture/list/detail slice', () => {
   it('moves stable list focus independently from selection and opens by stable task identity', async () => {
     const facade = createDesktopClientFacade({
       seedTasks: [
-        { id: 'task-1', notes: '', syncStatus: 'synced', title: 'Buy milk' },
-        { id: 'task-2', notes: 'Bring floor plans', syncStatus: 'synced', title: 'Call landlord' },
+        { completedAt: null, id: 'task-1', notes: '', planned: false, syncStatus: 'synced', title: 'Buy milk', trashedAt: null },
+        { completedAt: null, id: 'task-2', notes: 'Bring floor plans', planned: false, syncStatus: 'synced', title: 'Call landlord', trashedAt: null },
       ],
     })
 
@@ -98,7 +98,17 @@ describe('workspace-tracer: shared Inbox capture/list/detail slice', () => {
   })
 
   it('renders byte-identical markup from two independent facade instances (web/desktop parity)', () => {
-    const seedTasks = [{ id: 'task-1', notes: '', syncStatus: 'synced' as const, title: 'Water plants' }]
+    const seedTasks = [
+      {
+        completedAt: null,
+        id: 'task-1',
+        notes: '',
+        planned: false,
+        syncStatus: 'synced' as const,
+        title: 'Water plants',
+        trashedAt: null,
+      },
+    ]
 
     act(() => {
       root.render(<Workspace facade={createDesktopClientFacade({ seedTasks })} />)

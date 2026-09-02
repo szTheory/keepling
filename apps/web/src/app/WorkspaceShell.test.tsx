@@ -5,12 +5,24 @@ import type { ClientFacade } from '../../../../packages/web-ui/src/ClientFacade.
 import WorkspaceShell from './WorkspaceShell'
 
 const stubFacade: ClientFacade = {
-  captureTask: async () => ({ kind: 'accepted', task: { id: 't', notes: '', syncStatus: 'synced', title: 't' } }),
+  captureTask: async () => ({
+    kind: 'accepted',
+    task: { completedAt: null, id: 't', notes: '', planned: false, syncStatus: 'synced', title: 't', trashedAt: null },
+  }),
+  completeTask: async () => ({ kind: 'accepted' }),
+  editTask: async () => ({ kind: 'accepted' }),
   getRecoveryAvailability: () => null,
-  getSnapshot: () => ({ selectedTaskId: null, tasks: [] }),
+  getSnapshot: () => ({ conflict: null, route: 'inbox', selectedTaskId: null, tasks: [] }),
+  moveToday: async () => ({ kind: 'accepted' }),
+  reopenTask: async () => ({ kind: 'accepted' }),
+  resolveConflict: async () => ({ kind: 'accepted' }),
+  restoreTask: async () => ({ kind: 'accepted' }),
   selectTask: () => undefined,
+  setRoute: () => undefined,
   subscribe: () => () => undefined,
   subscribeRecovery: () => () => undefined,
+  trashTask: async () => ({ kind: 'accepted' }),
+  undoLastChange: async () => ({ kind: 'accepted' }),
 }
 
 describe('WorkspaceShell shared-workspace opt-in', () => {

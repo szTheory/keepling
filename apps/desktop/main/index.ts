@@ -5,8 +5,12 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 
 import {
   DesktopApplication,
+  type ConflictRecord,
+  type EditTaskCommand,
+  type LifecycleCommand,
   type LocalAcceptance,
   type LocalStorePort,
+  type MoveTodayCommand,
   type PendingMutation,
   type SyncAcknowledgement,
   type SyncPort,
@@ -57,6 +61,30 @@ class WorkerLocalStore implements LocalStorePort {
     return this.#request('snapshot')
   }
 
+  editTask(command: EditTaskCommand): Promise<WorkspaceSnapshot> {
+    return this.#request('editTask', command)
+  }
+
+  applyLifecycle(command: LifecycleCommand): Promise<WorkspaceSnapshot> {
+    return this.#request('applyLifecycle', command)
+  }
+
+  applyMoveToday(command: MoveTodayCommand): Promise<WorkspaceSnapshot> {
+    return this.#request('applyMoveToday', command)
+  }
+
+  undoLastLocalAction(): Promise<{ applied: boolean; snapshot: WorkspaceSnapshot }> {
+    return this.#request('undoLastLocalAction')
+  }
+
+  listConflicts(): Promise<ConflictRecord[]> {
+    return this.#request('listConflicts')
+  }
+
+  resolveConflict(input: { choice: 'current' | 'mine'; conflictId: string }): Promise<WorkspaceSnapshot> {
+    return this.#request('resolveConflict', input)
+  }
+
   async close(): Promise<void> {
     await this.#request('close')
     await this.#worker.terminate()
@@ -95,12 +123,25 @@ const bootstrap = async () => {
   const localStore = new WorkerLocalStore(join(app.getPath('userData'), 'namespace.sqlite3'), migrationPath)
   const syncMode = process.env.KEEPLING_TEST_SYNC_MODE
   const sync: SyncPort = {
-    acknowledge: async (mutation) => syncMode === 'acknowledge' ? {
-      fingerprint: mutation.fingerprint,
-      mutationId: mutation.mutationId,
-      outcome: 'accepted',
-      snapshot: { id: mutation.taskId, title: mutation.title },
-    } : null,
+    acknowledge: async (mutation) => {
+      if (syncMode === 'acknowledge') {
+        return {
+          fingerprint: mutation.fingerprint,
+          mutationId: mutation.mutationId,
+          outcome: 'accepted',
+          snapshot: { id: mutation.taskId, title: mutation.title },
+        }
+      }
+      if (syncMode === 'conflict') {
+        return {
+          fingerprint: mutation.fingerprint,
+          mutationId: mutation.mutationId,
+          outcome: 'conflict',
+          snapshot: { id: mutation.taskId, title: `${mutation.title} (updated elsewhere)` },
+        }
+      }
+      return null
+    },
   }
   const desktopApplication = new DesktopApplication({
     clock: { now: () => new Date().toISOString() },
@@ -139,6 +180,30 @@ const bootstrap = async () => {
   ipcMain.handle('keepling:presentation-snapshot', async (event) => {
     assertTrustedSender(event.sender)
     return desktopApplication.presentationSnapshot()
+  })
+  ipcMain.handle('keepling:edit-task', async (event, command: EditTaskCommand) => {
+    assertTrustedSender(event.sender)
+    return desktopApplication.editTask(command)
+  })
+  ipcMain.handle('keepling:lifecycle-task', async (event, command: LifecycleCommand) => {
+    assertTrustedSender(event.sender)
+    return desktopApplication.applyLifecycle(command)
+  })
+  ipcMain.handle('keepling:move-today', async (event, command: MoveTodayCommand) => {
+    assertTrustedSender(event.sender)
+    return desktopApplication.moveToday(command)
+  })
+  ipcMain.handle('keepling:undo-last-action', async (event) => {
+    assertTrustedSender(event.sender)
+    return desktopApplication.undoLastLocalAction()
+  })
+  ipcMain.handle('keepling:list-conflicts', async (event) => {
+    assertTrustedSender(event.sender)
+    return desktopApplication.listConflicts()
+  })
+  ipcMain.handle('keepling:resolve-conflict', async (event, input: { choice: 'current' | 'mine'; conflictId: string }) => {
+    assertTrustedSender(event.sender)
+    return desktopApplication.resolveConflict(input)
   })
   const unsubscribePresentation = desktopApplication.subscribePresentation((presentation) => {
     if (!window.isDestroyed()) window.webContents.send('keepling:presentation-changed', presentation)

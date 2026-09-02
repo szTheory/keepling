@@ -79,7 +79,15 @@ describe('browserClientFacade', () => {
 
     expect(outcome).toEqual({
       kind: 'accepted',
-      task: { id: 'task-1', notes: '', syncStatus: 'synced', title: 'Call dentist' },
+      task: {
+        completedAt: null,
+        id: 'task-1',
+        notes: '',
+        planned: false,
+        syncStatus: 'synced',
+        title: 'Call dentist',
+        trashedAt: null,
+      },
     })
     expect(facade.getSnapshot().tasks.map((task) => task.title)).toEqual(['Call dentist'])
     expect(acknowledgedEvents).toHaveLength(1)

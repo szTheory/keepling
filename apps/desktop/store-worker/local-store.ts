@@ -4,7 +4,11 @@ import { dirname } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 
 import type {
+  ConflictRecord,
+  EditTaskCommand,
+  LifecycleCommand,
   LocalAcceptance,
+  MoveTodayCommand,
   PendingMutation,
   PullPage,
   SyncAcknowledgement,
@@ -20,7 +24,15 @@ type LocalStoreOptions = {
   migrationPath: string | URL
 }
 
-type ProjectionRow = { sync_status: 'saved_on_this_mac' | 'synced'; task_id: string; title: string }
+type ProjectionRow = {
+  completed_at: string | null
+  notes: string
+  planned: number
+  sync_status: 'saved_on_this_mac' | 'synced'
+  task_id: string
+  title: string
+  trashed_at: string | null
+}
 type MutationRow = {
   accepted_at: string
   command_bytes: string
@@ -270,10 +282,20 @@ class NodeSqliteLocalStore {
       `).run(acknowledgement.outcome, snapshotJson, acknowledgement.mutationId)
       this.#database.prepare('DELETE FROM outbox WHERE mutation_id = ?').run(acknowledgement.mutationId)
       if (acknowledgement.outcome === 'conflict') {
+        const command = this.#database.prepare(`
+          SELECT effect_snapshot_json FROM immutable_commands WHERE mutation_id = ?
+        `).get(acknowledgement.mutationId) as { effect_snapshot_json: string } | undefined
+        const mineSnapshot: SyncSnapshot = command
+          ? (JSON.parse(command.effect_snapshot_json) as SyncSnapshot)
+          : { id: '' }
+        const detailsJson = JSON.stringify({
+          current: typeof acknowledgement.snapshot.title === 'string' ? acknowledgement.snapshot.title : '',
+          mine: typeof mineSnapshot.title === 'string' ? mineSnapshot.title : '',
+        })
         this.#database.prepare(`
           INSERT INTO conflicts(conflict_id, mutation_id, details_json) VALUES (?, ?, ?)
           ON CONFLICT(conflict_id) DO UPDATE SET details_json = excluded.details_json
-        `).run(`conflict:${acknowledgement.mutationId}`, acknowledgement.mutationId, snapshotJson)
+        `).run(`conflict:${acknowledgement.mutationId}`, acknowledgement.mutationId, detailsJson)
       }
       this.#replayVisible()
       this.#database.exec('COMMIT')
@@ -307,11 +329,161 @@ class NodeSqliteLocalStore {
 
   snapshot(): WorkspaceSnapshot {
     const rows = this.#database.prepare(`
-      SELECT task_id, title, sync_status FROM visible_projection ORDER BY rowid
+      SELECT task_id, title, sync_status, notes, completed_at, trashed_at, planned
+      FROM visible_projection ORDER BY rowid
     `).all() as ProjectionRow[]
     return {
-      tasks: rows.map((row) => ({ id: row.task_id, syncStatus: row.sync_status, title: row.title })),
+      tasks: rows.map((row) => ({
+        completedAt: row.completed_at,
+        id: row.task_id,
+        notes: row.notes,
+        planned: row.planned === 1,
+        syncStatus: row.sync_status,
+        title: row.title,
+        trashedAt: row.trashed_at,
+      })),
     }
+  }
+
+  editTask(command: EditTaskCommand): WorkspaceSnapshot {
+    const title = command.title.trim()
+    if (title.length === 0 || [...title].length > 512) throw new Error('invalid task title')
+    if ([...command.notes].length > 50_000) throw new Error('invalid task notes')
+    this.#database.exec('BEGIN IMMEDIATE')
+    try {
+      const before = this.#requireProjectionRow(command.taskId)
+      this.#recordLastAction(command.taskId, before)
+      this.#database.prepare(`
+        UPDATE visible_projection SET title = ?, notes = ? WHERE task_id = ?
+      `).run(title, command.notes, command.taskId)
+      this.#database.exec('COMMIT')
+    } catch (error) {
+      this.#database.exec('ROLLBACK')
+      throw error
+    }
+    return this.snapshot()
+  }
+
+  applyLifecycle(command: LifecycleCommand): WorkspaceSnapshot {
+    this.#database.exec('BEGIN IMMEDIATE')
+    try {
+      const before = this.#requireProjectionRow(command.taskId)
+      this.#recordLastAction(command.taskId, before)
+      if (command.kind === 'complete') {
+        this.#database.prepare(`UPDATE visible_projection SET completed_at = ? WHERE task_id = ?`)
+          .run(new Date().toISOString(), command.taskId)
+      } else if (command.kind === 'reopen') {
+        this.#database.prepare(`UPDATE visible_projection SET completed_at = NULL WHERE task_id = ?`)
+          .run(command.taskId)
+      } else if (command.kind === 'trash') {
+        this.#database.prepare(`UPDATE visible_projection SET trashed_at = ? WHERE task_id = ?`)
+          .run(new Date().toISOString(), command.taskId)
+      } else {
+        this.#database.prepare(`UPDATE visible_projection SET trashed_at = NULL WHERE task_id = ?`)
+          .run(command.taskId)
+      }
+      this.#database.exec('COMMIT')
+    } catch (error) {
+      this.#database.exec('ROLLBACK')
+      throw error
+    }
+    return this.snapshot()
+  }
+
+  applyMoveToday(command: MoveTodayCommand): WorkspaceSnapshot {
+    this.#database.exec('BEGIN IMMEDIATE')
+    try {
+      const before = this.#requireProjectionRow(command.taskId)
+      this.#recordLastAction(command.taskId, before)
+      this.#database.prepare(`UPDATE visible_projection SET planned = ? WHERE task_id = ?`)
+        .run(command.planned ? 1 : 0, command.taskId)
+      this.#database.exec('COMMIT')
+    } catch (error) {
+      this.#database.exec('ROLLBACK')
+      throw error
+    }
+    return this.snapshot()
+  }
+
+  undoLastLocalAction(): { applied: boolean; snapshot: WorkspaceSnapshot } {
+    this.#database.exec('BEGIN IMMEDIATE')
+    try {
+      const stored = this.#database.prepare(`
+        SELECT action_json FROM last_local_action WHERE singleton = 1
+      `).get() as { action_json: string | null }
+      if (stored.action_json === null) {
+        this.#database.exec('COMMIT')
+        return { applied: false, snapshot: this.snapshot() }
+      }
+      const action = JSON.parse(stored.action_json) as { previous: ProjectionRow; taskId: string }
+      this.#database.prepare(`
+        UPDATE visible_projection
+        SET title = ?, notes = ?, completed_at = ?, trashed_at = ?, planned = ?
+        WHERE task_id = ?
+      `).run(
+        action.previous.title,
+        action.previous.notes,
+        action.previous.completed_at,
+        action.previous.trashed_at,
+        action.previous.planned,
+        action.taskId,
+      )
+      this.#database.prepare(`UPDATE last_local_action SET action_json = NULL WHERE singleton = 1`).run()
+      this.#database.exec('COMMIT')
+    } catch (error) {
+      this.#database.exec('ROLLBACK')
+      throw error
+    }
+    return { applied: true, snapshot: this.snapshot() }
+  }
+
+  listConflicts(): ConflictRecord[] {
+    const rows = this.#database.prepare(`
+      SELECT conflicts.conflict_id, conflicts.details_json, immutable_commands.task_id
+      FROM conflicts JOIN immutable_commands USING (mutation_id)
+    `).all() as Array<{ conflict_id: string; details_json: string; task_id: string }>
+    return rows.map((row) => {
+      const details = JSON.parse(row.details_json) as { current: string; mine: string }
+      return { conflictId: row.conflict_id, current: details.current, mine: details.mine, taskId: row.task_id }
+    })
+  }
+
+  resolveConflict(input: { choice: 'current' | 'mine'; conflictId: string }): WorkspaceSnapshot {
+    this.#database.exec('BEGIN IMMEDIATE')
+    try {
+      const row = this.#database.prepare(`
+        SELECT conflicts.details_json, immutable_commands.task_id
+        FROM conflicts JOIN immutable_commands USING (mutation_id)
+        WHERE conflicts.conflict_id = ?
+      `).get(input.conflictId) as { details_json: string; task_id: string } | undefined
+      if (row === undefined) throw new Error('conflict not found')
+      const details = JSON.parse(row.details_json) as { current: string; mine: string }
+      const resolvedTitle = input.choice === 'mine' ? details.mine : details.current
+      const status = input.choice === 'mine' ? 'saved_on_this_mac' : 'synced'
+      this.#database.prepare(`UPDATE visible_projection SET title = ?, sync_status = ? WHERE task_id = ?`)
+        .run(resolvedTitle, status, row.task_id)
+      this.#database.prepare(`DELETE FROM conflicts WHERE conflict_id = ?`).run(input.conflictId)
+      this.#database.exec('COMMIT')
+    } catch (error) {
+      this.#database.exec('ROLLBACK')
+      throw error
+    }
+    return this.snapshot()
+  }
+
+  #requireProjectionRow(taskId: string): ProjectionRow {
+    const row = this.#database.prepare(`
+      SELECT task_id, title, sync_status, notes, completed_at, trashed_at, planned
+      FROM visible_projection WHERE task_id = ?
+    `).get(taskId) as ProjectionRow | undefined
+    if (row === undefined) throw new Error('task not found')
+    return row
+  }
+
+  #recordLastAction(taskId: string, before: ProjectionRow): void {
+    this.#database.prepare(`
+      UPDATE last_local_action SET action_json = ? WHERE singleton = 1
+    `).run(JSON.stringify({ previous: before, taskId }))
   }
 
   close(): void {

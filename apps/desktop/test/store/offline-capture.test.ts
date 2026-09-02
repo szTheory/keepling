@@ -38,7 +38,17 @@ describe('NodeSqliteLocalStore', () => {
 
     const reopened = new NodeSqliteLocalStore(paths)
     expect(reopened.snapshot()).toEqual({
-      tasks: [{ id: 'task-store', syncStatus: 'saved_on_this_mac', title: 'Survive relaunch' }],
+      tasks: [
+        {
+          completedAt: null,
+          id: 'task-store',
+          notes: '',
+          planned: false,
+          syncStatus: 'saved_on_this_mac',
+          title: 'Survive relaunch',
+          trashedAt: null,
+        },
+      ],
     })
     expect(reopened.pendingMutations()).toEqual([mutation])
     reopened.close()

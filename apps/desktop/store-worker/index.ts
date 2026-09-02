@@ -4,7 +4,18 @@ import { NodeSqliteLocalStore, type LocalStoreOptions } from './local-store.ts'
 
 type WorkerRequest = {
   id: number
-  operation: 'acceptCapture' | 'acknowledge' | 'pendingMutations' | 'snapshot' | 'close'
+  operation:
+    | 'acceptCapture'
+    | 'acknowledge'
+    | 'applyLifecycle'
+    | 'applyMoveToday'
+    | 'close'
+    | 'editTask'
+    | 'listConflicts'
+    | 'pendingMutations'
+    | 'resolveConflict'
+    | 'snapshot'
+    | 'undoLastLocalAction'
   payload?: unknown
 }
 
@@ -26,6 +37,24 @@ parentPort.on('message', (request: WorkerRequest) => {
         break
       case 'snapshot':
         value = store.snapshot()
+        break
+      case 'editTask':
+        value = store.editTask(request.payload as Parameters<typeof store.editTask>[0])
+        break
+      case 'applyLifecycle':
+        value = store.applyLifecycle(request.payload as Parameters<typeof store.applyLifecycle>[0])
+        break
+      case 'applyMoveToday':
+        value = store.applyMoveToday(request.payload as Parameters<typeof store.applyMoveToday>[0])
+        break
+      case 'undoLastLocalAction':
+        value = store.undoLastLocalAction()
+        break
+      case 'listConflicts':
+        value = store.listConflicts()
+        break
+      case 'resolveConflict':
+        value = store.resolveConflict(request.payload as Parameters<typeof store.resolveConflict>[0])
         break
       case 'close':
         store.close()
