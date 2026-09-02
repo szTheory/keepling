@@ -134,7 +134,12 @@ const executableName = basename(applicationPath, '.app')
 const builtExecutablePath = join(applicationPath, 'Contents', 'MacOS', executableName)
 const artifactRoot = mkdtempSync(join(tmpdir(), 'keepling-desktop-package-'))
 const copiedApplicationPath = join(artifactRoot, basename(applicationPath))
-cpSync(applicationPath, copiedApplicationPath, { dereference: false, errorOnExist: true, recursive: true })
+cpSync(applicationPath, copiedApplicationPath, {
+  dereference: false,
+  errorOnExist: true,
+  recursive: true,
+  verbatimSymlinks: true,
+})
 const executablePath = join(copiedApplicationPath, 'Contents', 'MacOS', executableName)
 
 const applicationDigestSha256 = hashDirectory(applicationPath)

@@ -8,6 +8,7 @@ cover/
 dist/
 build/
 apps/web/test-results/
+apps/desktop/out/
 DerivedData/
 *.xcuserstate
 .env
