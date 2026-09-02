@@ -36,6 +36,7 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
 
   @tag :transport
   test "native public client completes exact PKCE exchange, rotation, listing, and revocation", %{
+    account_id: account_id,
     conn: conn
   } do
     browser = login(conn)
@@ -96,8 +97,10 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
     refute rotated["refresh_token"] == refresh_a
     assert rotated["namespace"] == exchanged["namespace"]
 
+    asserted_namespace_authorization = authorize(browser, "namespace-assertion", "electron")
+
     asserted_namespace =
-      exchange_params(authorization.code)
+      exchange_params(asserted_namespace_authorization.code)
       |> Map.put("namespace", %{
         "account_subject" => Ecto.UUID.generate(),
         "generation" => 999,
@@ -128,7 +131,11 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
              |> get("/api/v1/device-grants")
              |> json_response(200)
 
-    assert Enum.map(grants, & &1["installation_id"]) == ["installation-a", "installation-b"]
+    assert Enum.map(grants, & &1["installation_id"]) == [
+             "installation-a",
+             "installation-b",
+             "namespace-assertion"
+           ]
 
     refute Enum.any?(
              grants,

@@ -6,6 +6,7 @@ import { expect, test } from '@playwright/test'
 
 import { KeeplingSyncAdapter } from '../../main/adapters/sync.ts'
 import { SafeStorageCredentialAdapter } from '../../main/adapters/credentials.ts'
+import { DesktopApplication, type LocalStorePort } from '../../main/application/DesktopApplication.ts'
 
 const credential = 'a'.repeat(43)
 const namespace = {
@@ -77,7 +78,7 @@ test('uses released operations, exact receipts, and only server-derived namespac
   })
   expect(acknowledgement).toEqual(replay)
   expect(requests.map(({ method, url }) => `${method} ${new URL(url).pathname}`)).toEqual([
-    'POST /oauth/token', 'GET /compatibility', 'GET /api/v1/sync', 'POST /api/v1/tasks', 'GET /api/v1/mutations/11111111-1111-4111-8111-111111111111',
+    'POST /oauth/token', 'GET /compatibility', 'GET /api/v1/sync', 'POST /api/v1/commands/capture-task', 'GET /api/v1/mutations/11111111-1111-4111-8111-111111111111',
   ])
   expect(requests[3]?.body).toBe(commandBytes)
 })
@@ -101,4 +102,31 @@ test('encrypts credentials asynchronously and persists only ciphertext', async (
   await expect(adapter.load()).resolves.toBe(credential)
   await adapter.clear()
   await expect(adapter.load()).resolves.toBeNull()
+})
+
+test('fences the active namespace before best-effort remote revocation', async () => {
+  const events: string[] = []
+  const localStore = {
+    acceptCapture: async () => { throw new Error('unused') },
+    acknowledge: async () => ({ tasks: [] }),
+    close: async () => undefined,
+    pendingMutations: async () => [],
+    setSyncFence: async (reason: string | null) => { events.push(`fence:${reason}`) },
+    snapshot: async () => ({ tasks: [] }),
+  } satisfies LocalStorePort
+  const application = new DesktopApplication({
+    clock: { now: () => '2026-09-02T12:00:00.000Z' },
+    credentials: {
+      clear: async () => { events.push('credentials:clear') },
+      load: async () => credential,
+      store: async () => undefined,
+    },
+    identity: { randomId: () => 'unused' },
+    localStore,
+    sync: {},
+  })
+
+  await application.signOut(async () => { events.push('remote:revoke'); throw new Error('offline') })
+
+  expect(events).toEqual(['fence:signed_out', 'credentials:clear', 'remote:revoke'])
 })
