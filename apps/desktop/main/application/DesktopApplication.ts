@@ -5,6 +5,7 @@ import {
   type DesktopPresentation,
   type DesktopPresentationInput,
 } from './presentation.ts'
+import { removeLocalNamespaceData, type RemoveLocalDataOutcome } from '../recovery/remove-local-data.ts'
 
 type SyncStatus = 'saved_on_this_mac' | 'synced'
 type SyncOutcome = 'accepted' | 'already_satisfied' | 'rejected' | 'stale' | 'conflict'
@@ -128,6 +129,8 @@ interface LocalStorePort {
   listConflicts?(): Promise<ConflictRecord[]> | ConflictRecord[]
   /** Commits the chosen field value for a sync conflict and clears it. */
   resolveConflict?(input: { choice: 'current' | 'mine'; conflictId: string }): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
+  /** D-24 whole-unit removal of this namespace's closed local file inventory. MUST run only after `close()`. */
+  removeLocalFiles?(): Promise<{ remaining: string[]; removed: string[] }> | { remaining: string[]; removed: string[] }
   /** Persists the Quick Entry draft (D-11); not a task change, no outbox row. */
   saveDraft?(draft: QuickEntryDraft): Promise<void> | void
   /** Reads back the persisted Quick Entry draft, or null when there is none. */
@@ -389,6 +392,24 @@ class DesktopApplication {
     return { settled }
   }
 
+  /**
+   * D-24 "Remove data from this Mac…" -- separate from sign out and server
+   * deletion. Delegates the actual serialized fence/close/delete/verify
+   * sequence to the pure `removeLocalNamespaceData` state machine so it can
+   * be exercised without a live worker/Electron process; this method's job
+   * is only to supply the real ports (local store, credentials) and publish
+   * the resulting presentation state. NEVER accepts or constructs a server
+   * deletion request -- no sync/network port is passed to the removal
+   * function at all, so calling it structurally cannot reach the server.
+   */
+  async removeLocalData(input: { confirmRemoveAnyway: boolean }): Promise<RemoveLocalDataOutcome> {
+    return removeLocalNamespaceData({
+      confirmRemoveAnyway: input.confirmRemoveAnyway,
+      credentials: this.#credentials,
+      localStore: this.#localStore,
+    })
+  }
+
   async runSyncPass(): Promise<{ pulled: number; settled: number }> {
     if (!this.#sync.pull || !this.#sync.push || !this.#localStore.applyPull || !this.#localStore.readyMutations) {
       const result = await this.reconcile()
@@ -436,6 +457,7 @@ export type {
   PendingMutation,
   PullPage,
   QuickEntryDraft,
+  RemoveLocalDataOutcome,
   SyncMutation,
   SyncNamespace,
   SyncAcknowledgement,

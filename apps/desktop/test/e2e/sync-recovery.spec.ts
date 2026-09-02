@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { chmodSync, existsSync, mkdtempSync, rmSync } from 'node:fs'
+import { chmodSync, existsSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { spawnSync } from 'node:child_process'
@@ -9,6 +9,8 @@ import { Worker } from 'node:worker_threads'
 import { expect, test } from '@playwright/test'
 
 import { DesktopApplication, type LocalStorePort } from '../../main/application/DesktopApplication.ts'
+import { removeLocalNamespaceData } from '../../main/recovery/remove-local-data.ts'
+import { NodeSqliteLocalStore } from '../../store-worker/local-store.ts'
 
 /**
  * D-22/D-34/D-38 recovery-shell proof (T-KPL03-05-02/-04). Two layers:
@@ -164,4 +166,176 @@ test('the real worker thread reports a closed failure code and transparently ret
 
   await requestFromWorker(worker, 3, 'close')
   await worker.terminate()
+})
+
+/**
+ * D-24 "Remove data from this Mac…" proof (T-KPL03-05-03). This is
+ * DesktopApplication/local-store integration, not IPC/renderer -- neither
+ * `main/index.ts` nor `preload/index.ts` wires `removeLocalData` to a
+ * channel in this plan's authorized scope (that composition is future
+ * work), so these tests drive `DesktopApplication.removeLocalData` and the
+ * underlying `removeLocalNamespaceData` state machine directly against a
+ * REAL `NodeSqliteLocalStore` on a disposable profile -- exactly like
+ * `real-stack-sync.spec.ts`'s existing pattern for boundary-level
+ * `DesktopApplication` proof.
+ */
+const captureCommand = (mutationId: string, taskId: string, title: string) => {
+  const commandBytes = JSON.stringify({ mutation_id: mutationId, task_id: taskId, title, type: 'capture_task' })
+  return {
+    acceptedAt: '2026-09-02T12:00:00.000Z',
+    commandBytes,
+    fingerprint: createHash('sha256').update(commandBytes).digest('hex'),
+    mutationId,
+    taskId,
+    title,
+  }
+}
+
+const openRealLocalStorePort = (databasePath: string) => {
+  const store = new NodeSqliteLocalStore({ databasePath, migrationPath })
+  const port: LocalStorePort = {
+    acceptCapture: async (mutation) => store.acceptCapture(mutation),
+    acknowledge: async (acknowledgement) => store.acknowledge(acknowledgement),
+    close: async () => store.close(),
+    listConflicts: async () => store.listConflicts(),
+    pendingMutations: async () => store.pendingMutations(),
+    removeLocalFiles: async () => store.removeLocalFiles(),
+    setSyncFence: async (reason) => store.setSyncFence(reason),
+    snapshot: async () => store.snapshot(),
+  }
+  return { port, store }
+}
+
+test('D-24: one-step removal is refused while local-only intent exists, and the namespace remains fully usable afterward (Keep Data)', async () => {
+  const root = fixtureRoot('blocked')
+  const databasePath = join(root, 'namespace.sqlite3')
+  const { port } = openRealLocalStorePort(databasePath)
+  let nextId = 0
+  const application = new DesktopApplication({
+    clock: { now: () => '2026-09-02T12:00:00.000Z' },
+    identity: { randomId: () => `id-${nextId++}` },
+    localStore: port,
+    sync: {},
+  })
+
+  await application.capture({ title: 'Unsynced local task' })
+  const blocked = await application.removeLocalData({ confirmRemoveAnyway: false })
+  expect(blocked).toEqual({ conflictedCount: 0, kind: 'blocked_pending_intent', pendingCount: 1 })
+
+  // Refused removal must leave the namespace exactly as usable as before --
+  // this is what makes "Sync First"/"Keep Data" safe defaults.
+  await expect(application.capture({ title: 'Still works after refused removal' })).resolves.toMatchObject({
+    status: 'local_saved',
+  })
+  expect((await application.snapshot()).tasks).toHaveLength(2)
+})
+
+test('D-24/D-38: the second confirmation closes the store before deleting its whole file inventory and verifies absence', async () => {
+  const root = fixtureRoot('removed')
+  const databasePath = join(root, 'namespace.sqlite3')
+  const { port, store } = openRealLocalStorePort(databasePath)
+  const application = new DesktopApplication({
+    clock: { now: () => '2026-09-02T12:00:00.000Z' },
+    identity: { randomId: () => 'unused' },
+    localStore: port,
+    sync: {},
+  })
+  await application.capture({ title: 'Namespace-only task' })
+
+  // A sibling file OUTSIDE the store's own bounded inventory must never be
+  // touched -- proves removal is an explicit list, never a directory glob.
+  const siblingPath = join(root, 'unrelated-namespace.sqlite3')
+  writeFileSync(siblingPath, 'not this namespace')
+
+  const outcome = await application.removeLocalData({ confirmRemoveAnyway: true })
+  expect(outcome).toEqual({ kind: 'removed' })
+  for (const path of store.listLocalFilePaths()) expect(existsSync(path)).toBe(false)
+  expect(existsSync(siblingPath)).toBe(true)
+  expect(statSync(siblingPath).size).toBeGreaterThan(0)
+})
+
+test('D-24/MAC-05: fencing a namespace for removal blocks a concurrent Quick Entry/main write and yields no ready sync pushes', () => {
+  const root = fixtureRoot('races')
+  const databasePath = join(root, 'namespace.sqlite3')
+  const store = new NodeSqliteLocalStore({ databasePath, migrationPath })
+  store.acceptCapture(captureCommand('mutation-race-1', 'task-race-1', 'Pending before fence'))
+
+  store.setSyncFence('local_removal')
+  // remove-versus-sync: a concurrent sync pass must see nothing ready to push.
+  expect(store.readyMutations()).toEqual([])
+  // remove-versus-Quick-Entry: a concurrent capture must be refused, not silently accepted.
+  expect(() => store.acceptCapture(captureCommand('mutation-race-2', 'task-race-2', 'Should be refused'))).toThrow(
+    /local writes are fenced/,
+  )
+
+  // Un-fencing (Cancel/Keep Data) restores ordinary write access exactly.
+  store.setSyncFence(null)
+  store.acceptCapture(captureCommand('mutation-race-2', 'task-race-2', 'Now accepted'))
+  expect(store.snapshot().tasks.map((task) => task.id)).toEqual(['task-race-1', 'task-race-2'])
+  store.close()
+})
+
+test('D-24: never constructs or sends a server delete request -- removal has no reachable sync/network capability', async () => {
+  const root = fixtureRoot('no-server-delete')
+  const databasePath = join(root, 'namespace.sqlite3')
+  const { port } = openRealLocalStorePort(databasePath)
+  const networkCalls: string[] = []
+  const application = new DesktopApplication({
+    clock: { now: () => '2026-09-02T12:00:00.000Z' },
+    identity: { randomId: () => 'unused' },
+    localStore: port,
+    sync: {
+      acknowledge: async () => { networkCalls.push('acknowledge'); return null },
+      pull: async () => { networkCalls.push('pull'); return { changes: [], cursor: null } },
+      push: async () => { networkCalls.push('push'); return null },
+    },
+  })
+
+  await expect(application.removeLocalData({ confirmRemoveAnyway: true })).resolves.toEqual({ kind: 'removed' })
+  expect(networkCalls).toEqual([])
+})
+
+test('D-24: a partial external filesystem failure is reported as failed and remains inspectable and retryable, never silently claimed as removed', async () => {
+  const attempts: Array<{ remaining: string[] }> = [
+    { remaining: ['/still/here.sqlite3'] },
+    { remaining: [] },
+  ]
+  const events: string[] = []
+  const outcome1 = await removeLocalNamespaceData({
+    confirmRemoveAnyway: true,
+    localStore: {
+      close: async () => { events.push('close') },
+      pendingMutations: async () => [],
+      removeLocalFiles: async () => attempts.shift() ?? { remaining: [] },
+      setSyncFence: async (reason) => { events.push(`fence:${reason}`) },
+    },
+  })
+  expect(outcome1).toEqual({ kind: 'failed', reason: 'still present after removal: /still/here.sqlite3' })
+
+  // Retryable: the same call, once the external condition is repaired, succeeds.
+  const outcome2 = await removeLocalNamespaceData({
+    confirmRemoveAnyway: true,
+    localStore: {
+      close: async () => { events.push('close') },
+      pendingMutations: async () => [],
+      removeLocalFiles: async () => attempts.shift() ?? { remaining: [] },
+      setSyncFence: async (reason) => { events.push(`fence:${reason}`) },
+    },
+  })
+  expect(outcome2).toEqual({ kind: 'removed' })
+})
+
+test('D-24: a store close() failure is reported as failed rather than proceeding to delete files', async () => {
+  const events: string[] = []
+  const outcome = await removeLocalNamespaceData({
+    confirmRemoveAnyway: true,
+    localStore: {
+      close: async () => { throw new Error('worker did not exit') },
+      pendingMutations: async () => [],
+      removeLocalFiles: async () => { events.push('removeLocalFiles'); return { remaining: [] } },
+      setSyncFence: async (reason) => { events.push(`fence:${reason}`) },
+    },
+  })
+  expect(outcome).toEqual({ kind: 'failed', reason: 'could not close the local store: worker did not exit' })
+  expect(events).toEqual(['fence:local_removal'])
 })
