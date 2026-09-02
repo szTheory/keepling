@@ -126,64 +126,114 @@ lane_backup_restore() {
   ./tooling/verify-restore.sh --fixture latest-wal
   KEEPLING_RESTORE_SEED="$phase_seed" ./tooling/verify-restore.sh --fixture historical-pitr
 }
-lane_opentofu_host_fixtures() { ./tooling/verify-host-replacement.sh --dry-run; }
+lane_opentofu_host_fixtures() {
+  ./tooling/test-host-bootstrap.sh
+  ./tooling/test-host-bootstrap-diagnostics.sh
+  ./tooling/test-provider-ownership.sh
+  ./tooling/test-plan-shape-contract.sh
+  ./tooling/test-resolved-plan-contract.sh
+  ./tooling/test-image-archive-contract.sh
+  ./tooling/test-remote-prepare-observability.sh
+  ./tooling/test-host-replacement-sequence.sh
+}
 lane_privacy() {
   MIX_ENV=test ./tooling/runtime-preflight.sh --exec -- sh -c \
     'cd apps/server && mix test --seed "$1" test/keepling/telemetry_redaction_test.exs test/keepling/ops_redaction_test.exs' sh "$phase_seed"
   ./tooling/verify-privacy.sh --self-test
 }
 
-run_lanes() {
-  trap cleanup EXIT HUP INT TERM
-  evidence_root=$(mktemp -d "${TMPDIR:-/tmp}/keepling-phase2-evidence.XXXXXX")
-  start_phase_database
-
-  server_cases=$(count_tests apps/server/test)
-  sync_cases=$(count_tests apps/server/test/keepling/application/sync apps/server/test/keepling/adapters/postgres/sync_feed_test.exs)
-  privacy_cases=$(count_tests apps/server/test/keepling/telemetry_redaction_test.exs apps/server/test/keepling/ops_redaction_test.exs)
-  contract_cases=$(find packages/contracts/schemas packages/contracts/vectors -type f | wc -l | tr -d '[:space:]')
-
-  run_lane repository-integrity none 3 \
-    'AGENTS.md,docs/architecture/REPOSITORY.md,tooling/check-repository-integrity.sh' \
-    './tooling/check-repository-integrity.sh' lane_repository_integrity
-  run_lane server "$phase_seed" "$server_cases" \
-    'apps/server/mix.lock,tooling/runtime-versions.env,apps/server/test/test_helper.exs' \
-    'mix compile --warnings-as-errors && mix test' lane_server
-  run_lane sync-property "$phase_seed" "$sync_cases" \
-    'apps/server/mix.lock,packages/contracts/vectors/sync-state-machine.json,apps/server/test/keepling/application/sync/reference_model_test.exs,apps/server/test/keepling/adapters/postgres/sync_feed_test.exs' \
-    'mix test test/keepling/application/sync test/keepling/adapters/postgres/sync_feed_test.exs' lane_sync_property
-  run_lane contracts-compatibility "$phase_seed" "$contract_cases" \
-    'pnpm-lock.yaml,apps/server/mix.lock,packages/contracts/openapi/keepling.yaml,tooling/test-compatibility.sh' \
-    'pnpm contracts:check && ./tooling/test-compatibility.sh' lane_contracts_compatibility
-  run_lane image-compose-deploy none 3 \
-    'infra/images/server/Dockerfile,infra/compose/compose.yml,infra/caddy/Caddyfile,tooling/verify-image.sh,tooling/verify-compose.sh,tooling/verify-deploy.sh' \
-    './tooling/verify-image.sh && ./tooling/verify-compose.sh && ./tooling/verify-deploy.sh --local' lane_image_compose_deploy
-  run_lane backup-restore "$phase_seed" 4 \
-    'infra/backup/schedule.yml,infra/backup/durable-state-manifest.yml,packages/contracts/vectors/recovery.json,tooling/verify-backup.sh,tooling/verify-restore.sh' \
-    './tooling/verify-backup.sh and three ./tooling/verify-restore.sh fixtures' lane_backup_restore
-  run_lane opentofu-host-fixtures "$phase_seed" 13 \
-    'infra/tofu/hetzner/versions.tf,infra/tofu/hetzner/.terraform.lock.hcl,infra/tofu/hetzner/replace_host.tftest.hcl,tooling/verify-host-replacement.sh,tooling/test-image-archive-contract.sh,tooling/test-remote-prepare-observability.sh' \
-    './tooling/verify-host-replacement.sh --dry-run' lane_opentofu_host_fixtures
-  run_lane privacy "$phase_seed" "$((privacy_cases + 10))" \
-    'packages/contracts/vectors/redaction.json,apps/server/test/keepling/telemetry_redaction_test.exs,apps/server/test/keepling/ops_redaction_test.exs,tooling/verify-privacy.sh' \
-    'mix test telemetry_redaction_test.exs ops_redaction_test.exs && verify-privacy.sh --self-test' lane_privacy
-
+report_deferred_live_acceptance() {
   deferred=.planning/phases/KPL-02-synchronization-and-replaceable-server/deferred-items.md
   grep -F 'Plan 02-09 remains incomplete' "$deferred" >/dev/null || {
     echo "Deferred live acceptance truth is missing" >&2
     return 1
   }
   printf '%s\n' "lane=live-host-dns-acceptance LIVE_ACCEPTANCE_STATUS=NON_PASSING reason=credentialed_outer_acceptance_deferred evidence=$deferred"
-  printf '%s\n' 'Phase 2 local executable lanes passed; credentialed host/DNS outer acceptance remains NON_PASSING.'
+}
+
+run_lanes() {
+  selected_lane=${1:-all}
+  trap cleanup EXIT HUP INT TERM
+  evidence_root=$(mktemp -d "${TMPDIR:-/tmp}/keepling-phase2-evidence.XXXXXX")
+  case "$selected_lane" in
+    all | server | sync-property | privacy) start_phase_database ;;
+  esac
+
+  server_cases=$(count_tests apps/server/test)
+  sync_cases=$(count_tests apps/server/test/keepling/application/sync apps/server/test/keepling/adapters/postgres/sync_feed_test.exs)
+  privacy_cases=$(count_tests apps/server/test/keepling/telemetry_redaction_test.exs apps/server/test/keepling/ops_redaction_test.exs)
+  contract_cases=$(find packages/contracts/schemas packages/contracts/vectors -type f | wc -l | tr -d '[:space:]')
+
+  case "$selected_lane" in
+    all | repository-integrity)
+      run_lane repository-integrity none 3 \
+        'AGENTS.md,docs/architecture/REPOSITORY.md,tooling/check-repository-integrity.sh' \
+        './tooling/check-repository-integrity.sh' lane_repository_integrity ;;
+  esac
+  case "$selected_lane" in
+    all | server)
+      run_lane server "$phase_seed" "$server_cases" \
+        'apps/server/mix.lock,tooling/runtime-versions.env,apps/server/test/test_helper.exs' \
+        'mix compile --warnings-as-errors && mix test' lane_server ;;
+  esac
+  case "$selected_lane" in
+    all | sync-property)
+      run_lane sync-property "$phase_seed" "$sync_cases" \
+        'apps/server/mix.lock,packages/contracts/vectors/sync.json,apps/server/test/keepling/application/sync/reference_model_test.exs,apps/server/test/keepling/adapters/postgres/sync_feed_test.exs' \
+        'mix test test/keepling/application/sync test/keepling/adapters/postgres/sync_feed_test.exs' lane_sync_property ;;
+  esac
+  case "$selected_lane" in
+    all | contracts-compatibility)
+      run_lane contracts-compatibility "$phase_seed" "$contract_cases" \
+        'pnpm-lock.yaml,apps/server/mix.lock,packages/contracts/openapi/keepling.yaml,tooling/test-compatibility.sh' \
+        'pnpm contracts:check && ./tooling/test-compatibility.sh' lane_contracts_compatibility ;;
+  esac
+  case "$selected_lane" in
+    all | image-compose-deploy)
+      run_lane image-compose-deploy none 3 \
+        'infra/images/server/Dockerfile,infra/compose/compose.yml,infra/caddy/Caddyfile,tooling/verify-image.sh,tooling/verify-compose.sh,tooling/verify-deploy.sh' \
+        './tooling/verify-image.sh && ./tooling/verify-compose.sh && ./tooling/verify-deploy.sh --local' lane_image_compose_deploy ;;
+  esac
+  case "$selected_lane" in
+    all | backup-restore)
+      run_lane backup-restore "$phase_seed" 4 \
+        'infra/backup/schedule.yml,infra/backup/durable-state-manifest.yml,packages/contracts/vectors/recovery.json,tooling/verify-backup.sh,tooling/verify-restore.sh' \
+        './tooling/verify-backup.sh and three ./tooling/verify-restore.sh fixtures' lane_backup_restore ;;
+  esac
+  case "$selected_lane" in
+    all | opentofu-host-fixtures)
+      run_lane opentofu-host-fixtures "$phase_seed" 8 \
+        'infra/tofu/hetzner/versions.tf,infra/tofu/hetzner/.terraform.lock.hcl,infra/tofu/hetzner/replace_host.tftest.hcl,tooling/verify-host-replacement.sh,tooling/test-image-archive-contract.sh,tooling/test-remote-prepare-observability.sh' \
+        'eight hermetic OpenTofu/bootstrap/archive/teardown/DNS-fence fixture commands' lane_opentofu_host_fixtures ;;
+  esac
+  case "$selected_lane" in
+    all | privacy)
+      run_lane privacy "$phase_seed" "$((privacy_cases + 10))" \
+        'packages/contracts/vectors/redaction.json,apps/server/test/keepling/telemetry_redaction_test.exs,apps/server/test/keepling/ops_redaction_test.exs,tooling/verify-privacy.sh' \
+        'mix test telemetry_redaction_test.exs ops_redaction_test.exs && verify-privacy.sh --self-test' lane_privacy ;;
+  esac
+
+  if [ "$selected_lane" = all ]; then
+    report_deferred_live_acceptance
+    printf '%s\n' 'Phase 2 local executable lanes passed; credentialed host/DNS outer acceptance remains NON_PASSING.'
+  fi
 }
 
 usage() {
-  echo "Usage: $0 --list | --run" >&2
+  echo "Usage: $0 --list | --run | --lane NAME" >&2
   exit 2
 }
 
 case "${1:-}" in
   --list) [ "$#" -eq 1 ] || usage; list_lanes ;;
   --run) [ "$#" -eq 1 ] || usage; run_lanes ;;
+  --lane)
+    [ "$#" -eq 2 ] || usage
+    case "$2" in
+      repository-integrity | server | sync-property | contracts-compatibility | image-compose-deploy | backup-restore | opentofu-host-fixtures | privacy) run_lanes "$2" ;;
+      live-host-dns-acceptance) report_deferred_live_acceptance; exit 3 ;;
+      *) usage ;;
+    esac
+    ;;
   *) usage ;;
 esac

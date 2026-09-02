@@ -1,0 +1,160 @@
+name: Protected recovery drills
+
+on:
+  schedule:
+    - cron: "15 5 * * *"
+    - cron: "45 5 * * 0"
+    - cron: "30 6 1 1,4,7,10 *"
+  workflow_dispatch:
+    inputs:
+      drill:
+        description: Exact protected drill to run
+        required: true
+        type: choice
+        options: [newest-logical, latest-wal, historical-pitr, host-replacement]
+      change_trigger:
+        description: Reviewed provider/bootstrap/recovery/DNS change reference; required for host replacement
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  KEEPLING_RESTORE_SEED: "20260901"
+  KEEPLING_FLAKE_POLICY: "single-attempt; no-retry; teardown-required"
+
+jobs:
+  daily-restore:
+    if: github.event.schedule == '15 5 * * *' || (github.event_name == 'workflow_dispatch' && (inputs.drill == 'newest-logical' || inputs.drill == 'latest-wal'))
+    environment: recovery-protected
+    runs-on: macos-15
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture: [newest-logical, latest-wal]
+    env:
+      KEEPLING_BACKUP_PRIMARY_ENDPOINT: ${{ secrets.KEEPLING_BACKUP_PRIMARY_ENDPOINT }}
+      KEEPLING_BACKUP_PRIMARY_REGION: ${{ secrets.KEEPLING_BACKUP_PRIMARY_REGION }}
+      KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ${{ secrets.KEEPLING_BACKUP_PRIMARY_ACCESS_KEY }}
+      KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ${{ secrets.KEEPLING_BACKUP_PRIMARY_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: |
+            ~/.asdf/installs
+            apps/server/deps
+            apps/server/_build
+          key: recovery-${{ runner.os }}-${{ hashFiles('tooling/runtime-versions.env', 'apps/server/mix.lock') }}
+      - name: Provision exact repository runtimes
+        run: |
+          brew list asdf >/dev/null 2>&1 || brew install asdf
+          ./tooling/runtime-preflight.sh --provision
+          ./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'
+      - name: Run one protected restore fixture and retain bounded evidence
+        run: |
+          set -eu
+          evidence="$RUNNER_TEMP/${{ matrix.fixture }}.json"
+          started=$(date +%s)
+          missing=0
+          for name in KEEPLING_BACKUP_PRIMARY_ENDPOINT KEEPLING_BACKUP_PRIMARY_REGION KEEPLING_BACKUP_PRIMARY_ACCESS_KEY KEEPLING_BACKUP_PRIMARY_SECRET_KEY; do
+            test -n "$(printenv "$name")" || missing=1
+          done
+          if test "$missing" -ne 0; then
+            jq -n '{version:1,fixture:"${{ matrix.fixture }}",result:"NON_PASSING",reason:"missing_protected_credentials"}' >"$evidence"
+            ./tooling/verify-privacy.sh "$evidence"
+            exit 1
+          fi
+          ./tooling/verify-restore.sh --fixture "${{ matrix.fixture }}"
+          elapsed=$(( $(date +%s) - started ))
+          jq -n --arg revision "$GITHUB_SHA" --argjson elapsed "$elapsed" '{version:1,fixture:"${{ matrix.fixture }}",result:"PASS",revision:$revision,elapsed_seconds:$elapsed,semantic:"complete"}' >"$evidence"
+          ./tooling/verify-privacy.sh "$evidence"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: recovery-${{ matrix.fixture }}-bounded
+          path: ${{ runner.temp }}/${{ matrix.fixture }}.json
+          if-no-files-found: error
+          retention-days: 30
+
+  weekly-historical-pitr:
+    if: github.event.schedule == '45 5 * * 0' || (github.event_name == 'workflow_dispatch' && inputs.drill == 'historical-pitr')
+    environment: recovery-protected
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      KEEPLING_BACKUP_PRIMARY_ENDPOINT: ${{ secrets.KEEPLING_BACKUP_PRIMARY_ENDPOINT }}
+      KEEPLING_BACKUP_PRIMARY_REGION: ${{ secrets.KEEPLING_BACKUP_PRIMARY_REGION }}
+      KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ${{ secrets.KEEPLING_BACKUP_PRIMARY_ACCESS_KEY }}
+      KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ${{ secrets.KEEPLING_BACKUP_PRIMARY_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: |
+            ~/.asdf/installs
+            apps/server/deps
+            apps/server/_build
+          key: recovery-${{ runner.os }}-${{ hashFiles('tooling/runtime-versions.env', 'apps/server/mix.lock') }}
+      - name: Provision exact repository runtimes
+        run: |
+          brew list asdf >/dev/null 2>&1 || brew install asdf
+          ./tooling/runtime-preflight.sh --provision
+          ./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'
+      - name: Run one seeded historical PITR fixture
+        run: |
+          set -eu
+          evidence="$RUNNER_TEMP/historical-pitr.json"
+          missing=0
+          for name in KEEPLING_BACKUP_PRIMARY_ENDPOINT KEEPLING_BACKUP_PRIMARY_REGION KEEPLING_BACKUP_PRIMARY_ACCESS_KEY KEEPLING_BACKUP_PRIMARY_SECRET_KEY; do
+            test -n "$(printenv "$name")" || missing=1
+          done
+          if test "$missing" -ne 0; then
+            jq -n '{version:1,fixture:"historical-pitr",result:"NON_PASSING",reason:"missing_protected_credentials",seed:20260901}' >"$evidence"
+            ./tooling/verify-privacy.sh "$evidence"
+            exit 1
+          fi
+          started=$(date +%s)
+          ./tooling/verify-restore.sh --fixture historical-pitr
+          elapsed=$(( $(date +%s) - started ))
+          jq -n --arg revision "$GITHUB_SHA" --argjson elapsed "$elapsed" '{version:1,fixture:"historical-pitr",result:"PASS",revision:$revision,elapsed_seconds:$elapsed,seed:20260901,semantic:"complete"}' >"$evidence"
+          ./tooling/verify-privacy.sh "$evidence"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: recovery-historical-pitr-bounded
+          path: ${{ runner.temp }}/historical-pitr.json
+          if-no-files-found: error
+          retention-days: 90
+
+  quarterly-host-replacement:
+    if: github.event.schedule == '30 6 1 1,4,7,10 *' || (github.event_name == 'workflow_dispatch' && inputs.drill == 'host-replacement')
+    environment: recovery-live
+    runs-on: macos-15
+    timeout-minutes: 20
+    env:
+      HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      KEEPLING_LIVE_CHANGE_TRIGGER: ${{ inputs.change_trigger }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Preserve deferred outer acceptance as explicitly non-passing
+        run: |
+          set -eu
+          evidence="$RUNNER_TEMP/host-replacement.json"
+          reason=change_trigger_required
+          test -n "$HCLOUD_TOKEN" && test -n "$CLOUDFLARE_API_TOKEN" || reason=missing_protected_credentials
+          test -n "$KEEPLING_LIVE_CHANGE_TRIGGER" || reason=change_trigger_required
+          jq -n --arg revision "$GITHUB_SHA" --arg reason "$reason" '{version:1,fixture:"host-replacement",result:"NON_PASSING",revision:$revision,reason:$reason,attempts:0,dns_reached:false}' >"$evidence"
+          ./tooling/verify-privacy.sh "$evidence"
+          echo 'Plan 02-09 corrected restore/runtime plus DNS rollback acceptance remains NON_PASSING.'
+          exit 1
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: host-replacement-non-passing
+          path: ${{ runner.temp }}/host-replacement.json
+          if-no-files-found: error
+          retention-days: 90
