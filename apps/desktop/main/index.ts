@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { Worker } from 'node:worker_threads'
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, net, protocol, session, shell } from 'electron'
 
 import {
   DesktopApplication,
@@ -16,6 +17,33 @@ import {
   type SyncPort,
   type WorkspaceSnapshot,
 } from './application/DesktopApplication.ts'
+import {
+  APP_PROTOCOL_ORIGIN,
+  APP_PROTOCOL_SCHEME,
+  CONTENT_SECURITY_POLICY,
+  assertTrustedIpcSender,
+  isAllowedExternalLinkTarget,
+  isAllowedNavigationTarget,
+  parseTrustedRequest,
+  resolvePackagedAssetPath,
+  shouldGrantPermission,
+} from './protocol.ts'
+import {
+  captureRequestSchema,
+  editRequestSchema,
+  lifecycleRequestSchema,
+  moveTodayRequestSchema,
+  resolveConflictRequestSchema,
+} from '../preload/contracts.ts'
+
+// MUST run before app.whenReady() -- Electron requires privileged-scheme
+// registration at module evaluation time, before the app is ready.
+protocol.registerSchemesAsPrivileged([
+  {
+    privileges: { bypassCSP: false, corsEnabled: false, secure: true, standard: true, supportFetchAPI: true },
+    scheme: APP_PROTOCOL_SCHEME,
+  },
+])
 
 type WorkerResponse = { error?: string; id: number; ok: boolean; value?: unknown }
 
@@ -151,6 +179,29 @@ const bootstrap = async () => {
   })
   await desktopApplication.reconcile()
 
+  // Registered once, on the default session, so EVERY renderer surface --
+  // this main window today, and any future utility window sharing the
+  // default session -- gets the same restrictive local-content, permission,
+  // and header policy without per-window wiring.
+  const rendererRoot = resolve(processResourcePath('renderer', '.'))
+  protocol.handle(APP_PROTOCOL_SCHEME, (request) => {
+    const candidate = resolvePackagedAssetPath(request.url, rendererRoot)
+    if (candidate === null) return new Response('not found', { status: 404 })
+    return net.fetch(pathToFileURL(candidate).toString())
+  })
+  session.defaultSession.setPermissionRequestHandler((_contents, permission, callback) => {
+    callback(shouldGrantPermission(permission))
+  })
+  session.defaultSession.setPermissionCheckHandler(() => false)
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [CONTENT_SECURITY_POLICY],
+      },
+    })
+  })
+
   const window = new BrowserWindow({
     height: 720,
     show: false,
@@ -163,55 +214,68 @@ const bootstrap = async () => {
     width: 960,
   })
 
-  const assertTrustedSender = (sender: Electron.WebContents) => {
-    if (sender !== window.webContents || !sender.getURL().startsWith('file://')) {
-      throw new Error('untrusted renderer sender')
-    }
+  // Every ipcMain handler consults this SAME sender/frame trust decision
+  // (`main/protocol.ts#isTrustedIpcSender`) before touching
+  // `DesktopApplication` -- a forged sender id, a subframe, or a frame
+  // outside the packaged `app://renderer/` origin all fail closed.
+  const assertTrustedSender = (event: Electron.IpcMainInvokeEvent) => {
+    const senderFrame = event.senderFrame
+    assertTrustedIpcSender({
+      isMainFrame: senderFrame !== null && senderFrame === event.sender.mainFrame,
+      senderFrameUrl: senderFrame?.url ?? null,
+      senderId: event.sender.id,
+      trustedSenderId: window.webContents.id,
+    })
   }
 
-  ipcMain.handle('keepling:capture', async (event, command: { title: string }) => {
-    assertTrustedSender(event.sender)
-    return desktopApplication.capture(command)
+  ipcMain.handle('keepling:capture', async (event, rawCommand) => {
+    assertTrustedSender(event)
+    return desktopApplication.capture(parseTrustedRequest(captureRequestSchema, rawCommand))
   })
   ipcMain.handle('keepling:snapshot', async (event) => {
-    assertTrustedSender(event.sender)
+    assertTrustedSender(event)
     return desktopApplication.snapshot()
   })
   ipcMain.handle('keepling:presentation-snapshot', async (event) => {
-    assertTrustedSender(event.sender)
+    assertTrustedSender(event)
     return desktopApplication.presentationSnapshot()
   })
-  ipcMain.handle('keepling:edit-task', async (event, command: EditTaskCommand) => {
-    assertTrustedSender(event.sender)
-    return desktopApplication.editTask(command)
+  ipcMain.handle('keepling:edit-task', async (event, rawCommand) => {
+    assertTrustedSender(event)
+    return desktopApplication.editTask(parseTrustedRequest(editRequestSchema, rawCommand) as EditTaskCommand)
   })
-  ipcMain.handle('keepling:lifecycle-task', async (event, command: LifecycleCommand) => {
-    assertTrustedSender(event.sender)
-    return desktopApplication.applyLifecycle(command)
+  ipcMain.handle('keepling:lifecycle-task', async (event, rawCommand) => {
+    assertTrustedSender(event)
+    return desktopApplication.applyLifecycle(parseTrustedRequest(lifecycleRequestSchema, rawCommand) as LifecycleCommand)
   })
-  ipcMain.handle('keepling:move-today', async (event, command: MoveTodayCommand) => {
-    assertTrustedSender(event.sender)
-    return desktopApplication.moveToday(command)
+  ipcMain.handle('keepling:move-today', async (event, rawCommand) => {
+    assertTrustedSender(event)
+    return desktopApplication.moveToday(parseTrustedRequest(moveTodayRequestSchema, rawCommand) as MoveTodayCommand)
   })
   ipcMain.handle('keepling:undo-last-action', async (event) => {
-    assertTrustedSender(event.sender)
+    assertTrustedSender(event)
     return desktopApplication.undoLastLocalAction()
   })
   ipcMain.handle('keepling:list-conflicts', async (event) => {
-    assertTrustedSender(event.sender)
+    assertTrustedSender(event)
     return desktopApplication.listConflicts()
   })
-  ipcMain.handle('keepling:resolve-conflict', async (event, input: { choice: 'current' | 'mine'; conflictId: string }) => {
-    assertTrustedSender(event.sender)
-    return desktopApplication.resolveConflict(input)
+  ipcMain.handle('keepling:resolve-conflict', async (event, rawInput) => {
+    assertTrustedSender(event)
+    return desktopApplication.resolveConflict(parseTrustedRequest(resolveConflictRequestSchema, rawInput))
   })
   const unsubscribePresentation = desktopApplication.subscribePresentation((presentation) => {
     if (!window.isDestroyed()) window.webContents.send('keepling:presentation-changed', presentation)
   })
 
-  window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
-  window.webContents.on('will-navigate', (event) => event.preventDefault())
-  await window.loadFile(processResourcePath('renderer', 'index.html'))
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    if (isAllowedExternalLinkTarget(url)) void shell.openExternal(url)
+    return { action: 'deny' }
+  })
+  window.webContents.on('will-navigate', (event, url) => {
+    if (!isAllowedNavigationTarget(url)) event.preventDefault()
+  })
+  await window.loadURL(`${APP_PROTOCOL_ORIGIN}/index.html`)
   window.show()
 
   let quitting = false

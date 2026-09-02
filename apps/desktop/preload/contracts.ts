@@ -1,5 +1,21 @@
 import { z } from 'zod'
 
+/**
+ * Centralized, strict, clone-safe request/response schemas for the main
+ * window's `keepling` preload bridge (D-27/D-28). BOTH sides parse against
+ * these exact schemas -- `preload/index.ts` parses outgoing requests before
+ * `ipcRenderer.invoke` and incoming responses/pushes before handing them to
+ * the renderer, and `main/index.ts` parses every incoming request again
+ * before it reaches `DesktopApplication`, because a compromised renderer can
+ * always call `ipcRenderer.invoke` directly and bypass preload entirely --
+ * the main-process parse is the actual security boundary, the preload parse
+ * is defense in depth plus an early, cheap rejection.
+ *
+ * Every schema is `.strict()`: unknown/extra fields (deep or shallow) are
+ * rejected rather than silently dropped, so a hostile renderer cannot smuggle
+ * additional fields through an otherwise-valid request.
+ */
+
 const recoveryActionCodeSchema = z.enum([
   'inspect', 'retry', 'check_again', 'review', 'review_conflict', 'sign_in', 'export',
   'remove_local_data', 'retry_save', 'retry_opening', 'show_recovery_options',
@@ -30,4 +46,91 @@ const desktopPresentationSchema = z.object({
   }).strict(),
 }).strict()
 
-export { desktopPresentationSchema }
+const captureRequestSchema = z.object({
+  addToToday: z.boolean().optional(),
+  title: z.string().trim().min(1).max(512),
+}).strict()
+const taskSchema = z.object({
+  completedAt: z.string().nullable().optional(),
+  id: z.string().min(1),
+  notes: z.string().optional(),
+  planned: z.boolean().optional(),
+  syncStatus: z.enum(['saved_on_this_mac', 'synced']),
+  title: z.string().min(1),
+  trashedAt: z.string().nullable().optional(),
+}).strict()
+const snapshotSchema = z.object({ tasks: z.array(taskSchema) }).strict()
+const localAcceptanceSchema = z.object({
+  fingerprint: z.string().regex(/^[a-f0-9]{64}$/),
+  mutationId: z.string().min(1),
+  snapshot: snapshotSchema,
+  status: z.literal('local_saved'),
+}).strict()
+const editRequestSchema = z.object({
+  notes: z.string().max(50_000),
+  taskId: z.string().min(1),
+  title: z.string().trim().min(1).max(512),
+}).strict()
+const lifecycleRequestSchema = z.object({
+  kind: z.enum(['complete', 'reopen', 'restore', 'trash']),
+  taskId: z.string().min(1),
+}).strict()
+const moveTodayRequestSchema = z.object({
+  planned: z.boolean(),
+  taskId: z.string().min(1),
+}).strict()
+const conflictSchema = z.object({
+  conflictId: z.string().min(1),
+  current: z.string(),
+  mine: z.string(),
+  taskId: z.string().min(1),
+}).strict()
+const undoResultSchema = z.object({ applied: z.boolean(), snapshot: snapshotSchema }).strict()
+const resolveConflictRequestSchema = z.object({
+  choice: z.enum(['current', 'mine']),
+  conflictId: z.string().min(1),
+}).strict()
+
+/**
+ * D-29 sequence contract for `keepling:presentation-changed` pushes. The
+ * preload bridge is always subscribed (its `ipcRenderer.on` listener is
+ * registered at module load, before any renderer code runs or calls
+ * `subscribePresentation`), so it never has to reason about "did I miss the
+ * first push" -- the only remaining question is whether the STREAM of pushes
+ * it does receive is contiguous. This is a pure decision function so the
+ * hostile-bridge suite can exercise missing/out-of-order/duplicate sequences
+ * directly, without needing a live Electron process.
+ *
+ * - `null` last sequence (nothing observed yet): always apply.
+ * - Exact successor: apply normally.
+ * - Equal or lower than the last applied sequence (duplicate/stale replay,
+ *   or a compromised main sending an out-of-order push): ignore -- never
+ *   regress the renderer to older presented state.
+ * - Anything higher than the exact successor (a gap -- one or more pushes
+ *   were lost): never try to reconstruct the skipped state by incrementing
+ *   unsafely; refetch the authoritative snapshot instead (opaque recovery).
+ */
+type SequenceOutcome = 'apply' | 'ignore_stale' | 'refetch'
+
+const decideSequenceOutcome = (lastSequence: number | null, incomingSequence: number): SequenceOutcome => {
+  if (lastSequence === null) return 'apply'
+  if (incomingSequence === lastSequence + 1) return 'apply'
+  if (incomingSequence <= lastSequence) return 'ignore_stale'
+  return 'refetch'
+}
+
+export {
+  captureRequestSchema,
+  conflictSchema,
+  decideSequenceOutcome,
+  desktopPresentationSchema,
+  editRequestSchema,
+  lifecycleRequestSchema,
+  localAcceptanceSchema,
+  moveTodayRequestSchema,
+  resolveConflictRequestSchema,
+  snapshotSchema,
+  taskSchema,
+  undoResultSchema,
+}
+export type { SequenceOutcome }
