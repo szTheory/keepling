@@ -135,7 +135,9 @@ capture_bootstrap_evidence() (
   status_rc=$2
   effect_file=$3
   effect_rc=$4
-  evidence_file=$5
+  diagnostic_file=$5
+  diagnostic_rc=$6
+  evidence_file=$7
   evidence_directory=$(dirname "$evidence_file")
   [ -d "$evidence_directory" ] || {
     echo "Host replacement verification failed: bootstrap evidence directory is missing" >&2
@@ -150,14 +152,37 @@ capture_bootstrap_evidence() (
 
   evidence_tmp=$(mktemp "$evidence_directory/.bootstrap-evidence.XXXXXX")
   normalized_effect=$(mktemp "$evidence_directory/.bootstrap-effects.XXXXXX")
-  trap 'rm -f -- "$evidence_tmp" "$normalized_effect"' EXIT HUP INT TERM
+  normalized_diagnostic=$(mktemp "$evidence_directory/.bootstrap-diagnostics.XXXXXX")
+  trap 'rm -f -- "$evidence_tmp" "$normalized_effect" "$normalized_diagnostic"' EXIT HUP INT TERM
   if jq -e 'type == "object"' "$effect_file" >/dev/null 2>&1; then
     jq '{cloud_init_version:(.cloud_init_version // "unknown"),sentinel:(.sentinel // false),docker_active:(.docker_active // false),required_paths:(.required_paths // false),release_digest_matches:(.release_digest_matches // false),release_architecture_matches:(.release_architecture_matches // false)}' "$effect_file" >"$normalized_effect"
   else
     jq -n '{cloud_init_version:"unknown",sentinel:false,docker_active:false,required_paths:false,release_digest_matches:false,release_architecture_matches:false}' >"$normalized_effect"
   fi
+  jq -n '{valid:false,datasource:{type:"unknown",result:"unknown",metadata_reachable:false},network:{online:false,dns:false,default_route:false},units:{init_local:"unknown",init_network:"unknown",config:"unknown",final:"unknown"},events:[],events_truncated:false,outcomes:{package_update:"unknown",package_install:"unknown",scripts_user:"unknown",runcmd:"unknown"}}' >"$normalized_diagnostic"
+  diagnostic_size=$(wc -c <"$diagnostic_file" | tr -d ' ')
+  if [ "$diagnostic_rc" -eq 0 ] && [ "$diagnostic_size" -le 16384 ] && jq -e 'type == "object" and .version == 1' "$diagnostic_file" >/dev/null 2>&1; then
+    jq '
+      def closed($value;$allowed): if ($value|type)=="string" and ($allowed|index($value)) then $value else "unknown" end;
+      def boolean($value): if ($value|type)=="boolean" then $value else false end;
+      def member($value;$allowed): ($value|type)=="string" and ($allowed|index($value)) != null;
+      . as $root | (if ($root.events|type)=="array" then $root.events else [] end) as $events |
+      ((($root.datasource|type)=="object") and member($root.datasource.type;["hetzner","nocloud","config-drive","ec2","azure","gce","none","unknown"]) and member($root.datasource.result;["ready","error","not-run","unknown"]) and (($root.datasource.metadata_reachable|type)=="boolean") and
+        (($root.network|type)=="object") and (($root.network.online|type)=="boolean") and (($root.network.dns|type)=="boolean") and (($root.network.default_route|type)=="boolean") and
+        (($root.units|type)=="object") and (["init_local","init_network","config","final"] | all(member($root.units[.];["active","inactive","failed","activating","deactivating","unknown"]))) and
+        (($root.events|type)=="array") and ($events | all((type=="object") and member(.stage;["init-local","init","modules-config","modules-final","unknown"]) and member(.module;["metadata","datasource","network-connectivity","systemd","package-update","package-install","scripts-user","runcmd","write-files","unknown"]) and member(.exception;["timeout","connection","permission","package-manager","service","command","validation","unknown"]) and member(.errno;["network-unreachable","connection-refused","timed-out","permission-denied","not-found","io","unknown"]))) and
+        (($root.events_truncated|type)=="boolean") and (($root.outcomes|type)=="object") and (["package_update","package_install","scripts_user","runcmd"] | all(member($root.outcomes[.];["ok","failed","not-run","unknown"])))) as $schema_valid |
+      {valid:$schema_valid,
+       datasource:{type:closed($root.datasource.type;["hetzner","nocloud","config-drive","ec2","azure","gce","none","unknown"]),result:closed($root.datasource.result;["ready","error","not-run","unknown"]),metadata_reachable:boolean($root.datasource.metadata_reachable)},
+       network:{online:boolean($root.network.online),dns:boolean($root.network.dns),default_route:boolean($root.network.default_route)},
+       units:{init_local:closed($root.units.init_local;["active","inactive","failed","activating","deactivating","unknown"]),init_network:closed($root.units.init_network;["active","inactive","failed","activating","deactivating","unknown"]),config:closed($root.units.config;["active","inactive","failed","activating","deactivating","unknown"]),final:closed($root.units.final;["active","inactive","failed","activating","deactivating","unknown"])},
+       events:[$events[:16][]? | {stage:closed(.stage;["init-local","init","modules-config","modules-final","unknown"]),module:closed(.module;["metadata","datasource","network-connectivity","systemd","package-update","package-install","scripts-user","runcmd","write-files","unknown"]),exception:closed(.exception;["timeout","connection","permission","package-manager","service","command","validation","unknown"]),errno:closed(.errno;["network-unreachable","connection-refused","timed-out","permission-denied","not-found","io","unknown"])}],
+       events_truncated:(($events|length)>16 or $root.events_truncated==true),
+       outcomes:{package_update:closed($root.outcomes.package_update;["ok","failed","not-run","unknown"]),package_install:closed($root.outcomes.package_install;["ok","failed","not-run","unknown"]),scripts_user:closed($root.outcomes.scripts_user;["ok","failed","not-run","unknown"]),runcmd:closed($root.outcomes.runcmd;["ok","failed","not-run","unknown"])}}
+    ' "$diagnostic_file" >"$normalized_diagnostic"
+  fi
   if jq -e 'type == "object"' "$status_file" >/dev/null 2>&1; then
-    jq --argjson status_rc "$status_rc" --argjson effect_rc "$effect_rc" --slurpfile effects "$normalized_effect" '
+    jq --argjson status_rc "$status_rc" --argjson effect_rc "$effect_rc" --slurpfile effects "$normalized_effect" --slurpfile diagnostics "$normalized_diagnostic" '
       def stages: ["init-local", "init", "modules-config", "modules-final"];
       def error_count($stage):
         if (.[$stage].errors | type) == "array" then (.[$stage].errors | length) else 0 end;
@@ -216,12 +241,13 @@ capture_bootstrap_evidence() (
           release_digest_matches: effect_boolean("release_digest_matches"),
           release_architecture_matches: effect_boolean("release_architecture_matches")
         },
+        diagnostics: $diagnostics[0],
         raw_detail_retained: false
       }
     ' "$status_file" >"$evidence_tmp"
   else
-    jq -n --argjson status_rc "$status_rc" --argjson effect_rc "$effect_rc" --slurpfile effects "$normalized_effect" \
-      '{version:2,cloud_init_version:(if ($effects[0].cloud_init_version | type) == "string" and ($effects[0].cloud_init_version | test("^[0-9]+([.][0-9]+){1,3}([+~._-][A-Za-z0-9]+)*$")) then $effects[0].cloud_init_version else "unknown" end),bootstrap_status:"unknown",status_rc:$status_rc,failed_stages:[],failed_modules:[],error_count:0,unknown_error_count:0,recoverable_error_count:0,effect_check_rc:$effect_rc,effects:{sentinel:($effects[0].sentinel == true),docker_active:($effects[0].docker_active == true),required_paths:($effects[0].required_paths == true),release_digest_matches:($effects[0].release_digest_matches == true),release_architecture_matches:($effects[0].release_architecture_matches == true)},raw_detail_retained:false}' >"$evidence_tmp"
+    jq -n --argjson status_rc "$status_rc" --argjson effect_rc "$effect_rc" --slurpfile effects "$normalized_effect" --slurpfile diagnostics "$normalized_diagnostic" \
+      '{version:2,cloud_init_version:(if ($effects[0].cloud_init_version | type) == "string" and ($effects[0].cloud_init_version | test("^[0-9]+([.][0-9]+){1,3}([+~._-][A-Za-z0-9]+)*$")) then $effects[0].cloud_init_version else "unknown" end),bootstrap_status:"unknown",status_rc:$status_rc,failed_stages:[],failed_modules:[],error_count:0,unknown_error_count:0,recoverable_error_count:0,effect_check_rc:$effect_rc,effects:{sentinel:($effects[0].sentinel == true),docker_active:($effects[0].docker_active == true),required_paths:($effects[0].required_paths == true),release_digest_matches:($effects[0].release_digest_matches == true),release_architecture_matches:($effects[0].release_architecture_matches == true)},diagnostics:$diagnostics[0],raw_detail_retained:false}' >"$evidence_tmp"
   fi
   chmod 600 "$evidence_tmp"
   mv "$evidence_tmp" "$evidence_file"
@@ -236,9 +262,12 @@ bootstrap_failure() {
   effect_file=$(mktemp "${TMPDIR:-/tmp}/keepling-bootstrap-effects.XXXXXX")
   effect_result=0
   run_with_optional_argument "$KEEPLING_BOOTSTRAP_EFFECT_RUNNER" "${KEEPLING_BOOTSTRAP_EFFECT_RUNNER_ARGUMENT:-}" >"$effect_file" 2>/dev/null || effect_result=$?
-  capture_bootstrap_evidence "$status_file" "$status_rc" "$effect_file" "$effect_result" "$KEEPLING_BOOTSTRAP_EVIDENCE_FILE" || capture_result=$?
+  diagnostic_file=$(mktemp "${TMPDIR:-/tmp}/keepling-bootstrap-diagnostics.XXXXXX")
+  diagnostic_result=0
+  run_with_optional_argument "$KEEPLING_BOOTSTRAP_DIAGNOSTIC_RUNNER" "${KEEPLING_BOOTSTRAP_DIAGNOSTIC_RUNNER_ARGUMENT:-}" >"$diagnostic_file" 2>/dev/null || diagnostic_result=$?
+  capture_bootstrap_evidence "$status_file" "$status_rc" "$effect_file" "$effect_result" "$diagnostic_file" "$diagnostic_result" "$KEEPLING_BOOTSTRAP_EVIDENCE_FILE" || capture_result=$?
   run_with_optional_argument "$KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER" "${KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER_ARGUMENT:-}" >/dev/null 2>&1 || teardown_result=$?
-  rm -f -- "$status_file" "$effect_file"
+  rm -f -- "$status_file" "$effect_file" "$diagnostic_file"
 
   [ "$teardown_result" -eq 0 ] || die "candidate teardown failed after bootstrap rejection"
   [ "$capture_result" -eq 0 ] || die "candidate was torn down but bounded bootstrap evidence could not be written"
@@ -249,10 +278,12 @@ verify_bootstrap_gate() {
   status_runner=${KEEPLING_BOOTSTRAP_STATUS_RUNNER:-}
   effect_runner=${KEEPLING_BOOTSTRAP_EFFECT_RUNNER:-}
   teardown_runner=${KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER:-}
+  diagnostic_runner=${KEEPLING_BOOTSTRAP_DIAGNOSTIC_RUNNER:-}
   evidence_file=${KEEPLING_BOOTSTRAP_EVIDENCE_FILE:-}
   [ -x "$status_runner" ] || die "bootstrap status runner is unavailable"
   [ -x "$effect_runner" ] || die "bootstrap effect-check runner is unavailable"
   [ -x "$teardown_runner" ] || die "bootstrap teardown runner is unavailable"
+  [ -x "$diagnostic_runner" ] || die "bootstrap diagnostic runner is unavailable"
   [ -n "$evidence_file" ] || die "bootstrap evidence file is missing"
 
   max_checks=${KEEPLING_BOOTSTRAP_MAX_CHECKS:-60}
@@ -320,8 +351,11 @@ verify_bootstrap_gate() {
           .sentinel == true and .docker_active == true and .required_paths == true and
           .release_digest_matches == true and .release_architecture_matches == true
         ' "$effect_file" >/dev/null 2>&1; then
-          capture_bootstrap_evidence "$status_file" "$status_result" "$effect_file" "$effect_result" "$evidence_file"
-          rm -f -- "$status_file" "$effect_file"
+          diagnostic_file=$(mktemp "${TMPDIR:-/tmp}/keepling-bootstrap-diagnostics.XXXXXX")
+          diagnostic_result=0
+          run_with_optional_argument "$diagnostic_runner" "${KEEPLING_BOOTSTRAP_DIAGNOSTIC_RUNNER_ARGUMENT:-}" >"$diagnostic_file" 2>/dev/null || diagnostic_result=$?
+          capture_bootstrap_evidence "$status_file" "$status_result" "$effect_file" "$effect_result" "$diagnostic_file" "$diagnostic_result" "$evidence_file"
+          rm -f -- "$status_file" "$effect_file" "$diagnostic_file"
           return 0
         fi
         rm -f -- "$effect_file"
@@ -756,6 +790,7 @@ dry_run() {
   ./infra/backup/mirror-snapshot.sh self-test >/dev/null
   ./tooling/verify-backup.sh --fixture local >/dev/null
   ./tooling/test-host-bootstrap.sh >/dev/null
+  ./tooling/test-host-bootstrap-diagnostics.sh >/dev/null
   ./tooling/test-provider-ownership.sh >/dev/null
   ./tooling/test-resolved-plan-contract.sh >/dev/null
   ./tooling/test-image-archive-contract.sh >/dev/null

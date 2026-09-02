@@ -28,6 +28,13 @@ scenario=$1
 cat "$scenario/effects.json"
 exit "$(cat "$scenario/effects.rc")"
 EOF
+cat >"$fixture_root/diagnostic-runner" <<'EOF'
+#!/usr/bin/env sh
+set -eu
+scenario=$1
+cat "$scenario/diagnostics.json"
+exit "$(cat "$scenario/diagnostics.rc")"
+EOF
 cat >"$fixture_root/teardown" <<'EOF'
 #!/usr/bin/env sh
 set -eu
@@ -40,7 +47,7 @@ cat >"$fixture_root/dns-mutation" <<'EOF'
 set -eu
 : >"$1"
 EOF
-chmod 700 "$fixture_root/status-runner" "$fixture_root/effect-runner" "$fixture_root/teardown" "$fixture_root/dns-mutation"
+chmod 700 "$fixture_root/status-runner" "$fixture_root/effect-runner" "$fixture_root/diagnostic-runner" "$fixture_root/teardown" "$fixture_root/dns-mutation"
 
 write_status() {
   destination=$1 extended=$2 errors=$3 recoverable=$4
@@ -68,7 +75,9 @@ new_scenario() {
   printf '0\n' >"$scenario/status-count"
   printf '0\n' >"$scenario/teardown-count"
   printf '0\n' >"$scenario/effects.rc"
+  printf '0\n' >"$scenario/diagnostics.rc"
   jq -n '{version:1,cloud_init_version:"25.1.4",sentinel:true,docker_active:true,required_paths:true,release_digest_matches:true,release_architecture_matches:true}' >"$scenario/effects.json"
+  jq -n '{version:1,datasource:{type:"hetzner",result:"ready",metadata_reachable:true},network:{online:true,dns:true,default_route:true},units:{init_local:"inactive",init_network:"inactive",config:"inactive",final:"inactive"},events:[],events_truncated:false,outcomes:{package_update:"ok",package_install:"ok",scripts_user:"ok",runcmd:"ok"}}' >"$scenario/diagnostics.json"
 }
 
 execute_case() (
@@ -78,6 +87,8 @@ execute_case() (
     KEEPLING_BOOTSTRAP_STATUS_RUNNER_ARGUMENT="$scenario" \
     KEEPLING_BOOTSTRAP_EFFECT_RUNNER="$fixture_root/effect-runner" \
     KEEPLING_BOOTSTRAP_EFFECT_RUNNER_ARGUMENT="$scenario" \
+    KEEPLING_BOOTSTRAP_DIAGNOSTIC_RUNNER="$fixture_root/diagnostic-runner" \
+    KEEPLING_BOOTSTRAP_DIAGNOSTIC_RUNNER_ARGUMENT="$scenario" \
     KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER="$fixture_root/teardown" \
     KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER_ARGUMENT="$scenario/teardown-count" \
     KEEPLING_BOOTSTRAP_EVIDENCE_FILE="$scenario/evidence.json" \
@@ -93,13 +104,14 @@ execute_case() (
   [ ! -e "$scenario/dns-called" ] || die "$(basename "$scenario") reached DNS from the bootstrap gate"
   [ -r "$scenario/evidence.json" ] || die "$(basename "$scenario") omitted bounded evidence"
   [ "$(stat -f '%Lp' "$scenario/evidence.json")" = 600 ] || die "$(basename "$scenario") evidence is not owner-only"
-  [ "$(wc -c <"$scenario/evidence.json" | tr -d ' ')" -le 4096 ] || die "$(basename "$scenario") evidence is unbounded"
+  [ "$(wc -c <"$scenario/evidence.json" | tr -d ' ')" -le 8192 ] || die "$(basename "$scenario") evidence is unbounded"
   if grep -Eq 'SENSITIVE_FIXTURE_VALUE|PRIVATE_IDENTIFIER_FIXTURE|redacted fixture classification' "$scenario/evidence.json"; then
     die "$(basename "$scenario") retained raw diagnostic detail"
   fi
   jq -e '.version == 2 and (.cloud_init_version | test("^[0-9]+([.][0-9]+){1,3}")) and
     (.status_rc | type) == "number" and (.effect_check_rc | type) == "number" and
-    (.effects | type) == "object" and .raw_detail_retained == false' "$scenario/evidence.json" >/dev/null ||
+    (.effects | type) == "object" and (.diagnostics | type) == "object" and
+    (.diagnostics.events | length) <= 16 and .raw_detail_retained == false' "$scenario/evidence.json" >/dev/null ||
     die "$(basename "$scenario") evidence contract is incomplete"
 )
 
@@ -196,6 +208,23 @@ for effect in sentinel docker_active required_paths release_digest_matches relea
   printf '0\n' >"$scenario/status-1.rc"; printf '1\n' >"$scenario/status-total"; execute_case "$scenario" fail 1 1
 done
 
+for diagnostic_case in malformed-diagnostic nonzero-diagnostic untrusted-diagnostic oversized-diagnostic; do
+  scenario="$fixture_root/$diagnostic_case"; new_scenario "$scenario"; write_status "$scenario/status-1.json" 'error - done' 1 0
+  case "$diagnostic_case" in
+    malformed-diagnostic) printf '{' >"$scenario/diagnostics.json" ;;
+    nonzero-diagnostic) printf '9\n' >"$scenario/diagnostics.rc" ;;
+    untrusted-diagnostic) jq '.datasource.type="SENSITIVE_FIXTURE_VALUE" | .events=[{stage:"PRIVATE_IDENTIFIER_FIXTURE",module:"arbitrary",exception:"raw",errno:"detail"}]' "$scenario/diagnostics.json" >"$scenario/changed" && mv "$scenario/changed" "$scenario/diagnostics.json" ;;
+    oversized-diagnostic) { printf '%s' '{"version":1,"padding":"'; awk 'BEGIN {for(i=0;i<17000;i++) printf "x"}'; printf '%s\n' '"}'; } >"$scenario/diagnostics.json" ;;
+  esac
+  printf '1\n' >"$scenario/status-1.rc"; printf '1\n' >"$scenario/status-total"; execute_case "$scenario" fail 1 1
+  if [ "$diagnostic_case" = untrusted-diagnostic ]; then
+    jq -e '.diagnostics.valid==false and .diagnostics.datasource.type=="unknown" and .diagnostics.events[0]=={stage:"unknown",module:"unknown",exception:"unknown",errno:"unknown"}' "$scenario/evidence.json" >/dev/null ||
+      die "untrusted diagnostics were not closed"
+  else
+    jq -e '.diagnostics.valid==false' "$scenario/evidence.json" >/dev/null || die "invalid diagnostics were trusted"
+  fi
+done
+
 scenario="$fixture_root/success"; new_scenario "$scenario"; write_status "$scenario/status-1.json" 'done' 0 0
 printf '0\n' >"$scenario/status-1.rc"; printf '1\n' >"$scenario/status-total"; execute_case "$scenario" pass 1 0
 jq -e '.bootstrap_status == "done" and .status_rc == 0 and .effect_check_rc == 0 and ([.effects[]] | all)' "$scenario/evidence.json" >/dev/null ||
@@ -206,6 +235,7 @@ printf '1\n' >"$scenario/status-1.rc"; printf '1\n' >"$scenario/status-total"
 forbidden_evidence="$repository_root/.forbidden-bootstrap-evidence"; rm -f -- "$forbidden_evidence"; result=0
 KEEPLING_BOOTSTRAP_STATUS_RUNNER="$fixture_root/status-runner" KEEPLING_BOOTSTRAP_STATUS_RUNNER_ARGUMENT="$scenario" \
   KEEPLING_BOOTSTRAP_EFFECT_RUNNER="$fixture_root/effect-runner" KEEPLING_BOOTSTRAP_EFFECT_RUNNER_ARGUMENT="$scenario" \
+  KEEPLING_BOOTSTRAP_DIAGNOSTIC_RUNNER="$fixture_root/diagnostic-runner" KEEPLING_BOOTSTRAP_DIAGNOSTIC_RUNNER_ARGUMENT="$scenario" \
   KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER="$fixture_root/teardown" KEEPLING_BOOTSTRAP_TEARDOWN_RUNNER_ARGUMENT="$scenario/teardown-count" \
   KEEPLING_BOOTSTRAP_EVIDENCE_FILE="$forbidden_evidence" ./tooling/verify-host-replacement.sh --bootstrap-gate >/dev/null 2>&1 || result=$?
 [ "$result" -ne 0 ] || die "unsafe evidence target was accepted"
