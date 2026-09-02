@@ -1,0 +1,133 @@
+{
+  "version": "1.0",
+  "created_at": "2026-09-02T19:20:27.521Z",
+  "project": "Keepling",
+  "repository": "/Users/jon/projects/keepling",
+  "branch": "main",
+  "head_at_pause": "db529f54712ce4eb6a0531690cde6053f77925df",
+  "workflow": {
+    "command": "$gsd-execute-phase 3",
+    "phase": "KPL-03",
+    "phase_name": "Mac Daily Loop",
+    "phase_dir": ".planning/phases/KPL-03-mac-daily-loop",
+    "status": "paused",
+    "completed_plans": 4,
+    "total_plans": 12,
+    "next_plan": "03-09",
+    "next_task": 1,
+    "next_plan_total_tasks": 2
+  },
+  "runtime": {
+    "provider": "claude",
+    "model_profile": "adaptive",
+    "model_policy": {
+      "provider": "anthropic",
+      "budget": "medium",
+      "high": "claude-opus-4-8",
+      "medium": "claude-sonnet-5",
+      "low": "claude-haiku-4-5"
+    },
+    "verified_resolution": {
+      "agent_runtime": "claude",
+      "executor_model": "sonnet",
+      "verifier_model": "sonnet"
+    }
+  },
+  "completed": [
+    {
+      "plan": "03-07",
+      "summary": ".planning/phases/KPL-03-mac-daily-loop/03-07-SUMMARY.md",
+      "commits": ["716866f", "55a9a4c", "a5fce17"],
+      "result": "Pinned Electron workspace and direct four-process Vite/Forge build boundaries."
+    },
+    {
+      "plan": "03-12",
+      "summary": ".planning/phases/KPL-03-mac-daily-loop/03-12-SUMMARY.md",
+      "commits": ["8d91e7f", "2f0c3eb", "8a909a6", "be7f728"],
+      "result": "Anti-vacuous desktop harness and digest-bound package-once/external-smoke evidence."
+    },
+    {
+      "plan": "03-01",
+      "summary": ".planning/phases/KPL-03-mac-daily-loop/03-01-SUMMARY.md",
+      "commits": ["15365ce", "c596d47", "bd5c436", "3634c22", "47e3cf2", "a540316", "4f0f803", "16c4ab8", "6207939"],
+      "result": "Packaged offline capture, atomic local durability, exact acknowledgement, hard-kill recovery, and same-profile ownership proof."
+    },
+    {
+      "plan": "03-02",
+      "summary": ".planning/phases/KPL-03-mac-daily-loop/03-02-SUMMARY.md",
+      "commits": ["2d33006", "34910da", "22c3a82", "756db86", "ce2c4e3", "994d40b", "f3c3525", "a19352d", "0a461ef", "bcbaf53", "db529f5"],
+      "result": "Desktop synchronization, server-derived five-field namespace, fenced sign-out, encrypted credentials, and closed recovery presentation."
+    }
+  ],
+  "remaining_in_wave_order": [
+    {"wave": 5, "plans": ["03-09"]},
+    {"wave": 6, "plans": ["03-03"]},
+    {"wave": 7, "plans": ["03-04", "03-10"]},
+    {"wave": 8, "plans": ["03-11"]},
+    {"wave": 9, "plans": ["03-05"]},
+    {"wave": 10, "plans": ["03-08"]},
+    {"wave": 11, "plans": ["03-06"]}
+  ],
+  "verification": {
+    "latest_regression_gate": {
+      "command": "pnpm test:phase-1",
+      "status": "passed",
+      "evidence": "175 server tests, 147 web tests, 25 Playwright tests, contract checks, and typechecks passed after 03-02."
+    },
+    "pending_before_wave_5": [
+      "node \"$HOME/.claude/gsd-core/bin/gsd-tools.cjs\" check verify.schema-drift KPL-03 --raw",
+      "node \"$HOME/.claude/gsd-core/bin/gsd-tools.cjs\" check verify.codebase-drift KPL-03 --raw",
+      "node \"$HOME/.claude/gsd-core/bin/gsd-tools.cjs\" check ui.safety-gate KPL-03 --raw"
+    ]
+  },
+  "decisions": [
+    "D-03 is fixed: drafts make no durability claim; Saved on this Mac appears only after atomic SQLite projection/outbox COMMIT; Synced appears only after exact acknowledgement matching mutation identity and fingerprint.",
+    "electron@44.1.1 and zod@4.5.4 were explicitly approved and installed.",
+    "Lockfile regeneration for the existing @tailwindcss/vite@4.3.3 was explicitly approved.",
+    "better-sqlite3 was not approved or installed; packaged node:sqlite passed and remains the selected implementation.",
+    "The selected user-data profile owns Electron's single-instance lock before bootstrap; isolated profiles stay independent and duplicate ownership of one profile is rejected.",
+    "The synchronization namespace contract was expanded additively to five server-derived fields: issuer, origin, stable server instance, account subject, and synchronization generation. Clients cannot assert, reconstruct, or override namespace authority.",
+    "Desktop sync is bounded pull-before-push and preserves exact serialized command bytes for retries.",
+    "Sign-out fences local intent and clears credentials before best-effort remote revocation.",
+    "GSD project runtime is Claude with the adaptive role-based model profile; current executor and verifier resolve to Sonnet."
+  ],
+  "blockers": [],
+  "human_actions_pending": [],
+  "environment": {
+    "services_running": [],
+    "background_jobs": [],
+    "dispatch_note": "origin/HEAD could not be resolved, so GSD safely degraded orchestrator-worktree isolation to sequential execution without worktrees.",
+    "sandbox_note": "The first Phase 1 regression attempt inside the Codex sandbox hit PostgreSQL shared-memory permission denial; the same gate passed in a native/approved execution context. Treat that syscall denial as environment-specific, not a product regression."
+  },
+  "working_tree_at_pause": {
+    "intentional_tracked_for_handoff_commit": [
+      ".planning/config.json",
+      ".planning/STATE.md",
+      ".planning/state.json",
+      ".planning/HANDOFF.json",
+      ".planning/phases/KPL-03-mac-daily-loop/.continue-here.md"
+    ],
+    "preserve_untracked_do_not_stage": [
+      ".gsd/",
+      ".planning/milestone.lock",
+      ".planning/research/.cache/",
+      ".tool-versions",
+      "apps/desktop/test-results/"
+    ]
+  },
+  "required_reading": [
+    "AGENTS.md",
+    ".planning/HANDOFF.json",
+    ".planning/STATE.md",
+    ".planning/phases/KPL-03-mac-daily-loop/.continue-here.md",
+    ".planning/phases/KPL-03-mac-daily-loop/03-CONTEXT.md",
+    ".planning/phases/KPL-03-mac-daily-loop/03-UI-SPEC.md",
+    ".planning/phases/KPL-03-mac-daily-loop/03-RESEARCH.md",
+    ".planning/phases/KPL-03-mac-daily-loop/03-02-SUMMARY.md",
+    ".planning/phases/KPL-03-mac-daily-loop/03-01-SUMMARY.md",
+    ".planning/phases/KPL-03-mac-daily-loop/03-09-PLAN.md",
+    "docs/architecture/REPOSITORY.md",
+    "docs/brand/BRAND-SEED.md"
+  ],
+  "next_action": "From the repository root, run the three pending Wave 4 capability gates. If they are clear or non-blocking, invoke $gsd-execute-phase 3 and continue with Wave 5 Plan 03-09. Do not rerun completed plans."
+}

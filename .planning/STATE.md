@@ -4,11 +4,11 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: Completed KPL-03-02-PLAN.md
-last_updated: "2026-09-02T18:54:51.627Z"
+stopped_at: Paused after KPL-03-02; Wave 4 regression passed, capability gates pending
+last_updated: "2026-09-02T19:20:27.521Z"
 last_activity: 2026-09-02
 last_activity_desc: Phase KPL-03 execution started
-state_head: bcbaf539c59719ad42185f28fde155c34fcf6057
+state_head: db529f54712ce4eb6a0531690cde6053f77925df
 progress:
   total_phases: 6
   completed_phases: 1
@@ -200,16 +200,16 @@ Progress: [█████████░] 97%
 
 ## Next Action
 
-Resolve deferred Plan KPL-02-09 through an authorized, single-attempt corrected restore/runtime and DNS outer acceptance rehearsal.
+Run the three pending KPL-03 Wave 4 capability gates (`verify.schema-drift`, `verify.codebase-drift`, and `ui.safety-gate`), then resume `$gsd-execute-phase 3` at Wave 5 Plan 03-09.
 
 ---
 *State initialized: 2026-08-28*
 
 ## Session
 
-**Last session:** 2026-09-02T18:54:51.523Z
-**Stopped at:** Completed KPL-03-02-PLAN.md
-**Resume file:** None
+**Last session:** 2026-09-02T19:20:27.211Z
+**Stopped at:** Paused after KPL-03-02; Wave 4 regression passed, capability gates pending
+**Resume file:** .planning/phases/KPL-03-mac-daily-loop/.continue-here.md
 
 ## Performance Metrics
 
