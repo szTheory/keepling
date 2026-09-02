@@ -259,6 +259,11 @@
       "id": "O-9",
       "item": "03-04 native shell built but not wired into the shipped app",
       "detail": "main/menu.ts, main/windows/{main-window,quick-entry-window,settings-window}.ts and preload/utility-preload.ts are production-quality and E2E-proven, but apps/desktop/main/index.ts contains zero references to them (verified by grep). They are proven against a deliberately-labeled test-only Electron entry point (apps/desktop/test/fixtures/wired-app-harness.ts) that composes the same production modules, NOT against the shipped dist/main/index.cjs. Until bootstrap() in main/index.ts calls createMainWindow / buildApplicationMenu / QuickEntryWindowController / SettingsWindowController, no user can reach Command-N, the global shortcut, Quick Entry, or the native menus. Cause: main/index.ts is not in 03-04's files_modified but is required by its deliverable - a planning defect the wave-7 scope fence surfaced rather than created. Assign the wiring to Plan 03-11 (wave 8): it depends_on 03-04, owns main/index.ts, and is already the window/lifecycle plan. Do NOT give it to 03-10; sealing the hostile boundary is unrelated and that would expand its scope."
+    },
+    {
+      "id": "O-10",
+      "item": "Window navigation guards are per-window and unenforced; two policies diverged",
+      "detail": "03-10's SUMMARY claims all new security policy sits on session.defaultSession so utility windows inherit it. Only half true. Permissions and CSP are session-wide and do inherit. setWindowOpenHandler and will-navigate are attached per-window in main/index.ts and inherit nothing. The utility windows are safe today only because 03-04 independently added its own guards in main/windows/{main-window,settings-window,quick-entry-window}.ts - safety by coincidence, not architecture. (a) No test enforces that every BrowserWindow has navigation guards: nothing under apps/desktop/test/ references setWindowOpenHandler or will-navigate, so a future window that forgets them ships silently. (b) The two policies diverged: main/index.ts uses an allowlist (isAllowedNavigationTarget / isAllowedExternalLinkTarget, permitting vetted external links via shell.openExternal) while 03-04's windows are unconditional deny-all. Not a defect today; both are safe. Wants an invariant test and one reconciled policy before phase verification."
     }
   ]
 }
