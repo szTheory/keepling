@@ -100,6 +100,10 @@ test('encrypts credentials asynchronously and persists only ciphertext', async (
   await adapter.store(credential)
   expect(written[0]?.toString('utf8')).toBe(`cipher:${credential}`)
   await expect(adapter.load()).resolves.toBe(credential)
+  expect(adapter.settingsDisclosure()).toEqual({
+    copy: 'This unsigned dogfood build may not keep sign-in through an app replacement. Your tasks and pending changes remain saved on this Mac.',
+    kind: 'unsigned_dogfood',
+  })
   await adapter.clear()
   await expect(adapter.load()).resolves.toBeNull()
 })
