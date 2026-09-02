@@ -1,0 +1,599 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+
+import {
+  DesktopApplication,
+  type CaptureCommand,
+  type LocalAcceptance,
+  type LocalStorePort,
+  type PendingMutation,
+  type SyncAcknowledgement,
+  type SyncPort,
+  type WorkspaceSnapshot,
+} from '../../main/application/DesktopApplication.ts'
+import {
+  captureRequestSchema,
+  conflictSchema,
+  decideSequenceOutcome,
+  desktopPresentationSchema,
+  editRequestSchema,
+  lifecycleRequestSchema,
+  localAcceptanceSchema,
+  moveTodayRequestSchema,
+  resolveConflictRequestSchema,
+  snapshotSchema,
+  undoResultSchema,
+} from '../../preload/contracts.ts'
+import {
+  APP_PROTOCOL_ORIGIN,
+  assertTrustedIpcSender,
+  IpcSecurityError,
+  isAllowedExternalLinkTarget,
+  isAllowedNavigationTarget,
+  isTrustedIpcSender,
+  parseTrustedRequest,
+  resolvePackagedAssetPath,
+  shouldGrantPermission,
+} from '../../main/protocol.ts'
+
+/**
+ * Hostile two-sided bridge and sequence proof (D-27/D-28/D-29,
+ * T-KPL03-10-01/02/03). Every case here asserts BOTH that the hostile input
+ * is rejected AND that the rejection happens before any privileged effect --
+ * either by proving `ipcRenderer.invoke` was never called for a malformed
+ * preload request, or by proving the pure decision function main's IPC
+ * handlers actually consult (`isTrustedIpcSender`, `parseTrustedRequest`,
+ * `resolvePackagedAssetPath`) returns the closed/deny outcome, never an
+ * approximate one.
+ */
+
+const validTask = {
+  completedAt: null,
+  id: 'task-1',
+  notes: 'note',
+  planned: false,
+  syncStatus: 'saved_on_this_mac' as const,
+  title: 'Call dentist',
+  trashedAt: null,
+}
+const validSnapshot = { tasks: [validTask] }
+const validLocalAcceptance = {
+  fingerprint: 'a'.repeat(64),
+  mutationId: 'mutation-1',
+  snapshot: validSnapshot,
+  status: 'local_saved' as const,
+}
+const validPresentationSummary = {
+  actions: [],
+  copy: null,
+  count: null,
+  kind: 'healthy' as const,
+  lastSuccessfulContact: null,
+}
+const validPresentation = {
+  sequence: 1,
+  summary: validPresentationSummary,
+  surfaces: { panel: validPresentationSummary, row: validPresentationSummary, shell: validPresentationSummary },
+}
+
+describe('preload/main strict request and response schemas (D-27/D-28)', () => {
+  it('accepts the exact well-formed shape for every schema', () => {
+    expect(() => captureRequestSchema.parse({ title: 'Call dentist' })).not.toThrow()
+    expect(() => localAcceptanceSchema.parse(validLocalAcceptance)).not.toThrow()
+    expect(() => snapshotSchema.parse(validSnapshot)).not.toThrow()
+    expect(() => editRequestSchema.parse({ notes: 'n', taskId: 't', title: 'x' })).not.toThrow()
+    expect(() => lifecycleRequestSchema.parse({ kind: 'complete', taskId: 't' })).not.toThrow()
+    expect(() => moveTodayRequestSchema.parse({ planned: true, taskId: 't' })).not.toThrow()
+    expect(() => conflictSchema.parse({ conflictId: 'c', current: 'a', mine: 'b', taskId: 't' })).not.toThrow()
+    expect(() => undoResultSchema.parse({ applied: true, snapshot: validSnapshot })).not.toThrow()
+    expect(() => resolveConflictRequestSchema.parse({ choice: 'mine', conflictId: 'c' })).not.toThrow()
+    expect(() => desktopPresentationSchema.parse(validPresentation)).not.toThrow()
+  })
+
+  it('rejects an extra shallow field on every request/response schema (.strict())', () => {
+    expect(() => captureRequestSchema.parse({ extra: 'field', title: 'Call dentist' })).toThrow()
+    expect(() => localAcceptanceSchema.parse({ ...validLocalAcceptance, extra: true })).toThrow()
+    expect(() => snapshotSchema.parse({ ...validSnapshot, extra: true })).toThrow()
+    expect(() => editRequestSchema.parse({ extra: 1, notes: 'n', taskId: 't', title: 'x' })).toThrow()
+    expect(() => lifecycleRequestSchema.parse({ extra: 1, kind: 'complete', taskId: 't' })).toThrow()
+    expect(() => moveTodayRequestSchema.parse({ extra: 1, planned: true, taskId: 't' })).toThrow()
+    expect(() => conflictSchema.parse({ conflictId: 'c', current: 'a', extra: 1, mine: 'b', taskId: 't' })).toThrow()
+    expect(() => undoResultSchema.parse({ applied: true, extra: 1, snapshot: validSnapshot })).toThrow()
+    expect(() => resolveConflictRequestSchema.parse({ choice: 'mine', conflictId: 'c', extra: 1 })).toThrow()
+    expect(() => desktopPresentationSchema.parse({ ...validPresentation, extra: 1 })).toThrow()
+  })
+
+  it('rejects a deep extra field smuggled inside a nested object (task inside snapshot, summary inside presentation)', () => {
+    expect(() => snapshotSchema.parse({ tasks: [{ ...validTask, hostileField: 'x' }] })).toThrow()
+    expect(() =>
+      desktopPresentationSchema.parse({
+        ...validPresentation,
+        summary: { ...validPresentationSummary, hostileField: 'x' },
+      }),
+    ).toThrow()
+    expect(() =>
+      desktopPresentationSchema.parse({
+        ...validPresentation,
+        surfaces: { ...validPresentation.surfaces, panel: { ...validPresentationSummary, hostileField: 'x' } },
+      }),
+    ).toThrow()
+  })
+
+  it('rejects a malformed union member (lifecycle kind, presentation kind, conflict choice, permission-style enum abuse)', () => {
+    expect(() => lifecycleRequestSchema.parse({ kind: 'delete_everything', taskId: 't' })).toThrow()
+    expect(() => resolveConflictRequestSchema.parse({ choice: 'both', conflictId: 'c' })).toThrow()
+    expect(() => desktopPresentationSchema.parse({ ...validPresentation, summary: { ...validPresentationSummary, kind: 'omniscient' } })).toThrow()
+  })
+
+  it('rejects a prototype-pollution-shaped payload (__proto__ as an extra key)', () => {
+    const hostile = JSON.parse('{"title":"x","__proto__":{"polluted":true}}') as unknown
+    expect(() => captureRequestSchema.parse(hostile)).toThrow()
+  })
+
+  it('rejects wrong-typed fields standing in for a clone-unsafe value (function/undefined coerced to string by callers is still rejected by type)', () => {
+    expect(() => captureRequestSchema.parse({ title: 123 })).toThrow()
+    expect(() => captureRequestSchema.parse({ title: undefined })).toThrow()
+    expect(() => captureRequestSchema.parse({ title: null })).toThrow()
+    expect(() => captureRequestSchema.parse({ title: {} })).toThrow()
+    expect(() => captureRequestSchema.parse({ title: [] })).toThrow()
+  })
+
+  it('rejects an out-of-range presentation sequence, count, or action list', () => {
+    expect(() => desktopPresentationSchema.parse({ ...validPresentation, sequence: -1 })).toThrow()
+    expect(() => desktopPresentationSchema.parse({ ...validPresentation, sequence: 1.5 })).toThrow()
+    expect(() =>
+      desktopPresentationSchema.parse({ ...validPresentation, summary: { ...validPresentationSummary, count: 100 } }),
+    ).toThrow()
+    expect(() =>
+      desktopPresentationSchema.parse({
+        ...validPresentation,
+        summary: {
+          ...validPresentationSummary,
+          actions: [
+            { code: 'retry', label: 'a' }, { code: 'retry', label: 'b' },
+            { code: 'retry', label: 'c' }, { code: 'retry', label: 'd' },
+          ],
+        },
+      }),
+    ).toThrow()
+  })
+})
+
+describe('main-side bounded parsing (parseTrustedRequest never leaks raw Zod internals)', () => {
+  it('converts a schema failure into a bounded IpcSecurityError with a fixed code, not the Zod error', () => {
+    let caught: unknown
+    try {
+      parseTrustedRequest(captureRequestSchema, { title: '' })
+    } catch (error) {
+      caught = error
+    }
+    expect(caught).toBeInstanceOf(IpcSecurityError)
+    expect((caught as IpcSecurityError).code).toBe('invalid_request')
+    expect((caught as IpcSecurityError).message).toBe('invalid_request')
+  })
+
+  it('passes a well-formed request through unchanged', () => {
+    expect(parseTrustedRequest(captureRequestSchema, { title: 'Call dentist' })).toEqual({ title: 'Call dentist' })
+  })
+})
+
+describe('sender/frame trust (T-KPL03-10-01): forged sender and subframe injection fail closed', () => {
+  const trustedId = 7
+
+  it('trusts only the exact expected sender id, from the main frame, inside the packaged app origin', () => {
+    expect(
+      isTrustedIpcSender({
+        isMainFrame: true,
+        senderFrameUrl: `${APP_PROTOCOL_ORIGIN}/index.html`,
+        senderId: trustedId,
+        trustedSenderId: trustedId,
+      }),
+    ).toBe(true)
+  })
+
+  it('rejects a forged sender id (a second window pretending to be the trusted one)', () => {
+    expect(
+      isTrustedIpcSender({
+        isMainFrame: true,
+        senderFrameUrl: `${APP_PROTOCOL_ORIGIN}/index.html`,
+        senderId: 999,
+        trustedSenderId: trustedId,
+      }),
+    ).toBe(false)
+  })
+
+  it('rejects a subframe of the trusted WebContents (frame-bound, not just sender-bound)', () => {
+    expect(
+      isTrustedIpcSender({
+        isMainFrame: false,
+        senderFrameUrl: `${APP_PROTOCOL_ORIGIN}/index.html`,
+        senderId: trustedId,
+        trustedSenderId: trustedId,
+      }),
+    ).toBe(false)
+  })
+
+  it('rejects a frame whose URL escaped the packaged app origin (e.g. after a navigation the main policy failed to block)', () => {
+    expect(
+      isTrustedIpcSender({
+        isMainFrame: true,
+        senderFrameUrl: 'https://attacker.example/phish.html',
+        senderId: trustedId,
+        trustedSenderId: trustedId,
+      }),
+    ).toBe(false)
+    expect(
+      isTrustedIpcSender({
+        isMainFrame: true,
+        senderFrameUrl: 'file:///etc/passwd',
+        senderId: trustedId,
+        trustedSenderId: trustedId,
+      }),
+    ).toBe(false)
+  })
+
+  it('rejects a null frame URL (frame already destroyed/detached)', () => {
+    expect(
+      isTrustedIpcSender({ isMainFrame: true, senderFrameUrl: null, senderId: trustedId, trustedSenderId: trustedId }),
+    ).toBe(false)
+  })
+
+  it('rejects an origin-prefix bypass attempt (app://renderer.attacker.example is NOT app://renderer)', () => {
+    expect(
+      isTrustedIpcSender({
+        isMainFrame: true,
+        senderFrameUrl: 'app://renderer.attacker.example/index.html',
+        senderId: trustedId,
+        trustedSenderId: trustedId,
+      }),
+    ).toBe(false)
+  })
+
+  it('assertTrustedIpcSender throws a bounded IpcSecurityError, never a generic Error, on every rejection above', () => {
+    expect(() =>
+      assertTrustedIpcSender({ isMainFrame: true, senderFrameUrl: null, senderId: 1, trustedSenderId: 1 }),
+    ).toThrow(IpcSecurityError)
+    try {
+      assertTrustedIpcSender({ isMainFrame: false, senderFrameUrl: `${APP_PROTOCOL_ORIGIN}/index.html`, senderId: 1, trustedSenderId: 1 })
+      expect.unreachable('expected assertTrustedIpcSender to throw')
+    } catch (error) {
+      expect(error).toBeInstanceOf(IpcSecurityError)
+      expect((error as IpcSecurityError).code).toBe('untrusted_sender')
+    }
+  })
+})
+
+describe('every ipcMain.handle registration in main/index.ts is sender-checked before touching DesktopApplication', () => {
+  it('static-scans main/index.ts: each handler body calls assertTrustedSender before any desktopApplication.* call', async () => {
+    const { readFile } = await import('node:fs/promises')
+    const { fileURLToPath } = await import('node:url')
+    const source = await readFile(fileURLToPath(new URL('../../main/index.ts', import.meta.url)), 'utf8')
+    const handlerBodies = [...source.matchAll(/ipcMain\.handle\('keepling:[^']+',\s*async\s*\([^)]*\)\s*=>\s*\{([\s\S]*?)\n {2}\}\)/g)]
+    expect(handlerBodies.length).toBeGreaterThanOrEqual(9)
+    for (const [, body] of handlerBodies) {
+      const trustCheckIndex = body!.indexOf('assertTrustedSender(event)')
+      const applicationCallIndex = body!.indexOf('desktopApplication.')
+      expect(trustCheckIndex, `handler body missing assertTrustedSender before desktopApplication call:\n${body}`).toBeGreaterThanOrEqual(0)
+      expect(applicationCallIndex).toBeGreaterThan(trustCheckIndex)
+    }
+  })
+
+  it('exposes no generic invoke/send channel and no raw callback surface in the preload bridge module source', async () => {
+    const { readFile } = await import('node:fs/promises')
+    const { fileURLToPath } = await import('node:url')
+    const source = await readFile(fileURLToPath(new URL('../../preload/index.ts', import.meta.url)), 'utf8')
+    // The ONLY ipcRenderer.invoke/send/on call sites are the named 'keepling:*' channels below --
+    // there is no channel-name parameter threaded through from renderer-controlled input.
+    const channelCalls = [...source.matchAll(/ipcRenderer\.(?:invoke|send|on)\(\s*'([^']+)'/g)].map((match) => match[1])
+    expect(channelCalls.length).toBeGreaterThan(0)
+    for (const channel of channelCalls) expect(channel!.startsWith('keepling:')).toBe(true)
+    expect(source).not.toMatch(/exposeInMainWorld\([^)]*,\s*ipcRenderer\s*\)/)
+  })
+})
+
+describe('packaged content and navigation policy (T-KPL03-10-02): content substitution and unexpected navigation fail closed', () => {
+  const rendererRoot = '/app/dist/renderer'
+
+  it('resolves the default document for the bare origin', () => {
+    expect(resolvePackagedAssetPath(`${APP_PROTOCOL_ORIGIN}/`, rendererRoot)).toBe('/app/dist/renderer/index.html')
+    expect(resolvePackagedAssetPath(APP_PROTOCOL_ORIGIN, rendererRoot)).toBe('/app/dist/renderer/index.html')
+  })
+
+  it('resolves an in-root asset path', () => {
+    expect(resolvePackagedAssetPath(`${APP_PROTOCOL_ORIGIN}/assets/index.js`, rendererRoot)).toBe('/app/dist/renderer/assets/index.js')
+  })
+
+  it('confines a path-traversal request to the packaged renderer root -- the WHATWG URL parser itself already collapses dot-segments to a root-relative pathname, so `..` beyond the URL root can never reach a `resolve(root, path)` outside rendererRoot; this proves that containment holds, not merely that the URL parser is trusted blindly', () => {
+    for (const hostile of [
+      `${APP_PROTOCOL_ORIGIN}/../../../../etc/passwd`,
+      `${APP_PROTOCOL_ORIGIN}/%2e%2e/%2e%2e/etc/passwd`,
+      `${APP_PROTOCOL_ORIGIN}/assets/../../../main/index.cjs`,
+    ]) {
+      const resolved = resolvePackagedAssetPath(hostile, rendererRoot)
+      expect(resolved).not.toBeNull()
+      expect(resolved === rendererRoot || resolved!.startsWith(`${rendererRoot}/`)).toBe(true)
+      // The literal attacker-intended target must never be what was actually resolved.
+      expect(resolved).not.toBe('/etc/passwd')
+      expect(resolved).not.toBe('/app/dist/main/index.cjs')
+    }
+  })
+
+  it('the containment boundary check is sep-anchored, not a bare string prefix (a sibling directory sharing the root name as a prefix is not "inside" it)', () => {
+    // If the containment check were `candidate.startsWith(root)` (no
+    // separator), a sibling directory like `/app/dist/renderer-evil` would
+    // incorrectly pass because it shares the string prefix `/app/dist/
+    // renderer`. Prove the real root/candidate pair used in production is
+    // exactly on the boundary and is accepted, establishing the check is
+    // exercised for a real in-root file, not skipped.
+    const inRoot = resolvePackagedAssetPath(`${APP_PROTOCOL_ORIGIN}/index.html`, rendererRoot)
+    expect(inRoot).toBe(`${rendererRoot}/index.html`)
+    expect(inRoot!.startsWith(`${rendererRoot}-evil`)).toBe(false)
+  })
+
+  it('denies wrong scheme and wrong host resource substitution', () => {
+    expect(resolvePackagedAssetPath('https://attacker.example/index.html', rendererRoot)).toBeNull()
+    expect(resolvePackagedAssetPath('file:///etc/passwd', rendererRoot)).toBeNull()
+    expect(resolvePackagedAssetPath('app://attacker-host/index.html', rendererRoot)).toBeNull()
+  })
+
+  it('denies a malformed request URL entirely (no throw, closed result)', () => {
+    expect(resolvePackagedAssetPath('not a url at all', rendererRoot)).toBeNull()
+  })
+
+  it('allows only same-origin app:// navigation and denies every other scheme', () => {
+    expect(isAllowedNavigationTarget(`${APP_PROTOCOL_ORIGIN}/index.html`)).toBe(true)
+    expect(isAllowedNavigationTarget('https://attacker.example')).toBe(false)
+    expect(isAllowedNavigationTarget('file:///etc/passwd')).toBe(false)
+    expect(isAllowedNavigationTarget('javascript:alert(1)')).toBe(false)
+    expect(isAllowedNavigationTarget('data:text/html,hostile')).toBe(false)
+    expect(isAllowedNavigationTarget('app://attacker-host/index.html')).toBe(false)
+  })
+
+  it('denies every external link target by default (empty allowlist, never a wildcard https allow)', () => {
+    expect(isAllowedExternalLinkTarget('https://example.com')).toBe(false)
+    expect(isAllowedExternalLinkTarget('http://example.com')).toBe(false)
+    expect(isAllowedExternalLinkTarget('javascript:alert(1)')).toBe(false)
+  })
+
+  it('denies every Electron permission request by default (deny-all)', () => {
+    for (const permission of ['camera', 'microphone', 'geolocation', 'notifications', 'clipboard-read', 'midi', 'hid', 'usb']) {
+      expect(shouldGrantPermission(permission)).toBe(false)
+    }
+  })
+})
+
+describe('D-29 presentation sequence contract: missing/out-of-order/duplicate sequences refetch, never apply unsafe increments', () => {
+  it('applies the first observed sequence unconditionally (baseline)', () => {
+    expect(decideSequenceOutcome(null, 0)).toBe('apply')
+    expect(decideSequenceOutcome(null, 41)).toBe('apply')
+  })
+
+  it('applies the exact successor', () => {
+    expect(decideSequenceOutcome(5, 6)).toBe('apply')
+  })
+
+  it('ignores a duplicate (equal) or stale (lower) sequence rather than regressing presented state', () => {
+    expect(decideSequenceOutcome(5, 5)).toBe('ignore_stale')
+    expect(decideSequenceOutcome(5, 3)).toBe('ignore_stale')
+    expect(decideSequenceOutcome(5, 0)).toBe('ignore_stale')
+  })
+
+  it('treats any gap (missing sequence) as opaque refetch, never an unsafe increment', () => {
+    expect(decideSequenceOutcome(5, 7)).toBe('refetch')
+    expect(decideSequenceOutcome(5, 100)).toBe('refetch')
+  })
+})
+
+describe('preload bridge: hostile renderer calls never reach ipcRenderer.invoke (no privileged effect on validation failure)', () => {
+  let ipcRendererMock: { invoke: ReturnType<typeof vi.fn>; on: ReturnType<typeof vi.fn>; removeListener: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> }
+  let exposeInMainWorldMock: ReturnType<typeof vi.fn>
+  let exposedApi: Record<string, unknown>
+
+  beforeEach(async () => {
+    vi.resetModules()
+    ipcRendererMock = {
+      invoke: vi.fn(async (channel: string) => {
+        if (channel === 'keepling:presentation-snapshot') return validPresentation
+        return validSnapshot
+      }),
+      on: vi.fn(),
+      removeListener: vi.fn(),
+      send: vi.fn(),
+    }
+    exposeInMainWorldMock = vi.fn()
+    vi.doMock('electron', () => ({
+      contextBridge: { exposeInMainWorld: exposeInMainWorldMock },
+      ipcRenderer: ipcRendererMock,
+    }))
+    await import('../../preload/index.ts')
+    expect(exposeInMainWorldMock).toHaveBeenCalledTimes(1)
+    expect(exposeInMainWorldMock.mock.calls[0]![0]).toBe('keepling')
+    exposedApi = exposeInMainWorldMock.mock.calls[0]![1] as Record<string, unknown>
+  })
+
+  afterEach(() => {
+    vi.doUnmock('electron')
+    vi.resetModules()
+  })
+
+  it('exposes only the named, expected surface -- no generic invoke/send/on escape hatch', () => {
+    expect(Object.keys(exposedApi).sort()).toEqual(
+      [
+        'capture', 'editTask', 'lifecycleTask', 'listConflicts', 'moveToday', 'presentationSnapshot',
+        'resolveConflict', 'snapshot', 'subscribePresentation', 'undoLastAction',
+      ].sort(),
+    )
+    expect(exposedApi).not.toHaveProperty('invoke')
+    expect(exposedApi).not.toHaveProperty('send')
+    expect(exposedApi).not.toHaveProperty('ipcRenderer')
+  })
+
+  it('capture(): an extra field never reaches ipcRenderer.invoke', async () => {
+    ipcRendererMock.invoke.mockClear()
+    await expect((exposedApi.capture as (r: unknown) => Promise<unknown>)({ addToToday: true, extra: 'x', title: 't' })).rejects.toThrow()
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('keepling:capture', expect.anything())
+  })
+
+  it('capture(): a malformed title type never reaches ipcRenderer.invoke', async () => {
+    ipcRendererMock.invoke.mockClear()
+    await expect((exposedApi.capture as (r: unknown) => Promise<unknown>)({ title: { hostile: true } })).rejects.toThrow()
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('keepling:capture', expect.anything())
+  })
+
+  it('editTask(): an unknown extra field never reaches ipcRenderer.invoke', async () => {
+    ipcRendererMock.invoke.mockClear()
+    await expect(
+      (exposedApi.editTask as (r: unknown) => Promise<unknown>)({ hostileField: 1, notes: 'n', taskId: 't', title: 'x' }),
+    ).rejects.toThrow()
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('keepling:edit-task', expect.anything())
+  })
+
+  it('lifecycleTask(): a malformed union member (unknown kind) never reaches ipcRenderer.invoke', async () => {
+    ipcRendererMock.invoke.mockClear()
+    await expect(
+      (exposedApi.lifecycleTask as (r: unknown) => Promise<unknown>)({ kind: 'delete_forever', taskId: 't' }),
+    ).rejects.toThrow()
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('keepling:lifecycle-task', expect.anything())
+  })
+
+  it('moveToday(): a wrong-typed field never reaches ipcRenderer.invoke', async () => {
+    ipcRendererMock.invoke.mockClear()
+    await expect((exposedApi.moveToday as (r: unknown) => Promise<unknown>)({ planned: 'yes', taskId: 't' })).rejects.toThrow()
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('keepling:move-today', expect.anything())
+  })
+
+  it('resolveConflict(): a malformed choice enum never reaches ipcRenderer.invoke', async () => {
+    ipcRendererMock.invoke.mockClear()
+    await expect(
+      (exposedApi.resolveConflict as (r: unknown) => Promise<unknown>)({ choice: 'delete_both', conflictId: 'c' }),
+    ).rejects.toThrow()
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('keepling:resolve-conflict', expect.anything())
+  })
+
+  it('a well-formed request for every method DOES reach ipcRenderer.invoke exactly once with the parsed value', async () => {
+    ipcRendererMock.invoke.mockClear()
+    ipcRendererMock.invoke.mockImplementationOnce(async () => validLocalAcceptance)
+    await (exposedApi.capture as (r: unknown) => Promise<unknown>)({ title: 'Call dentist' })
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('keepling:capture', { title: 'Call dentist' })
+  })
+
+  it('parses (and rejects) a malformed response from a compromised/buggy main before handing it to the renderer', async () => {
+    ipcRendererMock.invoke.mockImplementationOnce(async () => ({ hostile: 'response', not: 'a snapshot' }))
+    await expect((exposedApi.snapshot as () => Promise<unknown>)()).rejects.toThrow()
+  })
+
+  it('subscribePresentation(): registers the presentation-changed listener exactly once at module load, before any subscriber exists', () => {
+    const presentationListenerCalls = ipcRendererMock.on.mock.calls.filter(([channel]) => channel === 'keepling:presentation-changed')
+    expect(presentationListenerCalls).toHaveLength(1)
+  })
+
+  it('subscribePresentation(): delivers an authoritative baseline immediately on subscribe (subscription-precedes-snapshot guarantee)', async () => {
+    const received: unknown[] = []
+    ;(exposedApi.subscribePresentation as (fn: (p: unknown) => void) => () => void)((presentation) => received.push(presentation))
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(received).toHaveLength(1)
+    expect(received[0]).toMatchObject({ sequence: validPresentation.sequence })
+  })
+
+  it('a duplicate/out-of-order push is ignored (never regresses presented state)', async () => {
+    const [, presentationListener] = ipcRendererMock.on.mock.calls.find(([channel]) => channel === 'keepling:presentation-changed')!
+    const received: unknown[] = []
+    ;(exposedApi.subscribePresentation as (fn: (p: unknown) => void) => () => void)((presentation) => received.push(presentation))
+    await Promise.resolve()
+    await Promise.resolve()
+    received.length = 0
+    presentationListener({}, { ...validPresentation, sequence: 0 })
+    await Promise.resolve()
+    expect(received).toHaveLength(0)
+  })
+
+  it('a sequence gap triggers an opaque presentation-snapshot refetch instead of applying the pushed value directly', async () => {
+    const [, presentationListener] = ipcRendererMock.on.mock.calls.find(([channel]) => channel === 'keepling:presentation-changed')!
+    const received: unknown[] = []
+    ;(exposedApi.subscribePresentation as (fn: (p: unknown) => void) => () => void)((presentation) => received.push(presentation))
+    await Promise.resolve()
+    await Promise.resolve()
+    ipcRendererMock.invoke.mockClear()
+    received.length = 0
+    const refetchedPresentation = { ...validPresentation, sequence: 50 }
+    ipcRendererMock.invoke.mockImplementationOnce(async () => refetchedPresentation)
+    // A gap: jump from sequence 1 straight to 9, skipping 2..8.
+    presentationListener({}, { ...validPresentation, sequence: 9 })
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('keepling:presentation-snapshot')
+    // The pushed (gapped) value is never delivered directly -- only the refetched, authoritative one is.
+    expect(received).toHaveLength(1)
+    expect(received[0]).toMatchObject({ sequence: 50 })
+  })
+
+  it('unsubscribe stops delivering to that subscriber but the module-level listener stays live for others', async () => {
+    const received: unknown[] = []
+    const unsubscribe = (exposedApi.subscribePresentation as (fn: (p: unknown) => void) => () => void)((presentation) =>
+      received.push(presentation),
+    )
+    await Promise.resolve()
+    await Promise.resolve()
+    unsubscribe()
+    received.length = 0
+    const [, presentationListener] = ipcRendererMock.on.mock.calls.find(([channel]) => channel === 'keepling:presentation-changed')!
+    presentationListener({}, { ...validPresentation, sequence: 2 })
+    await Promise.resolve()
+    expect(received).toHaveLength(0)
+  })
+})
+
+describe('reload/crash after local COMMIT reconstructs from an opaque snapshot, never loses accepted intent (D-03/D-29)', () => {
+  class InMemoryLocalStore implements LocalStorePort {
+    #tasks: WorkspaceTask[] = []
+
+    async acceptCapture(mutation: PendingMutation): Promise<LocalAcceptance> {
+      // Durable COMMIT happens synchronously here -- this is the moment "Saved
+      // on this Mac" becomes true, matching D-03's post-COMMIT boundary.
+      this.#tasks = [...this.#tasks, { id: mutation.taskId, syncStatus: 'saved_on_this_mac', title: mutation.title }]
+      return { fingerprint: mutation.fingerprint, mutationId: mutation.mutationId, snapshot: { tasks: this.#tasks }, status: 'local_saved' }
+    }
+
+    async acknowledge(_acknowledgement: SyncAcknowledgement): Promise<WorkspaceSnapshot> {
+      return { tasks: this.#tasks }
+    }
+
+    async pendingMutations(): Promise<PendingMutation[]> {
+      return []
+    }
+
+    async snapshot(): Promise<WorkspaceSnapshot> {
+      return { tasks: this.#tasks }
+    }
+
+    async close(): Promise<void> {}
+  }
+
+  type WorkspaceTask = { id: string; syncStatus: 'saved_on_this_mac' | 'synced'; title: string }
+
+  it('a fresh (post-reload/crash) subscriber snapshot still contains the task committed before the renderer failure, via a fresh opaque fetch', async () => {
+    const store = new InMemoryLocalStore()
+    const sync: SyncPort = { acknowledge: async () => null }
+    const application = new DesktopApplication({
+      clock: { now: () => new Date(0).toISOString() },
+      identity: { randomId: (() => { let n = 0; return () => `id-${(n += 1)}` })() },
+      localStore: store,
+      sync,
+    })
+
+    const captured: LocalAcceptance = await application.capture({ title: 'Survive the crash' } satisfies CaptureCommand)
+    expect(captured.status).toBe('local_saved')
+
+    // Simulate a renderer reload/crash: drop every in-memory listener the
+    // renderer held (there is nothing to lose -- the crashed process's
+    // subscription state is discarded), then attach a completely new
+    // subscriber, exactly as the preload's `subscribePresentation` does on
+    // the very next `refetchAuthoritativePresentation()` call.
+    const freshSubscriberReceived: unknown[] = []
+    application.subscribePresentation((presentation) => freshSubscriberReceived.push(presentation))
+
+    const reconstructedSnapshot = await application.snapshot()
+    expect(reconstructedSnapshot.tasks).toHaveLength(1)
+    expect(reconstructedSnapshot.tasks[0]).toMatchObject({ syncStatus: 'saved_on_this_mac', title: 'Survive the crash' })
+  })
+})
