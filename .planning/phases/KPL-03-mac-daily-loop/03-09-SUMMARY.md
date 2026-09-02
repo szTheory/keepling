@@ -195,9 +195,16 @@ main-owned desktop adapter" — is currently satisfied *behaviorally* (see the
 byte-identical two-facade parity assertion in `workspace-tracer.test.tsx`) but not
 *in shipped composition*.
 
-**Carry-forward to Plan 03-03 (Wave 6):** flip the production Inbox route onto the shared
-slice and delete the `useSharedWorkspace` opt-in, so the flag cannot outlive the migration
-it exists to stage. If 03-03 closes without doing so, the extraction is dead code.
+**Carry-forward, split by platform.** Plan 03-03 (Wave 6) makes the slice load-bearing on
+*desktop* — its `files_modified` wires `apps/desktop/renderer/main.tsx` to the facade — so
+after 03-03 the extraction is shipped code on the Mac client, which is this phase's actual
+deliverable.
+
+03-03 does **not** touch `apps/web`, so the `useSharedWorkspace` flag survives it. That is
+a separate open item: either flip the web Inbox route onto the shared slice and delete the
+flag, or record a deliberate decision that web keeps its existing routed content and the
+flag is permanent API. It must not be left undecided at phase verification, because an
+opt-in that no production caller ever sets is indistinguishable from dead code.
 
 Otherwise the plan executed as written. The plan's `<files>` lists named `apps/web/src/app/AppShell.tsx` and `apps/web/src/app/WorkspaceShell.tsx`; both were modified as planned. Additional files not explicitly named in the plan (`apps/web/src/adapters/browserClientFacade.ts`, the fixture, and the four proof test files) were added because they are what the plan's own `<action>`/`<behavior>` text required ("adapt the browser composition through a browser-owned facade adapter", "the same shared slice renders through web and a deterministic desktop-facade fixture", "add import-boundary tests") — normal plan-to-implementation elaboration, not a scope change.
 
