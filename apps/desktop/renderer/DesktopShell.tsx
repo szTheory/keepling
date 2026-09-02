@@ -1,0 +1,104 @@
+import { useEffect, useState } from 'react'
+
+import type { ClientFacade } from '../../../packages/web-ui/src/ClientFacade.ts'
+import Workspace from '../../../packages/web-ui/src/workspace/Workspace.tsx'
+import { matchSemanticCommand, shouldDispatchCommand, type SemanticCommand } from './keyboardCommands.ts'
+
+type DesktopShellProps = {
+  facade: ClientFacade
+}
+
+const destinationTitle = (route: 'inbox' | 'today' | 'trash'): string => {
+  if (route === 'today') return 'Keepling — Today'
+  if (route === 'trash') return 'Keepling — Trash'
+  return 'Keepling — Inbox'
+}
+
+/**
+ * Desktop-only shell around the shared `Workspace` presentation. Owns:
+ *  - the sidebar-visibility toggle (Command-Control-S, D-14), and
+ *  - the native-menu-equivalent keyboard commands not already implemented
+ *    by TaskEditor (Command-S/Command-Return) or TaskList (Up/Down/Return).
+ *
+ * `document.title` is set here directly from the ClientFacade snapshot
+ * (D-07): Electron's BrowserWindow mirrors `document.title` as the native
+ * window title by default, so this never needs a main-process round trip
+ * and never contains task content (only the coarse destination name).
+ */
+function DesktopShell({ facade }: DesktopShellProps) {
+  const [sidebarVisible, setSidebarVisible] = useState(true)
+
+  useEffect(() => {
+    const applyTitle = () => {
+      document.title = destinationTitle(facade.getSnapshot().route)
+    }
+    applyTitle()
+    return facade.subscribe(applyTitle)
+  }, [facade])
+
+  useEffect(() => {
+    const dispatch = (command: SemanticCommand) => {
+      const snapshot = facade.getSnapshot()
+      const selected = snapshot.tasks.find((task) => task.id === snapshot.selectedTaskId) ?? null
+      switch (command) {
+        case 'new-task': {
+          facade.setRoute('inbox')
+          queueMicrotask(() => {
+            document.getElementById('workspace-capture-title')?.focus()
+          })
+          break
+        }
+        case 'go-inbox':
+          facade.setRoute('inbox')
+          break
+        case 'go-today':
+          facade.setRoute('today')
+          break
+        case 'toggle-complete-reopen': {
+          if (selected === null) break
+          if (selected.completedAt === null) void facade.completeTask(selected.id)
+          else void facade.reopenTask(selected.id)
+          break
+        }
+        case 'toggle-trash-restore': {
+          if (selected === null) break
+          if (selected.trashedAt === null) void facade.trashTask(selected.id)
+          else void facade.restoreTask(selected.id)
+          break
+        }
+        case 'undo':
+          void facade.undoLastChange()
+          break
+        case 'toggle-sidebar':
+          setSidebarVisible((visible) => !visible)
+          break
+        case 'sync-recovery':
+          document.getElementById('sync-recovery-region')?.focus()
+          break
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const command = matchSemanticCommand(event)
+      if (command === null) return
+      if (
+        !shouldDispatchCommand(command, {
+          activeElement: document.activeElement,
+          isComposing: event.isComposing,
+          repeat: event.repeat,
+        })
+      ) {
+        return
+      }
+      event.preventDefault()
+      dispatch(command)
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [facade])
+
+  return <Workspace facade={facade} sidebarVisible={sidebarVisible} />
+}
+
+export default DesktopShell

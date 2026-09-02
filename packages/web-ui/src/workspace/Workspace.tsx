@@ -16,6 +16,12 @@ import SyncRecovery from '../recovery/SyncRecovery'
  */
 type WorkspaceProps = {
   facade: ClientFacade
+  /**
+   * Desktop-only sidebar visibility (D-14 "Toggle Sidebar", Command-Control-S).
+   * Optional and defaults to visible so browser/fixture callers are
+   * unaffected; only the Electron renderer toggles this.
+   */
+  sidebarVisible?: boolean
 }
 
 const PERSISTENT_NAV_START = 1064
@@ -58,7 +64,7 @@ const emptyCopy: Record<WorkspaceRoute, { body: string; title: string }> = {
 
 type PendingNavigation = { kind: 'route'; route: WorkspaceRoute } | { kind: 'select'; taskId: string | null }
 
-function Workspace({ facade }: WorkspaceProps) {
+function Workspace({ facade, sidebarVisible = true }: WorkspaceProps) {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshotView>(() => facade.getSnapshot())
   const [dirty, setDirty] = useState(false)
   const [pendingNavigation, setPendingNavigation] = useState<PendingNavigation | null>(null)
@@ -146,7 +152,11 @@ function Workspace({ facade }: WorkspaceProps) {
 
   return (
     <main data-workspace-breakpoint={breakpoint} id="main-content" tabIndex={-1}>
-      <nav aria-label="Workspace destinations" data-workspace-region="nav">
+      <nav
+        aria-label="Workspace destinations"
+        data-workspace-region="nav"
+        hidden={!sidebarVisible}
+      >
         {(['inbox', 'today', 'trash'] as const).map((route) => (
           <button
             aria-current={snapshot.route === route ? 'true' : undefined}

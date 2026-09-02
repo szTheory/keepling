@@ -38,7 +38,12 @@ function SyncRecovery({ facade }: SyncRecoveryProps) {
   }
 
   return (
-    <aside aria-label="Latest recovery action" data-workspace-recovery="true">
+    <aside
+      aria-label="Latest recovery action"
+      data-workspace-recovery="true"
+      id="sync-recovery-region"
+      tabIndex={-1}
+    >
       <div aria-atomic="true" aria-live="polite" role="status">
         {settledMessage !== null ? (
           <p>{settledMessage}</p>
