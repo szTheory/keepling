@@ -304,6 +304,20 @@ const validateCompatibilityVectors = (vectors) => {
   return { cases: vectors.cases.length, codecs: vectors.codec_fixtures.length, lanes: vectors.matrix.lanes.length, laneInputs }
 }
 
+const validateNativeNamespaceContract = (sourceText, generatedText) => {
+  for (const field of ['account_subject', 'generation', 'issuer', 'origin', 'server_instance']) {
+    if (!sourceText.includes(`        ${field}:`)) fail(`native namespace is missing ${field}`)
+    if (!generatedText.includes(`readonly ${field}:`)) fail(`generated native namespace is missing ${field}`)
+  }
+  for (const requestName of ['NativeAuthorizationCodeExchangeRequest', 'NativeRefreshRequest']) {
+    const requestStart = sourceText.indexOf(`    ${requestName}:`)
+    const requestEnd = sourceText.indexOf('\n    ', requestStart + 5)
+    if (sourceText.slice(requestStart, requestEnd).includes('namespace')) {
+      fail(`${requestName} must not accept namespace authority`)
+    }
+  }
+}
+
 const exactStateSets = {
   mutation: ['local_saved', 'checking', 'accepted', 'rejected', 'conflict', 'authentication_required', 'quarantined'],
   synchronization: ['starting', 'catching_up', 'ready', 'stale_last_good', 'retryable_failure'],
@@ -345,6 +359,7 @@ if (schema.$schema !== 'https://json-schema.org/draft/2020-12/schema' || !schema
 }
 
 const vectors = JSON.parse(readFileSync(syncVectors, 'utf8'))
+validateNativeNamespaceContract(readFileSync(source, 'utf8'), readFileSync(generated, 'utf8'))
 const executedSyncCases = validateSyncVectors(vectors)
 const compatibility = JSON.parse(readFileSync(compatibilityVectors, 'utf8'))
 const executedCompatibility = validateCompatibilityVectors(compatibility)

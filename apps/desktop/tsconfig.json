@@ -11,7 +11,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "rootDir": ".",
+    "rootDir": "../..",
     "skipLibCheck": true,
     "strict": true,
     "target": "ES2023",

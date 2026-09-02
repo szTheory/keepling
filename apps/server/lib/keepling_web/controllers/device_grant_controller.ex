@@ -117,6 +117,13 @@ defmodule KeeplingWeb.DeviceGrantController do
     %{
       access_token: grant.access_token,
       expires_in: @access_ttl_seconds,
+      namespace: %{
+        account_subject: grant.namespace.subject,
+        generation: grant.namespace.generation,
+        issuer: grant.namespace.issuer,
+        origin: grant.namespace.origin,
+        server_instance: grant.namespace.server_instance
+      },
       refresh_token: grant.refresh_token,
       token_type: "Bearer"
     }

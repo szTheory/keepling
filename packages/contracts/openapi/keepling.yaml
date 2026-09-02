@@ -1712,6 +1712,7 @@ components:
       required:
         - access_token
         - expires_in
+        - namespace
         - refresh_token
         - token_type
       properties:
@@ -1720,11 +1721,34 @@ components:
         expires_in:
           type: integer
           const: 900
+        namespace:
+          $ref: '#/components/schemas/NativeSyncNamespace'
         refresh_token:
           $ref: '#/components/schemas/OpaqueGrantCredential'
         token_type:
           type: string
           const: Bearer
+    NativeSyncNamespace:
+      type: object
+      additionalProperties: false
+      description: Server-derived local-store authority; native requests cannot assert any dimension.
+      required: [account_subject, generation, issuer, origin, server_instance]
+      properties:
+        account_subject:
+          type: string
+          format: uuid
+        generation:
+          type: integer
+          minimum: 1
+        issuer:
+          type: string
+          minLength: 1
+        origin:
+          type: string
+          format: uri
+        server_instance:
+          type: string
+          minLength: 1
     OpaqueGrantCredential:
       type: string
       minLength: 43

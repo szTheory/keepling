@@ -131,7 +131,7 @@ class NodeSqliteLocalStore {
   }
 
   applyPull(page: PullPage): void {
-    if (!page.cursor || page.changes.length > 50) throw new Error('invalid bounded pull page')
+    if (page.changes.length > 50) throw new Error('invalid bounded pull page')
     this.#database.exec('BEGIN IMMEDIATE')
     try {
       for (const change of page.changes) {
@@ -148,7 +148,7 @@ class NodeSqliteLocalStore {
           `).run(change.entityId, JSON.stringify(change.snapshot))
         }
       }
-      this.#database.prepare('UPDATE sync_cursor SET cursor = ? WHERE singleton = 1').run(page.cursor)
+      if (page.cursor !== null) this.#database.prepare('UPDATE sync_cursor SET cursor = ? WHERE singleton = 1').run(page.cursor)
       this.#replayVisible()
       this.#database.exec('COMMIT')
     } catch (error) {

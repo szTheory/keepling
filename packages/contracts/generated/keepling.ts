@@ -1052,10 +1052,21 @@ export interface components {
             readonly grant_type: "refresh_token";
             readonly refresh_token: components["schemas"]["OpaqueGrantCredential"];
         };
+        /** @description Server-derived local-store authority; native requests cannot assert any dimension. */
+        readonly NativeSyncNamespace: {
+            /** Format: uuid */
+            readonly account_subject: string;
+            readonly generation: number;
+            readonly issuer: string;
+            /** Format: uri */
+            readonly origin: string;
+            readonly server_instance: string;
+        };
         readonly NativeTokenResponse: {
             readonly access_token: components["schemas"]["OpaqueGrantCredential"];
             /** @constant */
             readonly expires_in: 900;
+            readonly namespace: components["schemas"]["NativeSyncNamespace"];
             readonly refresh_token: components["schemas"]["OpaqueGrantCredential"];
             /** @constant */
             readonly token_type: "Bearer";

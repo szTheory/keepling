@@ -38,7 +38,7 @@ type SyncMutation = {
   resourceKeys: string[]
 }
 
-type PullPage = { changes: Array<{ entityId: string; snapshot: SyncSnapshot }>; cursor: string }
+type PullPage = { changes: Array<{ entityId: string; snapshot: SyncSnapshot }>; cursor: string | null }
 
 type SyncState = { cursor: string | null; outbox: string[]; readyPushes: string[] }
 type SyncNamespace = {
@@ -100,6 +100,7 @@ interface IdentityPort {
 
 type DesktopApplicationOptions = {
   clock: ClockPort
+  credentials?: CredentialPort
   identity: IdentityPort
   localStore: LocalStorePort
   sync: SyncPort
@@ -116,12 +117,14 @@ const computeSyncBackoff = (attempt: number, jitter: () => number): number => {
 
 class DesktopApplication {
   readonly #clock: ClockPort
+  readonly #credentials: CredentialPort | undefined
   readonly #identity: IdentityPort
   readonly #localStore: LocalStorePort
   readonly #sync: SyncPort
 
   constructor(options: DesktopApplicationOptions) {
     this.#clock = options.clock
+    this.#credentials = options.credentials
     this.#identity = options.identity
     this.#localStore = options.localStore
     this.#sync = options.sync
@@ -156,6 +159,21 @@ class DesktopApplication {
 
   async snapshot(): Promise<WorkspaceSnapshot> {
     return this.#localStore.snapshot()
+  }
+
+  async activateNamespace(namespace: SyncNamespace): Promise<boolean> {
+    if (!this.#localStore.bindNamespace) throw new Error('namespace binding is unavailable')
+    return this.#localStore.bindNamespace(namespace)
+  }
+
+  async signOut(revoke: () => Promise<void>): Promise<void> {
+    await this.#localStore.setSyncFence?.('signed_out')
+    await this.#credentials?.clear()
+    try {
+      await revoke()
+    } catch {
+      // Revocation is best-effort after the local namespace is already fenced.
+    }
   }
 
   async reconcile(): Promise<{ settled: number }> {
