@@ -167,6 +167,30 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
+**Plans:** 6 plans
+
+Plans:
+**Wave 1**
+
+- [ ] 03-01-PLAN.md — Prove exact packaged offline capture, hard-kill relaunch, and one-time acknowledgement.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 03-02-PLAN.md — Deliver real synchronization, namespace fencing, credentials, and one recovery projection.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 03-03-PLAN.md — Deliver the complete facade-driven Mac workspace and UI state matrix.
+- [ ] 03-04-PLAN.md — Deliver native menus, Quick Entry, resident lifecycle, and restoration.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 03-05-PLAN.md — Seal hostile IPC, store-failure recovery, and safe local-data removal.
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 03-06-PLAN.md — Bind exact packaged bytes to CI, accessibility, and bounded dogfood evidence.
+
 **Success Criteria**:
 
 1. The packaged Mac application supports quick capture, Inbox, Today, edit, complete/reopen, trash/restore, and undo with complete keyboard navigation.
