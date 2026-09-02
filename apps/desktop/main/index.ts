@@ -15,13 +15,18 @@ import {
 
 type WorkerResponse = { error?: string; id: number; ok: boolean; value?: unknown }
 
+const processResourcePath = (role: 'preload' | 'renderer' | 'worker', file: string) =>
+  app.isPackaged
+    ? join(process.resourcesPath, role, file)
+    : join(app.getAppPath(), 'dist', role, file)
+
 class WorkerLocalStore implements LocalStorePort {
   readonly #pending = new Map<number, { reject: (error: Error) => void; resolve: (value: unknown) => void }>()
   readonly #worker: Worker
   #nextId = 1
 
   constructor(databasePath: string, migrationPath: string) {
-    const workerPath = join(app.isPackaged ? process.resourcesPath : app.getAppPath(), 'dist', 'worker', 'index.cjs')
+    const workerPath = processResourcePath('worker', 'index.cjs')
     this.#worker = new Worker(workerPath, { workerData: { databasePath, migrationPath } })
     this.#worker.on('message', (response: WorkerResponse) => {
       const pending = this.#pending.get(response.id)
@@ -109,7 +114,7 @@ const bootstrap = async () => {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      preload: join(app.isPackaged ? process.resourcesPath : app.getAppPath(), 'dist', 'preload', 'index.cjs'),
+      preload: processResourcePath('preload', 'index.cjs'),
       sandbox: true,
     },
     width: 960,
@@ -132,7 +137,7 @@ const bootstrap = async () => {
 
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
   window.webContents.on('will-navigate', (event) => event.preventDefault())
-  await window.loadFile(join(app.isPackaged ? process.resourcesPath : app.getAppPath(), 'dist', 'renderer', 'index.html'))
+  await window.loadFile(processResourcePath('renderer', 'index.html'))
   window.show()
 
   let quitting = false

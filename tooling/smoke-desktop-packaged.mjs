@@ -82,12 +82,12 @@ try {
     'exec',
     'playwright',
     'test',
+    ...(requestedScenario ? [`${requestedScenario}.spec.ts`] : []),
     '--config',
     'playwright.config.ts',
     '--project',
     'packaged',
   ]
-  if (requestedScenario) argumentsForPlaywright.push(`${requestedScenario}.spec.ts`)
   const result = spawnSync('pnpm', argumentsForPlaywright, {
     cwd: desktopRoot,
     encoding: 'utf8',
