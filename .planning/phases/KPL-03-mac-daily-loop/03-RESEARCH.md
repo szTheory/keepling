@@ -603,22 +603,19 @@ const TaskDetailValues = z.strictObject({
 | A2 | Proposed leaf folders/files under the locked `apps/desktop` roots are an effective decomposition. [ASSUMED] | Recommended Project Structure | Planner may need different leaf boundaries to fit build/package constraints. |
 | A3 | The current web presentation can be extracted incrementally without a large browser regression rewrite. [ASSUMED] | Architecture | May require smaller deliberate duplication before a stable shared package seam emerges. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Does `node:sqlite` pass the exact packaged adapter gate?**
+1. **`node:sqlite` is a conditional packaged gate, not an unresolved architecture choice.**
    - What we know: Electron 44 embeds Node 24.18.1; `node:sqlite` is release candidate, synchronous, and has the required prepared statement/timeout/backup primitives. [CITED: https://www.electronjs.org/blog/electron-44-0] [CITED: https://nodejs.org/download/release/v24.18.1/docs/api/sqlite.html]
-   - What's unclear: packaged crash recovery, worker lifecycle, real workload latency, checkpoint behavior, and API sufficiency on Keepling fixtures. [VERIFIED: `.planning/knowledge/OPEN-QUESTIONS.md:5-16`]
-   - Recommendation: resolve in the first packaged tracer; activate `better-sqlite3` only with a recorded failed gate and fresh legitimacy/native-ABI proof. [VERIFIED: `.planning/phases/KPL-03-mac-daily-loop/03-CONTEXT.md:68-76`]
+   - Resolution: the first packaged tracer runs API-stability, correctness, crash-recovery, worker-architecture, latency, checkpoint, and packaged-loading predicates against the exact pinned Electron runtime. Passing selects `node:sqlite`; any failed predicate stops execution and records the failed predicate. Only then may execution open a fresh human legitimacy/native-ABI checkpoint for `better-sqlite3` behind the unchanged `LocalStorePort`. [VERIFIED: D-33]
 
-2. **How much React presentation is truly platform-free?**
+2. **Shared React extraction is presentation-only behind `ClientFacade`.**
    - What we know: workspace, capture, lifecycle, conflict, and recovery assets are reusable foundations, while browser submission/session authority is not. [VERIFIED: `.planning/phases/KPL-03-mac-daily-loop/03-CONTEXT.md:161-186`]
-   - What's unclear: the smallest extraction that does not destabilize Phase 1 web behavior. [ASSUMED]
-   - Recommendation: extract facade types and one capture/list/detail vertical slice first; duplicate a small adapter-specific wrapper when sharing would leak platform assumptions. [VERIFIED: `docs/architecture/REPOSITORY.md:48-60`]
+   - Resolution: extract only view components, presentation models, and named semantic `ClientFacade` calls. Browser submission/session/history/fetch and Electron preload/lifecycle/persistence remain adapter-owned. Begin with one capture/list/detail slice; retain deliberate adapter duplication whenever sharing would import a platform assumption. [VERIFIED: D-26, D-30, D-32]
 
-3. **What is the final evidence for “daily-use ready”?**
+3. **Daily-use readiness uses a seven-calendar-day bounded dogfood interval.**
    - What we know: the roadmap requires Jon to use the supported Mac loop without opening Things for those actions. [VERIFIED: `.planning/ROADMAP.md:164-176`]
-   - What's unclear: duration and defect threshold are not locked for Phase 3. [ASSUMED]
-   - Recommendation: plan a bounded dogfood acceptance checklist and evidence log after automated gates; do not convert subjective polish into a claim of data safety. [VERIFIED: `AGENTS.md:90-102`]
+   - Resolution: after automated and physical-Mac gates are green, use the exact digest-bound packaged build for seven consecutive calendar days, including at least five active-use days. Pass requires zero fallbacks to Things for scoped Mac actions, zero lost or silently overwritten accepted mutations, and zero unresolved data-safety, recovery-severity, keyboard, or accessibility blockers. Record every fallback, interruption, offline period, relaunch, conflict, and recovery action; an artifact change restarts the interval. Subjective polish notes remain findings, not data-safety proof. [VERIFIED: ROADMAP Phase 3 success criterion 5; AGENTS.md evidence rule]
 
 ## Environment Availability
 
