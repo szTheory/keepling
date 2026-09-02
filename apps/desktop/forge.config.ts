@@ -20,7 +20,6 @@ export default {
       fromDesktopRoot('./dist/renderer'),
       fromDesktopRoot('./dist/worker'),
       fromDesktopRoot('./migrations'),
-      fromDesktopRoot('./assets'),
     ],
     ignore: [/node_modules/],
     name: 'Keepling',
