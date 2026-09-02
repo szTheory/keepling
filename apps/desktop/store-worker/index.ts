@@ -9,11 +9,16 @@ type WorkerRequest = {
     | 'acknowledge'
     | 'applyLifecycle'
     | 'applyMoveToday'
+    | 'clearDraft'
     | 'close'
     | 'editTask'
+    | 'getDraft'
+    | 'getShortcutPreference'
     | 'listConflicts'
     | 'pendingMutations'
     | 'resolveConflict'
+    | 'saveDraft'
+    | 'setShortcutPreference'
     | 'snapshot'
     | 'undoLastLocalAction'
   payload?: unknown
@@ -55,6 +60,24 @@ parentPort.on('message', (request: WorkerRequest) => {
         break
       case 'resolveConflict':
         value = store.resolveConflict(request.payload as Parameters<typeof store.resolveConflict>[0])
+        break
+      case 'saveDraft':
+        store.saveDraft(request.payload as Parameters<typeof store.saveDraft>[0])
+        value = null
+        break
+      case 'getDraft':
+        value = store.getDraft()
+        break
+      case 'clearDraft':
+        store.clearDraft()
+        value = null
+        break
+      case 'getShortcutPreference':
+        value = store.getShortcutPreference()
+        break
+      case 'setShortcutPreference':
+        store.setShortcutPreference(request.payload as Parameters<typeof store.setShortcutPreference>[0])
+        value = null
         break
       case 'close':
         store.close()

@@ -70,6 +70,18 @@ const createDesktopClientFacade = (): ClientFacade => {
 
   void refresh()
 
+  // Plan 03-04: a task captured through Quick Entry (a separate resident
+  // utility window/IPC surface) commits through the SAME main-owned
+  // `DesktopApplication`, which already publishes a presentation update on
+  // every local commit (`publishPresentation({ kind: 'local_saved' })`).
+  // Refetching the snapshot on that signal is what makes "Its durable task
+  // appears immediately in Keepling" (D-11) true for the main window
+  // without a manual reload, and costs nothing extra for ordinary
+  // in-window edits (they already call `refresh()` themselves).
+  window.keepling.subscribePresentation(() => {
+    void refresh()
+  })
+
   const publishRecovery = (label: string) => {
     recovery = { expiresAt: new Date(Date.now() + 5 * 60_000).toISOString(), handle: 'local-undo', label }
     for (const listener of recoveryListeners) listener(recovery)

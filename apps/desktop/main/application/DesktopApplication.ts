@@ -52,6 +52,17 @@ type CaptureCommand = {
   title: string
 }
 
+/**
+ * Quick Entry draft (D-03/D-11): explicitly NOT a task change and never
+ * claims "Saved on this Mac". Persisted separately from task mutations so it
+ * survives Escape/Command-W hide and utility-window recreation; only an
+ * explicit discard clears it.
+ */
+type QuickEntryDraft = {
+  addToToday: boolean
+  title: string
+}
+
 type PendingMutation = {
   acceptedAt: string
   commandBytes: string
@@ -117,6 +128,16 @@ interface LocalStorePort {
   listConflicts?(): Promise<ConflictRecord[]> | ConflictRecord[]
   /** Commits the chosen field value for a sync conflict and clears it. */
   resolveConflict?(input: { choice: 'current' | 'mine'; conflictId: string }): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
+  /** Persists the Quick Entry draft (D-11); not a task change, no outbox row. */
+  saveDraft?(draft: QuickEntryDraft): Promise<void> | void
+  /** Reads back the persisted Quick Entry draft, or null when there is none. */
+  getDraft?(): Promise<QuickEntryDraft | null> | QuickEntryDraft | null
+  /** Removes the persisted Quick Entry draft (only on explicit Discard Draft). */
+  clearDraft?(): Promise<void> | void
+  /** Reads the persisted configurable Quick Entry global-shortcut accelerator. */
+  getShortcutPreference?(): Promise<string | null> | string | null
+  /** Persists a newly chosen Quick Entry global-shortcut accelerator. */
+  setShortcutPreference?(accelerator: string): Promise<void> | void
   pendingMutations(): Promise<PendingMutation[]>
   readyMutations?(): Promise<SyncMutation[]> | SyncMutation[]
   setSyncFence?(reason: string | null): Promise<void> | void
@@ -263,6 +284,41 @@ class DesktopApplication {
     return snapshot
   }
 
+  /**
+   * Quick Entry draft persistence (D-03/D-11). This is deliberately NOT a
+   * task mutation: no immutable command, no outbox row, no presentation
+   * publish -- a draft never claims durability beyond "kept while Keepling
+   * is running", which the main-owned store honors across window hide and
+   * recreation.
+   */
+  async saveDraft(draft: QuickEntryDraft): Promise<void> {
+    if (!this.#localStore.saveDraft) throw new Error('Quick Entry draft storage is unavailable')
+    const title = draft.title
+    if ([...title].length > 512) throw new Error('draft title must not exceed 512 Unicode scalar values')
+    await this.#localStore.saveDraft({ addToToday: draft.addToToday, title })
+  }
+
+  async getDraft(): Promise<QuickEntryDraft | null> {
+    if (!this.#localStore.getDraft) return null
+    return this.#localStore.getDraft()
+  }
+
+  async clearDraft(): Promise<void> {
+    if (!this.#localStore.clearDraft) throw new Error('Quick Entry draft storage is unavailable')
+    await this.#localStore.clearDraft()
+  }
+
+  async getShortcutPreference(): Promise<string | null> {
+    if (!this.#localStore.getShortcutPreference) return null
+    return this.#localStore.getShortcutPreference()
+  }
+
+  async setShortcutPreference(accelerator: string): Promise<void> {
+    if (!this.#localStore.setShortcutPreference) throw new Error('shortcut preference storage is unavailable')
+    if (accelerator.trim().length === 0) throw new Error('shortcut accelerator must not be empty')
+    await this.#localStore.setShortcutPreference(accelerator)
+  }
+
   async activateNamespace(namespace: SyncNamespace): Promise<boolean> {
     if (!this.#localStore.bindNamespace) throw new Error('namespace binding is unavailable')
     const bound = await this.#localStore.bindNamespace(namespace)
@@ -359,6 +415,7 @@ export type {
   MoveTodayCommand,
   PendingMutation,
   PullPage,
+  QuickEntryDraft,
   SyncMutation,
   SyncNamespace,
   SyncAcknowledgement,

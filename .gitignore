@@ -9,6 +9,7 @@ dist/
 build/
 apps/web/test-results/
 apps/desktop/out/
+apps/desktop/dist-harness/
 DerivedData/
 *.xcuserstate
 .env

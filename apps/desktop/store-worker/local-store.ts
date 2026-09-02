@@ -11,6 +11,7 @@ import type {
   MoveTodayCommand,
   PendingMutation,
   PullPage,
+  QuickEntryDraft,
   SyncAcknowledgement,
   SyncMutation,
   SyncNamespace,
@@ -18,6 +19,9 @@ import type {
   SyncState,
   WorkspaceSnapshot,
 } from '../main/application/DesktopApplication.ts'
+
+const QUICK_ENTRY_DRAFT_KEY = 'quick_entry_draft'
+const QUICK_ENTRY_SHORTCUT_KEY = 'quick_entry_shortcut'
 
 type LocalStoreOptions = {
   databasePath: string
@@ -469,6 +473,48 @@ class NodeSqliteLocalStore {
       throw error
     }
     return this.snapshot()
+  }
+
+  /**
+   * Quick Entry draft persistence (D-03/D-11). Stored in the existing
+   * `namespace_metadata` key/value table -- a draft is deliberately NOT a
+   * task mutation, so it never touches immutable_commands/outbox/journal.
+   * A single UPDATE-then-INSERT-if-absent keeps this durable across window
+   * hide/recreation and app restart without a schema change.
+   */
+  saveDraft(draft: QuickEntryDraft): void {
+    if ([...draft.title].length > 512) throw new Error('draft title must not exceed 512 Unicode scalar values')
+    this.#database.prepare(`
+      INSERT INTO namespace_metadata(key, value) VALUES (?, ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value
+    `).run(QUICK_ENTRY_DRAFT_KEY, JSON.stringify({ addToToday: draft.addToToday, title: draft.title }))
+  }
+
+  getDraft(): QuickEntryDraft | null {
+    const row = this.#database.prepare(`
+      SELECT value FROM namespace_metadata WHERE key = ?
+    `).get(QUICK_ENTRY_DRAFT_KEY) as { value: string } | undefined
+    if (row === undefined) return null
+    return JSON.parse(row.value) as QuickEntryDraft
+  }
+
+  clearDraft(): void {
+    this.#database.prepare('DELETE FROM namespace_metadata WHERE key = ?').run(QUICK_ENTRY_DRAFT_KEY)
+  }
+
+  getShortcutPreference(): string | null {
+    const row = this.#database.prepare(`
+      SELECT value FROM namespace_metadata WHERE key = ?
+    `).get(QUICK_ENTRY_SHORTCUT_KEY) as { value: string } | undefined
+    return row?.value ?? null
+  }
+
+  setShortcutPreference(accelerator: string): void {
+    if (accelerator.trim().length === 0) throw new Error('shortcut accelerator must not be empty')
+    this.#database.prepare(`
+      INSERT INTO namespace_metadata(key, value) VALUES (?, ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value
+    `).run(QUICK_ENTRY_SHORTCUT_KEY, accelerator)
   }
 
   #requireProjectionRow(taskId: string): ProjectionRow {
