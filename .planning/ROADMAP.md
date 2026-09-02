@@ -167,7 +167,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 9/12 plans executed
+**Plans:** 10/12 plans executed
 
 Plans:
 **Wave 1**
@@ -205,7 +205,7 @@ Plans:
 
 **Wave 9** *(blocked on Wave 8 completion)*
 
-- [ ] 03-05-PLAN.md — Seal hostile IPC, store-failure recovery, and safe local-data removal.
+- [x] 03-05-PLAN.md — Seal hostile IPC, store-failure recovery, and safe local-data removal.
 
 **Wave 10** *(blocked on Wave 9 completion)*
 
