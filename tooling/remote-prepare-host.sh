@@ -1,17 +1,19 @@
 #!/bin/sh
 set -eu
 
-[ "$#" -eq 7 ] || {
+[ "$#" -eq 9 ] || {
   printf '%s\n' 'REMOTE_PREPARE_FAILED_STAGE=contract RC=40' >&2
   exit 40
 }
 volume_id=$1
 expected_archive_sha=$2
-expected_image_id=$3
-expected_revision=$4
-expected_architecture=$5
-runtime_host=$6
-tested_manifest_digest=$7
+expected_config_image_id=$3
+expected_manifest_digest=$4
+expected_revision=$5
+expected_architecture=$6
+expected_rootfs_diff_ids=$7
+runtime_host=$8
+tested_manifest_digest=$9
 
 failure_stage=contract
 failure_code=40
@@ -19,32 +21,35 @@ completed=false
 load_rc=not-run inspect_rc=not-run observed_id_shape=empty observed_id_match=false
 revision_shape=empty revision_match=false architecture_shape=empty architecture_match=false
 inventory_before=not-run inventory_after=not-run inventory_delta=not-run
+descriptor_state=not-run descriptor_match=false rootfs_shape=empty rootfs_match=false
 exec 3>&2
 exec >/dev/null 2>&1
 report_exit() {
   result=$?
   trap - EXIT HUP INT TERM
   if [ "$completed" != true ]; then
-    printf 'REMOTE_PREPARE_FAILED_STAGE=%s RC=%s BEFORE=%s LOAD=%s AFTER=%s DELTA=%s INSPECT=%s ID_SHAPE=%s ID_MATCH=%s REV_SHAPE=%s REV_MATCH=%s ARCH_SHAPE=%s ARCH_MATCH=%s\n' \
+    printf 'REMOTE_PREPARE_FAILED_STAGE=%s RC=%s BEFORE=%s LOAD=%s AFTER=%s DELTA=%s INSPECT=%s ID_SHAPE=%s ID_MATCH=%s DESC=%s DESC_MATCH=%s REV_SHAPE=%s REV_MATCH=%s ARCH_SHAPE=%s ARCH_MATCH=%s ROOTFS_SHAPE=%s ROOTFS_MATCH=%s\n' \
       "$failure_stage" "$failure_code" "$inventory_before" "$load_rc" "$inventory_after" "$inventory_delta" "$inspect_rc" "$observed_id_shape" "$observed_id_match" \
-      "$revision_shape" "$revision_match" "$architecture_shape" "$architecture_match" >&3
+      "$descriptor_state" "$descriptor_match" "$revision_shape" "$revision_match" "$architecture_shape" "$architecture_match" "$rootfs_shape" "$rootfs_match" >&3
     exit "$failure_code"
   fi
   exit "$result"
 }
 trap report_exit EXIT HUP INT TERM
 
-case "$expected_archive_sha:$expected_image_id:$expected_revision:$expected_architecture" in
-  *[!a-zA-Z0-9:._-]*) exit "$failure_code" ;;
+case "$expected_archive_sha:$expected_config_image_id:$expected_manifest_digest:$expected_revision:$expected_architecture:$expected_rootfs_diff_ids" in
+  *[!a-zA-Z0-9:,._-]*) exit "$failure_code" ;;
 esac
 case "$volume_id:$runtime_host:$tested_manifest_digest" in
   *[!a-zA-Z0-9:._-]*) exit "$failure_code" ;;
 esac
 printf '%s' "$volume_id" | grep -Eq '^[1-9][0-9]*$' || exit "$failure_code"
 printf '%s' "$expected_archive_sha" | grep -Eq '^[0-9a-f]{64}$' || exit "$failure_code"
-printf '%s' "$expected_image_id" | grep -Eq '^sha256:[0-9a-f]{64}$' || exit "$failure_code"
+printf '%s' "$expected_config_image_id" | grep -Eq '^sha256:[0-9a-f]{64}$' || exit "$failure_code"
+printf '%s' "$expected_manifest_digest" | grep -Eq '^sha256:[0-9a-f]{64}$' || exit "$failure_code"
 printf '%s' "$expected_revision" | grep -Eq '^[0-9a-f]{7,64}$' || exit "$failure_code"
 [ "$expected_architecture" = amd64 ] || exit "$failure_code"
+printf '%s' "$expected_rootfs_diff_ids" | grep -Eq '^sha256:[0-9a-f]{64}(,sha256:[0-9a-f]{64})*$' || exit "$failure_code"
 printf '%s' "$runtime_host" | grep -Eq '^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$' || exit "$failure_code"
 if printf '%s' "$runtime_host" | grep -F '..' >/dev/null; then exit "$failure_code"; fi
 printf '%s' "$tested_manifest_digest" | grep -Eq '^sha256:[0-9a-f]{64}$' || exit "$failure_code"
@@ -53,6 +58,7 @@ stage() { failure_stage=$1; failure_code=$2; }
 id_shape() { if [ -z "$1" ]; then printf empty; elif printf '%s' "$1" | grep -Eq '^sha256:[0-9a-f]{64}$'; then printf sha256-64; else printf other; fi; }
 revision_value_shape() { if [ -z "$1" ]; then printf empty; elif printf '%s' "$1" | grep -Eq '^[0-9a-f]{7,64}$'; then printf hex-7-64; else printf other; fi; }
 architecture_value_shape() { if [ -z "$1" ]; then printf empty; elif [ "$1" = amd64 ]; then printf amd64; else printf other; fi; }
+rootfs_value_shape() { if [ -z "$1" ]; then printf empty; elif printf '%s' "$1" | grep -Eq '^sha256:[0-9a-f]{64}(,sha256:[0-9a-f]{64})*$'; then printf digest-list; else printf other; fi; }
 docker_bin=${KEEPLING_REMOTE_PREPARE_DOCKER_BIN:-docker}
 docker_command() { "$docker_bin" "$@"; }
 normalize_inventory() {
@@ -79,14 +85,26 @@ load_and_verify_image() {
   observed_loaded_count=$(if [ -n "$observed_loaded_ids" ]; then printf '%s\n' "$observed_loaded_ids" | awk 'END { print NR }'; else printf 0; fi)
   case "$observed_loaded_count" in 0) inventory_delta=zero; exit "$failure_code" ;; 1) inventory_delta=one ;; *) inventory_delta=multiple; exit "$failure_code" ;; esac
   observed_loaded_id=$observed_loaded_ids
-  observed_id_shape=$(id_shape "$observed_loaded_id")
-  stage image-id-compare 47
-  [ "$observed_loaded_id" = "$expected_image_id" ]
-  observed_id_match=true
   stage image-inspect 46
   if image_id=$(docker_command image inspect "$observed_loaded_id" --format '{{.Id}}'); then inspect_rc=zero; else inspect_rc=nonzero; exit "$failure_code"; fi
   observed_id_shape=$(id_shape "$image_id")
-  [ "$image_id" = "$observed_loaded_id" ] && [ "$image_id" = "$expected_image_id" ] || { observed_id_match=false; exit "$failure_code"; }
+  stage image-id-compare 47
+  [ "$image_id" = "$expected_config_image_id" ] || exit "$failure_code"
+  observed_id_match=true
+  stage image-descriptor 59
+  if image_descriptor=$(docker_command image inspect "$observed_loaded_id" --format '{{if .Descriptor}}{{.Descriptor.Digest}}{{end}}' 2>/dev/null); then
+    if [ -z "$image_descriptor" ]; then
+      descriptor_state=absent
+    elif printf '%s' "$image_descriptor" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+      descriptor_state=present
+      [ "$image_descriptor" = "$expected_manifest_digest" ] || exit "$failure_code"
+      descriptor_match=true
+    else
+      descriptor_state=invalid; exit "$failure_code"
+    fi
+  else
+    descriptor_state=absent
+  fi
   stage image-revision 48
   image_revision=$(docker_command image inspect "$observed_loaded_id" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')
   revision_shape=$(revision_value_shape "$image_revision")
@@ -97,6 +115,11 @@ load_and_verify_image() {
   architecture_shape=$(architecture_value_shape "$image_architecture")
   [ "$image_architecture" = "$expected_architecture" ]
   architecture_match=true
+  stage image-rootfs 60
+  image_rootfs=$(docker_command image inspect "$observed_loaded_id" --format '{{join .RootFS.Layers ","}}')
+  rootfs_shape=$(rootfs_value_shape "$image_rootfs")
+  [ "$image_rootfs" = "$expected_rootfs_diff_ids" ] || exit "$failure_code"
+  rootfs_match=true
 }
 
 if [ "${KEEPLING_REMOTE_PREPARE_DOCKER_BOUNDARY_TEST:-}" = yes ]; then
@@ -107,14 +130,15 @@ if [ "${KEEPLING_REMOTE_PREPARE_DOCKER_BOUNDARY_TEST:-}" = yes ]; then
 fi
 
 if [ "${KEEPLING_REMOTE_PREPARE_TEST_MODE:-}" = yes ]; then
-  if [ "${KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ID+x}" = x ]; then observed_test_id=$KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ID; else observed_test_id=$expected_image_id; fi
+  if [ "${KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ID+x}" = x ]; then observed_test_id=$KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ID; else observed_test_id=$expected_config_image_id; fi
   if [ "${KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_REVISION+x}" = x ]; then observed_test_revision=$KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_REVISION; else observed_test_revision=$expected_revision; fi
   if [ "${KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ARCHITECTURE+x}" = x ]; then observed_test_architecture=$KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ARCHITECTURE; else observed_test_architecture=$expected_architecture; fi
-  for test_stage in volume-device volume-mount filesystem archive-integrity image-load image-inspect image-id-compare image-revision image-architecture runtime-config db-start db-ready restore epoch runtime; do
+  for test_stage in volume-device volume-mount filesystem archive-integrity image-load image-inspect image-id-compare image-descriptor image-revision image-architecture image-rootfs runtime-config db-start db-ready restore epoch runtime; do
     case "$test_stage" in
       volume-device) test_code=41 ;; volume-mount) test_code=42 ;; filesystem) test_code=43 ;;
       archive-integrity) test_code=44 ;; image-load) test_code=45 ;; image-inspect) test_code=46 ;;
       image-id-compare) test_code=47 ;; image-revision) test_code=48 ;; image-architecture) test_code=49 ;;
+      image-descriptor) test_code=59 ;; image-rootfs) test_code=60 ;;
       runtime-config) test_code=50 ;; db-start) test_code=51 ;; db-ready) test_code=52 ;; restore) test_code=53 ;;
       epoch) test_code=54 ;; runtime) test_code=55 ;;
     esac
@@ -128,9 +152,11 @@ if [ "${KEEPLING_REMOTE_PREPARE_TEST_MODE:-}" = yes ]; then
           inspect_rc=zero; observed_id_shape=$(id_shape "$observed_test_id")
         fi
         ;;
-      image-id-compare) [ "$observed_test_id" = "$expected_image_id" ] && observed_id_match=true || observed_id_match=false ;;
+      image-id-compare) [ "$observed_test_id" = "$expected_config_image_id" ] && observed_id_match=true || observed_id_match=false ;;
+      image-descriptor) descriptor_state=present; descriptor_match=true ;;
       image-revision) revision_shape=$(revision_value_shape "$observed_test_revision"); [ "$observed_test_revision" = "$expected_revision" ] && revision_match=true || revision_match=false ;;
       image-architecture) architecture_shape=$(architecture_value_shape "$observed_test_architecture"); [ "$observed_test_architecture" = "$expected_architecture" ] && architecture_match=true || architecture_match=false ;;
+      image-rootfs) rootfs_shape=digest-list; rootfs_match=true ;;
     esac
     [ "${KEEPLING_REMOTE_PREPARE_TEST_FAILURE_STAGE:-}" != "$test_stage" ] || exit "$failure_code"
   done
@@ -177,7 +203,7 @@ openssl rand -hex 64 >/srv/keepling/secrets/secret-key-base
 openssl rand -hex 32 >/srv/keepling/secrets/operator-token
 chmod 600 /srv/keepling/secrets/*
 cat >/srv/keepling/runtime.env <<EOF
-KEEPLING_SERVER_IMAGE=$image_id
+KEEPLING_SERVER_IMAGE=$observed_loaded_id
 KEEPLING_SERVER_DIGEST=$tested_manifest_digest
 KEEPLING_HOST=$runtime_host
 KEEPLING_POSTGRES_DATA_DIR=/srv/keepling/data/postgres

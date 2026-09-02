@@ -720,6 +720,7 @@ resolve_image_archive_contract() {
   esac
 
   python3 - "$archive_file" "$output_file" <<'PY' ||
+import gzip
 import hashlib
 import json
 import os
@@ -738,13 +739,56 @@ try:
         for block in iter(lambda: stream.read(1024 * 1024), b""):
             archive_hash.update(block)
     with tarfile.open(archive_path, "r:*") as archive:
-        manifest_member = archive.getmember("manifest.json")
-        if not manifest_member.isfile() or manifest_member.size > 65_536:
+        members = archive.getmembers()
+        if len(members) > 4096:
             raise ValueError
-        manifest = json.load(archive.extractfile(manifest_member))
-        if not isinstance(manifest, list) or len(manifest) != 1 or not isinstance(manifest[0], dict):
+        names = []
+        for member in members:
+            if not (member.isfile() or member.isdir()):
+                raise ValueError
+            name = member.name.rstrip("/") if member.isdir() else member.name
+            if (not name or name.startswith("/") or "\\" in name or
+                    any(part in ("", ".", "..") for part in name.split("/"))):
+                raise ValueError
+            names.append(name)
+        if len(names) != len(set(names)):
             raise ValueError
-        entry = manifest[0]
+        by_name = {(member.name.rstrip("/") if member.isdir() else member.name): member for member in members}
+        def parse_json(data):
+            def unique_object(pairs):
+                result = {}
+                for key, value in pairs:
+                    if key in result:
+                        raise ValueError
+                    result[key] = value
+                return result
+            return json.loads(data, object_pairs_hook=unique_object)
+        def read_member(name, limit):
+            member = by_name.get(name)
+            if member is None or not member.isfile() or member.size < 0 or member.size > limit:
+                raise ValueError
+            stream = archive.extractfile(member)
+            if stream is None:
+                raise ValueError
+            data = stream.read(limit + 1)
+            if len(data) != member.size or len(data) > limit:
+                raise ValueError
+            return data
+        def read_json(name, limit):
+            value = parse_json(read_member(name, limit))
+            return value
+        def digest_and_size(stream, limit):
+            checksum = hashlib.sha256(); size = 0
+            for block in iter(lambda: stream.read(1024 * 1024), b""):
+                size += len(block)
+                if size > limit:
+                    raise ValueError
+                checksum.update(block)
+            return "sha256:" + checksum.hexdigest(), size
+        docker_manifest = read_json("manifest.json", 65_536)
+        if not isinstance(docker_manifest, list) or len(docker_manifest) != 1 or not isinstance(docker_manifest[0], dict):
+            raise ValueError
+        entry = docker_manifest[0]
         required_manifest_keys = {"Config", "RepoTags", "Layers"}
         allowed_manifest_keys = required_manifest_keys | {"LayerSources"}
         if not required_manifest_keys.issubset(entry) or not set(entry).issubset(allowed_manifest_keys):
@@ -758,11 +802,8 @@ try:
         config_name = entry["Config"]
         if not isinstance(config_name, str) or config_name.startswith("/") or ".." in config_name.split("/"):
             raise ValueError
-        config_member = archive.getmember(config_name)
-        if not config_member.isfile() or config_member.size > 1024 * 1024:
-            raise ValueError
-        config_bytes = archive.extractfile(config_member).read()
-        config = json.loads(config_bytes)
+        config_bytes = read_member(config_name, 1024 * 1024)
+        config = parse_json(config_bytes)
         config_hash = hashlib.sha256(config_bytes).hexdigest()
         config_basename = config_name.rsplit("/", 1)[-1]
         if config_basename.endswith(".json"):
@@ -775,12 +816,102 @@ try:
             raise ValueError
         if config.get("architecture") != "amd64" or config.get("os") != "linux":
             raise ValueError
+        rootfs = config.get("rootfs")
+        diff_ids = rootfs.get("diff_ids") if isinstance(rootfs, dict) and rootfs.get("type") == "layers" else None
+        if (not isinstance(diff_ids, list) or not diff_ids or len(diff_ids) != len(entry["Layers"]) or
+                any(not isinstance(value, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", value) for value in diff_ids)):
+            raise ValueError
+        docker_layer_hashes = []
+        for layer_name in entry["Layers"]:
+            if not isinstance(layer_name, str) or layer_name not in by_name:
+                raise ValueError
+            stream = archive.extractfile(by_name[layer_name])
+            if stream is None:
+                raise ValueError
+            layer_digest, _ = digest_and_size(stream, 4 * 1024 * 1024 * 1024)
+            docker_layer_hashes.append(layer_digest)
+        if docker_layer_hashes != diff_ids:
+            raise ValueError
+
+        layout = read_json("oci-layout", 4096)
+        if layout != {"imageLayoutVersion": "1.0.0"}:
+            raise ValueError
+        index = read_json("index.json", 65_536)
+        if (not isinstance(index, dict) or index.get("schemaVersion") != 2 or
+                index.get("mediaType") != "application/vnd.oci.image.index.v1+json" or
+                set(index) != {"schemaVersion", "mediaType", "manifests"}):
+            raise ValueError
+        descriptors = index.get("manifests")
+        if not isinstance(descriptors, list) or len(descriptors) != 1 or not isinstance(descriptors[0], dict):
+            raise ValueError
+        descriptor = descriptors[0]
+        if (set(descriptor) not in ({"mediaType", "digest", "size"}, {"mediaType", "digest", "size", "platform"}) or
+                descriptor.get("mediaType") != "application/vnd.oci.image.manifest.v1+json" or
+                ("platform" in descriptor and descriptor["platform"] != {"architecture": "amd64", "os": "linux"})):
+            raise ValueError
+        def validate_descriptor(value, media_types):
+            if (not isinstance(value, dict) or set(value) != {"mediaType", "digest", "size"} or
+                    value.get("mediaType") not in media_types or
+                    not isinstance(value.get("digest"), str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", value["digest"]) or
+                    not isinstance(value.get("size"), int) or isinstance(value.get("size"), bool) or value["size"] < 0):
+                raise ValueError
+        manifest_descriptor = {key: descriptor[key] for key in ("mediaType", "digest", "size")}
+        validate_descriptor(manifest_descriptor, {"application/vnd.oci.image.manifest.v1+json"})
+        manifest_name = "blobs/sha256/" + descriptor["digest"].split(":", 1)[1]
+        oci_manifest_bytes = read_member(manifest_name, 4 * 1024 * 1024)
+        if len(oci_manifest_bytes) != descriptor["size"] or "sha256:" + hashlib.sha256(oci_manifest_bytes).hexdigest() != descriptor["digest"]:
+            raise ValueError
+        oci_manifest = parse_json(oci_manifest_bytes)
+        if (not isinstance(oci_manifest, dict) or set(oci_manifest) != {"schemaVersion", "mediaType", "config", "layers"} or
+                oci_manifest.get("schemaVersion") != 2 or oci_manifest.get("mediaType") != "application/vnd.oci.image.manifest.v1+json"):
+            raise ValueError
+        config_descriptor = oci_manifest["config"]
+        validate_descriptor(config_descriptor, {"application/vnd.oci.image.config.v1+json"})
+        if config_descriptor["digest"] != "sha256:" + config_hash or config_descriptor["size"] != len(config_bytes):
+            raise ValueError
+        oci_config_name = "blobs/sha256/" + config_hash
+        if read_member(oci_config_name, 1024 * 1024) != config_bytes:
+            raise ValueError
+        oci_layers = oci_manifest["layers"]
+        if not isinstance(oci_layers, list) or len(oci_layers) != len(diff_ids):
+            raise ValueError
+        oci_diff_ids = []
+        total_expanded_layer_size = 0
+        for layer_descriptor in oci_layers:
+            validate_descriptor(layer_descriptor, {
+                "application/vnd.oci.image.layer.v1.tar",
+                "application/vnd.oci.image.layer.v1.tar+gzip",
+            })
+            layer_name = "blobs/sha256/" + layer_descriptor["digest"].split(":", 1)[1]
+            layer_member = by_name.get(layer_name)
+            if layer_member is None or not layer_member.isfile() or layer_member.size != layer_descriptor["size"]:
+                raise ValueError
+            raw = archive.extractfile(layer_member)
+            if raw is None:
+                raise ValueError
+            raw_digest, raw_size = digest_and_size(raw, 4 * 1024 * 1024 * 1024)
+            if raw_digest != layer_descriptor["digest"] or raw_size != layer_descriptor["size"]:
+                raise ValueError
+            raw = archive.extractfile(layer_member)
+            if raw is None:
+                raise ValueError
+            payload = gzip.GzipFile(fileobj=raw) if layer_descriptor["mediaType"].endswith("+gzip") else raw
+            diff_digest, expanded_size = digest_and_size(payload, 4 * 1024 * 1024 * 1024)
+            total_expanded_layer_size += expanded_size
+            if total_expanded_layer_size > 8 * 1024 * 1024 * 1024:
+                raise ValueError
+            oci_diff_ids.append(diff_digest)
+        if oci_diff_ids != diff_ids or oci_diff_ids != docker_layer_hashes:
+            raise ValueError
         contract = {
-            "version": 1,
+            "version": 2,
             "archive_sha256": archive_hash.hexdigest(),
-            "image_id": "sha256:" + config_hash,
+            "config_image_id": "sha256:" + config_hash,
+            "manifest_digest": descriptor["digest"],
             "revision": revision,
             "architecture": "amd64",
+            "os": "linux",
+            "rootfs_diff_ids": diff_ids,
         }
     directory = os.path.dirname(os.path.abspath(output_path))
     if not os.path.isdir(directory) or os.path.exists(output_path):

@@ -25,7 +25,9 @@ KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ARCHITECTURE="$observed_architecture" \
   ./tooling/remote-prepare-host.sh 101 \
   aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
   sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
-  cccccccccccccccccccccccccccccccccccccccc amd64 host.invalid \
+  sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee \
+  cccccccccccccccccccccccccccccccccccccccc amd64 \
+  sha256:1111111111111111111111111111111111111111111111111111111111111111,sha256:2222222222222222222222222222222222222222222222222222222222222222 host.invalid \
   sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 EOF
 cat >"$fixture_root/fake-docker" <<'EOF'
@@ -38,8 +40,8 @@ if [ "${1:-}:${2:-}" = image:ls ]; then
   [ "$DOCKER_FAKE_CASE" != inventory-after-nonzero ] || [ "$count" -ne 2 ] || exit 1
   case "$DOCKER_FAKE_CASE:$count" in
     empty-inventory:1) exit 0 ;;
-    empty-inventory:2) printf '%s\n' sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb; exit 0 ;;
-    already-present:1|already-present:2) printf '%s\n' sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb; exit 0 ;;
+    empty-inventory:2) printf '%s\n' sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee; exit 0 ;;
+    already-present:1|already-present:2) printf '%s\n' sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee; exit 0 ;;
     no-new:1|no-new:2) printf '%s\n' sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff; exit 0 ;;
     malformed-before:1) printf '%s\n' invalid; exit 0 ;;
     malformed-after:2) printf '%s\n' invalid; exit 0 ;;
@@ -49,11 +51,10 @@ if [ "${1:-}:${2:-}" = image:ls ]; then
     oversized-after:2) awk 'BEGIN { for (i=0;i<70000;i++) printf "x"; print "" }'; exit 0 ;;
     too-many-after:2) awk 'BEGIN { for (i=0;i<257;i++) print "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" }'; exit 0 ;;
     duplicates:1) printf '%s\n%s\n' sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff; exit 0 ;;
-    duplicates:2) printf '%s\n%s\n%s\n' sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb; exit 0 ;;
+    duplicates:2) printf '%s\n%s\n%s\n' sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee; exit 0 ;;
     multiple-new:2) printf '%s\n%s\n%s\n' sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee; exit 0 ;;
-    incorrect-new:2) printf '%s\n%s\n' sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee; exit 0 ;;
     *:1) printf '%s\n' sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff ;;
-    *:2) printf '%s\n%s\n' sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ;;
+    *:2) printf '%s\n%s\n' sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee ;;
   esac
   exit 0
 fi
@@ -66,10 +67,17 @@ case "$DOCKER_FAKE_CASE:${5:-}" in
   inspect-id-mismatch:'{{.Id}}') printf '%s\n' sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee ;;
   malicious-inspect:'{{.Id}}') printf '%s\n' 'UNTRUSTED DOCKER OUTPUT' ;;
   *:'{{.Id}}') printf '%s\n' sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ;;
+  descriptor-absent:'{{if .Descriptor}}{{.Descriptor.Digest}}{{end}}') exit 0 ;;
+  descriptor-mismatch:'{{if .Descriptor}}{{.Descriptor.Digest}}{{end}}') printf '%s\n' sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa ;;
+  descriptor-malicious:'{{if .Descriptor}}{{.Descriptor.Digest}}{{end}}') printf '%s\n' 'UNTRUSTED DESCRIPTOR' ;;
+  *:'{{if .Descriptor}}{{.Descriptor.Digest}}{{end}}') printf '%s\n' sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee ;;
   revision-mismatch:'{{index .Config.Labels "org.opencontainers.image.revision"}}') printf '%s\n' eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee ;;
   *:'{{index .Config.Labels "org.opencontainers.image.revision"}}') printf '%s\n' cccccccccccccccccccccccccccccccccccccccc ;;
   architecture-mismatch:'{{.Architecture}}') printf '%s\n' arm64 ;;
   *:'{{.Architecture}}') printf '%s\n' amd64 ;;
+  rootfs-mismatch:'{{join .RootFS.Layers ","}}') printf '%s\n' sha256:3333333333333333333333333333333333333333333333333333333333333333 ;;
+  rootfs-malicious:'{{join .RootFS.Layers ","}}') printf '%s\n' 'UNTRUSTED ROOTFS' ;;
+  *:'{{join .RootFS.Layers ","}}') printf '%s\n' sha256:1111111111111111111111111111111111111111111111111111111111111111,sha256:2222222222222222222222222222222222222222222222222222222222222222 ;;
   *) exit 92 ;;
 esac
 EOF
@@ -80,7 +88,9 @@ KEEPLING_REMOTE_PREPARE_DOCKER_BOUNDARY_TEST=yes KEEPLING_REMOTE_PREPARE_DOCKER_
   ./tooling/remote-prepare-host.sh 101 \
   aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
   sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
-  cccccccccccccccccccccccccccccccccccccccc amd64 host.invalid \
+  sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee \
+  cccccccccccccccccccccccccccccccccccccccc amd64 \
+  sha256:1111111111111111111111111111111111111111111111111111111111111111,sha256:2222222222222222222222222222222222222222222222222222222222222222 host.invalid \
   sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 EOF
 cat >"$fixture_root/teardown" <<'EOF'
@@ -95,7 +105,7 @@ cat >"$fixture_root/dns" <<'EOF'
 EOF
 chmod 700 "$fixture_root/pass" "$fixture_root/restore" "$fixture_root/fake-docker" "$fixture_root/restore-docker-boundary" "$fixture_root/teardown" "$fixture_root/dns"
 
-for pair in volume-device:41 volume-mount:42 filesystem:43 archive-integrity:44 image-load:45 image-inspect:46 image-id-compare:47 image-revision:48 image-architecture:49 runtime-config:50 db-start:51 db-ready:52 restore:53 epoch:54 runtime:55; do
+for pair in volume-device:41 volume-mount:42 filesystem:43 archive-integrity:44 image-load:45 image-inspect:46 image-id-compare:47 image-descriptor:59 image-revision:48 image-architecture:49 image-rootfs:60 runtime-config:50 db-start:51 db-ready:52 restore:53 epoch:54 runtime:55; do
   failure_stage=${pair%%:*}
   expected_code=${pair#*:}
   teardown_count=$fixture_root/$failure_stage-teardown-count
@@ -127,14 +137,16 @@ for pair in volume-device:41 volume-mount:42 filesystem:43 archive-integrity:44 
   [ "$result" -ne 0 ] || die "$failure_stage unexpectedly passed"
   [ "$(cat "$teardown_count")" = 1 ] || die "$failure_stage did not teardown exactly once"
   [ ! -e "$dns_called" ] || die "$failure_stage reached DNS"
-  [ "$(grep -Ec '^REMOTE_PREPARE_FAILED_STAGE=[a-z-]+ RC=[0-9]+ BEFORE=(not-run|ok|command-failed|invalid|oversized|too-many) LOAD=(not-run|ok|nonzero) AFTER=(not-run|ok|command-failed|invalid|oversized|too-many) DELTA=(not-run|zero|one|multiple) INSPECT=(not-run|zero|nonzero) ID_SHAPE=(sha256-64|empty|other) ID_MATCH=(true|false) REV_SHAPE=(hex-7-64|empty|other) REV_MATCH=(true|false) ARCH_SHAPE=(amd64|empty|other) ARCH_MATCH=(true|false)$' "$output")" = 1 ] || die "$failure_stage marker count is not exactly one"
+  [ "$(grep -Ec '^REMOTE_PREPARE_FAILED_STAGE=[a-z-]+ RC=[0-9]+ BEFORE=(not-run|ok|command-failed|invalid|oversized|too-many) LOAD=(not-run|ok|nonzero) AFTER=(not-run|ok|command-failed|invalid|oversized|too-many) DELTA=(not-run|zero|one|multiple) INSPECT=(not-run|zero|nonzero) ID_SHAPE=(sha256-64|empty|other) ID_MATCH=(true|false) DESC=(not-run|absent|present|invalid) DESC_MATCH=(true|false) REV_SHAPE=(hex-7-64|empty|other) REV_MATCH=(true|false) ARCH_SHAPE=(amd64|empty|other) ARCH_MATCH=(true|false) ROOTFS_SHAPE=(digest-list|empty|other) ROOTFS_MATCH=(true|false)$' "$output")" = 1 ] || die "$failure_stage marker count is not exactly one"
   grep -E "^REMOTE_PREPARE_FAILED_STAGE=$failure_stage RC=$expected_code " "$output" >/dev/null || die "$failure_stage marker is incorrect"
   case "$failure_stage" in
     image-load) grep -F ' LOAD=nonzero ' "$output" >/dev/null || die "load failure classification is incomplete" ;;
     image-inspect) grep -F ' INSPECT=nonzero ID_SHAPE=empty ID_MATCH=false ' "$output" >/dev/null || die "inspect failure classification is incomplete" ;;
     image-id-compare) grep -F ' INSPECT=zero ID_SHAPE=sha256-64 ID_MATCH=false ' "$output" >/dev/null || die "ID mismatch classification is incomplete" ;;
+    image-descriptor) grep -F ' DESC=present DESC_MATCH=true ' "$output" >/dev/null || die "descriptor classification is incomplete" ;;
     image-revision) grep -F ' REV_SHAPE=hex-7-64 REV_MATCH=false ' "$output" >/dev/null || die "revision mismatch classification is incomplete" ;;
     image-architecture) grep -F ' ARCH_SHAPE=other ARCH_MATCH=false' "$output" >/dev/null || die "architecture mismatch classification is incomplete" ;;
+    image-rootfs) grep -F ' ROOTFS_SHAPE=digest-list ROOTFS_MATCH=true' "$output" >/dev/null || die "rootfs classification is incomplete" ;;
   esac
   at_sign=$(printf '\100')
   if grep -Eq "/|${at_sign}|token|secret|identifier|192[.]0[.]2" "$output"; then die "$failure_stage output retained disallowed detail"; fi
@@ -145,11 +157,11 @@ docker_output=$fixture_root/docker-success-output
 docker_ls_count=$fixture_root/docker-success-ls-count; printf '0\n' >"$docker_ls_count"
 DOCKER_FAKE_CASE=success DOCKER_CALLS="$docker_calls" DOCKER_LS_COUNT="$docker_ls_count" FAKE_DOCKER="$fixture_root/fake-docker" \
   "$fixture_root/restore-docker-boundary" >"$docker_output" 2>&1 || die "immutable Docker boundary success fixture failed"
-[ "$(wc -l <"$docker_calls" | tr -d ' ')" = 6 ] || die "immutable Docker boundary command count is incorrect"
-[ "$(grep -Ec '^image\|inspect\|sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\|--format\|' "$docker_calls")" = 3 ] || die "Docker inspect did not exclusively target the immutable image ID"
+[ "$(wc -l <"$docker_calls" | tr -d ' ')" = 8 ] || die "immutable Docker boundary command count is incorrect"
+[ "$(grep -Ec '^image\|inspect\|sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\|--format\|' "$docker_calls")" = 5 ] || die "Docker inspect did not exclusively target the selected immutable target"
 if grep -F 'keepling-server:plan-02-09-amd64' "$docker_calls" >/dev/null; then die "Docker inspect consulted the mutable repository tag"; fi
 
-for success_case in empty-inventory duplicates; do
+for success_case in empty-inventory duplicates descriptor-absent; do
   docker_calls=$fixture_root/docker-$success_case-calls; docker_output=$fixture_root/docker-$success_case-output
   docker_ls_count=$fixture_root/docker-$success_case-ls-count; printf '0\n' >"$docker_ls_count"
   DOCKER_FAKE_CASE="$success_case" DOCKER_CALLS="$docker_calls" DOCKER_LS_COUNT="$docker_ls_count" FAKE_DOCKER="$fixture_root/fake-docker" \
@@ -157,7 +169,7 @@ for success_case in empty-inventory duplicates; do
   grep -Fx 'REMOTE_PREPARE_STAGE=ready' "$docker_output" >/dev/null || die "Docker boundary $success_case did not become ready"
 done
 
-for boundary_case in inventory-before-nonzero inventory-after-nonzero empty-inventory duplicates already-present no-new malformed-before malformed-after uppercase-before whitespace-after malicious-before oversized-after too-many-after multiple-new incorrect-new inspect-nonzero inspect-id-empty inspect-id-other inspect-id-mismatch revision-mismatch architecture-mismatch malicious-inspect; do
+for boundary_case in inventory-before-nonzero inventory-after-nonzero empty-inventory duplicates descriptor-absent already-present no-new malformed-before malformed-after uppercase-before whitespace-after malicious-before oversized-after too-many-after multiple-new inspect-nonzero inspect-id-empty inspect-id-other inspect-id-mismatch descriptor-mismatch descriptor-malicious revision-mismatch architecture-mismatch rootfs-mismatch rootfs-malicious malicious-inspect; do
   case "$boundary_case" in
     inventory-before-nonzero) expected_stage=image-inventory-before; expected_code=56; expected_detail='BEFORE=command-failed' ;;
     malformed-before|uppercase-before|malicious-before) expected_stage=image-inventory-before; expected_code=56; expected_detail='BEFORE=invalid' ;;
@@ -167,12 +179,13 @@ for boundary_case in inventory-before-nonzero inventory-after-nonzero empty-inve
     too-many-after) expected_stage=image-inventory-after; expected_code=57; expected_detail='AFTER=too-many' ;;
     already-present|no-new) expected_stage=image-delta; expected_code=58; expected_detail='DELTA=zero' ;;
     multiple-new) expected_stage=image-delta; expected_code=58; expected_detail='DELTA=multiple' ;;
-    incorrect-new) expected_stage=image-id-compare; expected_code=47; expected_detail='DELTA=one' ;;
     inspect-nonzero) expected_stage=image-inspect; expected_code=46; expected_detail='INSPECT=nonzero' ;;
-    inspect-id-empty|inspect-id-other|inspect-id-mismatch|malicious-inspect) expected_stage=image-inspect; expected_code=46; expected_detail='ID_MATCH=false' ;;
+    inspect-id-empty|inspect-id-other|inspect-id-mismatch|malicious-inspect) expected_stage=image-id-compare; expected_code=47; expected_detail='ID_MATCH=false' ;;
+    descriptor-mismatch|descriptor-malicious) expected_stage=image-descriptor; expected_code=59; expected_detail='DESC_MATCH=false' ;;
     revision-mismatch) expected_stage=image-revision; expected_code=48; expected_detail='REV_MATCH=false' ;;
     architecture-mismatch) expected_stage=image-architecture; expected_code=49; expected_detail='ARCH_MATCH=false' ;;
-    empty-inventory|duplicates) continue ;;
+    rootfs-mismatch|rootfs-malicious) expected_stage=image-rootfs; expected_code=60; expected_detail='ROOTFS_MATCH=false' ;;
+    empty-inventory|duplicates|descriptor-absent) continue ;;
   esac
   teardown_count=$fixture_root/docker-$boundary_case-teardown-count; dns_called=$fixture_root/docker-$boundary_case-dns-called
   output=$fixture_root/docker-$boundary_case-output; docker_calls=$fixture_root/docker-$boundary_case-calls
@@ -231,7 +244,7 @@ for value_case in empty other malicious; do
   KEEPLING_SEQUENCE_RUNTIME_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_SEMANTIC_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_DNS_RUNNER="$fixture_root/dns" KEEPLING_SEQUENCE_TEARDOWN_RUNNER="$fixture_root/teardown" \
     ./tooling/verify-host-replacement.sh --candidate-sequence >"$output" 2>&1 || result=$?
   [ "$result" -ne 0 ] && [ "$(cat "$teardown_count")" = 1 ] && [ ! -e "$dns_called" ] || die "architecture $value_case did not fail teardown-first"
-  grep -E '^REMOTE_PREPARE_FAILED_STAGE=image-architecture RC=49 .* ARCH_SHAPE=(empty|other) ARCH_MATCH=false$' "$output" >/dev/null || die "architecture $value_case shape was not closed"
+  grep -E '^REMOTE_PREPARE_FAILED_STAGE=image-architecture RC=49 .* ARCH_SHAPE=(empty|other) ARCH_MATCH=false ROOTFS_SHAPE=empty ROOTFS_MATCH=false$' "$output" >/dev/null || die "architecture $value_case shape was not closed"
   if [ -n "$observed_architecture" ] && grep -Fq "$observed_architecture" "$output"; then die "architecture $value_case raw output was retained"; fi
 done
 
@@ -244,9 +257,9 @@ grep -Fx 'REMOTE_PREPARE_FAILED_STAGE=contract RC=40' "$contract_output" >/dev/n
 
 for invalid_contract in volume host digest; do
   case "$invalid_contract" in
-    volume) args='0 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb cccccccccccccccccccccccccccccccccccccccc amd64 host.invalid sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd' ;;
-    host) args='101 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb cccccccccccccccccccccccccccccccccccccccc amd64 invalid..host sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd' ;;
-    digest) args='101 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb cccccccccccccccccccccccccccccccccccccccc amd64 host.invalid mutable-tag' ;;
+    volume) args='0 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee cccccccccccccccccccccccccccccccccccccccc amd64 sha256:1111111111111111111111111111111111111111111111111111111111111111 host.invalid sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd' ;;
+    host) args='101 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee cccccccccccccccccccccccccccccccccccccccc amd64 sha256:1111111111111111111111111111111111111111111111111111111111111111 invalid..host sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd' ;;
+    digest) args='101 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee cccccccccccccccccccccccccccccccccccccccc amd64 sha256:1111111111111111111111111111111111111111111111111111111111111111 host.invalid mutable-tag' ;;
   esac
   contract_output=$fixture_root/$invalid_contract-contract-output
   result=0
