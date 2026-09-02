@@ -218,7 +218,7 @@
     {
       "id": "O-1",
       "item": "useSharedWorkspace flag",
-      "detail": "apps/web WorkspaceShell renders the shared slice only behind a prop defaulting to false; only a test sets it. 03-03 made the slice load-bearing on desktop, so this is now web-only: flip the web Inbox route and delete the flag, or record that web deliberately keeps its routed content. Reasoning in 03-09-SUMMARY.md Deviations."
+      "detail": "apps/web WorkspaceShell renders the shared slice only behind a prop defaulting to false; only a test sets it. 03-03 made the slice load-bearing on desktop, so this is now web-only: flip the web Inbox route and delete the flag, or record that web deliberately keeps its routed content. Reasoning in 03-09-SUMMARY.md Deviations. NOTE: O-9 is the same failure class (delivered code unreachable in shipped composition) \u2014 03-04 disclosed it correctly in Known Gaps, unlike 03-09."
     },
     {
       "id": "O-2",
@@ -254,6 +254,11 @@
       "id": "O-8",
       "item": "/gsd-progress Route 0 misroutes to Phase 2",
       "detail": "Route 0's resume-incomplete-phase scan stops at the lowest-numbered phase where plan_count > summary_count. Phase 2 (11/10) matches permanently because 02-09 is deliberately deferred, so Route 0 can never route to Phase 3 and following it would strand KPL-03. Ignore it; continue with $gsd-execute-phase 3. Also: init.progress reports current_phase as KPL-02 and next_phase as '1' with phase_count 9 against a 6-phase roadmap (it mixes KPL-0x directory names with roadmap integers; STATE.md correctly says current_phase: 03), and progress.bar renders an empty gauge at 86%. Both are display/data faults in the tooling, not project state."
+    },
+    {
+      "id": "O-9",
+      "item": "03-04 native shell built but not wired into the shipped app",
+      "detail": "main/menu.ts, main/windows/{main-window,quick-entry-window,settings-window}.ts and preload/utility-preload.ts are production-quality and E2E-proven, but apps/desktop/main/index.ts contains zero references to them (verified by grep). They are proven against a deliberately-labeled test-only Electron entry point (apps/desktop/test/fixtures/wired-app-harness.ts) that composes the same production modules, NOT against the shipped dist/main/index.cjs. Until bootstrap() in main/index.ts calls createMainWindow / buildApplicationMenu / QuickEntryWindowController / SettingsWindowController, no user can reach Command-N, the global shortcut, Quick Entry, or the native menus. Cause: main/index.ts is not in 03-04's files_modified but is required by its deliverable - a planning defect the wave-7 scope fence surfaced rather than created. Assign the wiring to Plan 03-11 (wave 8): it depends_on 03-04, owns main/index.ts, and is already the window/lifecycle plan. Do NOT give it to 03-10; sealing the hostile boundary is unrelated and that would expand its scope."
     }
   ]
 }
