@@ -80,8 +80,12 @@ const trackedInputs = run(
   .sort()
 
 if (trackedInputs.length === 0) fail('the package input set is empty')
-const dirtyTracked = run('git', ['-C', repositoryRoot, 'status', '--porcelain', '--untracked-files=no'], { capture: true })
-if (dirtyTracked !== '') fail('tracked inputs must be committed before package-once records a source revision')
+const dirtyInputs = run(
+  'git',
+  ['-C', repositoryRoot, 'status', '--porcelain', '--untracked-files=no', '--', ...trackedInputs],
+  { capture: true },
+)
+if (dirtyInputs !== '') fail('package inputs must be committed before package-once records a source revision')
 
 const inputDigest = createHash('sha256')
 for (const relativePath of trackedInputs) {
