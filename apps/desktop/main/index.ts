@@ -82,6 +82,8 @@ if (selectedTestProfile) {
   app.setPath('userData', selected)
 }
 
+const ownsSelectedProfile = app.requestSingleInstanceLock()
+
 const bootstrap = async () => {
   await app.whenReady()
 
@@ -151,4 +153,5 @@ const bootstrap = async () => {
   })
 }
 
-void bootstrap()
+if (ownsSelectedProfile) void bootstrap()
+else app.quit()

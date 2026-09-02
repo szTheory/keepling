@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { spawn } from 'node:child_process'
 import { test, expect, _electron as electron, type ElectronApplication } from '@playwright/test'
 
 type PackageManifest = {
@@ -32,10 +33,37 @@ const hardKill = async (application: ElectronApplication) => {
   await new Promise<void>((resolve) => process.once('exit', () => resolve()))
 }
 
+const assertSecondInstanceRejected = async (first: ElectronApplication) => {
+  const duplicate = spawn(manifest.executablePath, [`--user-data-dir=${profilePath}`], {
+    env: {
+      ...process.env,
+      KEEPLING_EXPECT_PACKAGED: '1',
+      KEEPLING_TEST_SYNC_MODE: 'offline',
+      KEEPLING_TEST_USER_DATA_DIR: profilePath,
+    },
+    stdio: 'ignore',
+  })
+  const exitCode = await new Promise<number | null>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      duplicate.kill('SIGKILL')
+      reject(new Error('second same-profile instance did not exit'))
+    }, 5_000)
+    duplicate.once('error', reject)
+    duplicate.once('exit', (code) => {
+      clearTimeout(timeout)
+      resolve(code)
+    })
+  })
+  expect(exitCode).toBe(0)
+  await expect.poll(() => first.windows().length).toBe(1)
+  console.log('PACKAGED_PROFILE_OWNERSHIP accepted_instances=1 rejected_instances=1')
+}
+
 test('offline capture survives hard kill and exact acknowledgement', async () => {
   const first = await launch('offline')
   const firstWindow = await first.firstWindow()
   await expect(firstWindow.getByRole('heading', { name: 'Inbox' })).toBeVisible()
+  await assertSecondInstanceRejected(first)
   await firstWindow.getByLabel('Task title').fill('Survive a hard kill')
   await firstWindow.getByRole('button', { name: 'Save task' }).click()
   await expect(firstWindow.getByRole('status')).toHaveText('Saved on this Mac')
