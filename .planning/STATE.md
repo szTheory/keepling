@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: Completed 03-10-PLAN.md
-last_updated: "2026-09-02T22:03:38.610Z"
+stopped_at: Completed 03-11-PLAN.md
+last_updated: "2026-09-02T23:29:50.596Z"
 last_activity: 2026-09-02
 last_activity_desc: Phase KPL-03 execution started
-state_head: 4d751c675c8250377b3bb2e1ec534e70b6228384
+state_head: fa4d2f2b19b6174878ec7f2a2f3cd0fcb120f180
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 50
-  completed_plans: 45
+  completed_plans: 46
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-03 (Mac Daily Loop) — EXECUTING
-Plan: 9 of 12
+Plan: 10 of 12
 Total Plans in Phase: 12
 Status: Executing Phase KPL-03
 Last activity: 2026-09-02 — Phase KPL-03 execution resumed (wave continue)
@@ -178,6 +178,9 @@ Progress: [█████████░] 97%
 - [Phase 03]: The shared Workspace/CaptureForm/TaskList slice is proven via a browser adapter and a deterministic desktop-facade fixture but is not wired into the production Inbox route yet; WorkspaceShell exposes it behind an explicit useSharedWorkspace opt-in for future workspace expansion.
 - [Phase 03]: Desktop edit/complete/reopen/trash/restore/moveToday/undo are local-only durable commits in this plan (no outbox mutation, never claims Synced); real desktop sync for these commands is deferred follow-on scope.
 - [Phase 03]: Undo is single-level (latest supported change) via a last_local_action singleton, matching D-14; browser adapter extended for real (not stubbed) to satisfy the shared ClientFacade interface change without expanding apps/web's shipped surface.
+- [Phase 03]: apps/desktop/main/index.ts now instantiates DesktopLifecycle plus Plan 03-04's native menu/Quick Entry/Settings against the real shipped entry point, closing O-9
+- [Phase 03]: Close destroys the disposable main window; Dock activation and a second launch both recreate it via DesktopLifecycle.ensureWindow() from a persisted, display-clamped bounds/fullscreen snapshot
+- [Phase 03]: D-06 renderer-semantic restoration (destination/selection/sidebar/draft) is a disclosed gap requiring a renderer<->main IPC channel outside this plan's authorized scope
 
 ### Retained Research
 
@@ -211,8 +214,8 @@ Run the three pending KPL-03 Wave 4 capability gates (`verify.schema-drift`, `ve
 
 ## Session
 
-**Last session:** 2026-09-02T22:03:38.537Z
-**Stopped at:** Completed 03-10-PLAN.md
+**Last session:** 2026-09-02T23:29:50.524Z
+**Stopped at:** Completed 03-11-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -264,3 +267,4 @@ Run the three pending KPL-03 Wave 4 capability gates (`verify.schema-drift`, `ve
 | Phase KPL-03 P03 | ~100min | 2 tasks | 24 files |
 | Phase KPL-03 P04 | 130 min | 2 tasks | 30 files |
 | Phase KPL-03 P10 | 45min | 2 tasks | 5 files |
+| Phase KPL-03 P11 | 150min | 2 tasks | 7 files |

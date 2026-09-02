@@ -167,7 +167,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 8/12 plans executed
+**Plans:** 9/12 plans executed
 
 Plans:
 **Wave 1**
@@ -201,7 +201,7 @@ Plans:
 
 **Wave 8** *(blocked on Wave 7 completion)*
 
-- [ ] 03-11-PLAN.md — Prove resident single-instance lifecycle, restoration, bounded quit, and relaunch.
+- [x] 03-11-PLAN.md — Prove resident single-instance lifecycle, restoration, bounded quit, and relaunch.
 
 **Wave 9** *(blocked on Wave 8 completion)*
 
