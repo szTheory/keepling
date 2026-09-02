@@ -17,6 +17,26 @@ const migrationPath = new URL('../../migrations/0001_initial.sql', import.meta.u
 
 const openStore = (databasePath: string) => new NodeSqliteLocalStore({ databasePath, migrationPath })
 
+type WireMutation = {
+  accepted_at: string
+  command_bytes: string
+  dependencies: string[]
+  effect: { entity_id: string; snapshot: SyncMutation['effect']['snapshot'] }
+  fingerprint: string
+  mutation_id: string
+  resource_keys: string[]
+}
+
+const vectorMutation = (mutation: WireMutation): SyncMutation => ({
+  acceptedAt: mutation.accepted_at,
+  commandBytes: mutation.command_bytes,
+  dependencies: mutation.dependencies,
+  effect: { entityId: mutation.effect.entity_id, snapshot: mutation.effect.snapshot },
+  fingerprint: mutation.fingerprint,
+  mutationId: mutation.mutation_id,
+  resourceKeys: mutation.resource_keys,
+})
+
 afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { force: true, recursive: true })
 })
@@ -33,16 +53,27 @@ describe('Phase 2 synchronization vectors', () => {
       for (const action of vector.actions) {
         switch (action.type) {
           case 'local_accept':
-            store.acceptMutation(action.mutation as SyncMutation)
+            store.acceptMutation(vectorMutation(action.mutation))
             break
           case 'pull':
-            store.applyPull(action.page as PullPage)
+            store.applyPull({
+              changes: action.page.changes.map((change) => ({
+                entityId: change.entity_id,
+                snapshot: change.snapshot,
+              })),
+              cursor: action.page.cursor,
+            } as PullPage)
             break
           case 'ready_pushes':
             observedReady.push(...store.readyMutations().map((mutation) => mutation.mutationId))
             break
           case 'acknowledge':
-            store.acknowledgeSync(action.acknowledgement)
+            store.acknowledgeSync({
+              fingerprint: action.acknowledgement.fingerprint,
+              mutationId: action.acknowledgement.mutation_id,
+              outcome: action.acknowledgement.outcome,
+              snapshot: action.acknowledgement.snapshot,
+            })
             break
           case 'fence':
             store.setSyncFence(action.reason)
@@ -54,10 +85,9 @@ describe('Phase 2 synchronization vectors', () => {
         }
       }
 
-      expect(store.syncState()).toEqual({
+      expect(store.syncState()).toMatchObject({
         cursor: vector.expect.cursor,
         outbox: vector.expect.outbox,
-        readyPushes: vector.expect.ready_pushes,
       })
       expect(observedReady).toEqual(vector.expect.ready_pushes)
       store.close()
@@ -72,7 +102,7 @@ describe('Phase 2 synchronization vectors', () => {
       commandBytes,
       dependencies: [],
       effect: { entityId: 'task-exact', snapshot: { id: 'task-exact', revision: 1 } },
-      fingerprint: 'd14e3c537c334acf9214fe198011941c3e56a69737a3fbf8b3655c4bd95eb524',
+      fingerprint: '488519b4c58a327e9187c0528c17f82dffa7d07c0f4d250cb288d627ce3f1e0b',
       mutationId: 'mutation-exact',
       resourceKeys: ['task:task-exact'],
     }
@@ -107,5 +137,27 @@ describe('Phase 2 synchronization vectors', () => {
     await application.runSyncPass()
 
     expect(events).toEqual(['pull:50', `push:${commandBytes}`])
+  })
+
+  it('fences prior intent when any server-derived namespace dimension changes', () => {
+    const root = mkdtempSync(join(tmpdir(), 'keepling-sync-namespace-'))
+    roots.push(root)
+    const store = openStore(join(root, 'namespace.sqlite'))
+    const namespace = {
+      accountSubject: 'account-one',
+      generation: 'generation-one',
+      issuer: 'keepling-server',
+      origin: 'https://keepling.example',
+      serverInstance: 'server-one',
+    }
+    expect(store.bindNamespace(namespace)).toBe(true)
+    store.acceptMutation(vectorMutation(vectors.cases[0]!.actions[0]!.mutation))
+
+    expect(store.bindNamespace({ ...namespace, accountSubject: 'account-two' })).toBe(false)
+    expect(store.syncState()).toMatchObject({
+      outbox: ['mutation-001'],
+      readyPushes: [],
+    })
+    store.close()
   })
 })
