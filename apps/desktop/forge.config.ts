@@ -22,7 +22,9 @@ export default {
       fromDesktopRoot('./migrations'),
       fromDesktopRoot('./assets'),
     ],
+    ignore: [/node_modules/],
     name: 'Keepling',
+    prune: false,
   },
   plugins: [],
 }
