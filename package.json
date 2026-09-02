@@ -6,10 +6,17 @@
     "build:web": "pnpm --filter @keepling/web build",
     "contracts:check": "node tooling/check-contracts.mjs",
     "contracts:generate": "openapi-typescript packages/contracts/openapi/keepling.yaml --output packages/contracts/generated/keepling.ts --alphabetize --immutable",
+    "dev:desktop": "pnpm --dir apps/desktop dev",
     "dev:web": "pnpm --filter @keepling/web dev",
     "lint:web": "pnpm --filter @keepling/web lint",
+    "package:desktop": "pnpm --dir apps/desktop package",
+    "smoke:desktop:packaged": "pnpm --dir apps/desktop smoke:packaged",
     "stack:local": "./tooling/run-local-stack.sh --start",
+    "test:desktop": "pnpm --dir apps/desktop test",
+    "test:desktop:e2e": "pnpm --dir apps/desktop test:e2e",
+    "test:desktop:ipc": "pnpm --dir apps/desktop test:ipc",
     "test:phase-1": "./tooling/test-phase-1.sh --run",
+    "typecheck:desktop": "pnpm --dir apps/desktop typecheck",
     "typecheck:web": "pnpm --filter @keepling/web typecheck"
   },
   "devDependencies": {

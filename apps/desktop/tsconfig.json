@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleDetection": "force",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2023",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
+    "types": ["electron", "node", "vite/client"],
+    "verbatimModuleSyntax": true
+  },
+  "include": [
+    "forge.config.ts",
+    "main/**/*.ts",
+    "preload/**/*.ts",
+    "renderer/**/*.ts",
+    "renderer/**/*.tsx",
+    "store-worker/**/*.ts",
+    "vite.*.config.ts"
+  ]
+}
