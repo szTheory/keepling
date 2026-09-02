@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Completed KPL-02-08-PLAN.md
-last_updated: "2026-09-01T08:50:34.880Z"
-last_activity: 2026-09-01
-last_activity_desc: Phase KPL-02 execution started
+stopped_at: Completed KPL-02-10-PLAN.md; KPL-02-09 remains deferred
+last_updated: "2026-09-02T03:17:44Z"
+last_activity: 2026-09-02
+last_activity_desc: Completed Plan KPL-02-10 while preserving Plan KPL-02-09's deferred outer acceptance
 state_head: 9b6d7ab84a8dd578f50a35c01c8cbf052ea5017b
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 38
-  completed_plans: 36
+  completed_plans: 37
 milestone_name: milestone
 ---
 
@@ -32,9 +32,9 @@ Phase: KPL-02 (Synchronization and Replaceable Server) — EXECUTING
 Plan: 10 of 11
 Total Plans in Phase: 11
 Status: Executing Phase KPL-02
-Last activity: 2026-09-01 — Phase KPL-02 execution started
-Last Activity Description: Phase KPL-02 execution started
-Progress: [██████████] 100%
+Last activity: 2026-09-02 — Completed Plan KPL-02-10; Plan KPL-02-09 remains deferred
+Last Activity Description: Required local/CI evidence is green; credentialed restore/runtime and DNS outer acceptance remains explicitly non-passing
+Progress: [█████████░] 97%
 
 ## Accumulated Context
 
@@ -158,6 +158,9 @@ Progress: [██████████] 100%
 - [Phase 02]: Recovery uses a parameterized encrypted S3-compatible primary and independently credentialed append-only dated mirror snapshots; recovery credentials never reach the app container, and mirror retention is activated only after restore proof.
 - [Phase 02]: Restore readiness requires an exclusive target lease, complete semantic proof, and transactional finalization of a fresh synchronization epoch.
 - [Phase 02]: Completed restore verification is idempotently keyed by source digest, digested target, and verifier version.
+- [Phase 02]: Required CI invokes the same per-lane Phase 2 runner used locally, with positive case counts, seeds, timings, and tracked-input digests preventing vacuous success.
+- [Phase 02]: Credentialed host replacement and DNS acceptance remains an explicit non-passing protected outer lane until deferred Plan 02-09 succeeds; schedules, skips, and missing credentials never count as green evidence.
+- [Phase 02]: Novel live-boundary failures become hermetic fixtures first; real provider/DNS rehearsal is rare, single-attempt, change-triggered outer acceptance rather than a PR or debug loop.
 
 ### Retained Research
 
@@ -184,15 +187,15 @@ Progress: [██████████] 100%
 
 ## Next Action
 
-Run `$gsd-discuss-phase 2` from the repository root.
+Resolve deferred Plan KPL-02-09 through an authorized, single-attempt corrected restore/runtime and DNS outer acceptance rehearsal.
 
 ---
 *State initialized: 2026-08-28*
 
 ## Session
 
-**Last session:** 2026-09-01T08:50:34.787Z
-**Stopped at:** Completed KPL-02-08-PLAN.md
+**Last session:** 2026-09-02T03:17:44Z
+**Stopped at:** Completed KPL-02-10-PLAN.md; KPL-02-09 remains deferred
 **Resume file:** None
 
 ## Performance Metrics
@@ -235,3 +238,4 @@ Run `$gsd-discuss-phase 2` from the repository root.
 | Phase KPL-02 P06 | 17min | 3 tasks | 12 files |
 | Phase KPL-02 P07 | 37min | 3 tasks | 8 files |
 | Phase KPL-02 P08 | 9min | 3 tasks | 8 files |
+| Phase KPL-02 P10 | 18min | 2 tasks | 6 files |

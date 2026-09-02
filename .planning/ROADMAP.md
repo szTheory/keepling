@@ -109,7 +109,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05
 **UI hint:** no
-**Plans:** 9/11 plans executed
+**Plans:** 10/11 plans executed
 
 Plans:
 **Wave 1**
@@ -151,7 +151,7 @@ Plans:
 
 **Wave 10** *(blocked on Wave 9 completion)*
 
-- [ ] 02-10-PLAN.md — Bind every Phase 2 capability to required CI, scheduled recovery, and privacy evidence.
+- [x] 02-10-PLAN.md — Bind every Phase 2 capability to required CI, scheduled recovery, and privacy evidence.
 
 **Success Criteria**:
 
@@ -222,7 +222,7 @@ Plans:
 | Phase | Status | Requirements | Progress |
 |-------|--------|--------------|----------|
 | 1. One Trustworthy Task | Complete    | 13 | 74% |
-| 2. Synchronization and Replaceable Server | In Progress| 12 | 0% |
+| 2. Synchronization and Replaceable Server | In Progress | 12 | 91% |
 | 3. Mac Daily Loop | ○ Pending | 7 | 0% |
 | 4. Native iPhone Daily Loop | ○ Pending | 4 | 0% |
 | 5. Safe Agent Access | ○ Pending | 5 | 0% |

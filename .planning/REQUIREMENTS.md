@@ -69,7 +69,7 @@
 ### Quality and delivery
 
 - [x] **QUAL-01**: Contributor receives deterministic tests for domain rules, long mutation sequences, persistence/migrations, API/contracts, adapters, browser behavior, Electron boundaries, native orchestration, and deployment recovery at the layer best able to catch each failure.
-- [ ] **QUAL-02**: Contributor receives fast required CI lanes with parallelism, dependency caching, slow-test visibility, flake accountability, and cross-consumer fan-out for contract/token changes.
+- [x] **QUAL-02**: Contributor receives fast required CI lanes with parallelism, dependency caching, slow-test visibility, flake accountability, and cross-consumer fan-out for contract/token changes.
 - [ ] **QUAL-03**: Release promotion uses the exact revision and artifact previously tested; distribution jobs do not silently rebuild different bytes.
 - [ ] **QUAL-04**: Important screens have representative user-level coverage for meaningful populated, empty, loading, offline, denied, stale, conflict, partial, retry, and unrecoverable states.
 - [x] **QUAL-05**: Diagnostic logs and traces are structured, bounded, correlated, and tested not to emit task titles, notes, prompts, tokens, or arbitrary high-cardinality identifiers.
@@ -115,7 +115,7 @@
 |-------------|-------|--------|
 | GTD-01..07, SRV-01, SRV-03, WEB-01..02, QUAL-01 | Phase 1 | Gaps Found |
 | SRV-02 shared semantic boundary + web/API adapter proof | Phase 1 | Pending partial proof |
-| SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05 | Phase 2 | Pending |
+| SRV-04..06, DATA-02..03, OPS-01..05, QUAL-02, QUAL-05 | Phase 2 | Partial — 10/11 plans; DATA-03 and OPS-02 retain deferred Plan 02-09 outer acceptance |
 | MAC-01..05, QUAL-03..04, SRV-02 Electron adapter proof | Phase 3 | Pending |
 | IOS-01..04, SRV-02 iPhone adapter proof | Phase 4 | Pending |
 | MCP-01..05, SRV-02 MCP adapter proof and cross-adapter completion | Phase 5 | Pending |

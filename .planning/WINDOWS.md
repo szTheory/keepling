@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 37
+open_count: 39
 waived_count: 0
 fixed_count: 4
-total_count: 41
-last_updated: 2026-09-01T08:35:49.877Z
+total_count: 43
+last_updated: 2026-09-02T03:18:34.980Z
 ---
 
 # Broken Windows Ledger
@@ -56,6 +56,8 @@ last_updated: 2026-09-01T08:35:49.877Z
 | 39 | KPL-02 | deviation | infra/caddy/Caddyfile |  | Preserved local HTTP proof without disabling production HTTPS automation | open |  | 2026-09-01T08:35:49.662Z |  |
 | 40 | KPL-02 | deviation | tooling/verify-deploy.sh |  | Emitted the setup capability from the running release node | open |  | 2026-09-01T08:35:49.770Z |  |
 | 41 | KPL-02 | deviation | tooling/verify-deploy.sh |  | Matched the established direct task-read response contract | open |  | 2026-09-01T08:35:49.877Z |  |
+| 42 | KPL-02 | deviation | tooling/test-phase-2.sh |  | Corrected the Phase 2 sync lane to digest the tracked canonical sync vector | open |  | 2026-09-02T03:18:29.294Z |  |
+| 43 | KPL-02 | unrun-verify | .planning/phases/KPL-02-synchronization-and-replaceable-server/deferred-items.md |  | Credentialed corrected restore/runtime and DNS cutover/rollback outer acceptance remains explicitly non-passing | open |  | 2026-09-02T03:18:34.980Z |  |
 
 ````json
 [
@@ -549,6 +551,30 @@ last_updated: 2026-09-01T08:35:49.877Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-01T08:35:49.877Z",
+    "resolved_at": null
+  },
+  {
+    "id": 42,
+    "kind": "deviation",
+    "phase": "KPL-02",
+    "file": "tooling/test-phase-2.sh",
+    "line": null,
+    "description": "Corrected the Phase 2 sync lane to digest the tracked canonical sync vector",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T03:18:29.294Z",
+    "resolved_at": null
+  },
+  {
+    "id": 43,
+    "kind": "unrun-verify",
+    "phase": "KPL-02",
+    "file": ".planning/phases/KPL-02-synchronization-and-replaceable-server/deferred-items.md",
+    "line": null,
+    "description": "Credentialed corrected restore/runtime and DNS cutover/rollback outer acceptance remains explicitly non-passing",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T03:18:34.980Z",
     "resolved_at": null
   }
 ]
