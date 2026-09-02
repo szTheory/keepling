@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 39
+open_count: 44
 waived_count: 0
 fixed_count: 4
-total_count: 43
-last_updated: 2026-09-02T03:18:34.980Z
+total_count: 48
+last_updated: 2026-09-02T18:23:00.938Z
 ---
 
 # Broken Windows Ledger
@@ -58,6 +58,11 @@ last_updated: 2026-09-02T03:18:34.980Z
 | 41 | KPL-02 | deviation | tooling/verify-deploy.sh |  | Matched the established direct task-read response contract | open |  | 2026-09-01T08:35:49.877Z |  |
 | 42 | KPL-02 | deviation | tooling/test-phase-2.sh |  | Corrected the Phase 2 sync lane to digest the tracked canonical sync vector | open |  | 2026-09-02T03:18:29.294Z |  |
 | 43 | KPL-02 | unrun-verify | .planning/phases/KPL-02-synchronization-and-replaceable-server/deferred-items.md |  | Credentialed corrected restore/runtime and DNS cutover/rollback outer acceptance remains explicitly non-passing | open |  | 2026-09-02T03:18:34.980Z |  |
+| 44 | KPL-03 | deviation | .npmrc |  | Forge required a hoisted pnpm linker and regenerated lock graph | open |  | 2026-09-02T18:23:00.601Z |  |
+| 45 | KPL-03 | deviation | apps/desktop/forge.config.ts |  | Forge packaging was restricted to bundled runtime assets | open |  | 2026-09-02T18:23:00.686Z |  |
+| 46 | KPL-03 | deviation | tooling/package-desktop.mjs |  | External app copying required verbatim framework symlinks | open |  | 2026-09-02T18:23:00.770Z |  |
+| 47 | KPL-03 | deviation | apps/desktop/main/index.ts |  | Packaged process resources required direct Resources paths | open |  | 2026-09-02T18:23:00.852Z |  |
+| 48 | KPL-03 | deviation | apps/desktop/main/index.ts |  | Same-profile ownership required an explicit Electron single-instance lock | open |  | 2026-09-02T18:23:00.938Z |  |
 
 ````json
 [
@@ -575,6 +580,66 @@ last_updated: 2026-09-02T03:18:34.980Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-02T03:18:34.980Z",
+    "resolved_at": null
+  },
+  {
+    "id": 44,
+    "kind": "deviation",
+    "phase": "KPL-03",
+    "file": ".npmrc",
+    "line": null,
+    "description": "Forge required a hoisted pnpm linker and regenerated lock graph",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T18:23:00.601Z",
+    "resolved_at": null
+  },
+  {
+    "id": 45,
+    "kind": "deviation",
+    "phase": "KPL-03",
+    "file": "apps/desktop/forge.config.ts",
+    "line": null,
+    "description": "Forge packaging was restricted to bundled runtime assets",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T18:23:00.686Z",
+    "resolved_at": null
+  },
+  {
+    "id": 46,
+    "kind": "deviation",
+    "phase": "KPL-03",
+    "file": "tooling/package-desktop.mjs",
+    "line": null,
+    "description": "External app copying required verbatim framework symlinks",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T18:23:00.770Z",
+    "resolved_at": null
+  },
+  {
+    "id": 47,
+    "kind": "deviation",
+    "phase": "KPL-03",
+    "file": "apps/desktop/main/index.ts",
+    "line": null,
+    "description": "Packaged process resources required direct Resources paths",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T18:23:00.852Z",
+    "resolved_at": null
+  },
+  {
+    "id": 48,
+    "kind": "deviation",
+    "phase": "KPL-03",
+    "file": "apps/desktop/main/index.ts",
+    "line": null,
+    "description": "Same-profile ownership required an explicit Electron single-instance lock",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T18:23:00.938Z",
     "resolved_at": null
   }
 ]

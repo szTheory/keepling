@@ -167,7 +167,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 2/12 plans executed
+**Plans:** 3/12 plans executed
 
 Plans:
 **Wave 1**
@@ -180,7 +180,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 03-01-PLAN.md — Prove exact packaged offline capture, hard-kill relaunch, and one-time acknowledgement.
+- [x] 03-01-PLAN.md — Prove exact packaged offline capture, hard-kill relaunch, and one-time acknowledgement.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
