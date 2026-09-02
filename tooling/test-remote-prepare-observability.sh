@@ -28,6 +28,35 @@ KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ARCHITECTURE="$observed_architecture" \
   cccccccccccccccccccccccccccccccccccccccc amd64 host.invalid \
   sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 EOF
+cat >"$fixture_root/fake-docker" <<'EOF'
+#!/usr/bin/env sh
+set -eu
+printf '%s|%s|%s|%s|%s\n' "$1" "$2" "$3" "$4" "$5" >>"$DOCKER_CALLS"
+[ "$1" = image ] && [ "$2" = inspect ] && [ "$4" = --format ] || exit 91
+case "$DOCKER_FAKE_CASE:$5" in
+  inspect-nonzero:'{{.Id}}') exit 1 ;;
+  id-empty:'{{.Id}}') exit 0 ;;
+  id-other:'{{.Id}}') printf '%s\n' invalid ;;
+  id-mismatch:'{{.Id}}') printf '%s\n' sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee ;;
+  malicious:'{{.Id}}') printf '%s\n' 'UNTRUSTED DOCKER OUTPUT' ;;
+  *:'{{.Id}}') printf '%s\n' sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb ;;
+  revision-mismatch:'{{index .Config.Labels "org.opencontainers.image.revision"}}') printf '%s\n' eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee ;;
+  *:'{{index .Config.Labels "org.opencontainers.image.revision"}}') printf '%s\n' cccccccccccccccccccccccccccccccccccccccc ;;
+  architecture-mismatch:'{{.Architecture}}') printf '%s\n' arm64 ;;
+  *:'{{.Architecture}}') printf '%s\n' amd64 ;;
+  *) exit 92 ;;
+esac
+EOF
+cat >"$fixture_root/restore-docker-boundary" <<'EOF'
+#!/usr/bin/env sh
+set -eu
+KEEPLING_REMOTE_PREPARE_DOCKER_BOUNDARY_TEST=yes KEEPLING_REMOTE_PREPARE_DOCKER_BIN="$FAKE_DOCKER" \
+  ./tooling/remote-prepare-host.sh 101 \
+  aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+  sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
+  cccccccccccccccccccccccccccccccccccccccc amd64 host.invalid \
+  sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+EOF
 cat >"$fixture_root/teardown" <<'EOF'
 #!/usr/bin/env sh
 set -eu
@@ -38,7 +67,7 @@ cat >"$fixture_root/dns" <<'EOF'
 #!/usr/bin/env sh
 : >"$DNS_CALLED"
 EOF
-chmod 700 "$fixture_root/pass" "$fixture_root/restore" "$fixture_root/teardown" "$fixture_root/dns"
+chmod 700 "$fixture_root/pass" "$fixture_root/restore" "$fixture_root/fake-docker" "$fixture_root/restore-docker-boundary" "$fixture_root/teardown" "$fixture_root/dns"
 
 for pair in volume-device:41 volume-mount:42 filesystem:43 archive-integrity:44 image-load:45 image-inspect:46 image-id-compare:47 image-revision:48 image-architecture:49 runtime-config:50 db-start:51 db-ready:52 restore:53 epoch:54 runtime:55; do
   failure_stage=${pair%%:*}
@@ -72,7 +101,7 @@ for pair in volume-device:41 volume-mount:42 filesystem:43 archive-integrity:44 
   [ "$result" -ne 0 ] || die "$failure_stage unexpectedly passed"
   [ "$(cat "$teardown_count")" = 1 ] || die "$failure_stage did not teardown exactly once"
   [ ! -e "$dns_called" ] || die "$failure_stage reached DNS"
-  [ "$(grep -Ec '^REMOTE_PREPARE_FAILED_STAGE=[a-z-]+ RC=[0-9]+ LOAD=(not-run|ok|nonzero) TAG=(true|false) INSPECT=(not-run|zero|nonzero) ID_SHAPE=(sha256-64|empty|other) ID_MATCH=(true|false) REV_SHAPE=(hex-7-64|empty|other) REV_MATCH=(true|false) ARCH_SHAPE=(amd64|empty|other) ARCH_MATCH=(true|false)$' "$output")" = 1 ] || die "$failure_stage marker count is not exactly one"
+  [ "$(grep -Ec '^REMOTE_PREPARE_FAILED_STAGE=[a-z-]+ RC=[0-9]+ LOAD=(not-run|ok|nonzero) INSPECT=(not-run|zero|nonzero) ID_SHAPE=(sha256-64|empty|other) ID_MATCH=(true|false) REV_SHAPE=(hex-7-64|empty|other) REV_MATCH=(true|false) ARCH_SHAPE=(amd64|empty|other) ARCH_MATCH=(true|false)$' "$output")" = 1 ] || die "$failure_stage marker count is not exactly one"
   grep -E "^REMOTE_PREPARE_FAILED_STAGE=$failure_stage RC=$expected_code " "$output" >/dev/null || die "$failure_stage marker is incorrect"
   case "$failure_stage" in
     image-load) grep -F ' LOAD=nonzero ' "$output" >/dev/null || die "load failure classification is incomplete" ;;
@@ -83,6 +112,38 @@ for pair in volume-device:41 volume-mount:42 filesystem:43 archive-integrity:44 
   esac
   at_sign=$(printf '\100')
   if grep -Eq "/|${at_sign}|token|secret|identifier|192[.]0[.]2" "$output"; then die "$failure_stage output retained disallowed detail"; fi
+done
+
+docker_calls=$fixture_root/docker-success-calls
+docker_output=$fixture_root/docker-success-output
+DOCKER_FAKE_CASE=success DOCKER_CALLS="$docker_calls" FAKE_DOCKER="$fixture_root/fake-docker" \
+  "$fixture_root/restore-docker-boundary" >"$docker_output" 2>&1 || die "immutable Docker boundary success fixture failed"
+[ "$(wc -l <"$docker_calls" | tr -d ' ')" = 3 ] || die "immutable Docker boundary did not inspect exactly three fields"
+[ "$(grep -Ec '^image\|inspect\|sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\|--format\|' "$docker_calls")" = 3 ] || die "Docker inspect did not exclusively target the immutable image ID"
+if grep -F 'keepling-server:plan-02-09-amd64' "$docker_calls" >/dev/null; then die "Docker inspect consulted the mutable repository tag"; fi
+
+for boundary_case in inspect-nonzero id-empty id-other id-mismatch revision-mismatch architecture-mismatch malicious; do
+  case "$boundary_case" in
+    inspect-nonzero) expected_stage=image-inspect; expected_code=46 ;;
+    id-empty|id-other|id-mismatch|malicious) expected_stage=image-id-compare; expected_code=47 ;;
+    revision-mismatch) expected_stage=image-revision; expected_code=48 ;;
+    architecture-mismatch) expected_stage=image-architecture; expected_code=49 ;;
+  esac
+  teardown_count=$fixture_root/docker-$boundary_case-teardown-count; dns_called=$fixture_root/docker-$boundary_case-dns-called
+  output=$fixture_root/docker-$boundary_case-output; docker_calls=$fixture_root/docker-$boundary_case-calls
+  printf '0\n' >"$teardown_count"; result=0
+  DOCKER_FAKE_CASE="$boundary_case" DOCKER_CALLS="$docker_calls" FAKE_DOCKER="$fixture_root/fake-docker" \
+  TEARDOWN_COUNT="$teardown_count" DNS_CALLED="$dns_called" \
+  KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_IMAGE_RUNNER="$fixture_root/pass" \
+  KEEPLING_SEQUENCE_RESTORE_RUNNER="$fixture_root/restore-docker-boundary" KEEPLING_SEQUENCE_RUNTIME_RUNNER="$fixture_root/pass" \
+  KEEPLING_SEQUENCE_SEMANTIC_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_DNS_RUNNER="$fixture_root/dns" \
+  KEEPLING_SEQUENCE_TEARDOWN_RUNNER="$fixture_root/teardown" \
+    ./tooling/verify-host-replacement.sh --candidate-sequence >"$output" 2>&1 || result=$?
+  [ "$result" -ne 0 ] || die "Docker boundary $boundary_case unexpectedly passed"
+  [ "$(cat "$teardown_count")" = 1 ] || die "Docker boundary $boundary_case did not teardown exactly once"
+  [ ! -e "$dns_called" ] || die "Docker boundary $boundary_case reached DNS"
+  [ "$(grep -Ec "^REMOTE_PREPARE_FAILED_STAGE=$expected_stage RC=$expected_code " "$output")" = 1 ] || die "Docker boundary $boundary_case classification was incorrect"
+  if grep -Eq 'UNTRUSTED|keepling-server:plan-02-09-amd64' "$output"; then die "Docker boundary $boundary_case retained untrusted or mutable detail"; fi
 done
 
 for shape_case in empty other malicious; do

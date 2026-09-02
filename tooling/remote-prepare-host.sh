@@ -16,7 +16,7 @@ tested_manifest_digest=$7
 failure_stage=contract
 failure_code=40
 completed=false
-load_rc=not-run tag_present=false inspect_rc=not-run observed_id_shape=empty observed_id_match=false
+load_rc=not-run inspect_rc=not-run observed_id_shape=empty observed_id_match=false
 revision_shape=empty revision_match=false architecture_shape=empty architecture_match=false
 exec 3>&2
 exec >/dev/null 2>&1
@@ -24,8 +24,8 @@ report_exit() {
   result=$?
   trap - EXIT HUP INT TERM
   if [ "$completed" != true ]; then
-    printf 'REMOTE_PREPARE_FAILED_STAGE=%s RC=%s LOAD=%s TAG=%s INSPECT=%s ID_SHAPE=%s ID_MATCH=%s REV_SHAPE=%s REV_MATCH=%s ARCH_SHAPE=%s ARCH_MATCH=%s\n' \
-      "$failure_stage" "$failure_code" "$load_rc" "$tag_present" "$inspect_rc" "$observed_id_shape" "$observed_id_match" \
+    printf 'REMOTE_PREPARE_FAILED_STAGE=%s RC=%s LOAD=%s INSPECT=%s ID_SHAPE=%s ID_MATCH=%s REV_SHAPE=%s REV_MATCH=%s ARCH_SHAPE=%s ARCH_MATCH=%s\n' \
+      "$failure_stage" "$failure_code" "$load_rc" "$inspect_rc" "$observed_id_shape" "$observed_id_match" \
       "$revision_shape" "$revision_match" "$architecture_shape" "$architecture_match" >&3
     exit "$failure_code"
   fi
@@ -52,6 +52,34 @@ stage() { failure_stage=$1; failure_code=$2; }
 id_shape() { if [ -z "$1" ]; then printf empty; elif printf '%s' "$1" | grep -Eq '^sha256:[0-9a-f]{64}$'; then printf sha256-64; else printf other; fi; }
 revision_value_shape() { if [ -z "$1" ]; then printf empty; elif printf '%s' "$1" | grep -Eq '^[0-9a-f]{7,64}$'; then printf hex-7-64; else printf other; fi; }
 architecture_value_shape() { if [ -z "$1" ]; then printf empty; elif [ "$1" = amd64 ]; then printf amd64; else printf other; fi; }
+docker_bin=${KEEPLING_REMOTE_PREPARE_DOCKER_BIN:-docker}
+docker_command() { "$docker_bin" "$@"; }
+verify_loaded_image() {
+  stage image-inspect 46
+  if image_id=$(docker_command image inspect "$expected_image_id" --format '{{.Id}}'); then inspect_rc=zero; else inspect_rc=nonzero; exit "$failure_code"; fi
+  observed_id_shape=$(id_shape "$image_id")
+  stage image-id-compare 47
+  [ "$image_id" = "$expected_image_id" ]
+  observed_id_match=true
+  stage image-revision 48
+  image_revision=$(docker_command image inspect "$expected_image_id" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')
+  revision_shape=$(revision_value_shape "$image_revision")
+  [ "$image_revision" = "$expected_revision" ]
+  revision_match=true
+  stage image-architecture 49
+  image_architecture=$(docker_command image inspect "$expected_image_id" --format '{{.Architecture}}')
+  architecture_shape=$(architecture_value_shape "$image_architecture")
+  [ "$image_architecture" = "$expected_architecture" ]
+  architecture_match=true
+}
+
+if [ "${KEEPLING_REMOTE_PREPARE_DOCKER_BOUNDARY_TEST:-}" = yes ]; then
+  load_rc=ok
+  verify_loaded_image
+  completed=true
+  printf '%s\n' 'REMOTE_PREPARE_STAGE=ready' >&3
+  exit 0
+fi
 
 if [ "${KEEPLING_REMOTE_PREPARE_TEST_MODE:-}" = yes ]; then
   if [ "${KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ID+x}" = x ]; then observed_test_id=$KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ID; else observed_test_id=$expected_image_id; fi
@@ -70,9 +98,9 @@ if [ "${KEEPLING_REMOTE_PREPARE_TEST_MODE:-}" = yes ]; then
       image-load) if [ "${KEEPLING_REMOTE_PREPARE_TEST_FAILURE_STAGE:-}" = image-load ]; then load_rc=nonzero; else load_rc=ok; fi ;;
       image-inspect)
         if [ "${KEEPLING_REMOTE_PREPARE_TEST_INSPECT_RC:-zero}" = nonzero ]; then
-          inspect_rc=nonzero; tag_present=false
+          inspect_rc=nonzero
         else
-          inspect_rc=zero; tag_present=true; observed_id_shape=$(id_shape "$observed_test_id")
+          inspect_rc=zero; observed_id_shape=$(id_shape "$observed_test_id")
         fi
         ;;
       image-id-compare) [ "$observed_test_id" = "$expected_image_id" ] && observed_id_match=true || observed_id_match=false ;;
@@ -109,23 +137,8 @@ chown -R 1000:1000 /srv/keepling/data/caddy
 stage archive-integrity 44
 [ "$(sha256sum /root/image.tar.gz | awk '{print $1}')" = "$expected_archive_sha" ]
 stage image-load 45
-if docker load -i /root/image.tar.gz; then load_rc=ok; else load_rc=nonzero; exit "$failure_code"; fi
-stage image-inspect 46
-if image_id=$(docker image inspect keepling-server:plan-02-09-amd64 --format '{{.Id}}'); then inspect_rc=zero; tag_present=true; else inspect_rc=nonzero; tag_present=false; exit "$failure_code"; fi
-observed_id_shape=$(id_shape "$image_id")
-stage image-id-compare 47
-[ "$image_id" = "$expected_image_id" ]
-observed_id_match=true
-stage image-revision 48
-image_revision=$(docker image inspect keepling-server:plan-02-09-amd64 --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')
-revision_shape=$(revision_value_shape "$image_revision")
-[ "$image_revision" = "$expected_revision" ]
-revision_match=true
-stage image-architecture 49
-image_architecture=$(docker image inspect keepling-server:plan-02-09-amd64 --format '{{.Architecture}}')
-architecture_shape=$(architecture_value_shape "$image_architecture")
-[ "$image_architecture" = "$expected_architecture" ]
-architecture_match=true
+if docker_command load -i /root/image.tar.gz; then load_rc=ok; else load_rc=nonzero; exit "$failure_code"; fi
+verify_loaded_image
 
 stage runtime-config 50
 install -m 0644 /root/compose.yml /srv/keepling/infra/compose/compose.yml
