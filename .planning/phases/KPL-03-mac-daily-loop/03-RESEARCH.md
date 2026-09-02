@@ -163,7 +163,7 @@ The renderer boundary is a second independent proof: local packaged content, `no
 - Do not emit task titles, notes, prompts, credentials, raw tokens, or arbitrary identifiers in diagnostics. [VERIFIED: `AGENTS.md:5-20,90-102`]
 - Do not claim completion, safety, compatibility, restore health, or release readiness without fresh executable evidence at the relevant boundary. [VERIFIED: `AGENTS.md:90-102`]
 - Use root Git/GSD only; never create nested repositories, submodules, or application-level planning roots. [VERIFIED: `AGENTS.md:83-89`]
-- Use native tools first—pnpm workspaces for TypeScript—and do not introduce Nx, Turborepo, an ORM, Redis, Elasticsearch, Kubernetes, or a universal runtime/domain framework without measured need. [VERIFIED: `docs/architecture/REPOSITORY.md:62-72`] 
+- Use native tools first—pnpm workspaces for TypeScript—and do not introduce Nx, Turborepo, an ORM, Redis, Elasticsearch, Kubernetes, or a universal runtime/domain framework without measured need. [VERIFIED: `docs/architecture/REPOSITORY.md:62-72`]
 - No project-local skill directories exist for this phase, so there are no additional project skill rules to apply. [VERIFIED: `AGENTS.md:62-66`]
 
 ## Standard Stack
