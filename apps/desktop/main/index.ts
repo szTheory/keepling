@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { Worker } from 'node:worker_threads'
-import { app, BrowserWindow, ipcMain, net, protocol, session, shell } from 'electron'
+import { app, ipcMain, Menu, net, protocol, screen, session } from 'electron'
 
 import {
   DesktopApplication,
@@ -17,17 +17,20 @@ import {
   type SyncPort,
   type WorkspaceSnapshot,
 } from './application/DesktopApplication.ts'
+import { createFileWindowStatePort, DesktopLifecycle } from './lifecycle.ts'
+import { buildApplicationMenu } from './menu.ts'
 import {
   APP_PROTOCOL_ORIGIN,
   APP_PROTOCOL_SCHEME,
   CONTENT_SECURITY_POLICY,
   assertTrustedIpcSender,
-  isAllowedExternalLinkTarget,
-  isAllowedNavigationTarget,
   parseTrustedRequest,
   resolvePackagedAssetPath,
   shouldGrantPermission,
 } from './protocol.ts'
+import { createMainWindow } from './windows/main-window.ts'
+import { QuickEntryWindowController } from './windows/quick-entry-window.ts'
+import { SettingsWindowController } from './windows/settings-window.ts'
 import {
   captureRequestSchema,
   editRequestSchema,
@@ -113,6 +116,26 @@ class WorkerLocalStore implements LocalStorePort {
     return this.#request('resolveConflict', input)
   }
 
+  saveDraft(draft: { addToToday: boolean; title: string }): Promise<void> {
+    return this.#request('saveDraft', draft)
+  }
+
+  getDraft(): Promise<{ addToToday: boolean; title: string } | null> {
+    return this.#request('getDraft')
+  }
+
+  clearDraft(): Promise<void> {
+    return this.#request('clearDraft')
+  }
+
+  getShortcutPreference(): Promise<string | null> {
+    return this.#request('getShortcutPreference')
+  }
+
+  setShortcutPreference(accelerator: string): Promise<void> {
+    return this.#request('setShortcutPreference', accelerator)
+  }
+
   async close(): Promise<void> {
     await this.#request('close')
     await this.#worker.terminate()
@@ -180,9 +203,9 @@ const bootstrap = async () => {
   await desktopApplication.reconcile()
 
   // Registered once, on the default session, so EVERY renderer surface --
-  // this main window today, and any future utility window sharing the
-  // default session -- gets the same restrictive local-content, permission,
-  // and header policy without per-window wiring.
+  // the main window, Quick Entry, and Settings (all constructed below) --
+  // gets the same restrictive local-content, permission, and header policy
+  // without per-window wiring.
   const rendererRoot = resolve(processResourcePath('renderer', '.'))
   protocol.handle(APP_PROTOCOL_SCHEME, (request) => {
     const candidate = resolvePackagedAssetPath(request.url, rendererRoot)
@@ -202,29 +225,46 @@ const bootstrap = async () => {
     })
   })
 
-  const window = new BrowserWindow({
-    height: 720,
-    show: false,
-    webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      preload: processResourcePath('preload', 'index.cjs'),
-      sandbox: true,
+  const preloadPath = processResourcePath('preload', 'index.cjs')
+  const utilityPreloadPath = processResourcePath('preload', 'utility.cjs')
+  const rendererBase = `${APP_PROTOCOL_ORIGIN}/index.html`
+
+  // The single owner of the resident main window's lifetime (D-20/D-21).
+  // `createWindow` delegates to `windows/main-window.ts#createMainWindow`,
+  // which ALREADY installs a deny-all `setWindowOpenHandler`/`will-navigate`
+  // guard (O-10) -- the SAME unconditional policy Quick Entry/Settings use
+  // below, so every window this process creates shares one reconciled
+  // per-window navigation policy (see this plan's SUMMARY "Deviations" for
+  // why the main window's previous allowlist-based guard was retired in
+  // favor of this single policy).
+  const lifecycle = new DesktopLifecycle({
+    app,
+    createWindow: (options) => createMainWindow({ ...options, preloadPath }),
+    desktopApplication,
+    onBeforeQuit: () => {
+      unsubscribePresentation()
+      quickEntry.dispose()
     },
-    width: 960,
+    rendererUrl: rendererBase,
+    screen,
+    windowState: createFileWindowStatePort(join(app.getPath('userData'), 'window-state.json')),
   })
 
   // Every ipcMain handler consults this SAME sender/frame trust decision
   // (`main/protocol.ts#isTrustedIpcSender`) before touching
   // `DesktopApplication` -- a forged sender id, a subframe, or a frame
-  // outside the packaged `app://renderer/` origin all fail closed.
+  // outside the packaged `app://renderer/` origin all fail closed. This
+  // reads the CURRENT main window from `lifecycle` (not a captured
+  // variable) because Dock activation / a second launch can recreate the
+  // window after the first is closed.
   const assertTrustedSender = (event: Electron.IpcMainInvokeEvent) => {
+    const window = lifecycle.getMainWindow()
     const senderFrame = event.senderFrame
     assertTrustedIpcSender({
       isMainFrame: senderFrame !== null && senderFrame === event.sender.mainFrame,
       senderFrameUrl: senderFrame?.url ?? null,
       senderId: event.sender.id,
-      trustedSenderId: window.webContents.id,
+      trustedSenderId: window?.webContents.id ?? -1,
     })
   }
 
@@ -265,29 +305,42 @@ const bootstrap = async () => {
     return desktopApplication.resolveConflict(parseTrustedRequest(resolveConflictRequestSchema, rawInput))
   })
   const unsubscribePresentation = desktopApplication.subscribePresentation((presentation) => {
-    if (!window.isDestroyed()) window.webContents.send('keepling:presentation-changed', presentation)
+    const window = lifecycle.getMainWindow()
+    if (window !== null) window.webContents.send('keepling:presentation-changed', presentation)
   })
 
-  window.webContents.setWindowOpenHandler(({ url }) => {
-    if (isAllowedExternalLinkTarget(url)) void shell.openExternal(url)
-    return { action: 'deny' }
+  // O-9 native-shell wiring: Plan 03-04 built `menu.ts`, `windows/
+  // quick-entry-window.ts`, and `windows/settings-window.ts` to production
+  // quality and proved them against a test-only reference entry point
+  // (`test/fixtures/wired-app-harness.ts`) -- they were never instantiated
+  // here, so no user could reach Command-N, the global Quick Entry
+  // shortcut, or the native menus in the shipped app. This is that
+  // integration: the SAME production modules, composed against the real,
+  // hardened `main/index.ts` bootstrap instead of the harness.
+  const quickEntry = new QuickEntryWindowController({
+    desktopApplication,
+    preloadPath: utilityPreloadPath,
+    rendererUrl: `${rendererBase}?view=quick-entry`,
   })
-  window.webContents.on('will-navigate', (event, url) => {
-    if (!isAllowedNavigationTarget(url)) event.preventDefault()
+  const settings = new SettingsWindowController({
+    preloadPath: utilityPreloadPath,
+    quickEntryController: quickEntry,
+    rendererUrl: `${rendererBase}?view=settings`,
   })
-  await window.loadURL(`${APP_PROTOCOL_ORIGIN}/index.html`)
-  window.show()
 
-  let quitting = false
-  app.on('before-quit', (event) => {
-    if (quitting) return
-    event.preventDefault()
-    void desktopApplication.close().finally(() => {
-      unsubscribePresentation()
-      quitting = true
-      app.quit()
-    })
+  lifecycle.registerAppHandlers()
+
+  const shortcutStatus = await quickEntry.registerShortcut()
+  const menu = buildApplicationMenu({
+    getMainWindow: () => lifecycle.getMainWindow(),
+    getMenuState: () => ({ hasSelection: false, selectedCompleted: false, selectedTrashed: false }),
+    openQuickEntry: () => void quickEntry.open(),
+    openSettings: () => void settings.open(),
+    quickEntryAccelerator: shortcutStatus.accelerator,
   })
+  Menu.setApplicationMenu(menu)
+
+  await lifecycle.ensureWindow()
 }
 
 if (ownsSelectedProfile) void bootstrap()

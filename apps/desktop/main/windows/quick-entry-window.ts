@@ -88,8 +88,16 @@ class QuickEntryWindowController {
    * process itself created", not "the one Quick Entry window".
    */
   trustWindow(window: BrowserWindow): void {
-    this.#trustedSenders.add(window.webContents)
-    window.once('closed', () => this.#trustedSenders.delete(window.webContents))
+    // Capture the WebContents reference BEFORE registering the listener --
+    // re-reading `window.webContents` from inside a `'closed'` handler
+    // touches an already-destroyed native window during Electron's teardown
+    // and, observed during Plan 03-11's real `app.exit()` E2E evidence
+    // (`test/e2e/lifecycle.spec.ts`, Settings window + bounded quit), hangs
+    // the WHOLE app indefinitely instead of exiting. Deleting from a
+    // reference captured up front never re-touches the destroyed window.
+    const senderContents = window.webContents
+    this.#trustedSenders.add(senderContents)
+    window.once('closed', () => this.#trustedSenders.delete(senderContents))
   }
 
   #registerIpcHandlers(): void {

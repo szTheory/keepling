@@ -63,7 +63,11 @@ test('completes the full daily loop through user-visible roles only', async () =
     const notesField = window.locator('#task-editor-notes')
     await notesField.fill('Ask about morning slots')
     await window.keyboard.press('Meta+s')
-    await expect(window.getByText('Call dentist about cleaning')).toBeVisible()
+    // Scoped to the detail heading, not a bare getByText: the list row now
+    // also re-renders with the saved title while the editor stays open, so
+    // an unscoped getByText matches both simultaneously (strict-mode
+    // violation) once list-refresh and editor-save land in the same tick.
+    await expect(window.getByRole('heading', { name: 'Call dentist about cleaning' })).toBeVisible()
     await expect(window.locator('[data-workspace-dirty="true"]')).toHaveCount(0)
 
     // Complete, then reopen (D-14).
