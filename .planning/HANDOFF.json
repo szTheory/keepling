@@ -269,6 +269,24 @@
       "id": "O-11",
       "item": "D-06 restoration only partly implemented; no remaining plan owns the renderer",
       "detail": "03-11 implemented the window-level half of D-06 (validated on-screen bounds and fullscreen, clamped to the current display) and honestly disclosed that the renderer-semantic half is not implemented: sidebar visibility, pane sizes, destination, surviving selected task, semantic scroll anchor, and recoverable editor draft (D-06, 03-CONTEXT.md:28). Cause: no renderer file was in 03-11's authorized scope. This is the THIRD instance of the same structural defect as O-1 and O-9. Across all twelve plans' files_modified, every plan declaring apps/desktop/renderer/* or packages/web-ui/* (03-01, 03-03, 03-04, 03-07, 03-09) is complete, and none of the remaining plans (03-05 store/recovery, 03-08 performance, 03-06 packaged/tooling) touches either path. The renderer half of D-06 therefore has no owner and will not be delivered by any planned work. Severity precision: 03-11's must-have is worded as a restriction ('includes only D-06 semantic state... transient dialogs/progress/auth/raw focus never restore'), so restoring a strict subset does not violate that must-have as written - this is a gap against D-06 intent, not a failed plan assertion. Wants a gap-closure plan, or an explicit recorded decision that v1 restores window geometry only. Decide at /gsd-verify-work."
+    },
+    {
+      "id": "O-12",
+      "item": "removeLocalData built and proven but unreachable (no IPC/preload/renderer path)",
+      "detail": "03-05 delivered main/recovery/remove-local-data.ts (removeLocalNamespaceData) and DesktopApplication.removeLocalData() with 9 integration cases, structurally unable to delete server data. Verified by grep: zero references to removeLocalData / removeLocalNamespaceData in main/index.ts, preload/, renderer/, or packages/web-ui/src/. A user cannot invoke it. Disclosed honestly by 03-05; those files were outside its files_modified."
     }
-  ]
+  ],
+  "phase_level_gap": {
+    "id": "GAP-1",
+    "title": "Three features are built, tested, and unreachable; no remaining plan can wire them",
+    "instances": [
+      "O-1 shared workspace slice unused by the web production route",
+      "O-9 native shell unwired (CLOSED by 03-11 - proves this is closable)",
+      "O-11 D-06 renderer-semantic restoration not implemented",
+      "O-12 removeLocalData has no IPC/preload/renderer path"
+    ],
+    "root_cause": "One structural defect, not four unrelated bugs. Every executor disclosed correctly; the fault is the phase's allocation of files across plans, which leaves late-discovered integration work with no owner.",
+    "ownership_check": "Across all twelve plans' files_modified, every plan owning main/index.ts (03-01, 03-10), preload/* (03-01, 03-02, 03-03, 03-05, 03-10) or renderer/* and packages/web-ui/* (03-01, 03-03, 03-04, 03-07, 03-09) is complete. The remaining plans 03-08 and 03-06 are tests, tooling and docs only and touch none of those paths.",
+    "recommendation": "Let 03-08 and 03-06 run as planned, then close O-1, O-11 and O-12 together in ONE gap-closure plan owning main/index.ts, preload/{contracts,index}.ts and the renderer/web-ui paths. Wiring them separately would re-create the cross-plan file contention that caused the problem. Alternatively record an explicit decision that some are out of v1 scope - but decide rather than letting them pass silently."
+  }
 }
