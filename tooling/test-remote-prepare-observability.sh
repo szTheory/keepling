@@ -14,7 +14,14 @@ EOF
 cat >"$fixture_root/restore" <<'EOF'
 #!/usr/bin/env sh
 set -eu
+if [ "${TEST_OBSERVED_ID+x}" = x ]; then observed_id=$TEST_OBSERVED_ID; else observed_id=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb; fi
+if [ "${TEST_OBSERVED_REVISION+x}" = x ]; then observed_revision=$TEST_OBSERVED_REVISION; else observed_revision=cccccccccccccccccccccccccccccccccccccccc; fi
+if [ "${TEST_OBSERVED_ARCHITECTURE+x}" = x ]; then observed_architecture=$TEST_OBSERVED_ARCHITECTURE; else observed_architecture=amd64; fi
 KEEPLING_REMOTE_PREPARE_TEST_MODE=yes KEEPLING_REMOTE_PREPARE_TEST_FAILURE_STAGE="$FAILURE_STAGE" \
+KEEPLING_REMOTE_PREPARE_TEST_INSPECT_RC="${TEST_INSPECT_RC:-zero}" \
+KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ID="$observed_id" \
+KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_REVISION="$observed_revision" \
+KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ARCHITECTURE="$observed_architecture" \
   ./tooling/remote-prepare-host.sh 101 \
   aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
   sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
@@ -33,7 +40,7 @@ cat >"$fixture_root/dns" <<'EOF'
 EOF
 chmod 700 "$fixture_root/pass" "$fixture_root/restore" "$fixture_root/teardown" "$fixture_root/dns"
 
-for pair in volume-device:41 volume-mount:42 filesystem:43 archive-integrity:44 image-load:45 image-id:46 image-revision:47 image-architecture:48 runtime-config:49 db-start:50 db-ready:51 restore:52 epoch:53 runtime:54; do
+for pair in volume-device:41 volume-mount:42 filesystem:43 archive-integrity:44 image-load:45 image-inspect:46 image-id-compare:47 image-revision:48 image-architecture:49 runtime-config:50 db-start:51 db-ready:52 restore:53 epoch:54 runtime:55; do
   failure_stage=${pair%%:*}
   expected_code=${pair#*:}
   teardown_count=$fixture_root/$failure_stage-teardown-count
@@ -41,7 +48,19 @@ for pair in volume-device:41 volume-mount:42 filesystem:43 archive-integrity:44 
   output=$fixture_root/$failure_stage-output
   printf '0\n' >"$teardown_count"
   result=0
+  test_inspect_rc=zero
+  test_observed_id=sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  test_observed_revision=cccccccccccccccccccccccccccccccccccccccc
+  test_observed_architecture=amd64
+  case "$failure_stage" in
+    image-inspect) test_inspect_rc=nonzero ;;
+    image-id-compare) test_observed_id=sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee ;;
+    image-revision) test_observed_revision=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee ;;
+    image-architecture) test_observed_architecture=arm64 ;;
+  esac
   FAILURE_STAGE="$failure_stage" TEARDOWN_COUNT="$teardown_count" DNS_CALLED="$dns_called" \
+  TEST_INSPECT_RC="$test_inspect_rc" TEST_OBSERVED_ID="$test_observed_id" \
+  TEST_OBSERVED_REVISION="$test_observed_revision" TEST_OBSERVED_ARCHITECTURE="$test_observed_architecture" \
   KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER="$fixture_root/pass" \
   KEEPLING_SEQUENCE_IMAGE_RUNNER="$fixture_root/pass" \
   KEEPLING_SEQUENCE_RESTORE_RUNNER="$fixture_root/restore" \
@@ -53,10 +72,59 @@ for pair in volume-device:41 volume-mount:42 filesystem:43 archive-integrity:44 
   [ "$result" -ne 0 ] || die "$failure_stage unexpectedly passed"
   [ "$(cat "$teardown_count")" = 1 ] || die "$failure_stage did not teardown exactly once"
   [ ! -e "$dns_called" ] || die "$failure_stage reached DNS"
-  [ "$(grep -Ec '^REMOTE_PREPARE_FAILED_STAGE=[a-z-]+ RC=[0-9]+$' "$output")" = 1 ] || die "$failure_stage marker count is not exactly one"
-  grep -Fx "REMOTE_PREPARE_FAILED_STAGE=$failure_stage RC=$expected_code" "$output" >/dev/null || die "$failure_stage marker is incorrect"
+  [ "$(grep -Ec '^REMOTE_PREPARE_FAILED_STAGE=[a-z-]+ RC=[0-9]+ LOAD=(not-run|ok|nonzero) TAG=(true|false) INSPECT=(not-run|zero|nonzero) ID_SHAPE=(sha256-64|empty|other) ID_MATCH=(true|false) REV_SHAPE=(hex-7-64|empty|other) REV_MATCH=(true|false) ARCH_SHAPE=(amd64|empty|other) ARCH_MATCH=(true|false)$' "$output")" = 1 ] || die "$failure_stage marker count is not exactly one"
+  grep -E "^REMOTE_PREPARE_FAILED_STAGE=$failure_stage RC=$expected_code " "$output" >/dev/null || die "$failure_stage marker is incorrect"
+  case "$failure_stage" in
+    image-load) grep -F ' LOAD=nonzero ' "$output" >/dev/null || die "load failure classification is incomplete" ;;
+    image-inspect) grep -F ' INSPECT=nonzero ID_SHAPE=empty ID_MATCH=false ' "$output" >/dev/null || die "inspect failure classification is incomplete" ;;
+    image-id-compare) grep -F ' INSPECT=zero ID_SHAPE=sha256-64 ID_MATCH=false ' "$output" >/dev/null || die "ID mismatch classification is incomplete" ;;
+    image-revision) grep -F ' REV_SHAPE=hex-7-64 REV_MATCH=false ' "$output" >/dev/null || die "revision mismatch classification is incomplete" ;;
+    image-architecture) grep -F ' ARCH_SHAPE=other ARCH_MATCH=false' "$output" >/dev/null || die "architecture mismatch classification is incomplete" ;;
+  esac
   at_sign=$(printf '\100')
   if grep -Eq "/|${at_sign}|token|secret|identifier|192[.]0[.]2" "$output"; then die "$failure_stage output retained disallowed detail"; fi
+done
+
+for shape_case in empty other malicious; do
+  case "$shape_case" in empty) observed_id='' ;; other) observed_id=not-a-digest ;; malicious) observed_id='UNTRUSTED VALUE WITH SPACES' ;; esac
+  teardown_count=$fixture_root/$shape_case-teardown-count; dns_called=$fixture_root/$shape_case-dns-called; output=$fixture_root/$shape_case-output
+  printf '0\n' >"$teardown_count"; result=0
+  FAILURE_STAGE=image-id-compare TEARDOWN_COUNT="$teardown_count" DNS_CALLED="$dns_called" TEST_OBSERVED_ID="$observed_id" \
+  KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_IMAGE_RUNNER="$fixture_root/pass" \
+  KEEPLING_SEQUENCE_RESTORE_RUNNER="$fixture_root/restore" KEEPLING_SEQUENCE_RUNTIME_RUNNER="$fixture_root/pass" \
+  KEEPLING_SEQUENCE_SEMANTIC_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_DNS_RUNNER="$fixture_root/dns" \
+  KEEPLING_SEQUENCE_TEARDOWN_RUNNER="$fixture_root/teardown" \
+    ./tooling/verify-host-replacement.sh --candidate-sequence >"$output" 2>&1 || result=$?
+  [ "$result" -ne 0 ] && [ "$(cat "$teardown_count")" = 1 ] && [ ! -e "$dns_called" ] || die "$shape_case did not fail teardown-first"
+  grep -E '^REMOTE_PREPARE_FAILED_STAGE=image-id-compare RC=47 .* ID_SHAPE=(empty|other) ID_MATCH=false ' "$output" >/dev/null || die "$shape_case ID shape was not closed"
+  if [ -n "$observed_id" ] && grep -Fq "$observed_id" "$output"; then die "$shape_case raw ID output was retained"; fi
+  [ "$(wc -c <"$output" | tr -d ' ')" -le 512 ] || die "$shape_case output is unbounded"
+done
+
+for value_case in empty other malicious; do
+  case "$value_case" in empty) observed_revision='' ;; other) observed_revision=invalid ;; malicious) observed_revision='UNTRUSTED REVISION VALUE' ;; esac
+  teardown_count=$fixture_root/revision-$value_case-teardown-count; dns_called=$fixture_root/revision-$value_case-dns-called; output=$fixture_root/revision-$value_case-output
+  printf '0\n' >"$teardown_count"; result=0
+  FAILURE_STAGE=image-revision TEARDOWN_COUNT="$teardown_count" DNS_CALLED="$dns_called" TEST_OBSERVED_REVISION="$observed_revision" \
+  KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_IMAGE_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_RESTORE_RUNNER="$fixture_root/restore" \
+  KEEPLING_SEQUENCE_RUNTIME_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_SEMANTIC_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_DNS_RUNNER="$fixture_root/dns" KEEPLING_SEQUENCE_TEARDOWN_RUNNER="$fixture_root/teardown" \
+    ./tooling/verify-host-replacement.sh --candidate-sequence >"$output" 2>&1 || result=$?
+  [ "$result" -ne 0 ] && [ "$(cat "$teardown_count")" = 1 ] && [ ! -e "$dns_called" ] || die "revision $value_case did not fail teardown-first"
+  grep -E '^REMOTE_PREPARE_FAILED_STAGE=image-revision RC=48 .* REV_SHAPE=(empty|other) REV_MATCH=false ' "$output" >/dev/null || die "revision $value_case shape was not closed"
+  if [ -n "$observed_revision" ] && grep -Fq "$observed_revision" "$output"; then die "revision $value_case raw output was retained"; fi
+done
+
+for value_case in empty other malicious; do
+  case "$value_case" in empty) observed_architecture='' ;; other) observed_architecture=arm64 ;; malicious) observed_architecture='UNTRUSTED ARCH VALUE' ;; esac
+  teardown_count=$fixture_root/architecture-$value_case-teardown-count; dns_called=$fixture_root/architecture-$value_case-dns-called; output=$fixture_root/architecture-$value_case-output
+  printf '0\n' >"$teardown_count"; result=0
+  FAILURE_STAGE=image-architecture TEARDOWN_COUNT="$teardown_count" DNS_CALLED="$dns_called" TEST_OBSERVED_ARCHITECTURE="$observed_architecture" \
+  KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_IMAGE_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_RESTORE_RUNNER="$fixture_root/restore" \
+  KEEPLING_SEQUENCE_RUNTIME_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_SEMANTIC_RUNNER="$fixture_root/pass" KEEPLING_SEQUENCE_DNS_RUNNER="$fixture_root/dns" KEEPLING_SEQUENCE_TEARDOWN_RUNNER="$fixture_root/teardown" \
+    ./tooling/verify-host-replacement.sh --candidate-sequence >"$output" 2>&1 || result=$?
+  [ "$result" -ne 0 ] && [ "$(cat "$teardown_count")" = 1 ] && [ ! -e "$dns_called" ] || die "architecture $value_case did not fail teardown-first"
+  grep -E '^REMOTE_PREPARE_FAILED_STAGE=image-architecture RC=49 .* ARCH_SHAPE=(empty|other) ARCH_MATCH=false$' "$output" >/dev/null || die "architecture $value_case shape was not closed"
+  if [ -n "$observed_architecture" ] && grep -Fq "$observed_architecture" "$output"; then die "architecture $value_case raw output was retained"; fi
 done
 
 contract_output=$fixture_root/contract-output
@@ -78,7 +146,7 @@ for invalid_contract in volume host digest; do
   KEEPLING_REMOTE_PREPARE_TEST_MODE=yes ./tooling/remote-prepare-host.sh $args >"$contract_output" 2>&1 || result=$?
   [ "$result" -eq 40 ] || die "$invalid_contract contract did not fail closed"
   [ "$(wc -l <"$contract_output" | tr -d ' ')" = 1 ] || die "$invalid_contract contract marker count is not exactly one"
-  grep -Fx 'REMOTE_PREPARE_FAILED_STAGE=contract RC=40' "$contract_output" >/dev/null || die "$invalid_contract contract marker is incorrect"
+  grep -E '^REMOTE_PREPARE_FAILED_STAGE=contract RC=40 ' "$contract_output" >/dev/null || die "$invalid_contract contract marker is incorrect"
 done
 
 echo "Remote prepare observability regression passed: every failure is classified once, teardown-first, and DNS-unreachable"
