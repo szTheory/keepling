@@ -167,7 +167,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 5/12 plans executed
+**Plans:** 6/12 plans executed
 
 Plans:
 **Wave 1**
@@ -192,7 +192,7 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
-- [ ] 03-03-PLAN.md — Deliver the complete facade-driven Mac workspace and UI state matrix.
+- [x] 03-03-PLAN.md — Deliver the complete facade-driven Mac workspace and UI state matrix.
 
 **Wave 7** *(blocked on Wave 6 completion)*
 
