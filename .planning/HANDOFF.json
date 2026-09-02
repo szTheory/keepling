@@ -242,13 +242,18 @@
     },
     {
       "id": "O-6",
-      "item": "Phase 1 verification debt",
-      "detail": "KPL-01 has VERIFICATION.md and UAT.md and ROADMAP says Complete, but its checkbox is unmarked and it reports 74%. Pre-existing; does not block KPL-03."
+      "item": "Verification bookkeeping debt in both finished phases",
+      "detail": "Phase 1: has VERIFICATION.md and UAT.md and ROADMAP says Complete, but its checkbox is unmarked and it reports 74%. Phase 2: marked roadmap_complete true but has NO VERIFICATION.md (verification_status: missing) and 10/11 summaries, because 02-09 is a deliberately deferred non-autonomous lane needing host/DNS credentials. Both pre-existing; neither blocks KPL-03. Do not chase mid-phase; /gsd-audit-uat sweeps them together afterwards."
     },
     {
       "id": "O-7",
       "item": "Desktop SQL migration not drift-tracked",
       "detail": "03-03 modified apps/desktop/migrations/0001_initial.sql but verify.schema-drift reports schema_files: []; its block=false is not evidence about that file."
+    },
+    {
+      "id": "O-8",
+      "item": "/gsd-progress Route 0 misroutes to Phase 2",
+      "detail": "Route 0's resume-incomplete-phase scan stops at the lowest-numbered phase where plan_count > summary_count. Phase 2 (11/10) matches permanently because 02-09 is deliberately deferred, so Route 0 can never route to Phase 3 and following it would strand KPL-03. Ignore it; continue with $gsd-execute-phase 3. Also: init.progress reports current_phase as KPL-02 and next_phase as '1' with phase_count 9 against a 6-phase roadmap (it mixes KPL-0x directory names with roadmap integers; STATE.md correctly says current_phase: 03), and progress.bar renders an empty gauge at 86%. Both are display/data faults in the tooling, not project state."
     }
   ]
 }
