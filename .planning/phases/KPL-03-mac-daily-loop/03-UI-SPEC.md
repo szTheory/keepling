@@ -1,10 +1,11 @@
 ---
 phase: KPL-03
 slug: mac-daily-loop
-status: draft
+status: approved
 shadcn_initialized: true
 preset: "base-rhea / Base UI / Stone (effective code bLTj5vaS)"
 created: "2026-09-02"
+reviewed_at: "2026-09-02T04:11:11Z"
 ---
 
 # Phase KPL-03 — UI Design Contract
@@ -293,22 +294,25 @@ Under Reduce Motion, state changes are immediate or use opacity no longer than 1
 
 ## UI Considerations
 
-> Researcher-authored state contract pending replacement by the post-verification compiled UI-consideration probe. Empty/error copy references the Copywriting Contract rather than duplicating it.
+Compiled probe result: 58 applicable considerations resolved; 42 use explicit contract truths, 16 use evidence backstops, and 0 remain unresolved. Empty-state and error-state wording remains canonical in the Copywriting Contract; these rows define state behavior and reference that copy rather than restating every string.
 
-Applicable state considerations resolved: 8 covered, 2 evidence backstops, 0 unresolved.
+Element IDs: E1 primary workspace; E2 task lists; E3 task capture/editor; E4 Quick Entry; E5 Sync & Recovery; E6 conflict resolver; E7 settings/recovery shell; E8 menus, drawers, and dialogs.
 
-| Category | Element(s) | Status | Resolution / Reason |
-|----------|------------|--------|---------------------|
-| Empty | Capture/editor forms, task lists, Sync & Recovery | ✅ covered | Invalid blank forms retain labels and disable commit; authoritative zero-result lists and healthy recovery inspection use the exact empty copy; loading never masquerades as empty |
-| Loading | Workspace, lists, forms, toolbar control | ✅ covered | Local projection opens before network work; opening/preparing use named static states; background catch-up retains interactive content and appears only after the 3-second grace |
-| Error | Forms, lists, shortcuts, sync/recovery controls | ✅ covered | Validation stays adjacent; local-save, server, auth, conflict, namespace, shortcut, and unrecoverable failures each name preserved state and a specific next action |
-| Populated | Inbox, Today, Trash, Sync & Recovery | ✅ covered | Semantic lists use stable rows, independent pane scrolling, explicit reason/state text, and bounded recovery groups rather than cards or event logs |
-| Partial | Editor, local projection, sync summary | ✅ covered | Missing optional fields render absent; durable local content stays visible during catch-up/failure; nonconflicting drafts survive validation, auth, conflict, and renderer recreation |
-| Zero / one / many | Task lists, pending/conflict groups | ✅ covered | Zero uses authoritative empty copy; one retains normal geometry and singular copy; many use bounded counts, stable scrolling, and existing pagination rather than unbounded badges |
-| Overflow | Navigation, task rows, state copy, dialogs/popover | 🧪 backstop | Visual tests at 680×520, 1024×700, 1064×700, 1180×780, and 1440×900 cover pane minimums, one-line nav truncation, two-line row-title clamp, wrapped recovery copy, internal scrolling, and no window-level horizontal overflow |
-| Long text | Quick Entry, editor, rows, conflicts, recovery, controls | 🧪 backstop | Held-out accessibility/visual tests use 200-character titles, 10k-character notes, long project/server labels, long localized-style actions, and hostile plain text; editable/full views retain content while compact rows truncate with an accessible full value |
-| Relaunch/partial lifecycle | Main window, Quick Entry, editor | ✅ covered | Window restoration reconstructs only durable bounds/context/drafts; transient dialogs/progress/raw focus never restore; stable task identity restores focus and semantic scroll anchors |
-| Offline/actionable sync | Rows, toolbar, Sync & Recovery | ✅ covered | Healthy state is quiet; delayed and actionable states use one authoritative projection, explicit text, bounded counts, and exact recovery actions without claiming completeness |
+| Category | Element(s) | Status | Resolution |
+|----------|------------|--------|------------|
+| Empty | E1–E8 | resolved · explicit | Authoritative zero-result lists use the exact empty-state copy; unfilled forms retain labels and prevent invalid commit; healthy recovery uses `No Changes Need Your Attention`; empty action groups are omitted rather than shown inert. |
+| Loading | E1–E8 | resolved · explicit | Preserve the stable surface, drafts, and accepted local content; use named `Opening…`, `Preparing…`, or delayed `Updating…` states; never substitute an empty state or perpetual spinner. |
+| Error | E1–E8 | resolved · explicit | Retain entered and durable content, show the exact contextual problem, and provide a specific safe recovery action; validation stays adjacent and dialogs retain a safe action. |
+| Populated | E1, E2, E5, E6, E8 | resolved · explicit | Use stable list/form geometry, independent scrolling, bounded recovery groups, complete keyboard navigation, and text-backed state labels. |
+| Partial | E1–E8 | resolved · explicit | Preserve all valid local and nonconflicting content; absent optional fields remain absent; conditional actions are disabled or omitted without hiding retained state. |
+| Overflow | E1–E8 | resolved · backstop | `{ statement: "The specified visual matrix verifies wrapped recovery and dialog copy, compact task-title clamping with an accessible full value, internal pane/drawer/dialog scrolling, unclipped focus rings, and no window-level horizontal overflow.", verification: backstop }` |
+| Zero / one / many | E1, E2, E5, E6, E8 | resolved · explicit | Zero uses authoritative empty copy or omits an empty action group; one keeps normal geometry and singular wording; many uses stable scrolling and bounded counts without unbounded badges. |
+| Long text | E1–E8 | resolved · backstop | `{ statement: "Held-out long-text cases verify that editable and full views preserve content while compact views wrap or truncate without shrinking type or losing accessible meaning.", verification: backstop }` |
+
+Companion open-axis truths retained from the authored contract:
+
+- Relaunch and partial lifecycle: window restoration reconstructs only durable bounds, context, and drafts; transient dialogs, progress, and raw focus never restore; stable task identity restores focus and semantic scroll anchors.
+- Offline and actionable synchronization: healthy state is quiet; delayed and actionable states use one authoritative projection, explicit text, bounded counts, and exact recovery actions without claiming completeness.
 
 ---
 
@@ -337,12 +341,12 @@ Do not use `add --all`. Any later third-party registry or block is outside this 
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
-- [ ] Dimension 7 Inventory Provenance: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: FLAG — the primary window's focal point is not named explicitly; non-blocking recommendation
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
+- [x] Dimension 7 Inventory Provenance: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-09-02T04:11:11Z — six PASS, one non-blocking FLAG
