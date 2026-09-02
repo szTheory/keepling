@@ -19,7 +19,7 @@ export default defineConfig({
         test: {
           ...projectDefaults,
           environment: 'node',
-          include: ['test/application/**/*.{test,spec}.ts'],
+          include: ['test/application/**/*.{test,spec}.{ts,tsx}'],
           name: 'application',
         },
       }),
