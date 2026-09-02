@@ -18,14 +18,15 @@ failure_code=40
 completed=false
 load_rc=not-run inspect_rc=not-run observed_id_shape=empty observed_id_match=false
 revision_shape=empty revision_match=false architecture_shape=empty architecture_match=false
+inventory_before=not-run inventory_after=not-run inventory_delta=not-run
 exec 3>&2
 exec >/dev/null 2>&1
 report_exit() {
   result=$?
   trap - EXIT HUP INT TERM
   if [ "$completed" != true ]; then
-    printf 'REMOTE_PREPARE_FAILED_STAGE=%s RC=%s LOAD=%s INSPECT=%s ID_SHAPE=%s ID_MATCH=%s REV_SHAPE=%s REV_MATCH=%s ARCH_SHAPE=%s ARCH_MATCH=%s\n' \
-      "$failure_stage" "$failure_code" "$load_rc" "$inspect_rc" "$observed_id_shape" "$observed_id_match" \
+    printf 'REMOTE_PREPARE_FAILED_STAGE=%s RC=%s BEFORE=%s LOAD=%s AFTER=%s DELTA=%s INSPECT=%s ID_SHAPE=%s ID_MATCH=%s REV_SHAPE=%s REV_MATCH=%s ARCH_SHAPE=%s ARCH_MATCH=%s\n' \
+      "$failure_stage" "$failure_code" "$inventory_before" "$load_rc" "$inventory_after" "$inventory_delta" "$inspect_rc" "$observed_id_shape" "$observed_id_match" \
       "$revision_shape" "$revision_match" "$architecture_shape" "$architecture_match" >&3
     exit "$failure_code"
   fi
@@ -54,28 +55,52 @@ revision_value_shape() { if [ -z "$1" ]; then printf empty; elif printf '%s' "$1
 architecture_value_shape() { if [ -z "$1" ]; then printf empty; elif [ "$1" = amd64 ]; then printf amd64; else printf other; fi; }
 docker_bin=${KEEPLING_REMOTE_PREPARE_DOCKER_BIN:-docker}
 docker_command() { "$docker_bin" "$@"; }
-verify_loaded_image() {
-  stage image-inspect 46
-  if image_id=$(docker_command image inspect "$expected_image_id" --format '{{.Id}}'); then inspect_rc=zero; else inspect_rc=nonzero; exit "$failure_code"; fi
-  observed_id_shape=$(id_shape "$image_id")
+normalize_inventory() {
+  inventory_raw=$1
+  [ "${#inventory_raw}" -le 65536 ] || return 2
+  [ -n "$inventory_raw" ] || return 0
+  inventory_lines=$(printf '%s\n' "$inventory_raw" | awk 'END { print NR }')
+  [ "$inventory_lines" -le 256 ] || return 3
+  if printf '%s\n' "$inventory_raw" | grep -Ev '^(sha256:[0-9a-f]{64})?$' >/dev/null; then return 4; fi
+  printf '%s\n' "$inventory_raw" | awk 'length' | sort -u
+}
+inventory_failure_state() { case "$1" in 2) printf oversized ;; 3) printf too-many ;; *) printf invalid ;; esac; }
+load_and_verify_image() {
+  stage image-inventory-before 56
+  if inventory_before_raw=$(docker_command image ls --no-trunc --quiet); then :; else inventory_before=command-failed; exit "$failure_code"; fi
+  if inventory_before_ids=$(normalize_inventory "$inventory_before_raw"); then inventory_before=ok; else inventory_rc=$?; inventory_before=$(inventory_failure_state "$inventory_rc"); exit "$failure_code"; fi
+  stage image-load 45
+  if docker_command load -i /root/image.tar.gz; then load_rc=ok; else load_rc=nonzero; exit "$failure_code"; fi
+  stage image-inventory-after 57
+  if inventory_after_raw=$(docker_command image ls --no-trunc --quiet); then :; else inventory_after=command-failed; exit "$failure_code"; fi
+  if inventory_after_ids=$(normalize_inventory "$inventory_after_raw"); then inventory_after=ok; else inventory_rc=$?; inventory_after=$(inventory_failure_state "$inventory_rc"); exit "$failure_code"; fi
+  stage image-delta 58
+  observed_loaded_ids=$(printf '%s\n--\n%s\n' "$inventory_before_ids" "$inventory_after_ids" | awk '$0 == "--" { after=1; next } !after && length { before[$0]=1; next } after && length && !before[$0] { print }')
+  observed_loaded_count=$(if [ -n "$observed_loaded_ids" ]; then printf '%s\n' "$observed_loaded_ids" | awk 'END { print NR }'; else printf 0; fi)
+  case "$observed_loaded_count" in 0) inventory_delta=zero; exit "$failure_code" ;; 1) inventory_delta=one ;; *) inventory_delta=multiple; exit "$failure_code" ;; esac
+  observed_loaded_id=$observed_loaded_ids
+  observed_id_shape=$(id_shape "$observed_loaded_id")
   stage image-id-compare 47
-  [ "$image_id" = "$expected_image_id" ]
+  [ "$observed_loaded_id" = "$expected_image_id" ]
   observed_id_match=true
+  stage image-inspect 46
+  if image_id=$(docker_command image inspect "$observed_loaded_id" --format '{{.Id}}'); then inspect_rc=zero; else inspect_rc=nonzero; exit "$failure_code"; fi
+  observed_id_shape=$(id_shape "$image_id")
+  [ "$image_id" = "$observed_loaded_id" ] && [ "$image_id" = "$expected_image_id" ] || { observed_id_match=false; exit "$failure_code"; }
   stage image-revision 48
-  image_revision=$(docker_command image inspect "$expected_image_id" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')
+  image_revision=$(docker_command image inspect "$observed_loaded_id" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')
   revision_shape=$(revision_value_shape "$image_revision")
   [ "$image_revision" = "$expected_revision" ]
   revision_match=true
   stage image-architecture 49
-  image_architecture=$(docker_command image inspect "$expected_image_id" --format '{{.Architecture}}')
+  image_architecture=$(docker_command image inspect "$observed_loaded_id" --format '{{.Architecture}}')
   architecture_shape=$(architecture_value_shape "$image_architecture")
   [ "$image_architecture" = "$expected_architecture" ]
   architecture_match=true
 }
 
 if [ "${KEEPLING_REMOTE_PREPARE_DOCKER_BOUNDARY_TEST:-}" = yes ]; then
-  load_rc=ok
-  verify_loaded_image
+  load_and_verify_image
   completed=true
   printf '%s\n' 'REMOTE_PREPARE_STAGE=ready' >&3
   exit 0
@@ -136,9 +161,7 @@ chown -R 1000:1000 /srv/keepling/data/caddy
 
 stage archive-integrity 44
 [ "$(sha256sum /root/image.tar.gz | awk '{print $1}')" = "$expected_archive_sha" ]
-stage image-load 45
-if docker_command load -i /root/image.tar.gz; then load_rc=ok; else load_rc=nonzero; exit "$failure_code"; fi
-verify_loaded_image
+load_and_verify_image
 
 stage runtime-config 50
 install -m 0644 /root/compose.yml /srv/keepling/infra/compose/compose.yml
