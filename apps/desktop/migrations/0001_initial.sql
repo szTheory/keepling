@@ -25,7 +25,9 @@ CREATE TABLE immutable_commands (
   task_id TEXT NOT NULL,
   command_bytes TEXT NOT NULL,
   fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64),
-  accepted_at TEXT NOT NULL
+  accepted_at TEXT NOT NULL,
+  resource_keys_json TEXT NOT NULL CHECK (json_valid(resource_keys_json)),
+  effect_snapshot_json TEXT NOT NULL CHECK (json_valid(effect_snapshot_json))
 ) STRICT;
 
 CREATE TABLE mutation_journal (
