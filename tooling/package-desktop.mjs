@@ -182,5 +182,7 @@ const manifest = {
 const manifestPath = join(artifactRoot, 'package-manifest.json')
 mkdirSync(artifactRoot, { recursive: true })
 writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' })
+const locatorName = `keepling-desktop-latest-manifest-${sha256(repositoryRoot).slice(0, 16)}.txt`
+writeFileSync(join(tmpdir(), locatorName), `${manifestPath}\n`, { encoding: 'utf8' })
 
 console.log(`Desktop package manifest: ${manifestPath}`)

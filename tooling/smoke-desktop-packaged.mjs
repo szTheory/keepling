@@ -1,27 +1,29 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto'
-import { createRequire } from 'node:module'
 import { existsSync, lstatSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
+import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
+import { spawnSync } from 'node:child_process'
 
 const repositoryRoot = resolve(import.meta.dirname, '..')
 const desktopRoot = join(repositoryRoot, 'apps', 'desktop')
-const requireFromDesktop = createRequire(join(desktopRoot, 'package.json'))
+const packagedTestPath = join(desktopRoot, 'test', 'packaged', 'offline-capture.spec.ts')
 
 const fail = (message) => {
   console.error(`Packaged desktop smoke failed: ${message}`)
   process.exit(1)
 }
 
+const requestedScenario = process.argv.includes('offline-capture') ? 'offline-capture' : null
 const manifestFlag = process.argv.indexOf('--manifest')
-if (manifestFlag === -1 || manifestFlag !== process.argv.length - 2) {
-  fail('usage: node tooling/smoke-desktop-packaged.mjs --manifest /absolute/path/package-manifest.json')
-}
-
-const manifestPath = resolve(process.argv[manifestFlag + 1])
+const locatorName = `keepling-desktop-latest-manifest-${createHash('sha256').update(repositoryRoot).digest('hex').slice(0, 16)}.txt`
+const selectedManifest = manifestFlag === -1
+  ? readFileSync(join(tmpdir(), locatorName), 'utf8').trim()
+  : process.argv[manifestFlag + 1]
+if (!selectedManifest) fail('a package manifest must be selected explicitly or by the package-once locator')
+const manifestPath = resolve(selectedManifest)
 let manifest
 try {
   manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
@@ -67,36 +69,43 @@ const hashDirectory = (root) => {
 
 if (hashDirectory(copiedApplicationPath) !== manifest.applicationDigestSha256) fail('copied application digest does not match the package manifest')
 if (sha256(readFileSync(executablePath)) !== manifest.executableDigestSha256) fail('executable digest does not match the package manifest')
+const packagedTestSource = readFileSync(packagedTestPath, 'utf8')
+if (!packagedTestSource.includes('app.isPackaged')) fail('packaged test omits the runtime assertion')
+if (!packagedTestSource.includes('--user-data-dir')) fail('packaged test omits the disposable profile argument')
 
 const profilePath = mkdtempSync(join(tmpdir(), 'keepling-packaged-smoke-profile-'))
 const forbiddenUserDataDir = resolve(homedir(), 'Library', 'Application Support', 'Keepling')
 if (resolve(profilePath) === forbiddenUserDataDir) fail('packaged smoke refused the normal Keepling profile')
 
-let electronApplication
 try {
-  const { _electron: electron } = requireFromDesktop('playwright')
-  electronApplication = await electron.launch({
-    args: [`--user-data-dir=${profilePath}`],
-    cwd: dirname(executablePath),
+  const argumentsForPlaywright = [
+    'exec',
+    'playwright',
+    'test',
+    '--config',
+    'playwright.config.ts',
+    '--project',
+    'packaged',
+  ]
+  if (requestedScenario) argumentsForPlaywright.push(`${requestedScenario}.spec.ts`)
+  const result = spawnSync('pnpm', argumentsForPlaywright, {
+    cwd: desktopRoot,
+    encoding: 'utf8',
     env: {
       ...process.env,
-      KEEPLING_EXPECT_PACKAGED: '1',
+      KEEPLING_PACKAGE_MANIFEST: manifestPath,
       KEEPLING_FORBIDDEN_USER_DATA_DIR: forbiddenUserDataDir,
       KEEPLING_TEST_USER_DATA_DIR: profilePath,
     },
-    executablePath,
-    timeout: 30_000,
+    stdio: ['ignore', 'pipe', 'pipe'],
   })
-  const runtime = await electronApplication.evaluate(({ app }) => ({
-    isPackaged: app.isPackaged,
-    versions: process.versions,
-  }))
-  if (runtime.isPackaged !== true) fail('app.isPackaged was not true for the manifest-selected executable')
-  for (const [name, expected] of Object.entries(manifest.embeddedVersions)) {
-    if (runtime.versions[name] !== expected) fail(`embedded ${name} version differs from the package manifest`)
+  process.stdout.write(result.stdout)
+  process.stderr.write(result.stderr)
+  if (result.error || result.status !== 0) fail(`packaged Playwright scenario exited ${result.status ?? 'without status'}`)
+  if (!result.stdout.includes('PACKAGED_OFFLINE_CAPTURE passed=1')) {
+    fail('packaged scenario marker was absent')
   }
-  console.log(`Packaged desktop smoke passed: ${manifest.applicationDigestSha256}`)
+  console.log(`Packaged desktop smoke passed: digest=${manifest.applicationDigestSha256} executable=${executablePath}`)
 } finally {
-  await electronApplication?.close().catch(() => undefined)
   rmSync(profilePath, { force: true, recursive: true })
 }
