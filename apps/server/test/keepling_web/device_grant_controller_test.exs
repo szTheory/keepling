@@ -65,9 +65,18 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
     assert %{
              "access_token" => access_a,
              "expires_in" => 900,
+             "namespace" => %{
+               "account_subject" => account_subject,
+               "generation" => 1,
+               "issuer" => "https://issuer.keepling.invalid",
+               "origin" => "https://server.keepling.invalid",
+               "server_instance" => "server-instance-transport"
+             },
              "refresh_token" => refresh_a,
              "token_type" => "Bearer"
            } = exchanged
+
+    assert Ecto.UUID.cast!(account_subject) == Ecto.UUID.cast!(account_id)
 
     assert byte_size(Base.url_decode64!(access_a, padding: false)) == 32
     assert byte_size(Base.url_decode64!(refresh_a, padding: false)) == 32
@@ -85,6 +94,19 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
 
     refute rotated["access_token"] == access_a
     refute rotated["refresh_token"] == refresh_a
+    assert rotated["namespace"] == exchanged["namespace"]
+
+    asserted_namespace =
+      exchange_params(authorization.code)
+      |> Map.put("namespace", %{
+        "account_subject" => Ecto.UUID.generate(),
+        "generation" => 999,
+        "issuer" => "https://client.invalid",
+        "origin" => "https://client.invalid",
+        "server_instance" => "client-server"
+      })
+
+    assert build_conn() |> post("/oauth/token", asserted_namespace) |> response(401)
 
     fenced =
       build_conn()
