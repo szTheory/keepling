@@ -59,9 +59,12 @@ expect_fail malformed "$fixture_root/malformed.tar.gz"
 existing=$fixture_root/existing.json
 : >"$existing"
 if ./tooling/verify-host-replacement.sh --resolve-image-archive "$fixture_root/archive-a.tar.gz" "$existing" >/dev/null 2>&1; then die "existing target was accepted"; fi
-unsafe=$repository_root/.unsafe-image-contract.json
-rm -f -- "$unsafe"
+unsafe=$repository_root/.unsafe-image-contract-$(basename "$fixture_root").json
+[ ! -e "$unsafe" ] || die "unsafe fixture target already exists"
 if ./tooling/verify-host-replacement.sh --resolve-image-archive "$fixture_root/archive-a.tar.gz" "$unsafe" >/dev/null 2>&1; then die "repository output was accepted"; fi
-[ ! -e "$unsafe" ] || die "unsafe output was written"
+if [ -e "$unsafe" ]; then
+  rm -f -- "$unsafe"
+  die "unsafe output was written"
+fi
 
 echo "Image archive contract regression passed: immutable archive A wins and drifted metadata cannot become expected identity"

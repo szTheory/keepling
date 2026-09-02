@@ -32,10 +32,17 @@ trap report_exit EXIT HUP INT TERM
 case "$expected_archive_sha:$expected_image_id:$expected_revision:$expected_architecture" in
   *[!a-zA-Z0-9:._-]*) exit "$failure_code" ;;
 esac
+case "$volume_id:$runtime_host:$tested_manifest_digest" in
+  *[!a-zA-Z0-9:._-]*) exit "$failure_code" ;;
+esac
+printf '%s' "$volume_id" | grep -Eq '^[1-9][0-9]*$' || exit "$failure_code"
 printf '%s' "$expected_archive_sha" | grep -Eq '^[0-9a-f]{64}$' || exit "$failure_code"
 printf '%s' "$expected_image_id" | grep -Eq '^sha256:[0-9a-f]{64}$' || exit "$failure_code"
 printf '%s' "$expected_revision" | grep -Eq '^[0-9a-f]{7,64}$' || exit "$failure_code"
 [ "$expected_architecture" = amd64 ] || exit "$failure_code"
+printf '%s' "$runtime_host" | grep -Eq '^[a-z0-9]([a-z0-9.-]{0,251}[a-z0-9])?$' || exit "$failure_code"
+if printf '%s' "$runtime_host" | grep -F '..' >/dev/null; then exit "$failure_code"; fi
+printf '%s' "$tested_manifest_digest" | grep -Eq '^sha256:[0-9a-f]{64}$' || exit "$failure_code"
 
 stage() { failure_stage=$1; failure_code=$2; }
 

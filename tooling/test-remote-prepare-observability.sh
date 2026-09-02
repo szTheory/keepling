@@ -66,4 +66,19 @@ result=0
 [ "$(wc -l <"$contract_output" | tr -d ' ')" = 1 ] || die "malformed contract marker count is not exactly one"
 grep -Fx 'REMOTE_PREPARE_FAILED_STAGE=contract RC=40' "$contract_output" >/dev/null || die "malformed contract marker is incorrect"
 
+for invalid_contract in volume host digest; do
+  case "$invalid_contract" in
+    volume) args='0 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb cccccccccccccccccccccccccccccccccccccccc amd64 host.invalid sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd' ;;
+    host) args='101 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb cccccccccccccccccccccccccccccccccccccccc amd64 invalid..host sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd' ;;
+    digest) args='101 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb cccccccccccccccccccccccccccccccccccccccc amd64 host.invalid mutable-tag' ;;
+  esac
+  contract_output=$fixture_root/$invalid_contract-contract-output
+  result=0
+  # shellcheck disable=SC2086 # Deliberately expands the fixed, whitespace-separated fixture arguments.
+  KEEPLING_REMOTE_PREPARE_TEST_MODE=yes ./tooling/remote-prepare-host.sh $args >"$contract_output" 2>&1 || result=$?
+  [ "$result" -eq 40 ] || die "$invalid_contract contract did not fail closed"
+  [ "$(wc -l <"$contract_output" | tr -d ' ')" = 1 ] || die "$invalid_contract contract marker count is not exactly one"
+  grep -Fx 'REMOTE_PREPARE_FAILED_STAGE=contract RC=40' "$contract_output" >/dev/null || die "$invalid_contract contract marker is incorrect"
+done
+
 echo "Remote prepare observability regression passed: every failure is classified once, teardown-first, and DNS-unreachable"
