@@ -75,11 +75,14 @@ existing=$fixture_root/existing.json
 if ./tooling/verify-host-replacement.sh --resolve-plan-architecture "$valid_plan" "$existing" >/dev/null 2>&1; then
   die "existing output target was accepted"
 fi
-unsafe=$repository_root/.unsafe-resolved-plan.json
-rm -f -- "$unsafe"
+unsafe=$repository_root/.unsafe-resolved-plan-$(basename "$fixture_root").json
+[ ! -e "$unsafe" ] || die "unsafe fixture target already exists"
 if ./tooling/verify-host-replacement.sh --resolve-plan-architecture "$valid_plan" "$unsafe" >/dev/null 2>&1; then
   die "repository output target was accepted"
 fi
-[ ! -e "$unsafe" ] || die "unsafe output was written"
+if [ -e "$unsafe" ]; then
+  rm -f -- "$unsafe"
+  die "unsafe output was written"
+fi
 
 echo "Resolved plan contract regression passed: evaluated defaults reach the effect gate and ambiguity fails closed"
