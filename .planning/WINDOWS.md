@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 44
+open_count: 49
 waived_count: 0
 fixed_count: 4
-total_count: 48
-last_updated: 2026-09-02T18:23:00.938Z
+total_count: 53
+last_updated: 2026-09-02T18:55:07.591Z
 ---
 
 # Broken Windows Ledger
@@ -63,6 +63,11 @@ last_updated: 2026-09-02T18:23:00.938Z
 | 46 | KPL-03 | deviation | tooling/package-desktop.mjs |  | External app copying required verbatim framework symlinks | open |  | 2026-09-02T18:23:00.770Z |  |
 | 47 | KPL-03 | deviation | apps/desktop/main/index.ts |  | Packaged process resources required direct Resources paths | open |  | 2026-09-02T18:23:00.852Z |  |
 | 48 | KPL-03 | deviation | apps/desktop/main/index.ts |  | Same-profile ownership required an explicit Electron single-instance lock | open |  | 2026-09-02T18:23:00.938Z |  |
+| 49 | KPL-03 | deviation | packages/contracts/openapi/keepling.yaml |  | Approved additive native-token namespace response expansion resolved in plan 03-02 | open |  | 2026-09-02T18:54:39.314Z |  |
+| 50 | KPL-03 | deviation | apps/desktop/migrations/0001_initial.sql |  | Persisted storage-neutral synchronization metadata required for relaunch-safe lane replay | open |  | 2026-09-02T18:55:07.249Z |  |
+| 51 | KPL-03 | deviation | apps/desktop/tsconfig.json |  | Allowed type-only repository-owned generated contract imports in desktop typechecking | open |  | 2026-09-02T18:55:07.362Z |  |
+| 52 | KPL-03 | deviation | apps/desktop/main/adapters/credentials.ts |  | Loaded Electron safeStorage lazily so injected adapter proof runs outside Electron | open |  | 2026-09-02T18:55:07.476Z |  |
+| 53 | KPL-03 | deviation | apps/desktop/main/adapters/credentials.ts |  | Added unsigned dogfood credential continuity disclosure for Settings presentation | open |  | 2026-09-02T18:55:07.591Z |  |
 
 ````json
 [
@@ -640,6 +645,66 @@ last_updated: 2026-09-02T18:23:00.938Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-02T18:23:00.938Z",
+    "resolved_at": null
+  },
+  {
+    "id": 49,
+    "kind": "deviation",
+    "phase": "KPL-03",
+    "file": "packages/contracts/openapi/keepling.yaml",
+    "line": null,
+    "description": "Approved additive native-token namespace response expansion resolved in plan 03-02",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T18:54:39.314Z",
+    "resolved_at": null
+  },
+  {
+    "id": 50,
+    "kind": "deviation",
+    "phase": "KPL-03",
+    "file": "apps/desktop/migrations/0001_initial.sql",
+    "line": null,
+    "description": "Persisted storage-neutral synchronization metadata required for relaunch-safe lane replay",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T18:55:07.249Z",
+    "resolved_at": null
+  },
+  {
+    "id": 51,
+    "kind": "deviation",
+    "phase": "KPL-03",
+    "file": "apps/desktop/tsconfig.json",
+    "line": null,
+    "description": "Allowed type-only repository-owned generated contract imports in desktop typechecking",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T18:55:07.362Z",
+    "resolved_at": null
+  },
+  {
+    "id": 52,
+    "kind": "deviation",
+    "phase": "KPL-03",
+    "file": "apps/desktop/main/adapters/credentials.ts",
+    "line": null,
+    "description": "Loaded Electron safeStorage lazily so injected adapter proof runs outside Electron",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T18:55:07.476Z",
+    "resolved_at": null
+  },
+  {
+    "id": 53,
+    "kind": "deviation",
+    "phase": "KPL-03",
+    "file": "apps/desktop/main/adapters/credentials.ts",
+    "line": null,
+    "description": "Added unsigned dogfood credential continuity disclosure for Settings presentation",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-02T18:55:07.591Z",
     "resolved_at": null
   }
 ]

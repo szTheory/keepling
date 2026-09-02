@@ -167,7 +167,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 3/12 plans executed
+**Plans:** 4/12 plans executed
 
 Plans:
 **Wave 1**
@@ -184,7 +184,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 03-02-PLAN.md — Deliver real synchronization, namespace fencing, credentials, and one recovery projection.
+- [x] 03-02-PLAN.md — Deliver real synchronization, namespace fencing, credentials, and one recovery projection.
 
 **Wave 5** *(blocked on Wave 4 completion)*
 

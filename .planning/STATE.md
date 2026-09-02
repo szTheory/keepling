@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: Completed KPL-03-01-PLAN.md
-last_updated: "2026-09-02T18:24:28.406Z"
+stopped_at: Completed KPL-03-02-PLAN.md
+last_updated: "2026-09-02T18:54:51.627Z"
 last_activity: 2026-09-02
 last_activity_desc: Phase KPL-03 execution started
-state_head: 16c4ab80a3d1e809684da039ad83dc637d10ee17
+state_head: bcbaf539c59719ad42185f28fde155c34fcf6057
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 50
-  completed_plans: 40
+  completed_plans: 41
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-03 (Mac Daily Loop) — EXECUTING
-Plan: 4 of 12
+Plan: 5 of 12
 Total Plans in Phase: 12
 Status: Executing Phase KPL-03
 Last activity: 2026-09-02 — Phase KPL-03 execution started
@@ -170,6 +170,10 @@ Progress: [█████████░] 97%
 - [Phase 03]: electron@44.1.1 and zod@4.5.4 were installed only after explicit provenance approval; better-sqlite3 remains absent because packaged node:sqlite passed.
 - [Phase 03]: The selected user-data profile owns Electron's single-instance lock before bootstrap, so isolated profiles remain independent while duplicate ownership of one profile is rejected.
 - [Phase 03]: All runtime dependencies are bundled into the four process outputs, so Forge excludes node_modules and packages only those outputs plus migrations.
+- [Phase 03]: Desktop sync performs bounded pull-before-push passes and preserves exact serialized command bytes for retry authority.
+- [Phase 03]: Desktop storage activates only the complete five-field namespace returned by authenticated server token responses; client-derived authority is forbidden.
+- [Phase 03]: Sign-out fences local intent and clears credentials before best-effort remote revocation.
+- [Phase 03]: Synchronization and recovery UI consume one monotonic main-owned closed presentation projection.
 
 ### Retained Research
 
@@ -203,8 +207,8 @@ Resolve deferred Plan KPL-02-09 through an authorized, single-attempt corrected 
 
 ## Session
 
-**Last session:** 2026-09-02T18:24:28.333Z
-**Stopped at:** Completed KPL-03-01-PLAN.md
+**Last session:** 2026-09-02T18:54:51.523Z
+**Stopped at:** Completed KPL-03-02-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -251,3 +255,4 @@ Resolve deferred Plan KPL-02-09 through an authorized, single-attempt corrected 
 | Phase KPL-03 P07 | 4min | 2 tasks | 9 files |
 | Phase KPL-03 P12 | 7min | 2 tasks | 5 files |
 | Phase KPL-03 P01 | 12h 11m | 3 tasks | 16 files |
+| Phase KPL-03 P02 | 26min | 3 tasks | 18 files |
