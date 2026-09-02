@@ -1,6 +1,8 @@
 import { useRef, type MouseEvent, type ReactNode } from 'react'
 
 import { Drawer } from '@/components/ui/drawer'
+import type { ClientFacade } from '../../../../packages/web-ui/src/ClientFacade'
+import Workspace from '../../../../packages/web-ui/src/workspace/Workspace'
 
 const navigationItems = [
   ['/', 'Inbox'],
@@ -15,11 +17,20 @@ const navigationItems = [
 
 type WorkspaceShellProps = {
   children: ReactNode
+  /**
+   * The browser-owned ClientFacade adapter (D-26/D-27). Threaded through so
+   * the shared `packages/web-ui` Workspace presentation can eventually own
+   * the Inbox capture/list/detail slice; only rendered when
+   * `useSharedWorkspace` is explicitly set so existing routed content is
+   * unaffected.
+   */
+  clientFacade?: ClientFacade
   detailContent?: ReactNode
   detailSelected?: boolean
   listContent?: ReactNode
   onNavigate?: (event: MouseEvent<HTMLAnchorElement>, href: string) => void
   pathname: string
+  useSharedWorkspace?: boolean
 }
 
 export type WorkspaceLayoutContent = {
@@ -67,13 +78,17 @@ function NavigationLinks({
 
 function WorkspaceShell({
   children,
+  clientFacade,
   detailContent,
   detailSelected = false,
   listContent,
   onNavigate,
   pathname,
+  useSharedWorkspace = false,
 }: WorkspaceShellProps) {
   const firstDrawerLinkRef = useRef<HTMLAnchorElement>(null)
+  const sharedWorkspace =
+    useSharedWorkspace && clientFacade !== undefined ? <Workspace facade={clientFacade} /> : null
 
   return (
     <>
@@ -139,7 +154,7 @@ function WorkspaceShell({
                 {detailContent}
               </div>
             </main>
-          ) : children}
+          ) : (sharedWorkspace ?? children)}
         </div>
       </div>
     </>
