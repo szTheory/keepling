@@ -45,6 +45,34 @@ verify_selection() {
   ' "$selection" >/dev/null || die "catalog selection contract is invalid"
 }
 
+verify_network_graph_contract() {
+  graph=infra/tofu/hetzner/main.tf
+  server_block=$(awk '
+    /^resource "hcloud_server" "replacement" \{/ { capture = 1 }
+    capture {
+      print
+      opened = gsub(/\{/, "{")
+      closed = gsub(/\}/, "}")
+      depth += opened - closed
+      if (depth == 0) exit
+    }
+  ' "$graph")
+  [ -n "$server_block" ] || die "replacement server graph is missing"
+  [ "$(grep -Ec '^[[:space:]]*resource "hcloud_server_network"' "$graph")" -eq 0 ] ||
+    die "private network attachment must not be a post-boot resource"
+  [ "$(printf '%s\n' "$server_block" | grep -Fc 'depends_on = [hcloud_network_subnet.replacement]')" -eq 1 ] ||
+    die "server creation must explicitly wait for the declared private subnet"
+  [ "$(printf '%s\n' "$server_block" | grep -Ec '^[[:space:]]+network \{')" -eq 1 ] ||
+    die "server creation must declare exactly one private network attachment"
+  printf '%s\n' "$server_block" | grep -F 'subnet_id = hcloud_network_subnet.replacement.id' >/dev/null ||
+    die "server creation must bind the exact declared private subnet"
+  printf '%s\n' "$server_block" | grep -F 'alias_ips = []' >/dev/null ||
+    die "server private-network aliases must be explicit and empty"
+  if grep -Eq 'port[[:space:]]*=[[:space:]]*"5432"' "$graph"; then
+    die "PostgreSQL must not be exposed by the provider firewall graph"
+  fi
+}
+
 expected_state_addresses() {
   printf '%s\n' \
     hcloud_firewall.replacement \
@@ -53,7 +81,6 @@ expected_state_addresses() {
     hcloud_network_subnet.replacement \
     hcloud_primary_ip.replacement \
     hcloud_server.replacement \
-    hcloud_server_network.replacement \
     hcloud_ssh_key.replacement \
     hcloud_volume.replacement \
     hcloud_volume_attachment.replacement
@@ -780,6 +807,7 @@ verify_pinned_tofu() {
 dry_run() {
   verify_cloud_init_preflight
   verify_pinned_tofu
+  verify_network_graph_contract
   tofu_data=$(mktemp -d "${TMPDIR:-/tmp}/keepling-tofu-data.XXXXXX")
   trap 'rm -rf -- "$tofu_data"' EXIT HUP INT TERM
   "$TOFU_BIN" -chdir=infra/tofu/hetzner fmt -check -recursive
@@ -804,6 +832,7 @@ dry_run() {
 credentialed_preflight() {
   require_credentials
   verify_selection
+  verify_network_graph_contract
   workspace=$(mktemp -d "${TMPDIR:-/tmp}/keepling-replacement-preflight.XXXXXX")
   trap 'rm -rf -- "$workspace"' EXIT HUP INT TERM
   chmod 700 "$workspace"

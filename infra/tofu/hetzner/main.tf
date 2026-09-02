@@ -114,6 +114,13 @@ resource "hcloud_server" "replacement" {
     ipv6_enabled = false
   }
 
+  network {
+    subnet_id = hcloud_network_subnet.replacement.id
+    alias_ips = []
+  }
+
+  depends_on = [hcloud_network_subnet.replacement]
+
   lifecycle {
     precondition {
       condition     = var.target_architecture == "x86_64"
@@ -125,13 +132,6 @@ resource "hcloud_server" "replacement" {
 resource "hcloud_firewall_attachment" "replacement" {
   firewall_id = hcloud_firewall.replacement.id
   server_ids  = [hcloud_server.replacement.id]
-}
-
-resource "hcloud_server_network" "replacement" {
-  server_id  = hcloud_server.replacement.id
-  network_id = hcloud_network.replacement.id
-
-  depends_on = [hcloud_network_subnet.replacement]
 }
 
 resource "hcloud_volume" "replacement" {

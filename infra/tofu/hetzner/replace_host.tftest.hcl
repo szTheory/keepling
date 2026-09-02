@@ -84,8 +84,12 @@ run "replacement_graph_is_owned_and_bounded" {
   }
 
   assert {
-    condition     = hcloud_server_network.replacement.network_id == tonumber(hcloud_network.replacement.id)
-    error_message = "the server must attach to the declared private network"
+    condition = (
+      length(hcloud_server.replacement.network) == 1 &&
+      one(hcloud_server.replacement.network).subnet_id == hcloud_network_subnet.replacement.id &&
+      length(one(hcloud_server.replacement.network).alias_ips) == 0
+    )
+    error_message = "the server must attach exactly once to the declared private subnet at creation"
   }
 
   assert {
