@@ -167,47 +167,51 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 11 plans
+**Plans:** 12 plans
 
 Plans:
 **Wave 1**
 
-- [ ] 03-07-PLAN.md — Create the complete desktop build, test, isolation, package-once, and external-smoke harness.
+- [ ] 03-07-PLAN.md — Create the desktop workspace, process-build, and renderer-entry foundation.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 03-01-PLAN.md — Prove exact packaged offline capture, hard-kill relaunch, and one-time acknowledgement.
+- [ ] 03-12-PLAN.md — Create isolated test discovery, package-once, external-smoke, and anti-vacuous harness plumbing.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 03-02-PLAN.md — Deliver real synchronization, namespace fencing, credentials, and one recovery projection.
+- [ ] 03-01-PLAN.md — Prove exact packaged offline capture, hard-kill relaunch, and one-time acknowledgement.
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 03-09-PLAN.md — Extract the presentation-only ClientFacade and one shared workspace slice.
+- [ ] 03-02-PLAN.md — Deliver real synchronization, namespace fencing, credentials, and one recovery projection.
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 03-03-PLAN.md — Deliver the complete facade-driven Mac workspace and UI state matrix.
+- [ ] 03-09-PLAN.md — Extract the presentation-only ClientFacade and one shared workspace slice.
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
-- [ ] 03-04-PLAN.md — Deliver native menus, Quick Entry, resident lifecycle, and restoration.
-- [ ] 03-10-PLAN.md — Seal packaged-content and hostile renderer/IPC boundaries.
+- [ ] 03-03-PLAN.md — Deliver the complete facade-driven Mac workspace and UI state matrix.
 
 **Wave 7** *(blocked on Wave 6 completion)*
 
-- [ ] 03-11-PLAN.md — Prove resident single-instance lifecycle, restoration, bounded quit, and relaunch.
+- [ ] 03-04-PLAN.md — Deliver native menus, keyboard routing, and durable configurable Quick Entry.
+- [ ] 03-10-PLAN.md — Seal packaged-content and hostile renderer/IPC boundaries.
 
 **Wave 8** *(blocked on Wave 7 completion)*
 
-- [ ] 03-05-PLAN.md — Seal hostile IPC, store-failure recovery, and safe local-data removal.
+- [ ] 03-11-PLAN.md — Prove resident single-instance lifecycle, restoration, bounded quit, and relaunch.
 
 **Wave 9** *(blocked on Wave 8 completion)*
 
-- [ ] 03-08-PLAN.md — Record every D-43 packaged runtime metric and named regression budget.
+- [ ] 03-05-PLAN.md — Seal hostile IPC, store-failure recovery, and safe local-data removal.
 
 **Wave 10** *(blocked on Wave 9 completion)*
+
+- [ ] 03-08-PLAN.md — Record every D-43 packaged runtime metric and named regression budget.
+
+**Wave 11** *(blocked on Wave 10 completion)*
 
 - [ ] 03-06-PLAN.md — Bind exact packaged bytes to CI, accessibility, and bounded dogfood evidence.
 
