@@ -18,7 +18,7 @@
 ### Identity and server authority
 
 - [x] **SRV-01**: User can authenticate a personal account and authorize multiple owned devices without exposing server credentials to clients or agents.
-- [ ] **SRV-02**: User receives the same domain invariants through web, desktop, iPhone, API, and MCP entry points.
+- [x] **SRV-02**: User receives the same domain invariants through web, desktop, iPhone, API, and MCP entry points.
 - [x] **SRV-03**: User-visible mutations are idempotent by mutation identity and return stable result or error contracts.
 - [x] **SRV-04**: User can synchronize through an ordered, account-scoped change feed with opaque durable cursors and tombstones.
 - [x] **SRV-05**: User sees a structured conflict instead of a silent overwrite when concurrent edits cannot be safely merged.
@@ -31,11 +31,11 @@
 
 ### Mac desktop
 
-- [ ] **MAC-01**: User can capture, view Inbox and Today, edit, complete, reopen, trash, restore, and undo from the Electron Mac client.
-- [ ] **MAC-02**: User can perform the supported daily loop with complete keyboard navigation and quick entry.
-- [ ] **MAC-03**: User can mutate tasks while offline, quit or lose the process, relaunch, and later reconcile without losing or duplicating accepted intent.
-- [ ] **MAC-04**: User can inspect offline, syncing, conflict, authentication-expired, and unrecoverable states without reading logs.
-- [ ] **MAC-05**: User receives proof that the packaged installed application—not only a development renderer—preserves and synchronizes the local store.
+- [x] **MAC-01**: User can capture, view Inbox and Today, edit, complete, reopen, trash, restore, and undo from the Electron Mac client.
+- [x] **MAC-02**: User can perform the supported daily loop with complete keyboard navigation and quick entry.
+- [x] **MAC-03**: User can mutate tasks while offline, quit or lose the process, relaunch, and later reconcile without losing or duplicating accepted intent.
+- [x] **MAC-04**: User can inspect offline, syncing, conflict, authentication-expired, and unrecoverable states without reading logs.
+- [x] **MAC-05**: User receives proof that the packaged installed application—not only a development renderer—preserves and synchronizes the local store.
 
 ### Native iPhone
 
@@ -70,8 +70,8 @@
 
 - [x] **QUAL-01**: Contributor receives deterministic tests for domain rules, long mutation sequences, persistence/migrations, API/contracts, adapters, browser behavior, Electron boundaries, native orchestration, and deployment recovery at the layer best able to catch each failure.
 - [x] **QUAL-02**: Contributor receives fast required CI lanes with parallelism, dependency caching, slow-test visibility, flake accountability, and cross-consumer fan-out for contract/token changes.
-- [ ] **QUAL-03**: Release promotion uses the exact revision and artifact previously tested; distribution jobs do not silently rebuild different bytes.
-- [ ] **QUAL-04**: Important screens have representative user-level coverage for meaningful populated, empty, loading, offline, denied, stale, conflict, partial, retry, and unrecoverable states.
+- [x] **QUAL-03**: Release promotion uses the exact revision and artifact previously tested; distribution jobs do not silently rebuild different bytes.
+- [x] **QUAL-04**: Important screens have representative user-level coverage for meaningful populated, empty, loading, offline, denied, stale, conflict, partial, retry, and unrecoverable states.
 - [x] **QUAL-05**: Diagnostic logs and traces are structured, bounded, correlated, and tested not to emit task titles, notes, prompts, tokens, or arbitrary high-cardinality identifiers.
 
 ## v2 Requirements

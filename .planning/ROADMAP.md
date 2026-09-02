@@ -167,12 +167,12 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 12 plans
+**Plans:** 1/12 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 03-07-PLAN.md — Create the desktop workspace, process-build, and renderer-entry foundation.
+- [x] 03-07-PLAN.md — Create the desktop workspace, process-build, and renderer-entry foundation.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -271,7 +271,7 @@ Plans:
 |-------|--------|--------------|----------|
 | 1. One Trustworthy Task | Complete    | 13 | 74% |
 | 2. Synchronization and Replaceable Server | In Progress | 12 | 91% |
-| 3. Mac Daily Loop | ○ Pending | 7 | 0% |
+| 3. Mac Daily Loop | In Progress| 7 | 0% |
 | 4. Native iPhone Daily Loop | ○ Pending | 4 | 0% |
 | 5. Safe Agent Access | ○ Pending | 5 | 0% |
 | 6. Portability and Trust Release | ○ Pending | 1 + cross-cutting verification | 0% |
