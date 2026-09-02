@@ -173,7 +173,33 @@ status: complete
 
 ## Deviations from Plan
 
-None - plan executed as written. The plan's `<files>` lists named `apps/web/src/app/AppShell.tsx` and `apps/web/src/app/WorkspaceShell.tsx`; both were modified as planned. Additional files not explicitly named in the plan (`apps/web/src/adapters/browserClientFacade.ts`, the fixture, and the four proof test files) were added because they are what the plan's own `<action>`/`<behavior>` text required ("adapt the browser composition through a browser-owned facade adapter", "the same shared slice renders through web and a deterministic desktop-facade fixture", "add import-boundary tests") — normal plan-to-implementation elaboration, not a scope change.
+One disclosed seam, recorded after orchestrator review (this section originally read
+"None - plan executed as written", which under-disclosed the decision below).
+
+**The shared slice is not yet load-bearing in the production web route.**
+`WorkspaceShell` accepts `useSharedWorkspace?: boolean` which **defaults to `false`**, so
+the extracted `packages/web-ui` `Workspace` renders only when a caller explicitly opts in.
+No production route opts in; today the only `useSharedWorkspace` caller is
+`apps/web/src/app/WorkspaceShell.test.tsx`.
+
+Why this was the right call for THIS plan: the plan's `fails_when` for Task 2 includes
+"web behavior regresses", and Plan 03-09's stated purpose is to *freeze the extraction
+boundary* before Plan 03-03 performs the full workspace expansion. Switching the live
+Inbox route inside 03-09 would have put an unproven presentation path in front of the
+already-verified production route for no gain this plan can verify.
+
+Why it must not be left as-is: until a production route sets `useSharedWorkspace`, the
+shared slice is proven only by test callers. The must-have — "one Inbox
+capture/list/detail slice behaves identically through the web adapter and the
+main-owned desktop adapter" — is currently satisfied *behaviorally* (see the
+byte-identical two-facade parity assertion in `workspace-tracer.test.tsx`) but not
+*in shipped composition*.
+
+**Carry-forward to Plan 03-03 (Wave 6):** flip the production Inbox route onto the shared
+slice and delete the `useSharedWorkspace` opt-in, so the flag cannot outlive the migration
+it exists to stage. If 03-03 closes without doing so, the extraction is dead code.
+
+Otherwise the plan executed as written. The plan's `<files>` lists named `apps/web/src/app/AppShell.tsx` and `apps/web/src/app/WorkspaceShell.tsx`; both were modified as planned. Additional files not explicitly named in the plan (`apps/web/src/adapters/browserClientFacade.ts`, the fixture, and the four proof test files) were added because they are what the plan's own `<action>`/`<behavior>` text required ("adapt the browser composition through a browser-owned facade adapter", "the same shared slice renders through web and a deterministic desktop-facade fixture", "add import-boundary tests") — normal plan-to-implementation elaboration, not a scope change.
 
 ## Issues Encountered
 
