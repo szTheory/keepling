@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { z } from 'zod'
 
+import { desktopPresentationSchema } from './contracts.ts'
+
 const captureRequestSchema = z.object({ title: z.string().trim().min(1).max(512) }).strict()
 const taskSchema = z.object({
   id: z.string().min(1),
@@ -20,6 +22,14 @@ const keepling = Object.freeze({
     await ipcRenderer.invoke('keepling:capture', captureRequestSchema.parse(request)),
   ),
   snapshot: async () => snapshotSchema.parse(await ipcRenderer.invoke('keepling:snapshot')),
+  presentationSnapshot: async () => desktopPresentationSchema.parse(
+    await ipcRenderer.invoke('keepling:presentation-snapshot'),
+  ),
+  subscribePresentation: (subscriber: (presentation: z.infer<typeof desktopPresentationSchema>) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, value: unknown) => subscriber(desktopPresentationSchema.parse(value))
+    ipcRenderer.on('keepling:presentation-changed', listener)
+    return () => ipcRenderer.removeListener('keepling:presentation-changed', listener)
+  },
 })
 
 contextBridge.exposeInMainWorld('keepling', keepling)

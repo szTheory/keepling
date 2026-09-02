@@ -1,5 +1,11 @@
 import { createHash } from 'node:crypto'
 
+import {
+  deriveDesktopPresentation,
+  type DesktopPresentation,
+  type DesktopPresentationInput,
+} from './presentation.ts'
+
 type SyncStatus = 'saved_on_this_mac' | 'synced'
 type SyncOutcome = 'accepted' | 'already_satisfied' | 'rejected' | 'stale' | 'conflict'
 
@@ -121,6 +127,9 @@ class DesktopApplication {
   readonly #identity: IdentityPort
   readonly #localStore: LocalStorePort
   readonly #sync: SyncPort
+  readonly #presentationSubscribers = new Set<(presentation: DesktopPresentation) => void>()
+  #currentPresentation = deriveDesktopPresentation({ kind: 'opening' }, 0)
+  #presentationSequence = 0
 
   constructor(options: DesktopApplicationOptions) {
     this.#clock = options.clock
@@ -154,7 +163,14 @@ class DesktopApplication {
     }
 
     // This await is the D-03 boundary. The store may only resolve after COMMIT.
-    return this.#localStore.acceptCapture(mutation)
+    try {
+      const acceptance = await this.#localStore.acceptCapture(mutation)
+      this.publishPresentation({ kind: 'local_saved', pendingCount: 1 })
+      return acceptance
+    } catch (error) {
+      this.publishPresentation({ kind: 'local_save_failure' })
+      throw error
+    }
   }
 
   async snapshot(): Promise<WorkspaceSnapshot> {
@@ -163,7 +179,9 @@ class DesktopApplication {
 
   async activateNamespace(namespace: SyncNamespace): Promise<boolean> {
     if (!this.#localStore.bindNamespace) throw new Error('namespace binding is unavailable')
-    return this.#localStore.bindNamespace(namespace)
+    const bound = await this.#localStore.bindNamespace(namespace)
+    if (!bound) this.publishPresentation({ kind: 'namespace_mismatch' })
+    return bound
   }
 
   async signOut(revoke: () => Promise<void>): Promise<void> {
@@ -174,6 +192,21 @@ class DesktopApplication {
     } catch {
       // Revocation is best-effort after the local namespace is already fenced.
     }
+  }
+
+  presentationSnapshot(): DesktopPresentation {
+    return this.#currentPresentation
+  }
+
+  publishPresentation(input: DesktopPresentationInput): DesktopPresentation {
+    this.#currentPresentation = deriveDesktopPresentation(input, ++this.#presentationSequence)
+    for (const subscriber of this.#presentationSubscribers) subscriber(this.#currentPresentation)
+    return this.#currentPresentation
+  }
+
+  subscribePresentation(subscriber: (presentation: DesktopPresentation) => void): () => void {
+    this.#presentationSubscribers.add(subscriber)
+    return () => this.#presentationSubscribers.delete(subscriber)
   }
 
   async reconcile(): Promise<{ settled: number }> {

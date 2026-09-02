@@ -136,6 +136,13 @@ const bootstrap = async () => {
     assertTrustedSender(event.sender)
     return desktopApplication.snapshot()
   })
+  ipcMain.handle('keepling:presentation-snapshot', async (event) => {
+    assertTrustedSender(event.sender)
+    return desktopApplication.presentationSnapshot()
+  })
+  const unsubscribePresentation = desktopApplication.subscribePresentation((presentation) => {
+    if (!window.isDestroyed()) window.webContents.send('keepling:presentation-changed', presentation)
+  })
 
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
   window.webContents.on('will-navigate', (event) => event.preventDefault())
@@ -147,6 +154,7 @@ const bootstrap = async () => {
     if (quitting) return
     event.preventDefault()
     void desktopApplication.close().finally(() => {
+      unsubscribePresentation()
       quitting = true
       app.quit()
     })
