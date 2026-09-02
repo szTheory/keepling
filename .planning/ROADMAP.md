@@ -167,7 +167,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 1/12 plans executed
+**Plans:** 2/12 plans executed
 
 Plans:
 **Wave 1**
@@ -176,7 +176,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 03-12-PLAN.md — Create isolated test discovery, package-once, external-smoke, and anti-vacuous harness plumbing.
+- [x] 03-12-PLAN.md — Create isolated test discovery, package-once, external-smoke, and anti-vacuous harness plumbing.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 

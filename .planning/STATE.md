@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: Completed KPL-03-07-PLAN.md
-last_updated: "2026-09-02T05:49:47.030Z"
+stopped_at: Completed KPL-03-12-PLAN.md
+last_updated: "2026-09-02T06:03:05.390Z"
 last_activity: 2026-09-02
 last_activity_desc: Phase KPL-03 execution started
-state_head: 55a9a4c7d25eb09e87ab4360b6d42c5882de17b1
+state_head: 8a909a63bceb37ddc9c50541efffefa44e35a84d
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 50
-  completed_plans: 38
+  completed_plans: 39
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-03 (Mac Daily Loop) — EXECUTING
-Plan: 2 of 12
+Plan: 3 of 12
 Total Plans in Phase: 12
 Status: Executing Phase KPL-03
 Last activity: 2026-09-02 — Phase KPL-03 execution started
@@ -164,6 +164,8 @@ Progress: [█████████░] 97%
 - [Phase 03]: Use direct Vite builds for all four Electron process roles without the experimental Forge Vite plugin.
 - [Phase 03]: Keep main, preload, and worker as Node 24 CommonJS outputs while the renderer uses browser-only relative packaged assets.
 - [Phase 03]: Declare Electron 44.1.1, Forge 7.11.2, and Zod 4.5.4 without installing or changing the lockfile before provenance approval.
+- [Phase 03]: Desktop test evidence uses named non-watch lanes with explicit zero-case refusal and disposable system-temporary profiles.
+- [Phase 03]: Package-once binds committed inputs and exact application, executable, ZIP, and embedded-runtime identity before external manifest-only smoke.
 
 ### Retained Research
 
@@ -197,8 +199,8 @@ Resolve deferred Plan KPL-02-09 through an authorized, single-attempt corrected 
 
 ## Session
 
-**Last session:** 2026-09-02T05:49:46.953Z
-**Stopped at:** Completed KPL-03-07-PLAN.md
+**Last session:** 2026-09-02T06:03:05.315Z
+**Stopped at:** Completed KPL-03-12-PLAN.md
 **Resume file:** None
 
 ## Performance Metrics
@@ -243,3 +245,4 @@ Resolve deferred Plan KPL-02-09 through an authorized, single-attempt corrected 
 | Phase KPL-02 P08 | 9min | 3 tasks | 8 files |
 | Phase KPL-02 P10 | 18min | 2 tasks | 6 files |
 | Phase KPL-03 P07 | 4min | 2 tasks | 9 files |
+| Phase KPL-03 P12 | 7min | 2 tasks | 5 files |
