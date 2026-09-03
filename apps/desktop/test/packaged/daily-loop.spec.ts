@@ -134,6 +134,10 @@ test('the packaged app completes capture, edit, complete/reopen, Today placement
     await window.getByRole('button', { name: 'Add to Today' }).click()
     await window.getByRole('button', { name: 'Today', exact: true }).click()
     await expect(window.getByText('Call the vet about the checkup')).toBeVisible()
+    // Today and Inbox are disjoint routes (a planned task leaves the Inbox
+    // list) -- remove it from Today before expecting it back in Inbox.
+    await window.getByText('Call the vet about the checkup').click()
+    await window.getByRole('button', { name: 'Remove from Today' }).click()
 
     await window.getByRole('button', { name: 'Inbox', exact: true }).click()
     await window.getByText('Call the vet about the checkup').click()

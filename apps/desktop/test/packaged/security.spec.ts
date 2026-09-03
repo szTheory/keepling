@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync } from 'node:fs'
 import { join } from 'node:path'
 import { test, expect, _electron as electron, type ElectronApplication } from '@playwright/test'
 
@@ -78,10 +78,17 @@ test('the packaged session serves a Content-Security-Policy header, and the rend
   try {
     const window = await application.firstWindow()
 
-    const headers = await application.evaluate(async ({ net }) => {
-      const response = await net.fetch('app://renderer/index.html')
-      return Object.fromEntries(response.headers.entries())
-    })
+    // `net.fetch` from the MAIN process does not route through the same
+    // custom-protocol handling a BrowserWindow navigation does (it throws
+    // net::ERR_UNKNOWN_URL_SCHEME for the privileged `app://` scheme), so
+    // this captures the REAL response the renderer's own navigation
+    // receives via Playwright's CDP-backed response listener -- proving the
+    // header the browsing context actually gets, not a synthetic fetch.
+    const [response] = await Promise.all([
+      window.waitForResponse((candidate) => candidate.url().startsWith('app://renderer/index.html')),
+      window.reload(),
+    ])
+    const headers = await response.allHeaders()
     const csp = headers['content-security-policy']
     expect(csp).toBeDefined()
     expect(csp).toContain("default-src 'self'")
@@ -164,7 +171,11 @@ test('the packaged worker/SQLite runtime loads its worker script and migration f
     expect(existsSync(join(resourcesPath, 'worker', 'index.cjs'))).toBe(true)
     expect(existsSync(join(resourcesPath, 'migrations', '0001_initial.sql'))).toBe(true)
     expect(resourcesPath.includes('apps/desktop/main')).toBe(false)
-    expect(resourcesPath.startsWith(manifest.copiedApplicationPath)).toBe(true)
+    // macOS resolves `/var` -> `/private/var` for real filesystem paths, so
+    // compare realpaths rather than a raw prefix (the manifest's tmpdir()
+    // path and the packaged process's own resolved resourcesPath otherwise
+    // legitimately differ only by that symlink).
+    expect(realpathSync(resourcesPath).startsWith(realpathSync(manifest.copiedApplicationPath))).toBe(true)
 
     // A live round trip through that exact worker/migration pair: if the
     // packaged path resolution were wrong, this capture would throw or the

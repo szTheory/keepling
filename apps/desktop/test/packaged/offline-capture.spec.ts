@@ -64,9 +64,9 @@ test('offline capture survives hard kill and exact acknowledgement', async () =>
   const firstWindow = await first.firstWindow()
   await expect(firstWindow.getByRole('heading', { name: 'Inbox' })).toBeVisible()
   await assertSecondInstanceRejected(first)
-  await firstWindow.getByLabel('Task title').fill('Survive a hard kill')
-  await firstWindow.getByRole('button', { name: 'Save task' }).click()
-  await expect(firstWindow.getByRole('status')).toHaveText('Saved on this Mac')
+  await firstWindow.getByLabel('What do you want to keep?').fill('Survive a hard kill')
+  await firstWindow.getByRole('button', { name: 'Add Task' }).click()
+  await expect(firstWindow.getByText('Saved on this Mac').first()).toBeVisible()
   await expect(firstWindow.getByText('Survive a hard kill')).toHaveCount(1)
   await hardKill(first)
 
