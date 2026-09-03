@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-03T00:18:26.680Z",
+  "recordedSourceRevision": "fed6f8263004d9cb2bac744060af6518503e3e63",
+  "environment": {
+    "arch": "arm64",
+    "cpuModel": "Apple M5 Pro",
+    "cpuCount": 18,
+    "electron": "44.1.1",
+    "chrome": "152.0.7977.65",
+    "embeddedNode": "24.19.0",
+    "v8": "15.2.124.18-electron.0",
+    "hostNode": "v22.14.0",
+    "osRelease": "25.6.0",
+    "platform": "darwin",
+    "totalMemoryGb": 64
+  },
+  "metrics": {
+    "cold_launch_to_local_interactive_ms": {
+      "unit": "ms",
+      "statistic": "p95",
+      "baseline": 272,
+      "budget": {
+        "kind": "relative",
+        "value": 0.35
+      },
+      "sampleFloor": 3,
+      "rationale": "Cross-process launch path (main -> worker -> IPC -> renderer paint) has real scheduler noise; 35% relative headroom over p95 avoids flagging normal variance while catching a genuine regression."
+    },
+    "warm_launch_to_local_interactive_ms": {
+      "unit": "ms",
+      "statistic": "p95",
+      "baseline": 272,
+      "budget": {
+        "kind": "relative",
+        "value": 0.35
+      },
+      "sampleFloor": 3,
+      "rationale": "Same cross-process path as cold launch, lower absolute magnitude but comparable relative variance."
+    },
+    "quick_entry_open_to_focus_ms": {
+      "unit": "ms",
+      "statistic": "p95",
+      "baseline": 90,
+      "budget": {
+        "kind": "relative",
+        "value": 0.4
+      },
+      "sampleFloor": 3,
+      "rationale": "Window creation plus focus involves OS window-server round trips with higher relative variance on a shared CI/dev machine."
+    },
+    "local_commit_ms": {
+      "unit": "ms",
+      "statistic": "p95",
+      "baseline": 53,
+      "budget": {
+        "kind": "relative",
+        "value": 0.5
+      },
+      "sampleFloor": 3,
+      "rationale": "SQLite worker round trip is normally fast (single-digit-to-low-double-digit ms) so relative variance is naturally larger; absolute regressions of a few ms would otherwise false-positive."
+    },
+    "list_scroll_frame_p95_ms": {
+      "unit": "ms",
+      "statistic": "p95",
+      "baseline": 10,
+      "budget": {
+        "kind": "absolute",
+        "value": 8
+      },
+      "sampleFloor": 100,
+      "rationale": "Frame pacing target is 16.6ms/frame (60fps); an absolute +8ms budget over the recorded p95 flags real jank without chasing sub-millisecond rAF scheduler jitter."
+    },
+    "idle_cpu_percent": {
+      "unit": "percent",
+      "statistic": "p95",
+      "baseline": 0.28934463163575674,
+      "budget": {
+        "kind": "absolute",
+        "value": 5
+      },
+      "sampleFloor": 30,
+      "rationale": "Idle CPU should be near-zero; a flat +5 percentage-point budget catches a real idle-loop regression while tolerating brief OS scheduling spikes."
+    },
+    "idle_memory_mb": {
+      "unit": "mb",
+      "statistic": "p95",
+      "baseline": 578.421875,
+      "budget": {
+        "kind": "relative",
+        "value": 0.25
+      },
+      "sampleFloor": 30,
+      "rationale": "Electron/V8 heap and renderer memory vary with OS memory pressure; 25% relative headroom avoids false positives from GC timing."
+    },
+    "wake_reconnect_main_thread_work_ms": {
+      "unit": "ms",
+      "statistic": "p95",
+      "baseline": 1,
+      "budget": {
+        "kind": "absolute",
+        "value": 200
+      },
+      "sampleFloor": 3,
+      "rationale": "This is a derived (marginal) measurement -- see fixture note; absolute budget avoids amplifying noise from two subtracted measurements into a relative percentage."
+    },
+    "wake_reconnect_renderer_thread_work_ms": {
+      "unit": "ms",
+      "statistic": "p95",
+      "baseline": 20,
+      "budget": {
+        "kind": "relative",
+        "value": 0.5
+      },
+      "sampleFloor": 3,
+      "rationale": "Single IPC round trip plus one React re-render; naturally small and noisy in absolute terms."
+    },
+    "wal_bytes": {
+      "unit": "bytes",
+      "statistic": "p50",
+      "baseline": 477952,
+      "budget": {
+        "kind": "relative",
+        "value": 0.3
+      },
+      "sampleFloor": 3,
+      "rationale": "WAL growth per fixed capture count is deterministic-ish but SQLite page allocation has some run-to-run variance."
+    },
+    "checkpoint_ms": {
+      "unit": "ms",
+      "statistic": "p95",
+      "baseline": 1,
+      "budget": {
+        "kind": "absolute",
+        "value": 10
+      },
+      "sampleFloor": 3,
+      "rationale": "Checkpoint duration on a small WAL is normally 0-1ms at Date.now() millisecond resolution, so a baseline near zero makes a relative budget nearly untestable (50% of 1ms is 1.5ms); an absolute +10ms budget still catches a real regression (e.g. disk contention or a much larger WAL) without quantization noise flipping pass/fail."
+    },
+    "packaged_app_bytes": {
+      "unit": "bytes",
+      "statistic": "p50",
+      "baseline": 307477331,
+      "budget": {
+        "kind": "relative",
+        "value": 0.1
+      },
+      "sampleFloor": 1,
+      "rationale": "Packaged bytes should only grow with genuine dependency/asset changes; 10% headroom tolerates minor Electron/asset churn between releases without masking a real bloat regression."
+    }
+  }
+}
