@@ -492,6 +492,43 @@ const findNodes = (nodes, predicate) => nodes.filter(predicate)
 
 const focusedElement = (handle) => runProbe(handle.probeBinary, ['focused', '--pid', String(handle.pid)]).value.focused
 
+const focusIdentity = (node) =>
+  node === null || node === undefined
+    ? null
+    : JSON.stringify([node.role, node.title ?? '', node.description ?? '', node.frame ?? null])
+
+/**
+ * Reads the AX focused element only once it has SETTLED, i.e. once it is
+ * non-null and unchanged across consecutive reads. Mounting a dialog moves
+ * focus in more than one step and leaves the application with NO focused
+ * element in between, so a single read after a fixed sleep intermittently
+ * observes that hole and reports "focus was on nothing" (the same class of
+ * defect fixed for A6 in fbdf2b4).
+ *
+ * Settling is deliberately WEAKER than anything a row asserts: it waits for
+ * focus to stop moving, never for focus to be on a particular element. A row
+ * whose focus settles on the wrong thing -- or on the application element,
+ * or on a removed zero-sized node -- still fails loudly. At the deadline it
+ * returns whatever it last saw, including null, so a genuine "focus is lost"
+ * product defect is still reported rather than being waited away.
+ */
+const settledFocus = async (handle, { intervalMs = 150, stableReads = 3, timeoutMs = 6_000 } = {}) => {
+  const deadline = Date.now() + timeoutMs
+  let lastIdentity = null
+  let repeats = 0
+  let node = null
+  for (;;) {
+    node = focusedElement(handle) ?? null
+    const identity = focusIdentity(node)
+    if (identity !== null && identity === lastIdentity) repeats += 1
+    else repeats = identity === null ? 0 : 1
+    lastIdentity = identity
+    if (repeats >= stableReads) return node
+    if (Date.now() >= deadline) return node
+    await sleep(intervalMs)
+  }
+}
+
 /**
  * CGEvent keystrokes go to whatever the OS considers frontmost. Asserting
  * that the app under test really is frontmost before every keystroke is
@@ -956,13 +993,15 @@ const rowA4 = (context) => runRow('A4', 'VoiceOver layer: the unsaved-changes di
     // silently worked around; see this plan's SUMMARY.)
     await tabUntil(handle, 'the Today destination button', (node) => node.role === 'AXButton' && node.title === 'Today', { key: 'shift+tab', limit: 24 })
     postKeys(handle, 'space')
-    await sleep(800)
+    await waitFor('the unsaved-changes dialog to mount', async () =>
+      findNode(webNodes(handle), (node) => (node.description ?? '') === 'Discard unsaved changes?' || (node.title ?? '') === 'Discard unsaved changes?'),
+    { intervalMs: 150, timeoutMs: 10_000 })
 
     const nodes = webNodes(handle)
     const dialog = findNode(nodes, (node) => (node.description ?? '') === 'Discard unsaved changes?' || (node.title ?? '') === 'Discard unsaved changes?')
     check('navigating away with unsaved edits raises the unsaved-changes dialog', dialog !== null)
 
-    const focused = focusedElement(handle)
+    const focused = await settledFocus(handle)
     check(
       'the unsaved-changes dialog moves focus INTO itself (previously a disclosed gap, fixed in 03-15)',
       focused !== null && (focused.title ?? '') === 'Keep Editing',
@@ -979,8 +1018,7 @@ const rowA4 = (context) => runRow('A4', 'VoiceOver layer: the unsaved-changes di
     )
 
     postKeys(handle, 'space')
-    await sleep(600)
-    const afterClose = focusedElement(handle)
+    const afterClose = await settledFocus(handle)
     check(
       'closing the dialog leaves focus on a visible, operable element -- never the application element, never a removed node',
       afterClose !== null && afterClose.role !== 'AXApplication' && (afterClose.frame?.width ?? 0) > 0 && (afterClose.frame?.height ?? 0) > 0,
