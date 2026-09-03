@@ -311,12 +311,22 @@
     {
       "id": "O-19",
       "item": "MAC-04 is not satisfiable: the shipped app publishes no \"syncing\" state",
-      "detail": "Found by 03-14 and documented in 03-14-SUMMARY.md:315, but NOT originally recorded in HANDOFF.json -- added here 2026-09-02 by the orchestrator so it survives context loss. DesktopApplication.runSyncPass() emits no presentation, so a user cannot inspect 'currently synchronizing' without reading logs. Every other MAC-04 state (offline, conflict, authentication-expired, unrecoverable) is now reachable after 03-14. Small and self-contained, but it was outside 03-14's authorized files, and marking MAC-04 without it would be a false claim. OWNER: fold into 03-15 or a short follow-up."
+      "detail": "Found by 03-14 and documented in 03-14-SUMMARY.md:315, but NOT originally recorded in HANDOFF.json -- added here 2026-09-02 by the orchestrator so it survives context loss. DesktopApplication.runSyncPass() emits no presentation, so a user cannot inspect 'currently synchronizing' without reading logs. Every other MAC-04 state (offline, conflict, authentication-expired, unrecoverable) is now reachable after 03-14. Small and self-contained, but it was outside 03-14's authorized files, and marking MAC-04 without it would be a false claim. OWNER: fold into 03-15 or a short follow-up. CLOSED 2026-09-03 by 03-15 (a29335b): runSyncPass() publishes an \"updating\" presentation row and clears it on success, partial settlement and failure, guarded on the presentation sequence so a mid-pass conflict is never clobbered. Makes no durability claim."
     },
     {
       "id": "O-20",
       "item": "Two subsystems were reachable-but-broken, discovered only when wired -- assume more exist",
       "detail": "03-13 found two (createRequire(import.meta.url) crashing the bundled app; WorkerLocalStore not proxying removeLocalFiles/setSyncFence). 03-14 found two more: (a) store-worker/index.ts never routed applyPull, readyMutations, acknowledgeSync, bindNamespace or syncState, and WorkerLocalStore never forwarded them, so runSyncPass() silently degraded to reconcile-only and activateNamespace() threw -- NOTHING could ever have been pushed to a server; (b) the fenced sign-out cleared the credential before revocation, so the remote revoke always failed authentication_required and silently never happened. PATTERN: code that has only ever executed under test fixtures is not proven code. Any remaining subsystem whose only caller is a test should be treated as unverified until exercised through the shipped entry point."
+    },
+    {
+      "id": "O-21",
+      "item": "FIFTH GAP-1 instance: Quick Entry never returns focus to the prior application",
+      "detail": "Found by 03-15 row A9 and documented in 03-15-SUMMARY.md:206, but NOT recorded in HANDOFF.json by the executor -- added here 2026-09-03 by the orchestrator. QuickEntryWindowController calls an optional `foregroundApp` port on open and hide, but NO implementation of that port exists anywhere in the repository and none is passed in main/index.ts#bootstrap(). Prior-app focus return is therefore unreachable in the shipped app. MEASURED, not inferred: with TextEdit focused, submitting a Quick Entry capture leaves Keepling frontmost. Differs from O-1/O-11/O-12/O-15 in that the adapter was never written at all, so closing it is new implementation work (a ForegroundAppPort adapter plus bootstrap wiring) and it carries a real UX decision: what should happen when Quick Entry is invoked from Keepling own window. Disclosed rather than half-fixed. Row A9 fails honestly against it, so the phase gate is RED until it is closed."
+    },
+    {
+      "id": "O-22",
+      "item": "Executors document new open items in their SUMMARY but do not add them to HANDOFF.json",
+      "detail": "Happened twice in a row: 03-14 reported recording O-19 and did not; 03-15 recommended O-21 and did not. Both were caught and added by the orchestrator, but only because the orchestrator read the SUMMARY carefully -- neither would have survived a context loss, which is exactly what HANDOFF.json exists to prevent. MITIGATION: the orchestrator must diff SUMMARY-recommended open items against HANDOFF.json open_items after every executor returns, and any future executor dispatch should state explicitly that recording an open item means writing it to .planning/HANDOFF.json, not only describing it in the SUMMARY."
     }
   ],
   "phase_level_gap": {
