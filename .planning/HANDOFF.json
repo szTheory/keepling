@@ -310,7 +310,7 @@
     },
     {
       "id": "O-19",
-      "item": "MAC-04 is not satisfiable: the shipped app publishes no  state",
+      "item": "MAC-04 is not satisfiable: the shipped app publishes no \"syncing\" state",
       "detail": "Found by 03-14 and documented in 03-14-SUMMARY.md:315, but NOT originally recorded in HANDOFF.json -- added here 2026-09-02 by the orchestrator so it survives context loss. DesktopApplication.runSyncPass() emits no presentation, so a user cannot inspect 'currently synchronizing' without reading logs. Every other MAC-04 state (offline, conflict, authentication-expired, unrecoverable) is now reachable after 03-14. Small and self-contained, but it was outside 03-14's authorized files, and marking MAC-04 without it would be a false claim. OWNER: fold into 03-15 or a short follow-up."
     },
     {
