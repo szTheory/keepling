@@ -217,15 +217,15 @@ Progress: [█████████░] 97%
 
 ## Next Action
 
-Run `pnpm test:phase-1` (not run since 03-02), then proceed to phase verification for KPL-03. The desktop phase gate is green (`node tooling/verify-desktop-phase.mjs` → lanes=9 failed=0), so requirements MAC-02/03/04/05 and QUAL-03/04 can now be checked against real evidence rather than deferred. Read `.planning/phases/KPL-03-mac-daily-loop/.continue-here.md` first; open items O-23 and O-24 are new.
+Run `pnpm test:phase-1` (not run since 03-02), then proceed to phase verification for KPL-03. The desktop phase gate is green (`node tooling/verify-desktop-phase.mjs` → lanes=9 failed=0), so requirements MAC-02/03/04/05 and QUAL-03/04 can now be checked against real evidence rather than deferred. Read `.planning/phases/KPL-03-mac-daily-loop/.continue-here.md` first; O-24 and O-27 are now CLOSED, and open items O-23, O-25, O-28 and O-29 are the live ones (O-25 -- the non-blocking CI job -- is the load-bearing one now that the lane's trustworthiness has been measured locally).
 
 ---
 *State initialized: 2026-08-28*
 
 ## Session
 
-**Last session:** 2026-09-03T20:18:10.353Z
-**Stopped at:** Completed 03-16-PLAN.md (O-21 closed; macOS lane 15/15, 92 cases; desktop phase gate lanes=9 failed=0)
+**Last session:** 2026-09-03T22:35:00.000Z
+**Stopped at:** Completed 03-18-PLAN.md (O-24 and O-27 closed; the macOS lane no longer sleeps-then-reads-once, measured 10/10 full runs with 150/150 rows; desktop phase gate lanes=9 failed=0 on evidence for digest 5f8ad9fa...)
 **Resume file:** None
 
 ## Performance Metrics
@@ -284,6 +284,7 @@ Run `pnpm test:phase-1` (not run since 03-02), then proceed to phase verificatio
 | Phase KPL-03 P14 | 46 min | 4 tasks | 16 files |
 | Phase KPL-03 P15 | 2h 35m | 4 tasks | 11 files |
 | Phase KPL-03 P16 | 75min | 2 tasks | 7 files |
+| Phase KPL-03 P18 | 60min | 3 tasks | 3 files |
 
 ### Blockers
 
