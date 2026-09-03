@@ -167,9 +167,11 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 12/13 plans executed
+**Plans:** 13/14 plans executed
 
 Plans:
+
+- [x] 03-14-PLAN.md
 
 - [x] 03-13-PLAN.md
 
@@ -267,7 +269,6 @@ Plans:
 3. Upgrade preflight, migrations, readiness, rollback guidance, doctor output, and host-replacement recovery succeed from documented operator commands.
 4. Security policy, supported-version policy, SBOM/checksum/signing posture appropriate to distributed artifacts, privacy disclosures, and bounded support contract are public.
 5. Jon has completed a sustained Mac+iPhone dogfood period with no unresolved data-loss, silent-overwrite, or recovery-severity defects in the supported loop.
-
 
 ## Candidate future milestone: Sigra identity migration
 
