@@ -374,6 +374,13 @@ describe('every ipcMain.handle registration in main/index.ts is sender-checked b
     expect(source).toContain('routeAuthorizationCallback')
     // The same-profile ownership lock is preserved.
     expect(source).toContain('app.requestSingleInstanceLock()')
+    // Wiring the adapter is not enough on its own: a serialized, best-effort
+    // trigger must actually drive passes, or the adapter is
+    // reachable-but-never-reached. It is a hint, never a correctness
+    // dependency -- every trigger site runs AFTER the durable commit.
+    expect(source).toContain('let syncPassInFlight: Promise<void> | null = null')
+    expect(source).toContain('if (syncPassInFlight !== null || syncAdapter === null) return')
+    expect([...source.matchAll(/scheduleSyncPass\(\)/g)]).toHaveLength(5)
   })
 
   it('exposes no generic invoke/send channel and no raw callback surface in the preload bridge module source', async () => {

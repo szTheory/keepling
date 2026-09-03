@@ -458,6 +458,36 @@ const bootstrap = async () => {
     await desktopApplication.runSyncPass().catch(() => ({ pulled: 0, settled: 0 }))
   }
 
+  /**
+   * Rule 2 addition: a best-effort, SERIALIZED synchronization trigger.
+   *
+   * Wiring the real adapter is not enough on its own -- without a trigger
+   * nothing would ever call `runSyncPass()` in ordinary use, so a capture
+   * made after startup would sit in the outbox indefinitely and the adapter
+   * would be reachable-but-never-reached (the same defect class this plan
+   * exists to close). This is a HINT, never a correctness dependency
+   * (D-18): every mutation is already durably committed before this runs,
+   * a failed pass is swallowed, and the exact serialized bytes stay in the
+   * outbox for the next attempt. Passes never overlap, so a burst of
+   * captures cannot stack concurrent pulls or duplicate a push.
+   */
+  let syncPassInFlight: Promise<void> | null = null
+  const scheduleSyncPass = (): void => {
+    if (syncPassInFlight !== null || syncAdapter === null) return
+    syncPassInFlight = (async () => {
+      try {
+        const token = authorization === null ? null : await authorization.accessToken()
+        if (token === null) return
+        await desktopApplication.runSyncPass()
+      } catch {
+        // Offline, unauthenticated, or refused: the durable outbox keeps
+        // the exact intent, and nothing claims "Synced".
+      } finally {
+        syncPassInFlight = null
+      }
+    })()
+  }
+
   deliverAuthorizationCallback = (callbackUrl) => void applyAuthorizationCallback(callbackUrl)
   for (const queued of queuedAuthorizationCallbacks.splice(0)) deliverAuthorizationCallback(queued)
 
@@ -572,7 +602,9 @@ const bootstrap = async () => {
 
   ipcMain.handle('keepling:capture', async (event, rawCommand) => {
     assertTrustedSender(event)
-    return desktopApplication.capture(parseTrustedRequest(captureRequestSchema, rawCommand))
+    const acceptance = await desktopApplication.capture(parseTrustedRequest(captureRequestSchema, rawCommand))
+    scheduleSyncPass()
+    return acceptance
   })
   ipcMain.handle('keepling:snapshot', async (event) => {
     assertTrustedSender(event)
@@ -584,15 +616,21 @@ const bootstrap = async () => {
   })
   ipcMain.handle('keepling:edit-task', async (event, rawCommand) => {
     assertTrustedSender(event)
-    return desktopApplication.editTask(parseTrustedRequest(editRequestSchema, rawCommand) as EditTaskCommand)
+    const snapshot = await desktopApplication.editTask(parseTrustedRequest(editRequestSchema, rawCommand) as EditTaskCommand)
+    scheduleSyncPass()
+    return snapshot
   })
   ipcMain.handle('keepling:lifecycle-task', async (event, rawCommand) => {
     assertTrustedSender(event)
-    return desktopApplication.applyLifecycle(parseTrustedRequest(lifecycleRequestSchema, rawCommand) as LifecycleCommand)
+    const snapshot = await desktopApplication.applyLifecycle(parseTrustedRequest(lifecycleRequestSchema, rawCommand) as LifecycleCommand)
+    scheduleSyncPass()
+    return snapshot
   })
   ipcMain.handle('keepling:move-today', async (event, rawCommand) => {
     assertTrustedSender(event)
-    return desktopApplication.moveToday(parseTrustedRequest(moveTodayRequestSchema, rawCommand) as MoveTodayCommand)
+    const snapshot = await desktopApplication.moveToday(parseTrustedRequest(moveTodayRequestSchema, rawCommand) as MoveTodayCommand)
+    scheduleSyncPass()
+    return snapshot
   })
   ipcMain.handle('keepling:undo-last-action', async (event) => {
     assertTrustedSender(event)
@@ -684,6 +722,10 @@ const bootstrap = async () => {
       throw new IpcSecurityError('untrusted_sender')
     }
   }
+
+  // Startup hint: settle whatever the last session left pending as soon as
+  // the window exists, without blocking the window from appearing.
+  scheduleSyncPass()
 
   ipcMain.handle('keepling:account:status', async (event) => {
     assertTrustedAccountSender(event)
