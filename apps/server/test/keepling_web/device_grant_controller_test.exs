@@ -31,7 +31,126 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
         else: Application.delete_env(:keepling, :device_grants)
     end)
 
-    %{account_id: account_id}
+    %{account_id: account_id, configured_device_grants: previous}
+  end
+
+  # O-18 closure: the two tests below are the ONLY ones in this file that
+  # exercise the configuration a REAL server boots with. Every other test
+  # here runs against the fixture block installed by `setup` above, which is
+  # exactly why the device-grant flow could be fully green while being
+  # unreachable outside the test suite.
+  test "real runtime configuration -- not test setup -- issues and exchanges an electron grant", %{
+    account_id: account_id,
+    configured_device_grants: configured,
+    conn: conn
+  } do
+    assert is_list(configured),
+           "config/runtime.exs must supply :keepling, :device_grants for a real server"
+
+    Application.put_env(:keepling, :device_grants, configured)
+
+    issuer = Keyword.fetch!(configured, :issuer)
+    origin = Keyword.fetch!(configured, :origin)
+    server_instance = Keyword.fetch!(configured, :server_instance)
+
+    [redirect_uri | _] =
+      configured |> Keyword.fetch!(:redirect_uris) |> Map.fetch!("electron")
+
+    assert redirect_uri == "keepling://auth/callback"
+
+    response =
+      conn
+      |> login()
+      |> recycle()
+      |> get("/oauth/authorize", %{
+        "client_id" => "electron",
+        "code_challenge" => @challenge,
+        "code_challenge_method" => "S256",
+        "installation_id" => "real-configuration-installation",
+        "label" => "Real configuration installation",
+        "redirect_uri" => redirect_uri,
+        "response_type" => "code",
+        "state" => @state
+      })
+
+    assert response.status == 302
+    location = response |> get_resp_header("location") |> List.first() |> URI.parse()
+    assert "#{location.scheme}://#{location.host}#{location.path}" == redirect_uri
+    code = URI.decode_query(location.query) |> Map.fetch!("code")
+
+    exchanged =
+      build_conn()
+      |> post("/oauth/token", %{
+        "code" => code,
+        "code_verifier" => @verifier,
+        "grant_type" => "authorization_code",
+        "redirect_uri" => redirect_uri,
+        "state" => @state
+      })
+      |> json_response(200)
+
+    assert %{
+             "namespace" => %{
+               "account_subject" => account_subject,
+               "generation" => 1,
+               "issuer" => ^issuer,
+               "origin" => ^origin,
+               "server_instance" => ^server_instance
+             }
+           } = exchanged
+
+    assert Ecto.UUID.cast!(account_subject) == Ecto.UUID.cast!(account_id)
+  end
+
+  test "a server whose device-grant configuration is absent or malformed refuses to boot" do
+    previous = Application.get_env(:keepling, :device_grants)
+
+    on_exit(fn ->
+      if previous,
+        do: Application.put_env(:keepling, :device_grants, previous),
+        else: Application.delete_env(:keepling, :device_grants)
+    end)
+
+    Application.delete_env(:keepling, :device_grants)
+
+    assert_raise ArgumentError, ~r/device grant configuration/, fn ->
+      Keepling.Application.start(:normal, [])
+    end
+
+    for {malformed, expected} <- [
+          {[issuer: "", origin: "https://o.invalid", server_instance: "s", redirect_uris: %{}],
+           ~r/device grant issuer/},
+          {[issuer: "https://i.invalid", origin: "not a url", server_instance: "s", redirect_uris: %{}],
+           ~r/device grant origin/},
+          {[issuer: "https://i.invalid", origin: "https://o.invalid", server_instance: "  ", redirect_uris: %{}],
+           ~r/device grant server instance/},
+          {[issuer: "https://i.invalid", origin: "https://o.invalid", server_instance: "s"],
+           ~r/device grant redirect/},
+          {[
+             issuer: "https://i.invalid",
+             origin: "https://o.invalid",
+             server_instance: "s",
+             redirect_uris: %{"electron" => []}
+           ], ~r/device grant redirect/},
+          {[
+             issuer: "https://i.invalid",
+             origin: "https://o.invalid",
+             server_instance: "s",
+             redirect_uris: %{"browser" => ["keepling://auth/callback"]}
+           ], ~r/device grant redirect/},
+          {[
+             issuer: "https://i.invalid",
+             origin: "https://o.invalid",
+             server_instance: "s",
+             redirect_uris: %{"electron" => ["https://phishing.invalid/callback"]}
+           ], ~r/device grant redirect/}
+        ] do
+      Application.put_env(:keepling, :device_grants, malformed)
+
+      assert_raise ArgumentError, expected, fn ->
+        Keepling.Application.start(:normal, [])
+      end
+    end
   end
 
   @tag :transport
