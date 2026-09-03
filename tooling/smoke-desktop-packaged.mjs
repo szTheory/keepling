@@ -9,14 +9,24 @@ import { spawnSync } from 'node:child_process'
 
 const repositoryRoot = resolve(import.meta.dirname, '..')
 const desktopRoot = join(repositoryRoot, 'apps', 'desktop')
-const packagedTestPath = join(desktopRoot, 'test', 'packaged', 'offline-capture.spec.ts')
+const packagedTestDir = join(desktopRoot, 'test', 'packaged')
 
 const fail = (message) => {
   console.error(`Packaged desktop smoke failed: ${message}`)
   process.exit(1)
 }
 
-const requestedScenario = process.argv.includes('offline-capture') ? 'offline-capture' : null
+// Every packaged spec file is eligible by name (offline-capture, daily-loop,
+// security, ...) -- never hardcode a single scenario, or adding a new
+// packaged spec silently stops being selectable by name.
+const packagedSpecFiles = readdirSync(packagedTestDir)
+  .filter((entry) => entry.endsWith('.spec.ts'))
+  .sort()
+if (packagedSpecFiles.length === 0) fail('no packaged spec files exist under test/packaged')
+const knownScenarios = new Map(packagedSpecFiles.map((file) => [file.replace(/\.spec\.ts$/, ''), file]))
+const requestedScenarioArg = process.argv.slice(2).find((argument) => knownScenarios.has(argument))
+const requestedScenario = requestedScenarioArg ?? null
+
 const manifestFlag = process.argv.indexOf('--manifest')
 const locatorName = `keepling-desktop-latest-manifest-${createHash('sha256').update(repositoryRoot).digest('hex').slice(0, 16)}.txt`
 const selectedManifest = manifestFlag === -1
@@ -69,9 +79,17 @@ const hashDirectory = (root) => {
 
 if (hashDirectory(copiedApplicationPath) !== manifest.applicationDigestSha256) fail('copied application digest does not match the package manifest')
 if (sha256(readFileSync(executablePath)) !== manifest.executableDigestSha256) fail('executable digest does not match the package manifest')
-const packagedTestSource = readFileSync(packagedTestPath, 'utf8')
-if (!packagedTestSource.includes('app.isPackaged')) fail('packaged test omits the runtime assertion')
-if (!packagedTestSource.includes('--user-data-dir')) fail('packaged test omits the disposable profile argument')
+
+// Anti-vacuous discipline applies to EVERY packaged spec, not just one: each
+// must launch a disposable profile, and at least one must assert the real
+// packaged runtime flag.
+let anyAssertsIsPackaged = false
+for (const file of packagedSpecFiles) {
+  const source = readFileSync(join(packagedTestDir, file), 'utf8')
+  if (!source.includes('--user-data-dir')) fail(`${file} omits the disposable profile argument`)
+  if (source.includes('app.isPackaged')) anyAssertsIsPackaged = true
+}
+if (!anyAssertsIsPackaged) fail('no packaged spec asserts app.isPackaged')
 
 const profilePath = mkdtempSync(join(tmpdir(), 'keepling-packaged-smoke-profile-'))
 const forbiddenUserDataDir = resolve(homedir(), 'Library', 'Application Support', 'Keepling')
@@ -102,10 +120,19 @@ try {
   process.stdout.write(result.stdout)
   process.stderr.write(result.stderr)
   if (result.error || result.status !== 0) fail(`packaged Playwright scenario exited ${result.status ?? 'without status'}`)
-  if (!result.stdout.includes('PACKAGED_OFFLINE_CAPTURE passed=1')) {
-    fail('packaged scenario marker was absent')
-  }
-  console.log(`Packaged desktop smoke passed: digest=${manifest.applicationDigestSha256} executable=${executablePath}`)
+  // Anti-vacuous, generalized across every packaged spec: Playwright's own
+  // summary line must report a positive pass count and zero failures --
+  // never a hardcoded single-scenario marker string that silently stops
+  // covering new packaged specs.
+  const passedMatch = result.stdout.match(/(\d+) passed/)
+  const failedMatch = result.stdout.match(/(\d+) failed/)
+  const passedCount = passedMatch ? Number(passedMatch[1]) : 0
+  const failedCount = failedMatch ? Number(failedMatch[1]) : 0
+  if (passedCount <= 0) fail('packaged suite reported zero passing tests')
+  if (failedCount > 0) fail(`packaged suite reported ${failedCount} failing test(s)`)
+  console.log(
+    `Packaged desktop smoke passed: digest=${manifest.applicationDigestSha256} executable=${executablePath} passed=${passedCount}`,
+  )
 } finally {
   rmSync(profilePath, { force: true, recursive: true })
 }

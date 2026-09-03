@@ -26,6 +26,66 @@ const fail = (message) => {
   process.exit(1)
 }
 
+/**
+ * D-47/QUAL-03: promotion is a SEPARATE, exclusive step from packaging.
+ * `--promote <manifestPath>` never builds, never packages, and never
+ * touches Electron -- it only accepts a manifest already produced by a
+ * `package-once` run (and, by the time CI calls this, already proven by
+ * every required test lane) and records exactly one promotion per exact
+ * application digest. A second attempt to promote the SAME digest, or an
+ * attempt to promote a manifest missing a required digest field, refuses.
+ * This is the boundary that makes "one build digest flows unchanged through
+ * packaged tests and promotion" an enforced invariant, not a convention.
+ */
+const promoteFlagIndex = process.argv.indexOf('--promote')
+if (promoteFlagIndex !== -1) {
+  const manifestArgument = process.argv[promoteFlagIndex + 1]
+  if (!manifestArgument) fail('--promote requires a manifest path')
+  const manifestPath = resolve(manifestArgument)
+  let manifest
+  try {
+    manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+  } catch {
+    fail('the manifest selected for promotion is missing or invalid JSON')
+  }
+  for (const field of [
+    'applicationDigestSha256',
+    'executableDigestSha256',
+    'zipDigestSha256',
+    'inputDigestSha256',
+    'sourceRevision',
+    'copiedApplicationPath',
+    'executablePath',
+  ]) {
+    if (typeof manifest[field] !== 'string' || manifest[field].length === 0) {
+      fail(`promotion manifest is missing required field "${field}"`)
+    }
+  }
+  const promotionRoot = resolve(process.env.KEEPLING_DESKTOP_PROMOTION_DIR ?? join(tmpdir(), 'keepling-desktop-promotions'))
+  mkdirSync(promotionRoot, { recursive: true })
+  const promotionPath = join(promotionRoot, `${manifest.applicationDigestSha256}.json`)
+  const promotionRecord = {
+    manifestPath,
+    promotedAt: new Date().toISOString(),
+    schemaVersion: 1,
+    ...manifest,
+  }
+  try {
+    // 'wx' is the exclusivity enforcement: a colliding promotion attempt for
+    // an ALREADY-promoted digest throws EEXIST rather than overwriting a
+    // prior promotion record with a second job's (potentially different)
+    // outcome.
+    writeFileSync(promotionPath, `${JSON.stringify(promotionRecord, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' })
+  } catch (error) {
+    if (error && error.code === 'EEXIST') {
+      fail(`digest ${manifest.applicationDigestSha256} is already promoted at ${promotionPath}`)
+    }
+    throw error
+  }
+  console.log(`Desktop package promoted: digest=${manifest.applicationDigestSha256} record=${promotionPath}`)
+  process.exit(0)
+}
+
 const run = (command, args, options = {}) => {
   const result = spawnSync(command, args, {
     cwd: desktopRoot,

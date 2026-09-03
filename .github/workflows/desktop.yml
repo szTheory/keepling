@@ -1,0 +1,155 @@
+name: Desktop packaged evidence
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+
+jobs:
+  desktop-units:
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Install locked JavaScript inputs
+        run: corepack enable && pnpm install --frozen-lockfile
+      - name: Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks
+        run: |
+          set -o pipefail
+          pnpm contracts:check
+          pnpm test:desktop
+          pnpm test:desktop:ipc
+          pnpm typecheck:desktop
+          pnpm typecheck:web
+
+  # This IS the required "desktop-packaged" CI artifact lane the phase plan
+  # calls for: package builds ONCE, uploads the exact bytes + immutable
+  # manifest, and every downstream job downloads that SAME artifact into a
+  # distinct directory rather than rebuilding. Promotion (below) accepts
+  # only the digest this job recorded.
+  desktop-package:
+    runs-on: macos-15
+    timeout-minutes: 20
+    outputs:
+      application-digest: ${{ steps.package.outputs.application-digest }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Install locked JavaScript inputs
+        run: corepack enable && pnpm install --frozen-lockfile
+      - name: Build once and record the immutable package manifest
+        id: package
+        run: |
+          set -o pipefail
+          pnpm package:desktop | tee "$RUNNER_TEMP/package.txt"
+          manifest_path=$(grep -o '/.*/package-manifest.json' "$RUNNER_TEMP/package.txt" | tail -1)
+          artifact_root=$(dirname "$manifest_path")
+          echo "manifest-path=$manifest_path" >> "$GITHUB_OUTPUT"
+          echo "artifact-root=$artifact_root" >> "$GITHUB_OUTPUT"
+          digest=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync(process.argv[1],'utf8')).applicationDigestSha256)" "$manifest_path")
+          echo "application-digest=$digest" >> "$GITHUB_OUTPUT"
+          # Stage the artifact under a fixed, relative-from-workspace path so
+          # actions/upload-artifact preserves a predictable layout for every
+          # downstream download.
+          mkdir -p "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}"
+          cp -R "$artifact_root"/. "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+          path: ${{ runner.temp }}/${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+          if-no-files-found: error
+          retention-days: 14
+
+  # Test jobs NEVER rebuild and NEVER invoke `pnpm package:desktop` -- they
+  # only download the exact bytes `desktop-package` produced and rewrite the
+  # manifest's absolute paths to match this job's own download location
+  # (the build job's paths are ephemeral to its own runner and never exist
+  # on a different runner).
+  desktop-packaged:
+    needs: [desktop-package]
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Install locked JavaScript inputs
+        run: corepack enable && pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+          path: ${{ runner.temp }}/${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+      - name: Rebase the downloaded manifest onto this job's own artifact directory
+        id: rebase
+        run: |
+          set -o pipefail
+          artifact_root="$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}"
+          chmod -R u+x "$artifact_root"
+          node -e "
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const root = process.argv[1];
+            const manifestPath = path.join(root, 'package-manifest.json');
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+            const appName = path.basename(manifest.copiedApplicationPath);
+            const rebasedAppPath = path.join(root, appName);
+            const executableName = path.basename(manifest.executablePath);
+            manifest.copiedApplicationPath = rebasedAppPath;
+            manifest.executablePath = path.join(rebasedAppPath, 'Contents', 'MacOS', executableName);
+            fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+            console.log(manifestPath);
+          " "$artifact_root" | tee "$RUNNER_TEMP/rebase.txt"
+          echo "manifest-path=$artifact_root/package-manifest.json" >> "$GITHUB_OUTPUT"
+      - name: Run every packaged Playwright spec against the exact downloaded bytes
+        run: node tooling/smoke-desktop-packaged.mjs --manifest "${{ steps.rebase.outputs.manifest-path }}"
+
+  # Real Electron E2E against the shipped entry point (`dist/main/index.cjs`
+  # via `package.json#main`), independent of the packaged artifact -- this
+  # is the pre-existing daily-loop/lifecycle/hostile-boundary evidence, kept
+  # in this workflow so the required job set is complete in one place.
+  desktop-e2e:
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Install locked JavaScript inputs
+        run: corepack enable && pnpm install --frozen-lockfile
+      - name: Install Playwright browsers/Electron runtime dependencies
+        run: pnpm --dir apps/desktop exec playwright install --with-deps
+      - name: Run the real shipped-entry-point Electron E2E suite
+        run: pnpm test:desktop:e2e
+
+  # Promotion is the exclusive, single-writer step: it accepts ONLY the
+  # digest `desktop-package` recorded, and ONLY after every required lane
+  # above has passed. `package-desktop.mjs --promote` refuses a second
+  # promotion attempt for the same digest and refuses a manifest missing any
+  # required digest field.
+  desktop-promote:
+    needs: [desktop-units, desktop-package, desktop-packaged, desktop-e2e]
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+          path: ${{ runner.temp }}/${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+      - name: Promote only the recorded digest, exclusively, after every required lane passed
+        run: |
+          node tooling/package-desktop.mjs --promote "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/package-manifest.json"
+          echo "Promoted digest ${{ needs.desktop-package.outputs.application-digest }}"
