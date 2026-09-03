@@ -4,7 +4,7 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: Completed 03-16-PLAN.md (O-21 closed; macOS lane 15/15, 92 cases; desktop phase gate lanes=9 failed=0)
+stopped_at: Completed 03-17-PLAN.md (local test scoping, test:changed, headless E2E, macOS CI TCC experiment; gate lanes=9 failed=1 pending O-27 evidence re-record)
 last_updated: "2026-09-03T20:18:17.495Z"
 last_activity: 2026-09-02
 last_activity_desc: Phase KPL-03 execution started
@@ -12,8 +12,8 @@ state_head: b810736bdc716792df60ca67e3c7cab605fe5843
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 54
-  completed_plans: 52
+  total_plans: 55
+  completed_plans: 53
 milestone_name: milestone
 ---
 
@@ -29,11 +29,11 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-03 (Mac Daily Loop) — EXECUTING
-Plan: 16 of 16
-Total Plans in Phase: 16
+Plan: 17 of 17
+Total Plans in Phase: 17
 Status: Executing Phase KPL-03
-Last activity: 2026-09-03 — Plan 03-16 complete (O-21 closed; macOS lane 15/15)
-Last Activity Description: Quick Entry prior-application focus return wired into the shipped bootstrap; macOS integration lane green (92 cases) and desktop phase gate at lanes=9 failed=0
+Last activity: 2026-09-03 — Plan 03-17 complete (test filters fixed, test:changed, headless E2E, macOS CI TCC experiment)
+Last Activity Description: Local test runs are scopeable, change-aware and optionally windowless; gate and CI unchanged in comprehensiveness. Gate reports lanes=9 failed=1 until O-27 re-records macOS row evidence for the new packaged digest.
 Progress: [█████████░] 97%
 
 ## Accumulated Context

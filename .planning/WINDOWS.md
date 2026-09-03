@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 50
+open_count: 52
 waived_count: 0
 fixed_count: 4
-total_count: 54
-last_updated: 2026-09-03T01:41:18.549Z
+total_count: 56
+last_updated: 2026-09-03T20:47:11.845Z
 ---
 
 # Broken Windows Ledger
@@ -69,6 +69,8 @@ last_updated: 2026-09-03T01:41:18.549Z
 | 52 | KPL-03 | deviation | apps/desktop/main/adapters/credentials.ts |  | Loaded Electron safeStorage lazily so injected adapter proof runs outside Electron | open |  | 2026-09-02T18:55:07.476Z |  |
 | 53 | KPL-03 | deviation | apps/desktop/main/adapters/credentials.ts |  | Added unsigned dogfood credential continuity disclosure for Settings presentation | open |  | 2026-09-02T18:55:07.591Z |  |
 | 54 | KPL-03 | deviation | apps/desktop/main/adapters/credentials.ts |  | 03-13: pane-size persistence (D-06) is N/A -- no resizable-pane UI exists in the shared Workspace presentation to size or restore; documented decision, not a stub. | open |  | 2026-09-03T01:41:18.549Z |  |
+| 55 | KPL-03 | unrun-verify | tooling/verify-desktop-phase.mjs |  | macos-integration lane cases=0 at 03-17 HEAD: recorded row evidence is bound to the packaged applicationDigestSha256 and 03-17 changed main/index.ts. Re-record with: pnpm package:desktop && node tooling/verify-macos-integration.mjs --all (O-27) | open |  | 2026-09-03T20:47:11.732Z |  |
+| 56 | KPL-03 | unmet-truth | apps/desktop/vitest.config.ts |  | vitest 'worker' project declares include test/worker/** but that directory does not exist; the empty lane is invisible in a full run (O-26) | open |  | 2026-09-03T20:47:11.845Z |  |
 
 ````json
 [
@@ -718,6 +720,30 @@ last_updated: 2026-09-03T01:41:18.549Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-03T01:41:18.549Z",
+    "resolved_at": null
+  },
+  {
+    "id": 55,
+    "kind": "unrun-verify",
+    "phase": "KPL-03",
+    "file": "tooling/verify-desktop-phase.mjs",
+    "line": null,
+    "description": "macos-integration lane cases=0 at 03-17 HEAD: recorded row evidence is bound to the packaged applicationDigestSha256 and 03-17 changed main/index.ts. Re-record with: pnpm package:desktop && node tooling/verify-macos-integration.mjs --all (O-27)",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-03T20:47:11.732Z",
+    "resolved_at": null
+  },
+  {
+    "id": 56,
+    "kind": "unmet-truth",
+    "phase": "KPL-03",
+    "file": "apps/desktop/vitest.config.ts",
+    "line": null,
+    "description": "vitest 'worker' project declares include test/worker/** but that directory does not exist; the empty lane is invisible in a full run (O-26)",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-03T20:47:11.845Z",
     "resolved_at": null
   }
 ]

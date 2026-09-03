@@ -359,6 +359,11 @@
       "id": "O-26",
       "item": "vitest `worker` project has zero test files",
       "detail": "apps/desktop/vitest.config.ts declares a `worker` project (include: test/worker/**) with passWithNoTests: false, but apps/desktop/test/worker/ does not exist. The full `pnpm test:desktop` run still passes because vitest's no-test check is satisfied by the other projects, so the empty lane is invisible -- `node tooling/run-tests.mjs unit --project=worker` alone fails with 'No test files found'. Found while building the 03-17 change-scoped selector. Either add the worker-protocol tests the project name promises (the real worker IS covered today, but from test/e2e/sync-recovery.spec.ts, not test/worker/), or delete the project so the lane list stops advertising coverage that does not exist."
+    },
+    {
+      "id": "O-27",
+      "item": "macOS integration evidence must be re-recorded for the post-03-17 packaged digest",
+      "detail": "03-17 Task 3 edits apps/desktop/main/index.ts (installs the headless presentation seam), which changes the packaged bytes. The recorded macOS row evidence is bound to applicationDigestSha256, so the previously green record (ffcb4a92459956e21708b415f4b4b8b0babde91452ee308a5e633e766d346c59, 15 rows / 92 cases) no longer applies. `node tooling/verify-desktop-phase.mjs` at 03-17 HEAD therefore reports lanes=9 failed=1, with macos-integration cases=0 and the message 'no macOS integration evidence exists for application digest 5f8ad9faa50749a5fa0afeb3d34341cfca50694cc61c428f71b94f2d853aeace'. This is the gate working as designed (it refuses stale evidence), NOT a weakened lane: the other 8 lanes pass with unchanged counts (typecheck x2, unit 164, ipc 66, electron-e2e 57, package-once, packaged 10, privacy). Fix is one command, deliberately NOT run by the 03-17 executor because it types on the real keyboard and mutates real system settings on Jon's machine: `pnpm package:desktop && node tooling/verify-macos-integration.mjs --all`. Partial `--rows` recording will not restore the gate, because the gate requires evidence for every row."
     }
   ],
   "phase_level_gap": {
