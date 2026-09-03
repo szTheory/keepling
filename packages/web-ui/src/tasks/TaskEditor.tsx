@@ -20,11 +20,21 @@ import type { ClientFacade, WorkspaceTaskView } from '../ClientFacade'
  */
 type TaskEditorHandle = {
   discard: () => void
+  /** O-11 gap closure (D-06): the current in-progress edit, or `null` when not dirty. Used only for semantic-restoration persistence -- never a durability signal (D-03). */
+  getDraft: () => { notes: string; title: string } | null
   save: () => Promise<boolean>
 }
 
 type TaskEditorProps = {
   facade: ClientFacade
+  /**
+   * O-11 gap closure (D-06): a restored recoverable draft for THIS task,
+   * applied only once, at mount (never re-applied on a later re-render or
+   * task switch -- ordinary edits and the existing `task.id` reset effect
+   * own everything after that). Absent/undefined means "start from the
+   * task's own canonical title/notes", the pre-existing behavior.
+   */
+  initialDraft?: { notes: string; title: string }
   onDirtyChange: (dirty: boolean) => void
   task: WorkspaceTaskView
 }
@@ -36,17 +46,28 @@ const syncStatusLabel = (status: WorkspaceTaskView['syncStatus']): string => {
 }
 
 const TaskEditor = forwardRef<TaskEditorHandle, TaskEditorProps>(function TaskEditor(
-  { facade, onDirtyChange, task },
+  { facade, initialDraft, onDirtyChange, task },
   ref,
 ) {
-  const [title, setTitle] = useState(task.title)
-  const [notes, setNotes] = useState(task.notes)
+  const [title, setTitle] = useState(() => initialDraft?.title ?? task.title)
+  const [notes, setNotes] = useState(() => initialDraft?.notes ?? task.notes)
   const [saving, setSaving] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
   const [lifecycleBusy, setLifecycleBusy] = useState(false)
   const titleRef = useRef<HTMLInputElement>(null)
+  // O-11 gap closure: skip the very first run of the reset-to-canonical
+  // effect below so a restored `initialDraft` (applied only via the lazy
+  // useState initializers above, at true mount) is never immediately wiped
+  // out by this effect on that same mount. Every SUBSEQUENT task switch or
+  // remote task field change still resets normally.
+  const skippedFirstResetRef = useRef(false)
 
   useEffect(() => {
+    if (!skippedFirstResetRef.current) {
+      skippedFirstResetRef.current = true
+      setProblem(null)
+      return
+    }
     setTitle(task.title)
     setNotes(task.notes)
     setProblem(null)
@@ -77,7 +98,7 @@ const TaskEditor = forwardRef<TaskEditorHandle, TaskEditorProps>(function TaskEd
     setProblem(null)
   }
 
-  useImperativeHandle(ref, () => ({ discard, save }))
+  useImperativeHandle(ref, () => ({ discard, getDraft: () => (dirty ? { notes, title } : null), save }))
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if ((event.metaKey || event.ctrlKey) && (event.key === 's' || event.key === 'Enter')) {

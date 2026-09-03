@@ -68,6 +68,26 @@ type RecoveryAvailabilityView = {
 } | null
 
 /**
+ * D-06 renderer-semantic restoration snapshot (O-11 gap closure). Deliberately
+ * narrow to what D-06 names: destination, a surviving selection, a semantic
+ * scroll anchor, and a recoverable editor draft. NEVER includes transient
+ * dialogs, progress, authentication prompts, or raw DOM focus targets --
+ * those must never be restored. `draft` makes NO durability claim (D-03):
+ * it is UI convenience state, distinct from an accepted, committed task.
+ *
+ * Pane sizes are deliberately absent: no resizable-pane UI exists anywhere
+ * in this shared Workspace presentation, so there is nothing to size or
+ * restore for that D-06 field (see 03-13-SUMMARY.md "Deviations").
+ */
+type WorkspaceLayoutState = {
+  readonly destination: WorkspaceRoute
+  readonly draft: { readonly notes: string; readonly taskId: string; readonly title: string } | null
+  readonly scrollAnchorTaskId: string | null
+  readonly selectedTaskId: string | null
+  readonly sidebarVisible: boolean
+}
+
+/**
  * The platform-free semantic presentation contract (D-26/D-27).
  *
  * `getSnapshot`/`subscribe` expose the workspace task list, route, and
@@ -101,6 +121,22 @@ interface ClientFacade {
   selectTask(taskId: string | null): void
   /** Named navigation operation: switches the active workspace destination (Inbox/Today/Trash). */
   setRoute(route: WorkspaceRoute): void
+  /**
+   * Named restoration operation (D-06, O-11 gap closure): best-effort,
+   * fire-and-forget persistence of the current semantic workspace layout,
+   * for restoration on the next relaunch. Never a durability boundary and
+   * never throws for the caller. Optional -- platforms without real
+   * cross-relaunch persistence simply omit it, and callers must treat its
+   * absence as "restoration unsupported here", never as an error.
+   */
+  persistWorkspaceLayout?(state: WorkspaceLayoutState): void
+  /**
+   * Named restoration operation (D-06, O-11 gap closure): returns the last
+   * persisted semantic workspace layout, or `null` when none is persisted
+   * yet or this platform does not support restoration. Optional for the
+   * same reason as `persistWorkspaceLayout`.
+   */
+  restoreWorkspaceLayout?(): Promise<WorkspaceLayoutState | null>
   /** Subscribes to workspace snapshot changes; returns an unsubscribe function. */
   subscribe(listener: (snapshot: WorkspaceSnapshotView) => void): () => void
   /** Subscribes to recovery/undo availability changes; returns an unsubscribe function. */
@@ -119,6 +155,7 @@ export type {
   RecoveryAvailabilityView,
   TaskOutcome,
   WorkspaceConflictView,
+  WorkspaceLayoutState,
   WorkspaceRoute,
   WorkspaceSnapshotView,
   WorkspaceSyncStatus,

@@ -24,6 +24,14 @@ const destinationTitle = (route: 'inbox' | 'today' | 'trash'): string => {
  * (D-07): Electron's BrowserWindow mirrors `document.title` as the native
  * window title by default, so this never needs a main-process round trip
  * and never contains task content (only the coarse destination name).
+ *
+ * O-11 gap closure (D-06 renderer-semantic restoration): `sidebarVisible`
+ * starts optimistically `true` (the pre-existing default) and is updated by
+ * `onSidebarVisibleRestored` if `Workspace` finds a persisted layout. This
+ * file is a necessary, disclosed addition beyond this plan's originally
+ * declared `files_modified` (see 03-13-SUMMARY.md "Deviations") -- sidebar
+ * visibility is real state this component alone owns, so restoring it
+ * requires a two-line wire here regardless of file scope.
  */
 function DesktopShell({ facade }: DesktopShellProps) {
   const [sidebarVisible, setSidebarVisible] = useState(true)
@@ -98,7 +106,13 @@ function DesktopShell({ facade }: DesktopShellProps) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [facade])
 
-  return <Workspace facade={facade} sidebarVisible={sidebarVisible} />
+  return (
+    <Workspace
+      facade={facade}
+      onSidebarVisibleRestored={setSidebarVisible}
+      sidebarVisible={sidebarVisible}
+    />
+  )
 }
 
 export default DesktopShell

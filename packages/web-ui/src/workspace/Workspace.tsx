@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import type { ClientFacade, WorkspaceRoute, WorkspaceSnapshotView } from '../ClientFacade'
+import type { ClientFacade, WorkspaceLayoutState, WorkspaceRoute, WorkspaceSnapshotView } from '../ClientFacade'
 import CaptureForm from '../capture/CaptureForm'
 import ConflictResolver from '../tasks/ConflictResolver'
 import TaskEditor, { type TaskEditorHandle } from '../tasks/TaskEditor'
@@ -16,6 +16,17 @@ import SyncRecovery from '../recovery/SyncRecovery'
  */
 type WorkspaceProps = {
   facade: ClientFacade
+  /**
+   * O-11 gap closure (D-06): called (at most once) with a restored
+   * sidebar-visibility value when a persisted layout is found. Workspace
+   * does not own sidebar visibility itself (the Electron renderer's
+   * DesktopShell does, via `sidebarVisible` below) -- this is how a
+   * restored value reaches that owner without Workspace needing to own it.
+   * Absent means "no caller wants restored sidebar visibility" (e.g. the
+   * browser adapter, which has no such concept); never called with a
+   * dangling or transient value.
+   */
+  onSidebarVisibleRestored?: (visible: boolean) => void
   /**
    * Desktop-only sidebar visibility (D-14 "Toggle Sidebar", Command-Control-S).
    * Optional and defaults to visible so browser/fixture callers are
@@ -64,7 +75,7 @@ const emptyCopy: Record<WorkspaceRoute, { body: string; title: string }> = {
 
 type PendingNavigation = { kind: 'route'; route: WorkspaceRoute } | { kind: 'select'; taskId: string | null }
 
-function Workspace({ facade, sidebarVisible = true }: WorkspaceProps) {
+function Workspace({ facade, onSidebarVisibleRestored, sidebarVisible = true }: WorkspaceProps) {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshotView>(() => facade.getSnapshot())
   const [dirty, setDirty] = useState(false)
   const [pendingNavigation, setPendingNavigation] = useState<PendingNavigation | null>(null)
@@ -73,8 +84,56 @@ function Workspace({ facade, sidebarVisible = true }: WorkspaceProps) {
   const editorRef = useRef<TaskEditorHandle>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const previousTasksRef = useRef(snapshot.tasks)
+  // O-11 gap closure (D-06 renderer-semantic restoration). `restoreAttemptedRef`
+  // gates persistence: we must not persist (and thereby overwrite a real
+  // saved layout with fresh-mount defaults) until a restore attempt has
+  // actually resolved. `pendingRestoreRef` holds a restored layout between
+  // "route applied" and "tasks loaded enough to validate selection/scroll/
+  // draft against" -- see the two effects below.
+  const restoreAttemptedRef = useRef(false)
+  const pendingRestoreRef = useRef<WorkspaceLayoutState | null>(null)
+  const [restoredDraft, setRestoredDraft] = useState<{ notes: string; taskId: string; title: string } | null>(null)
 
   useEffect(() => facade.subscribe(setSnapshot), [facade])
+
+  // Restore step 1: fetch the persisted layout once per facade instance and
+  // apply the destination + sidebar visibility immediately -- both are safe
+  // to apply without waiting for tasks to load. Selection/scroll/draft are
+  // deferred to step 2 because they must be validated against real tasks
+  // (D-06: "a selected task that no longer exists degrades safely rather
+  // than restoring a dangling selection").
+  useEffect(() => {
+    let cancelled = false
+    const restore = facade.restoreWorkspaceLayout
+    if (restore === undefined) {
+      restoreAttemptedRef.current = true
+      return undefined
+    }
+    void restore()
+      .then((state) => {
+        if (cancelled) return
+        if (state !== null) {
+          pendingRestoreRef.current = state
+          facade.setRoute(state.destination)
+          onSidebarVisibleRestored?.(state.sidebarVisible)
+        }
+      })
+      .catch(() => {
+        // Restoration is UI convenience only (D-03/D-21) -- a failure here
+        // degrades to the ordinary fresh-workspace defaults, never a crash
+        // and never blocks the workspace from rendering.
+      })
+      .finally(() => {
+        if (!cancelled) restoreAttemptedRef.current = true
+      })
+    return () => {
+      cancelled = true
+    }
+    // Deliberately run once per facade instance (a fresh facade means a
+    // fresh relaunch/mount), not on every onSidebarVisibleRestored identity
+    // change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [facade])
 
   const routeTasks = useMemo(
     () =>
@@ -110,6 +169,52 @@ function Workspace({ facade, sidebarVisible = true }: WorkspaceProps) {
     if (next) setFocusTaskId(next.id)
     else headingRef.current?.focus()
   }, [facade, routeTasks, snapshot.selectedTaskId, snapshot.tasks])
+
+  // Restore step 2: once the destination has actually taken effect on the
+  // live snapshot (proving step 1's `setRoute` has landed and `routeTasks`
+  // above reflects it), validate the restored selection/scroll-anchor/draft
+  // against tasks that ACTUALLY exist right now. Anything not found is
+  // dropped, never applied -- this is the "degrades safely" contract
+  // (D-06: "a selected task that no longer exists degrades safely rather
+  // than restoring a dangling selection").
+  useEffect(() => {
+    const pending = pendingRestoreRef.current
+    if (pending === null) return
+    if (snapshot.route !== pending.destination) return
+    pendingRestoreRef.current = null
+    const restoredTaskId =
+      pending.selectedTaskId !== null && routeTasks.some((task) => task.id === pending.selectedTaskId)
+        ? pending.selectedTaskId
+        : null
+    if (restoredTaskId !== null) facade.selectTask(restoredTaskId)
+    const anchor =
+      pending.scrollAnchorTaskId !== null && routeTasks.some((task) => task.id === pending.scrollAnchorTaskId)
+        ? pending.scrollAnchorTaskId
+        : restoredTaskId
+    if (anchor !== null) setFocusTaskId(anchor)
+    if (pending.draft !== null && routeTasks.some((task) => task.id === pending.draft!.taskId)) {
+      setRestoredDraft(pending.draft)
+    }
+  }, [facade, routeTasks, snapshot.route])
+
+  // Persist step: whenever meaningful semantic layout inputs change AFTER
+  // the initial restore attempt has resolved (never before -- persisting
+  // fresh-mount defaults before restoration runs would overwrite a real
+  // saved layout with nothing), best-effort persist the current layout for
+  // the next relaunch. `sidebarVisible` is a prop (owned by the Electron
+  // renderer's DesktopShell), so it flows in here already current.
+  useEffect(() => {
+    if (!restoreAttemptedRef.current) return
+    if (facade.persistWorkspaceLayout === undefined) return
+    const draft = editorRef.current?.getDraft() ?? null
+    facade.persistWorkspaceLayout({
+      destination: snapshot.route,
+      draft: draft !== null && selectedTask !== null ? { notes: draft.notes, taskId: selectedTask.id, title: draft.title } : null,
+      scrollAnchorTaskId: focusTaskId ?? snapshot.selectedTaskId,
+      selectedTaskId: snapshot.selectedTaskId,
+      sidebarVisible,
+    })
+  }, [dirty, facade, focusTaskId, selectedTask, sidebarVisible, snapshot.route, snapshot.selectedTaskId])
 
   const showList = breakpoint !== 'compact' || selectedTask === null
   const showDetail = breakpoint !== 'compact' || selectedTask !== null
@@ -218,7 +323,13 @@ function Workspace({ facade, sidebarVisible = true }: WorkspaceProps) {
                 </button>
               ) : null}
               <h2 id="workspace-detail-title">{selectedTask.title}</h2>
-              <TaskEditor facade={facade} onDirtyChange={setDirty} ref={editorRef} task={selectedTask} />
+              <TaskEditor
+                facade={facade}
+                initialDraft={restoredDraft && restoredDraft.taskId === selectedTask.id ? restoredDraft : undefined}
+                onDirtyChange={setDirty}
+                ref={editorRef}
+                task={selectedTask}
+              />
             </>
           )}
         </section>

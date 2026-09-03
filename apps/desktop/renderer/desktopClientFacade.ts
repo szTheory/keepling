@@ -6,6 +6,7 @@ import type {
   RecoveryAvailabilityView,
   TaskOutcome,
   WorkspaceConflictView,
+  WorkspaceLayoutState,
   WorkspaceRoute,
   WorkspaceSnapshotView,
   WorkspaceTaskView,
@@ -109,6 +110,17 @@ const createDesktopClientFacade = (): ClientFacade => {
   }
 
   return {
+    // O-11 gap closure (D-06): a real (not stubbed) main-owned round trip
+    // through the named preload contract added by this plan -- the exact
+    // "extend ClientFacade with named semantic restoration operations and
+    // persist the snapshot through the existing main-owned window-state
+    // port" the plan action calls for (a small self-contained sibling port
+    // in `main/index.ts`, since `lifecycle.ts` is outside this plan's
+    // authorized file scope; see 03-13-SUMMARY.md).
+    persistWorkspaceLayout: (state: WorkspaceLayoutState) => {
+      window.keepling.persistWorkspaceLayout(state)
+    },
+    restoreWorkspaceLayout: () => window.keepling.restoreWorkspaceLayout(),
     captureTask: async (input: CaptureInput): Promise<CaptureOutcome> => {
       try {
         const acceptance = await window.keepling.capture({ title: input.title })
