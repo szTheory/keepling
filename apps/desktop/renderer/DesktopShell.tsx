@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import type { ClientFacade } from '../../../packages/web-ui/src/ClientFacade.ts'
 import Workspace from '../../../packages/web-ui/src/workspace/Workspace.tsx'
+import SyncStatusRow from './SyncStatusRow.tsx'
 import { matchSemanticCommand, shouldDispatchCommand, type SemanticCommand } from './keyboardCommands.ts'
 
 type DesktopShellProps = {
@@ -107,11 +108,20 @@ function DesktopShell({ facade }: DesktopShellProps) {
   }, [facade])
 
   return (
-    <Workspace
-      facade={facade}
-      onSidebarVisibleRestored={setSidebarVisible}
-      sidebarVisible={sidebarVisible}
-    />
+    <>
+      {/*
+        O-30 (Rule 2): the main-owned MAC-04 status row. Rendered ABOVE the
+        workspace rather than inside `packages/web-ui` because it is fed by
+        the desktop preload bridge's presentation channel, which the shared
+        browser presentation has no equivalent of.
+      */}
+      <SyncStatusRow />
+      <Workspace
+        facade={facade}
+        onSidebarVisibleRestored={setSidebarVisible}
+        sidebarVisible={sidebarVisible}
+      />
+    </>
   )
 }
 

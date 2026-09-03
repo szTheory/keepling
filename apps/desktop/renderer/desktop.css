@@ -11,11 +11,34 @@ body {
 
 #root {
   height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/*
+  O-30: the MAC-04 status row sits ABOVE the workspace and takes only the
+  height it needs, so the workspace keeps filling the rest of the window
+  exactly as it did when it was the only child. When the row is quiet
+  (`summary.copy === null`) it renders nothing at all and this costs zero
+  height.
+*/
+#sync-status-row {
+  flex: 0 0 auto;
+  padding: 8px 20px;
+  border-bottom: 1px solid color-mix(in srgb, CanvasText 14%, transparent);
+  background: color-mix(in srgb, CanvasText 5%, transparent);
+}
+
+#sync-status-row p {
+  margin: 0;
+  font-size: 13px;
+  color: color-mix(in srgb, CanvasText 72%, transparent);
 }
 
 main[data-workspace-breakpoint] {
   display: grid;
-  height: 100vh;
+  flex: 1 1 auto;
+  min-height: 0;
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr auto;
 }
