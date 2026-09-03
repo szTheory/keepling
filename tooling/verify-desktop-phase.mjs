@@ -185,6 +185,31 @@ runLane({
   trackedInputPaths: ['apps/desktop/test/packaged', 'tooling/smoke-desktop-packaged.mjs'],
 })
 
+/**
+ * The macOS layer (rows A1-A15): the real AXUIElement tree VoiceOver speaks,
+ * real CGEvent keystrokes, real input sources, and real system
+ * accessibility/appearance settings, all against the SAME packaged artifact
+ * `package-once` produced. This lane replaces what used to be a fifteen-row
+ * human checklist. Like every other lane here it is anti-vacuous: a missing
+ * Accessibility (TCC) grant, a missing `swiftc`, an unimplemented row, or a
+ * row that asserted nothing is a FAILURE, never a skip.
+ */
+runLane({
+  args: ['tooling/verify-macos-integration.mjs'],
+  command: 'node',
+  name: 'macos-integration',
+  parse: (stdout) => {
+    const summary = stdout.match(/macOS integration lane summary: rows=(\d+) failed=(\d+) cases=(\d+)/)
+    if (!summary) throw new Error('macOS integration lane summary line not found')
+    if (Number(summary[2]) > 0) throw new Error(`macOS integration lane reported ${summary[2]} failing row(s)`)
+    const passed = stdout.match(/macOS integration lane: PASSED cases=(\d+)/)
+    if (!passed) throw new Error('macOS integration lane did not report a PASSED result')
+    if (Number(passed[1]) !== Number(summary[3])) throw new Error('macOS integration lane case counts disagree')
+    return Number(passed[1])
+  },
+  trackedInputPaths: ['tooling/macos-integration', 'tooling/verify-macos-integration.mjs'],
+})
+
 // Privacy: every generated packaged/E2E test-results artifact from this run
 // is scanned for hostile content sentinels (packages/contracts vector,
 // shared with Phase 2) AND for plaintext bearer/access-token-shaped
@@ -251,6 +276,40 @@ runLane({
 // existing test (file + exact test-name substring) as the owner of that
 // adversarial category. A renamed or deleted fixture fails this gate.
 // ---------------------------------------------------------------------------
+
+/**
+ * Physical-accessibility row ownership (A1-A15). These rows were previously
+ * a human checklist; each is now owned by exactly one named row
+ * implementation in the macOS lane. A renamed or deleted row fails this
+ * gate the same way a missing D-48 fixture does -- which is what stops the
+ * checklist quietly coming back as an unowned claim.
+ */
+const accessibilityRowRegistry = [
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A1', testName: "runRow('A1'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A2', testName: "runRow('A2'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A3', testName: "runRow('A3'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A4', testName: "runRow('A4'" },
+]
+
+let accessibilityOwnershipFailed = false
+for (const row of accessibilityRowRegistry) {
+  const filePath = join(repositoryRoot, row.file)
+  let source
+  try {
+    source = readFileSync(filePath, 'utf8')
+  } catch {
+    console.log(`AROW row=${row.row} status=MISSING file=${row.file}`)
+    accessibilityOwnershipFailed = true
+    continue
+  }
+  const found = source.includes(row.testName)
+  console.log(`AROW row=${row.row} status=${found ? 'PASS' : 'FAIL'} file=${row.file}`)
+  if (!found) accessibilityOwnershipFailed = true
+}
+if (accessibilityOwnershipFailed) {
+  anyFailed = true
+  fail('one or more physical-accessibility rows (A1-A15) has no owning implementation')
+}
 
 const ownershipRegistry = [
   { category: 'shortcut', file: 'apps/desktop/test/e2e/lifecycle.spec.ts', testName: 'the global Quick Entry shortcut is registered by the real shipped app' },
