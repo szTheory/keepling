@@ -367,6 +367,24 @@ case "activate":
   usleep(400_000)
   emit(["activated": true, "pid": Int(pid)])
 
+case "resize":
+  requireTrusted()
+  let pid = requiredPid()
+  guard let width = Double(requiredOption("width")), let height = Double(requiredOption("height")) else {
+    die("invalid_option", "--width/--height must be numbers")
+  }
+  let application = AXUIElementCreateApplication(pid)
+  activateAccessibility(application)
+  guard let window = axChildren(application).first(where: { (axString($0, kAXRoleAttribute as String) ?? "") == "AXWindow" }) else {
+    die("no_window", "\(pid)")
+  }
+  var size = CGSize(width: width, height: height)
+  guard let sizeValue = AXValueCreate(.cgSize, &size) else { die("axvalue_create_failed") }
+  let status = AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
+  if status != .success { die("window_resize_failed", "AXError \(status.rawValue)") }
+  usleep(500_000)
+  emit(["resized": true, "window": describe(window)])
+
 case "windows":
   requireTrusted()
   let pid = requiredPid()

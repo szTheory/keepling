@@ -289,6 +289,15 @@ const accessibilityRowRegistry = [
   { file: 'tooling/verify-macos-integration.mjs', row: 'A2', testName: "runRow('A2'" },
   { file: 'tooling/verify-macos-integration.mjs', row: 'A3', testName: "runRow('A3'" },
   { file: 'tooling/verify-macos-integration.mjs', row: 'A4', testName: "runRow('A4'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A5', testName: "runRow('A5'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A6', testName: "runRow('A6'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A7', testName: "runRow('A7'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A10', testName: "appearanceRow('A10'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A11', testName: "appearanceRow('A11'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A12', testName: "appearanceRow('A12'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A13', testName: "appearanceRow('A13'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A14', testName: "appearanceRow('A14'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A15', testName: "runRow('A15'" },
 ]
 
 let accessibilityOwnershipFailed = false

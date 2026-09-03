@@ -33,7 +33,7 @@
 
 import { createHash } from 'node:crypto'
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync } from 'node:fs'
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { isAbsolute, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
@@ -383,6 +383,157 @@ const waitFor = async (description, predicate, { timeoutMs = 12_000, intervalMs 
 }
 
 // ---------------------------------------------------------------------------
+// System settings: capture before mutation, restore on EVERY exit path
+// ---------------------------------------------------------------------------
+
+/**
+ * Everything in here exists because this lane runs on a person's own Mac and
+ * changes real system settings. The rules it keeps:
+ *
+ *   1. Nothing is mutated until the current value has been captured AND
+ *      written to disk, so even a `kill -9` leaves a record of what to put
+ *      back.
+ *   2. Restore is registered on normal exit, on an exception, and on SIGINT
+ *      and SIGTERM -- before the first mutation, not after.
+ *   3. Restore is VERIFIED by re-reading every setting. A restore that
+ *      cannot prove it worked is a lane failure, not a shrug.
+ */
+const settingsState = {
+  applied: false,
+  baseline: null,
+  capturePath: null,
+  inputSource: null,
+  probeBinary: null,
+  restored: false,
+}
+
+const readSystemSettings = () => runProbe(settingsState.probeBinary, ['capture']).value
+
+const captureSystemSettings = () => {
+  if (settingsState.baseline !== null) return settingsState.baseline
+  const baseline = readSystemSettings()
+  mkdirSync(cacheDir, { recursive: true })
+  settingsState.capturePath = join(cacheDir, 'settings-capture.json')
+  writeFileSync(settingsState.capturePath, JSON.stringify(baseline, null, 2))
+  settingsState.baseline = baseline
+  console.log(`SETTINGS captured=${Object.keys(baseline).filter((key) => key !== 'inputSource').length} file=${settingsState.capturePath}`)
+  return baseline
+}
+
+const MANAGED_KEYS = ['appearance', 'differentiateWithoutColor', 'fullKeyboardAccess', 'increaseContrast', 'reduceMotion', 'reduceTransparency']
+
+const PROTECTED_DOMAIN_INSTRUCTION = [
+  '',
+  'The Accessibility settings domain (`com.apple.universalaccess`) is protected',
+  'by macOS privacy controls: an unentitled process may write to it and receive',
+  'NO error while nothing is actually stored. That silent no-op is exactly the',
+  'vacuous pass this lane exists to prevent, so it is treated as a failure.',
+  '',
+  'Open:  System Settings -> Privacy & Security -> Full Disk Access',
+  'Then:  enable the application that runs this lane (the terminal, IDE, or CI',
+  '       agent process), and restart it so the new grant takes effect.',
+  '',
+  'This is a one-time approval. The lane will NOT skip these rows without it.',
+].join('\n')
+
+/**
+ * Applies settings and then VERIFIES the write landed by re-reading in a
+ * SEPARATE process. An in-process read-back would be satisfied by the
+ * preferences cache even when nothing reached disk.
+ */
+const applySystemSettings = (changes) => {
+  captureSystemSettings()
+  settingsState.applied = true
+  runProbe(settingsState.probeBinary, ['apply', '--settings', JSON.stringify(changes)])
+  const observed = readSystemSettings()
+  const rejected = Object.entries(changes).filter(([key, value]) => JSON.stringify(observed[key] ?? null) !== JSON.stringify(value))
+  if (rejected.length > 0) {
+    const detail = rejected.map(([key, value]) => `${key}: asked for ${JSON.stringify(value)}, the system still reports ${JSON.stringify(observed[key] ?? null)}`).join('; ')
+    console.error(`macOS integration lane failed: the operating system did not accept a setting change -- ${detail}\n${PROTECTED_DOMAIN_INSTRUCTION}`)
+    restoreSystemSettings()
+    process.exit(1)
+  }
+}
+
+const selectInputSource = (identifier) => {
+  captureSystemSettings()
+  const previous = settingsState.baseline.inputSource?.id ?? null
+  const result = runProbe(settingsState.probeBinary, ['select-input-source', '--id', identifier]).value
+  settingsState.inputSource = { enabledByUs: result.enabledByUs === true, identifier, previous }
+  return result
+}
+
+/**
+ * Synchronous on purpose: `process.on('exit')` cannot await, and a restore
+ * that only runs on the happy path is not a restore.
+ */
+const restoreSystemSettings = ({ verify = true } = {}) => {
+  if (settingsState.baseline === null || settingsState.restored) return true
+  settingsState.restored = true
+
+  if (settingsState.inputSource !== null) {
+    const { enabledByUs, identifier, previous } = settingsState.inputSource
+    if (previous !== null) spawnSync(settingsState.probeBinary, ['select-input-source', '--id', previous], { encoding: 'utf8' })
+    if (enabledByUs) spawnSync(settingsState.probeBinary, ['disable-input-source', '--id', identifier], { encoding: 'utf8' })
+  }
+
+  const restoreTo = {}
+  for (const key of MANAGED_KEYS) restoreTo[key] = settingsState.baseline[key] ?? null
+  spawnSync(settingsState.probeBinary, ['apply', '--settings', JSON.stringify(restoreTo)], { encoding: 'utf8' })
+
+  if (!verify) return true
+  const after = spawnSync(settingsState.probeBinary, ['capture'], { encoding: 'utf8' })
+  let current
+  try {
+    current = JSON.parse(after.stdout)
+  } catch {
+    console.error('macOS integration lane failed: could not re-read system settings to verify restoration')
+    return false
+  }
+  const differences = []
+  for (const key of MANAGED_KEYS) {
+    const expected = settingsState.baseline[key] ?? null
+    const actual = current[key] ?? null
+    if (JSON.stringify(expected) !== JSON.stringify(actual)) differences.push(`${key}: expected ${JSON.stringify(expected)}, found ${JSON.stringify(actual)}`)
+  }
+  const expectedSource = settingsState.baseline.inputSource?.id ?? null
+  const actualSource = current.inputSource?.id ?? null
+  if (expectedSource !== actualSource) differences.push(`inputSource: expected ${expectedSource}, found ${actualSource}`)
+  const expectedEnabled = JSON.stringify(settingsState.baseline.inputSource?.enabled ?? [])
+  const actualEnabled = JSON.stringify(current.inputSource?.enabled ?? [])
+  if (expectedEnabled !== actualEnabled) differences.push(`enabled input sources: expected ${expectedEnabled}, found ${actualEnabled}`)
+
+  if (differences.length > 0) {
+    console.error(`SETTINGS restore=FAILED differences=${differences.length}`)
+    for (const difference of differences) console.error(`  ${difference}`)
+    console.error(`The captured original values remain at ${settingsState.capturePath}.`)
+    return false
+  }
+  console.log('SETTINGS restore=VERIFIED every mutated setting matches its captured value')
+  return true
+}
+
+let restoreFailed = false
+const restoreOnExit = () => {
+  if (!restoreSystemSettings()) restoreFailed = true
+}
+process.on('exit', restoreOnExit)
+for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+  process.on(signal, () => {
+    console.error(`\nmacOS integration lane interrupted by ${signal} -- restoring system settings before exiting.`)
+    const ok = restoreSystemSettings()
+    for (const handle of [...liveApplications]) handle.child.kill('SIGKILL')
+    for (const path of disposableProfiles.splice(0)) rmSync(path, { force: true, recursive: true })
+    process.exit(ok ? 130 : 1)
+  })
+}
+process.on('uncaughtException', (error) => {
+  console.error(`macOS integration lane failed: ${error instanceof Error ? error.stack ?? error.message : String(error)}`)
+  restoreSystemSettings()
+  process.exit(1)
+})
+
+// ---------------------------------------------------------------------------
 // Row registry
 // ---------------------------------------------------------------------------
 
@@ -399,9 +550,11 @@ const runRow = async (id, title, body) => {
     await body(check)
   } catch (error) {
     if (!(error instanceof LaneFailure)) {
+      const detail = error instanceof Error ? error.stack ?? error.message : String(error)
+      console.error(`macOS integration lane failed: ${id}: ${detail}`)
       rowResults.push({ cases: assertions.length, durationMs: Date.now() - startedAt, id, passed: false, title })
       console.log(`ROW id=${id} status=FAIL cases=${assertions.length} duration_ms=${Date.now() - startedAt}`)
-      throw new LaneFailure(`${id}: ${error instanceof Error ? error.message : String(error)}`)
+      throw new LaneFailure(`${id}: ${detail}`)
     }
     rowResults.push({ cases: assertions.length, durationMs: Date.now() - startedAt, id, passed: false, title })
     console.log(`ROW id=${id} status=FAIL cases=${assertions.length} duration_ms=${Date.now() - startedAt}`)
@@ -642,6 +795,7 @@ const rowA4 = (context) => runRow('A4', 'VoiceOver layer: the unsaved-changes di
 
     const titleField = await tabUntil(handle, 'the task title editor', (node) => node.role === 'AXTextField' && node.title === 'Title')
     check('the task title editor is reachable by keyboard and exposes its label', titleField.title === 'Title')
+    postKeys(handle, 'right')
     postKeys(handle, 'text: unsaved')
     await sleep(300)
 
@@ -687,21 +841,483 @@ const rowA4 = (context) => runRow('A4', 'VoiceOver layer: the unsaved-changes di
   }
 })
 
+
+// ---------------------------------------------------------------------------
+// Rows A5-A7 -- real keyboard access, real keystrokes, real input sources
+// ---------------------------------------------------------------------------
+
+const activateButton = async (handle, name) => {
+  await tabUntil(handle, `the "${name}" button`, (node) => node.role === 'AXButton' && node.title === name)
+  postKeys(handle, 'space')
+  await sleep(500)
+}
+
+/** Moves roving focus to a task row by name and opens it -- keyboard only. */
+const openTaskByKeyboard = async (handle, titleFragment) => {
+  await tabUntil(handle, `the "${titleFragment}" task row`, (node) =>
+    node.role === 'AXGroup' && ancestryText(node).includes('Tasks') && (node.title ?? '').includes(titleFragment))
+  postKeys(handle, 'return')
+  await sleep(700)
+}
+
+const hasButton = (handle, name) => findNode(webNodes(handle), (node) => node.role === 'AXButton' && node.title === name) !== null
+
+const rowA5 = (context) => runRow('A5', 'Full Keyboard Access: the complete scoped sequence, keyboard only', async (check) => {
+  applySystemSettings({ fullKeyboardAccess: 3 })
+  const settings = readSystemSettings()
+  check('Full Keyboard Access is genuinely enabled at the OS level before the sequence runs', settings.fullKeyboardAccess === 3, `AppleKeyboardUIMode=${settings.fullKeyboardAccess}`)
+
+  const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a5') })
+  try {
+    // Every step below is driven by CGEvent keys alone. No mouse event is
+    // ever posted by this lane, so "reachable by keyboard" is a property of
+    // the run rather than a claim about it.
+    await captureTaskByKeyboard(handle, 'Keyboard loop')
+    check('capture is reachable by keyboard alone', taskRows(handle).some((row) => row.text.includes('Keyboard loop')))
+
+    await openTaskByKeyboard(handle, 'Keyboard loop')
+    check('opening a task is reachable by keyboard alone', findNode(webNodes(handle), (node) => node.role === 'AXTextField' && node.title === 'Title') !== null)
+
+    await tabUntil(handle, 'the task title editor', (node) => node.role === 'AXTextField' && node.title === 'Title')
+    // Tabbing into a text field selects its contents; move the caret to the
+    // end first so this appends rather than replacing the title.
+    postKeys(handle, 'right')
+    postKeys(handle, 'text: edited')
+    await sleep(300)
+    await activateButton(handle, 'Save Changes')
+    await waitFor('the edited title to reach the list', async () => taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+    check('editing and saving are reachable by keyboard alone', taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+
+    await activateButton(handle, 'Complete')
+    check('completing is reachable by keyboard alone', hasButton(handle, 'Reopen'))
+    await activateButton(handle, 'Reopen')
+    check('reopening is reachable by keyboard alone', hasButton(handle, 'Complete'))
+
+    // Adding to Today moves the task OUT of Inbox, so the round trip has to
+    // cross routes -- by keyboard, like everything else here.
+    await activateButton(handle, 'Add to Today')
+    await waitFor('the planned task to leave Inbox', async () => !taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+    await activateButton(handle, 'Today')
+    await waitFor('the planned task to appear in Today', async () => taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+    check('adding to Today is reachable by keyboard alone', taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+
+    await openTaskByKeyboard(handle, 'Keyboard loop')
+    await activateButton(handle, 'Remove from Today')
+    await waitFor('the task to leave Today', async () => !taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+    check('removing from Today is reachable by keyboard alone', !taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+
+    await activateButton(handle, 'Inbox')
+    await waitFor('the task to return to Inbox', async () => taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+    await openTaskByKeyboard(handle, 'Keyboard loop')
+    await activateButton(handle, 'Move to Trash')
+    await waitFor('the trashed task to leave Inbox', async () => !taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+    check('trashing is reachable by keyboard alone', !taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+
+    await activateButton(handle, 'Trash')
+    await waitFor('the trashed task to appear in Trash', async () => taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+    await openTaskByKeyboard(handle, 'Keyboard loop')
+    await activateButton(handle, 'Restore')
+    await waitFor('the restored task to leave Trash', async () => !taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+    check('restoring is reachable by keyboard alone', !taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+
+    postKeys(handle, 'cmd+z')
+    await waitFor('undo to put the task back in Trash', async () => taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+    check('undo is reachable by keyboard alone', taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+
+    const focused = focusedElement(handle)
+    check(
+      'after the whole sequence, focus is still on a visible, operable element -- never lost',
+      focused !== null && focused.role !== 'AXApplication' && (focused.frame?.width ?? 0) > 0,
+      `focus was on ${focused ? `${focused.role} "${focused.title ?? ''}"` : 'nothing'}`,
+    )
+  } finally {
+    await quitApplication(handle)
+  }
+})
+
+const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never trapped or lost', async (check) => {
+  applySystemSettings({ fullKeyboardAccess: 3 })
+  check('Full Keyboard Access is enabled at the OS level', readSystemSettings().fullKeyboardAccess === 3)
+
+  const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a6') })
+  try {
+    const assertUsableFocus = (label) => {
+      const focused = focusedElement(handle)
+      check(
+        `${label}: focus is on a visible, operable element -- never the application element, never a removed node, never a silent reset`,
+        focused !== null &&
+          focused.role !== 'AXApplication' &&
+          (focused.frame?.width ?? 0) > 0 &&
+          (focused.frame?.height ?? 0) > 0,
+        `focus was on ${focused ? `${focused.role} "${focused.title ?? ''}" ${JSON.stringify(focused.frame ?? null)}` : 'nothing'}`,
+      )
+      return focused
+    }
+
+    // Dialog 1: Quick Entry discard-draft confirmation.
+    postKeys(handle, 'ctrl+alt+space')
+    await sleep(1400)
+    await tabUntil(handle, 'the Quick Entry capture field', (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL)
+    postKeys(handle, 'text:Draft')
+    await sleep(300)
+    await tabUntil(handle, 'the Discard Draft button', (node) => node.role === 'AXButton' && (node.title ?? '').startsWith('Discard Draft'))
+    postKeys(handle, 'space')
+    await sleep(700)
+    check('the Quick Entry discard dialog opens by keyboard alone', (focusedElement(handle)?.title ?? '') === 'Keep Draft')
+    postKeys(handle, 'space')
+    await sleep(700)
+    assertUsableFocus('after closing the Quick Entry discard dialog by keyboard')
+    postKeys(handle, 'escape')
+    await sleep(600)
+
+    // Dialog 2: the workspace unsaved-changes alertdialog.
+    await captureTaskByKeyboard(handle, 'Focus safety')
+    await tabUntil(handle, 'the task row', (node) => node.role === 'AXGroup' && ancestryText(node).includes('Tasks') && (node.title ?? '').includes('Focus safety'))
+    postKeys(handle, 'return')
+    await sleep(600)
+    await tabUntil(handle, 'the task title editor', (node) => node.role === 'AXTextField' && node.title === 'Title')
+    postKeys(handle, 'right')
+    postKeys(handle, 'text: dirty')
+    await sleep(300)
+    await tabUntil(handle, 'the Today destination button', (node) => node.role === 'AXButton' && node.title === 'Today', { key: 'shift+tab', limit: 24 })
+    postKeys(handle, 'space')
+    await sleep(800)
+    check('the unsaved-changes dialog opens by keyboard alone', (focusedElement(handle)?.title ?? '') === 'Keep Editing')
+    postKeys(handle, 'space')
+    await sleep(800)
+    assertUsableFocus('after closing the unsaved-changes dialog by keyboard')
+
+    // And once more through the destructive branch, which removes the
+    // element focus was on -- the case a naive implementation strands.
+    await tabUntil(handle, 'the Today destination button', (node) => node.role === 'AXButton' && node.title === 'Today', { key: 'shift+tab', limit: 24 })
+    postKeys(handle, 'space')
+    await sleep(800)
+    await tabUntil(handle, 'the Discard Changes button', (node) => node.role === 'AXButton' && node.title === 'Discard Changes')
+    postKeys(handle, 'space')
+    await sleep(900)
+    assertUsableFocus('after discarding changes and navigating away')
+  } finally {
+    await quitApplication(handle)
+  }
+})
+
+const DEAD_KEY_LAYOUT = 'com.apple.keylayout.USInternational-PC'
+
+const rowA7 = (context) => runRow('A7', 'Non-US layout with dead keys', async (check) => {
+  const selection = selectInputSource(DEAD_KEY_LAYOUT)
+  check('a non-US layout with dead keys is genuinely selected at the OS level', selection.selected === DEAD_KEY_LAYOUT, `selected ${selection.selected}`)
+
+  const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a7') })
+  try {
+    postKeys(handle, 'cmd+n')
+    await sleep(400)
+    await tabUntil(handle, 'the capture field', (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL)
+    // Raw virtual key codes, so the OS composes through the ACTIVE input
+    // source rather than this lane faking the result: `'` (dead acute) then
+    // `e` must produce `é`.
+    postKeys(handle, 'text:Caf,code:39,wait:120,e')
+    await sleep(600)
+
+    const composed = await waitFor('the dead-key composition to land in the field', async () => {
+      const node = findNode(webNodes(handle), (entry) => entry.role === 'AXTextField' && entry.title === CAPTURE_FIELD_LABEL)
+      return node && (node.value ?? '').length > 0 ? node : null
+    })
+    check(
+      'a dead-key sequence composes the accented character in the field, read back as AXValue',
+      composed.value === 'Café',
+      `field value was "${composed.value}"`,
+    )
+
+    await tabUntil(handle, 'the Add Task button', (node) => node.role === 'AXButton' && node.title === 'Add Task')
+    postKeys(handle, 'space')
+    const row = await waitFor('the composed title to commit', async () =>
+      taskRows(handle).find((entry) => entry.text.includes('Café')) ?? null)
+    check('the composed character survives commit and is announced correctly', row.text.includes('Café'), `row announcement was "${row.text}"`)
+  } finally {
+    await quitApplication(handle)
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Rows A10-A15 -- real system appearance settings, legibility measured in pixels
+// ---------------------------------------------------------------------------
+
+const WCAG_AA_BODY_TEXT = 4.5
+
+const measureContrast = (handle) => runProbe(settingsState.probeBinary, ['contrast', '--pid', String(handle.pid)]).value
+
+const appearanceRow = (id, title, { changes, live = false, extra = null }) => (context) =>
+  runRow(id, title, async (check) => {
+    if (!live) applySystemSettings(changes)
+    const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile(id.toLowerCase()) })
+    try {
+      await captureTaskByKeyboard(handle, `${id} legibility`)
+      const before = live ? measureContrast(handle) : null
+      if (live) {
+        // A14 is explicitly about a change made WHILE the app is open.
+        applySystemSettings(changes)
+        await sleep(1500)
+      }
+      const applied = readSystemSettings()
+      for (const [key, value] of Object.entries(changes)) {
+        check(`${key} is genuinely applied as the real OS setting`, JSON.stringify(applied[key] ?? null) === JSON.stringify(value), `read back ${JSON.stringify(applied[key] ?? null)}`)
+      }
+
+      const measurement = measureContrast(handle)
+      check(
+        'the window still renders distinguishable content (more than one significant colour)',
+        measurement.distinctSignificantColours > 1,
+        `saw ${measurement.distinctSignificantColours}`,
+      )
+      check(
+        `legibility is a MEASURED WCAG contrast ratio over rendered pixels, not an impression (>= ${WCAG_AA_BODY_TEXT}:1)`,
+        measurement.bestRatio >= WCAG_AA_BODY_TEXT,
+        `measured ${measurement.bestRatio.toFixed(2)}:1 between ${JSON.stringify(measurement.backgroundColour)} and ${JSON.stringify(measurement.foregroundColour)}`,
+      )
+      if (live && before !== null) {
+        check(
+          'the window re-themes live, without a relaunch',
+          JSON.stringify(before.backgroundColour) !== JSON.stringify(measurement.backgroundColour),
+          `background stayed ${JSON.stringify(measurement.backgroundColour)}`,
+        )
+      }
+      if (extra) await extra(handle, check, measurement)
+    } finally {
+      await quitApplication(handle)
+    }
+  })
+
+const rowA10 = appearanceRow('A10', 'Increase Contrast', { changes: { increaseContrast: true } })
+
+const rowA11 = appearanceRow('A11', 'Differentiate Without Color', {
+  changes: { differentiateWithoutColor: true },
+  extra: async (handle, check) => {
+    const nodes = webNodes(handle)
+    const rows = taskRows(handle, nodes)
+    check(
+      'sync status is conveyed by TEXT, not colour alone',
+      rows.length > 0 && rows.every((row) => /Saved on this Mac|Synced|Draft/.test(row.text)),
+      `row announcements were ${JSON.stringify(rows.map((row) => row.text))}`,
+    )
+    await tabUntil(handle, 'a task row', (node) => node.role === 'AXGroup' && ancestryText(node).includes('Tasks'))
+    postKeys(handle, 'return')
+    await sleep(600)
+    check(
+      'selection is conveyed by a non-colour cue the accessibility layer can read (aria-current)',
+      taskRows(handle).some((row) => row.ariaCurrent === 'true'),
+    )
+    // Validation errors: an empty capture leaves the Add Task button
+    // announced as disabled, a state, not a colour.
+    postKeys(handle, 'cmd+n')
+    await sleep(400)
+    const addTask = findNode(webNodes(handle), (node) => node.role === 'AXButton' && node.title === 'Add Task')
+    check('an invalid capture is conveyed as an announced control state, not a colour', addTask?.enabled === false)
+  },
+})
+
+const rowA12 = appearanceRow('A12', 'Reduce Transparency', { changes: { reduceTransparency: true } })
+const rowA13 = appearanceRow('A13', 'Reduce Motion', { changes: { reduceMotion: true } })
+const rowA14 = appearanceRow('A14', 'Light/Dark change while the app is open', { changes: { appearance: 'Dark' }, live: true })
+
+const rowA15 = (context) => runRow('A15', '200% zoom equivalent: no primary control is clipped', async (check) => {
+  const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a15') })
+  try {
+    await captureTaskByKeyboard(handle, 'Zoom legibility')
+
+    // A display scaled to ~200% halves the logical viewport the window gets.
+    // Resizing the real window through the accessibility API reproduces that
+    // logical size against the real packaged app.
+    const before = runProbe(handle.probeBinary, ['windows', '--pid', String(handle.pid)]).value.windows[0].frame
+    const resized = runProbe(handle.probeBinary, ['resize', '--pid', String(handle.pid), '--width', '520', '--height', '420']).value
+    const windowFrame = resized.window.frame
+    // A ~200% scaled display halves the logical space the window gets. The
+    // window shrinks to the smallest size the app itself permits; the claim
+    // under test is that NOTHING is clipped at that floor, not that the app
+    // will shrink without limit.
+    check(
+      'the window really does shrink toward the reduced logical size a ~200% scaled display produces',
+      windowFrame.width < before.width && windowFrame.height < before.height,
+      `before ${JSON.stringify(before)} after ${JSON.stringify(windowFrame)}`,
+    )
+    await sleep(800)
+
+    const nodes = webNodes(handle)
+    const primaryControls = [
+      { predicate: (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL, name: 'the capture field' },
+      { predicate: (node) => node.role === 'AXButton' && node.title === 'Add Task', name: 'the Add Task button' },
+      { predicate: (node) => node.role === 'AXButton' && node.title === 'Inbox', name: 'the Inbox destination' },
+      { predicate: (node) => node.role === 'AXButton' && node.title === 'Today', name: 'the Today destination' },
+      { predicate: (node) => node.role === 'AXButton' && node.title === 'Trash', name: 'the Trash destination' },
+      { predicate: (node) => node.role === 'AXList' && node.description === 'Tasks', name: 'the task list' },
+    ]
+    for (const control of primaryControls) {
+      const node = findNode(nodes, control.predicate)
+      const frame = node?.frame ?? null
+      const inside =
+        frame !== null &&
+        frame.width > 0 &&
+        frame.height > 0 &&
+        frame.x >= windowFrame.x - 1 &&
+        frame.y >= windowFrame.y - 1 &&
+        frame.x + frame.width <= windowFrame.x + windowFrame.width + 1 &&
+        frame.y + frame.height <= windowFrame.y + windowFrame.height + 1
+      check(`${control.name} stays visible and unclipped at the reduced size`, inside, `frame ${JSON.stringify(frame)} against window ${JSON.stringify(windowFrame)}`)
+    }
+  } finally {
+    await quitApplication(handle)
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Restore self-test: an interrupted run must leave the machine as it was
+// ---------------------------------------------------------------------------
+
+/**
+ * The restore path is the one piece of this lane that touches a person's
+ * own machine, so "it restores on the happy path" is not good enough. This
+ * proves the two paths that actually matter:
+ *
+ *   1. A mid-row EXCEPTION still restores every setting.
+ *   2. A SIGTERM (the shape of a Ctrl-C, a CI cancellation, or a killed
+ *      job) still restores every setting -- proven by forking a real child
+ *      process that mutates settings and is then killed for real, with the
+ *      PARENT checking the machine afterwards.
+ */
+/**
+ * Deliberately uses settings the lane can always write (the global domain)
+ * plus the input source, so the self-test proves the RESTORE MACHINERY
+ * rather than incidentally re-testing whether a protected domain is
+ * writable. Restoring these is exactly as hard as restoring the others.
+ */
+const SELF_TEST_MUTATIONS = { appearance: 'Dark', fullKeyboardAccess: 0 }
+
+const settingsSubset = (snapshot) => {
+  const subset = {}
+  for (const key of MANAGED_KEYS) subset[key] = snapshot[key] ?? null
+  subset.inputSource = snapshot.inputSource ?? null
+  return subset
+}
+
+const runSelfTestRestore = async () => {
+  const baseline = settingsSubset(readSystemSettings())
+  console.log(`SELF_TEST baseline=${JSON.stringify(baseline)}`)
+
+  // Case 1: a mid-row exception.
+  await runRow('SELF-TEST-EXCEPTION', 'a mid-row failure restores every mutated setting', async (check) => {
+    let threw = false
+    try {
+      applySystemSettings(SELF_TEST_MUTATIONS)
+      selectInputSource(DEAD_KEY_LAYOUT)
+      const mutated = readSystemSettings()
+      check(
+        'the self-test really did mutate the machine before failing',
+        mutated.appearance === 'Dark' && mutated.fullKeyboardAccess === 0 && mutated.inputSource.id === DEAD_KEY_LAYOUT,
+        JSON.stringify(mutated),
+      )
+      throw new Error('deliberate mid-row failure')
+    } catch (error) {
+      threw = error instanceof Error && error.message === 'deliberate mid-row failure'
+      if (!threw) throw error
+    }
+    check('the deliberate failure actually happened', threw)
+    check('restore reports success after the failure', restoreSystemSettings() === true)
+    const after = settingsSubset(readSystemSettings())
+    check(
+      'every setting matches the value captured before the run',
+      JSON.stringify(after) === JSON.stringify(baseline),
+      `after=${JSON.stringify(after)} baseline=${JSON.stringify(baseline)}`,
+    )
+    // Allow a subsequent case to capture and restore again.
+    settingsState.baseline = null
+    settingsState.restored = false
+    settingsState.inputSource = null
+  })
+
+  // Case 2: a genuine external interruption of a real child process. The
+  // child mutates the machine, announces it, and then does nothing but wait
+  // -- so the ONLY thing that can put the machine back is the signal
+  // handler, not any tidy return path.
+  await runRow('SELF-TEST-SIGNAL', 'an interrupted run restores every mutated setting', async (check) => {
+    const child = spawn(process.execPath, [import.meta.filename, '--internal-mutate-then-wait'], { stdio: ['ignore', 'pipe', 'pipe'] })
+    let stdout = ''
+    let stderr = ''
+    child.stdout.on('data', (chunk) => { stdout += String(chunk) })
+    child.stderr.on('data', (chunk) => { stderr += String(chunk) })
+
+    const exited = new Promise((resolve) => child.once('exit', (code, signal) => resolve({ code, signal })))
+    const mutated = await waitFor('the child process to mutate the machine', async () => stdout.includes('SELF_TEST_CHILD mutated=true'), { intervalMs: 200, timeoutMs: 60_000 })
+    check('the child process actually mutated the machine before being interrupted', mutated === true, stdout.trim().slice(-400))
+
+    const duringInterruption = settingsSubset(readSystemSettings())
+    check(
+      'the machine really was in a mutated state at the moment of the interruption',
+      JSON.stringify(duringInterruption) !== JSON.stringify(baseline),
+      `state matched the baseline, so the interruption proved nothing: ${JSON.stringify(duringInterruption)}`,
+    )
+
+    child.kill('SIGTERM')
+    const outcome = await Promise.race([exited, sleep(30_000).then(() => null)])
+    if (outcome === null) {
+      child.kill('SIGKILL')
+      fail('the interrupted child never exited')
+    }
+    check('the interrupted child exited through its signal handler', outcome.code === 130, `code=${outcome.code} signal=${outcome.signal} stderr=${stderr.trim().slice(-400)}`)
+
+    const after = settingsSubset(readSystemSettings())
+    check(
+      'the machine is exactly as it was found after the interruption',
+      JSON.stringify(after) === JSON.stringify(baseline),
+      `after=${JSON.stringify(after)} baseline=${JSON.stringify(baseline)}`,
+    )
+  })
+}
+
+const runInternalMutateThenWait = async () => {
+  applySystemSettings(SELF_TEST_MUTATIONS)
+  selectInputSource(DEAD_KEY_LAYOUT)
+  const mutated = readSystemSettings()
+  const reallyMutated = mutated.appearance === 'Dark' && mutated.fullKeyboardAccess === 0 && mutated.inputSource.id === DEAD_KEY_LAYOUT
+  console.log(`SELF_TEST_CHILD mutated=${reallyMutated}`)
+  // Then do nothing at all, forever. There is no tidy return path from here:
+  // whatever puts the machine back has to be the signal handler. The timer
+  // keeps the event loop alive so Node does not exit on its own and
+  // accidentally take the ordinary exit path instead.
+  await new Promise(() => {
+    setInterval(() => {}, 1_000)
+  })
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
-const ROW_IMPLEMENTATIONS = { A1: rowA1, A2: rowA2, A3: rowA3, A4: rowA4 }
+const PIXEL_MEASURED_ROWS = ['A10', 'A11', 'A12', 'A13', 'A14']
+
+const ROW_IMPLEMENTATIONS = {
+  A1: rowA1, A2: rowA2, A3: rowA3, A4: rowA4, A5: rowA5, A6: rowA6, A7: rowA7,
+  A10: rowA10, A11: rowA11, A12: rowA12, A13: rowA13, A14: rowA14, A15: rowA15,
+}
 
 const cleanUp = async () => {
   for (const handle of [...liveApplications]) await quitApplication(handle)
   for (const path of disposableProfiles.splice(0)) rmSync(path, { force: true, recursive: true })
+  // Restore here, not only in the exit handler, so a failed restoration can
+  // still change this process's exit code. The exit/signal handlers remain
+  // as the last-resort net for paths that never reach here.
+  if (!restoreSystemSettings()) restoreFailed = true
 }
 
 const main = async () => {
   const swiftVersion = requireSwiftc()
+  if (hasFlag('internal-mutate-then-wait')) {
+    settingsState.probeBinary = compileProbe('SystemSettings').binaryPath
+    await runInternalMutateThenWait()
+    return
+  }
   const manifest = loadManifest()
   const axProbe = compileProbe('AXProbe')
+  const settingsProbe = compileProbe('SystemSettings')
+  settingsState.probeBinary = settingsProbe.binaryPath
 
   const permission = runProbe(axProbe.binaryPath, ['permission'])
   if (permission.value.trusted !== true) {
@@ -710,10 +1326,34 @@ const main = async () => {
     process.exit(1)
   }
 
-  console.log(`LANE_INPUT swiftc="${swiftVersion}" probe_digest=${axProbe.digest}`)
+  console.log(`LANE_INPUT swiftc="${swiftVersion}" ax_probe_digest=${axProbe.digest} settings_probe_digest=${settingsProbe.digest}`)
   console.log(`LANE_ARTIFACT application_digest=${manifest.applicationDigestSha256} executable=${manifest.executablePath} source_revision=${manifest.sourceRevision}`)
 
   const context = { axProbe: axProbe.binaryPath, manifest }
+
+  if (selfTestRestore) {
+    await runSelfTestRestore(context)
+    return
+  }
+
+  // Legibility rows measure a WCAG contrast ratio over REAL rendered pixels.
+  // Without Screen Recording there are no pixels to measure, so those rows
+  // fail loudly and up front rather than after launching an application.
+  const pixelRows = requestedRows.filter((row) => PIXEL_MEASURED_ROWS.includes(row))
+  if (pixelRows.length > 0 && runProbe(settingsProbe.binaryPath, ['screen-permission']).value.granted !== true) {
+    console.error(
+      `macOS integration lane failed: row(s) ${pixelRows.join(',')} measure legibility from real rendered pixels, and Screen Recording is not granted.\n\n` +
+      'Open:  System Settings -> Privacy & Security -> Screen Recording\n' +
+      'Then:  enable the application that runs this lane (the terminal, IDE, or CI\n' +
+      '       agent process), and restart it so the new grant takes effect.\n\n' +
+      'This is a one-time approval. These rows will NOT be skipped or downgraded\n' +
+      'to an unmeasured assertion without it -- a legibility claim with no pixels\n' +
+      'behind it is exactly the vacuous evidence this lane replaced.',
+    )
+    process.exit(1)
+  }
+
+
   const rows = requestedRows.filter((row) => ROW_IMPLEMENTATIONS[row] !== undefined)
   const unimplemented = requestedRows.filter((row) => ROW_IMPLEMENTATIONS[row] === undefined)
   if (unimplemented.length > 0) fail(`row(s) ${unimplemented.join(',')} have no implementation -- an unimplemented row is a failure, never a skip`)
@@ -738,12 +1378,16 @@ console.log('')
 console.log(`macOS integration lane summary: rows=${rowResults.length} failed=${failedRows.length} cases=${totalCases} duration_ms=${Date.now() - startedAt}`)
 for (const row of rowResults) console.log(`  ${row.passed ? 'PASS' : 'FAIL'} ${row.id} ${row.title} cases=${row.cases}`)
 
-if (rowResults.length !== requestedRows.length) {
+if (!selfTestRestore && rowResults.length !== requestedRows.length) {
   console.error(`macOS integration lane failed: ${requestedRows.length} row(s) were requested but ${rowResults.length} reported -- a row that did not run is never a skip`)
   exitCode = 1
 }
 if (totalCases <= 0) {
   console.error('macOS integration lane failed: zero cases were executed')
+  exitCode = 1
+}
+if (restoreFailed) {
+  console.error('macOS integration lane failed: system settings could not be restored to their captured values')
   exitCode = 1
 }
 if (exitCode !== 0 || failedRows.length > 0) {
