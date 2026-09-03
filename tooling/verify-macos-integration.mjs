@@ -1091,17 +1091,39 @@ const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never tr
 
   const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a6') })
   try {
-    const assertUsableFocus = (label) => {
-      const focused = focusedElement(handle)
+    // Focus must SETTLE on a usable element, which is not the same as being
+    // usable at one arbitrary instant. Dismissing a dialog unmounts the node
+    // focus was on, and for a beat the AX tree legitimately reports no focused
+    // element at all while the app moves it somewhere safe. Sampling once
+    // after a fixed sleep raced that beat: this row passed, passed, then
+    // failed on the same application digest b7bd61a7, at a different case
+    // each time.
+    //
+    // Polling to a deadline removes the race WITHOUT weakening the claim --
+    // focus that never settles on a visible operable element still fails,
+    // which is the actual defect this row exists to catch. A transient null
+    // during a dismissal is not that defect; a permanent one is.
+    const usableFocus = (node) =>
+      node !== null &&
+      node.role !== 'AXApplication' &&
+      (node.frame?.width ?? 0) > 0 &&
+      (node.frame?.height ?? 0) > 0
+
+    const assertUsableFocus = async (label) => {
+      let last = null
+      const deadline = Date.now() + 5_000
+      for (;;) {
+        last = focusedElement(handle)
+        if (usableFocus(last)) break
+        if (Date.now() > deadline) break
+        await sleep(200)
+      }
       check(
         `${label}: focus is on a visible, operable element -- never the application element, never a removed node, never a silent reset`,
-        focused !== null &&
-          focused.role !== 'AXApplication' &&
-          (focused.frame?.width ?? 0) > 0 &&
-          (focused.frame?.height ?? 0) > 0,
-        `focus was on ${focused ? `${focused.role} "${focused.title ?? ''}" ${JSON.stringify(focused.frame ?? null)}` : 'nothing'}`,
+        usableFocus(last),
+        `focus never settled within 5000ms; last read was ${last ? `${last.role} "${last.title ?? ''}" ${JSON.stringify(last.frame ?? null)}` : 'nothing'}`,
       )
-      return focused
+      return last
     }
 
     // Dialog 1: Quick Entry discard-draft confirmation.
@@ -1116,7 +1138,7 @@ const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never tr
     check('the Quick Entry discard dialog opens by keyboard alone', (focusedElement(handle)?.title ?? '') === 'Keep Draft')
     postKeys(handle, 'space')
     await sleep(700)
-    assertUsableFocus('after closing the Quick Entry discard dialog by keyboard')
+    await assertUsableFocus('after closing the Quick Entry discard dialog by keyboard')
     postKeys(handle, 'escape')
     await sleep(600)
 
@@ -1135,7 +1157,7 @@ const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never tr
     check('the unsaved-changes dialog opens by keyboard alone', (focusedElement(handle)?.title ?? '') === 'Keep Editing')
     postKeys(handle, 'space')
     await sleep(800)
-    assertUsableFocus('after closing the unsaved-changes dialog by keyboard')
+    await assertUsableFocus('after closing the unsaved-changes dialog by keyboard')
 
     // And once more through the destructive branch, which removes the
     // element focus was on -- the case a naive implementation strands.
@@ -1145,7 +1167,7 @@ const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never tr
     await tabUntil(handle, 'the Discard Changes button', (node) => node.role === 'AXButton' && node.title === 'Discard Changes')
     postKeys(handle, 'space')
     await sleep(900)
-    assertUsableFocus('after discarding changes and navigating away')
+    await assertUsableFocus('after discarding changes and navigating away')
   } finally {
     await quitApplication(handle)
   }
