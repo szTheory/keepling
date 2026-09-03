@@ -89,7 +89,36 @@ func setting(named name: String) -> ManagedSetting {
   return match
 }
 
+/// The Light/Dark appearance is NOT owned by the `AppleInterfaceStyle`
+/// preference key. Writing that key with CFPreferences succeeds and
+/// `defaults read -g AppleInterfaceStyle` reports the new value, but the
+/// system's real appearance state -- the one AppKit, Chromium and every
+/// running application actually observe -- lives in a daemon and is unchanged.
+/// A lane that wrote the key and then asserted a re-theme would be asserting
+/// against a value nobody reads, so appearance goes through the supported
+/// System Events route in both directions instead.
+func runAppleScript(_ source: String) -> String {
+  var error: NSDictionary?
+  guard let script = NSAppleScript(source: source) else { die("applescript_compile_failed", source) }
+  let result = script.executeAndReturnError(&error)
+  if let error {
+    die("applescript_failed", "\(error[NSAppleScript.errorMessage] ?? error) -- grant Automation control of System Events to the process running this lane")
+  }
+  return result.stringValue ?? ""
+}
+
+func readAppearance() -> Any {
+  let dark = runAppleScript("tell application \"System Events\" to tell appearance preferences to get dark mode")
+  return dark == "true" ? "Dark" : NSNull()
+}
+
+func writeAppearance(_ value: Any) {
+  let dark = (value as? String)?.lowercased() == "dark"
+  _ = runAppleScript("tell application \"System Events\" to tell appearance preferences to set dark mode to \(dark)")
+}
+
 func readSetting(_ managed: ManagedSetting) -> Any {
+  if managed.name == "appearance" { return readAppearance() }
   let value = CFPreferencesCopyAppValue(managed.key as CFString, managed.domain as CFString)
   guard let value else { return NSNull() }
   switch managed.kind {
@@ -100,6 +129,7 @@ func readSetting(_ managed: ManagedSetting) -> Any {
 }
 
 func writeSetting(_ managed: ManagedSetting, _ value: Any) {
+  if managed.name == "appearance" { return writeAppearance(value) }
   if value is NSNull {
     CFPreferencesSetAppValue(managed.key as CFString, nil, managed.domain as CFString)
   } else {
@@ -156,7 +186,19 @@ func requireScreenCapture() {
 /// ScreenCaptureKit (`CGWindowListCreateImage` was removed in macOS 15).
 /// Legibility rows assert a COMPUTED contrast ratio over these pixels rather
 /// than a human impression of "looks fine".
+/// ScreenCaptureKit reaches the WindowServer through CoreGraphics, and a bare
+/// command-line binary has no WindowServer connection -- CGS aborts the process
+/// on `CGS_REQUIRE_INIT` before TCC is ever consulted, which reads like a
+/// permission problem but is not one. Instantiating NSApplication establishes
+/// that connection. `.prohibited` keeps the probe out of the Dock and stops it
+/// stealing focus from the application whose pixels it is about to capture.
+func connectToWindowServer() {
+  let application = NSApplication.shared
+  application.setActivationPolicy(.prohibited)
+}
+
 func captureWindowImage(pid: pid_t) -> CGImage {
+  connectToWindowServer()
   requireScreenCapture()
   let semaphore = DispatchSemaphore(value: 0)
   var captured: CGImage?
