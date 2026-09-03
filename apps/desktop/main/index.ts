@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { Worker } from 'node:worker_threads'
-import { app, ipcMain, Menu, net, protocol, screen, session, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, net, protocol, screen, session, shell } from 'electron'
 
 import { BrowserDelegatedAuthorization, KEEPLING_REDIRECT_URI } from './adapters/auth.ts'
 import { SafeStorageCredentialAdapter } from './adapters/credentials.ts'
@@ -40,6 +40,7 @@ import {
   shouldGrantPermission,
 } from './protocol.ts'
 import { removeLocalFilesAt } from '../store-worker/local-store.ts'
+import { ElectronForegroundApp } from './windows/foreground-app.ts'
 import { createMainWindow } from './windows/main-window.ts'
 import { QuickEntryWindowController } from './windows/quick-entry-window.ts'
 import { SettingsWindowController } from './windows/settings-window.ts'
@@ -687,8 +688,20 @@ const bootstrap = async () => {
   // shortcut, or the native menus in the shipped app. This is that
   // integration: the SAME production modules, composed against the real,
   // hardened `main/index.ts` bootstrap instead of the harness.
+  // O-21 focus return: `ForegroundAppPort` existed with only a recording
+  // double in `test/fixtures/wired-app-harness.ts`, so in the shipped app
+  // `#foregroundApp` was `undefined`, every call site no-opped, and closing
+  // Quick Entry left Keepling frontmost instead of returning the user to
+  // the application (and the caret) they came from. This is the real
+  // adapter, on the production path (D-11, MAC-02, lane row A9).
+  const foregroundApp = new ElectronForegroundApp({
+    application: app,
+    getMainWindow: () => lifecycle.getMainWindow(),
+    isKeeplingFrontmost: () => BrowserWindow.getFocusedWindow() !== null,
+  })
   const quickEntry = new QuickEntryWindowController({
     desktopApplication,
+    foregroundApp,
     preloadPath: utilityPreloadPath,
     rendererUrl: `${rendererBase}?view=quick-entry`,
   })
