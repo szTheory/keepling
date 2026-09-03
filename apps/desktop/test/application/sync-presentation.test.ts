@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DesktopApplication, type PendingMutation } from '../../main/application/DesktopApplication.ts'
 import { GRACE_PERIOD_MS, type DesktopPresentation } from '../../main/application/presentation.ts'
+import { isSyncUnreachable, SyncUnreachableError } from '../../main/application/sync-reachability.ts'
+import { KeeplingSyncAdapter } from '../../main/adapters/sync.ts'
 
 /**
  * O-19: MAC-04 requires a person to be able to inspect the "syncing" state
@@ -141,5 +143,180 @@ describe('synchronization presentation (O-19 / MAC-04 fifth state)', () => {
     await application.runSyncPass()
 
     expect(application.presentationSnapshot().summary.kind).toBe('conflict')
+  })
+})
+
+/**
+ * O-30 / MAC-04: `{ kind: 'offline' }` was declared, had authored copy, and
+ * was unit-tested against a fixture -- and was constructed NOWHERE in
+ * production. Unplugging the network showed the retryable-failure row
+ * instead, so the state a person most needs to recognise ("my Mac cannot
+ * reach the server; nothing is lost") was unreachable.
+ *
+ * Three situations previously collapsed into two rows. These cases pin the
+ * separation:
+ *
+ *  1. No server configured -> `offline` with a null last contact. Nothing to
+ *     be offline FROM, but the app must never imply it is synchronized.
+ *  2. A configured server that never answered -> `offline`, carrying the
+ *     REAL last successful contact when one has ever happened.
+ *  3. A server that answered badly -> still `retryable_failure`. Conflating
+ *     these two makes the row a lie.
+ */
+describe('offline versus rejected (O-30 / MAC-04 fifth state)', () => {
+  const buildOfflineApplication = (
+    sync: SyncStubs & { configured?: () => boolean },
+    options: { contacts?: string[]; lastSuccessfulContact?: string | null } = {},
+  ) =>
+    new DesktopApplication({
+      clock: { now: () => '2026-09-03T12:00:00.000Z' },
+      identity: { randomId: () => 'unused' },
+      localStore: {
+        acceptCapture: async () => { throw new Error('unused') },
+        acknowledge: async () => ({ tasks: [] }),
+        acknowledgeSync: async () => undefined,
+        applyPull: async () => undefined,
+        close: async () => undefined,
+        pendingMutations: async () => [mutation],
+        readyMutations: async () => [mutation],
+        recordSuccessfulContact: async (at: string) => { options.contacts?.push(at) },
+        snapshot: async () => ({ tasks: [] }),
+        syncState: async () => ({
+          cursor: null,
+          lastSuccessfulContact: options.lastSuccessfulContact ?? null,
+          outbox: [mutation.mutationId],
+          readyPushes: [mutation.mutationId],
+        }),
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      sync: sync as any,
+    })
+
+  it('publishes the offline row -- not retryable failure -- when a configured server could not be reached', async () => {
+    const application = buildOfflineApplication(
+      {
+        pull: async () => { throw new SyncUnreachableError('the Keepling server could not be reached') },
+        push: async () => null,
+      },
+      { lastSuccessfulContact: '2026-09-03T11:00:00.000Z' },
+    )
+
+    await expect(application.runSyncPass()).rejects.toThrow(/could not be reached/)
+
+    const summary = application.presentationSnapshot().summary
+    expect(summary.kind).toBe('offline')
+    expect(summary.copy).toBe('Offline — showing tasks saved on this Mac')
+    // The real prior contact, read back from the local store -- never fabricated.
+    expect(summary.lastSuccessfulContact).toBe('2026-09-03T11:00:00.000Z')
+  })
+
+  it('reports a null last contact -- never a fabricated one -- when the server has never been reached', async () => {
+    const application = buildOfflineApplication({
+      pull: async () => { throw new SyncUnreachableError('connection refused') },
+      push: async () => null,
+    })
+
+    await expect(application.runSyncPass()).rejects.toThrow(/connection refused/)
+
+    const summary = application.presentationSnapshot().summary
+    expect(summary.kind).toBe('offline')
+    expect(summary.copy).toBe('Offline — showing tasks saved on this Mac')
+    expect(summary.lastSuccessfulContact).toBeNull()
+  })
+
+  it('keeps retryable failure for a server that ANSWERED and the answer was a problem', async () => {
+    const application = buildOfflineApplication({
+      // A real HTTP answer that was a problem -- the transport reached the
+      // server, so this is emphatically not "offline".
+      pull: async () => { throw new Error('server_500') },
+      push: async () => null,
+    })
+
+    await expect(application.runSyncPass()).rejects.toThrow(/server_500/)
+
+    const summary = application.presentationSnapshot().summary
+    expect(summary.kind).toBe('retryable_failure')
+    expect(summary.copy).toBe('Couldn’t reach the server. Your changes stay on this Mac.')
+  })
+
+  it('records a real successful contact when the server answers, so the offline row has an honest source', async () => {
+    const contacts: string[] = []
+    const application = buildOfflineApplication(
+      {
+        pull: async () => ({ changes: [], cursor: 'cursor-after-pull' }),
+        push: async () => ({ fingerprint: mutation.fingerprint, mutationId: mutation.mutationId }),
+      },
+      { contacts },
+    )
+
+    await application.runSyncPass()
+
+    expect(contacts).toEqual(['2026-09-03T12:00:00.000Z'])
+    expect(application.presentationSnapshot().summary.kind).toBe('healthy')
+  })
+
+  it('never claims a synchronized row when NO server is configured -- it settles offline with no contact', async () => {
+    const reached: string[] = []
+    const application = buildOfflineApplication({
+      configured: () => false,
+      pull: async () => { reached.push('pull'); return { changes: [], cursor: null } },
+      push: async () => { reached.push('push'); return null },
+    })
+
+    await expect(application.runSyncPass()).resolves.toEqual({ pulled: 0, settled: 0 })
+
+    const summary = application.presentationSnapshot().summary
+    expect(summary.kind).toBe('offline')
+    expect(summary.copy).toBe('Offline — showing tasks saved on this Mac')
+    expect(summary.lastSuccessfulContact).toBeNull()
+    // Nothing was attempted against a server that does not exist.
+    expect(reached).toEqual([])
+  })
+})
+
+/**
+ * The transport is the only layer that knows whether bytes came back, so it
+ * is the only layer allowed to decide "unreachable". These cases pin that
+ * boundary directly against `KeeplingSyncAdapter#json`, with an injected
+ * `fetch` standing in for the network condition.
+ */
+describe('transport reachability tag (O-30)', () => {
+  const buildAdapter = (fetchStub: (input: string | URL, init?: RequestInit) => Promise<Response>) =>
+    new KeeplingSyncAdapter({
+      accessToken: () => 'access-token',
+      baseUrl: 'http://127.0.0.1:9',
+      fetch: fetchStub,
+    })
+
+  it('tags a request that never got an answer as unreachable', async () => {
+    const adapter = buildAdapter(async () => {
+      // What Node's fetch actually does for a refused connection.
+      throw new TypeError('fetch failed')
+    })
+
+    const failure = await adapter.pull(null, 50).catch((error: unknown) => error)
+    expect(isSyncUnreachable(failure)).toBe(true)
+    expect(failure).toBeInstanceOf(Error)
+    expect((failure as Error).message).toMatch(/could not be reached/)
+  })
+
+  it('does NOT tag a server that answered badly -- a 500 stays a rejected answer', async () => {
+    const adapter = buildAdapter(async () =>
+      new Response(JSON.stringify({ code: 'internal_error' }), { status: 500 }),
+    )
+
+    const failure = await adapter.pull(null, 50).catch((error: unknown) => error)
+    // Positive read first: this really is the server's own problem code,
+    // which proves the request completed rather than never happening.
+    expect((failure as Error).message).toBe('internal_error')
+    expect(isSyncUnreachable(failure)).toBe(false)
+  })
+
+  it('does NOT tag a malformed body -- the server answered, the answer was the problem', async () => {
+    const adapter = buildAdapter(async () => new Response('not json at all', { status: 200 }))
+
+    const failure = await adapter.pull(null, 50).catch((error: unknown) => error)
+    expect(failure).toBeInstanceOf(Error)
+    expect(isSyncUnreachable(failure)).toBe(false)
   })
 })
