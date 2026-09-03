@@ -9,11 +9,14 @@ import { allocateDisposableProfile } from '../../playwright.config.ts'
  * D-42 automated accessibility/appearance proof, run against the REAL
  * shipped entry point (same launch as `lifecycle.spec.ts`/`daily-loop.spec.ts`).
  * Covers what CAN be asserted from Chromium/Electron's own accessibility
- * tree and CSS media-query emulation. What genuinely requires a human at a
- * physical Mac (VoiceOver announcement wording, Full Keyboard Access focus
- * ring behavior, real non-US/dead-key input, a real global-shortcut
- * collision with another running app) is out of this file's scope by
- * design -- see `docs/testing/desktop-dogfood.md`.
+ * tree and CSS media-query emulation.
+ *
+ * The macOS layer this file cannot see -- the real AXUIElement tree
+ * VoiceOver speaks, real CGEvent keystrokes, real input sources, and real
+ * system accessibility/appearance settings -- is NOT a human checklist. It
+ * is executed by `tooling/verify-macos-integration.mjs` (rows A1-A15)
+ * against the packaged `.app`. This file deliberately does not duplicate
+ * those rows, and they deliberately do not duplicate these.
  */
 const desktopRoot = fileURLToPath(new URL('../../', import.meta.url))
 
@@ -178,8 +181,8 @@ test('dialog focus: an inline sync conflict moves focus to its own heading so a 
   }
 })
 
-test('DISCLOSED GAP: the workspace unsaved-changes alertdialog does not move focus into itself on open', async () => {
-  const profilePath = allocateDisposableProfile('a11y-disclosed-gap-unsaved-dialog')
+test('dialog focus: the workspace unsaved-changes alertdialog moves focus into itself, onto the safe (non-destructive) default action, and returns focus on close', async () => {
+  const profilePath = allocateDisposableProfile('a11y-unsaved-changes-dialog-focus')
   const { application, window } = await launch(profilePath)
   try {
     await window.getByLabel('What do you want to keep?').fill('Edit me')
@@ -191,22 +194,32 @@ test('DISCLOSED GAP: the workspace unsaved-changes alertdialog does not move foc
     const dialog = window.getByRole('alertdialog', { name: 'Discard unsaved changes?' })
     await expect(dialog).toBeVisible()
 
-    // Documents today's REAL (disclosed, not fixed by this plan -- see
-    // 03-06-SUMMARY.md "Known Gaps"; the fix belongs to packages/web-ui,
-    // which this plan's files_modified does not include) behavior: opening
-    // this alertdialog does NOT move focus into it -- focus stays wherever
-    // the triggering click naturally landed (the clicked nav button),
-    // rather than being deliberately moved to a safe default action inside
-    // the dialog the way the Quick Entry / conflict dialogs above do. This
-    // is a genuine, pre-existing accessibility defect this test
-    // intentionally surfaces rather than silently working around.
+    // Opening this alertdialog moves focus INTO it, onto the safe
+    // non-destructive default action, exactly as the Quick Entry and
+    // conflict dialogs above already do -- a screen reader announces the
+    // interruption without the person having to explore the window to
+    // discover it happened.
     const focusIsInsideDialog = await window.evaluate((dialogSelector) => {
       const dialogElement = document.querySelector(dialogSelector)
       return dialogElement !== null && dialogElement.contains(document.activeElement)
     }, '[data-workspace-dirty-dialog="true"]')
-    expect(focusIsInsideDialog).toBe(false)
+    expect(focusIsInsideDialog).toBe(true)
+    await expect(window.getByRole('button', { name: 'Keep Editing' })).toBeFocused()
 
-    await window.getByRole('button', { name: 'Keep Editing' }).click()
+    await window.getByRole('button', { name: 'Keep Editing' }).press('Enter')
+    await expect(dialog).toHaveCount(0)
+
+    // Closing returns focus to a visible, operable element -- never the
+    // removed dialog node, never a silent reset to <body>/the application
+    // element (A6's "focus never gets trapped or lost" condition).
+    const focusAfterClose = await window.evaluate(() => {
+      const active = document.activeElement
+      if (active === null || active === document.body || active === document.documentElement) return null
+      const rect = active.getBoundingClientRect()
+      return { id: active.id, tag: active.tagName, visible: rect.width > 0 && rect.height > 0 }
+    })
+    expect(focusAfterClose).not.toBeNull()
+    expect(focusAfterClose?.visible).toBe(true)
   } finally {
     await application.close()
   }
