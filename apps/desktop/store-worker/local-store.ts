@@ -319,11 +319,30 @@ class NodeSqliteLocalStore {
     return true
   }
 
+  /**
+   * O-30: records that the server actually answered at this instant, in the
+   * same durable `namespace_metadata` table the sync fence and bound
+   * namespace already use, so a relaunch can still read it. This is the ONLY
+   * writer of the offline row's `lastSuccessfulContact` -- nothing may
+   * derive or default it.
+   */
+  recordSuccessfulContact(at: string): void {
+    if (typeof at !== 'string' || at.length === 0) throw new Error('successful contact instant is invalid')
+    this.#database.prepare(`
+      INSERT INTO namespace_metadata(key, value) VALUES ('last_successful_contact', ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value
+    `).run(at)
+  }
+
   syncState(): SyncState {
     const cursor = this.#database.prepare('SELECT cursor FROM sync_cursor WHERE singleton = 1').get() as { cursor: string | null }
     const outbox = this.#database.prepare('SELECT mutation_id FROM outbox ORDER BY sequence').all() as Array<{ mutation_id: string }>
+    const contact = this.#database.prepare(`
+      SELECT value FROM namespace_metadata WHERE key = 'last_successful_contact'
+    `).get() as { value: string } | undefined
     return {
       cursor: cursor.cursor,
+      lastSuccessfulContact: contact?.value ?? null,
       outbox: outbox.map((row) => row.mutation_id),
       readyPushes: this.readyMutations().map((mutation) => mutation.mutationId),
     }

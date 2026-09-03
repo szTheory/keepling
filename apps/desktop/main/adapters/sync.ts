@@ -8,6 +8,7 @@ import type {
   SyncPort,
   SyncSnapshot,
 } from '../application/DesktopApplication.ts'
+import { SyncUnreachableError } from '../application/sync-reachability.ts'
 
 type NativeTokenResponse = components['schemas']['NativeTokenResponse']
 type SyncFeedPage = components['schemas']['SyncFeedPage']
@@ -212,7 +213,21 @@ class KeeplingSyncAdapter implements SyncPort {
         if (!accessToken) throw new Error('authentication_required')
         headers.set('authorization', `Bearer ${accessToken}`)
       }
-      const response = await this.#fetch(url, { ...init, headers, signal: controller.signal })
+      // O-30: THIS is the only line that can tell "unreachable" from
+      // "rejected", because it is the only place that knows whether any
+      // bytes came back. `fetch` rejects for DNS failure, connection
+      // refused, TLS failure, and the abort above firing on timeout -- in
+      // every one of those the request never got an answer, which is
+      // exactly what the `offline` row means.
+      let response: Response
+      try {
+        response = await this.#fetch(url, { ...init, headers, signal: controller.signal })
+      } catch (error) {
+        throw new SyncUnreachableError('the Keepling server could not be reached', { cause: error })
+      }
+      // Everything below this line ran because the server ANSWERED. A
+      // malformed body or a non-OK status is a rejected answer, not an
+      // absent one, and must keep landing on the retryable-failure row.
       const value = await response.json()
       if (!response.ok) {
         const problem = value as { code?: unknown }

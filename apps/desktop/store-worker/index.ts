@@ -20,6 +20,7 @@ type WorkerRequest = {
     | 'listConflicts'
     | 'pendingMutations'
     | 'readyMutations'
+    | 'recordSuccessfulContact'
     | 'removeLocalFiles'
     | 'resolveConflict'
     | 'saveDraft'
@@ -160,6 +161,13 @@ parentPort.on('message', (request: WorkerRequest) => {
         break
       case 'syncState':
         value = store.syncState()
+        break
+      // O-30: the durable source for the offline row's
+      // `lastSuccessfulContact`. Without this route the field could only
+      // ever be fabricated or absent.
+      case 'recordSuccessfulContact':
+        store.recordSuccessfulContact(request.payload as string)
+        value = null
         break
       default: {
         const unreachable: never = request.operation

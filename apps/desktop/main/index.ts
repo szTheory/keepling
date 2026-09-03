@@ -237,6 +237,13 @@ class WorkerLocalStore implements LocalStorePort {
     return this.#request('syncState')
   }
 
+  // O-30: without this forwarding the offline row's `lastSuccessfulContact`
+  // would have no durable source at all in the SHIPPED app -- exactly the
+  // "implemented but never routed" defect class O-16 was.
+  recordSuccessfulContact(at: string): Promise<void> {
+    return this.#request('recordSuccessfulContact', at)
+  }
+
   async close(): Promise<void> {
     await this.#request('close')
     await this.#worker.terminate()
@@ -415,6 +422,12 @@ const bootstrap = async () => {
         return null
       }
     },
+    // O-30: an app with NO server configured is not "healthy" and is not
+    // "saved on this Mac pending sync" -- there is nothing to sync WITH.
+    // Saying so explicitly here is what lets `DesktopApplication` settle on
+    // an honest row instead of resolving a no-op pass into a quiet row a
+    // person reads as "everything is synchronized".
+    configured: () => syncAdapter !== null,
     pull: async (cursor, limit) => (syncAdapter === null ? { changes: [], cursor } : syncAdapter.pull(cursor, limit)),
     // The EXACT serialized command bytes are retried, never re-serialized.
     push: async (commandBytes) => (syncAdapter === null ? null : syncAdapter.push(commandBytes)),

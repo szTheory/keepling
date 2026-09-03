@@ -7,6 +7,7 @@ import {
   type DesktopPresentationInput,
 } from './presentation.ts'
 import { removeLocalNamespaceData, type RemoveLocalDataOutcome } from '../recovery/remove-local-data.ts'
+import { isSyncUnreachable } from './sync-reachability.ts'
 
 type SyncStatus = 'saved_on_this_mac' | 'synced'
 type SyncOutcome = 'accepted' | 'already_satisfied' | 'rejected' | 'stale' | 'conflict'
@@ -88,7 +89,18 @@ type SyncMutation = {
 
 type PullPage = { changes: Array<{ entityId: string; snapshot: SyncSnapshot }>; cursor: string | null }
 
-type SyncState = { cursor: string | null; outbox: string[]; readyPushes: string[] }
+type SyncState = {
+  cursor: string | null
+  /**
+   * The instant the server last actually answered this Mac, or null/absent
+   * when it never has. Persisted by the local store so a relaunch can still
+   * read it -- the `offline` row is only honest if this has a real source
+   * (O-30).
+   */
+  lastSuccessfulContact?: string | null
+  outbox: string[]
+  readyPushes: string[]
+}
 type SyncNamespace = {
   accountSubject: string
   generation: string
@@ -144,6 +156,13 @@ interface LocalStorePort {
   setShortcutPreference?(accelerator: string): Promise<void> | void
   pendingMutations(): Promise<PendingMutation[]>
   readyMutations?(): Promise<SyncMutation[]> | SyncMutation[]
+  /**
+   * Durably records that the server answered at this instant (O-30). Read
+   * back through `syncState().lastSuccessfulContact`. Best-effort: this is a
+   * presentation source, never a correctness step, so a failure to record it
+   * must not fail a synchronization pass.
+   */
+  recordSuccessfulContact?(at: string): Promise<void> | void
   setSyncFence?(reason: string | null): Promise<void> | void
   snapshot(): Promise<WorkspaceSnapshot>
   syncState?(): Promise<SyncState> | SyncState
@@ -152,6 +171,15 @@ interface LocalStorePort {
 
 interface SyncPort {
   acknowledge?(mutation: PendingMutation): Promise<SyncAcknowledgement | null>
+  /**
+   * Whether a server is configured at all (O-30). `false` means there is
+   * nothing to be offline FROM: the app is working exactly as intended and
+   * its data is safe locally, but it is not synchronized and must never
+   * publish a row implying that it is. Absent means "unknown", which is
+   * treated as configured -- a port that cannot answer this question is
+   * never assumed to be serverless.
+   */
+  configured?(): boolean
   pull?(cursor: string | null, limit: 50): Promise<PullPage>
   push?(commandBytes: string): Promise<SyncAcknowledgement | null>
 }
@@ -442,6 +470,22 @@ class DesktopApplication {
       return { pulled: 0, settled: result.settled }
     }
 
+    // O-30: no server configured. `healthy` here would be a quiet row a
+    // person reads as "everything is synchronized", which is simply untrue
+    // -- there is no server to have synchronized with. `local_saved` ("Sync
+    // when you're back online") is equally wrong: it promises a sync that
+    // nothing is arranged to perform. `offline` -- "Offline — showing tasks
+    // saved on this Mac" -- is the one row whose copy a person would read as
+    // true here, and its `lastSuccessfulContact` is honestly null because
+    // this app has never contacted anything.
+    if (this.#sync.configured?.() === false) {
+      this.publishPresentation({
+        kind: 'offline',
+        lastSuccessfulContact: (await this.#readLastSuccessfulContact()) ?? undefined,
+      })
+      return { pulled: 0, settled: 0 }
+    }
+
     const startedAt = Date.now()
     let ownedSequence = this.publishPresentation({ kind: 'updating', startedAt }).sequence
     const graceTimer = setTimeout(() => {
@@ -459,9 +503,25 @@ class DesktopApplication {
       this.publishPresentation(input)
     }
 
+    // Read before the pass so a failure mid-pass can report the REAL prior
+    // contact rather than inventing one. Stays null when the server has
+    // never answered this Mac.
+    let lastSuccessfulContact: string | null = null
+
     try {
       const state = await this.#localStore.syncState?.()
+      lastSuccessfulContact = state?.lastSuccessfulContact ?? null
       const page = await this.#sync.pull(state?.cursor ?? null, SYNC_LIMITS.pull)
+      // The server answered. That is a real contact regardless of whether
+      // the answer turns out to be well-formed below, and it is what gives
+      // the offline row an honest source next time. Best-effort (D-18): a
+      // local store that cannot record this must not fail the pass or
+      // downgrade a genuine success into a retryable failure.
+      try {
+        await this.#localStore.recordSuccessfulContact?.(this.#clock.now())
+      } catch {
+        // Presentation hint only -- never a correctness step.
+      }
       if (page.changes.length > SYNC_LIMITS.pull) throw new Error('sync pull exceeded bounded page size')
       await this.#localStore.applyPull(page)
 
@@ -483,8 +543,25 @@ class DesktopApplication {
       settle(remaining > 0 ? { kind: 'local_saved', pendingCount: remaining } : { kind: 'healthy' })
       return { pulled: page.changes.length, settled }
     } catch (error) {
-      settle({ kind: 'retryable_failure', pendingCount: pending })
+      // O-30: a server that never answered is OFFLINE; a server that
+      // answered and the answer was a problem stays RETRYABLE. The tag comes
+      // from the transport, the only layer that knows whether bytes came
+      // back -- never from sniffing message text.
+      if (isSyncUnreachable(error)) {
+        settle({ kind: 'offline', lastSuccessfulContact: lastSuccessfulContact ?? undefined })
+      } else {
+        settle({ kind: 'retryable_failure', pendingCount: pending })
+      }
       throw error
+    }
+  }
+
+  async #readLastSuccessfulContact(): Promise<string | null> {
+    try {
+      return (await this.#localStore.syncState?.())?.lastSuccessfulContact ?? null
+    } catch {
+      // An unreadable local store never fabricates a contact instant.
+      return null
     }
   }
 
