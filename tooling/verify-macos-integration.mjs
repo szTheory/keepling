@@ -1187,13 +1187,38 @@ const rowA7 = (context) => runRow('A7', 'Non-US layout with dead keys', async (c
     // Raw virtual key codes, so the OS composes through the ACTIVE input
     // source rather than this lane faking the result: `'` (dead acute) then
     // `e` must produce `é`.
-    postKeys(handle, 'text:Caf,code:39,wait:120,e')
-    await sleep(600)
+    //
+    // The two keystrokes are posted SEPARATELY, with the letter gated on the
+    // dead key having actually landed, because a single burst with a fixed
+    // `wait:120` between them intermittently lost the `e` and left the field
+    // on the pending dead key ("Caf'"). Measured timeline: the dead key
+    // appears as marked text within 100ms and then sits there INDEFINITELY
+    // until the composing letter arrives -- so "the field stopped changing"
+    // is not a safe settle condition here, but "the dead key is pending" is.
+    const captureFieldNode = () =>
+      findNode(webNodes(handle), (entry) => entry.role === 'AXTextField' && entry.title === CAPTURE_FIELD_LABEL) ?? null
+    const captureFieldValue = () => {
+      const node = captureFieldNode()
+      return node === null ? null : node.value ?? ''
+    }
 
-    const composed = await waitFor('the dead-key composition to land in the field', async () => {
-      const node = findNode(webNodes(handle), (entry) => entry.role === 'AXTextField' && entry.title === CAPTURE_FIELD_LABEL)
-      return node && (node.value ?? '').length > 0 ? node : null
-    })
+    postKeys(handle, 'text:Caf')
+    await waitFor('the literal prefix to reach the capture field', async () => captureFieldValue() === 'Caf', { intervalMs: 100, timeoutMs: 10_000 })
+    postKeys(handle, 'code:39')
+    await waitFor('the dead acute to land as a pending composition', async () => {
+      const value = captureFieldValue()
+      return value !== null && value !== 'Caf' && value.length > 0
+    }, { intervalMs: 100, timeoutMs: 10_000 })
+    postKeys(handle, 'e')
+
+    const composed = await waitFor('the dead-key composition to resolve in the field', async () => {
+      const node = captureFieldNode()
+      const value = node === null ? '' : node.value ?? ''
+      // Resolved means the pending dead key is gone: the composing letter
+      // has been consumed one way or another. What it resolved TO is the
+      // assertion below, which still fails loudly on "Caf'e" or "Cafe".
+      return value.length > 0 && !value.endsWith("'") ? node : null
+    }, { intervalMs: 100, timeoutMs: 10_000 })
     check(
       'a dead-key sequence composes the accented character in the field, read back as AXValue',
       composed.value === 'Café',
