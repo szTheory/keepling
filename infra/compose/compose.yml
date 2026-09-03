@@ -7,6 +7,12 @@ x-app-environment: &app-environment
   KEEPLING_SERVER_RELEASE: ${KEEPLING_SERVER_RELEASE:-0.1.0}
   KEEPLING_TESTED_OCI_DIGEST: ${KEEPLING_SERVER_DIGEST:-sha256:3df6e26b590ea322aafabf116d39014717f629d859283b82c139cd62f6e2be10}
   KEEPLING_UPDATE_LOCATION: ${KEEPLING_UPDATE_LOCATION:-https://github.com/szTheory/keepling/releases}
+  # O-18: the server refuses to boot without a stable synchronization
+  # server instance. Defaults to the deployment host so an existing
+  # deployment keeps booting; set KEEPLING_SERVER_INSTANCE explicitly when
+  # restoring onto a replacement host that must open a NEW synchronization
+  # namespace rather than silently reusing the previous one.
+  KEEPLING_DEVICE_GRANT_SERVER_INSTANCE: ${KEEPLING_SERVER_INSTANCE:-${KEEPLING_HOST:-localhost}}
 
 x-app-secrets: &app-secrets
   - database_url

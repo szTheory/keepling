@@ -118,6 +118,46 @@ operator_status_token_hash =
 
 config :keepling, :operator_status_token_hash, operator_status_token_hash
 
+# O-18: the device-grant namespace and redirect allowlist a REAL server
+# boots with. Previously these existed only inside test setup, which made
+# `/oauth/authorize` answer 400 for every request on a running server and
+# `namespace_config/0` return `:device_grant_configuration_missing`.
+#
+# `issuer`, `origin`, and `server_instance` are three of the five locked
+# namespace-tuple fields and are SERVER-DERIVED ONLY -- they come from
+# deployment configuration here and can never be influenced by request
+# input. `server_instance` must be stable for the life of a server's data:
+# changing it opens a new synchronization namespace, which is exactly the
+# fence a restore-onto-different-server needs.
+#
+# The redirect allowlist is an exact-match private-use-scheme allowlist
+# (RFC 8252): the desktop app registers `keepling://` and the server accepts
+# only the precise callback URI, never a prefix or a wildcard.
+device_grant_origin =
+  case environment do
+    :prod -> System.get_env("KEEPLING_DEVICE_GRANT_ORIGIN") || "https://#{endpoint_url[:host]}"
+    _ -> System.get_env("KEEPLING_DEVICE_GRANT_ORIGIN") || "http://localhost:#{endpoint_url[:port]}"
+  end
+
+device_grant_issuer = System.get_env("KEEPLING_DEVICE_GRANT_ISSUER") || device_grant_origin
+
+device_grant_server_instance =
+  case {environment, System.get_env("KEEPLING_DEVICE_GRANT_SERVER_INSTANCE")} do
+    {:prod, nil} -> fetch_required!.("KEEPLING_DEVICE_GRANT_SERVER_INSTANCE")
+    {:prod, ""} -> fetch_required!.("KEEPLING_DEVICE_GRANT_SERVER_INSTANCE")
+    {_environment, nil} -> "local-#{environment}"
+    {_environment, value} -> value
+  end
+
+config :keepling, :device_grants,
+  issuer: device_grant_issuer,
+  origin: device_grant_origin,
+  server_instance: device_grant_server_instance,
+  redirect_uris: %{
+    "electron" => ["keepling://auth/callback"],
+    "iphone" => ["keepling://auth/callback"]
+  }
+
 config :keepling, KeeplingWeb.Endpoint,
   server: enabled?.("PHX_SERVER"),
   url: endpoint_url,
