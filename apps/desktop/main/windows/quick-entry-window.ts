@@ -37,7 +37,15 @@ type ShortcutStatus = { accelerator: string; registered: boolean }
 
 type QuickEntryWindowOptions = {
   desktopApplication: DesktopApplication
-  foregroundApp?: ForegroundAppPort
+  /**
+   * REQUIRED, deliberately. This was optional, and the shipped bootstrap
+   * simply omitted it: every capture/restore call no-opped and Quick Entry
+   * left Keepling frontmost instead of returning the user to the
+   * application they came from (O-21). An optional port with exactly one
+   * implementation -- in test code -- is how that defect stayed invisible,
+   * so the type now refuses to compile a caller that forgets it.
+   */
+  foregroundApp: ForegroundAppPort
   globalShortcutPort?: GlobalShortcutPort
   preloadPath: string
   rendererUrl: string
@@ -54,7 +62,7 @@ type QuickEntryWindowOptions = {
  */
 class QuickEntryWindowController {
   readonly #desktopApplication: DesktopApplication
-  readonly #foregroundApp: ForegroundAppPort | undefined
+  readonly #foregroundApp: ForegroundAppPort
   readonly #preloadPath: string
   readonly #rendererUrl: string
   readonly #shortcutPort: GlobalShortcutPort
@@ -184,7 +192,7 @@ class QuickEntryWindowController {
   async open(): Promise<void> {
     if (this.#window !== null && !this.#window.isDestroyed()) {
       if (this.#capturedForegroundHandle === null) {
-        this.#capturedForegroundHandle = (await this.#foregroundApp?.captureActiveApp()) ?? null
+        this.#capturedForegroundHandle = (await this.#foregroundApp.captureActiveApp()) ?? null
       }
       this.#window.show()
       this.#window.focus()
@@ -192,7 +200,7 @@ class QuickEntryWindowController {
       return
     }
 
-    this.#capturedForegroundHandle = (await this.#foregroundApp?.captureActiveApp()) ?? null
+    this.#capturedForegroundHandle = (await this.#foregroundApp.captureActiveApp()) ?? null
 
     const window = new BrowserWindow({
       height: 228,
@@ -236,7 +244,7 @@ class QuickEntryWindowController {
     if (this.#capturedForegroundHandle !== null) {
       const handle = this.#capturedForegroundHandle
       this.#capturedForegroundHandle = null
-      void this.#foregroundApp?.restoreActiveApp(handle)
+      void this.#foregroundApp.restoreActiveApp(handle)
     }
   }
 
