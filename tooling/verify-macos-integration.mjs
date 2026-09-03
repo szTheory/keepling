@@ -164,6 +164,17 @@ const probeSourceDigest = (name) => {
 }
 
 const PROBE_NAMES = ['AXProbe', 'HotkeyRival', 'SystemSettings']
+
+/**
+ * The Swift probes are not the only thing that decides what this lane
+ * CLAIMS -- every assertion lives in this file. Binding evidence to the
+ * probes alone left a hole: weaken or delete a check here, and the gate
+ * would keep reusing evidence recorded before the change and keep
+ * reporting PASS. That is precisely the vacuous green this lane exists to
+ * prevent, so the runner's own source is part of what evidence is bound to.
+ */
+const laneSourceDigest = () =>
+  createHash('sha256').update(readFileSync(join(repositoryRoot, 'tooling', 'verify-macos-integration.mjs'))).digest('hex').slice(0, 16)
 const probeSourceDigests = () => Object.fromEntries(PROBE_NAMES.map((name) => [name, probeSourceDigest(name)]))
 
 // ---------------------------------------------------------------------------
@@ -208,6 +219,7 @@ const writeEvidence = (manifest, rows) => {
   const record = {
     applicationDigestSha256: manifest.applicationDigestSha256,
     executableDigestSha256: manifest.executableDigestSha256,
+    laneSourceDigest: laneSourceDigest(),
     probeSourceDigests: probeSourceDigests(),
     recordedAt: new Date().toISOString(),
     rowSelection: rows.length === ALL_ROWS.length ? 'complete' : 'partial',
@@ -512,13 +524,30 @@ const focusIdentity = (node) =>
  * returns whatever it last saw, including null, so a genuine "focus is lost"
  * product defect is still reported rather than being waited away.
  */
-const settledFocus = async (handle, { intervalMs = 150, stableReads = 3, timeoutMs = 6_000 } = {}) => {
+/**
+ * `until` polls for the condition the CALLER is about to assert, rather than
+ * for focus merely holding still. That distinction matters: a run of `null`
+ * reads never "settles" -- each one resets the repeat counter -- so a slow
+ * machine returns `null` at the deadline and the row reports "focus was on
+ * nothing" even though focus arrives correctly a moment later. Measured: A4
+ * failed this way on a loaded machine where A3 took 16s against its usual
+ * 5.5s. Passing `until` does not weaken any assertion. The caller still
+ * checks the returned node exactly as before; if the condition never holds
+ * within the deadline, the last observation is returned and the check fails.
+ */
+const settledFocus = async (handle, { intervalMs = 150, stableReads = 3, timeoutMs = 6_000, until = null } = {}) => {
   const deadline = Date.now() + timeoutMs
   let lastIdentity = null
   let repeats = 0
   let node = null
   for (;;) {
     node = focusedElement(handle) ?? null
+    if (until !== null) {
+      if (until(node)) return node
+      if (Date.now() >= deadline) return node
+      await sleep(intervalMs)
+      continue
+    }
     const identity = focusIdentity(node)
     if (identity !== null && identity === lastIdentity) repeats += 1
     else repeats = identity === null ? 0 : 1
@@ -1001,7 +1030,10 @@ const rowA4 = (context) => runRow('A4', 'VoiceOver layer: the unsaved-changes di
     const dialog = findNode(nodes, (node) => (node.description ?? '') === 'Discard unsaved changes?' || (node.title ?? '') === 'Discard unsaved changes?')
     check('navigating away with unsaved edits raises the unsaved-changes dialog', dialog !== null)
 
-    const focused = await settledFocus(handle)
+    const focused = await settledFocus(handle, {
+      timeoutMs: 15_000,
+      until: (node) => (node?.title ?? '') === 'Keep Editing',
+    })
     check(
       'the unsaved-changes dialog moves focus INTO itself (previously a disclosed gap, fixed in 03-15)',
       focused !== null && (focused.title ?? '') === 'Keep Editing',
@@ -1018,7 +1050,11 @@ const rowA4 = (context) => runRow('A4', 'VoiceOver layer: the unsaved-changes di
     )
 
     postKeys(handle, 'space')
-    const afterClose = await settledFocus(handle)
+    const afterClose = await settledFocus(handle, {
+      timeoutMs: 15_000,
+      until: (node) =>
+        node !== null && node.role !== 'AXApplication' && (node.frame?.width ?? 0) > 0 && (node.frame?.height ?? 0) > 0,
+    })
     check(
       'closing the dialog leaves focus on a visible, operable element -- never the application element, never a removed node',
       afterClose !== null && afterClose.role !== 'AXApplication' && (afterClose.frame?.width ?? 0) > 0 && (afterClose.frame?.height ?? 0) > 0,
@@ -1735,6 +1771,7 @@ const runEvidenceSelfTest = async () => {
   const completeRecord = {
     applicationDigestSha256: 'digest-under-test',
     executableDigestSha256: 'executable-under-test',
+    laneSourceDigest: 'lane-1',
     probeSourceDigests: { ...probeDigests },
     recordedAt: '2026-09-03T00:00:00.000Z',
     rows: ALL_ROWS.map((id) => ({ cases: 3, durationMs: 10, id, passed: true })),
@@ -1746,7 +1783,7 @@ const runEvidenceSelfTest = async () => {
   }
 
   await runRow('SELF-TEST-EVIDENCE', 'digest-bound evidence is reused only when it is complete, passing and current', async (check) => {
-    const accepted = evaluateEvidence(completeRecord, { manifest, probeDigests })
+    const accepted = evaluateEvidence(completeRecord, { laneDigest: 'lane-1', manifest, probeDigests })
     check('complete, wholly passing evidence for this exact artifact is reused', accepted.ok === true, accepted.reason ?? '')
     check('the reused evidence carries every row', accepted.recordedRows?.length === ALL_ROWS.length)
 
@@ -1755,12 +1792,14 @@ const runEvidenceSelfTest = async () => {
       ['evidence for a different artifact digest is never reused', clone((record) => { record.applicationDigestSha256 = 'a-different-digest' })],
       ['evidence for a different packaged executable is never reused', clone((record) => { record.executableDigestSha256 = 'a-different-executable' })],
       ['evidence recorded before a probe source changed is never reused', clone((record) => { record.probeSourceDigests.AXProbe = 'ax-2' })],
+      ['evidence recorded before the lane\'s own assertions changed is never reused', clone((record) => { record.laneSourceDigest = 'lane-2' })],
+      ['evidence predating lane-source binding entirely is never reused', clone((record) => { delete record.laneSourceDigest })],
       ['a recorded FAILING row never satisfies the gate', clone((record) => { record.rows[0].passed = false })],
       ['evidence covering only the untrusted subset never satisfies the gate', clone((record) => { record.rows = record.rows.filter((row) => UNTRUSTED_ROWS.includes(row.id)) })],
       ['evidence with zero cases never satisfies the gate', clone((record) => { record.rows = record.rows.map((row) => ({ ...row, cases: 0 })) })],
     ]
     for (const [claim, record] of cases) {
-      const outcome = evaluateEvidence(record, { manifest, probeDigests })
+      const outcome = evaluateEvidence(record, { laneDigest: 'lane-1', manifest, probeDigests })
       check(claim, outcome.ok === false, `it was accepted with ${outcome.recordedRows?.length ?? 0} row(s)`)
     }
   })
@@ -1854,7 +1893,7 @@ const cleanUp = async () => {
  * only for evidence that is complete, wholly passing, and bound to this
  * exact artifact and these exact probe sources.
  */
-const evaluateEvidence = (record, { manifest, probeDigests }) => {
+const evaluateEvidence = (record, { manifest, probeDigests, laneDigest }) => {
   const digest = manifest.applicationDigestSha256
   if (record === null || record === undefined) return { ok: false, reason: `no macOS integration evidence exists for application digest ${digest}` }
   if (record.applicationDigestSha256 !== digest) return { ok: false, reason: `the recorded evidence is for a different application digest (${record.applicationDigestSha256})` }
@@ -1862,6 +1901,10 @@ const evaluateEvidence = (record, { manifest, probeDigests }) => {
 
   const changedProbes = PROBE_NAMES.filter((name) => (record.probeSourceDigests ?? {})[name] !== probeDigests[name])
   if (changedProbes.length > 0) return { ok: false, reason: `the macOS probe source(s) ${changedProbes.join(', ')} changed since that evidence was recorded, so it no longer describes this lane` }
+
+  if (record.laneSourceDigest !== laneDigest) {
+    return { ok: false, reason: `the lane's own source changed since that evidence was recorded (recorded ${record.laneSourceDigest ?? 'nothing'}, now ${laneDigest}), so it no longer describes these assertions` }
+  }
 
   const recordedRows = record.rows ?? []
   const failedRows = recordedRows.filter((row) => !row.passed)
@@ -1882,7 +1925,7 @@ const evaluateEvidence = (record, { manifest, probeDigests }) => {
 const runGateMode = (manifest) => {
   const digest = manifest.applicationDigestSha256
   const record = readEvidence(digest)
-  const outcome = evaluateEvidence(record, { manifest, probeDigests: probeSourceDigests() })
+  const outcome = evaluateEvidence(record, { laneDigest: laneSourceDigest(), manifest, probeDigests: probeSourceDigests() })
   if (!outcome.ok) {
     console.error(`macOS integration lane failed: ${outcome.reason}\n${EVIDENCE_PRODUCTION_INSTRUCTION}`)
     console.log('macOS integration lane summary: rows=0 failed=1 cases=0 duration_ms=0')
