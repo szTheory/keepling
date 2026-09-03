@@ -287,6 +287,11 @@
       "id": "O-14",
       "item": "Generated evidence dirs were not gitignored (FIXED)",
       "detail": ".gitignore covered apps/web/test-results/ but not apps/desktop/test-results/, and 03-08 introduced .artifacts/ holding desktop/performance-evidence.json and desktop/package-manifest.json. Both untracked and un-ignored, so any git add -A would have committed generated evidence. Both added to .gitignore; they no longer appear in git status, which also permanently protects two paths previously guarded only by executor discipline."
+    },
+    {
+      "id": "O-15",
+      "item": "SafeStorageCredentialAdapter built but never wired into bootstrap()",
+      "detail": "Found by 03-06 while writing the packaged security test, and independently confirmed: SafeStorageCredentialAdapter exists at apps/desktop/main/adapters/credentials.ts and is referenced ONLY by tests (test/packaged/security.spec.ts, test/e2e/real-stack-sync.spec.ts). It is never constructed or wired in main/index.ts#bootstrap(). Built and unit-tested in 03-02. This is a FOURTH open instance of the GAP-1 structural defect and should be folded into the same gap-closure plan."
     }
   ],
   "phase_level_gap": {
@@ -294,12 +299,14 @@
     "title": "Three features are built, tested, and unreachable; no remaining plan can wire them",
     "instances": [
       "O-1 shared workspace slice unused by the web production route",
-      "O-9 native shell unwired (CLOSED by 03-11 - proves this is closable)",
+      "O-9 native shell unwired (CLOSED by 03-11 - proves this class is closable)",
       "O-11 D-06 renderer-semantic restoration not implemented",
-      "O-12 removeLocalData has no IPC/preload/renderer path"
+      "O-12 removeLocalData has no IPC/preload/renderer path",
+      "O-15 SafeStorageCredentialAdapter never constructed in bootstrap()"
     ],
     "root_cause": "One structural defect, not four unrelated bugs. Every executor disclosed correctly; the fault is the phase's allocation of files across plans, which leaves late-discovered integration work with no owner.",
     "ownership_check": "Across all twelve plans' files_modified, every plan owning main/index.ts (03-01, 03-10), preload/* (03-01, 03-02, 03-03, 03-05, 03-10) or renderer/* and packages/web-ui/* (03-01, 03-03, 03-04, 03-07, 03-09) is complete. The remaining plans 03-08 and 03-06 are tests, tooling and docs only and touch none of those paths.",
-    "recommendation": "Let 03-08 and 03-06 run as planned, then close O-1, O-11 and O-12 together in ONE gap-closure plan owning main/index.ts, preload/{contracts,index}.ts and the renderer/web-ui paths. Wiring them separately would re-create the cross-plan file contention that caused the problem. Alternatively record an explicit decision that some are out of v1 scope - but decide rather than letting them pass silently."
+    "recommendation": "Close O-1, O-11, O-12 and O-15 together in ONE gap-closure plan owning main/index.ts, preload/{contracts,index}.ts and the renderer/web-ui paths. Wiring them separately would re-create the cross-plan file contention that caused this. O-9 proves the class is closable: 03-11 shut it with real evidence against the shipped entry point once a single plan was authorized to own the file. Alternatively record an explicit decision that some are out of v1 scope - but decide rather than letting them pass silently.",
+    "credential_note": "O-15 is the most consequential of the four: an unwired credential adapter means the shipped app's credential path is not the safeStorage-backed one that 03-02 built and tested. Verify what bootstrap() actually uses before any ship claim about credential protection."
   }
 }
