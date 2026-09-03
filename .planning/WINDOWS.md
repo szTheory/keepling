@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 49
+open_count: 50
 waived_count: 0
 fixed_count: 4
-total_count: 53
-last_updated: 2026-09-02T18:55:07.591Z
+total_count: 54
+last_updated: 2026-09-03T01:41:18.549Z
 ---
 
 # Broken Windows Ledger
@@ -68,6 +68,7 @@ last_updated: 2026-09-02T18:55:07.591Z
 | 51 | KPL-03 | deviation | apps/desktop/tsconfig.json |  | Allowed type-only repository-owned generated contract imports in desktop typechecking | open |  | 2026-09-02T18:55:07.362Z |  |
 | 52 | KPL-03 | deviation | apps/desktop/main/adapters/credentials.ts |  | Loaded Electron safeStorage lazily so injected adapter proof runs outside Electron | open |  | 2026-09-02T18:55:07.476Z |  |
 | 53 | KPL-03 | deviation | apps/desktop/main/adapters/credentials.ts |  | Added unsigned dogfood credential continuity disclosure for Settings presentation | open |  | 2026-09-02T18:55:07.591Z |  |
+| 54 | KPL-03 | deviation | apps/desktop/main/adapters/credentials.ts |  | 03-13: pane-size persistence (D-06) is N/A -- no resizable-pane UI exists in the shared Workspace presentation to size or restore; documented decision, not a stub. | open |  | 2026-09-03T01:41:18.549Z |  |
 
 ````json
 [
@@ -705,6 +706,18 @@ last_updated: 2026-09-02T18:55:07.591Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-02T18:55:07.591Z",
+    "resolved_at": null
+  },
+  {
+    "id": 54,
+    "kind": "deviation",
+    "phase": "KPL-03",
+    "file": "apps/desktop/main/adapters/credentials.ts",
+    "line": null,
+    "description": "03-13: pane-size persistence (D-06) is N/A -- no resizable-pane UI exists in the shared Workspace presentation to size or restore; documented decision, not a stub.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-03T01:41:18.549Z",
     "resolved_at": null
   }
 ]

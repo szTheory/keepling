@@ -167,9 +167,12 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 11/12 plans executed
+**Plans:** 12/13 plans executed
 
 Plans:
+
+- [x] 03-13-PLAN.md
+
 **Wave 1**
 
 - [x] 03-07-PLAN.md — Create the desktop workspace, process-build, and renderer-entry foundation.

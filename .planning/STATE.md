@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: Completed 03-08-PLAN.md
-last_updated: "2026-09-03T00:21:07.736Z"
+stopped_at: Completed 03-13-PLAN.md (gap closure)
+last_updated: "2026-09-03T01:41:42.165Z"
 last_activity: 2026-09-02
 last_activity_desc: Phase KPL-03 execution started
-state_head: 1ae7553037ef13def121a20055e4ce9c4beb3bd2
+state_head: d308a47b281bfc8d0d36403864190fa054842718
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 50
-  completed_plans: 48
+  total_plans: 51
+  completed_plans: 49
 milestone_name: milestone
 ---
 
@@ -183,6 +183,10 @@ Progress: [█████████░] 97%
 - [Phase 03]: D-06 renderer-semantic restoration (destination/selection/sidebar/draft) is a disclosed gap requiring a renderer<->main IPC channel outside this plan's authorized scope
 - [Phase 03]: [Phase KPL-03]: Worker-thread store-open failures self-heal via transparent reopen on the next request instead of a dedicated retry operation, and never auto-reset the store.
 - [Phase 03]: [Phase KPL-03]: removeLocalNamespaceData never receives a sync/network port as input, making server-deletion structurally unreachable from local-data removal; DesktopApplication.removeLocalData is implemented and tested but not yet wired into main/index.ts or preload/index.ts.
+- [Phase KPL-03]: O-15 CLOSED: bootstrap() constructs SafeStorageCredentialAdapter; prior path was credentials: undefined.
+- [Phase KPL-03]: O-12 CLOSED: removeLocalData reachable via named preload contract + sender-validated IPC; single-field request schema keeps server deletion structurally unreachable.
+- [Phase KPL-03]: O-11 CLOSED: D-06 renderer-semantic restoration (destination, selection, scroll anchor, draft) proven across a real relaunch; pane sizes N/A (no resizable-pane UI exists).
+- [Phase KPL-03]: O-1 RESOLVED: apps/web keeps routed Inbox content; useSharedWorkspace documented as permanent future-facing API.
 
 ### Retained Research
 
@@ -216,8 +220,8 @@ Run the three pending KPL-03 Wave 4 capability gates (`verify.schema-drift`, `ve
 
 ## Session
 
-**Last session:** 2026-09-03T00:21:07.647Z
-**Stopped at:** Completed 03-08-PLAN.md
+**Last session:** 2026-09-03T01:41:42.086Z
+**Stopped at:** Completed 03-13-PLAN.md (gap closure)
 **Resume file:** None
 
 ## Performance Metrics
@@ -272,3 +276,4 @@ Run the three pending KPL-03 Wave 4 capability gates (`verify.schema-drift`, `ve
 | Phase KPL-03 P11 | 150min | 2 tasks | 7 files |
 | Phase KPL-03 P05 | 35min | 2 tasks | 6 files |
 | Phase KPL-03 P08 | 105min | 2 tasks | 6 files |
+| Phase KPL-03 P13 | 95min | 4 tasks | 13 files |
