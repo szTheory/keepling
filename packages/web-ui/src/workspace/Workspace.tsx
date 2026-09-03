@@ -83,6 +83,14 @@ function Workspace({ facade, onSidebarVisibleRestored, sidebarVisible = true }: 
   const breakpoint = useBreakpoint()
   const editorRef = useRef<TaskEditorHandle>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
+  // A4: the unsaved-changes alertdialog must announce itself the way the
+  // Quick Entry and conflict dialogs already do. `keepEditingRef` is the
+  // safe, non-destructive default action focus lands on when the dialog
+  // opens; `dialogReturnFocusRef` remembers the element that was focused
+  // when the dialog opened so closing it never strands focus on a removed
+  // node or silently resets it to <body>.
+  const keepEditingRef = useRef<HTMLButtonElement>(null)
+  const dialogReturnFocusRef = useRef<HTMLElement | null>(null)
   const previousTasksRef = useRef(snapshot.tasks)
   // O-11 gap closure (D-06 renderer-semantic restoration). `restoreAttemptedRef`
   // gates persistence: we must not persist (and thereby overwrite a real
@@ -216,6 +224,30 @@ function Workspace({ facade, onSidebarVisibleRestored, sidebarVisible = true }: 
     })
   }, [dirty, facade, focusTaskId, selectedTask, sidebarVisible, snapshot.route, snapshot.selectedTaskId])
 
+  // A4 fix: move focus INTO the unsaved-changes alertdialog on open, onto
+  // the safe non-destructive default action, and restore it to the
+  // previously focused element on close. Without this a screen reader user
+  // is never told the navigation was interrupted -- they keep hearing
+  // whatever the triggering click happened to focus.
+  useEffect(() => {
+    if (pendingNavigation === null) {
+      const previous = dialogReturnFocusRef.current
+      dialogReturnFocusRef.current = null
+      if (previous !== null && previous.isConnected) previous.focus()
+      else if (previous !== null) {
+        // The trigger was removed while the dialog was open (a task row
+        // that left the route). Degrade to the list heading, then to the
+        // main landmark -- never to a detached node, never to <body>.
+        const fallback = headingRef.current ?? document.getElementById('main-content')
+        fallback?.focus()
+      }
+      return
+    }
+    const active = document.activeElement
+    dialogReturnFocusRef.current = active instanceof HTMLElement ? active : null
+    keepEditingRef.current?.focus()
+  }, [pendingNavigation])
+
   const showList = breakpoint !== 'compact' || selectedTask === null
   const showDetail = breakpoint !== 'compact' || selectedTask !== null
 
@@ -347,7 +379,7 @@ function Workspace({ facade, onSidebarVisibleRestored, sidebarVisible = true }: 
           <button onClick={resolvePendingDiscard} type="button">
             Discard Changes
           </button>
-          <button onClick={() => setPendingNavigation(null)} type="button">
+          <button onClick={() => setPendingNavigation(null)} ref={keepEditingRef} type="button">
             Keep Editing
           </button>
         </div>

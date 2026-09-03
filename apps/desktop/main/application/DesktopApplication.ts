@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 
 import {
+  GRACE_PERIOD_MS,
   deriveDesktopPresentation,
   type DesktopPresentation,
   type DesktopPresentationInput,
@@ -410,31 +411,81 @@ class DesktopApplication {
     })
   }
 
+  /**
+   * O-19 / MAC-04: a synchronization pass is one of the five states a person
+   * must be able to INSPECT without reading logs. This publishes the
+   * `updating` row for the duration of the pass and clears it on EVERY exit
+   * path -- success, partial settlement, and failure.
+   *
+   * Two properties this deliberately preserves:
+   *
+   *  - It makes NO durability claim. `updating` says "Updating…", never
+   *    "Synced"; a mutation is only settled by an acknowledgement matching
+   *    its mutation identity AND fingerprint exactly (D-03), and anything
+   *    still in the outbox afterwards lands on "Saved on this Mac".
+   *  - It never clobbers a more specific row published DURING the pass
+   *    (conflict, namespace mismatch, authentication required). The
+   *    terminal publish is guarded on the presentation sequence, so a pass
+   *    that surfaced a real interruption leaves that interruption on
+   *    screen.
+   *
+   * The delayed re-publish exists because `deriveDesktopPresentation`
+   * resolves `updating` to a quiet `healthy` row inside GRACE_PERIOD_MS
+   * (anti-flicker). A pass that finishes quickly is therefore invisible by
+   * design; a pass that outlives the grace period re-publishes itself so it
+   * actually becomes "Updating…" on screen. This is a presentation hint
+   * only -- no correctness step depends on it (D-18).
+   */
   async runSyncPass(): Promise<{ pulled: number; settled: number }> {
     if (!this.#sync.pull || !this.#sync.push || !this.#localStore.applyPull || !this.#localStore.readyMutations) {
       const result = await this.reconcile()
       return { pulled: 0, settled: result.settled }
     }
 
-    const state = await this.#localStore.syncState?.()
-    const page = await this.#sync.pull(state?.cursor ?? null, SYNC_LIMITS.pull)
-    if (page.changes.length > SYNC_LIMITS.pull) throw new Error('sync pull exceeded bounded page size')
-    await this.#localStore.applyPull(page)
+    const startedAt = Date.now()
+    let ownedSequence = this.publishPresentation({ kind: 'updating', startedAt }).sequence
+    const graceTimer = setTimeout(() => {
+      if (this.#currentPresentation.sequence !== ownedSequence) return
+      ownedSequence = this.publishPresentation({ kind: 'updating', startedAt }).sequence
+    }, GRACE_PERIOD_MS)
+    ;(graceTimer as { unref?: () => void }).unref?.()
 
-    const ready = (await this.#localStore.readyMutations()).slice(0, SYNC_LIMITS.push)
-    let settled = 0
-    for (const mutation of ready) {
-      const acknowledgement = await this.#sync.push(mutation.commandBytes)
-      if (
-        acknowledgement === null ||
-        acknowledgement.mutationId !== mutation.mutationId ||
-        acknowledgement.fingerprint !== mutation.fingerprint
-      ) continue
-      await (this.#localStore.acknowledgeSync?.(acknowledgement)
-        ?? this.#localStore.acknowledge(acknowledgement))
-      settled += 1
+    // `undefined` until the ready set is actually known, so a failure before
+    // that point publishes an honest count-less row rather than a made-up 0.
+    let pending: number | undefined
+    const settle = (input: DesktopPresentationInput): void => {
+      clearTimeout(graceTimer)
+      if (this.#currentPresentation.sequence !== ownedSequence) return
+      this.publishPresentation(input)
     }
-    return { pulled: page.changes.length, settled }
+
+    try {
+      const state = await this.#localStore.syncState?.()
+      const page = await this.#sync.pull(state?.cursor ?? null, SYNC_LIMITS.pull)
+      if (page.changes.length > SYNC_LIMITS.pull) throw new Error('sync pull exceeded bounded page size')
+      await this.#localStore.applyPull(page)
+
+      const ready = (await this.#localStore.readyMutations()).slice(0, SYNC_LIMITS.push)
+      pending = ready.length
+      let settled = 0
+      for (const mutation of ready) {
+        const acknowledgement = await this.#sync.push(mutation.commandBytes)
+        if (
+          acknowledgement === null ||
+          acknowledgement.mutationId !== mutation.mutationId ||
+          acknowledgement.fingerprint !== mutation.fingerprint
+        ) continue
+        await (this.#localStore.acknowledgeSync?.(acknowledgement)
+          ?? this.#localStore.acknowledge(acknowledgement))
+        settled += 1
+      }
+      const remaining = ready.length - settled
+      settle(remaining > 0 ? { kind: 'local_saved', pendingCount: remaining } : { kind: 'healthy' })
+      return { pulled: page.changes.length, settled }
+    } catch (error) {
+      settle({ kind: 'retryable_failure', pendingCount: pending })
+      throw error
+    }
   }
 
   async close(): Promise<void> {
