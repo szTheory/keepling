@@ -4,7 +4,24 @@ import { dirname } from 'node:path'
 
 import type { CredentialPort } from '../application/DesktopApplication.ts'
 
-const require = createRequire(import.meta.url)
+/**
+ * O-15 gap closure fix (Rule 1 -- discovered wiring this module into the
+ * real bootstrap for the first time; it was previously dead code, never
+ * bundled into `main/index.cjs`, so this bug was unreachable before).
+ *
+ * The module-level `const require = createRequire(import.meta.url)` this
+ * function replaces crashed the ENTIRE app at load: `vite.main.config.ts`
+ * builds a `cjs` bundle, and rolldown's CJS output replaces every
+ * `import.meta` reference with `{}` (a documented, intentional rolldown
+ * behavior for non-ESM output), making `import.meta.url` `undefined` and
+ * `createRequire(undefined)` throw synchronously at module evaluation time
+ * -- before `bootstrap()` even runs. In the REAL packaged CJS bundle,
+ * `require` is already a native CommonJS global; `createRequire` is only
+ * needed as a fallback for the ESM test runners (vitest/ts-node) that load
+ * this file directly as `.ts` source.
+ */
+const resolveRequire = (): NodeRequire =>
+  typeof require === 'function' ? require : createRequire(import.meta.url)
 
 type SafeStoragePort = Pick<
   Electron.SafeStorage,
@@ -50,7 +67,7 @@ class SafeStorageCredentialAdapter implements CredentialPort {
     this.#filePath = options.filePath
     this.#read = options.read ?? defaultRead
     this.#remove = options.remove ?? defaultRemove
-    this.#safeStorage = options.safeStorage ?? (require('electron') as typeof Electron.CrossProcessExports).safeStorage
+    this.#safeStorage = options.safeStorage ?? (resolveRequire()('electron') as typeof Electron.CrossProcessExports).safeStorage
     this.#write = options.write ?? defaultWrite
   }
 

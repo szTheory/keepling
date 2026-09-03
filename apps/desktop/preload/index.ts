@@ -10,9 +10,12 @@ import {
   lifecycleRequestSchema,
   localAcceptanceSchema,
   moveTodayRequestSchema,
+  removeLocalDataOutcomeSchema,
+  removeLocalDataRequestSchema,
   resolveConflictRequestSchema,
   snapshotSchema,
   undoResultSchema,
+  workspaceLayoutStateSchema,
 } from './contracts.ts'
 
 type DesktopPresentation = z.infer<typeof desktopPresentationSchema>
@@ -87,6 +90,22 @@ const keepling = Object.freeze({
   resolveConflict: async (request: unknown) => snapshotSchema.parse(
     await ipcRenderer.invoke('keepling:resolve-conflict', resolveConflictRequestSchema.parse(request)),
   ),
+  // O-12 gap closure: named removal contract (D-24). Both sides parse
+  // against the SAME strict schema as every other operation here -- a
+  // hostile renderer calling `ipcRenderer.invoke` directly still hits the
+  // real main-process parse, which is the actual security boundary.
+  removeLocalData: async (request: unknown) => removeLocalDataOutcomeSchema.parse(
+    await ipcRenderer.invoke('keepling:remove-local-data', removeLocalDataRequestSchema.parse(request)),
+  ),
+  // O-11 gap closure (D-06): main-owned, best-effort, non-durable UI
+  // convenience persistence for renderer-semantic workspace layout.
+  persistWorkspaceLayout: (state: unknown) => {
+    void ipcRenderer.invoke('keepling:persist-workspace-layout', workspaceLayoutStateSchema.parse(state))
+  },
+  restoreWorkspaceLayout: async () => {
+    const raw = await ipcRenderer.invoke('keepling:restore-workspace-layout')
+    return raw === null ? null : workspaceLayoutStateSchema.parse(raw)
+  },
   subscribePresentation: (subscriber: (presentation: DesktopPresentation) => void) => {
     presentationSubscribers.add(subscriber)
     // Deliver an immediate baseline to the new subscriber (main-owned

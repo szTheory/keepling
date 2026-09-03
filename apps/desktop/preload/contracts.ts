@@ -92,6 +92,48 @@ const resolveConflictRequestSchema = z.object({
 }).strict()
 
 /**
+ * O-12 gap closure: the strict both-side contract for "Remove data from
+ * this Mac..." (D-24), following 03-10's established pattern exactly.
+ * `confirmRemoveAnyway` is the ONLY input -- no sync/network capability is
+ * ever part of this shape, so a hostile renderer cannot smuggle a path to
+ * server deletion through this contract even in principle.
+ */
+const removeLocalDataRequestSchema = z.object({
+  confirmRemoveAnyway: z.boolean(),
+}).strict()
+const removeLocalDataOutcomeSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('removed') }).strict(),
+  z.object({
+    conflictedCount: z.number().int().min(0),
+    kind: z.literal('blocked_pending_intent'),
+    pendingCount: z.number().int().min(0),
+  }).strict(),
+  z.object({ kind: z.literal('failed'), reason: z.string().min(1).max(500) }).strict(),
+])
+
+/**
+ * O-11 gap closure: the D-06 renderer-semantic restoration snapshot.
+ * Deliberately narrow -- only the fields D-06 names (destination, surviving
+ * selection, a semantic scroll anchor, and a recoverable editor draft).
+ * Pane sizes are NOT included: no resizable-pane UI exists anywhere in the
+ * shared Workspace presentation to size, so there is nothing to persist for
+ * that field (see 03-13-SUMMARY.md "Deviations"). Never a durability claim
+ * (D-03) -- this is UI convenience state, not task data.
+ */
+const workspaceDraftSchema = z.object({
+  notes: z.string().max(50_000),
+  taskId: z.string().min(1),
+  title: z.string().max(512),
+}).strict()
+const workspaceLayoutStateSchema = z.object({
+  destination: z.enum(['inbox', 'today', 'trash']),
+  draft: workspaceDraftSchema.nullable(),
+  scrollAnchorTaskId: z.string().min(1).nullable(),
+  selectedTaskId: z.string().min(1).nullable(),
+  sidebarVisible: z.boolean(),
+}).strict()
+
+/**
  * D-29 sequence contract for `keepling:presentation-changed` pushes. The
  * preload bridge is always subscribed (its `ipcRenderer.on` listener is
  * registered at module load, before any renderer code runs or calls
@@ -128,9 +170,13 @@ export {
   lifecycleRequestSchema,
   localAcceptanceSchema,
   moveTodayRequestSchema,
+  removeLocalDataOutcomeSchema,
+  removeLocalDataRequestSchema,
   resolveConflictRequestSchema,
   snapshotSchema,
   taskSchema,
   undoResultSchema,
+  workspaceDraftSchema,
+  workspaceLayoutStateSchema,
 }
 export type { SequenceOutcome }

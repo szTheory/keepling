@@ -20,6 +20,7 @@ type WorkerRequest = {
     | 'resolveConflict'
     | 'saveDraft'
     | 'setShortcutPreference'
+    | 'setSyncFence'
     | 'snapshot'
     | 'undoLastLocalAction'
   payload?: unknown
@@ -125,6 +126,10 @@ parentPort.on('message', (request: WorkerRequest) => {
         break
       case 'setShortcutPreference':
         store.setShortcutPreference(request.payload as Parameters<typeof store.setShortcutPreference>[0])
+        value = null
+        break
+      case 'setSyncFence':
+        store.setSyncFence(request.payload as Parameters<typeof store.setSyncFence>[0])
         value = null
         break
       default: {

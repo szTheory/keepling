@@ -1,9 +1,11 @@
+import { existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { Worker } from 'node:worker_threads'
 import { app, ipcMain, Menu, net, protocol, screen, session } from 'electron'
 
+import { SafeStorageCredentialAdapter } from './adapters/credentials.ts'
 import {
   DesktopApplication,
   type ConflictRecord,
@@ -28,6 +30,7 @@ import {
   resolvePackagedAssetPath,
   shouldGrantPermission,
 } from './protocol.ts'
+import { removeLocalFilesAt } from '../store-worker/local-store.ts'
 import { createMainWindow } from './windows/main-window.ts'
 import { QuickEntryWindowController } from './windows/quick-entry-window.ts'
 import { SettingsWindowController } from './windows/settings-window.ts'
@@ -36,7 +39,9 @@ import {
   editRequestSchema,
   lifecycleRequestSchema,
   moveTodayRequestSchema,
+  removeLocalDataRequestSchema,
   resolveConflictRequestSchema,
+  workspaceLayoutStateSchema,
 } from '../preload/contracts.ts'
 
 // MUST run before app.whenReady() -- Electron requires privileged-scheme
@@ -50,17 +55,46 @@ protocol.registerSchemesAsPrivileged([
 
 type WorkerResponse = { error?: string; id: number; ok: boolean; value?: unknown }
 
+/**
+ * O-11 gap closure (D-06): the SAME best-effort atomic-replace file pattern
+ * `lifecycle.ts#createFileWindowStatePort` uses for window bounds, applied
+ * to renderer-semantic workspace layout. Kept self-contained here (rather
+ * than extending `lifecycle.ts`, which is outside this plan's authorized
+ * scope) since it is a single small read/write pair, not a stateful port.
+ */
+const loadWorkspaceLayout = (filePath: string): unknown => {
+  try {
+    if (!existsSync(filePath)) return null
+    return JSON.parse(readFileSync(filePath, 'utf8'))
+  } catch {
+    return null
+  }
+}
+
+const saveWorkspaceLayout = (filePath: string, state: unknown): void => {
+  try {
+    const tmpPath = `${filePath}.tmp`
+    writeFileSync(tmpPath, JSON.stringify(state))
+    renameSync(tmpPath, filePath)
+  } catch {
+    // Best-effort UI convenience persistence only -- never a durability
+    // prerequisite for anything this app reports as saved or synced.
+  }
+}
+
 const processResourcePath = (role: 'preload' | 'renderer' | 'worker', file: string) =>
   app.isPackaged
     ? join(process.resourcesPath, role, file)
     : join(app.getAppPath(), 'dist', role, file)
 
 class WorkerLocalStore implements LocalStorePort {
+  readonly #databasePath: string
   readonly #pending = new Map<number, { reject: (error: Error) => void; resolve: (value: unknown) => void }>()
   readonly #worker: Worker
   #nextId = 1
 
   constructor(databasePath: string, migrationPath: string) {
+    this.#databasePath = databasePath
     const workerPath = processResourcePath('worker', 'index.cjs')
     this.#worker = new Worker(workerPath, { workerData: { databasePath, migrationPath } })
     this.#worker.on('message', (response: WorkerResponse) => {
@@ -136,6 +170,33 @@ class WorkerLocalStore implements LocalStorePort {
     return this.#request('setShortcutPreference', accelerator)
   }
 
+  // O-12 gap closure (Rule 1 fix): `removeLocalNamespaceData` requires
+  // `removeLocalFiles`/`setSyncFence` on its `LocalDataStorePort`, and this
+  // proxy class never forwarded either -- so calling
+  // `desktopApplication.removeLocalData` against the REAL shipped worker
+  // always failed closed with `local file removal is unavailable`,
+  // discovered only once this plan made the surface actually reachable
+  // (`test/e2e/gap-closure.spec.ts`).
+  //
+  // `removeLocalFiles` deliberately does NOT round-trip through the worker
+  // (unlike every other proxy method here): `removeLocalNamespaceData`
+  // calls `localStore.close()` BEFORE `removeLocalFiles()` (D-38 order),
+  // and THIS class's `close()` terminates the worker thread entirely (the
+  // correct behavior for real app shutdown, which shares the same `close`
+  // contract) -- a `removeLocalFiles` request sent after that would
+  // `postMessage` to an already-exited worker and hang forever (silently
+  // dropped, per the worker's own comment). `removeLocalFilesAt` is the
+  // SAME plain, worker-independent function the worker itself calls for
+  // this operation, so calling it directly here after the worker has
+  // already been terminated is exactly as safe.
+  removeLocalFiles(): { remaining: string[]; removed: string[] } {
+    return removeLocalFilesAt(this.#databasePath)
+  }
+
+  setSyncFence(reason: string | null): Promise<void> {
+    return this.#request('setSyncFence', reason)
+  }
+
   async close(): Promise<void> {
     await this.#request('close')
     await this.#worker.terminate()
@@ -194,13 +255,43 @@ const bootstrap = async () => {
       return null
     },
   }
+  // O-15 gap closure: this is the SAME `SafeStorageCredentialAdapter`
+  // Plan 03-02 built and unit-tested (`test/e2e/real-stack-sync.spec.ts`) --
+  // it was never constructed here before this plan, so the credential path
+  // the shipped app actually ran was `credentials: undefined`
+  // (`DesktopApplication`'s `#credentials?.clear()` calls silently no-op).
+  // Wiring it here is the entire fix: no other file reads or writes a
+  // credential value anywhere in `main/`, `preload/`, or `renderer/`
+  // (verified by grep before this change; see 03-13-SUMMARY.md).
+  const credentials = new SafeStorageCredentialAdapter({
+    filePath: join(app.getPath('userData'), 'credential.enc'),
+  })
   const desktopApplication = new DesktopApplication({
     clock: { now: () => new Date().toISOString() },
+    credentials,
     identity: { randomId: randomUUID },
     localStore,
     sync,
   })
   await desktopApplication.reconcile()
+
+  // Test-only introspection seam for shipped-entry-point gap-closure proof
+  // (`test/e2e/gap-closure.spec.ts`), following the SAME pattern already
+  // used above by `KEEPLING_TEST_SYNC_MODE` / `KEEPLING_TEST_USER_DATA_DIR`:
+  // gated behind an explicit env var no real user session would ever set,
+  // never active by default. This is NOT the prohibited
+  // `test/fixtures/wired-app-harness.ts` reference entry point -- it is a
+  // narrow read-only handle into the REAL objects this REAL `bootstrap()`
+  // already constructed, exposed only so a Playwright test driving the real
+  // packaged `dist/main/index.cjs` can prove the credential adapter is
+  // actually the one wired in, without adding any new production-reachable
+  // IPC surface.
+  if (process.env.KEEPLING_TEST_EXPOSE_INTERNALS === '1') {
+    ;(globalThis as unknown as { __keeplingTestCredentials?: SafeStorageCredentialAdapter })
+      .__keeplingTestCredentials = credentials
+    ;(globalThis as unknown as { __keeplingTestDesktopApplication?: DesktopApplication })
+      .__keeplingTestDesktopApplication = desktopApplication
+  }
 
   // Registered once, on the default session, so EVERY renderer surface --
   // the main window, Quick Entry, and Settings (all constructed below) --
@@ -228,6 +319,7 @@ const bootstrap = async () => {
   const preloadPath = processResourcePath('preload', 'index.cjs')
   const utilityPreloadPath = processResourcePath('preload', 'utility.cjs')
   const rendererBase = `${APP_PROTOCOL_ORIGIN}/index.html`
+  const workspaceLayoutPath = join(app.getPath('userData'), 'workspace-layout.json')
 
   // The single owner of the resident main window's lifetime (D-20/D-21).
   // `createWindow` delegates to `windows/main-window.ts#createMainWindow`,
@@ -303,6 +395,36 @@ const bootstrap = async () => {
   ipcMain.handle('keepling:resolve-conflict', async (event, rawInput) => {
     assertTrustedSender(event)
     return desktopApplication.resolveConflict(parseTrustedRequest(resolveConflictRequestSchema, rawInput))
+  })
+  // O-12 gap closure: `DesktopApplication.removeLocalData` (Plan 03-05) is
+  // now reachable end to end -- named preload contract, sender-validated
+  // handler, same trust check as every other operation above. Its input
+  // type is `{ confirmRemoveAnyway: boolean }` only: no sync/network port
+  // is threaded through this handler, so server deletion stays structurally
+  // unreachable from this surface, exactly as `removeLocalNamespaceData`
+  // requires.
+  ipcMain.handle('keepling:remove-local-data', async (event, rawCommand) => {
+    assertTrustedSender(event)
+    return desktopApplication.removeLocalData(parseTrustedRequest(removeLocalDataRequestSchema, rawCommand))
+  })
+  // O-11 gap closure (D-06): best-effort, main-owned, non-durable UI
+  // convenience persistence for renderer-semantic workspace layout state
+  // (destination, surviving selection, semantic scroll anchor, recoverable
+  // draft). A read failure or a malformed/tampered file degrades to "no
+  // restoration" (never a thrown error to the renderer); a write failure is
+  // silently best-effort, mirroring `createFileWindowStatePort` exactly --
+  // this is UI convenience state, never a durability boundary (D-03/D-21).
+  ipcMain.handle('keepling:restore-workspace-layout', async (event) => {
+    assertTrustedSender(event)
+    const raw = loadWorkspaceLayout(workspaceLayoutPath)
+    if (raw === null) return null
+    const parsed = workspaceLayoutStateSchema.safeParse(raw)
+    return parsed.success ? parsed.data : null
+  })
+  ipcMain.handle('keepling:persist-workspace-layout', async (event, rawState) => {
+    assertTrustedSender(event)
+    saveWorkspaceLayout(workspaceLayoutPath, parseTrustedRequest(workspaceLayoutStateSchema, rawState))
+    return null
   })
   const unsubscribePresentation = desktopApplication.subscribePresentation((presentation) => {
     const window = lifecycle.getMainWindow()
