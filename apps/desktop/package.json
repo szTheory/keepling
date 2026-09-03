@@ -16,9 +16,9 @@
     "dev": "vite --config vite.renderer.config.ts",
     "package": "node ../../tooling/package-desktop.mjs",
     "smoke:packaged": "node ../../tooling/smoke-desktop-packaged.mjs",
-    "test": "vitest run --config vitest.config.ts --project application --project renderer --project store --project worker --project performance",
-    "test:e2e": "playwright test --config playwright.config.ts --project electron",
-    "test:ipc": "vitest run --config vitest.config.ts --project ipc",
+    "test": "node ../../tooling/run-tests.mjs unit",
+    "test:e2e": "node ../../tooling/run-tests.mjs e2e",
+    "test:ipc": "node ../../tooling/run-tests.mjs ipc",
     "typecheck": "tsc --project tsconfig.json --noEmit --pretty false"
   },
   "dependencies": {

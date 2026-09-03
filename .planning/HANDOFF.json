@@ -191,7 +191,7 @@
     "services_running": [],
     "background_jobs": [],
     "isolation_note": "No git remote, so origin/HEAD is unresolvable and worktree.base-check returns shouldDegrade:true / fork-ref-unknown. GSD sequential fallback is correct (#683). Do NOT force worktree dispatch and do NOT create a remote. dispatch-isolation re-resolves to harness-worktree on every read and re-persists it, so re-arm before EVERY dispatch: gsd-tools query dispatch-isolation --raw --phase KPL-03 --force-isolation none. Without this the isolation guard hook refuses the Agent() call. Do not set workflow.use_worktrees=false as a workaround.",
-    "harness_note": "pnpm test:desktop -- <name> does NOT filter: the extra -- makes vitest ignore the positional, so the full desktop suite runs whatever name is passed. Counts from it are not lane-scoped. Do not edit committed plan verify commands to 'fix' this.",
+    "harness_note": "FIXED in 03-17: pnpm test:desktop <name> and pnpm test:desktop -- <name> both filter now. All three desktop lanes route through tooling/run-tests.mjs, which strips the bare -- that vitest's cac parser treated as a passthrough separator and uses --project=<name> so Playwright's variadic --project no longer swallows the positional. Counts reported in summaries written BEFORE 03-17 against a -- <name> command are full-suite counts, not lane-scoped. Committed plan verify commands using that form were left unedited and are correct as written now.",
     "sandbox_note": "A PostgreSQL shmget: Operation not permitted failure is an execution-environment limitation, not a product regression.",
     "runtime_paths_note": "Plan <execution_context> includes were repointed .codex -> .claude in 516497a and 9149d8d. One .codex string is deliberately preserved at 02-RESEARCH.md:163 as a dated research finding."
   },
@@ -233,7 +233,7 @@
     {
       "id": "O-1",
       "item": "useSharedWorkspace flag",
-      "detail": "apps/web WorkspaceShell renders the shared slice only behind a prop defaulting to false; only a test sets it. 03-03 made the slice load-bearing on desktop, so this is now web-only: flip the web Inbox route and delete the flag, or record that web deliberately keeps its routed content. Reasoning in 03-09-SUMMARY.md Deviations. NOTE: O-9 is the same failure class (delivered code unreachable in shipped composition) — 03-04 disclosed it correctly in Known Gaps, unlike 03-09."
+      "detail": "apps/web WorkspaceShell renders the shared slice only behind a prop defaulting to false; only a test sets it. 03-03 made the slice load-bearing on desktop, so this is now web-only: flip the web Inbox route and delete the flag, or record that web deliberately keeps its routed content. Reasoning in 03-09-SUMMARY.md Deviations. NOTE: O-9 is the same failure class (delivered code unreachable in shipped composition) \u2014 03-04 disclosed it correctly in Known Gaps, unlike 03-09."
     },
     {
       "id": "O-2",
