@@ -721,9 +721,20 @@ const bootstrap = async () => {
   // is still signed in.
   ipcMain.handle('keepling:account:disconnect', async (event) => {
     assertTrustedAccountSender(event)
-    const adapter = syncAdapter
+    // Rule 1 fix, found by the real-stack sign-out proof: the fence order
+    // means the credential is ALREADY cleared by the time the revocation
+    // callback runs, so an adapter reading the token from storage always
+    // failed `authentication_required` and the best-effort revocation
+    // silently never happened. Capturing the bearer token BEFORE sign-out
+    // and revoking with THAT preserves the fence order exactly (local
+    // intent fenced and credential cleared first) while letting the
+    // revocation actually authenticate.
+    const revocationToken = authorization === null ? null : await authorization.accessToken()
+    const revocationAdapter = configuredServerUrl === null || revocationToken === null
+      ? null
+      : new KeeplingSyncAdapter({ accessToken: () => revocationToken, baseUrl: configuredServerUrl })
     await desktopApplication.signOut(async () => {
-      if (adapter !== null) await adapter.revoke(installationId)
+      if (revocationAdapter !== null) await revocationAdapter.revoke(installationId)
     })
     return readAccountStatus()
   })
