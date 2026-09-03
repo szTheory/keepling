@@ -80,7 +80,16 @@ if (!existsSync(binaryPath)) {
   process.exit(2)
 }
 
-const argv = [...lane.args, ...forwarded]
+// An explicit `--project=<name>` REPLACES the lane's default project set
+// rather than adding to it, so `tooling/select-tests.mjs` can narrow a lane
+// to the single vitest project that can observe a change. Without this an
+// extra `--project` would union with the defaults and narrow nothing.
+const overridesProjects = forwarded.some((argument) => argument.startsWith('--project'))
+const laneArguments = overridesProjects
+  ? lane.args.filter((argument) => !argument.startsWith('--project'))
+  : lane.args
+
+const argv = [...laneArguments, ...forwarded]
 console.log(`run-tests: ${lane.binary} ${argv.join(' ')}`)
 const result = spawnSync(binaryPath, argv, { cwd: DESKTOP_ROOT, stdio: 'inherit' })
 if (result.error) {

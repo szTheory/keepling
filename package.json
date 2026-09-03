@@ -12,6 +12,7 @@
     "package:desktop": "pnpm --dir apps/desktop package",
     "smoke:desktop:packaged": "pnpm --dir apps/desktop smoke:packaged",
     "stack:local": "./tooling/run-local-stack.sh --start",
+    "test:changed": "node tooling/select-tests.mjs",
     "test:desktop": "pnpm --dir apps/desktop test",
     "test:desktop:e2e": "pnpm --dir apps/desktop test:e2e",
     "test:desktop:ipc": "pnpm --dir apps/desktop test:ipc",

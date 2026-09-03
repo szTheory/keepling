@@ -57,3 +57,43 @@ so a trailing positional stays a positional. Flags that merely start with `--`
 Counts reported in summaries written **before** 03-17 against a `-- <name>`
 command are full-suite counts, not lane-scoped ones. They are still valid
 evidence; they are just not scoped.
+
+## `pnpm test:changed` — run only what can observe your change
+
+```sh
+pnpm test:changed              # select from the working tree and run
+pnpm test:changed --dry-run    # show the selection and its reasoning, run nothing
+pnpm test:changed --include-manual                 # also run the screen-taking lanes
+pnpm test:changed --dry-run --paths apps/desktop/main/windows/quick-entry-window.ts
+```
+
+It diffs staged + unstaged + untracked paths against `HEAD`, maps each path to
+the lanes that can actually observe it, prints *why* each lane was chosen, and
+runs exactly those.
+
+Two rules govern the mapping, in this order:
+
+1. **Never silently under-select.** All matching rules apply as a union, not
+   first-match. A path matching *no* rule widens to **every** lane, and the
+   reason is printed. A selector that quietly under-selects manufactures false
+   confidence, which is worse than a slow run.
+2. **Never silently seize the machine.** The macOS integration rows (real
+   CGEvents, real system settings) and the Elixir server suite are *selected
+   and printed* but **not executed** unless you pass `--include-manual`. They
+   are reported as `NOT RUN`, with the exact command — an unrun lane is never
+   counted as a pass.
+
+`pnpm test:changed` is **not** the gate and is deliberately not wired into
+`tooling/verify-desktop-phase.mjs` or any CI job. Every run prints the
+authority:
+
+```
+node tooling/verify-desktop-phase.mjs
+```
+
+### Adding a rule
+
+Edit `RULES` in `tooling/select-tests.mjs`. If you see an `UNMATCHED path`
+line, that is the tool telling you a rule is missing — it has already widened
+to everything for safety, so nothing was lost, but the next person deserves
+the narrower answer.
