@@ -41,6 +41,7 @@ import {
 } from './protocol.ts'
 import { removeLocalFilesAt } from '../store-worker/local-store.ts'
 import { ElectronForegroundApp } from './windows/foreground-app.ts'
+import { installHeadlessPresentation } from './windows/headless-presentation.ts'
 import { createMainWindow } from './windows/main-window.ts'
 import { QuickEntryWindowController } from './windows/quick-entry-window.ts'
 import { SettingsWindowController } from './windows/settings-window.ts'
@@ -251,6 +252,14 @@ class WorkerLocalStore implements LocalStorePort {
       this.#worker.postMessage({ id, operation, payload })
     })
   }
+}
+
+// Opt-in headless presentation for a LOCAL Electron E2E run
+// (`KEEPLING_TEST_HEADLESS=1`). Installed before any window is constructed so
+// no window can slip through presented. Inert without the flag, and never set
+// in CI -- see apps/desktop/main/windows/headless-presentation.ts.
+if (installHeadlessPresentation(BrowserWindow, app)) {
+  console.log('keepling: KEEPLING_TEST_HEADLESS=1 -- windows will not be presented')
 }
 
 const selectedTestProfile = process.env.KEEPLING_TEST_USER_DATA_DIR

@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { app, ipcMain, Menu } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu } from 'electron'
 
 import { DesktopApplication, type LocalStorePort } from '../../main/application/DesktopApplication.ts'
 import { buildApplicationMenu } from '../../main/menu.ts'
+import { installHeadlessPresentation } from '../../main/windows/headless-presentation.ts'
 import { createMainWindow } from '../../main/windows/main-window.ts'
 import {
   QuickEntryWindowController,
@@ -100,6 +101,12 @@ if (selectedTestProfile) app.setPath('userData', resolve(selectedTestProfile))
 
 const bootstrap = async () => {
   await app.whenReady()
+
+  // The same opt-in headless seam the shipped entry point installs. Without
+  // it, `KEEPLING_TEST_HEADLESS=1` would silently NOT apply to the two specs
+  // that launch this harness, and their windows would still take over the
+  // screen while the run claimed to be headless.
+  installHeadlessPresentation(BrowserWindow, app)
 
   const migrationPath = join(desktopRoot, 'migrations', '0001_initial.sql')
   const localStore: LocalStorePort = new NodeSqliteLocalStore({

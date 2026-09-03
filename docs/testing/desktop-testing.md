@@ -97,3 +97,56 @@ Edit `RULES` in `tooling/select-tests.mjs`. If you see an `UNMATCHED path`
 line, that is the tool telling you a rule is missing — it has already widened
 to everything for safety, so nothing was lost, but the next person deserves
 the narrower answer.
+
+## Headless E2E (`KEEPLING_TEST_HEADLESS=1`) — opt in, local only
+
+```sh
+KEEPLING_TEST_HEADLESS=1 pnpm test:desktop:e2e     # 52 tests, 41.6s, no windows
+pnpm test:desktop:e2e                              # 57 tests, 1.1m, real windows (default)
+pnpm test:desktop:e2e --grep @windowed             # only the specs that need a real window
+```
+
+Every window in this app is already constructed `show: false` and presented
+later by an explicit `.show()`. Under the flag,
+`apps/desktop/main/windows/headless-presentation.ts` neutralises exactly those
+presentation methods (`show`, `showInactive`, `moveTop`) on
+`BrowserWindow.prototype` and hides the Dock icon. Nothing else changes: the
+whole main process, the real preload bridge, the real renderer, and the real
+store run unchanged, and Playwright keeps driving the renderer over CDP.
+
+The seam is installed in **both** entry points — the shipped
+`apps/desktop/main/index.ts` *and* `apps/desktop/test/fixtures/wired-app-harness.ts`.
+Without the second one, the two harness-launched specs would still have
+thrown windows on the screen while the run claimed to be headless.
+
+Measured, with the flag set (`BrowserWindow.getAllWindows()` inspected after
+the renderer settles):
+
+| `KEEPLING_TEST_HEADLESS` | main window `isVisible()` | Dock icon |
+|---|---|---|
+| `1` | `false` | hidden |
+| unset | `true` | shown |
+
+### Per-spec headless capability
+
+| Spec | Launches | Headless? | Evidence |
+|---|---|---|---|
+| `accessibility.spec.ts` | `dist/main/index.cjs` | ✅ 11 passed | DOM/AX-role assertions and `setContentSize`, none of which need presentation |
+| `daily-loop.spec.ts` | `dist/main/index.cjs` | ✅ 2 passed | user-visible roles only; `toBeFocused()` is DOM focus, which a hidden window still maintains |
+| `gap-closure.spec.ts` | `dist/main/index.cjs` | ✅ 6 passed | real-wiring introspection, no presentation predicate |
+| `keyboard-menus.spec.ts` | `dist-harness/harness.cjs` | ✅ 5 passed | inspects and clicks the real `Menu` via `application.evaluate`, which works unpresented |
+| `keyboard-quick-entry.spec.ts` | `dist-harness/harness.cjs` | ❌ **`@windowed`** | its central predicate `isQuickEntryOpen()` → `QuickEntryWindowController.isOpen()` → `BrowserWindow.isVisible()` is precisely what headless suppresses. Measured: `:169` (`Command-Return commits…`) **fails outright** (asserts `isOpen() === true`), and the `isOpen() === false` assertions at `:122`/`:148` would pass **vacuously** — unable to tell "hidden after commit" from "never presented". Tagged, excluded headless, unchanged windowed. |
+| `lifecycle.spec.ts` | `dist/main/index.cjs` | ✅ 12 passed | window count, `close`, `setBounds`/`getBounds` and Dock-activation events are all real on an unpresented window |
+| `real-stack-sync.spec.ts` | — | ✅ 7 passed | never launches Electron |
+| `sync-recovery.spec.ts` | — | ✅ 9 passed | never launches Electron |
+
+A spec that cannot be trusted headless runs **windowed or not at all** — never
+headless-and-weakened. The tag is per-test, so a new test added to a
+`@windowed` file must opt in deliberately rather than inheriting a silent
+exclusion.
+
+### Not the default, and not in CI
+
+`grepInvert` is `undefined` unless you opt in, so the phase gate and every CI
+job run the full 57-test windowed suite exactly as before. CI has no screen to
+take over and benefits from the windowed path being exercised.

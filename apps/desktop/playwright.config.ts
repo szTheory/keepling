@@ -33,8 +33,27 @@ process.env.KEEPLING_TEST_PROFILE_ROOT = profileRoot
 process.env.KEEPLING_FORBIDDEN_USER_DATA_DIR = forbiddenUserDataDir
 process.once('exit', () => rmSync(profileRoot, { force: true, recursive: true }))
 
+/**
+ * Opt-in headless E2E (`KEEPLING_TEST_HEADLESS=1`, local convenience only).
+ *
+ * The app suppresses window PRESENTATION under that flag (see
+ * `apps/desktop/main/windows/headless-presentation.ts`); Playwright keeps
+ * driving the renderer over CDP. Specs whose assertions depend on REAL
+ * presentation -- `BrowserWindow.isVisible()`, focus, window ordering -- are
+ * tagged `@windowed` and are EXCLUDED here rather than weakened to pass.
+ *
+ * Never defaulted, and deliberately not set in CI: CI has no screen to take
+ * over and benefits from the windowed path being exercised. `grepInvert` is
+ * therefore `undefined` unless the developer opts in.
+ */
+const headless = process.env.KEEPLING_TEST_HEADLESS === '1'
+if (headless) {
+  console.log('playwright: KEEPLING_TEST_HEADLESS=1 -- excluding @windowed specs (run them windowed to cover them)')
+}
+
 export default defineConfig({
   expect: { timeout: 10_000 },
+  grepInvert: headless ? /@windowed/ : undefined,
   forbidOnly: true,
   fullyParallel: false,
   outputDir: './test-results/playwright',

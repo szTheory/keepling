@@ -20,6 +20,21 @@ import { allocateDisposableProfile } from '../../playwright.config.ts'
  * NOT evidence that they are reachable from the shipped app today. See this
  * plan's SUMMARY "Known Gaps" for the exact remaining integration step.
  */
+/**
+ * WINDOWED-ONLY (`@windowed`). Every test in this file is excluded from a
+ * `KEEPLING_TEST_HEADLESS=1` run, because this file's central predicate --
+ * `isQuickEntryOpen()` -> the real controller's `isOpen()` -> the real
+ * `BrowserWindow.isVisible()` -- is exactly what headless presentation
+ * suppresses. Measured: with the seam installed,
+ * `keyboard-quick-entry.spec.ts:169` FAILS outright (it asserts
+ * `isOpen() === true`), and the `isOpen() === false` assertions at :122 and
+ * :148 would pass VACUOUSLY, unable to distinguish "hidden after commit"
+ * from "never presented at all". A spec that cannot be trusted headless
+ * runs windowed or not at all -- never headless-and-weakened.
+ *
+ * Run these explicitly with: `pnpm test:desktop:e2e keyboard-quick-entry`
+ * (no headless flag), or `pnpm test:desktop:e2e --grep @windowed`.
+ */
 const desktopRoot = fileURLToPath(new URL('../../', import.meta.url))
 
 test.beforeAll(() => {
@@ -90,7 +105,7 @@ const isQuickEntryOpen = (application: ElectronApplication): Promise<boolean> =>
       .quickEntry.isOpen(),
   )
 
-test('one shortcut invocation opens exactly one Quick Entry window, focused on the title field', async () => {
+test('one shortcut invocation opens exactly one Quick Entry window, focused on the title field', { tag: '@windowed' }, async () => {
   const profilePath = allocateDisposableProfile('quick-entry-single-window')
   const { application } = await launch(profilePath)
   try {
@@ -111,7 +126,7 @@ test('one shortcut invocation opens exactly one Quick Entry window, focused on t
   }
 })
 
-test('local commit produces one task, clears the draft, hides the window, and returns focus to the prior app', async () => {
+test('local commit produces one task, clears the draft, hides the window, and returns focus to the prior app', { tag: '@windowed' }, async () => {
   const profilePath = allocateDisposableProfile('quick-entry-commit-focus-return')
   const { application, window } = await launch(profilePath)
   try {
@@ -135,7 +150,7 @@ test('local commit produces one task, clears the draft, hides the window, and re
   }
 })
 
-test('a hidden nonempty draft survives Escape and window recreation until explicitly discarded', async () => {
+test('a hidden nonempty draft survives Escape and window recreation until explicitly discarded', { tag: '@windowed' }, async () => {
   const profilePath = allocateDisposableProfile('quick-entry-durable-draft')
   const { application } = await launch(profilePath)
   try {
@@ -166,7 +181,7 @@ test('a hidden nonempty draft survives Escape and window recreation until explic
   }
 })
 
-test('Command-Return commits, and typing during IME composition does not commit', async () => {
+test('Command-Return commits, and typing during IME composition does not commit', { tag: '@windowed' }, async () => {
   const profilePath = allocateDisposableProfile('quick-entry-command-return-and-ime')
   const { application, window } = await launch(profilePath)
   try {
@@ -195,7 +210,7 @@ test('Command-Return commits, and typing during IME composition does not commit'
   }
 })
 
-test('shortcut collision is visible and directly rebindable, never a silent fallback (D-10)', async () => {
+test('shortcut collision is visible and directly rebindable, never a silent fallback (D-10)', { tag: '@windowed' }, async () => {
   const profilePath = allocateDisposableProfile('quick-entry-shortcut-collision')
   const { application } = await launch(profilePath, { KEEPLING_TEST_OCCUPIED_SHORTCUT: 'Control+Alt+Space' })
   try {
