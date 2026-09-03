@@ -167,7 +167,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 10/12 plans executed
+**Plans:** 11/12 plans executed
 
 Plans:
 **Wave 1**
@@ -209,7 +209,7 @@ Plans:
 
 **Wave 10** *(blocked on Wave 9 completion)*
 
-- [ ] 03-08-PLAN.md — Record every D-43 packaged runtime metric and named regression budget.
+- [x] 03-08-PLAN.md — Record every D-43 packaged runtime metric and named regression budget.
 
 **Wave 11** *(blocked on Wave 10 completion)*
 
