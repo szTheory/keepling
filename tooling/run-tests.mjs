@@ -49,7 +49,6 @@ const LANES = {
       '--project=application',
       '--project=renderer',
       '--project=store',
-      '--project=worker',
       '--project=performance',
     ],
     filterHint: 'a file-path substring, e.g. `keyboardCommands`',

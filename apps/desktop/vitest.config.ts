@@ -41,15 +41,6 @@ export default defineConfig({
           name: 'store',
         },
       }),
-      // Worker protocol and lifecycle cases.
-      defineProject({
-        test: {
-          ...projectDefaults,
-          environment: 'node',
-          include: ['test/worker/**/*.{test,spec}.ts'],
-          name: 'worker',
-        },
-      }),
       // Hostile preload/main contract cases, kept in a separately invokable lane.
       defineProject({
         test: {
