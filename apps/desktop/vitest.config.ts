@@ -59,6 +59,17 @@ export default defineConfig({
           name: 'ipc',
         },
       }),
+      // D-43 measurement tooling: pure statistics/privacy/budget-comparison
+      // logic only -- never spawns Electron (see the entrypoint guard in
+      // tooling/measure-desktop-performance.mjs).
+      defineProject({
+        test: {
+          ...projectDefaults,
+          environment: 'node',
+          include: ['test/performance/**/*.{test,spec}.ts'],
+          name: 'performance',
+        },
+      }),
     ],
     watch: false,
   },
