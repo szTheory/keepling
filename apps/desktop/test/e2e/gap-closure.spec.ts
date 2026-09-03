@@ -1,5 +1,7 @@
 import { spawnSync } from 'node:child_process'
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { createServer } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { readdir } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
@@ -239,6 +241,158 @@ test.describe('O-11: D-06 renderer-semantic restoration survives a real relaunch
       await expect(second.window.getByText('Choose a Task')).toBeVisible()
     } finally {
       await second.application.close()
+    }
+  })
+})
+
+/**
+ * O-30 / MAC-04: shipped-entry-point proof that the `offline` row actually
+ * reaches a person.
+ *
+ * O-20's lesson is that code exercised only by fixtures is not proven code,
+ * so none of this uses `test/fixtures/wired-app-harness.ts`. Every case
+ * below launches the REAL `dist/main/index.cjs`, lets the REAL `bootstrap()`
+ * construct the REAL `KeeplingSyncAdapter` against a REAL server address
+ * (`KEEPLING_TEST_SYNC_MODE` is deliberately NOT set, so the offline test
+ * stub is out of the picture entirely), and reads the row off the REAL
+ * rendered window -- the same pixels a user looks at.
+ *
+ * The narrow `KEEPLING_TEST_EXPOSE_INTERNALS` seam is used only to TRIGGER a
+ * pass, which in ordinary use is triggered by a signed-in session's
+ * scheduler. What the pass then does -- which HTTP call it makes, how the
+ * failure is classified, which row is published, what the window shows -- is
+ * entirely production code.
+ */
+const launchRealSync = async (
+  profilePath: string,
+): Promise<{ application: ElectronApplication; window: Page }> => {
+  const env: Record<string, string> = {
+    ...(process.env as Record<string, string>),
+    KEEPLING_TEST_EXPOSE_INTERNALS: '1',
+    KEEPLING_TEST_USER_DATA_DIR: profilePath,
+  }
+  // The real adapter, not the inline stub: `main/index.ts` selects the stub
+  // whenever this variable is DEFINED, empty string included.
+  delete env.KEEPLING_TEST_SYNC_MODE
+  const application = await electron.launch({ args: ['.'], cwd: desktopRoot, env, timeout: 30_000 })
+  const window = await application.firstWindow()
+  return { application, window }
+}
+
+/** Seeds a signed-in session so a pass gets as far as the network. Uses the REAL credential adapter bootstrap() wired in. */
+const seedCredentials = async (application: ElectronApplication, origin: string): Promise<void> => {
+  await application.evaluate(async ({}, serverOrigin: string) => {
+    const globalScope = globalThis as unknown as {
+      __keeplingTestCredentials?: { store: (value: string) => Promise<void> }
+    }
+    await globalScope.__keeplingTestCredentials?.store(JSON.stringify({
+      accessToken: 'seeded-access-token',
+      namespace: {
+        accountSubject: 'subject-offline-proof',
+        generation: '1',
+        issuer: serverOrigin,
+        origin: serverOrigin,
+        serverInstance: 'instance-offline-proof',
+      },
+      refreshToken: 'seeded-refresh-token',
+    }))
+  }, origin)
+}
+
+/** Runs one REAL synchronization pass and swallows its rejection, exactly as the shipped scheduler does. */
+const runOneSyncPass = async (application: ElectronApplication): Promise<void> => {
+  await application.evaluate(async () => {
+    const globalScope = globalThis as unknown as {
+      __keeplingTestDesktopApplication?: { runSyncPass: () => Promise<unknown> }
+    }
+    await globalScope.__keeplingTestDesktopApplication?.runSyncPass().catch(() => undefined)
+  })
+}
+
+const OFFLINE_COPY = 'Offline — showing tasks saved on this Mac'
+const RETRYABLE_COPY = 'Couldn’t reach the server. Your changes stay on this Mac.'
+
+/** Binds and immediately releases a loopback port, so connecting to it is a real ECONNREFUSED rather than a hang. */
+const allocateClosedPort = async (): Promise<number> => {
+  const server = createServer()
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+  const port = (server.address() as AddressInfo).port
+  await new Promise<void>((resolve) => server.close(() => resolve()))
+  return port
+}
+
+test.describe('O-30: the offline row is real, distinguishes unreachable from rejected, and reaches the window', () => {
+  test('a configured server this Mac cannot reach shows the offline row -- not the retryable-failure row', async () => {
+    const profilePath = allocateDisposableProfile('gap-closure-o30-unreachable')
+    const port = await allocateClosedPort()
+    const origin = `http://127.0.0.1:${port}`
+    writeFileSync(join(profilePath, 'server.json'), JSON.stringify({ baseUrl: `${origin}/` }))
+
+    const { application, window } = await launchRealSync(profilePath)
+    try {
+      await seedCredentials(application, origin)
+      await captureTask(window, 'Kept while the server is unreachable')
+      await runOneSyncPass(application)
+
+      // Positive read FIRST: the status surface really rendered and really
+      // states the offline copy. Only then is the negation meaningful.
+      const row = window.locator('#sync-status-row')
+      await expect(row).toHaveText(OFFLINE_COPY)
+      await expect(row).toHaveAttribute('data-sync-status', 'offline')
+      await expect(window.getByText(RETRYABLE_COPY)).toHaveCount(0)
+
+      // The user's task is still right there on this Mac -- the whole point
+      // of the copy.
+      await expect(window.getByText('Kept while the server is unreachable')).toBeVisible()
+    } finally {
+      await application.close()
+    }
+  })
+
+  test('a server that ANSWERS badly still shows the retryable-failure row -- an answered request is never called offline', async () => {
+    const profilePath = allocateDisposableProfile('gap-closure-o30-rejected')
+    const server = createServer((_request, response) => {
+      response.writeHead(500, { 'content-type': 'application/problem+json' })
+      response.end(JSON.stringify({ code: 'internal_error' }))
+    })
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+    const origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
+    writeFileSync(join(profilePath, 'server.json'), JSON.stringify({ baseUrl: `${origin}/` }))
+
+    const { application, window } = await launchRealSync(profilePath)
+    try {
+      await seedCredentials(application, origin)
+      await captureTask(window, 'Kept while the server rejects')
+      await runOneSyncPass(application)
+
+      const row = window.locator('#sync-status-row')
+      await expect(row).toHaveText(RETRYABLE_COPY)
+      await expect(row).toHaveAttribute('data-sync-status', 'retryable_failure')
+      await expect(window.getByText(OFFLINE_COPY)).toHaveCount(0)
+    } finally {
+      await application.close()
+      await new Promise<void>((resolve) => server.close(() => resolve()))
+    }
+  })
+
+  test('an app with NO server configured never publishes a row implying its data is synchronized', async () => {
+    const profilePath = allocateDisposableProfile('gap-closure-o30-unconfigured')
+    const { application, window } = await launchRealSync(profilePath)
+    try {
+      await captureTask(window, 'Kept with no server at all')
+      await runOneSyncPass(application)
+
+      const row = window.locator('#sync-status-row')
+      await expect(row).toHaveText(OFFLINE_COPY)
+      await expect(row).toHaveAttribute('data-sync-status', 'offline')
+
+      // Guarded negations: the row above proved the surface rendered, so
+      // these read a real string, never an empty one.
+      const rowText = (await row.textContent()) ?? ''
+      expect(rowText.length).toBeGreaterThan(0)
+      expect(rowText).not.toMatch(/synced|up to date|everything/i)
+    } finally {
+      await application.close()
     }
   })
 })
