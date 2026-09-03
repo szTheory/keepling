@@ -32,10 +32,10 @@
 ### Mac desktop
 
 - [x] **MAC-01**: User can capture, view Inbox and Today, edit, complete, reopen, trash, restore, and undo from the Electron Mac client.
-- [x] **MAC-02**: User can perform the supported daily loop with complete keyboard navigation and quick entry.
-- [x] **MAC-03**: User can mutate tasks while offline, quit or lose the process, relaunch, and later reconcile without losing or duplicating accepted intent.
-- [x] **MAC-04**: User can inspect offline, syncing, conflict, authentication-expired, and unrecoverable states without reading logs.
-- [x] **MAC-05**: User receives proof that the packaged installed application—not only a development renderer—preserves and synchronizes the local store.
+- [ ] **MAC-02**: User can perform the supported daily loop with complete keyboard navigation and quick entry.  <!-- unchecked 2026-09-02: pending physical keyboard/IME/accessibility evidence (03-06 Task 3) -->
+- [ ] **MAC-03**: User can mutate tasks while offline, quit or lose the process, relaunch, and later reconcile without losing or duplicating accepted intent.  <!-- unchecked 2026-09-02: 'later reconcile' requires sync, which is not wired into the shipped app (O-16) -->
+- [ ] **MAC-04**: User can inspect offline, syncing, conflict, authentication-expired, and unrecoverable states without reading logs.  <!-- unchecked 2026-09-02: 'syncing' and 'authentication-expired' states are unreachable without wired sync (O-16) -->
+- [ ] **MAC-05**: User receives proof that the packaged installed application—not only a development renderer—preserves and synchronizes the local store.  <!-- unchecked 2026-09-02: 'preserves' is proven; 'synchronizes' is false — sync is not wired into the shipped app (O-16) -->
 
 ### Native iPhone
 
@@ -70,8 +70,8 @@
 
 - [x] **QUAL-01**: Contributor receives deterministic tests for domain rules, long mutation sequences, persistence/migrations, API/contracts, adapters, browser behavior, Electron boundaries, native orchestration, and deployment recovery at the layer best able to catch each failure.
 - [x] **QUAL-02**: Contributor receives fast required CI lanes with parallelism, dependency caching, slow-test visibility, flake accountability, and cross-consumer fan-out for contract/token changes.
-- [x] **QUAL-03**: Release promotion uses the exact revision and artifact previously tested; distribution jobs do not silently rebuild different bytes.
-- [x] **QUAL-04**: Important screens have representative user-level coverage for meaningful populated, empty, loading, offline, denied, stale, conflict, partial, retry, and unrecoverable states.
+- [ ] **QUAL-03**: Release promotion uses the exact revision and artifact previously tested; distribution jobs do not silently rebuild different bytes.  <!-- unchecked 2026-09-02: automated digest-bound promotion proven (03-06 Task 1); phase not verified -->
+- [ ] **QUAL-04**: Important screens have representative user-level coverage for meaningful populated, empty, loading, offline, denied, stale, conflict, partial, retry, and unrecoverable states.  <!-- unchecked 2026-09-02: pending physical/accessibility evidence (03-06 Task 3) -->
 - [x] **QUAL-05**: Diagnostic logs and traces are structured, bounded, correlated, and tested not to emit task titles, notes, prompts, tokens, or arbitrary high-cardinality identifiers.
 
 ## v2 Requirements

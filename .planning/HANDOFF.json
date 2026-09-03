@@ -292,6 +292,16 @@
       "id": "O-15",
       "item": "SafeStorageCredentialAdapter built but never wired into bootstrap()",
       "detail": "Found by 03-06 while writing the packaged security test, and independently confirmed: SafeStorageCredentialAdapter exists at apps/desktop/main/adapters/credentials.ts and is referenced ONLY by tests (test/packaged/security.spec.ts, test/e2e/real-stack-sync.spec.ts). It is never constructed or wired in main/index.ts#bootstrap(). Built and unit-tested in 03-02. This is a FOURTH open instance of the GAP-1 structural defect and should be folded into the same gap-closure plan."
+    },
+    {
+      "id": "O-16",
+      "item": "Real sync adapter is NOT wired into the shipped app",
+      "detail": "main/index.ts constructs an inline stub SyncPort whose acknowledge() returns hardcoded fixtures only when KEEPLING_TEST_SYNC_MODE is set, and null otherwise. The real KeeplingSyncAdapter (main/adapters/sync.ts) is imported by exactly one file: test/e2e/real-stack-sync.spec.ts. So the shipped app never contacts a server. Consequences: nothing reaches PostgreSQL, so the Phase 2 backup infrastructure (infra/backup: pgbackrest, mirror-snapshot.sh, durable-state-manifest.yml) protects an empty database; 'Synced' can never be displayed (D-03 correctly refuses to claim it); and there is NO desktop-local backup or export, so the single SQLite file at ~/Library/Application Support/Keepling/namespace.sqlite3 is the only copy of a user's data. Wiring is NOT a small change: KeeplingSyncAdapter requires baseUrl and accessToken, and the desktop has no server-URL configuration and no sign-in path - DesktopApplication has signOut but no signIn, preload exposes no auth contract, and settings.tsx has no account UI. This is a sixth instance of the GAP-1 class but materially larger than the others."
+    },
+    {
+      "id": "O-17",
+      "item": "CRITICAL - MAC-01..05, QUAL-03..04 were marked complete by the FIRST plan of the phase",
+      "detail": "Commit a5fce17 ('docs(03-07): complete desktop build foundation plan') checked [x] for MAC-01, MAC-02, MAC-03, MAC-04, MAC-05, QUAL-03 and QUAL-04 in REQUIREMENTS.md. 03-07 was wave 1 - it built only the Vite/Forge workspace and renderer entry foundation. No capture, no Inbox, no sync, no packaging proof existed yet. Cause: requirements.mark-complete marks every ID in a plan's `requirements:` frontmatter on completion, and GSD plans share requirement IDs across many plans, so the FIRST plan to finish claims them all. This made 03-06's and 03-08's careful refusal to mark requirements moot - they were already marked. REQUIREMENTS.md's own traceability table (line 119) contradicted the checkboxes throughout, still reading 'Phase 3 | Pending'. CORRECTED 2026-09-02: MAC-02/03/04/05 and QUAL-03/04 unchecked with an inline reason on each line. MAC-01 left checked - it is genuinely proven by shipped-entry-point E2E (gap-closure.spec.ts, daily-loop.spec.ts). GENERALIZATION - CHECK OTHER PHASES: this is a tooling behaviour, not a one-off. Phase 1 and Phase 2 requirement checkboxes were written the same way and may carry the same defect; the Phase 1 checkbox anomaly already recorded in O-6 is likely the same root cause."
     }
   ],
   "phase_level_gap": {
