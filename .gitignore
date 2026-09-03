@@ -8,8 +8,10 @@ cover/
 dist/
 build/
 apps/web/test-results/
+apps/desktop/test-results/
 apps/desktop/out/
 apps/desktop/dist-harness/
+.artifacts/
 DerivedData/
 *.xcuserstate
 .env

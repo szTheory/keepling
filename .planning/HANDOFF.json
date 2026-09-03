@@ -194,8 +194,11 @@
       ".gsd/",
       ".planning/milestone.lock",
       ".planning/research/.cache/",
-      ".tool-versions",
-      "apps/desktop/test-results/"
+      ".tool-versions"
+    ],
+    "now_gitignored": [
+      "apps/desktop/test-results/",
+      ".artifacts/"
     ]
   },
   "required_reading": [
@@ -274,6 +277,16 @@
       "id": "O-12",
       "item": "removeLocalData built and proven but unreachable (no IPC/preload/renderer path)",
       "detail": "03-05 delivered main/recovery/remove-local-data.ts (removeLocalNamespaceData) and DesktopApplication.removeLocalData() with 9 integration cases, structurally unable to delete server data. Verified by grep: zero references to removeLocalData / removeLocalNamespaceData in main/index.ts, preload/, renderer/, or packages/web-ui/src/. A user cannot invoke it. Disclosed honestly by 03-05; those files were outside its files_modified."
+    },
+    {
+      "id": "O-13",
+      "item": "Wake/reconnect has no powerMonitor listener - deliberately NOT a GAP-1 item",
+      "detail": "03-08 disclosed that wake/reconnect is measured through a proxy because no OS-level powerMonitor listener is wired into the shipped app. Check against the decisions before treating this as a gap: D-18 says 'No correctness step depends on a timer, socket, online flag, wake event, or graceful shutdown', and D-43 asks only that wake/reconnect work be measured. The absence is therefore compliant by design. Adding a listener would be a legitimate retry hint (D-18 permits hints) but is not required for correctness. Do NOT fold into GAP-1: unlike O-1/O-11/O-12, nothing here is unreachable that the decisions say must be reachable. Recorded so a later reader does not 'fix' a deliberate design choice. Also disclosed: Quick Entry open-to-focus measures first-open-per-session only, because the window is resident and repeat opens are a different, faster scenario."
+    },
+    {
+      "id": "O-14",
+      "item": "Generated evidence dirs were not gitignored (FIXED)",
+      "detail": ".gitignore covered apps/web/test-results/ but not apps/desktop/test-results/, and 03-08 introduced .artifacts/ holding desktop/performance-evidence.json and desktop/package-manifest.json. Both untracked and un-ignored, so any git add -A would have committed generated evidence. Both added to .gitignore; they no longer appear in git status, which also permanently protects two paths previously guarded only by executor discipline."
     }
   ],
   "phase_level_gap": {
