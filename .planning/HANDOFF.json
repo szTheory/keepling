@@ -233,7 +233,7 @@
     {
       "id": "O-1",
       "item": "useSharedWorkspace flag",
-      "detail": "apps/web WorkspaceShell renders the shared slice only behind a prop defaulting to false; only a test sets it. 03-03 made the slice load-bearing on desktop, so this is now web-only: flip the web Inbox route and delete the flag, or record that web deliberately keeps its routed content. Reasoning in 03-09-SUMMARY.md Deviations. NOTE: O-9 is the same failure class (delivered code unreachable in shipped composition) — 03-04 disclosed it correctly in Known Gaps, unlike 03-09."
+      "detail": "apps/web WorkspaceShell renders the shared slice only behind a prop defaulting to false; only a test sets it. 03-03 made the slice load-bearing on desktop, so this is now web-only: flip the web Inbox route and delete the flag, or record that web deliberately keeps its routed content. Reasoning in 03-09-SUMMARY.md Deviations. NOTE: O-9 is the same failure class (delivered code unreachable in shipped composition) \u2014 03-04 disclosed it correctly in Known Gaps, unlike 03-09."
     },
     {
       "id": "O-2",
@@ -357,8 +357,9 @@
     },
     {
       "id": "O-26",
-      "item": "vitest `worker` project has zero test files",
-      "detail": "apps/desktop/vitest.config.ts declares a `worker` project (include: test/worker/**) with passWithNoTests: false, but apps/desktop/test/worker/ does not exist. The full `pnpm test:desktop` run still passes because vitest's no-test check is satisfied by the other projects, so the empty lane is invisible -- `node tooling/run-tests.mjs unit --project=worker` alone fails with 'No test files found'. Found while building the 03-17 change-scoped selector. Either add the worker-protocol tests the project name promises (the real worker IS covered today, but from test/e2e/sync-recovery.spec.ts, not test/worker/), or delete the project so the lane list stops advertising coverage that does not exist."
+      "item": "CLOSED - the phantom `worker` vitest project (declared test/worker/**, which does not exist) was deleted in 65a0f35; counts unchanged at 18 files/164 tests proves it contributed zero",
+      "detail": "apps/desktop/vitest.config.ts declares a `worker` project (include: test/worker/**) with passWithNoTests: false, but apps/desktop/test/worker/ does not exist. The full `pnpm test:desktop` run still passes because vitest's no-test check is satisfied by the other projects, so the empty lane is invisible -- `node tooling/run-tests.mjs unit --project=worker` alone fails with 'No test files found'. Found while building the 03-17 change-scoped selector. Either add the worker-protocol tests the project name promises (the real worker IS covered today, but from test/e2e/sync-recovery.spec.ts, not test/worker/), or delete the project so the lane list stops advertising coverage that does not exist.",
+      "status": "closed"
     },
     {
       "id": "O-27",
@@ -367,7 +368,7 @@
     },
     {
       "id": "O-28",
-      "item": "Negation-shaped assertions can pass against a surface that has not rendered yet",
+      "item": "Vacuous negation assertions: 'text does NOT contain X' passes when the text was never observed. A8 fixed in 509e323. SWEPT 2026-09-03: the vitest suites' not.toMatch/not.toContain sites are all guarded by an adjacent positive assertion or by a read that throws (hostile-bridge credential-entry check guards with expect(sources.length).toBeGreaterThan(0)). No further live instances found in vitest. The Playwright e2e/packaged suites remain unswept.",
       "detail": "Found by 03-18 while converting row A8. Both A8 phases asserted 'Keepling does not report the Quick Entry accelerator as unavailable' (!/Quick Entry shortcut isn.t available/.test(settingsText)) against a settings pane read once after a fixed sleep(1800). An empty or half-rendered pane satisfies that negation, so a slow Settings window would have produced a PASS rather than a failure -- a false pass, not a flake. Fixed in 509e323 by waiting for the pane to have STATED a position (either 'Current shortcut' or the unavailable message) and failing the row loudly if it never does; that wait deliberately does NOT use onTimeout:'return', because returning would restore the vacuous read. Only A8 was found to have this shape in the macOS lane, but the class is not lane-specific: any assertion of the form 'the text does NOT contain X' is vacuously true against an unrendered read. The Playwright E2E suites and the packaged lane have not been swept for it."
     },
     {
