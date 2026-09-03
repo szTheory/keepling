@@ -19,9 +19,12 @@ import {
   lifecycleRequestSchema,
   localAcceptanceSchema,
   moveTodayRequestSchema,
+  removeLocalDataOutcomeSchema,
+  removeLocalDataRequestSchema,
   resolveConflictRequestSchema,
   snapshotSchema,
   undoResultSchema,
+  workspaceLayoutStateSchema,
 } from '../../preload/contracts.ts'
 import {
   APP_PROTOCOL_ORIGIN,
@@ -74,6 +77,13 @@ const validPresentation = {
   summary: validPresentationSummary,
   surfaces: { panel: validPresentationSummary, row: validPresentationSummary, shell: validPresentationSummary },
 }
+const validWorkspaceLayoutState = {
+  destination: 'inbox' as const,
+  draft: null,
+  scrollAnchorTaskId: null,
+  selectedTaskId: null,
+  sidebarVisible: true,
+}
 
 describe('preload/main strict request and response schemas (D-27/D-28)', () => {
   it('accepts the exact well-formed shape for every schema', () => {
@@ -87,6 +97,23 @@ describe('preload/main strict request and response schemas (D-27/D-28)', () => {
     expect(() => undoResultSchema.parse({ applied: true, snapshot: validSnapshot })).not.toThrow()
     expect(() => resolveConflictRequestSchema.parse({ choice: 'mine', conflictId: 'c' })).not.toThrow()
     expect(() => desktopPresentationSchema.parse(validPresentation)).not.toThrow()
+    expect(() => removeLocalDataRequestSchema.parse({ confirmRemoveAnyway: true })).not.toThrow()
+    expect(() => removeLocalDataOutcomeSchema.parse({ kind: 'removed' })).not.toThrow()
+    expect(() => removeLocalDataOutcomeSchema.parse({ conflictedCount: 0, kind: 'blocked_pending_intent', pendingCount: 2 })).not.toThrow()
+    expect(() => removeLocalDataOutcomeSchema.parse({ kind: 'failed', reason: 'disk full' })).not.toThrow()
+    expect(() => workspaceLayoutStateSchema.parse(validWorkspaceLayoutState)).not.toThrow()
+    expect(() =>
+      workspaceLayoutStateSchema.parse({
+        ...validWorkspaceLayoutState,
+        draft: { notes: 'n', taskId: 't', title: 'x' },
+        scrollAnchorTaskId: 't',
+        selectedTaskId: 't',
+      }),
+    ).not.toThrow()
+  })
+
+  it('O-12: the removal request schema has EXACTLY one field (confirmRemoveAnyway) -- structurally no sync/network capability can ever be smuggled through it', () => {
+    expect(Object.keys(removeLocalDataRequestSchema.shape)).toEqual(['confirmRemoveAnyway'])
   })
 
   it('rejects an extra shallow field on every request/response schema (.strict())', () => {
@@ -100,6 +127,18 @@ describe('preload/main strict request and response schemas (D-27/D-28)', () => {
     expect(() => undoResultSchema.parse({ applied: true, extra: 1, snapshot: validSnapshot })).toThrow()
     expect(() => resolveConflictRequestSchema.parse({ choice: 'mine', conflictId: 'c', extra: 1 })).toThrow()
     expect(() => desktopPresentationSchema.parse({ ...validPresentation, extra: 1 })).toThrow()
+    expect(() => removeLocalDataRequestSchema.parse({ confirmRemoveAnyway: true, extra: 1 })).toThrow()
+    expect(() => removeLocalDataOutcomeSchema.parse({ extra: 1, kind: 'removed' })).toThrow()
+    expect(() => workspaceLayoutStateSchema.parse({ ...validWorkspaceLayoutState, extra: 1 })).toThrow()
+    expect(() =>
+      workspaceLayoutStateSchema.parse({ ...validWorkspaceLayoutState, draft: { extra: 1, notes: 'n', taskId: 't', title: 'x' } }),
+    ).toThrow()
+  })
+
+  it('rejects a removal request that tries to add a sync/network-shaped field (syncFirst, revoke, remote, serverDelete) -- the schema is strict, so this is structurally impossible, never merely policy', () => {
+    for (const hostileField of ['syncFirst', 'revoke', 'remote', 'serverDelete', 'namespace']) {
+      expect(() => removeLocalDataRequestSchema.parse({ confirmRemoveAnyway: true, [hostileField]: true })).toThrow()
+    }
   })
 
   it('rejects a deep extra field smuggled inside a nested object (task inside snapshot, summary inside presentation)', () => {
@@ -122,6 +161,8 @@ describe('preload/main strict request and response schemas (D-27/D-28)', () => {
     expect(() => lifecycleRequestSchema.parse({ kind: 'delete_everything', taskId: 't' })).toThrow()
     expect(() => resolveConflictRequestSchema.parse({ choice: 'both', conflictId: 'c' })).toThrow()
     expect(() => desktopPresentationSchema.parse({ ...validPresentation, summary: { ...validPresentationSummary, kind: 'omniscient' } })).toThrow()
+    expect(() => removeLocalDataOutcomeSchema.parse({ kind: 'partially_removed' })).toThrow()
+    expect(() => workspaceLayoutStateSchema.parse({ ...validWorkspaceLayoutState, destination: 'archive' })).toThrow()
   })
 
   it('rejects a prototype-pollution-shaped payload (__proto__ as an extra key)', () => {
@@ -263,17 +304,23 @@ describe('sender/frame trust (T-KPL03-10-01): forged sender and subframe injecti
 })
 
 describe('every ipcMain.handle registration in main/index.ts is sender-checked before touching DesktopApplication', () => {
-  it('static-scans main/index.ts: each handler body calls assertTrustedSender before any desktopApplication.* call', async () => {
+  it('static-scans main/index.ts: every handler body calls assertTrustedSender first, and every handler that touches DesktopApplication does so only after that check', async () => {
     const { readFile } = await import('node:fs/promises')
     const { fileURLToPath } = await import('node:url')
     const source = await readFile(fileURLToPath(new URL('../../main/index.ts', import.meta.url)), 'utf8')
     const handlerBodies = [...source.matchAll(/ipcMain\.handle\('keepling:[^']+',\s*async\s*\([^)]*\)\s*=>\s*\{([\s\S]*?)\n {2}\}\)/g)]
-    expect(handlerBodies.length).toBeGreaterThanOrEqual(9)
+    // O-12/O-11 gap closure added `keepling:remove-local-data` (touches
+    // DesktopApplication) plus `keepling:restore-workspace-layout` /
+    // `keepling:persist-workspace-layout` (pure file I/O, no
+    // DesktopApplication call at all -- they are still REQUIRED to be
+    // sender-checked, which the loop below enforces unconditionally for
+    // every handler regardless of whether it touches DesktopApplication).
+    expect(handlerBodies.length).toBeGreaterThanOrEqual(12)
     for (const [, body] of handlerBodies) {
       const trustCheckIndex = body!.indexOf('assertTrustedSender(event)')
+      expect(trustCheckIndex, `handler body missing assertTrustedSender:\n${body}`).toBeGreaterThanOrEqual(0)
       const applicationCallIndex = body!.indexOf('desktopApplication.')
-      expect(trustCheckIndex, `handler body missing assertTrustedSender before desktopApplication call:\n${body}`).toBeGreaterThanOrEqual(0)
-      expect(applicationCallIndex).toBeGreaterThan(trustCheckIndex)
+      if (applicationCallIndex >= 0) expect(applicationCallIndex).toBeGreaterThan(trustCheckIndex)
     }
   })
 
@@ -418,8 +465,9 @@ describe('preload bridge: hostile renderer calls never reach ipcRenderer.invoke 
   it('exposes only the named, expected surface -- no generic invoke/send/on escape hatch', () => {
     expect(Object.keys(exposedApi).sort()).toEqual(
       [
-        'capture', 'editTask', 'lifecycleTask', 'listConflicts', 'moveToday', 'presentationSnapshot',
-        'resolveConflict', 'snapshot', 'subscribePresentation', 'undoLastAction',
+        'capture', 'editTask', 'lifecycleTask', 'listConflicts', 'moveToday', 'persistWorkspaceLayout',
+        'presentationSnapshot', 'removeLocalData', 'resolveConflict', 'restoreWorkspaceLayout', 'snapshot',
+        'subscribePresentation', 'undoLastAction',
       ].sort(),
     )
     expect(exposedApi).not.toHaveProperty('invoke')
@@ -467,6 +515,45 @@ describe('preload bridge: hostile renderer calls never reach ipcRenderer.invoke 
       (exposedApi.resolveConflict as (r: unknown) => Promise<unknown>)({ choice: 'delete_both', conflictId: 'c' }),
     ).rejects.toThrow()
     expect(ipcRendererMock.invoke).not.toHaveBeenCalledWith('keepling:resolve-conflict', expect.anything())
+  })
+
+  it('removeLocalData(): a malformed confirmRemoveAnyway type never reaches ipcRenderer.invoke -- absence of privileged effect, not merely rejection', async () => {
+    ipcRendererMock.invoke.mockClear()
+    await expect(
+      (exposedApi.removeLocalData as (r: unknown) => Promise<unknown>)({ confirmRemoveAnyway: 'yes' }),
+    ).rejects.toThrow()
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+  })
+
+  it('removeLocalData(): an attempt to smuggle a sync/network-shaped extra field never reaches ipcRenderer.invoke', async () => {
+    ipcRendererMock.invoke.mockClear()
+    await expect(
+      (exposedApi.removeLocalData as (r: unknown) => Promise<unknown>)({ confirmRemoveAnyway: true, syncFirst: true }),
+    ).rejects.toThrow()
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+  })
+
+  it('removeLocalData(): a malformed main response is rejected before reaching the caller (never trusts an unparsed outcome)', async () => {
+    ipcRendererMock.invoke.mockImplementationOnce(async () => ({ kind: 'partially_removed' }))
+    await expect((exposedApi.removeLocalData as (r: unknown) => Promise<unknown>)({ confirmRemoveAnyway: false })).rejects.toThrow()
+  })
+
+  it('persistWorkspaceLayout(): a malformed layout state never reaches ipcRenderer.invoke', () => {
+    ipcRendererMock.invoke.mockClear()
+    expect(() =>
+      (exposedApi.persistWorkspaceLayout as (s: unknown) => void)({ ...validWorkspaceLayoutState, destination: 'archive' }),
+    ).toThrow()
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+  })
+
+  it('restoreWorkspaceLayout(): a malformed response from a compromised/buggy main is rejected, never handed to the renderer', async () => {
+    ipcRendererMock.invoke.mockImplementationOnce(async () => ({ ...validWorkspaceLayoutState, destination: 'archive' }))
+    await expect((exposedApi.restoreWorkspaceLayout as () => Promise<unknown>)()).rejects.toThrow()
+  })
+
+  it('restoreWorkspaceLayout(): a null main response (nothing persisted yet) resolves to null, never throws', async () => {
+    ipcRendererMock.invoke.mockImplementationOnce(async () => null)
+    await expect((exposedApi.restoreWorkspaceLayout as () => Promise<unknown>)()).resolves.toBeNull()
   })
 
   it('a well-formed request for every method DOES reach ipcRenderer.invoke exactly once with the parsed value', async () => {
