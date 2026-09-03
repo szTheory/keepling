@@ -268,6 +268,34 @@ Plans:
 4. Security policy, supported-version policy, SBOM/checksum/signing posture appropriate to distributed artifacts, privacy disclosures, and bounded support contract are public.
 5. Jon has completed a sustained Mac+iPhone dogfood period with no unresolved data-loss, silent-overwrite, or recovery-severity defects in the supported loop.
 
+
+## Candidate future milestone: Sigra identity migration
+
+Not part of milestone v1.0. Recorded 2026-09-02 so the decision is not re-litigated.
+
+Keepling's `apps/server/lib/keepling/accounts/` is hand-rolled (Argon2id passwords, sessions,
+device grants, rate limiting, security audit). The intended eventual owner of the human-facing half
+is **Sigra** (`~/projects/sigra`, `hex.pm/packages/sigra`, v1.5.0) — passkeys, TOTP MFA, social SSO
+(Apple/Facebook/GitHub/Google/generic), enterprise connections, sessions, lockout, suspicious-login,
+and audit.
+
+**The two halves do not overlap.** Sigra's OAuth is *inbound* — it is an OAuth client for social
+login, not an authorization server for a project's own native clients. Keepling's
+`accounts/device_grant.ex` owns the *outbound* half: authorization code + PKCE for
+`client_id=electron`/`iphone`, refresh rotation with replay detection, per-installation revocation,
+and the locked five-field namespace tuple. Sigra does not provide that and is not trying to.
+
+**Why this does not block Phase 3.** Plan 03-14 delegates desktop authentication to the system
+browser (RFC 8252). The desktop only ever knows `browser → keepling://auth/callback → /oauth/token`.
+Whatever authenticates the browser session behind `/oauth/authorize` can be replaced wholesale
+without touching Electron or, later, the iPhone client. Adopting Sigra therefore *adds* passkeys,
+Touch ID, and SSO to every client with zero client-side work.
+
+**Why it is a migration, not a drop-in.** Sigra generates host-owned contexts/schemas/LiveViews;
+Keepling already has a locked namespace design and a closed `security_audit` vocabulary.
+Reconciling schemas, session store, and audit vocabulary is real work that would stall dogfooding if
+attempted now.
+
 ## Progress
 
 | Phase | Status | Requirements | Progress |
