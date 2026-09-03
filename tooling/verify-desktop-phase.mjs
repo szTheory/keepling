@@ -190,12 +190,25 @@ runLane({
  * real CGEvent keystrokes, real input sources, and real system
  * accessibility/appearance settings, all against the SAME packaged artifact
  * `package-once` produced. This lane replaces what used to be a fifteen-row
- * human checklist. Like every other lane here it is anti-vacuous: a missing
- * Accessibility (TCC) grant, a missing `swiftc`, an unimplemented row, or a
- * row that asserted nothing is a FAILURE, never a skip.
+ * human checklist.
+ *
+ * `--gate` deliberately does NOT run the rows. Running them takes over the
+ * keyboard and changes real system settings on whatever machine the gate is
+ * invoked on, which is not an acceptable cost for every ordinary gate run.
+ * Instead the rows are executed ONCE per packaged artifact
+ * (`node tooling/verify-macos-integration.mjs --all`) and the result is
+ * recorded against that exact `applicationDigestSha256` -- the same
+ * digest-binding idiom D-47 already uses for package-once -> promotion.
+ *
+ * The reuse is strict and visible: evidence is bound to the artifact digest
+ * AND to the Swift probe source digests, must cover every row, must contain
+ * no failing row, and prints the digest and original run timestamp whenever
+ * it is reused. Missing, stale, partial or failing evidence is a LOUD
+ * FAILURE naming the command that produces it -- never a skip, never a soft
+ * pass.
  */
 runLane({
-  args: ['tooling/verify-macos-integration.mjs'],
+  args: ['tooling/verify-macos-integration.mjs', '--gate'],
   command: 'node',
   name: 'macos-integration',
   parse: (stdout) => {
@@ -292,11 +305,13 @@ const accessibilityRowRegistry = [
   { file: 'tooling/verify-macos-integration.mjs', row: 'A5', testName: "runRow('A5'" },
   { file: 'tooling/verify-macos-integration.mjs', row: 'A6', testName: "runRow('A6'" },
   { file: 'tooling/verify-macos-integration.mjs', row: 'A7', testName: "runRow('A7'" },
-  { file: 'tooling/verify-macos-integration.mjs', row: 'A10', testName: "appearanceRow('A10'" },
-  { file: 'tooling/verify-macos-integration.mjs', row: 'A11', testName: "appearanceRow('A11'" },
-  { file: 'tooling/verify-macos-integration.mjs', row: 'A12', testName: "appearanceRow('A12'" },
-  { file: 'tooling/verify-macos-integration.mjs', row: 'A13', testName: "appearanceRow('A13'" },
-  { file: 'tooling/verify-macos-integration.mjs', row: 'A14', testName: "appearanceRow('A14'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A8', testName: "runRow('A8'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A9', testName: "runRow('A9'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A10', testName: "pixelAppearanceRow('A10'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A11', testName: "runRow('A11'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A12', testName: "pixelAppearanceRow('A12'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A13', testName: "pixelAppearanceRow('A13'" },
+  { file: 'tooling/verify-macos-integration.mjs', row: 'A14', testName: "pixelAppearanceRow('A14'" },
   { file: 'tooling/verify-macos-integration.mjs', row: 'A15', testName: "runRow('A15'" },
 ]
 
@@ -370,8 +385,12 @@ if (ownershipFailed) {
 console.log(
   'DEFERRED item=signed-notarized-credential-continuity status=NON_PASSING reason=explicitly-deferred-not-part-of-this-automated-gate',
 )
+// Rows A1-A15 are no longer deferred human evidence: they are the
+// `macos-integration` lane above. What remains for a person is informal
+// feedback while dogfooding -- no checklist, no evidence record, no
+// sign-off, and nothing that gates this file.
 console.log(
-  'DEFERRED item=physical-accessibility-and-dogfood status=NON_PASSING reason=requires-human-evidence-see-docs/testing/desktop-dogfood.md',
+  'NOT_A_GATE item=dogfood-feedback status=INFORMAL reason=physical-accessibility-rows-are-automated-see-tooling/verify-macos-integration.mjs',
 )
 
 console.log('')

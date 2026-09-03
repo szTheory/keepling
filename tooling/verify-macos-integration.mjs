@@ -35,7 +35,7 @@ import { createHash } from 'node:crypto'
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { isAbsolute, join, relative, resolve, sep } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
 
 const repositoryRoot = resolve(import.meta.dirname, '..')
@@ -77,7 +77,38 @@ const hasFlag = (name) => argv.includes(`--${name}`)
 const ALL_ROWS = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10', 'A11', 'A12', 'A13', 'A14', 'A15']
 
 const selfTestRestore = hasFlag('self-test-restore')
-const requestedRows = (() => {
+const gateMode = hasFlag('gate')
+const runAllRows = hasFlag('all')
+const restoreOnly = hasFlag('restore')
+const withoutAccessibilityTrust = hasFlag('without-accessibility-trust')
+
+/**
+ * This lane drives real keyboard input and changes real system settings on
+ * whatever machine it runs on, so it never starts by accident. Every mode
+ * has to be asked for by name.
+ */
+if (!selfTestRestore && !gateMode && !runAllRows && !restoreOnly && !withoutAccessibilityTrust && flagValue('rows') === null && !hasFlag('internal-mutate-then-wait')) {
+  console.error([
+    'macOS integration lane: nothing selected, so nothing was run.',
+    '',
+    'This lane types on the real keyboard and changes real system settings',
+    '(appearance, contrast, transparency, motion, keyboard access, input',
+    'source). It is deliberately opt-in so it can never take over a machine',
+    'by accident.',
+    '',
+    '  --all                    run every row A1-A15 and RECORD the evidence',
+    '  --rows A1,A2             run selected rows only',
+    '  --gate                   reuse recorded evidence for the current artifact',
+    '  --without-accessibility-trust  run only rows needing no Accessibility grant',
+    '  --self-test-restore      prove settings are restored after a failure and',
+    '                           after a real interruption',
+    '  --restore                manually restore settings from the last capture',
+  ].join('\n'))
+  process.exit(1)
+}
+
+let requestedRows = (() => {
+  if (withoutAccessibilityTrust && flagValue('rows') === null) return null // resolved once the registry exists
   const raw = flagValue('rows')
   if (raw === null) return ALL_ROWS
   const rows = raw.split(',').map((entry) => entry.trim().toUpperCase()).filter(Boolean)
@@ -125,6 +156,92 @@ const compileProbe = (name) => {
   }
   return { binaryPath, digest }
 }
+
+const probeSourceDigest = (name) => {
+  const sourcePath = join(sourceDir, `${name}.swift`)
+  if (!existsSync(sourcePath)) fail(`probe source is missing: ${relative(repositoryRoot, sourcePath)}`)
+  return createHash('sha256').update(readFileSync(sourcePath)).digest('hex').slice(0, 16)
+}
+
+const PROBE_NAMES = ['AXProbe', 'HotkeyRival', 'SystemSettings']
+const probeSourceDigests = () => Object.fromEntries(PROBE_NAMES.map((name) => [name, probeSourceDigest(name)]))
+
+// ---------------------------------------------------------------------------
+// Digest-bound evidence (D-47 idiom, same as package-once -> promotion)
+// ---------------------------------------------------------------------------
+
+/**
+ * Running this lane costs the machine it runs on: it takes over the keyboard
+ * and flips real system settings. Making that a precondition of EVERY gate
+ * invocation would be unreasonable on a person's own workstation, so the
+ * result is recorded against the exact artifact it was produced from and
+ * reused for that artifact only.
+ *
+ * The reuse rules are deliberately strict, because a cache that can go stale
+ * silently is worse than no cache:
+ *   * A record is bound to one `applicationDigestSha256`. It is never reused
+ *     for a different artifact.
+ *   * It is also bound to the source digests of all three Swift probes. Edit
+ *     a probe and the evidence stops counting.
+ *   * A record only satisfies the gate if it covers EVERY row and every row
+ *     passed. A recorded failure never satisfies anything.
+ *   * Missing or stale evidence is a LOUD FAILURE naming the command that
+ *     produces it -- never a skip, never a soft pass.
+ * Reuse always prints the digest and the original run timestamp, so it can
+ * never happen invisibly.
+ */
+const evidenceDir = join(cacheDir, 'evidence')
+const evidencePathFor = (applicationDigest) => join(evidenceDir, `${applicationDigest}.json`)
+
+const readEvidence = (applicationDigest) => {
+  const path = evidencePathFor(applicationDigest)
+  if (!existsSync(path)) return null
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'))
+  } catch {
+    return null
+  }
+}
+
+const writeEvidence = (manifest, rows) => {
+  mkdirSync(evidenceDir, { recursive: true })
+  const record = {
+    applicationDigestSha256: manifest.applicationDigestSha256,
+    executableDigestSha256: manifest.executableDigestSha256,
+    probeSourceDigests: probeSourceDigests(),
+    recordedAt: new Date().toISOString(),
+    rowSelection: rows.length === ALL_ROWS.length ? 'complete' : 'partial',
+    rows: rows.map((row) => ({
+      cases: row.cases,
+      durationMs: row.durationMs,
+      id: row.id,
+      passed: row.passed,
+      requiresAccessibilityTrust: ROW_REGISTRY[row.id]?.requiresAccessibilityTrust ?? null,
+      title: row.title,
+    })),
+    sourceRevision: manifest.sourceRevision,
+    totalCases: rows.reduce((sum, row) => sum + row.cases, 0),
+  }
+  writeFileSync(evidencePathFor(manifest.applicationDigestSha256), JSON.stringify(record, null, 2))
+  console.log(`LANE_EVIDENCE recorded=true file=${evidencePathFor(manifest.applicationDigestSha256)} rows=${record.rows.length} cases=${record.totalCases}`)
+  return record
+}
+
+const EVIDENCE_PRODUCTION_INSTRUCTION = [
+  '',
+  'This lane types on the real keyboard and changes real system settings, so',
+  'it is NOT run on every gate invocation. It runs ONCE per packaged artifact,',
+  'and the gate reuses that result for exactly that artifact digest.',
+  '',
+  'Produce the evidence for the artifact currently under test:',
+  '',
+  '    pnpm package:desktop && node tooling/verify-macos-integration.mjs --all',
+  '',
+  'It restores every setting it changes on every exit path, including an',
+  'interruption. If a run is ever cut short in a way that leaves something',
+  'changed, `node tooling/verify-macos-integration.mjs --restore` puts it back',
+  'from the capture taken before the first mutation.',
+].join('\n')
 
 /** Runs a probe subcommand. Missing TCC permission is always fatal, never soft. */
 const runProbe = (binaryPath, args, { allowFailure = false } = {}) => {
@@ -290,6 +407,33 @@ const launchApplication = async (manifest, probeBinary, { profilePath, syncMode 
   return handle
 }
 
+/**
+ * Launches the packaged app WITHOUT touching the accessibility API at all.
+ * Readiness is established by successfully capturing the window's pixels,
+ * which goes through ScreenCaptureKit's window list rather than AX. This is
+ * what lets the rows tagged `requiresAccessibilityTrust: false` run on a
+ * machine with no Accessibility grant.
+ */
+const launchApplicationWithoutAccessibility = async (manifest, { profilePath, syncMode = 'offline' }) => {
+  const child = spawn(manifest.executablePath, [`--user-data-dir=${profilePath}`], {
+    env: {
+      ...process.env,
+      KEEPLING_EXPECT_PACKAGED: '1',
+      KEEPLING_TEST_SYNC_MODE: syncMode,
+      KEEPLING_TEST_USER_DATA_DIR: profilePath,
+    },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  const handle = { child, pid: child.pid, probeBinary: null }
+  liveApplications.add(handle)
+  await waitFor('the packaged application window to become capturable', async () => {
+    if (child.exitCode !== null) fail(`the packaged application exited (${child.exitCode}) before presenting a window`)
+    const probe = runProbe(settingsState.probeBinary, ['contrast', '--pid', String(child.pid)], { allowFailure: true })
+    return probe.ok
+  }, { intervalMs: 700, timeoutMs: 45_000 })
+  return handle
+}
+
 const quitApplication = async (handle) => {
   liveApplications.delete(handle)
   if (handle.child.exitCode !== null) return
@@ -366,8 +510,14 @@ const ensureFrontmost = (handle) => {
   }
 }
 
-const postKeys = (handle, sequence) => {
-  ensureFrontmost(handle)
+/**
+ * `raise: false` is essential for A9: forcing the application frontmost
+ * would make the harness itself the "prior application", and the row would
+ * then be measuring its own interference instead of the app's focus
+ * restoration.
+ */
+const postKeys = (handle, sequence, { raise = true } = {}) => {
+  if (raise) ensureFrontmost(handle)
   return runProbe(handle.probeBinary, ['key', '--sequence', sequence])
 }
 
@@ -580,11 +730,11 @@ const CAPTURE_FIELD_LABEL = 'What do you want to keep?'
  * Everything about this is real: a real CGEvent Tab, and the focus answer
  * read back out of the AX tree rather than out of the DOM.
  */
-const tabUntil = async (handle, description, predicate, { key = 'tab', limit = 24 } = {}) => {
+const tabUntil = async (handle, description, predicate, { key = 'tab', limit = 24, raise = true } = {}) => {
   for (let step = 0; step < limit; step += 1) {
     const focused = focusedElement(handle)
     if (focused && predicate(focused)) return focused
-    postKeys(handle, key)
+    postKeys(handle, key, { raise })
     await sleep(120)
   }
   const focused = focusedElement(handle)
@@ -1046,17 +1196,28 @@ const WCAG_AA_BODY_TEXT = 4.5
 
 const measureContrast = (handle) => runProbe(settingsState.probeBinary, ['contrast', '--pid', String(handle.pid)]).value
 
-const appearanceRow = (id, title, { changes, live = false, extra = null }) => (context) =>
+/**
+ * The legibility rows for settings whose effect is purely visual. These
+ * deliberately use NO accessibility API and post NO keystrokes: they launch
+ * the packaged app, apply the real OS setting, and measure a WCAG contrast
+ * ratio over the window's real rendered pixels. That is what makes them
+ * runnable without an Accessibility (TCC) grant.
+ *
+ * They still need Screen Recording (there are no pixels to measure without
+ * it) and, for the `com.apple.universalaccess` settings, the ability to
+ * write that protected domain -- both surfaced as loud failures, never
+ * skips.
+ */
+const pixelAppearanceRow = (id, title, { changes, live = false }) => (context) =>
   runRow(id, title, async (check) => {
     if (!live) applySystemSettings(changes)
-    const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile(id.toLowerCase()) })
+    const handle = await launchApplicationWithoutAccessibility(context.manifest, { profilePath: allocateProfile(id.toLowerCase()) })
     try {
-      await captureTaskByKeyboard(handle, `${id} legibility`)
       const before = live ? measureContrast(handle) : null
       if (live) {
         // A14 is explicitly about a change made WHILE the app is open.
         applySystemSettings(changes)
-        await sleep(1500)
+        await sleep(2000)
       }
       const applied = readSystemSettings()
       for (const [key, value] of Object.entries(changes)) {
@@ -1081,19 +1242,28 @@ const appearanceRow = (id, title, { changes, live = false, extra = null }) => (c
           `background stayed ${JSON.stringify(measurement.backgroundColour)}`,
         )
       }
-      if (extra) await extra(handle, check, measurement)
     } finally {
       await quitApplication(handle)
     }
   })
 
-const rowA10 = appearanceRow('A10', 'Increase Contrast', { changes: { increaseContrast: true } })
+const rowA10 = pixelAppearanceRow('A10', 'Increase Contrast', { changes: { increaseContrast: true } })
 
-const rowA11 = appearanceRow('A11', 'Differentiate Without Color', {
-  changes: { differentiateWithoutColor: true },
-  extra: async (handle, check) => {
-    const nodes = webNodes(handle)
-    const rows = taskRows(handle, nodes)
+const rowA11 = (context) => runRow('A11', 'Differentiate Without Color', async (check) => {
+  applySystemSettings({ differentiateWithoutColor: true })
+  const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a11') })
+  try {
+    await captureTaskByKeyboard(handle, 'A11 legibility')
+    check('differentiateWithoutColor is genuinely applied as the real OS setting', readSystemSettings().differentiateWithoutColor === true)
+
+    const measurement = measureContrast(handle)
+    check(
+      `legibility is a MEASURED WCAG contrast ratio over rendered pixels, not an impression (>= ${WCAG_AA_BODY_TEXT}:1)`,
+      measurement.bestRatio >= WCAG_AA_BODY_TEXT,
+      `measured ${measurement.bestRatio.toFixed(2)}:1`,
+    )
+
+    const rows = taskRows(handle)
     check(
       'sync status is conveyed by TEXT, not colour alone',
       rows.length > 0 && rows.every((row) => /Saved on this Mac|Synced|Draft/.test(row.text)),
@@ -1106,18 +1276,18 @@ const rowA11 = appearanceRow('A11', 'Differentiate Without Color', {
       'selection is conveyed by a non-colour cue the accessibility layer can read (aria-current)',
       taskRows(handle).some((row) => row.ariaCurrent === 'true'),
     )
-    // Validation errors: an empty capture leaves the Add Task button
-    // announced as disabled, a state, not a colour.
     postKeys(handle, 'cmd+n')
     await sleep(400)
     const addTask = findNode(webNodes(handle), (node) => node.role === 'AXButton' && node.title === 'Add Task')
     check('an invalid capture is conveyed as an announced control state, not a colour', addTask?.enabled === false)
-  },
+  } finally {
+    await quitApplication(handle)
+  }
 })
 
-const rowA12 = appearanceRow('A12', 'Reduce Transparency', { changes: { reduceTransparency: true } })
-const rowA13 = appearanceRow('A13', 'Reduce Motion', { changes: { reduceMotion: true } })
-const rowA14 = appearanceRow('A14', 'Light/Dark change while the app is open', { changes: { appearance: 'Dark' }, live: true })
+const rowA12 = pixelAppearanceRow('A12', 'Reduce Transparency', { changes: { reduceTransparency: true } })
+const rowA13 = pixelAppearanceRow('A13', 'Reduce Motion', { changes: { reduceMotion: true } })
+const rowA14 = pixelAppearanceRow('A14', 'Light/Dark change while the app is open', { changes: { appearance: 'Dark' }, live: true })
 
 const rowA15 = (context) => runRow('A15', '200% zoom equivalent: no primary control is clipped', async (check) => {
   const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a15') })
@@ -1165,6 +1335,186 @@ const rowA15 = (context) => runRow('A15', '200% zoom equivalent: no primary cont
     }
   } finally {
     await quitApplication(handle)
+  }
+})
+
+// ---------------------------------------------------------------------------
+// Rows A8-A9 -- real OS arbitration and real prior-application focus
+// ---------------------------------------------------------------------------
+
+const QUICK_ENTRY_ACCELERATOR = 'ctrl+alt+space'
+
+const windowTitles = (handle) =>
+  runProbe(handle.probeBinary, ['windows', '--pid', String(handle.pid)]).value.windows.map((window) => window.title ?? '')
+
+/**
+ * Two independent signals, because a panel-style window is not always
+ * reported the same way depending on which window is frontmost: a window
+ * titled for Quick Entry, or a second capture field somewhere in the tree.
+ */
+const quickEntryIsOpen = (handle) => {
+  if (windowTitles(handle).some((title) => title.includes('Quick Entry'))) return true
+  return findNodes(webNodes(handle), (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL).length > 1
+}
+
+const rowA8 = (context) => runRow('A8', 'Real global-shortcut collision and OS arbitration', async (check) => {
+  // Phase 1: a separate, real process takes the accelerator FIRST.
+  const rival = spawn(context.rivalProbe, [], { stdio: ['ignore', 'pipe', 'pipe'] })
+  let rivalOutput = ''
+  rival.stdout.on('data', (chunk) => { rivalOutput += String(chunk) })
+  rival.stderr.on('data', (chunk) => { rivalOutput += String(chunk) })
+  const rivalExited = new Promise((resolve) => rival.once('exit', resolve))
+
+  try {
+    await waitFor('the rival process to report its registration', async () => rivalOutput.includes('RIVAL registered='), { intervalMs: 150, timeoutMs: 20_000 })
+    check(
+      'a separate real process genuinely holds Keepling\'s Quick Entry accelerator',
+      rivalOutput.includes('RIVAL registered=true'),
+      rivalOutput.trim().slice(-300),
+    )
+
+    const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a8-collision') })
+    try {
+      // Keepling must SAY it lost. A silent fallback to a different
+      // shortcut, or claiming a shortcut it does not hold, is the failure.
+      postKeys(handle, 'cmd+comma')
+      await sleep(1800)
+      const settingsText = webNodes(handle).map((node) => subtreeText(node.subtree ?? node)).join(' ')
+      const keeplingClaimsTheShortcut = !/Quick Entry shortcut isn.t available/.test(settingsText)
+      check(
+        'Keepling states a definite position on the accelerator rather than saying nothing',
+        settingsText.includes('Current shortcut') || !keeplingClaimsTheShortcut,
+        settingsText.slice(0, 300),
+      )
+      check(
+        'when Keepling reports the accelerator unavailable it offers a direct rebind, never a silent fallback to a different shortcut',
+        keeplingClaimsTheShortcut || settingsText.includes('Change Shortcut'),
+      )
+
+      const before = rivalOutput
+      postKeys(handle, QUICK_ENTRY_ACCELERATOR)
+      await sleep(2500)
+      const rivalReceived = rivalOutput.slice(before.length).includes('RIVAL received=1')
+      const keeplingReceived = quickEntryIsOpen(handle)
+      console.log(`ARBITRATION rival_registered=true keepling_claims_shortcut=${keeplingClaimsTheShortcut} rival_received=${rivalReceived} keepling_received=${keeplingReceived}`)
+
+      // MEASURED, not assumed. macOS global hot keys are NOT exclusive:
+      // the second registration succeeds (verified in both orders) and the
+      // key is delivered to every registrant. So a collision does not
+      // silently steal Keepling's accelerator, and Keepling reporting the
+      // accelerator as available is a TRUE statement even while another
+      // application also receives it.
+      check(
+        'the collision is real: a separate application received the same accelerator in the same keystroke',
+        rivalReceived === true,
+        `rival received=${rivalReceived}`,
+      )
+      check(
+        'Keepling never silently believes it holds a shortcut it does not: it reported the accelerator as available AND actually received it',
+        keeplingClaimsTheShortcut === keeplingReceived,
+        `Keepling reported ${keeplingClaimsTheShortcut ? 'available' : 'unavailable'} but ${keeplingReceived ? 'received' : 'did not receive'} the accelerator`,
+      )
+      check(
+        'a colliding application does not suppress Keepling\'s own Quick Entry',
+        keeplingReceived === true,
+        `Keepling opened Quick Entry=${keeplingReceived}`,
+      )
+    } finally {
+      await quitApplication(handle)
+    }
+  } finally {
+    rival.kill('SIGTERM')
+    await Promise.race([rivalExited, sleep(5_000)])
+    if (rival.exitCode === null) rival.kill('SIGKILL')
+    await sleep(800)
+  }
+
+  // Phase 2: with the rival gone, Keepling holds and receives its own
+  // accelerator. Without this the row would pass just as happily against an
+  // application whose shortcut never works at all.
+  const solo = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a8-solo') })
+  try {
+    postKeys(solo, 'cmd+comma')
+    await sleep(1800)
+    const settingsText = webNodes(solo).map((node) => subtreeText(node.subtree ?? node)).join(' ')
+    check(
+      'with no rival, Keepling reports the accelerator as available',
+      !/Quick Entry shortcut isn.t available/.test(settingsText),
+      settingsText.slice(0, 300),
+    )
+    postKeys(solo, 'escape')
+    await sleep(600)
+    postKeys(solo, QUICK_ENTRY_ACCELERATOR)
+    await waitFor('Quick Entry to open from the real global accelerator', async () => quickEntryIsOpen(solo), { timeoutMs: 20_000 })
+    check('with no rival, the real global accelerator reaches Keepling', quickEntryIsOpen(solo))
+  } finally {
+    await quitApplication(solo)
+  }
+})
+
+const PRIOR_APPLICATION = { bundleIdentifier: 'com.apple.TextEdit', name: 'TextEdit' }
+
+const rowA9 = (context) => runRow('A9', 'Prior-application focus and caret return', async (check) => {
+  const documentPath = join(mkdtempSync(join(tmpdir(), 'keepling-macos-a9-')), 'prior-application.txt')
+  writeFileSync(documentPath, 'The caret in this real prior application must come back exactly where it was.\n')
+  disposableProfiles.push(dirname(documentPath))
+
+  spawnSync('open', ['-a', PRIOR_APPLICATION.name, documentPath], { encoding: 'utf8' })
+  const priorPid = await waitFor(`${PRIOR_APPLICATION.name} to become frontmost`, async () => {
+    const frontmost = runProbe(context.axProbe, ['frontmost'], { allowFailure: true })
+    return frontmost.ok && frontmost.value.bundleIdentifier === PRIOR_APPLICATION.bundleIdentifier ? frontmost.value.pid : null
+  }, { intervalMs: 500, timeoutMs: 30_000 })
+  const priorHandle = { child: { exitCode: null, kill: () => {} }, pid: priorPid, probeBinary: context.axProbe }
+
+  const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a9') })
+  try {
+    for (const ending of ['submitted', 'discarded']) {
+      // Put the caret at a known, non-trivial offset in the REAL prior app.
+      runProbe(context.axProbe, ['raise', '--pid', String(priorPid)])
+      await sleep(1200)
+      postKeys(priorHandle, 'cmd+down')
+      await sleep(200)
+      for (let step = 0; step < 6; step += 1) postKeys(priorHandle, 'left')
+      await sleep(400)
+      const selectionBefore = runProbe(context.axProbe, ['selection', '--pid', String(priorPid)]).value.selection
+      check(
+        `${ending}: the prior application really has a caret at a known offset before Quick Entry is invoked`,
+        selectionBefore !== null && typeof selectionBefore.location === 'number' && selectionBefore.location > 0,
+        JSON.stringify(selectionBefore),
+      )
+
+      postKeys(priorHandle, QUICK_ENTRY_ACCELERATOR)
+      await waitFor('Quick Entry to open over the prior application', async () => quickEntryIsOpen(handle))
+      // From here on the harness must NOT raise anything: Quick Entry takes
+      // focus by itself, and forcing the application frontmost would make
+      // the harness the prior application and invalidate the whole row.
+      await tabUntil(handle, 'the Quick Entry capture field', (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL, { raise: false })
+      postKeys(handle, `text:Captured while ${ending}`, { raise: false })
+      await sleep(400)
+      if (ending === 'submitted') postKeys(handle, 'return', { raise: false })
+      else postKeys(handle, 'escape', { raise: false })
+      await waitFor('Quick Entry to close', async () => !quickEntryIsOpen(handle), { timeoutMs: 15_000 })
+
+      await sleep(1200)
+      const frontmost = runProbe(context.axProbe, ['frontmost']).value
+      check(
+        `${ending}: focus returns to the SAME prior application -- never Keepling's main window, never the Dock`,
+        frontmost.bundleIdentifier === PRIOR_APPLICATION.bundleIdentifier,
+        `frontmost was ${frontmost.name} (${frontmost.bundleIdentifier})`,
+      )
+      const selectionAfter = runProbe(context.axProbe, ['selection', '--pid', String(priorPid)]).value.selection
+      check(
+        `${ending}: the caret comes back to exactly the same place in the same field`,
+        selectionAfter !== null && selectionAfter.location === selectionBefore.location && selectionAfter.length === selectionBefore.length,
+        `before ${JSON.stringify(selectionBefore)} after ${JSON.stringify(selectionAfter)}`,
+      )
+    }
+  } finally {
+    await quitApplication(handle)
+    // Close the prior application without saving, and take its document with
+    // it -- this lane leaves nothing behind on the machine.
+    spawnSync('osascript', ['-e', `tell application "${PRIOR_APPLICATION.name}" to close every document saving no`], { encoding: 'utf8', timeout: 10_000 })
+    spawnSync('osascript', ['-e', `tell application "${PRIOR_APPLICATION.name}" to quit`], { encoding: 'utf8', timeout: 10_000 })
   }
 })
 
@@ -1272,6 +1622,49 @@ const runSelfTestRestore = async () => {
   })
 }
 
+/**
+ * Proves the digest-bound evidence RULES without a Mac, without permissions
+ * and without running a row. The positive case matters as much as the
+ * negative ones: a reuse mechanism that quietly never reuses, or quietly
+ * always reuses, is worse than none.
+ */
+const runEvidenceSelfTest = async () => {
+  const manifest = { applicationDigestSha256: 'digest-under-test', executableDigestSha256: 'executable-under-test' }
+  const probeDigests = { AXProbe: 'ax-1', HotkeyRival: 'rival-1', SystemSettings: 'settings-1' }
+  const completeRecord = {
+    applicationDigestSha256: 'digest-under-test',
+    executableDigestSha256: 'executable-under-test',
+    probeSourceDigests: { ...probeDigests },
+    recordedAt: '2026-09-03T00:00:00.000Z',
+    rows: ALL_ROWS.map((id) => ({ cases: 3, durationMs: 10, id, passed: true })),
+  }
+  const clone = (mutate) => {
+    const copy = JSON.parse(JSON.stringify(completeRecord))
+    mutate(copy)
+    return copy
+  }
+
+  await runRow('SELF-TEST-EVIDENCE', 'digest-bound evidence is reused only when it is complete, passing and current', async (check) => {
+    const accepted = evaluateEvidence(completeRecord, { manifest, probeDigests })
+    check('complete, wholly passing evidence for this exact artifact is reused', accepted.ok === true, accepted.reason ?? '')
+    check('the reused evidence carries every row', accepted.recordedRows?.length === ALL_ROWS.length)
+
+    const cases = [
+      ['absent evidence is never a pass', null],
+      ['evidence for a different artifact digest is never reused', clone((record) => { record.applicationDigestSha256 = 'a-different-digest' })],
+      ['evidence for a different packaged executable is never reused', clone((record) => { record.executableDigestSha256 = 'a-different-executable' })],
+      ['evidence recorded before a probe source changed is never reused', clone((record) => { record.probeSourceDigests.AXProbe = 'ax-2' })],
+      ['a recorded FAILING row never satisfies the gate', clone((record) => { record.rows[0].passed = false })],
+      ['evidence covering only the untrusted subset never satisfies the gate', clone((record) => { record.rows = record.rows.filter((row) => UNTRUSTED_ROWS.includes(row.id)) })],
+      ['evidence with zero cases never satisfies the gate', clone((record) => { record.rows = record.rows.map((row) => ({ ...row, cases: 0 })) })],
+    ]
+    for (const [claim, record] of cases) {
+      const outcome = evaluateEvidence(record, { manifest, probeDigests })
+      check(claim, outcome.ok === false, `it was accepted with ${outcome.recordedRows?.length ?? 0} row(s)`)
+    }
+  })
+}
+
 const runInternalMutateThenWait = async () => {
   applySystemSettings(SELF_TEST_MUTATIONS)
   selectInputSource(DEAD_KEY_LAYOUT)
@@ -1291,12 +1684,54 @@ const runInternalMutateThenWait = async () => {
 // Main
 // ---------------------------------------------------------------------------
 
-const PIXEL_MEASURED_ROWS = ['A10', 'A11', 'A12', 'A13', 'A14']
-
-const ROW_IMPLEMENTATIONS = {
-  A1: rowA1, A2: rowA2, A3: rowA3, A4: rowA4, A5: rowA5, A6: rowA6, A7: rowA7,
-  A10: rowA10, A11: rowA11, A12: rowA12, A13: rowA13, A14: rowA14, A15: rowA15,
+/**
+ * Row capability registry.
+ *
+ * `requiresAccessibilityTrust` is the OBSERVED boundary, not a predicted
+ * one. Everything that reads another process's AXUIElement tree, posts a
+ * CGEvent to another application, or sets `AXManualAccessibility` on
+ * another process needs `AXIsProcessTrusted()`. That is A1-A9 as expected --
+ * and, contrary to the initial prediction, ALSO A11 and A15, because A11's
+ * "conveyed by text, not colour" claim is a claim about the accessibility
+ * tree, and A15 asserts control geometry read from AX frames. Rewriting
+ * either to avoid AX would have meant asserting something weaker than the
+ * row actually says, so they are tagged honestly instead.
+ *
+ * The untrusted subset (A10, A12, A13, A14) genuinely uses no accessibility
+ * API and posts no keystrokes: it launches the packaged app, applies the
+ * real OS setting, and measures WCAG contrast from real rendered pixels.
+ *
+ * Two further capabilities came out of implementation and are tracked
+ * separately because they are separate grants, not the Accessibility one:
+ *   * `requiresScreenRecording` -- there are no pixels to measure without it.
+ *   * `requiresProtectedSettingsWrite` -- `com.apple.universalaccess` is a
+ *     privacy-protected domain. An unentitled process may write to it and
+ *     get NO error while nothing is stored, so every write is verified.
+ * So no row is literally free of all TCC grants; only A14 in the untrusted
+ * subset avoids the protected settings domain, and it still needs Screen
+ * Recording.
+ */
+const ROW_REGISTRY = {
+  A1: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: false, requiresScreenRecording: false, run: rowA1 },
+  A2: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: false, requiresScreenRecording: false, run: rowA2 },
+  A3: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: false, requiresScreenRecording: false, run: rowA3 },
+  A4: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: false, requiresScreenRecording: false, run: rowA4 },
+  A5: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: false, requiresScreenRecording: false, run: rowA5 },
+  A6: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: false, requiresScreenRecording: false, run: rowA6 },
+  A7: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: false, requiresScreenRecording: false, run: rowA7 },
+  A8: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: false, requiresScreenRecording: false, run: rowA8 },
+  A9: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: false, requiresScreenRecording: false, run: rowA9 },
+  A10: { requiresAccessibilityTrust: false, requiresProtectedSettingsWrite: true, requiresScreenRecording: true, run: rowA10 },
+  A11: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: true, requiresScreenRecording: true, run: rowA11 },
+  A12: { requiresAccessibilityTrust: false, requiresProtectedSettingsWrite: true, requiresScreenRecording: true, run: rowA12 },
+  A13: { requiresAccessibilityTrust: false, requiresProtectedSettingsWrite: true, requiresScreenRecording: true, run: rowA13 },
+  A14: { requiresAccessibilityTrust: false, requiresProtectedSettingsWrite: false, requiresScreenRecording: true, run: rowA14 },
+  A15: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: false, requiresScreenRecording: false, run: rowA15 },
 }
+
+const PIXEL_MEASURED_ROWS = ALL_ROWS.filter((row) => ROW_REGISTRY[row]?.requiresScreenRecording)
+const UNTRUSTED_ROWS = ALL_ROWS.filter((row) => ROW_REGISTRY[row]?.requiresAccessibilityTrust === false)
+if (requestedRows === null) requestedRows = UNTRUSTED_ROWS
 
 const cleanUp = async () => {
   for (const handle of [...liveApplications]) await quitApplication(handle)
@@ -1307,7 +1742,79 @@ const cleanUp = async () => {
   if (!restoreSystemSettings()) restoreFailed = true
 }
 
+/**
+ * Gate mode: consult recorded evidence for the artifact currently under test.
+ * It never runs a row, never touches the keyboard, and never changes a
+ * setting -- an ordinary gate run leaves the machine completely alone.
+ */
+/**
+ * PURE decision function, so the reuse rules can be tested without a Mac,
+ * without permissions, and without running a row. Returns `{ ok: true }`
+ * only for evidence that is complete, wholly passing, and bound to this
+ * exact artifact and these exact probe sources.
+ */
+const evaluateEvidence = (record, { manifest, probeDigests }) => {
+  const digest = manifest.applicationDigestSha256
+  if (record === null || record === undefined) return { ok: false, reason: `no macOS integration evidence exists for application digest ${digest}` }
+  if (record.applicationDigestSha256 !== digest) return { ok: false, reason: `the recorded evidence is for a different application digest (${record.applicationDigestSha256})` }
+  if (record.executableDigestSha256 !== manifest.executableDigestSha256) return { ok: false, reason: 'the recorded evidence is for a different packaged executable' }
+
+  const changedProbes = PROBE_NAMES.filter((name) => (record.probeSourceDigests ?? {})[name] !== probeDigests[name])
+  if (changedProbes.length > 0) return { ok: false, reason: `the macOS probe source(s) ${changedProbes.join(', ')} changed since that evidence was recorded, so it no longer describes this lane` }
+
+  const recordedRows = record.rows ?? []
+  const failedRows = recordedRows.filter((row) => !row.passed)
+  if (failedRows.length > 0) return { ok: false, reason: `the recorded evidence for this digest contains ${failedRows.length} FAILING row(s): ${failedRows.map((row) => row.id).join(', ')}` }
+  // A record covering only the untrusted subset can never satisfy the gate
+  // as if it covered all fifteen. Partial evidence is a loud failure for the
+  // rows it does not cover.
+  const missingRows = ALL_ROWS.filter((row) => !recordedRows.some((recorded) => recorded.id === row))
+  if (missingRows.length > 0) {
+    return { ok: false, reason: `the recorded evidence for this digest covers ${recordedRows.length}/${ALL_ROWS.length} rows and does not cover row(s) ${missingRows.join(', ')}` }
+  }
+
+  const totalCases = recordedRows.reduce((sum, row) => sum + row.cases, 0)
+  if (totalCases <= 0) return { ok: false, reason: 'the recorded evidence contains zero cases' }
+  return { ok: true, recordedRows, totalCases }
+}
+
+const runGateMode = (manifest) => {
+  const digest = manifest.applicationDigestSha256
+  const record = readEvidence(digest)
+  const outcome = evaluateEvidence(record, { manifest, probeDigests: probeSourceDigests() })
+  if (!outcome.ok) {
+    console.error(`macOS integration lane failed: ${outcome.reason}\n${EVIDENCE_PRODUCTION_INSTRUCTION}`)
+    console.log('macOS integration lane summary: rows=0 failed=1 cases=0 duration_ms=0')
+    process.exit(1)
+  }
+  const { recordedRows, totalCases } = outcome
+
+  console.log(`LANE_EVIDENCE reuse=true application_digest=${digest} recorded_at=${record.recordedAt} source_revision=${record.sourceRevision} file=${evidencePathFor(digest)}`)
+  console.log('LANE_EVIDENCE note=this-gate-run-executed-no-rows-and-changed-no-system-setting')
+  for (const row of recordedRows) console.log(`ROW id=${row.id} status=PASS cases=${row.cases} duration_ms=${row.durationMs} source=recorded-evidence`)
+  console.log('')
+  console.log(`macOS integration lane summary: rows=${recordedRows.length} failed=0 cases=${totalCases} duration_ms=0`)
+  for (const row of recordedRows) console.log(`  PASS ${row.id} ${row.title} cases=${row.cases}`)
+  console.log(`macOS integration lane: PASSED cases=${totalCases} (reusing evidence recorded ${record.recordedAt} for artifact digest ${digest})`)
+  process.exit(0)
+}
+
 const main = async () => {
+  if (restoreOnly) {
+    const capturePath = join(cacheDir, 'settings-capture.json')
+    if (!existsSync(capturePath)) {
+      console.error(`macOS integration lane: nothing to restore -- no settings capture exists at ${capturePath}`)
+      process.exit(1)
+    }
+    settingsState.probeBinary = compileProbe('SystemSettings').binaryPath
+    settingsState.baseline = JSON.parse(readFileSync(capturePath, 'utf8'))
+    settingsState.capturePath = capturePath
+    settingsState.inputSource = null
+    if (!restoreSystemSettings()) process.exit(1)
+    console.log('macOS integration lane: system settings restored from the last capture')
+    process.exit(0)
+  }
+
   const swiftVersion = requireSwiftc()
   if (hasFlag('internal-mutate-then-wait')) {
     settingsState.probeBinary = compileProbe('SystemSettings').binaryPath
@@ -1319,19 +1826,28 @@ const main = async () => {
   const settingsProbe = compileProbe('SystemSettings')
   settingsState.probeBinary = settingsProbe.binaryPath
 
-  const permission = runProbe(axProbe.binaryPath, ['permission'])
-  if (permission.value.trusted !== true) {
-    const chain = (permission.value.ancestry ?? []).map((entry) => entry.name).join(' <- ')
-    console.error(`macOS integration lane failed: accessibility_permission_denied (process chain: ${chain})\n\n${ACCESSIBILITY_GRANT_INSTRUCTION}`)
-    process.exit(1)
+  if (gateMode) runGateMode(manifest)
+
+  // Only demanded by the rows that genuinely need it. The untrusted subset
+  // (see ROW_REGISTRY) runs on a machine with no Accessibility grant at all.
+  const trustedRows = requestedRows.filter((row) => ROW_REGISTRY[row]?.requiresAccessibilityTrust)
+  if (trustedRows.length > 0 || selfTestRestore) {
+    const permission = runProbe(axProbe.binaryPath, ['permission'])
+    if (permission.value.trusted !== true) {
+      const chain = (permission.value.ancestry ?? []).map((entry) => entry.name).join(' <- ')
+      console.error(`macOS integration lane failed: row(s) ${trustedRows.join(',')} read the accessibility tree and post real keystrokes, and accessibility_permission_denied (process chain: ${chain})\n\n${ACCESSIBILITY_GRANT_INSTRUCTION}`)
+      process.exit(1)
+    }
   }
 
   console.log(`LANE_INPUT swiftc="${swiftVersion}" ax_probe_digest=${axProbe.digest} settings_probe_digest=${settingsProbe.digest}`)
   console.log(`LANE_ARTIFACT application_digest=${manifest.applicationDigestSha256} executable=${manifest.executablePath} source_revision=${manifest.sourceRevision}`)
 
-  const context = { axProbe: axProbe.binaryPath, manifest }
+  const rivalProbe = compileProbe('HotkeyRival')
+  const context = { axProbe: axProbe.binaryPath, manifest, rivalProbe: rivalProbe.binaryPath }
 
   if (selfTestRestore) {
+    await runEvidenceSelfTest()
     await runSelfTestRestore(context)
     return
   }
@@ -1354,11 +1870,18 @@ const main = async () => {
   }
 
 
-  const rows = requestedRows.filter((row) => ROW_IMPLEMENTATIONS[row] !== undefined)
-  const unimplemented = requestedRows.filter((row) => ROW_IMPLEMENTATIONS[row] === undefined)
+  const rows = requestedRows.filter((row) => ROW_REGISTRY[row] !== undefined)
+  const unimplemented = requestedRows.filter((row) => ROW_REGISTRY[row] === undefined)
   if (unimplemented.length > 0) fail(`row(s) ${unimplemented.join(',')} have no implementation -- an unimplemented row is a failure, never a skip`)
 
-  for (const row of rows) await ROW_IMPLEMENTATIONS[row](context)
+  for (const row of rows) await ROW_REGISTRY[row].run(context)
+
+  // Only a COMPLETE, wholly passing run becomes reusable evidence. A partial
+  // `--rows` run is for developing the lane, not for satisfying the gate.
+  const coversEveryRow = ALL_ROWS.every((row) => rowResults.some((result) => result.id === row && result.passed))
+  if (coversEveryRow) writeEvidence(manifest, rowResults)
+  else if (runAllRows) console.log('LANE_EVIDENCE recorded=false reason=not-every-row-passed')
+  else console.log('LANE_EVIDENCE recorded=false reason=partial-row-selection-is-never-recorded-as-gate-evidence')
 }
 
 const startedAt = Date.now()
