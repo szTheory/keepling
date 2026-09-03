@@ -167,9 +167,11 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 14/15 plans executed
+**Plans:** 15/16 plans executed
 
 Plans:
+
+- [x] 03-16-PLAN.md
 
 - [x] 03-15-PLAN.md
 

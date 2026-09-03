@@ -4,7 +4,7 @@
   "project": "Keepling",
   "repository": "/Users/jon/projects/keepling",
   "branch": "main",
-  "head_at_pause": "e01bab0ac181697a766a23e601fde026f83e303d",
+  "head_at_pause": "b810736bdc716792df60ca67e3c7cab605fe5843",
   "workflow": {
     "command": "$gsd-execute-phase 3",
     "phase": "KPL-03",
@@ -112,6 +112,18 @@
         "e01bab0"
       ],
       "result": "Facade-driven daily loop, desktop renderer composition, resolved state matrix, real Electron Playwright E2E."
+    },
+    {
+      "plan": "03-16",
+      "summary": ".planning/phases/KPL-03-mac-daily-loop/03-16-SUMMARY.md",
+      "commits": [
+        "e2bc5ea",
+        "06ac82d",
+        "14a2f4b",
+        "1ff88a8",
+        "b810736"
+      ],
+      "result": "Closed O-21: production ForegroundAppPort wired into bootstrap; full fifteen-row macOS lane green (92 cases) and the desktop phase gate at lanes=9 failed=0."
     }
   ],
   "remaining_in_wave_order": [
@@ -149,9 +161,9 @@
   ],
   "verification": {
     "latest_orchestrator_run": {
-      "at_head": "e01bab0ac181697a766a23e601fde026f83e303d",
+      "at_head": "b810736bdc716792df60ca67e3c7cab605fe5843",
       "status": "passed",
-      "evidence": "Orchestrator-run after 03-03, independent of executor: pnpm test:desktop 7 files/50 tests; pnpm --dir apps/web test --run 15 files/153 tests; typecheck:desktop clean; typecheck:web clean."
+      "evidence": "node tooling/verify-desktop-phase.mjs -> lanes=9 failed=0 (typecheck-desktop 1, typecheck-web 1, unit 164, ipc 66, electron-e2e 57, package-once 1, packaged 10, macos-integration 92, privacy 1). macOS lane run directly: rows=15 failed=0 cases=92, LANE_EVIDENCE recorded=true, SETTINGS restore=VERIFIED, application_digest=ffcb4a92459956e21708b415f4b4b8b0babde91452ee308a5e633e766d346c59, source_revision=b810736."
     },
     "capability_gates": {
       "verify.schema-drift": "block=false",
@@ -320,13 +332,23 @@
     },
     {
       "id": "O-21",
-      "item": "FIFTH GAP-1 instance: Quick Entry never returns focus to the prior application",
-      "detail": "Found by 03-15 row A9 and documented in 03-15-SUMMARY.md:206, but NOT recorded in HANDOFF.json by the executor -- added here 2026-09-03 by the orchestrator. QuickEntryWindowController calls an optional `foregroundApp` port on open and hide, but NO implementation of that port exists anywhere in the repository and none is passed in main/index.ts#bootstrap(). Prior-app focus return is therefore unreachable in the shipped app. MEASURED, not inferred: with TextEdit focused, submitting a Quick Entry capture leaves Keepling frontmost. Differs from O-1/O-11/O-12/O-15 in that the adapter was never written at all, so closing it is new implementation work (a ForegroundAppPort adapter plus bootstrap wiring) and it carries a real UX decision: what should happen when Quick Entry is invoked from Keepling own window. Disclosed rather than half-fixed. Row A9 fails honestly against it, so the phase gate is RED until it is closed."
+      "item": "CLOSED - Quick Entry now returns focus to the prior application",
+      "detail": "Found by 03-15 row A9 and documented in 03-15-SUMMARY.md:206, but NOT recorded in HANDOFF.json by the executor -- added here 2026-09-03 by the orchestrator. QuickEntryWindowController calls an optional `foregroundApp` port on open and hide, but NO implementation of that port exists anywhere in the repository and none is passed in main/index.ts#bootstrap(). Prior-app focus return is therefore unreachable in the shipped app. MEASURED, not inferred: with TextEdit focused, submitting a Quick Entry capture leaves Keepling frontmost. Differs from O-1/O-11/O-12/O-15 in that the adapter was never written at all, so closing it is new implementation work (a ForegroundAppPort adapter plus bootstrap wiring) and it carries a real UX decision: what should happen when Quick Entry is invoked from Keepling own window. Disclosed rather than half-fixed. Row A9 fails honestly against it, so the phase gate is RED until it is closed. CLOSED 2026-09-03 by 03-16 (e2bc5ea, 06ac82d, 14a2f4b). `ElectronForegroundApp` in apps/desktop/main/windows/foreground-app.ts is constructed in the production bootstrap() and passed as QuickEntryWindowController's `foregroundApp`. Mechanism: capture records ONLY whether Keepling itself was frontmost; restore calls app.hide(), and macOS hands activation back to the previously active application with the caret untouched -- no TCC Automation prompt, no native module. The UX decision O-21 flagged was resolved as: invoked from Keepling's own window, do NOT hide -- show and focus the main window instead (proven by unit test, since row A9 cannot measure it). The option is now REQUIRED on QuickEntryWindowOptions, so this defect class cannot recur silently. MEASURED: row A9 PASS cases=6 against application_digest=ffcb4a92459956e21708b415f4b4b8b0babde91452ee308a5e633e766d346c59, and the full lane is rows=15 failed=0 cases=92 with LANE_EVIDENCE recorded=true and SETTINGS restore=VERIFIED. The whole desktop phase gate is now lanes=9 failed=0."
     },
     {
       "id": "O-22",
       "item": "Executors document new open items in their SUMMARY but do not add them to HANDOFF.json",
       "detail": "Happened twice in a row: 03-14 reported recording O-19 and did not; 03-15 recommended O-21 and did not. Both were caught and added by the orchestrator, but only because the orchestrator read the SUMMARY carefully -- neither would have survived a context loss, which is exactly what HANDOFF.json exists to prevent. MITIGATION: the orchestrator must diff SUMMARY-recommended open items against HANDOFF.json open_items after every executor returns, and any future executor dispatch should state explicitly that recording an open item means writing it to .planning/HANDOFF.json, not only describing it in the SUMMARY."
+    },
+    {
+      "id": "O-23",
+      "item": "Focus return is implemented by hiding the WHOLE application, which also hides Keepling's main window",
+      "detail": "Consequence of the mechanism chosen to close O-21, recorded because row A9 does not measure it and a dogfooder will notice it. macOS only hands activation back to the previous application when an application hides ITSELF, so restoring focus necessarily hides Keepling's main window too: capture from TextEdit with a Keepling window visible on the same space, and after the capture commits that window is gone (hidden, not closed) rather than merely behind TextEdit. Every alternative examined needs something we refuse to ship: activating another application by bundle identifier needs its identity, which needs an AppleScript/Automation TCC prompt (prohibited by 03-16) or a native NSRunningApplication module. The next capture un-hides the app again, so nothing is stranded. DECIDE at dogfood: accept it, or ship a native helper. Do NOT 'fix' it by skipping app.hide(), which silently reintroduces O-21 -- row A9 would go red, correctly."
+    },
+    {
+      "id": "O-24",
+      "item": "The macOS lane still contains sleep-then-read-once patterns of the class that made A4, A6 and A7 flap",
+      "detail": "Three rows have now been caught intermittently failing against UNCHANGED product code: A6 (fixed in fbdf2b4), and A4 and A7 (both fixed in 03-16, b810736 and 1ff88a8). Measured rates before the fixes: A4 failed 3 times in 6 isolated runs, A7 roughly 1 in 8. All three shared one shape -- `await sleep(N)` and then a SINGLE read of AX state that is still moving. Rows A1, A2, A3, A5, A8 and the shared `captureTaskByKeyboard` helper still contain that shape and should be assumed to harbour the same defect until each is either converted to a settle predicate or run enough times to bound its rate. The lane now has a `settledFocus(handle)` helper for the focus case. RULE, restated because it is easy to get wrong: the settle predicate must be strictly WEAKER than the row's assertion (wait for focus to stop moving, never for focus to be on the right element), or the row becomes vacuous. Note also that quiescence is NOT always a valid settle: A7's pending dead key is stable indefinitely, so 'the value stopped changing' would have settled on the failure."
     }
   ],
   "phase_level_gap": {

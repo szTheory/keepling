@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: "Completed 03-15-PLAN.md (macos-integration lane red: A9 defect + two ungranted permissions)"
-last_updated: "2026-09-03T04:32:00.419Z"
+stopped_at: Completed 03-16-PLAN.md (O-21 closed; macOS lane 15/15, 92 cases; desktop phase gate lanes=9 failed=0)
+last_updated: "2026-09-03T20:18:17.495Z"
 last_activity: 2026-09-02
 last_activity_desc: Phase KPL-03 execution started
-state_head: 7bbd929def3510ba1de755ccb966c71473142956
+state_head: b810736bdc716792df60ca67e3c7cab605fe5843
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 53
-  completed_plans: 51
+  total_plans: 54
+  completed_plans: 52
 milestone_name: milestone
 ---
 
@@ -29,11 +29,11 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-03 (Mac Daily Loop) — EXECUTING
-Plan: 12 of 12
-Total Plans in Phase: 12
+Plan: 16 of 16
+Total Plans in Phase: 16
 Status: Executing Phase KPL-03
-Last activity: 2026-09-02 — Phase KPL-03 execution resumed (wave continue)
-Last Activity Description: Phase KPL-03 execution started
+Last activity: 2026-09-03 — Plan 03-16 complete (O-21 closed; macOS lane 15/15)
+Last Activity Description: Quick Entry prior-application focus return wired into the shipped bootstrap; macOS integration lane green (92 cases) and desktop phase gate at lanes=9 failed=0
 Progress: [█████████░] 97%
 
 ## Accumulated Context
@@ -189,6 +189,8 @@ Progress: [█████████░] 97%
 - [Phase KPL-03]: O-1 RESOLVED: apps/web keeps routed Inbox content; useSharedWorkspace documented as permanent future-facing API.
 - [Phase KPL-03]: Rows A1-A15 of the physical-accessibility checklist are automated at the macOS layer (AXUIElement tree, CGEvent keystrokes, real input sources, real system settings, WCAG contrast from rendered pixels); the dogfood contract keeps only informal feedback with no checklist, evidence record, or sign-off.
 - [Phase KPL-03]: The macos-integration lane runs once per packaged artifact and the phase gate reuses evidence bound to that exact applicationDigestSha256 plus the Swift probe source digests; missing, stale, partial or failing evidence is a loud failure, never a skip.
+- [Phase 03]: Quick Entry returns focus by hiding Keepling itself (app.hide()), which macOS turns into activation of the prior application with its caret intact — no TCC Automation prompt and no native module, at the cost of also hiding Keepling's main window (O-23).
+- [Phase 03]: A settle predicate must be strictly weaker than the assertion it precedes, and quiescence is not universally valid — a pending macOS dead key is stable indefinitely.
 
 ### Retained Research
 
@@ -215,15 +217,15 @@ Progress: [█████████░] 97%
 
 ## Next Action
 
-Run the three pending KPL-03 Wave 4 capability gates (`verify.schema-drift`, `verify.codebase-drift`, and `ui.safety-gate`), then resume `$gsd-execute-phase 3` at Wave 5 Plan 03-09.
+Run `pnpm test:phase-1` (not run since 03-02), then proceed to phase verification for KPL-03. The desktop phase gate is green (`node tooling/verify-desktop-phase.mjs` → lanes=9 failed=0), so requirements MAC-02/03/04/05 and QUAL-03/04 can now be checked against real evidence rather than deferred. Read `.planning/phases/KPL-03-mac-daily-loop/.continue-here.md` first; open items O-23 and O-24 are new.
 
 ---
 *State initialized: 2026-08-28*
 
 ## Session
 
-**Last session:** 2026-09-03T04:31:39.118Z
-**Stopped at:** Completed 03-15-PLAN.md (macos-integration lane red: A9 defect + two ungranted permissions)
+**Last session:** 2026-09-03T20:18:10.353Z
+**Stopped at:** Completed 03-16-PLAN.md (O-21 closed; macOS lane 15/15, 92 cases; desktop phase gate lanes=9 failed=0)
 **Resume file:** None
 
 ## Performance Metrics
@@ -281,6 +283,7 @@ Run the three pending KPL-03 Wave 4 capability gates (`verify.schema-drift`, `ve
 | Phase KPL-03 P13 | 95min | 4 tasks | 13 files |
 | Phase KPL-03 P14 | 46 min | 4 tasks | 16 files |
 | Phase KPL-03 P15 | 2h 35m | 4 tasks | 11 files |
+| Phase KPL-03 P16 | 75min | 2 tasks | 7 files |
 
 ### Blockers
 
