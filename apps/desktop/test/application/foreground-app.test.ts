@@ -59,52 +59,60 @@ class FakeWindow implements FocusableWindow {
   }
 }
 
-const build = (options: { frontmost: boolean; hidden?: boolean; mainWindow?: FakeWindow | null }) => {
+const build = (options: {
+  frontmost: boolean | (() => boolean)
+  hidden?: boolean
+  mainWindow?: FakeWindow | null
+  wait?: (milliseconds: number) => Promise<void>
+}) => {
   const application = new FakeApplication(options.hidden ?? false)
   const mainWindow = options.mainWindow === undefined ? new FakeWindow() : options.mainWindow
   const port = new ElectronForegroundApp({
     application,
     getMainWindow: () => mainWindow,
-    isKeeplingFrontmost: () => options.frontmost,
+    isKeeplingFrontmost: typeof options.frontmost === 'function' ? options.frontmost : () => options.frontmost as boolean,
+    settleIntervalMs: 0,
+    settleTimeoutMs: 200,
+    wait: options.wait ?? (async () => {}),
   })
   return { application, mainWindow, port }
 }
 
 describe('ElectronForegroundApp', () => {
-  it('hides the application on restore when Quick Entry was invoked from another application', () => {
+  it('hides the application on restore when Quick Entry was invoked from another application', async () => {
     const { application, mainWindow, port } = build({ frontmost: false })
 
-    port.restoreActiveApp(port.captureActiveApp())
+    port.restoreActiveApp(await port.captureActiveApp())
 
     expect(application.hideCalls).toBe(1)
     expect(mainWindow?.showCalls).toBe(0)
     expect(mainWindow?.focusCalls).toBe(0)
   })
 
-  it('never hides the application when Quick Entry was invoked from Keepling itself', () => {
+  it('never hides the application when Quick Entry was invoked from Keepling itself', async () => {
     const { application, mainWindow, port } = build({ frontmost: true })
 
-    port.restoreActiveApp(port.captureActiveApp())
+    port.restoreActiveApp(await port.captureActiveApp())
 
     expect(application.hideCalls).toBe(0)
     expect(mainWindow?.showCalls).toBe(1)
     expect(mainWindow?.focusCalls).toBe(1)
   })
 
-  it('reads frontmost-ness before un-hiding, so a hidden application is un-hidden for the next capture', () => {
+  it('reads frontmost-ness before un-hiding, so a hidden application is un-hidden for the next capture', async () => {
     const { application, port } = build({ frontmost: false, hidden: true })
 
-    const handle = port.captureActiveApp()
+    const handle = await port.captureActiveApp()
 
     expect(application.showCalls).toBe(1)
     expect(application.isHidden()).toBe(false)
     expect(handle.keeplingWasFrontmost).toBe(false)
   })
 
-  it('leaves an already-visible application alone at capture time', () => {
+  it('leaves an already-visible application alone at capture time', async () => {
     const { application, port } = build({ frontmost: true })
 
-    port.captureActiveApp()
+    await port.captureActiveApp()
 
     expect(application.showCalls).toBe(0)
   })
@@ -120,14 +128,47 @@ describe('ElectronForegroundApp', () => {
     expect(mainWindow?.showCalls).toBe(0)
   })
 
-  it('does not touch a destroyed or absent main window on the Keepling-frontmost path', () => {
+  it('does not touch a destroyed or absent main window on the Keepling-frontmost path', async () => {
     const destroyed = build({ frontmost: true, mainWindow: new FakeWindow(true) })
-    destroyed.port.restoreActiveApp(destroyed.port.captureActiveApp())
+    destroyed.port.restoreActiveApp(await destroyed.port.captureActiveApp())
     expect(destroyed.mainWindow?.showCalls).toBe(0)
     expect(destroyed.application.hideCalls).toBe(0)
 
     const absent = build({ frontmost: true, mainWindow: null })
-    absent.port.restoreActiveApp(absent.port.captureActiveApp())
+    absent.port.restoreActiveApp(await absent.port.captureActiveApp())
     expect(absent.application.hideCalls).toBe(0)
+  })
+
+  it('waits for the un-hide to settle before returning, so Quick Entry is shown after the main window is back', async () => {
+    let frontmost = false
+    let waits = 0
+    const { port } = build({
+      frontmost: () => frontmost,
+      hidden: true,
+      wait: async () => {
+        waits += 1
+        // `NSApplication.unhide:` re-keys the main window several run-loop
+        // turns after it returns; model that instead of assuming it is
+        // instantaneous.
+        if (waits === 3) frontmost = true
+      },
+    })
+
+    const handle = await port.captureActiveApp()
+
+    expect(waits).toBe(3)
+    expect(handle.keeplingWasFrontmost).toBe(false)
+  })
+
+  it('gives up on the settle at a bounded deadline rather than hanging the shortcut forever', async () => {
+    let waits = 0
+    const { port } = build({
+      frontmost: false,
+      hidden: true,
+      wait: async () => { waits += 1 },
+    })
+
+    await expect(port.captureActiveApp()).resolves.toMatchObject({ keeplingWasFrontmost: false })
+    expect(waits).toBeGreaterThan(0)
   })
 })

@@ -22,7 +22,16 @@ type ForegroundAppOptions = {
   application: ApplicationActivationPort
   getMainWindow(): FocusableWindow | null
   isKeeplingFrontmost(): boolean
+  /** Injected so the un-hide settle loop is provable without real timers. */
+  settleIntervalMs?: number
+  settleTimeoutMs?: number
+  wait?: (milliseconds: number) => Promise<void>
 }
+
+const DEFAULT_SETTLE_INTERVAL_MS = 25
+const DEFAULT_SETTLE_TIMEOUT_MS = 2_000
+
+const realWait = (milliseconds: number) => new Promise<void>((resolve) => { setTimeout(resolve, milliseconds) })
 
 /**
  * Opaque handle (see `ForegroundAppPort`): it deliberately carries only
@@ -69,17 +78,38 @@ class ElectronForegroundApp implements ForegroundAppPort {
   readonly #application: ApplicationActivationPort
   readonly #getMainWindow: () => FocusableWindow | null
   readonly #isKeeplingFrontmost: () => boolean
+  readonly #settleIntervalMs: number
+  readonly #settleTimeoutMs: number
+  readonly #wait: (milliseconds: number) => Promise<void>
 
   constructor(options: ForegroundAppOptions) {
     this.#application = options.application
     this.#getMainWindow = options.getMainWindow
     this.#isKeeplingFrontmost = options.isKeeplingFrontmost
+    this.#settleIntervalMs = options.settleIntervalMs ?? DEFAULT_SETTLE_INTERVAL_MS
+    this.#settleTimeoutMs = options.settleTimeoutMs ?? DEFAULT_SETTLE_TIMEOUT_MS
+    this.#wait = options.wait ?? realWait
   }
 
-  captureActiveApp(): TaggedHandle {
+  async captureActiveApp(): Promise<TaggedHandle> {
     // Read frontmost-ness BEFORE any un-hide, or the answer is always "yes".
     const keeplingWasFrontmost = this.#isKeeplingFrontmost()
-    if (this.#application.isHidden()) this.#application.show()
+    if (this.#application.isHidden()) {
+      this.#application.show()
+      // `NSApplication.unhide:` finishes on a LATER run-loop turn: it
+      // re-orders and re-keys the previously visible windows (the main
+      // window) after it returns. Measured in lane row A9 -- Quick Entry was
+      // shown first, the un-hide then put the main window back in front, and
+      // the user's keystrokes went into the MAIN window's capture field
+      // instead. So wait for the un-hide to SETTLE (Keepling owns a focused
+      // window again) before the caller shows Quick Entry, rather than
+      // sleeping a fixed amount and hoping. Bounded: a machine that never
+      // settles still proceeds instead of hanging the shortcut.
+      const deadline = Date.now() + this.#settleTimeoutMs
+      while (!this.#isKeeplingFrontmost() && Date.now() < deadline) {
+        await this.#wait(this.#settleIntervalMs)
+      }
+    }
     return { keeplingWasFrontmost, tag: KEEPLING_FOREGROUND_HANDLE }
   }
 
