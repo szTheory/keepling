@@ -30,6 +30,32 @@ type WorkspaceShellProps = {
   listContent?: ReactNode
   onNavigate?: (event: MouseEvent<HTMLAnchorElement>, href: string) => void
   pathname: string
+  /**
+   * O-1 gap closure -- RECORDED DECISION (03-13, KPL-03-mac-daily-loop):
+   * `apps/web`'s production Inbox route KEEPS its existing routed content
+   * (`routeContent`/`listContent`/`detailContent` via `AppShell`/
+   * `routes.tsx`), and this flag remains permanent, documented, intentionally
+   * unset-in-production API rather than being flipped or deleted.
+   *
+   * Why: 03-03 already made the shared `packages/web-ui` Workspace slice
+   * load-bearing on DESKTOP, proving the extraction boundary works. But
+   * `apps/web`'s existing routed Inbox content is a materially different,
+   * more mature surface (its own pagination/cursor-based views, its own
+   * conflict/undo wiring already exercised by 153 passing web tests) --
+   * replacing it with the shared slice today would be a real feature
+   * regression, not a refactor, and the plan that found this gap
+   * (03-13-PLAN.md) explicitly permits recording this decision instead of
+   * forcing a flip that regresses that suite. `AppShell` never sets this
+   * prop; only `WorkspaceShell.test.tsx` does, by design -- proving the
+   * shared slice still renders correctly through this seam without
+   * shipping it to production.
+   *
+   * This is NOT dead code: it is the documented integration point a future
+   * workspace-consolidation phase will use once the shared slice reaches
+   * feature parity with `apps/web`'s routed content. See
+   * `.planning/phases/KPL-03-mac-daily-loop/03-13-SUMMARY.md` for the full
+   * decision record.
+   */
   useSharedWorkspace?: boolean
 }
 
