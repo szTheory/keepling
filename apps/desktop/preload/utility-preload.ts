@@ -1,6 +1,12 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { z } from 'zod'
 
+import {
+  accountConnectOutcomeSchema,
+  accountConnectRequestSchema,
+  accountStatusSchema,
+} from './contracts.ts'
+
 /**
  * Narrow preload bridge for the Quick Entry and Settings utility windows
  * (D-27/D-28). This is a SEPARATE file from `apps/desktop/preload/index.ts`
@@ -59,6 +65,23 @@ const keeplingUtility = Object.freeze({
   ),
   setShortcut: async (accelerator: string) => shortcutStatusSchema.parse(
     await ipcRenderer.invoke('keepling:quick-entry:set-shortcut', z.string().min(1).parse(accelerator)),
+  ),
+  // O-16 gap closure: the Settings account surface. These schemas are the
+  // SAME ones `preload/contracts.ts` defines and `main/index.ts` parses
+  // again on the privileged side -- one contract, parsed twice.
+  //
+  // `accountConnect` takes a server address and NOTHING else: authentication
+  // is delegated to the system browser (RFC 8252), so no Electron renderer
+  // ever renders or transports a password, passkey, token, authorization
+  // code, or PKCE verifier.
+  accountConnect: async (request: unknown) => accountConnectOutcomeSchema.parse(
+    await ipcRenderer.invoke('keepling:account:connect', accountConnectRequestSchema.parse(request)),
+  ),
+  accountDisconnect: async () => accountStatusSchema.parse(
+    await ipcRenderer.invoke('keepling:account:disconnect'),
+  ),
+  accountStatus: async () => accountStatusSchema.parse(
+    await ipcRenderer.invoke('keepling:account:status'),
   ),
   hide: () => ipcRenderer.send('keepling:quick-entry:hide'),
   requestDiscard: () => ipcRenderer.send('keepling:quick-entry:discard'),

@@ -318,13 +318,62 @@ describe('every ipcMain.handle registration in main/index.ts is sender-checked b
     // DesktopApplication call at all -- they are still REQUIRED to be
     // sender-checked, which the loop below enforces unconditionally for
     // every handler regardless of whether it touches DesktopApplication).
-    expect(handlerBodies.length).toBeGreaterThanOrEqual(12)
+    // 03-14 added the four `keepling:account:*` handlers, which use the
+    // WIDER-BY-ONE-WINDOW `assertTrustedAccountSender` (main window OR the
+    // Settings window). The loop below therefore accepts either trust
+    // helper, and the case after it proves the account variant is used ONLY
+    // on account channels -- a strictly stronger assertion than before.
+    expect(handlerBodies.length).toBeGreaterThanOrEqual(16)
     for (const [, body] of handlerBodies) {
-      const trustCheckIndex = body!.indexOf('assertTrustedSender(event)')
-      expect(trustCheckIndex, `handler body missing assertTrustedSender:\n${body}`).toBeGreaterThanOrEqual(0)
+      const trustCheckIndex = Math.max(
+        body!.indexOf('assertTrustedSender(event)'),
+        body!.indexOf('assertTrustedAccountSender(event)'),
+      )
+      expect(trustCheckIndex, `handler body missing a trusted-sender check:\n${body}`).toBeGreaterThanOrEqual(0)
       const applicationCallIndex = body!.indexOf('desktopApplication.')
       if (applicationCallIndex >= 0) expect(applicationCallIndex).toBeGreaterThan(trustCheckIndex)
     }
+  })
+
+  it('the wider account trust helper is used ONLY on keepling:account:* channels, and every account channel uses it', async () => {
+    const { readFile } = await import('node:fs/promises')
+    const { fileURLToPath } = await import('node:url')
+    const source = await readFile(fileURLToPath(new URL('../../main/index.ts', import.meta.url)), 'utf8')
+    const handlers = [...source.matchAll(/ipcMain\.handle\('(keepling:[^']+)',\s*async\s*\([^)]*\)\s*=>\s*\{([\s\S]*?)\n {2}\}\)/g)]
+    const accountChannels = handlers.filter(([, channel]) => channel!.startsWith('keepling:account:'))
+    expect(accountChannels.length).toBeGreaterThanOrEqual(4)
+    for (const [, channel, body] of handlers) {
+      const usesAccountTrust = body!.includes('assertTrustedAccountSender(event)')
+      expect(usesAccountTrust, `${channel} uses the wrong trust helper`).toBe(channel!.startsWith('keepling:account:'))
+    }
+  })
+
+  it('the account trust helper evaluates the SAME closed policy, only against a second main-owned window', async () => {
+    const { readFile } = await import('node:fs/promises')
+    const { fileURLToPath } = await import('node:url')
+    const source = await readFile(fileURLToPath(new URL('../../main/index.ts', import.meta.url)), 'utf8')
+    const helper = source.slice(source.indexOf('const assertTrustedAccountSender'))
+    expect(helper).toContain('isTrustedIpcSender')
+    expect(helper).toContain('lifecycle.getMainWindow()?.webContents.id ?? -1')
+    expect(helper).toContain('settings.getWindow()?.webContents.id ?? -1')
+    expect(helper).toContain("IpcSecurityError('untrusted_sender')")
+  })
+
+  it('the shipped bootstrap constructs the REAL sync adapter, and the inline fixture survives only behind its explicit test gate (O-16)', async () => {
+    const { readFile } = await import('node:fs/promises')
+    const { fileURLToPath } = await import('node:url')
+    const source = await readFile(fileURLToPath(new URL('../../main/index.ts', import.meta.url)), 'utf8')
+    expect(source).toContain("import { KeeplingSyncAdapter } from './adapters/sync.ts'")
+    expect(source).toContain('new KeeplingSyncAdapter(')
+    expect(source).toContain('const sync: SyncPort = syncMode === undefined ? realSync : testStubSync')
+    expect(source).toContain("app.setAsDefaultProtocolClient(AUTH_PROTOCOL_SCHEME)")
+    // Both the macOS `open-url` path and the argv/`second-instance` path
+    // route into the SAME single validation entry point.
+    expect(source).toContain("app.on('open-url'")
+    expect(source).toContain("app.on('second-instance'")
+    expect(source).toContain('routeAuthorizationCallback')
+    // The same-profile ownership lock is preserved.
+    expect(source).toContain('app.requestSingleInstanceLock()')
   })
 
   it('exposes no generic invoke/send channel and no raw callback surface in the preload bridge module source', async () => {

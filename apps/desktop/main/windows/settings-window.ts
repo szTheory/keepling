@@ -27,6 +27,16 @@ class SettingsWindowController {
     this.#rendererUrl = options.rendererUrl
   }
 
+  /**
+   * The live Settings window, or `null` when it has never opened or was
+   * closed. Exposed so `main/index.ts` can include this window's exact
+   * `WebContents` id in the trusted-sender set for the account IPC channels
+   * -- Settings is the surface that owns server selection and sign-out.
+   */
+  getWindow(): BrowserWindow | null {
+    return this.#window !== null && !this.#window.isDestroyed() ? this.#window : null
+  }
+
   async open(): Promise<void> {
     if (this.#window !== null && !this.#window.isDestroyed()) {
       this.#window.show()
@@ -47,6 +57,9 @@ class SettingsWindowController {
       width: 480,
     })
     this.#window = window
+    window.once('closed', () => {
+      if (this.#window === window) this.#window = null
+    })
     this.#quickEntryController.trustWindow(window)
     window.setMenuBarVisibility(false)
     window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))

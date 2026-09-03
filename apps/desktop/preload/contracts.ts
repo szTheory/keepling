@@ -134,6 +134,49 @@ const workspaceLayoutStateSchema = z.object({
 }).strict()
 
 /**
+ * O-16 gap closure: the account surface (connect / disconnect / status).
+ *
+ * The request shape is deliberately minimal and closed. `serverUrl` is the
+ * ONLY thing a renderer may supply, because authentication happens in the
+ * SYSTEM BROWSER (RFC 8252) -- no password, passkey, token, authorization
+ * code, or PKCE verifier is ever collected by, passed through, or visible
+ * to any renderer. `.strict()` makes that a structural property rather than
+ * a policy that could be relaxed by accident.
+ *
+ * The namespace appears ONLY in the reported status, never in a request:
+ * the five server-derived fields are echoed exactly as the token response
+ * supplied them and can never be asserted, derived, defaulted, or
+ * overridden by a client.
+ */
+const syncNamespaceSchema = z.object({
+  accountSubject: z.string().min(1).max(200),
+  generation: z.string().min(1).max(40),
+  issuer: z.string().min(1).max(2048),
+  origin: z.string().min(1).max(2048),
+  serverInstance: z.string().min(1).max(200),
+}).strict()
+const accountConnectRequestSchema = z.object({
+  serverUrl: z.string().min(1).max(2048),
+}).strict()
+const credentialDisclosureSchema = z.object({
+  copy: z.string().min(1).max(500),
+  kind: z.literal('unsigned_dogfood'),
+}).strict()
+const accountStatusSchema = z.object({
+  disclosure: credentialDisclosureSchema.nullable(),
+  namespace: syncNamespaceSchema.nullable(),
+  serverUrl: z.string().min(1).max(2048).nullable(),
+  state: z.enum(['not_configured', 'signed_out', 'authorizing', 'connected']),
+}).strict()
+const accountConnectOutcomeSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('browser_opened'), status: accountStatusSchema }).strict(),
+  z.object({
+    kind: z.literal('rejected'),
+    reason: z.enum(['invalid_server_address', 'authorization_unavailable']),
+  }).strict(),
+])
+
+/**
  * D-29 sequence contract for `keepling:presentation-changed` pushes. The
  * preload bridge is always subscribed (its `ipcRenderer.on` listener is
  * registered at module load, before any renderer code runs or calls
@@ -162,6 +205,9 @@ const decideSequenceOutcome = (lastSequence: number | null, incomingSequence: nu
 }
 
 export {
+  accountConnectOutcomeSchema,
+  accountConnectRequestSchema,
+  accountStatusSchema,
   captureRequestSchema,
   conflictSchema,
   decideSequenceOutcome,
@@ -174,6 +220,7 @@ export {
   removeLocalDataRequestSchema,
   resolveConflictRequestSchema,
   snapshotSchema,
+  syncNamespaceSchema,
   taskSchema,
   undoResultSchema,
   workspaceDraftSchema,

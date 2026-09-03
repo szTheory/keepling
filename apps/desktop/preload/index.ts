@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { z } from 'zod'
 
 import {
+  accountStatusSchema,
   captureRequestSchema,
   conflictSchema,
   decideSequenceOutcome,
@@ -96,6 +97,18 @@ const keepling = Object.freeze({
   // real main-process parse, which is the actual security boundary.
   removeLocalData: async (request: unknown) => removeLocalDataOutcomeSchema.parse(
     await ipcRenderer.invoke('keepling:remove-local-data', removeLocalDataRequestSchema.parse(request)),
+  ),
+  // O-16 gap closure: the main window's read-only view of the account
+  // connection, plus the resolution of the `sign_in` recovery action that
+  // already exists in this bridge's presentation vocabulary. `beginSignIn`
+  // takes NO arguments and returns only status -- it hands authentication to
+  // the SYSTEM BROWSER and never collects a credential in this renderer.
+  // Server selection itself lives in Settings, not here.
+  accountStatus: async () => accountStatusSchema.parse(
+    await ipcRenderer.invoke('keepling:account:status'),
+  ),
+  beginSignIn: async () => accountStatusSchema.parse(
+    await ipcRenderer.invoke('keepling:account:begin-sign-in'),
   ),
   // O-11 gap closure (D-06): main-owned, best-effort, non-durable UI
   // convenience persistence for renderer-semantic workspace layout.

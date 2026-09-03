@@ -3,9 +3,12 @@ import { randomUUID } from 'node:crypto'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { Worker } from 'node:worker_threads'
-import { app, ipcMain, Menu, net, protocol, screen, session } from 'electron'
+import { app, ipcMain, Menu, net, protocol, screen, session, shell } from 'electron'
 
+import { BrowserDelegatedAuthorization, KEEPLING_REDIRECT_URI } from './adapters/auth.ts'
 import { SafeStorageCredentialAdapter } from './adapters/credentials.ts'
+import { FileServerConfiguration } from './adapters/server-config.ts'
+import { KeeplingSyncAdapter } from './adapters/sync.ts'
 import {
   DesktopApplication,
   type ConflictRecord,
@@ -15,8 +18,12 @@ import {
   type LocalStorePort,
   type MoveTodayCommand,
   type PendingMutation,
+  type PullPage,
   type SyncAcknowledgement,
+  type SyncMutation,
+  type SyncNamespace,
   type SyncPort,
+  type SyncState,
   type WorkspaceSnapshot,
 } from './application/DesktopApplication.ts'
 import { createFileWindowStatePort, DesktopLifecycle } from './lifecycle.ts'
@@ -25,7 +32,9 @@ import {
   APP_PROTOCOL_ORIGIN,
   APP_PROTOCOL_SCHEME,
   CONTENT_SECURITY_POLICY,
+  IpcSecurityError,
   assertTrustedIpcSender,
+  isTrustedIpcSender,
   parseTrustedRequest,
   resolvePackagedAssetPath,
   shouldGrantPermission,
@@ -35,6 +44,7 @@ import { createMainWindow } from './windows/main-window.ts'
 import { QuickEntryWindowController } from './windows/quick-entry-window.ts'
 import { SettingsWindowController } from './windows/settings-window.ts'
 import {
+  accountConnectRequestSchema,
   captureRequestSchema,
   editRequestSchema,
   lifecycleRequestSchema,
@@ -197,6 +207,34 @@ class WorkerLocalStore implements LocalStorePort {
     return this.#request('setSyncFence', reason)
   }
 
+  // O-16 (Rule 1 fix): these five were implemented in
+  // `store-worker/local-store.ts` but were never forwarded here OR routed in
+  // `store-worker/index.ts`, so `DesktopApplication`'s optional-capability
+  // checks quietly degraded `runSyncPass()` to reconcile-only and
+  // `activateNamespace()` threw `namespace binding is unavailable`. Never
+  // caught before because the shipped app had no real sync adapter to push
+  // through -- the same "only ever ran in tests" defect class as O-16
+  // itself.
+  applyPull(page: PullPage): Promise<void> {
+    return this.#request('applyPull', page)
+  }
+
+  readyMutations(): Promise<SyncMutation[]> {
+    return this.#request('readyMutations')
+  }
+
+  acknowledgeSync(acknowledgement: SyncAcknowledgement): Promise<void> {
+    return this.#request('acknowledgeSync', acknowledgement)
+  }
+
+  bindNamespace(namespace: SyncNamespace): Promise<boolean> {
+    return this.#request('bindNamespace', namespace)
+  }
+
+  syncState(): Promise<SyncState> {
+    return this.#request('syncState')
+  }
+
   async close(): Promise<void> {
     await this.#request('close')
     await this.#worker.terminate()
@@ -222,7 +260,48 @@ if (selectedTestProfile) {
   app.setPath('userData', selected)
 }
 
+// Same-profile ownership lock (D-19). Unchanged: one profile is owned by
+// exactly one process; isolated profiles stay independent.
 const ownsSelectedProfile = app.requestSingleInstanceLock()
+
+// Derived from the single redirect-URI constant the authorization adapter
+// and the server's exact-match allowlist both use, so the scheme registered
+// with macOS can never drift from the callback actually accepted.
+const AUTH_PROTOCOL_SCHEME = new URL(KEEPLING_REDIRECT_URI).protocol.slice(0, -1)
+const AUTH_CALLBACK_PREFIX = `${AUTH_PROTOCOL_SCHEME}://`
+
+/**
+ * O-16: the `keepling://auth/callback` return path from the SYSTEM BROWSER.
+ *
+ * Registered at module scope, before `app.whenReady()`, because macOS can
+ * deliver `open-url` for the URL that LAUNCHED the app before `bootstrap()`
+ * has finished constructing the authorization adapter. Anything that arrives
+ * early is queued and flushed once the adapter exists, so a cold-start
+ * callback is never dropped.
+ *
+ * Every URL routed here is UNTRUSTED INPUT -- private-use-scheme
+ * registration is first-come on macOS -- so nothing beyond a cheap prefix
+ * filter happens at this layer. All real validation (exact scheme/host/path,
+ * exact state matching against one in-flight request, PKCE verifier
+ * possession) lives in `BrowserDelegatedAuthorization#handleCallback`.
+ */
+const queuedAuthorizationCallbacks: string[] = []
+let deliverAuthorizationCallback: ((callbackUrl: string) => void) | null = null
+
+const routeAuthorizationCallback = (candidate: unknown): void => {
+  if (typeof candidate !== 'string' || !candidate.startsWith(AUTH_CALLBACK_PREFIX)) return
+  if (deliverAuthorizationCallback === null) queuedAuthorizationCallbacks.push(candidate)
+  else deliverAuthorizationCallback(candidate)
+}
+
+app.on('open-url', (event, url) => {
+  event.preventDefault()
+  routeAuthorizationCallback(url)
+})
+app.on('second-instance', (_event, argv) => {
+  for (const argument of argv) routeAuthorizationCallback(argument)
+})
+for (const argument of process.argv.slice(1)) routeAuthorizationCallback(argument)
 
 const bootstrap = async () => {
   await app.whenReady()
@@ -233,8 +312,20 @@ const bootstrap = async () => {
     '0001_initial.sql',
   )
   const localStore = new WorkerLocalStore(join(app.getPath('userData'), 'namespace.sqlite3'), migrationPath)
+
+  // O-16 gap closure. Before this plan the ONLY `SyncPort` this shipped
+  // entry point ever constructed was the inline fixture below, whose
+  // `acknowledge` returned `null` unless `KEEPLING_TEST_SYNC_MODE` was set
+  // -- so the shipped app never contacted a server at all, nothing ever
+  // reached PostgreSQL, and "Synced" was structurally unreachable.
+  // `KeeplingSyncAdapter` was imported by exactly one file, a test.
+  //
+  // The fixture survives ONLY behind its explicit environment gate (the
+  // same seam `KEEPLING_TEST_USER_DATA_DIR` already uses); the default,
+  // real-user path below constructs the real adapter against the configured
+  // server.
   const syncMode = process.env.KEEPLING_TEST_SYNC_MODE
-  const sync: SyncPort = {
+  const testStubSync: SyncPort = {
     acknowledge: async (mutation) => {
       if (syncMode === 'acknowledge') {
         return {
@@ -255,6 +346,70 @@ const bootstrap = async () => {
       return null
     },
   }
+
+  const serverConfiguration = new FileServerConfiguration({
+    filePath: join(app.getPath('userData'), 'server.json'),
+  })
+  let configuredServerUrl = await serverConfiguration.load()
+
+  // A stable per-installation identity. It is an opaque random UUID with no
+  // device, account, or user information in it, and it never appears in
+  // diagnostic telemetry -- the server uses it only to name one grant family
+  // so a single Mac can be revoked independently.
+  const installationIdPath = join(app.getPath('userData'), 'installation.json')
+  const installationId = (() => {
+    const stored = loadWorkspaceLayout(installationIdPath) as { installationId?: unknown } | null
+    if (stored !== null && typeof stored.installationId === 'string' && stored.installationId.length > 0) {
+      return stored.installationId
+    }
+    const generated = randomUUID()
+    saveWorkspaceLayout(installationIdPath, { installationId: generated })
+    return generated
+  })()
+
+  let syncAdapter: KeeplingSyncAdapter | null = null
+  let authorization: BrowserDelegatedAuthorization | null = null
+
+  const configureServer = (baseUrl: string): void => {
+    const adapter = new KeeplingSyncAdapter({
+      accessToken: async () => (authorization === null ? null : authorization.accessToken()),
+      baseUrl,
+    })
+    syncAdapter = adapter
+    authorization = new BrowserDelegatedAuthorization({
+      clock: { now: () => Date.now() },
+      credentials,
+      exchange: adapter,
+      installationId,
+      label: 'Keepling for Mac',
+      openExternal: (url) => shell.openExternal(url),
+      serverBaseUrl: baseUrl,
+    })
+  }
+
+  // A stable `SyncPort` that delegates to whichever adapter is currently
+  // configured, so changing servers never requires rebuilding
+  // `DesktopApplication`. With no server configured every operation is a
+  // no-op -- the app stays completely usable offline, and D-03 correctly
+  // refuses to claim "Synced".
+  const realSync: SyncPort = {
+    // Exact acknowledgement (D-03): reconciliation asks the server for the
+    // receipt of THIS mutation identity and compares the fingerprint;
+    // `DesktopApplication.reconcile` discards anything that does not match
+    // both.
+    acknowledge: async (mutation) => {
+      if (syncAdapter === null) return null
+      try {
+        return await syncAdapter.lookup(mutation.mutationId, mutation.fingerprint)
+      } catch {
+        return null
+      }
+    },
+    pull: async (cursor, limit) => (syncAdapter === null ? { changes: [], cursor } : syncAdapter.pull(cursor, limit)),
+    // The EXACT serialized command bytes are retried, never re-serialized.
+    push: async (commandBytes) => (syncAdapter === null ? null : syncAdapter.push(commandBytes)),
+  }
+  const sync: SyncPort = syncMode === undefined ? realSync : testStubSync
   // O-15 gap closure: this is the SAME `SafeStorageCredentialAdapter`
   // Plan 03-02 built and unit-tested (`test/e2e/real-stack-sync.spec.ts`) --
   // it was never constructed here before this plan, so the credential path
@@ -266,6 +421,11 @@ const bootstrap = async () => {
   const credentials = new SafeStorageCredentialAdapter({
     filePath: join(app.getPath('userData'), 'credential.enc'),
   })
+  // Registering the private-use scheme is what makes the browser's
+  // `keepling://auth/callback` return reach THIS app at all.
+  app.setAsDefaultProtocolClient(AUTH_PROTOCOL_SCHEME)
+  if (configuredServerUrl !== null) configureServer(configuredServerUrl)
+
   const desktopApplication = new DesktopApplication({
     clock: { now: () => new Date().toISOString() },
     credentials,
@@ -274,6 +434,56 @@ const bootstrap = async () => {
     sync,
   })
   await desktopApplication.reconcile()
+
+  /**
+   * The single place an authorization callback is applied. On success the
+   * server-derived namespace binds the local store (a mismatch fences it
+   * rather than mixing two accounts' data), and only then does a real
+   * synchronization pass run.
+   */
+  const applyAuthorizationCallback = async (callbackUrl: string): Promise<void> => {
+    if (authorization === null) return
+    const outcome = await authorization.handleCallback(callbackUrl)
+    if (outcome.kind !== 'authorized') {
+      // A rejected/failed callback never mutates credentials and never
+      // claims progress. Only a genuine authentication failure (not an
+      // unsolicited callback from another app) surfaces the closed
+      // `authentication_required` recovery presentation.
+      if (outcome.kind === 'failed') desktopApplication.publishPresentation({ kind: 'authentication_required' })
+      return
+    }
+    const bound = await desktopApplication.activateNamespace(outcome.namespace).catch(() => false)
+    if (!bound) return
+    await localStore.setSyncFence(null)
+    await desktopApplication.runSyncPass().catch(() => ({ pulled: 0, settled: 0 }))
+  }
+
+  deliverAuthorizationCallback = (callbackUrl) => void applyAuthorizationCallback(callbackUrl)
+  for (const queued of queuedAuthorizationCallbacks.splice(0)) deliverAuthorizationCallback(queued)
+
+  type AccountStatus = {
+    disclosure: { copy: string; kind: 'unsigned_dogfood' } | null
+    namespace: SyncNamespace | null
+    serverUrl: string | null
+    state: 'authorizing' | 'connected' | 'not_configured' | 'signed_out'
+  }
+
+  const readAccountStatus = async (): Promise<AccountStatus> => {
+    const stored = authorization === null ? null : await authorization.loadCredentials()
+    const state: AccountStatus['state'] = configuredServerUrl === null
+      ? 'not_configured'
+      : stored !== null
+        ? 'connected'
+        : authorization?.hasAuthorizationInFlight() === true
+          ? 'authorizing'
+          : 'signed_out'
+    return {
+      disclosure: credentials.settingsDisclosure(),
+      namespace: stored?.namespace ?? null,
+      serverUrl: configuredServerUrl,
+      state,
+    }
+  }
 
   // Test-only introspection seam for shipped-entry-point gap-closure proof
   // (`test/e2e/gap-closure.spec.ts`), following the SAME pattern already
@@ -448,6 +658,74 @@ const bootstrap = async () => {
     preloadPath: utilityPreloadPath,
     quickEntryController: quickEntry,
     rendererUrl: `${rendererBase}?view=settings`,
+  })
+
+  /**
+   * O-16 account surface trust. Identical policy to `assertTrustedSender`
+   * (exact `WebContents` id, main frame only, frame URL inside the packaged
+   * `app://renderer/` origin) evaluated against BOTH main-owned windows that
+   * legitimately reach this surface: the main window (which resolves the
+   * `sign_in` recovery action) and Settings (which owns server selection and
+   * sign-out). A forged sender id, a subframe, or a frame outside the
+   * packaged origin still fails closed.
+   */
+  const assertTrustedAccountSender = (event: Electron.IpcMainInvokeEvent) => {
+    const senderFrame = event.senderFrame
+    const shared = {
+      isMainFrame: senderFrame !== null && senderFrame === event.sender.mainFrame,
+      senderFrameUrl: senderFrame?.url ?? null,
+      senderId: event.sender.id,
+    }
+    const trustedIds = [
+      lifecycle.getMainWindow()?.webContents.id ?? -1,
+      settings.getWindow()?.webContents.id ?? -1,
+    ]
+    if (!trustedIds.some((trustedSenderId) => isTrustedIpcSender({ ...shared, trustedSenderId }))) {
+      throw new IpcSecurityError('untrusted_sender')
+    }
+  }
+
+  ipcMain.handle('keepling:account:status', async (event) => {
+    assertTrustedAccountSender(event)
+    return readAccountStatus()
+  })
+  // Server selection plus browser-delegated authorization. `serverUrl` is
+  // the ONLY input; a disallowed origin is rejected before anything is
+  // written, so a bad address can never replace a working one.
+  ipcMain.handle('keepling:account:connect', async (event, rawRequest) => {
+    assertTrustedAccountSender(event)
+    const request = parseTrustedRequest(accountConnectRequestSchema, rawRequest)
+    let selected: string
+    try {
+      selected = await serverConfiguration.save(request.serverUrl)
+    } catch {
+      return { kind: 'rejected', reason: 'invalid_server_address' }
+    }
+    configuredServerUrl = selected
+    configureServer(selected)
+    if (authorization === null) return { kind: 'rejected', reason: 'authorization_unavailable' }
+    await authorization.begin()
+    return { kind: 'browser_opened', status: await readAccountStatus() }
+  })
+  // Resolves the `sign_in` recovery action that already exists in the
+  // presentation vocabulary. Takes no argument and returns only status: the
+  // credential is acquired in the system browser, never in a renderer.
+  ipcMain.handle('keepling:account:begin-sign-in', async (event) => {
+    assertTrustedAccountSender(event)
+    if (authorization !== null) await authorization.begin()
+    return readAccountStatus()
+  })
+  // Sign-out order is load-bearing (D-25) and unchanged: local intent is
+  // fenced and the credential cleared BEFORE any best-effort remote
+  // revocation, so losing the network can never leave this Mac believing it
+  // is still signed in.
+  ipcMain.handle('keepling:account:disconnect', async (event) => {
+    assertTrustedAccountSender(event)
+    const adapter = syncAdapter
+    await desktopApplication.signOut(async () => {
+      if (adapter !== null) await adapter.revoke(installationId)
+    })
+    return readAccountStatus()
   })
 
   lifecycle.registerAppHandlers()

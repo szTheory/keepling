@@ -7,8 +7,11 @@ type WorkerRequest = {
   operation:
     | 'acceptCapture'
     | 'acknowledge'
+    | 'acknowledgeSync'
     | 'applyLifecycle'
     | 'applyMoveToday'
+    | 'applyPull'
+    | 'bindNamespace'
     | 'clearDraft'
     | 'close'
     | 'editTask'
@@ -16,12 +19,14 @@ type WorkerRequest = {
     | 'getShortcutPreference'
     | 'listConflicts'
     | 'pendingMutations'
+    | 'readyMutations'
     | 'removeLocalFiles'
     | 'resolveConflict'
     | 'saveDraft'
     | 'setShortcutPreference'
     | 'setSyncFence'
     | 'snapshot'
+    | 'syncState'
     | 'undoLastLocalAction'
   payload?: unknown
 }
@@ -131,6 +136,30 @@ parentPort.on('message', (request: WorkerRequest) => {
       case 'setSyncFence':
         store.setSyncFence(request.payload as Parameters<typeof store.setSyncFence>[0])
         value = null
+        break
+      // O-16 (Rule 1 fix): the bounded pull-before-push synchronization
+      // operations `NodeSqliteLocalStore` has always implemented were never
+      // reachable through this worker protocol, so `DesktopApplication`'s
+      // optional-capability checks silently degraded `runSyncPass()` to
+      // reconcile-only and `activateNamespace()` threw -- discovered only
+      // once Plan 03-14 wired the REAL sync adapter into the shipped
+      // bootstrap and a push actually had to happen.
+      case 'applyPull':
+        store.applyPull(request.payload as Parameters<typeof store.applyPull>[0])
+        value = null
+        break
+      case 'readyMutations':
+        value = store.readyMutations()
+        break
+      case 'acknowledgeSync':
+        store.acknowledgeSync(request.payload as Parameters<typeof store.acknowledgeSync>[0])
+        value = null
+        break
+      case 'bindNamespace':
+        value = store.bindNamespace(request.payload as Parameters<typeof store.bindNamespace>[0])
+        break
+      case 'syncState':
+        value = store.syncState()
         break
       default: {
         const unreachable: never = request.operation
