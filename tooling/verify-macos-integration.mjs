@@ -504,6 +504,22 @@ const findNodes = (nodes, predicate) => nodes.filter(predicate)
 
 const focusedElement = (handle) => runProbe(handle.probeBinary, ['focused', '--pid', String(handle.pid)]).value.focused
 
+/**
+ * Focus a person could actually operate: a real node, not the application
+ * element, with a non-zero frame. Shared so that A4, A5 and A6 poll for the
+ * same notion of "not lost" that they assert on, rather than each restating
+ * it slightly differently.
+ */
+const usableFocus = (node) =>
+  node !== null &&
+  node !== undefined &&
+  node.role !== 'AXApplication' &&
+  (node.frame?.width ?? 0) > 0 &&
+  (node.frame?.height ?? 0) > 0
+
+/** How a focus observation is reported when an assertion about it fails. */
+const describeFocus = (node) => (node ? `${node.role} "${node.title ?? ''}"` : 'nothing')
+
 const focusIdentity = (node) =>
   node === null || node === undefined
     ? null
@@ -587,13 +603,36 @@ const postKeys = (handle, sequence, { raise = true } = {}) => {
   return runProbe(handle.probeBinary, ['key', '--sequence', sequence])
 }
 
-const waitFor = async (description, predicate, { timeoutMs = 12_000, intervalMs = 300 } = {}) => {
+/**
+ * THE RULE THIS FILE KEEPS, stated once so it is not reintroduced:
+ *
+ *   Poll for the condition you are about to assert. Never sleep a fixed
+ *   amount and read once, and never poll for "the value stopped changing".
+ *
+ * A fixed sleep encodes a guess about the machine's speed, so it turns a
+ * loaded machine into a red row on unchanged bytes -- five rows (A3, A4, A6,
+ * A7, A14) flaked exactly that way, and because this lane's evidence is
+ * cached against the artifact digest, one lucky sample became DURABLE green.
+ * Quiescence is no safer: an absent focus and a pending dead key are both
+ * stable indefinitely, so "it stopped changing" settles happily on the
+ * failure state and reports a pass.
+ *
+ * Two mechanisms implement the rule and there are deliberately no others:
+ * `settledFocus(handle, { until })` for AX focus, and `waitFor` for
+ * everything else. Neither weakens an assertion. Where the assertion should
+ * still be able to report WHAT it saw, pass `onTimeout: 'return'` so the
+ * deadline hands the last (falsy) observation back to the caller and the
+ * caller's own `check` fails with its own detail; the default instead fails
+ * the row loudly, which is right when a missing precondition would make the
+ * assertion vacuous rather than false.
+ */
+const waitFor = async (description, predicate, { timeoutMs = 12_000, intervalMs = 300, onTimeout = 'fail' } = {}) => {
   const deadline = Date.now() + timeoutMs
   let last = null
   for (;;) {
     last = await predicate()
     if (last) return last
-    if (Date.now() > deadline) fail(`timed out waiting for ${description}`)
+    if (Date.now() > deadline) return onTimeout === 'return' ? last : fail(`timed out waiting for ${description}`)
     await sleep(intervalMs)
   }
 }
@@ -865,18 +904,37 @@ const rowA1 = (context) => runRow('A1', 'VoiceOver layer: capture', async (check
       return node && node.value === 'Prove the screen reader layer' ? node : null
     })
     check('real CGEvent keystrokes reach the capture field and are readable as AXValue', typed.value === 'Prove the screen reader layer')
-    const armed = findNode(webNodes(handle), (node) => node.role === 'AXButton' && node.title === 'Add Task')
-    check('the Add Task button announces the state change to enabled once there is something to add', armed?.enabled === true)
+    // The enabled state is re-announced a beat after the value lands, so poll
+    // for the enabled button rather than sampling once behind the value read.
+    const addTaskButton = () => findNode(webNodes(handle), (node) => node.role === 'AXButton' && node.title === 'Add Task')
+    const armed = await waitFor(
+      'the Add Task button to be announced as enabled',
+      async () => { const node = addTaskButton(); return node?.enabled === true ? node : null },
+      { onTimeout: 'return' },
+    ) ?? addTaskButton()
+    check(
+      'the Add Task button announces the state change to enabled once there is something to add',
+      armed?.enabled === true,
+      `Add Task announced enabled=${JSON.stringify(armed?.enabled ?? null)}`,
+    )
 
     await tabUntil(handle, 'the Add Task button', (node) => node.role === 'AXButton' && node.title === 'Add Task')
     postKeys(handle, 'space')
-    const row = await waitFor('the captured task to appear', async () =>
-      taskRows(handle).find((entry) => entry.text.includes('Prove the screen reader layer')) ?? null)
-    check('the captured task announces its title', row.text.includes('Prove the screen reader layer'))
+    // The row's title and its sync status are announced in two separate
+    // paints: the row appears, then persistence resolves and "Saved on this
+    // Mac" joins the same announcement. Waiting only for the title and then
+    // asserting on the status raced that second paint.
+    const capturedRow = () => taskRows(handle).find((entry) => entry.text.includes('Prove the screen reader layer')) ?? null
+    const row = await waitFor(
+      'the captured task to appear with its sync status',
+      async () => { const entry = capturedRow(); return entry !== null && entry.text.includes('Saved on this Mac') ? entry : null },
+      { onTimeout: 'return' },
+    ) ?? capturedRow()
+    check('the captured task announces its title', (row?.text ?? '').includes('Prove the screen reader layer'), `row announcement was "${row?.text ?? ''}"`)
     check(
       'the post-submit "Saved on this Mac" status is discoverable in the same announcement, without a second interaction',
-      row.text.includes('Saved on this Mac'),
-      `row announcement was "${row.text}"`,
+      (row?.text ?? '').includes('Saved on this Mac'),
+      `row announcement was "${row?.text ?? ''}"`,
     )
     const liveRegions = findNodes(webNodes(handle), (node) => node.ariaLive === 'polite')
     check(
@@ -895,7 +953,17 @@ const rowA2 = (context) => runRow('A2', 'VoiceOver layer: list navigation and se
     await captureTaskByKeyboard(handle, 'First task')
     await captureTaskByKeyboard(handle, 'Second task')
 
-    const rows = taskRows(handle)
+    // Both rows announce their sync status a beat after they appear, so poll
+    // for the announcement this row asserts on instead of sampling once.
+    const bothRows = () => taskRows(handle)
+    const rows = await waitFor(
+      'both captured tasks to announce their titles and their sync status',
+      async () => {
+        const entries = bothRows()
+        return entries.length === 2 && entries.every((entry) => entry.text.includes('Saved on this Mac')) ? entries : null
+      },
+      { onTimeout: 'return' },
+    ) ?? bothRows()
     check('both captured tasks are exposed as rows of the labelled task list', rows.length === 2, `saw ${rows.length}`)
     for (const title of ['First task', 'Second task']) {
       const row = rows.find((entry) => entry.text.includes(title))
@@ -913,16 +981,29 @@ const rowA2 = (context) => runRow('A2', 'VoiceOver layer: list navigation and se
     check('roving focus alone never marks a task as selected', firstRow.ariaCurrent === undefined)
 
     postKeys(handle, 'down')
-    await sleep(400)
-    const movedRow = focusedElement(handle)
-    check('arrow-key navigation moves accessibility focus between rows', movedRow.title !== firstRow.title, `stayed on "${movedRow.title}"`)
-    check('arrow-key navigation still selects nothing', movedRow.ariaCurrent === undefined)
+    // Roving focus moves in two steps -- the old row gives focus up before the
+    // new one takes it -- so a single read after a fixed sleep can land in the
+    // hole between them and report that focus never moved.
+    const movedRow = await settledFocus(handle, {
+      timeoutMs: 8_000,
+      until: (node) => node !== null && node.title !== firstRow.title,
+    })
+    check(
+      'arrow-key navigation moves accessibility focus between rows',
+      movedRow !== null && movedRow.title !== firstRow.title,
+      `focus was on ${movedRow ? `${movedRow.role} "${movedRow.title ?? ''}"` : 'nothing'} after focusing "${firstRow.title ?? ''}"`,
+    )
+    check('arrow-key navigation still selects nothing', movedRow !== null && movedRow.ariaCurrent === undefined, `ariaCurrent=${movedRow?.ariaCurrent ?? 'unset'}`)
 
     postKeys(handle, 'return')
-    await sleep(600)
-    const selectedRows = taskRows(handle).filter((row) => row.ariaCurrent === 'true')
+    const selection = () => taskRows(handle).filter((row) => row.ariaCurrent === 'true')
+    const selectedRows = await waitFor(
+      'exactly one task to be marked as selected',
+      async () => { const marked = selection(); return marked.length === 1 ? marked : null },
+      { onTimeout: 'return' },
+    ) ?? selection()
     check('Return selects exactly one task -- the roving-focused one', selectedRows.length === 1, `saw ${selectedRows.length} selected`)
-    const movedTitle = String(movedRow.title ?? '').split(' Saved')[0]
+    const movedTitle = String(movedRow?.title ?? '').split(' Saved')[0]
     check(
       'the selected task is the row focus had reached, by stable identity',
       selectedRows[0] !== undefined && selectedRows[0].text.includes(movedTitle),
@@ -930,12 +1011,14 @@ const rowA2 = (context) => runRow('A2', 'VoiceOver layer: list navigation and se
     )
 
     postKeys(handle, 'up')
-    await sleep(400)
-    const focusedAfter = focusedElement(handle)
+    const focusedAfter = await settledFocus(handle, {
+      timeoutMs: 8_000,
+      until: (node) => node !== null && node.ariaCurrent === undefined,
+    })
     check(
       'the SELECTED task stays distinguishable from the VoiceOver-focused row (D-05)',
-      focusedAfter.ariaCurrent === undefined && taskRows(handle).some((row) => row.ariaCurrent === 'true'),
-      `focused row reported ariaCurrent=${focusedAfter.ariaCurrent ?? 'unset'}`,
+      focusedAfter !== null && focusedAfter.ariaCurrent === undefined && taskRows(handle).some((row) => row.ariaCurrent === 'true'),
+      `focus was on ${focusedAfter ? `${focusedAfter.role} "${focusedAfter.title ?? ''}"` : 'nothing'} reporting ariaCurrent=${focusedAfter?.ariaCurrent ?? 'unset'}`,
     )
   } finally {
     await quitApplication(handle)
@@ -961,14 +1044,20 @@ const rowA3 = (context) => runRow('A3', 'VoiceOver layer: dialogs announce thems
     await sleep(300)
     await tabUntil(handle, 'the Discard Draft button', (node) => node.role === 'AXButton' && (node.title ?? '').startsWith('Discard Draft'))
     postKeys(handle, 'space')
-    await sleep(600)
 
-    const discardFocus = focusedElement(handle)
-    check('the discard-draft confirmation moves focus into itself', discardFocus !== null && (discardFocus.title ?? '') === 'Keep Draft')
+    const discardFocus = await settledFocus(handle, {
+      timeoutMs: 10_000,
+      until: (node) => (node?.title ?? '') === 'Keep Draft',
+    })
+    check(
+      'the discard-draft confirmation moves focus into itself',
+      discardFocus !== null && (discardFocus.title ?? '') === 'Keep Draft',
+      `focus was on ${discardFocus ? `${discardFocus.role} "${discardFocus.title ?? ''}"` : 'nothing'}`,
+    )
     check(
       'a screen reader hears the dialog heading immediately, without exploring the window',
-      ancestryText(discardFocus).includes('Discard Quick Entry Draft?'),
-      `ancestry was "${ancestryText(discardFocus)}"`,
+      discardFocus !== null && ancestryText(discardFocus).includes('Discard Quick Entry Draft?'),
+      `ancestry was "${discardFocus === null ? '' : ancestryText(discardFocus)}"`,
     )
     postKeys(handle, 'space')
     await sleep(400)
@@ -988,7 +1077,15 @@ const rowA3 = (context) => runRow('A3', 'VoiceOver layer: dialogs announce thems
       findNode(webNodes(conflictHandle), (node) =>
         node.role === 'AXHeading' && subtreeText(node.subtree).includes('This task changed somewhere else.')) ?? null)
     check('an inline sync conflict is announced as a heading', heading.role === 'AXHeading')
-    const focused = focusedElement(conflictHandle)
+    // The heading MOUNTS before the app moves focus onto it, so reading focus
+    // the instant the heading appears samples the gap in between and reports
+    // "focus was on nothing" against product code that is working. Poll for
+    // the focus the check below asserts on; a conflict that genuinely never
+    // takes focus still fails at the deadline, with what it saw instead.
+    const focused = await settledFocus(conflictHandle, {
+      timeoutMs: 10_000,
+      until: (node) => (node?.title ?? '').includes('This task changed somewhere else.'),
+    })
     check(
       'the conflict moves focus to its own heading so the interruption is announced',
       focused !== null && (focused.title ?? '').includes('This task changed somewhere else.'),
@@ -1037,7 +1134,7 @@ const rowA4 = (context) => runRow('A4', 'VoiceOver layer: the unsaved-changes di
     check(
       'the unsaved-changes dialog moves focus INTO itself (previously a disclosed gap, fixed in 03-15)',
       focused !== null && (focused.title ?? '') === 'Keep Editing',
-      `focus was on ${focused ? `${focused.role} "${focused.title ?? ''}"` : 'nothing'}`,
+      `focus was on ${describeFocus(focused)}`,
     )
     check(
       'the safe, non-destructive action is the one focus lands on',
@@ -1045,20 +1142,16 @@ const rowA4 = (context) => runRow('A4', 'VoiceOver layer: the unsaved-changes di
     )
     check(
       'a screen reader hears the dialog heading immediately',
-      ancestryText(focused).includes('Discard unsaved changes?'),
-      `ancestry was "${ancestryText(focused)}"`,
+      focused !== null && ancestryText(focused).includes('Discard unsaved changes?'),
+      `ancestry was "${focused === null ? '' : ancestryText(focused)}"`,
     )
 
     postKeys(handle, 'space')
-    const afterClose = await settledFocus(handle, {
-      timeoutMs: 15_000,
-      until: (node) =>
-        node !== null && node.role !== 'AXApplication' && (node.frame?.width ?? 0) > 0 && (node.frame?.height ?? 0) > 0,
-    })
+    const afterClose = await settledFocus(handle, { timeoutMs: 15_000, until: usableFocus })
     check(
       'closing the dialog leaves focus on a visible, operable element -- never the application element, never a removed node',
-      afterClose !== null && afterClose.role !== 'AXApplication' && (afterClose.frame?.width ?? 0) > 0 && (afterClose.frame?.height ?? 0) > 0,
-      `focus was on ${afterClose ? `${afterClose.role} "${afterClose.title ?? ''}"` : 'nothing'}`,
+      usableFocus(afterClose),
+      `focus was on ${describeFocus(afterClose)}`,
     )
   } finally {
     await quitApplication(handle)
@@ -1100,7 +1193,9 @@ const rowA5 = (context) => runRow('A5', 'Full Keyboard Access: the complete scop
     check('capture is reachable by keyboard alone', taskRows(handle).some((row) => row.text.includes('Keyboard loop')))
 
     await openTaskByKeyboard(handle, 'Keyboard loop')
-    check('opening a task is reachable by keyboard alone', findNode(webNodes(handle), (node) => node.role === 'AXTextField' && node.title === 'Title') !== null)
+    const titleEditor = () => findNode(webNodes(handle), (node) => node.role === 'AXTextField' && node.title === 'Title')
+    await waitFor('the task detail editor to mount', async () => titleEditor(), { onTimeout: 'return' })
+    check('opening a task is reachable by keyboard alone', titleEditor() !== null)
 
     await tabUntil(handle, 'the task title editor', (node) => node.role === 'AXTextField' && node.title === 'Title')
     // Tabbing into a text field selects its contents; move the caret to the
@@ -1113,8 +1208,10 @@ const rowA5 = (context) => runRow('A5', 'Full Keyboard Access: the complete scop
     check('editing and saving are reachable by keyboard alone', taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
 
     await activateButton(handle, 'Complete')
+    await waitFor('the Reopen button to replace Complete', async () => hasButton(handle, 'Reopen'), { onTimeout: 'return' })
     check('completing is reachable by keyboard alone', hasButton(handle, 'Reopen'))
     await activateButton(handle, 'Reopen')
+    await waitFor('the Complete button to come back', async () => hasButton(handle, 'Complete'), { onTimeout: 'return' })
     check('reopening is reachable by keyboard alone', hasButton(handle, 'Complete'))
 
     // Adding to Today moves the task OUT of Inbox, so the round trip has to
@@ -1148,11 +1245,14 @@ const rowA5 = (context) => runRow('A5', 'Full Keyboard Access: the complete scop
     await waitFor('undo to put the task back in Trash', async () => taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
     check('undo is reachable by keyboard alone', taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
 
-    const focused = focusedElement(handle)
+    // Undo re-mounts the row focus was on, and for a beat the AX tree reports
+    // no focused element at all. Poll for the same condition this asserts.
+    const stillFocused = (node) => node !== null && node.role !== 'AXApplication' && (node.frame?.width ?? 0) > 0
+    const focused = await settledFocus(handle, { timeoutMs: 8_000, until: stillFocused })
     check(
       'after the whole sequence, focus is still on a visible, operable element -- never lost',
-      focused !== null && focused.role !== 'AXApplication' && (focused.frame?.width ?? 0) > 0,
-      `focus was on ${focused ? `${focused.role} "${focused.title ?? ''}"` : 'nothing'}`,
+      stillFocused(focused),
+      `focus was on ${describeFocus(focused)}`,
     )
   } finally {
     await quitApplication(handle)
@@ -1177,21 +1277,8 @@ const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never tr
     // focus that never settles on a visible operable element still fails,
     // which is the actual defect this row exists to catch. A transient null
     // during a dismissal is not that defect; a permanent one is.
-    const usableFocus = (node) =>
-      node !== null &&
-      node.role !== 'AXApplication' &&
-      (node.frame?.width ?? 0) > 0 &&
-      (node.frame?.height ?? 0) > 0
-
     const assertUsableFocus = async (label) => {
-      let last = null
-      const deadline = Date.now() + 5_000
-      for (;;) {
-        last = focusedElement(handle)
-        if (usableFocus(last)) break
-        if (Date.now() > deadline) break
-        await sleep(200)
-      }
+      const last = await settledFocus(handle, { intervalMs: 200, timeoutMs: 5_000, until: usableFocus })
       check(
         `${label}: focus is on a visible, operable element -- never the application element, never a removed node, never a silent reset`,
         usableFocus(last),
@@ -1208,8 +1295,12 @@ const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never tr
     await sleep(300)
     await tabUntil(handle, 'the Discard Draft button', (node) => node.role === 'AXButton' && (node.title ?? '').startsWith('Discard Draft'))
     postKeys(handle, 'space')
-    await sleep(700)
-    check('the Quick Entry discard dialog opens by keyboard alone', (focusedElement(handle)?.title ?? '') === 'Keep Draft')
+    const keepDraft = await settledFocus(handle, { timeoutMs: 10_000, until: (node) => (node?.title ?? '') === 'Keep Draft' })
+    check(
+      'the Quick Entry discard dialog opens by keyboard alone',
+      (keepDraft?.title ?? '') === 'Keep Draft',
+      `focus was on ${describeFocus(keepDraft)}`,
+    )
     postKeys(handle, 'space')
     await sleep(700)
     await assertUsableFocus('after closing the Quick Entry discard dialog by keyboard')
@@ -1227,8 +1318,12 @@ const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never tr
     await sleep(300)
     await tabUntil(handle, 'the Today destination button', (node) => node.role === 'AXButton' && node.title === 'Today', { key: 'shift+tab', limit: 24 })
     postKeys(handle, 'space')
-    await sleep(800)
-    check('the unsaved-changes dialog opens by keyboard alone', (focusedElement(handle)?.title ?? '') === 'Keep Editing')
+    const keepEditing = await settledFocus(handle, { timeoutMs: 10_000, until: (node) => (node?.title ?? '') === 'Keep Editing' })
+    check(
+      'the unsaved-changes dialog opens by keyboard alone',
+      (keepEditing?.title ?? '') === 'Keep Editing',
+      `focus was on ${describeFocus(keepEditing)}`,
+    )
     postKeys(handle, 'space')
     await sleep(800)
     await assertUsableFocus('after closing the unsaved-changes dialog by keyboard')
@@ -1348,13 +1443,23 @@ const pixelAppearanceRow = (id, title, { changes, live = false }) => (context) =
         // instead. This does not weaken the row: if the background never
         // changes within the deadline, the loop exits and the
         // `re-themes live` check below fails exactly as it did before.
-        const deadline = Date.now() + 15_000
-        for (;;) {
-          const sample = measureContrast(handle)
-          if (JSON.stringify(sample.backgroundColour) !== JSON.stringify(before.backgroundColour)) break
-          if (Date.now() > deadline) break
-          await sleep(300)
-        }
+        //
+        // The settle condition is every condition this row asserts, not just
+        // "the background changed": a window caught mid-repaint can already
+        // report a different background while its text has not been repainted
+        // yet, which would measure a transient contrast ratio.
+        await waitFor(
+          'the live re-theme to settle into a legible window',
+          async () => {
+            const sample = measureContrast(handle)
+            return JSON.stringify(sample.backgroundColour) !== JSON.stringify(before.backgroundColour) &&
+              sample.distinctSignificantColours > 1 &&
+              sample.bestRatio >= WCAG_AA_BODY_TEXT
+              ? sample
+              : null
+          },
+          { intervalMs: 300, onTimeout: 'return', timeoutMs: 15_000 },
+        )
       }
       const applied = readSystemSettings()
       for (const [key, value] of Object.entries(changes)) {
@@ -1408,15 +1513,27 @@ const rowA11 = (context) => runRow('A11', 'Differentiate Without Color', async (
     )
     await tabUntil(handle, 'a task row', (node) => node.role === 'AXGroup' && ancestryText(node).includes('Tasks'))
     postKeys(handle, 'return')
-    await sleep(600)
+    const isSelected = () => taskRows(handle).some((row) => row.ariaCurrent === 'true')
+    await waitFor('the selected task to be marked with aria-current', async () => isSelected(), { onTimeout: 'return' })
     check(
       'selection is conveyed by a non-colour cue the accessibility layer can read (aria-current)',
-      taskRows(handle).some((row) => row.ariaCurrent === 'true'),
+      isSelected(),
+      `row announcements were ${JSON.stringify(taskRows(handle).map((row) => `${row.text} ariaCurrent=${row.ariaCurrent ?? 'unset'}`))}`,
     )
     postKeys(handle, 'cmd+n')
-    await sleep(400)
-    const addTask = findNode(webNodes(handle), (node) => node.role === 'AXButton' && node.title === 'Add Task')
-    check('an invalid capture is conveyed as an announced control state, not a colour', addTask?.enabled === false)
+    // The empty capture field and the disabled Add Task button are painted
+    // together but announced independently, so poll for the announced state.
+    const addTaskButton = () => findNode(webNodes(handle), (node) => node.role === 'AXButton' && node.title === 'Add Task')
+    const addTask = await waitFor(
+      'the Add Task button to be announced as disabled for the empty capture field',
+      async () => { const node = addTaskButton(); return node?.enabled === false ? node : null },
+      { onTimeout: 'return' },
+    ) ?? addTaskButton()
+    check(
+      'an invalid capture is conveyed as an announced control state, not a colour',
+      addTask?.enabled === false,
+      `Add Task announced enabled=${JSON.stringify(addTask?.enabled ?? null)}`,
+    )
   } finally {
     await quitApplication(handle)
   }
@@ -1446,9 +1563,6 @@ const rowA15 = (context) => runRow('A15', '200% zoom equivalent: no primary cont
       windowFrame.width < before.width && windowFrame.height < before.height,
       `before ${JSON.stringify(before)} after ${JSON.stringify(windowFrame)}`,
     )
-    await sleep(800)
-
-    const nodes = webNodes(handle)
     const primaryControls = [
       { predicate: (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL, name: 'the capture field' },
       { predicate: (node) => node.role === 'AXButton' && node.title === 'Add Task', name: 'the Add Task button' },
@@ -1457,18 +1571,33 @@ const rowA15 = (context) => runRow('A15', '200% zoom equivalent: no primary cont
       { predicate: (node) => node.role === 'AXButton' && node.title === 'Trash', name: 'the Trash destination' },
       { predicate: (node) => node.role === 'AXList' && node.description === 'Tasks', name: 'the task list' },
     ]
+    const unclipped = (frame) =>
+      frame !== null &&
+      frame.width > 0 &&
+      frame.height > 0 &&
+      frame.x >= windowFrame.x - 1 &&
+      frame.y >= windowFrame.y - 1 &&
+      frame.x + frame.width <= windowFrame.x + windowFrame.width + 1 &&
+      frame.y + frame.height <= windowFrame.y + windowFrame.height + 1
+
+    // Reflow after a resize is asynchronous: controls are re-laid-out over
+    // several frames, and reading the tree once after a fixed 800ms could
+    // measure a control mid-flight, still reported at its pre-resize frame
+    // and therefore "clipped". Poll for the settled layout this asserts on --
+    // a control that is genuinely clipped never satisfies it and still fails
+    // below, with the frame it actually had.
+    const settledNodes = await waitFor(
+      'the layout to settle at the reduced window size',
+      async () => {
+        const sample = webNodes(handle)
+        return primaryControls.every((control) => unclipped(findNode(sample, control.predicate)?.frame ?? null)) ? sample : null
+      },
+      { intervalMs: 250, onTimeout: 'return', timeoutMs: 10_000 },
+    )
+    const nodes = settledNodes ?? webNodes(handle)
     for (const control of primaryControls) {
-      const node = findNode(nodes, control.predicate)
-      const frame = node?.frame ?? null
-      const inside =
-        frame !== null &&
-        frame.width > 0 &&
-        frame.height > 0 &&
-        frame.x >= windowFrame.x - 1 &&
-        frame.y >= windowFrame.y - 1 &&
-        frame.x + frame.width <= windowFrame.x + windowFrame.width + 1 &&
-        frame.y + frame.height <= windowFrame.y + windowFrame.height + 1
-      check(`${control.name} stays visible and unclipped at the reduced size`, inside, `frame ${JSON.stringify(frame)} against window ${JSON.stringify(windowFrame)}`)
+      const frame = findNode(nodes, control.predicate)?.frame ?? null
+      check(`${control.name} stays visible and unclipped at the reduced size`, unclipped(frame), `frame ${JSON.stringify(frame)} against window ${JSON.stringify(windowFrame)}`)
     }
   } finally {
     await quitApplication(handle)
@@ -1515,8 +1644,16 @@ const rowA8 = (context) => runRow('A8', 'Real global-shortcut collision and OS a
       // Keepling must SAY it lost. A silent fallback to a different
       // shortcut, or claiming a shortcut it does not hold, is the failure.
       postKeys(handle, 'cmd+comma')
-      await sleep(1800)
-      const settingsText = webNodes(handle).map((node) => subtreeText(node.subtree ?? node)).join(' ')
+      // Wait for the Settings pane to have STATED a position, not for a fixed
+      // 1.8s. This is a precondition rather than the assertion: an empty
+      // settings text would make "Keepling does not claim the shortcut" read
+      // as TRUE and could manufacture a pass, so a pane that never renders
+      // must fail the row loudly instead.
+      const shortcutSettingsText = () => {
+        const text = webNodes(handle).map((node) => subtreeText(node.subtree ?? node)).join(' ')
+        return text.includes('Current shortcut') || /Quick Entry shortcut isn.t available/.test(text) ? text : null
+      }
+      const settingsText = await waitFor('the Settings pane to state a position on the Quick Entry accelerator', shortcutSettingsText, { intervalMs: 250, timeoutMs: 20_000 })
       const keeplingClaimsTheShortcut = !/Quick Entry shortcut isn.t available/.test(settingsText)
       check(
         'Keepling states a definite position on the accelerator rather than saying nothing',
@@ -1530,8 +1667,17 @@ const rowA8 = (context) => runRow('A8', 'Real global-shortcut collision and OS a
 
       const before = rivalOutput
       postKeys(handle, QUICK_ENTRY_ACCELERATOR)
-      await sleep(2500)
-      const rivalReceived = rivalOutput.slice(before.length).includes('RIVAL received=1')
+      // Both registrants are asserted to have received the keystroke, and each
+      // arrives on its own schedule. Poll until BOTH have, then read them; a
+      // registrant that never receives it still fails at the deadline with the
+      // observed values, which is the whole point of the row.
+      const rivalGotIt = () => rivalOutput.slice(before.length).includes('RIVAL received=1')
+      await waitFor(
+        'the accelerator to reach both registrants',
+        async () => rivalGotIt() && quickEntryIsOpen(handle),
+        { intervalMs: 250, onTimeout: 'return', timeoutMs: 10_000 },
+      )
+      const rivalReceived = rivalGotIt()
       const keeplingReceived = quickEntryIsOpen(handle)
       console.log(`ARBITRATION rival_registered=true keepling_claims_shortcut=${keeplingClaimsTheShortcut} rival_received=${rivalReceived} keepling_received=${keeplingReceived}`)
 
@@ -1572,8 +1718,17 @@ const rowA8 = (context) => runRow('A8', 'Real global-shortcut collision and OS a
   const solo = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a8-solo') })
   try {
     postKeys(solo, 'cmd+comma')
-    await sleep(1800)
-    const settingsText = webNodes(solo).map((node) => subtreeText(node.subtree ?? node)).join(' ')
+    // Same precondition as phase 1, and for the same reason: asserting
+    // "Keepling does not report the accelerator unavailable" against a pane
+    // that has not rendered yet would pass on an empty string.
+    const settingsText = await waitFor(
+      'the Settings pane to state a position on the Quick Entry accelerator',
+      async () => {
+        const text = webNodes(solo).map((node) => subtreeText(node.subtree ?? node)).join(' ')
+        return text.includes('Current shortcut') || /Quick Entry shortcut isn.t available/.test(text) ? text : null
+      },
+      { intervalMs: 250, timeoutMs: 20_000 },
+    )
     check(
       'with no rival, Keepling reports the accelerator as available',
       !/Quick Entry shortcut isn.t available/.test(settingsText),
@@ -1612,8 +1767,14 @@ const rowA9 = (context) => runRow('A9', 'Prior-application focus and caret retur
       postKeys(priorHandle, 'cmd+down')
       await sleep(200)
       for (let step = 0; step < 6; step += 1) postKeys(priorHandle, 'left')
-      await sleep(400)
-      const selectionBefore = runProbe(context.axProbe, ['selection', '--pid', String(priorPid)]).value.selection
+      // TextEdit reports the caret through the AX API a beat after the keys
+      // land; poll for the caret this asserts on rather than sampling once.
+      const priorSelection = () => runProbe(context.axProbe, ['selection', '--pid', String(priorPid)]).value.selection
+      const selectionBefore = await waitFor(
+        `${PRIOR_APPLICATION.name} to report a caret at a known offset`,
+        async () => { const value = priorSelection(); return value !== null && typeof value.location === 'number' && value.location > 0 ? value : null },
+        { onTimeout: 'return' },
+      ) ?? priorSelection()
       check(
         `${ending}: the prior application really has a caret at a known offset before Quick Entry is invoked`,
         selectionBefore !== null && typeof selectionBefore.location === 'number' && selectionBefore.location > 0,
@@ -1632,14 +1793,28 @@ const rowA9 = (context) => runRow('A9', 'Prior-application focus and caret retur
       else postKeys(handle, 'escape', { raise: false })
       await waitFor('Quick Entry to close', async () => !quickEntryIsOpen(handle), { timeoutMs: 15_000 })
 
-      await sleep(1200)
-      const frontmost = runProbe(context.axProbe, ['frontmost']).value
+      // Activation is handed back by the OS asynchronously, and TextEdit
+      // restores its caret after it is reactivated. Poll for each condition
+      // the checks below assert on; focus that lands somewhere else and stays
+      // there still fails at the deadline, reporting where it actually went.
+      const readFrontmost = () => runProbe(context.axProbe, ['frontmost']).value
+      const frontmost = await waitFor(
+        `focus to return to ${PRIOR_APPLICATION.name}`,
+        async () => { const value = readFrontmost(); return value.bundleIdentifier === PRIOR_APPLICATION.bundleIdentifier ? value : null },
+        { intervalMs: 200, onTimeout: 'return', timeoutMs: 10_000 },
+      ) ?? readFrontmost()
       check(
         `${ending}: focus returns to the SAME prior application -- never Keepling's main window, never the Dock`,
         frontmost.bundleIdentifier === PRIOR_APPLICATION.bundleIdentifier,
         `frontmost was ${frontmost.name} (${frontmost.bundleIdentifier})`,
       )
-      const selectionAfter = runProbe(context.axProbe, ['selection', '--pid', String(priorPid)]).value.selection
+      const sameSelection = (value) =>
+        value !== null && value.location === selectionBefore?.location && value.length === selectionBefore?.length
+      const selectionAfter = await waitFor(
+        `${PRIOR_APPLICATION.name} to restore its caret to the same place`,
+        async () => { const value = priorSelection(); return sameSelection(value) ? value : null },
+        { intervalMs: 200, onTimeout: 'return', timeoutMs: 10_000 },
+      ) ?? priorSelection()
       check(
         `${ending}: the caret comes back to exactly the same place in the same field`,
         selectionAfter !== null && selectionAfter.location === selectionBefore.location && selectionAfter.length === selectionBefore.length,
