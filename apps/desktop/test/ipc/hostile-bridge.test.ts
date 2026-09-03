@@ -11,6 +11,9 @@ import {
   type WorkspaceSnapshot,
 } from '../../main/application/DesktopApplication.ts'
 import {
+  accountConnectOutcomeSchema,
+  accountConnectRequestSchema,
+  accountStatusSchema,
   captureRequestSchema,
   conflictSchema,
   decideSequenceOutcome,
@@ -465,9 +468,10 @@ describe('preload bridge: hostile renderer calls never reach ipcRenderer.invoke 
   it('exposes only the named, expected surface -- no generic invoke/send/on escape hatch', () => {
     expect(Object.keys(exposedApi).sort()).toEqual(
       [
-        'capture', 'editTask', 'lifecycleTask', 'listConflicts', 'moveToday', 'persistWorkspaceLayout',
-        'presentationSnapshot', 'removeLocalData', 'resolveConflict', 'restoreWorkspaceLayout', 'snapshot',
-        'subscribePresentation', 'undoLastAction',
+        'accountStatus', 'beginSignIn', 'capture', 'editTask', 'lifecycleTask', 'listConflicts',
+        'moveToday', 'persistWorkspaceLayout', 'presentationSnapshot', 'removeLocalData',
+        'resolveConflict', 'restoreWorkspaceLayout', 'snapshot', 'subscribePresentation',
+        'undoLastAction',
       ].sort(),
     )
     expect(exposedApi).not.toHaveProperty('invoke')
@@ -682,5 +686,183 @@ describe('reload/crash after local COMMIT reconstructs from an opaque snapshot, 
     const reconstructedSnapshot = await application.snapshot()
     expect(reconstructedSnapshot.tasks).toHaveLength(1)
     expect(reconstructedSnapshot.tasks[0]).toMatchObject({ syncStatus: 'saved_on_this_mac', title: 'Survive the crash' })
+  })
+})
+
+/**
+ * O-16 closure (Plan 03-14): the account surface -- connect, disconnect, and
+ * connection status -- is the FIRST renderer-reachable path to anything
+ * network-shaped, so it gets the same two-sided strict contract and the same
+ * hostile coverage as `removeLocalData` (03-13's precedent).
+ *
+ * The central prohibition proved here: NO renderer may collect a credential.
+ * Authentication happens in the system browser. The contracts below are
+ * structurally incapable of carrying a password, passkey, token, or code.
+ */
+const validAccountNamespace = {
+  accountSubject: '9f1d5f39-1a4a-4b7e-9f2a-2b8ef2a3c111',
+  generation: '3',
+  issuer: 'https://issuer.keepling.invalid',
+  origin: 'https://server.keepling.invalid',
+  serverInstance: 'server-instance-real',
+}
+const validAccountStatus = {
+  disclosure: null,
+  namespace: null,
+  serverUrl: null,
+  state: 'not_configured' as const,
+}
+
+describe('account surface (O-16): strict two-sided contracts that structurally cannot carry a credential', () => {
+  it('accepts the exact well-formed shape', () => {
+    expect(() => accountConnectRequestSchema.parse({ serverUrl: 'https://keepling.example.com' })).not.toThrow()
+    expect(() => accountStatusSchema.parse(validAccountStatus)).not.toThrow()
+    expect(() =>
+      accountStatusSchema.parse({
+        disclosure: { copy: 'Unsigned dogfood build.', kind: 'unsigned_dogfood' },
+        namespace: validAccountNamespace,
+        serverUrl: 'https://keepling.example.com/',
+        state: 'connected',
+      }),
+    ).not.toThrow()
+    expect(() => accountConnectOutcomeSchema.parse({ kind: 'browser_opened', status: validAccountStatus })).not.toThrow()
+    expect(() => accountConnectOutcomeSchema.parse({ kind: 'rejected', reason: 'invalid_server_address' })).not.toThrow()
+  })
+
+  it('the connect request has EXACTLY one field (serverUrl) -- no credential can be smuggled through it', () => {
+    expect(Object.keys(accountConnectRequestSchema.shape)).toEqual(['serverUrl'])
+    for (const credentialField of ['password', 'passkey', 'token', 'accessToken', 'code', 'codeVerifier', 'secret']) {
+      expect(() =>
+        accountConnectRequestSchema.parse({ serverUrl: 'https://keepling.example.com', [credentialField]: 'x' }),
+      ).toThrow()
+    }
+  })
+
+  it('never lets a renderer assert, derive, or override any of the five namespace fields', () => {
+    // The namespace is REPORTED to the renderer as status; there is no
+    // request schema anywhere in this surface that accepts one.
+    expect(() => accountConnectRequestSchema.parse({ namespace: validAccountNamespace, serverUrl: 'https://a.invalid' })).toThrow()
+    expect(() =>
+      accountStatusSchema.parse({ ...validAccountStatus, namespace: { ...validAccountNamespace, extra: 'x' } }),
+    ).toThrow()
+    for (const field of ['accountSubject', 'generation', 'issuer', 'origin', 'serverInstance']) {
+      const partial: Record<string, unknown> = { ...validAccountNamespace }
+      delete partial[field]
+      expect(() => accountStatusSchema.parse({ ...validAccountStatus, namespace: partial })).toThrow()
+    }
+  })
+
+  it('rejects extra fields, malformed unions, and out-of-range values on every account schema (.strict())', () => {
+    expect(() => accountStatusSchema.parse({ ...validAccountStatus, extra: 1 })).toThrow()
+    expect(() => accountStatusSchema.parse({ ...validAccountStatus, state: 'omniscient' })).toThrow()
+    expect(() => accountStatusSchema.parse({ ...validAccountStatus, disclosure: { copy: 'x', kind: 'signed' } })).toThrow()
+    expect(() => accountConnectOutcomeSchema.parse({ kind: 'browser_opened' })).toThrow()
+    expect(() => accountConnectOutcomeSchema.parse({ extra: 1, kind: 'rejected', reason: 'invalid_server_address' })).toThrow()
+    expect(() => accountConnectOutcomeSchema.parse({ kind: 'authorized', namespace: validAccountNamespace })).toThrow()
+    expect(() => accountConnectRequestSchema.parse({ serverUrl: '' })).toThrow()
+    expect(() => accountConnectRequestSchema.parse({ serverUrl: 'a'.repeat(2049) })).toThrow()
+    expect(() => accountConnectRequestSchema.parse({ serverUrl: 42 })).toThrow()
+  })
+
+  it('converts an account schema failure into the same bounded IpcSecurityError as every other main-side parse', () => {
+    let caught: unknown
+    try {
+      parseTrustedRequest(accountConnectRequestSchema, { password: 'hunter2', serverUrl: 'https://a.invalid' })
+    } catch (error) {
+      caught = error
+    }
+    expect(caught).toBeInstanceOf(IpcSecurityError)
+    expect((caught as IpcSecurityError).code).toBe('invalid_request')
+  })
+})
+
+describe('no renderer anywhere collects a credential (03-14 prohibition)', () => {
+  it('static-scans every renderer source for a credential-entry field', async () => {
+    const { readdir, readFile } = await import('node:fs/promises')
+    const { fileURLToPath } = await import('node:url')
+    const { join } = await import('node:path')
+    const rendererRoot = fileURLToPath(new URL('../../renderer', import.meta.url))
+    const webUiRoot = fileURLToPath(new URL('../../../../packages/web-ui/src', import.meta.url))
+
+    const walk = async (directory: string): Promise<string[]> => {
+      const entries = await readdir(directory, { withFileTypes: true })
+      const files: string[] = []
+      for (const entry of entries) {
+        const path = join(directory, entry.name)
+        if (entry.isDirectory()) files.push(...await walk(path))
+        else if (/\.(ts|tsx|html)$/.test(entry.name)) files.push(path)
+      }
+      return files
+    }
+
+    const sources = [...await walk(rendererRoot), ...await walk(webUiRoot)]
+    expect(sources.length).toBeGreaterThan(0)
+    for (const path of sources) {
+      const source = await readFile(path, 'utf8')
+      expect(source, `${path} must not render a password input`).not.toMatch(/type=["']password["']/)
+      expect(source, `${path} must not use the WebAuthn credential API`).not.toMatch(/navigator\.credentials/)
+      expect(source, `${path} must not carry a credential autocomplete hint`).not.toMatch(
+        /autoComplete=["'](?:current-password|new-password|webauthn)["']/,
+      )
+    }
+  })
+})
+
+describe('utility preload bridge (Settings account surface): hostile calls never reach ipcRenderer.invoke', () => {
+  let ipcRendererMock: { invoke: ReturnType<typeof vi.fn>; on: ReturnType<typeof vi.fn>; removeListener: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> }
+  let exposeInMainWorldMock: ReturnType<typeof vi.fn>
+  let exposedApi: Record<string, unknown>
+
+  beforeEach(async () => {
+    vi.resetModules()
+    ipcRendererMock = {
+      invoke: vi.fn(async (channel: string) => {
+        if (channel === 'keepling:account:connect') return { kind: 'browser_opened', status: validAccountStatus }
+        if (channel === 'keepling:account:status' || channel === 'keepling:account:disconnect') return validAccountStatus
+        return { accelerator: 'Control+Alt+Space', registered: true }
+      }),
+      on: vi.fn(),
+      removeListener: vi.fn(),
+      send: vi.fn(),
+    }
+    exposeInMainWorldMock = vi.fn()
+    vi.doMock('electron', () => ({
+      contextBridge: { exposeInMainWorld: exposeInMainWorldMock },
+      ipcRenderer: ipcRendererMock,
+    }))
+    await import('../../preload/utility-preload.ts')
+    exposedApi = exposeInMainWorldMock.mock.calls[0]![1] as Record<string, unknown>
+  })
+
+  afterEach(() => {
+    vi.doUnmock('electron')
+    vi.resetModules()
+  })
+
+  it('exposes the named account operations and no generic escape hatch', () => {
+    expect(Object.keys(exposedApi)).toContain('accountConnect')
+    expect(Object.keys(exposedApi)).toContain('accountDisconnect')
+    expect(Object.keys(exposedApi)).toContain('accountStatus')
+    expect(exposedApi).not.toHaveProperty('invoke')
+    expect(exposedApi).not.toHaveProperty('ipcRenderer')
+  })
+
+  it('accountConnect(): a credential-shaped extra field never reaches ipcRenderer.invoke', async () => {
+    ipcRendererMock.invoke.mockClear()
+    for (const hostile of [
+      { password: 'hunter2', serverUrl: 'https://a.invalid' },
+      { serverUrl: 'https://a.invalid', token: 'abc' },
+      { serverUrl: 42 },
+      { serverUrl: '' },
+      {},
+    ]) {
+      await expect((exposedApi.accountConnect as (r: unknown) => Promise<unknown>)(hostile)).rejects.toThrow()
+    }
+    expect(ipcRendererMock.invoke).not.toHaveBeenCalled()
+  })
+
+  it('accountStatus(): a malformed main-side response is rejected before it reaches the renderer', async () => {
+    ipcRendererMock.invoke.mockImplementationOnce(async () => ({ ...validAccountStatus, accessToken: 'leaked' }))
+    await expect((exposedApi.accountStatus as () => Promise<unknown>)()).rejects.toThrow()
   })
 })
