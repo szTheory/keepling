@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: Completed 03-14-PLAN.md (O-16 and O-18 closed)
-last_updated: "2026-09-03T02:47:41.094Z"
+stopped_at: "Completed 03-15-PLAN.md (macos-integration lane red: A9 defect + two ungranted permissions)"
+last_updated: "2026-09-03T04:32:00.419Z"
 last_activity: 2026-09-02
 last_activity_desc: Phase KPL-03 execution started
-state_head: c11c6b9bc72e5fd1dc95bd012a09ba771eb1a48a
+state_head: 7bbd929def3510ba1de755ccb966c71473142956
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 52
-  completed_plans: 50
+  total_plans: 53
+  completed_plans: 51
 milestone_name: milestone
 ---
 
@@ -187,6 +187,8 @@ Progress: [█████████░] 97%
 - [Phase KPL-03]: O-12 CLOSED: removeLocalData reachable via named preload contract + sender-validated IPC; single-field request schema keeps server deletion structurally unreachable.
 - [Phase KPL-03]: O-11 CLOSED: D-06 renderer-semantic restoration (destination, selection, scroll anchor, draft) proven across a real relaunch; pane sizes N/A (no resizable-pane UI exists).
 - [Phase KPL-03]: O-1 RESOLVED: apps/web keeps routed Inbox content; useSharedWorkspace documented as permanent future-facing API.
+- [Phase KPL-03]: Rows A1-A15 of the physical-accessibility checklist are automated at the macOS layer (AXUIElement tree, CGEvent keystrokes, real input sources, real system settings, WCAG contrast from rendered pixels); the dogfood contract keeps only informal feedback with no checklist, evidence record, or sign-off.
+- [Phase KPL-03]: The macos-integration lane runs once per packaged artifact and the phase gate reuses evidence bound to that exact applicationDigestSha256 plus the Swift probe source digests; missing, stale, partial or failing evidence is a loud failure, never a skip.
 
 ### Retained Research
 
@@ -220,8 +222,8 @@ Run the three pending KPL-03 Wave 4 capability gates (`verify.schema-drift`, `ve
 
 ## Session
 
-**Last session:** 2026-09-03T02:47:41.019Z
-**Stopped at:** Completed 03-14-PLAN.md (O-16 and O-18 closed)
+**Last session:** 2026-09-03T04:31:39.118Z
+**Stopped at:** Completed 03-15-PLAN.md (macos-integration lane red: A9 defect + two ungranted permissions)
 **Resume file:** None
 
 ## Performance Metrics
@@ -278,3 +280,9 @@ Run the three pending KPL-03 Wave 4 capability gates (`verify.schema-drift`, `ve
 | Phase KPL-03 P08 | 105min | 2 tasks | 6 files |
 | Phase KPL-03 P13 | 95min | 4 tasks | 13 files |
 | Phase KPL-03 P14 | 46 min | 4 tasks | 16 files |
+| Phase KPL-03 P15 | 2h 35m | 4 tasks | 11 files |
+
+### Blockers
+
+- O-21: prior-application focus return after Quick Entry is unimplemented in the shipped app -- QuickEntryWindowController calls an optional foregroundApp port that has no implementation and is never passed in main/index.ts#bootstrap(). Found by row A9; a fifth GAP-1 instance. Blocks the macos-integration lane going green.
+- O-22: Cmd-1/Cmd-2 route through facade.setRoute in DesktopShell.tsx and bypass the unsaved-changes guard that mouse navigation goes through.
