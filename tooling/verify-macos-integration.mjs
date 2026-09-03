@@ -1302,7 +1302,23 @@ const pixelAppearanceRow = (id, title, { changes, live = false }) => (context) =
       if (live) {
         // A14 is explicitly about a change made WHILE the app is open.
         applySystemSettings(changes)
-        await sleep(2000)
+        // The re-theme is delivered to a RUNNING application asynchronously:
+        // the appearance daemon notifies AppKit, Chromium re-evaluates
+        // `prefers-color-scheme`, and the window repaints. Measured on this
+        // machine that takes ~4-5s, so the fixed 2s sleep this replaced
+        // sampled the window mid-flight and A14 flaked on unchanged bytes --
+        // PASS at 20:54:21 and FAIL ~30 minutes later on the identical
+        // application_digest 5f8ad9fa. Poll until the repaint has SETTLED
+        // instead. This does not weaken the row: if the background never
+        // changes within the deadline, the loop exits and the
+        // `re-themes live` check below fails exactly as it did before.
+        const deadline = Date.now() + 15_000
+        for (;;) {
+          const sample = measureContrast(handle)
+          if (JSON.stringify(sample.backgroundColour) !== JSON.stringify(before.backgroundColour)) break
+          if (Date.now() > deadline) break
+          await sleep(300)
+        }
       }
       const applied = readSystemSettings()
       for (const [key, value] of Object.entries(changes)) {
