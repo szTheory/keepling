@@ -349,6 +349,16 @@
       "id": "O-24",
       "item": "The macOS lane still contains sleep-then-read-once patterns of the class that made A4, A6 and A7 flap",
       "detail": "Three rows have now been caught intermittently failing against UNCHANGED product code: A6 (fixed in fbdf2b4), and A4 and A7 (both fixed in 03-16, b810736 and 1ff88a8). Measured rates before the fixes: A4 failed 3 times in 6 isolated runs, A7 roughly 1 in 8. All three shared one shape -- `await sleep(N)` and then a SINGLE read of AX state that is still moving. Rows A1, A2, A3, A5, A8 and the shared `captureTaskByKeyboard` helper still contain that shape and should be assumed to harbour the same defect until each is either converted to a settle predicate or run enough times to bound its rate. The lane now has a `settledFocus(handle)` helper for the focus case. RULE, restated because it is easy to get wrong: the settle predicate must be strictly WEAKER than the row's assertion (wait for focus to stop moving, never for focus to be on the right element), or the row becomes vacuous. Note also that quiescence is NOT always a valid settle: A7's pending dead key is stable indefinitely, so 'the value stopped changing' would have settled on the failure."
+    },
+    {
+      "id": "O-25",
+      "item": "desktop-macos-integration CI job is non-blocking and MUST NOT stay that way",
+      "detail": "03-17 Task 4 added .github/workflows/desktop.yml job `desktop-macos-integration` (macos-15, downloads the desktop-package artifact, never rebuilds). It probes hosted-runner TCC with tooling/macos-integration/TccProbe.swift (AXIsProcessTrusted, CGPreflightScreenCaptureAccess, a com.apple.universalaccess write/read-back) and then runs `verify-macos-integration.mjs --without-accessibility-trust`. It carries continue-on-error: true for the FIRST run only, because its purpose is to answer an open question, and it is deliberately absent from desktop-promote's needs. NO REAL RUN HAS HAPPENED YET -- as of 03-17 the hosted-runner TCC question is UNSETTLED and no claim either way is supported. After the first real run: read the printed TCC report and the row results, then EITHER remove continue-on-error and add the job to the required set, OR delete the job. A permanently non-blocking test job is exactly the vacuous green KPL-03 spent 03-15/03-16 removing."
+    },
+    {
+      "id": "O-26",
+      "item": "vitest `worker` project has zero test files",
+      "detail": "apps/desktop/vitest.config.ts declares a `worker` project (include: test/worker/**) with passWithNoTests: false, but apps/desktop/test/worker/ does not exist. The full `pnpm test:desktop` run still passes because vitest's no-test check is satisfied by the other projects, so the empty lane is invisible -- `node tooling/run-tests.mjs unit --project=worker` alone fails with 'No test files found'. Found while building the 03-17 change-scoped selector. Either add the worker-protocol tests the project name promises (the real worker IS covered today, but from test/e2e/sync-recovery.spec.ts, not test/worker/), or delete the project so the lane list stops advertising coverage that does not exist."
     }
   ],
   "phase_level_gap": {

@@ -150,3 +150,47 @@ exclusion.
 `grepInvert` is `undefined` unless you opt in, so the phase gate and every CI
 job run the full 57-test windowed suite exactly as before. CI has no screen to
 take over and benefits from the windowed path being exercised.
+
+## The macOS integration lane in CI — an open experiment
+
+`.github/workflows/desktop.yml` gained a `desktop-macos-integration` job:
+`macos-15`, downloads the exact `desktop-package` artifact (never rebuilds),
+probes what the runner grants, then runs
+`node tooling/verify-macos-integration.mjs --without-accessibility-trust`
+(rows A10, A12, A13, A14 — the ones that provably need no Accessibility
+grant).
+
+The probe is `tooling/macos-integration/TccProbe.swift`. It never prompts
+(`kAXTrustedCheckOptionPrompt: false`, and `CGPreflightScreenCaptureAccess()`
+rather than a request), because a prompt on a non-interactive runner would
+hang until the timeout and tell us nothing. It reports:
+
+* `AXIsProcessTrusted()` — Accessibility
+* `CGPreflightScreenCaptureAccess()` — Screen Recording
+* whether a `com.apple.universalaccess` write persists (a probe-private key,
+  written, read back, then removed — it never touches a real setting)
+* the process ancestry, because TCC attributes a grant to the *responsible*
+  process, not the probe binary
+
+Positive control, run locally on a Mac where all three permissions are
+granted:
+
+```json
+{ "accessibility_trusted": true,
+  "screen_recording_preflight": true,
+  "universal_access_write": { "persisted": true } }
+```
+
+So the probe can report `true`. A `false` from a runner is therefore
+meaningful rather than a probe artefact.
+
+> **The hosted-runner TCC question is UNSETTLED.** No real CI run of this job
+> has happened yet, so nothing here claims a GitHub-hosted runner can — or
+> cannot — be granted TCC. One real run settles it.
+
+The job is `continue-on-error: true` **for that first run only**, and is
+deliberately absent from `desktop-promote`'s `needs` so it cannot contribute
+to a promotion decision while it is an experiment. Once the first run's output
+exists, it must either become required or be deleted — a permanently
+non-blocking test job is exactly the vacuous green this phase spent two plans
+removing. Tracked as `O-25` in `.planning/HANDOFF.json`.

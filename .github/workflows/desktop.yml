@@ -134,6 +134,81 @@ jobs:
       - name: Run the real shipped-entry-point Electron E2E suite
         run: pnpm test:desktop:e2e
 
+  # EXPERIMENT, NON-BLOCKING (this first run ONLY). It is genuinely unknown
+  # whether a GitHub-hosted macos-15 runner can be granted Accessibility,
+  # Screen Recording, or a write to the protected `com.apple.universalaccess`
+  # domain. Rather than designing around a guess, this job PROBES what the
+  # runner actually grants, prints it, and then runs the subset of macOS rows
+  # that provably need no Accessibility grant -- so one real run settles the
+  # question either way.
+  #
+  # `continue-on-error: true` is temporary and MUST be removed. A permanently
+  # non-blocking test job is exactly the vacuous green this phase spent two
+  # plans removing: after the first real run, either make this required or
+  # delete it (tracked as an open item in .planning/HANDOFF.json).
+  #
+  # Follows the same build-once/download-many discipline as every other test
+  # job: it downloads the exact bytes `desktop-package` produced and NEVER
+  # rebuilds. It is deliberately absent from `desktop-promote`'s `needs`, so
+  # it can never contribute to a promotion decision while it is an experiment.
+  desktop-macos-integration:
+    needs: [desktop-package]
+    runs-on: macos-15
+    timeout-minutes: 30
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Install locked JavaScript inputs
+        run: corepack enable && pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+          path: ${{ runner.temp }}/${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+      - name: Report what TCC this hosted runner actually grants
+        run: |
+          set -o pipefail
+          swiftc -O -swift-version 5 -o "$RUNNER_TEMP/TccProbe" tooling/macos-integration/TccProbe.swift
+          echo "--- hosted-runner TCC report (definitive for this runner image) ---"
+          "$RUNNER_TEMP/TccProbe" | tee "$RUNNER_TEMP/tcc-report.json"
+          echo "--- end TCC report ---"
+      - name: Rebase the downloaded manifest onto this job's own artifact directory
+        id: rebase
+        run: |
+          set -o pipefail
+          artifact_root="$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}"
+          chmod -R u+x "$artifact_root"
+          node -e "
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const root = process.argv[1];
+            const manifestPath = path.join(root, 'package-manifest.json');
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+            const appName = path.basename(manifest.copiedApplicationPath);
+            const rebasedAppPath = path.join(root, appName);
+            const executableName = path.basename(manifest.executablePath);
+            manifest.copiedApplicationPath = rebasedAppPath;
+            manifest.executablePath = path.join(rebasedAppPath, 'Contents', 'MacOS', executableName);
+            fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+            console.log(manifestPath);
+          " "$artifact_root"
+          echo "manifest-path=$artifact_root/package-manifest.json" >> "$GITHUB_OUTPUT"
+      - name: Run the macOS rows that need no Accessibility grant, against the downloaded bytes
+        run: |
+          node tooling/verify-macos-integration.mjs \
+            --without-accessibility-trust \
+            --manifest "${{ steps.rebase.outputs.manifest-path }}"
+      - name: Publish the TCC answer as an artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hosted-runner-tcc-report
+          path: ${{ runner.temp }}/tcc-report.json
+          if-no-files-found: warn
+          retention-days: 14
+
   # Promotion is the exclusive, single-writer step: it accepts ONLY the
   # digest `desktop-package` recorded, and ONLY after every required lane
   # above has passed. `package-desktop.mjs --promote` refuses a second
