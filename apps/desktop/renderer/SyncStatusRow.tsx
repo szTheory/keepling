@@ -175,7 +175,13 @@ function SyncStatusRow() {
       data-sync-status={summary.kind}
       id="sync-status-row"
     >
-      <p>{summary.copy}</p>
+      {/*
+        The copy is addressable on its own (`data-sync-copy`) so an assertion
+        about WHAT A PERSON IS TOLD is not silently coupled to which recovery
+        buttons happen to sit beside it -- reading the whole landmark's text
+        would make every future action change look like a copy regression.
+      */}
+      <p data-sync-copy="true">{summary.copy}</p>
       {summary.actions.map((action) => (
         <button
           data-recovery-action={action.code}

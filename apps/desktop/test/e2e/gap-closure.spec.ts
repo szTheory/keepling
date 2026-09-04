@@ -337,7 +337,8 @@ test.describe('O-30: the offline row is real, distinguishes unreachable from rej
       // Positive read FIRST: the status surface really rendered and really
       // states the offline copy. Only then is the negation meaningful.
       const row = window.locator('#sync-status-row')
-      await expect(row).toHaveText(OFFLINE_COPY)
+      const copy = row.locator('[data-sync-copy]')
+      await expect(copy).toHaveText(OFFLINE_COPY)
       await expect(row).toHaveAttribute('data-sync-status', 'offline')
       await expect(window.getByText(RETRYABLE_COPY)).toHaveCount(0)
 
@@ -366,7 +367,8 @@ test.describe('O-30: the offline row is real, distinguishes unreachable from rej
       await runOneSyncPass(application)
 
       const row = window.locator('#sync-status-row')
-      await expect(row).toHaveText(RETRYABLE_COPY)
+      const copy = row.locator('[data-sync-copy]')
+      await expect(copy).toHaveText(RETRYABLE_COPY)
       await expect(row).toHaveAttribute('data-sync-status', 'retryable_failure')
       await expect(window.getByText(OFFLINE_COPY)).toHaveCount(0)
     } finally {
@@ -383,7 +385,8 @@ test.describe('O-30: the offline row is real, distinguishes unreachable from rej
       await runOneSyncPass(application)
 
       const row = window.locator('#sync-status-row')
-      await expect(row).toHaveText(OFFLINE_COPY)
+      const copy = row.locator('[data-sync-copy]')
+      await expect(copy).toHaveText(OFFLINE_COPY)
       await expect(row).toHaveAttribute('data-sync-status', 'offline')
 
       // Guarded negations: the row above proved the surface rendered, so
@@ -391,6 +394,117 @@ test.describe('O-30: the offline row is real, distinguishes unreachable from rej
       const rowText = (await row.textContent()) ?? ''
       expect(rowText.length).toBeGreaterThan(0)
       expect(rowText).not.toMatch(/synced|up to date|everything/i)
+    } finally {
+      await application.close()
+    }
+  })
+})
+
+test.describe('O-42: an authored recovery action is a live remedy, not a label', () => {
+  test('the retryable-failure row offers Retry, and pressing it runs a REAL synchronization pass', async () => {
+    const profilePath = allocateDisposableProfile('gap-closure-o42-retry')
+    let requestCount = 0
+    const server = createServer((_request, response) => {
+      requestCount += 1
+      response.writeHead(500, { 'content-type': 'application/problem+json' })
+      response.end(JSON.stringify({ code: 'internal_error' }))
+    })
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+    const origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
+    writeFileSync(join(profilePath, 'server.json'), JSON.stringify({ baseUrl: `${origin}/` }))
+
+    const { application, window } = await launchRealSync(profilePath)
+    try {
+      await seedCredentials(application, origin)
+      await captureTask(window, 'Kept while the server answers badly')
+      await runOneSyncPass(application)
+
+      const retry = window.locator('#sync-status-row button[data-recovery-action="retry"]')
+      await expect(retry).toHaveText('Retry')
+      const before = requestCount
+      await retry.click()
+      // The button reached the network, through the shipped IPC surface and
+      // the real adapter. Before O-42 nothing downstream read the action at
+      // all, so this count could never move.
+      await expect.poll(() => requestCount, { timeout: 30_000 }).toBeGreaterThan(before)
+      await expect(window.locator('#sync-status-row')).toHaveAttribute('data-sync-status', 'retryable_failure')
+    } finally {
+      await application.close()
+      await new Promise<void>((resolve) => server.close(() => resolve()))
+    }
+  })
+
+  test('the Export action writes a real file containing the tasks saved on this Mac', async () => {
+    const profilePath = allocateDisposableProfile('gap-closure-o42-export')
+    const { application, window } = await launchRealSync(profilePath)
+    try {
+      await captureTask(window, 'Exportable while fenced')
+      // Reach the real main-process capability the Export action dispatches
+      // to, through the same handler a click reaches.
+      const outcome = await window.evaluate(async () =>
+        (window as unknown as { keepling: { exportLocalData: () => Promise<unknown> } }).keepling.exportLocalData(),
+      ) as { kind: string; path: string; taskCount: number }
+      expect(outcome.kind).toBe('exported')
+      expect(outcome.taskCount).toBeGreaterThan(0)
+      expect(existsSync(outcome.path)).toBe(true)
+      const exported = JSON.parse(readFileSync(outcome.path, 'utf8')) as {
+        pendingCommands: Array<{ type?: string }>
+        tasks: Array<{ title: string }>
+      }
+      expect(exported.tasks.map((task) => task.title)).toContain('Exportable while fenced')
+      // The unsent intent travels with it -- otherwise "export before you
+      // remove" would still lose what has not reached a server.
+      expect(exported.pendingCommands.some((command) => command.type === 'capture_task')).toBe(true)
+    } finally {
+      await application.close()
+    }
+  })
+})
+
+test.describe('O-31(a): the Quick Entry window shows synchronization state', () => {
+  test('capturing through Quick Entry while the server is unreachable says so, in that window', async () => {
+    const profilePath = allocateDisposableProfile('gap-closure-o31a')
+    const port = await allocateClosedPort()
+    const origin = `http://127.0.0.1:${String(port)}`
+    writeFileSync(join(profilePath, 'server.json'), JSON.stringify({ baseUrl: `${origin}/` }))
+
+    const { application, window } = await launchRealSync(profilePath)
+    try {
+      await seedCredentials(application, origin)
+      await expect(window.getByRole('heading', { name: 'Inbox' })).toBeVisible()
+
+      const [quickEntry] = await Promise.all([
+        application.waitForEvent('window', {
+          predicate: (page: Page) => page.url().includes('view=quick-entry'),
+        }),
+        application.evaluate(({ Menu }) => {
+          const find = (items: Electron.MenuItem[]): Electron.MenuItem | null => {
+            for (const item of items) {
+              if (item.label.startsWith('Quick Entry')) return item
+              const nested = item.submenu ? find(item.submenu.items) : null
+              if (nested) return nested
+            }
+            return null
+          }
+          const item = find(Menu.getApplicationMenu()?.items ?? [])
+          if (!item) throw new Error('Quick Entry menu item not found')
+          item.click()
+        }),
+      ])
+      await quickEntry.waitForLoadState('domcontentloaded')
+
+      // The window really loaded the NARROW utility bridge, not the main
+      // one -- which is exactly why this needed a new channel rather than a
+      // component mount.
+      expect(await quickEntry.evaluate(() => 'keepling' in window)).toBe(false)
+      expect(await quickEntry.evaluate(() => 'keeplingUtility' in window)).toBe(true)
+
+      await runOneSyncPass(application)
+      const copy = quickEntry.locator('#utility-sync-status-row [data-sync-copy]')
+      await expect(copy).toHaveText(OFFLINE_COPY, { timeout: 30_000 })
+      await expect(quickEntry.locator('#utility-sync-status-row')).toHaveAttribute('data-sync-status', 'offline')
+      // Read-only: no remedy crosses this bridge.
+      await expect(quickEntry.locator('#utility-sync-status-row button')).toHaveCount(0)
     } finally {
       await application.close()
     }

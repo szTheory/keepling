@@ -47,7 +47,7 @@ function UtilitySyncStatusRow() {
       data-sync-status={summary.kind}
       id="utility-sync-status-row"
     >
-      <p>{summary.copy}</p>
+      <p data-sync-copy="true">{summary.copy}</p>
     </aside>
   )
 }
