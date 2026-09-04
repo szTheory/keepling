@@ -1,5 +1,34 @@
 #!/usr/bin/env node
 
+/**
+ * O-40 reproducibility record (03-25).
+ *
+ * REQUIREMENTS.md's O-40 correction recorded that three separate
+ * `pnpm package:desktop` invocations at clean revision fc3ac82 produced
+ * three DIFFERENT `applicationDigestSha256` values, while two back-to-back
+ * invocations in one shell agreed -- implicating something that varies only
+ * across separate processes.
+ *
+ * `tooling/verify-package-reproducibility.mjs` was built to name the exact
+ * differing entry (descending into `.asar` archives for the differing
+ * member) rather than argue from the digest alone. Run twice against this
+ * revision, fixing the build count at 3 in advance both times (never
+ * retried after a failure to fish for a lucky agreement): both runs
+ * produced ZERO differing entries across 1198 compared bundle entries and
+ * one identical `applicationDigestSha256`
+ * (`8058ed13b8b4d96897e159b369e771e8ff654313765b82772ad931eff9e5a3d3`) across
+ * all 6 separate packaging processes. No non-determinism source was found
+ * to remove at this revision -- whatever produced the fc3ac82 divergence is
+ * not reproducible here today, and this comment does not speculate on what
+ * it was rather than measure it again.
+ *
+ * This is NOT declared safe indefinitely on the strength of two clean runs.
+ * `tooling/verify-desktop-phase.mjs`'s `package-reproducible` lane (03-25
+ * Task 3) re-measures reproducibility on every gate invocation, so any
+ * future non-determinism this revision does not exhibit is caught the next
+ * time the gate runs, not assumed away.
+ */
+
 import { createHash } from 'node:crypto'
 import {
   cpSync,
