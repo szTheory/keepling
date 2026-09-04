@@ -12,7 +12,7 @@ import {
   type OutboundIntent,
 } from './outbound-commands.ts'
 import { removeLocalNamespaceData, type RemoveLocalDataOutcome } from '../recovery/remove-local-data.ts'
-import { isSyncUnreachable } from './sync-reachability.ts'
+import { isSyncAuthenticationRequired, isSyncUnreachable } from './sync-reachability.ts'
 
 type SyncStatus = 'saved_on_this_mac' | 'synced'
 type SyncOutcome = 'accepted' | 'already_satisfied' | 'rejected' | 'stale' | 'conflict'
@@ -595,6 +595,13 @@ class DesktopApplication {
       const ready = (await this.#localStore.readyMutations()).slice(0, SYNC_LIMITS.push)
       pending = ready.length
       let settled = 0
+      // O-38. A conflict and a semantic rejection are TERMINAL answers about
+      // a specific command, counted separately from an acceptance because
+      // they are different things to tell a person -- and because before
+      // this they were not counted at all: the adapter threw, the pass
+      // failed, and both landed on "Couldn't reach the server."
+      let conflicted = 0
+      let refused = 0
       for (const mutation of ready) {
         const acknowledgement = await this.#sync.push(mutation.commandBytes)
         if (
@@ -604,10 +611,23 @@ class DesktopApplication {
         ) continue
         await (this.#localStore.acknowledgeSync?.(acknowledgement)
           ?? this.#localStore.acknowledge(acknowledgement))
-        settled += 1
+        if (acknowledgement.outcome === 'conflict') conflicted += 1
+        else if (acknowledgement.outcome === 'rejected') refused += 1
+        else settled += 1
       }
-      const remaining = ready.length - settled
-      settle(remaining > 0 ? { kind: 'local_saved', pendingCount: remaining } : { kind: 'healthy' })
+      const remaining = ready.length - settled - conflicted - refused
+      // Conflict outranks rejection outranks a quiet pending row: a conflict
+      // is the only one of the three that needs a CHOICE from a person, so
+      // it must not be hidden behind a row that merely informs.
+      settle(
+        conflicted > 0
+          ? { affectedCount: conflicted, kind: 'conflict' }
+          : refused > 0
+            ? { affectedCount: refused, kind: 'rejected' }
+            : remaining > 0
+              ? { kind: 'local_saved', pendingCount: remaining }
+              : { kind: 'healthy' },
+      )
       return { pulled: page.changes.length, settled }
     } catch (error) {
       // O-30: a server that never answered is OFFLINE; a server that
@@ -616,6 +636,13 @@ class DesktopApplication {
       // back -- never from sniffing message text.
       if (isSyncUnreachable(error)) {
         settle({ kind: 'offline', lastSuccessfulContact: lastSuccessfulContact ?? undefined })
+      } else if (isSyncAuthenticationRequired(error)) {
+        // O-38 sibling: the server ANSWERED 401. Retrying the same bytes
+        // after signing in is exactly right, so this is neither offline nor
+        // a decision about the command -- it is the one row whose `Sign In`
+        // action resolves it, and it now has a production construction site
+        // rather than only the failed-callback path.
+        settle({ kind: 'authentication_required', pendingCount: pending })
       } else {
         settle({ kind: 'retryable_failure', pendingCount: pending })
       }

@@ -8,7 +8,11 @@ import type {
   SyncPort,
   SyncSnapshot,
 } from '../application/DesktopApplication.ts'
-import { SyncUnreachableError } from '../application/sync-reachability.ts'
+import {
+  SYNC_FAILURE_AUTHENTICATION_REQUIRED,
+  SyncUnreachableError,
+} from '../application/sync-reachability.ts'
+import { classifyServerRefusal, type ServerRefusal } from './server-refusal.ts'
 
 type NativeTokenResponse = components['schemas']['NativeTokenResponse']
 type SyncFeedPage = components['schemas']['SyncFeedPage']
@@ -34,6 +38,67 @@ type NativeCredentials = {
   expiresIn: 900
   namespace: SyncNamespace
   refreshToken: string
+}
+
+/**
+ * A refusal the server ANSWERED with (O-38). The `message` stays the problem
+ * code, exactly as before, so every existing caller and test that reads it
+ * keeps working; the structured fields are additive and are what lets `push`
+ * tell a decided command from a transport failure.
+ */
+class SyncRefusedError extends Error {
+  readonly problem: unknown
+  readonly status: number
+  /** Set only for a 401, so the application can publish its own row without sniffing status codes. */
+  readonly syncFailure: string | undefined
+
+  constructor(code: string, status: number, problem: unknown) {
+    super(code)
+    this.name = 'SyncRefusedError'
+    this.problem = problem
+    this.status = status
+    this.syncFailure = status === 401 ? SYNC_FAILURE_AUTHENTICATION_REQUIRED : undefined
+  }
+}
+
+/**
+ * O-38: turns a refusal the server ANSWERED with into the settled outcome it
+ * is, or `null` when the caller must keep throwing.
+ *
+ * The snapshot carried on a conflict is built from the SERVER's own conflict
+ * extension and from nothing else -- the client never derives what the
+ * server currently holds. `already_satisfied` and `accepted` still come from
+ * a 200 body through `mapAcknowledgement`, which stays strict: a 200 that
+ * claimed `conflict` would be an invalid acknowledgement and must still be
+ * refused loudly.
+ */
+const settleRefusal = (
+  error: unknown,
+  identity: { fingerprint: string; mutationId: string; taskId: string | null },
+): SyncAcknowledgement | null => {
+  if (!(error instanceof SyncRefusedError) || identity.taskId === null) return null
+  const refusal: ServerRefusal | null = classifyServerRefusal(error.status, error.problem)
+  if (refusal === null || refusal.kind === 'authentication_required') return null
+  if (refusal.kind === 'rejected') {
+    return {
+      fingerprint: identity.fingerprint,
+      mutationId: identity.mutationId,
+      outcome: 'rejected',
+      snapshot: { id: identity.taskId, rejection_code: refusal.code },
+    }
+  }
+  return {
+    fingerprint: identity.fingerprint,
+    mutationId: identity.mutationId,
+    outcome: 'conflict',
+    snapshot: {
+      affected_fields: refusal.affectedFields,
+      conflict_id: refusal.conflictId,
+      id: identity.taskId,
+      ...(refusal.latestRevision === null ? {} : { revision: refusal.latestRevision }),
+      ...(refusal.currentTitle === null ? {} : { title: refusal.currentTitle }),
+    },
+  }
 }
 
 const exactObject = (value: unknown, keys: readonly string[], label: string): Record<string, unknown> => {
@@ -172,11 +237,24 @@ class KeeplingSyncAdapter implements SyncPort {
     const command = JSON.parse(commandBytes) as Record<string, unknown>
     const mutationId = requiredString(command.mutation_id, 'command mutation identity')
     const commandType = requiredString(command.type, 'command type').replaceAll('_', '-')
-    const response = await this.#json(this.#url(`/api/v1/commands/${encodeURIComponent(commandType)}`), {
-      body: commandBytes,
-      method: 'POST',
-    }, true)
     const fingerprint = createHash('sha256').update(commandBytes).digest('hex')
+    const taskId = typeof command.task_id === 'string' ? command.task_id : null
+    let response: unknown
+    try {
+      response = await this.#json(this.#url(`/api/v1/commands/${encodeURIComponent(commandType)}`), {
+        body: commandBytes,
+        method: 'POST',
+      }, true)
+    } catch (error) {
+      // O-38: a 409 conflict and a 422 semantic refusal are DECISIONS about
+      // this command, not transport failures. Before this they threw, were
+      // caught by `runSyncPass`, and landed on "Couldn't reach the server"
+      // with a Retry button that would retry the same immutable bytes
+      // forever. Anything not classified here still throws.
+      const settled = settleRefusal(error, { fingerprint, mutationId, taskId })
+      if (settled === null) throw error
+      return settled
+    }
     const acknowledgement = mapAcknowledgement(response, fingerprint)
     if (acknowledgement.mutationId !== mutationId) throw new Error('server acknowledgement mutation mismatch')
     return acknowledgement
@@ -231,7 +309,16 @@ class KeeplingSyncAdapter implements SyncPort {
       const value = await response.json()
       if (!response.ok) {
         const problem = value as { code?: unknown }
-        throw new Error(typeof problem.code === 'string' ? problem.code : `server_${response.status}`)
+        // O-38: the STATUS and the whole problem body travel with the error.
+        // Without them a 409 conflict is indistinguishable from a 500 at the
+        // call site, and both landed on the retryable-failure row -- so a
+        // decided command was retried forever and its conflict was never
+        // told to anyone.
+        throw new SyncRefusedError(
+          typeof problem.code === 'string' ? problem.code : `server_${response.status}`,
+          response.status,
+          value,
+        )
       }
       return value
     } finally {
@@ -240,5 +327,5 @@ class KeeplingSyncAdapter implements SyncPort {
   }
 }
 
-export { KeeplingSyncAdapter, mapNamespace, mapTokenResponse }
+export { KeeplingSyncAdapter, SyncRefusedError, mapNamespace, mapTokenResponse, settleRefusal }
 export type { AuthorizationCodeExchange, KeeplingSyncAdapterOptions, NativeCredentials }

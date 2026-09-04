@@ -23,6 +23,17 @@
  * defect this plan exists to close.
  */
 const SYNC_FAILURE_UNREACHABLE = 'sync_unreachable'
+/**
+ * O-38 sibling tag. A 401 is an ANSWER, so it is not `unreachable`, and it
+ * is not a decision about the command either -- retrying the same bytes
+ * after signing in is exactly right. It is its own state with its own
+ * authored row and a live `Sign In` action, and it must never be collapsed
+ * into a per-mutation rejection: every authentication problem the server
+ * emits carries `retryable: false`, so a rule keyed on that field alone
+ * would silently discard a whole outbox as "the server didn't accept these
+ * changes".
+ */
+const SYNC_FAILURE_AUTHENTICATION_REQUIRED = 'sync_authentication_required'
 
 class SyncUnreachableError extends Error {
   readonly syncFailure: string = SYNC_FAILURE_UNREACHABLE
@@ -33,9 +44,18 @@ class SyncUnreachableError extends Error {
   }
 }
 
-const isSyncUnreachable = (error: unknown): boolean =>
-  typeof error === 'object' &&
-  error !== null &&
-  (error as { syncFailure?: unknown }).syncFailure === SYNC_FAILURE_UNREACHABLE
+const hasSyncFailureTag = (error: unknown, tag: string): boolean =>
+  typeof error === 'object' && error !== null && (error as { syncFailure?: unknown }).syncFailure === tag
 
-export { SYNC_FAILURE_UNREACHABLE, SyncUnreachableError, isSyncUnreachable }
+const isSyncUnreachable = (error: unknown): boolean => hasSyncFailureTag(error, SYNC_FAILURE_UNREACHABLE)
+
+const isSyncAuthenticationRequired = (error: unknown): boolean =>
+  hasSyncFailureTag(error, SYNC_FAILURE_AUTHENTICATION_REQUIRED)
+
+export {
+  SYNC_FAILURE_AUTHENTICATION_REQUIRED,
+  SYNC_FAILURE_UNREACHABLE,
+  SyncUnreachableError,
+  isSyncAuthenticationRequired,
+  isSyncUnreachable,
+}

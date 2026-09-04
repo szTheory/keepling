@@ -383,4 +383,115 @@ describe('durable outbound mutations (O-41)', () => {
       database.close()
     }
   })
+  // -- O-38: WHAT A REFUSAL DOES TO THE LOCAL ROW ---------------------------
+
+  it('never overwrites the local row from a conflict answer, which is not a full snapshot', () => {
+    const store = openStore()
+    store.acknowledge({
+      fingerprint: capture.fingerprint,
+      mutationId: capture.mutationId,
+      outcome: 'accepted',
+      snapshot: { id: TASK_ID, notes: '', planned_on: null, revision: 1, title: 'Book the ferry' },
+    })
+    store.applyLifecycle(
+      { kind: 'complete', taskId: TASK_ID },
+      outbound(store, { kind: 'lifecycle', lifecycle: 'complete', taskId: TASK_ID }, 'm-complete'),
+    )
+    // The server's 409 body names only the affected field. Writing it into
+    // the canonical shadow would blank everything it did not mention, and
+    // the projection would fall back to showing the task identifier as its
+    // title.
+    store.acknowledge({
+      fingerprint: store.readyMutations()[0]!.fingerprint,
+      mutationId: 'm-complete',
+      outcome: 'conflict',
+      snapshot: { affected_fields: ['completed_at'], conflict_id: 'c-1', id: TASK_ID, revision: 9 },
+    })
+    const task = store.snapshot().tasks[0]!
+    expect(task.title).toBe('Book the ferry')
+    expect(task.syncStatus).toBe('saved_on_this_mac')
+    // Terminal: the server has decided, so the command leaves the outbox.
+    expect(store.syncState().outbox).toEqual([])
+    store.close()
+  })
+
+  it('never claims Synced for a rejected command', () => {
+    const store = openStore()
+    store.acknowledge({
+      fingerprint: capture.fingerprint,
+      mutationId: capture.mutationId,
+      outcome: 'accepted',
+      snapshot: { id: TASK_ID, notes: '', planned_on: null, revision: 1, title: 'Book the ferry' },
+    })
+    store.editTask(
+      { notes: '', taskId: TASK_ID, title: 'Retitled' },
+      outbound(store, { kind: 'edit', notes: '', taskId: TASK_ID, title: 'Retitled' }, 'm-edit'),
+    )
+    store.acknowledge({
+      fingerprint: store.readyMutations()[0]!.fingerprint,
+      mutationId: 'm-edit',
+      outcome: 'rejected',
+      snapshot: { id: TASK_ID, rejection_code: 'no_fields_touched' },
+    })
+    const task = store.snapshot().tasks[0]!
+    expect(task.title).toBe('Retitled')
+    expect(task.syncStatus).toBe('saved_on_this_mac')
+    expect(store.syncState().outbox).toEqual([])
+    expect(store.listConflicts()).toEqual([])
+    store.close()
+  })
+
+  it('records a mine/current choice only when the server named a divergent title', () => {
+    const store = openStore()
+    store.acknowledge({
+      fingerprint: capture.fingerprint,
+      mutationId: capture.mutationId,
+      outcome: 'accepted',
+      snapshot: { id: TASK_ID, notes: '', planned_on: null, revision: 1, title: 'Book the ferry' },
+    })
+    store.editTask(
+      { notes: '', taskId: TASK_ID, title: 'Book the ferry to Mull' },
+      outbound(store, { kind: 'edit', notes: '', taskId: TASK_ID, title: 'Book the ferry to Mull' }, 'm-edit'),
+    )
+    store.acknowledge({
+      fingerprint: store.readyMutations()[0]!.fingerprint,
+      mutationId: 'm-edit',
+      outcome: 'conflict',
+      snapshot: { affected_fields: ['title'], id: TASK_ID, revision: 4, title: 'Book the ferry from Oban' },
+    })
+    expect(store.listConflicts()).toEqual([
+      {
+        conflictId: 'conflict:m-edit',
+        current: 'Book the ferry from Oban',
+        mine: 'Book the ferry to Mull',
+        taskId: TASK_ID,
+      },
+    ])
+    store.close()
+  })
+
+  it('does not offer a title chooser for a conflict that is not about a title', () => {
+    const store = openStore()
+    store.acknowledge({
+      fingerprint: capture.fingerprint,
+      mutationId: capture.mutationId,
+      outcome: 'accepted',
+      snapshot: { id: TASK_ID, notes: '', planned_on: null, revision: 1, title: 'Book the ferry' },
+    })
+    store.applyLifecycle(
+      { kind: 'trash', taskId: TASK_ID },
+      outbound(store, { kind: 'lifecycle', lifecycle: 'trash', taskId: TASK_ID }, 'm-trash'),
+    )
+    store.acknowledge({
+      fingerprint: store.readyMutations()[0]!.fingerprint,
+      mutationId: 'm-trash',
+      outcome: 'conflict',
+      snapshot: { affected_fields: ['trashed_at'], id: TASK_ID, revision: 9 },
+    })
+    // Offering two timestamps under "choose which title to keep" would be a
+    // lie in the UI. The `conflict` row and its Review Conflict action still
+    // reach the person; the action falls back to refreshing from the server.
+    expect(store.listConflicts()).toEqual([])
+    store.close()
+  })
 })

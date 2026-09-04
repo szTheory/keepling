@@ -439,14 +439,34 @@ class NodeSqliteLocalStore {
       }
 
       const snapshotJson = JSON.stringify(acknowledgement.snapshot)
-      this.#database.prepare(`
-        INSERT INTO canonical_shadow(entity_id, snapshot_json) VALUES (?, ?)
-        ON CONFLICT(entity_id) DO UPDATE SET snapshot_json = excluded.snapshot_json
-      `).run(pending.task_id, snapshotJson)
-      this.#upsertProjection(pending.task_id, acknowledgement.snapshot, 'synced')
+      // O-38. Only an ACCEPTED answer carries a full canonical task snapshot,
+      // so only an accepted answer may replace what this Mac believes the
+      // server holds.
+      //
+      // A conflict answer is an RFC 9457 problem carrying just the affected
+      // fields' current values, and a rejection carries no task state at
+      // all. Writing either into `canonical_shadow` would blank every field
+      // the server did not mention, and `#upsertProjection` would then fall
+      // back to displaying the task's identifier as its title -- a silent
+      // data-shaped lie produced by trying to be helpful. The next real pull
+      // brings the true canonical state; until then the local row stands and
+      // honestly still reads "Saved on this Mac".
+      if (acknowledgement.outcome === 'accepted' || acknowledgement.outcome === 'already_satisfied') {
+        this.#database.prepare(`
+          INSERT INTO canonical_shadow(entity_id, snapshot_json) VALUES (?, ?)
+          ON CONFLICT(entity_id) DO UPDATE SET snapshot_json = excluded.snapshot_json
+        `).run(pending.task_id, snapshotJson)
+        this.#upsertProjection(pending.task_id, acknowledgement.snapshot, 'synced')
+      }
       this.#database.prepare(`
         UPDATE mutation_journal SET outcome = ?, terminal_snapshot_json = ? WHERE mutation_id = ?
       `).run(acknowledgement.outcome, snapshotJson, acknowledgement.mutationId)
+      // Terminal for every outcome: the server has decided, and retrying the
+      // same immutable bytes cannot change its mind. Leaving a refused
+      // command queued is how an outbox fills with commands nothing can ever
+      // settle. Note this is ALSO what keeps the ordering rule free of a
+      // stuck state -- a later mutation on the same task becomes ready as
+      // soon as this one leaves the outbox, whatever the outcome was.
       this.#database.prepare('DELETE FROM outbox WHERE mutation_id = ?').run(acknowledgement.mutationId)
       if (acknowledgement.outcome === 'conflict') {
         const command = this.#database.prepare(`
@@ -455,16 +475,46 @@ class NodeSqliteLocalStore {
         const mineSnapshot: SyncSnapshot = command
           ? (JSON.parse(command.effect_snapshot_json) as SyncSnapshot)
           : { id: '' }
-        const detailsJson = JSON.stringify({
-          current: typeof acknowledgement.snapshot.title === 'string' ? acknowledgement.snapshot.title : '',
-          mine: typeof mineSnapshot.title === 'string' ? mineSnapshot.title : '',
-        })
-        this.#database.prepare(`
-          INSERT INTO conflicts(conflict_id, mutation_id, details_json) VALUES (?, ?, ?)
-          ON CONFLICT(conflict_id) DO UPDATE SET details_json = excluded.details_json
-        `).run(`conflict:${acknowledgement.mutationId}`, acknowledgement.mutationId, detailsJson)
+        const current = typeof acknowledgement.snapshot.title === 'string' ? acknowledgement.snapshot.title : null
+        const mine = typeof mineSnapshot.title === 'string' ? mineSnapshot.title : null
+        // A mine/current record is only recorded when the SERVER named a
+        // divergent `title`, because that is the only thing the desktop's
+        // chooser can honestly present (`ConflictResolver` asks which TITLE
+        // to keep). A lifecycle or Trash conflict diverges on
+        // `completed_at`/`trashed_at`, and offering those two timestamps
+        // under "choose which title" would be a lie in the UI. Those still
+        // reach a person as the `conflict` row and its Review Conflict
+        // action, which falls back to refreshing from the server -- exactly
+        // the `refresh_task` recovery the server itself names. Recorded as a
+        // known limit in 03-22-SUMMARY.md.
+        if (current !== null && mine !== null) {
+          this.#database.prepare(`
+            INSERT INTO conflicts(conflict_id, mutation_id, details_json) VALUES (?, ?, ?)
+            ON CONFLICT(conflict_id) DO UPDATE SET details_json = excluded.details_json
+          `).run(
+            `conflict:${acknowledgement.mutationId}`,
+            acknowledgement.mutationId,
+            JSON.stringify({ current, mine }),
+          )
+        }
       }
-      this.#replayVisible()
+      // The visible projection is a replay of (canonical shadow + outbox).
+      // Replaying it after a REFUSAL would reassert the shadow over a change
+      // the refused command had already applied locally -- so the person
+      // would watch their edit vanish while being told "Your version is
+      // still on this Mac", and a diverged row would be relabelled "Synced"
+      // on the strength of an answer that settled nothing. The local row
+      // stands, still reading "Saved on this Mac", and the conflict record
+      // (when the server named a title) holds both versions for the choice.
+      //
+      // KNOWN LIMIT, recorded in 03-22-SUMMARY.md rather than papered over:
+      // the refused command is terminal and is gone from the outbox, so the
+      // NEXT pull replays the shadow and the local value is lost. Giving a
+      // refused local change a durable home is a product decision this plan
+      // did not carry authority to make.
+      if (acknowledgement.outcome === 'accepted' || acknowledgement.outcome === 'already_satisfied') {
+        this.#replayVisible()
+      }
       this.#database.exec('COMMIT')
     } catch (error) {
       this.#database.exec('ROLLBACK')
