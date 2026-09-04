@@ -520,6 +520,92 @@ const bootstrap = async () => {
     })()
   }
 
+  /**
+   * O-42: what the `Retry` and `Check Again` recovery actions actually DO.
+   *
+   * `scheduleSyncPass` is a fire-and-forget HINT and swallows its own
+   * failure, which is right for an automatic trigger and wrong for a button
+   * a person just pressed: pressing Retry and being told nothing is how an
+   * action stops being trusted. This awaits the pass and reports what
+   * happened, while sharing the same in-flight guard so a burst of presses
+   * cannot stack concurrent pulls or duplicate a push.
+   *
+   * It takes no argument. Retry means "try the pass again now", never "send
+   * this particular thing", so no renderer can aim a push.
+   */
+  const retrySyncNow = async (): Promise<
+    { kind: 'ran'; pulled: number; settled: number } | { kind: 'failed'; reason: string } | { kind: 'unavailable' }
+  > => {
+    if (syncAdapter === null) return { kind: 'unavailable' }
+    while (syncPassInFlight !== null) await syncPassInFlight
+    let outcome: Awaited<ReturnType<typeof retrySyncNow>> = { kind: 'unavailable' }
+    syncPassInFlight = (async () => {
+      try {
+        const token = authorization === null ? null : await authorization.accessToken()
+        if (token === null) {
+          outcome = { kind: 'unavailable' }
+          return
+        }
+        const result = await desktopApplication.runSyncPass()
+        outcome = { kind: 'ran', pulled: result.pulled, settled: result.settled }
+      } catch (error) {
+        // The row `runSyncPass` already published (offline, authentication
+        // required, retryable failure, conflict) is the authoritative thing
+        // a person reads; this only tells the button its press landed.
+        outcome = { kind: 'failed', reason: error instanceof Error ? error.message.slice(0, 200) : 'sync_failed' }
+      } finally {
+        syncPassInFlight = null
+      }
+    })()
+    await syncPassInFlight
+    return outcome
+  }
+
+  /**
+   * O-42: what the `Export` recovery action actually does.
+   *
+   * `namespace_mismatch` offers Inspect / Export / "Remove data from this
+   * Mac…" side by side. Until now Export existed only as an authored label
+   * no surface read, so the only live-looking way out of a fenced namespace
+   * would have been the one that DELETES -- with no way to take the data
+   * first. For a project whose core value is that accepted changes are
+   * never silently lost, a dead Export next to a live Remove is a
+   * data-safety defect, not a cosmetic one.
+   *
+   * Deliberately NOT a native save dialog: the destination is main-owned and
+   * fixed, which keeps a hostile renderer from directing a write anywhere,
+   * and keeps the action provable without a human driving a modal.
+   */
+  const exportLocalData = async (): Promise<
+    { kind: 'exported'; path: string; taskCount: number } | { kind: 'failed'; reason: string }
+  > => {
+    try {
+      const [snapshot, state] = await Promise.all([localStore.snapshot(), localStore.syncState()])
+      const pending = await localStore.readyMutations().catch(() => [])
+      const stamp = new Date().toISOString().replaceAll(':', '-').slice(0, 19)
+      const path = join(app.getPath('downloads'), `Keepling-export-${stamp}.json`)
+      writeFileSync(
+        path,
+        `${JSON.stringify(
+          {
+            exportedAt: new Date().toISOString(),
+            // The exact durable bytes, not a re-serialization: this is the
+            // record of what this Mac still intends to send.
+            pendingCommands: pending.map((mutation) => JSON.parse(mutation.commandBytes) as unknown),
+            schemaVersion: 1,
+            tasks: snapshot.tasks,
+            unsentMutationIds: state.outbox,
+          },
+          null,
+          2,
+        )}\n`,
+      )
+      return { kind: 'exported', path, taskCount: snapshot.tasks.length }
+    } catch (error) {
+      return { kind: 'failed', reason: error instanceof Error ? error.message.slice(0, 200) : 'export_failed' }
+    }
+  }
+
   deliverAuthorizationCallback = (callbackUrl) => void applyAuthorizationCallback(callbackUrl)
   for (const queued of queuedAuthorizationCallbacks.splice(0)) deliverAuthorizationCallback(queued)
 
@@ -705,6 +791,17 @@ const bootstrap = async () => {
     assertTrustedSender(event)
     saveWorkspaceLayout(workspaceLayoutPath, parseTrustedRequest(workspaceLayoutStateSchema, rawState))
     return null
+  })
+  // O-42: the recovery actions the presentation has always authored and
+  // that nothing downstream could ever perform. Same sender trust decision
+  // as every other handler above.
+  ipcMain.handle('keepling:retry-sync', async (event) => {
+    assertTrustedSender(event)
+    return retrySyncNow()
+  })
+  ipcMain.handle('keepling:export-local-data', async (event) => {
+    assertTrustedSender(event)
+    return exportLocalData()
   })
   const unsubscribePresentation = desktopApplication.subscribePresentation((presentation) => {
     const window = lifecycle.getMainWindow()

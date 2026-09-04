@@ -101,6 +101,27 @@ const resolveConflictRequestSchema = z.object({
 const removeLocalDataRequestSchema = z.object({
   confirmRemoveAnyway: z.boolean(),
 }).strict()
+
+/**
+ * O-42: the two capabilities the recovery actions needed and that no
+ * surface could reach.
+ *
+ * `retrySync` takes NO argument -- `retry` and `Check Again` mean "try the
+ * synchronization pass again now", never "send this particular thing", so
+ * there is nothing for a renderer to choose and no way for one to aim a
+ * push. `exportLocalData` also takes no argument: the destination is
+ * main-owned, and the renderer learns only the path that was written, so a
+ * hostile renderer cannot direct a write anywhere.
+ */
+const retrySyncOutcomeSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('ran'), pulled: z.number().int().min(0), settled: z.number().int().min(0) }).strict(),
+  z.object({ kind: z.literal('failed'), reason: z.string().min(1).max(200) }).strict(),
+  z.object({ kind: z.literal('unavailable') }).strict(),
+])
+const exportLocalDataOutcomeSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('exported'), path: z.string().min(1).max(4096), taskCount: z.number().int().min(0) }).strict(),
+  z.object({ kind: z.literal('failed'), reason: z.string().min(1).max(200) }).strict(),
+])
 const removeLocalDataOutcomeSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('removed') }).strict(),
   z.object({
@@ -213,12 +234,14 @@ export {
   decideSequenceOutcome,
   desktopPresentationSchema,
   editRequestSchema,
+  exportLocalDataOutcomeSchema,
   lifecycleRequestSchema,
   localAcceptanceSchema,
   moveTodayRequestSchema,
   removeLocalDataOutcomeSchema,
   removeLocalDataRequestSchema,
   resolveConflictRequestSchema,
+  retrySyncOutcomeSchema,
   snapshotSchema,
   syncNamespaceSchema,
   taskSchema,

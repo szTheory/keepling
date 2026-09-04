@@ -524,15 +524,44 @@ describe('preload bridge: hostile renderer calls never reach ipcRenderer.invoke 
   it('exposes only the named, expected surface -- no generic invoke/send/on escape hatch', () => {
     expect(Object.keys(exposedApi).sort()).toEqual(
       [
-        'accountStatus', 'beginSignIn', 'capture', 'editTask', 'lifecycleTask', 'listConflicts',
-        'moveToday', 'persistWorkspaceLayout', 'presentationSnapshot', 'removeLocalData',
-        'resolveConflict', 'restoreWorkspaceLayout', 'snapshot', 'subscribePresentation',
-        'undoLastAction',
+        'accountStatus', 'beginSignIn', 'capture', 'editTask', 'exportLocalData', 'lifecycleTask',
+        'listConflicts', 'moveToday', 'persistWorkspaceLayout', 'presentationSnapshot',
+        'removeLocalData', 'resolveConflict', 'restoreWorkspaceLayout', 'retrySync', 'snapshot',
+        'subscribePresentation', 'undoLastAction',
       ].sort(),
     )
     expect(exposedApi).not.toHaveProperty('invoke')
     expect(exposedApi).not.toHaveProperty('send')
     expect(exposedApi).not.toHaveProperty('ipcRenderer')
+  })
+
+  // O-42: the two capabilities the recovery actions needed. Both take NO
+  // argument, which is the point -- there is nothing for a hostile renderer
+  // to aim. What still has to hold is that neither trusts main's answer.
+  it('retrySync(): takes no argument, so no renderer can aim a synchronization push', async () => {
+    ipcRendererMock.invoke.mockClear()
+    ipcRendererMock.invoke.mockImplementationOnce(async () => ({ kind: 'ran', pulled: 0, settled: 1 }))
+    await (exposedApi.retrySync as (...args: unknown[]) => Promise<unknown>)({ commandBytes: 'hostile' })
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('keepling:retry-sync')
+    expect(ipcRendererMock.invoke.mock.calls[0]).toHaveLength(1)
+  })
+
+  it('retrySync(): a malformed main response is rejected before reaching the caller', async () => {
+    ipcRendererMock.invoke.mockImplementationOnce(async () => ({ kind: 'ran', pulled: -1, settled: 1 }))
+    await expect((exposedApi.retrySync as () => Promise<unknown>)()).rejects.toThrow()
+  })
+
+  it('exportLocalData(): takes no argument, so no renderer can direct a write', async () => {
+    ipcRendererMock.invoke.mockClear()
+    ipcRendererMock.invoke.mockImplementationOnce(async () => ({ kind: 'exported', path: '/tmp/x.json', taskCount: 0 }))
+    await (exposedApi.exportLocalData as (...args: unknown[]) => Promise<unknown>)({ path: '/etc/passwd' })
+    expect(ipcRendererMock.invoke).toHaveBeenCalledWith('keepling:export-local-data')
+    expect(ipcRendererMock.invoke.mock.calls[0]).toHaveLength(1)
+  })
+
+  it('exportLocalData(): a malformed main response is rejected before reaching the caller', async () => {
+    ipcRendererMock.invoke.mockImplementationOnce(async () => ({ kind: 'exported', taskCount: 0 }))
+    await expect((exposedApi.exportLocalData as () => Promise<unknown>)()).rejects.toThrow()
   })
 
   it('capture(): an extra field never reaches ipcRenderer.invoke', async () => {

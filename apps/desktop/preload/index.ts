@@ -8,12 +8,14 @@ import {
   decideSequenceOutcome,
   desktopPresentationSchema,
   editRequestSchema,
+  exportLocalDataOutcomeSchema,
   lifecycleRequestSchema,
   localAcceptanceSchema,
   moveTodayRequestSchema,
   removeLocalDataOutcomeSchema,
   removeLocalDataRequestSchema,
   resolveConflictRequestSchema,
+  retrySyncOutcomeSchema,
   snapshotSchema,
   undoResultSchema,
   workspaceLayoutStateSchema,
@@ -97,6 +99,14 @@ const keepling = Object.freeze({
   // real main-process parse, which is the actual security boundary.
   removeLocalData: async (request: unknown) => removeLocalDataOutcomeSchema.parse(
     await ipcRenderer.invoke('keepling:remove-local-data', removeLocalDataRequestSchema.parse(request)),
+  ),
+  // O-42: the two capabilities the authored recovery actions needed.
+  // Neither takes an argument -- `Retry`/`Check Again` mean "run the pass
+  // again now", and the export destination is main-owned -- so a renderer
+  // can neither aim a push nor direct a write.
+  retrySync: async () => retrySyncOutcomeSchema.parse(await ipcRenderer.invoke('keepling:retry-sync')),
+  exportLocalData: async () => exportLocalDataOutcomeSchema.parse(
+    await ipcRenderer.invoke('keepling:export-local-data'),
   ),
   // O-16 gap closure: the main window's read-only view of the account
   // connection, plus the resolution of the `sign_in` recovery action that
