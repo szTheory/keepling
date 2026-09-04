@@ -156,10 +156,30 @@ try {
   if (Number(conflict[3]) <= 0) fail('the real-stack suite surfaced zero conflicts')
   if (conflict[4] !== 'real') fail('the conflict was not produced by a real second writer')
 
+  // O-45. Undo was the last mutation a person can perform that reached the
+  // server never. It cannot be proved the way the others were: the command
+  // carries a SERVER-ISSUED handle, so a lane that never obtained one from a
+  // real server has proved nothing about it. Every field below is an
+  // observation the spec can only print after the real server acted.
+  const undo = stdout.match(
+    /REAL_STACK_UNDO handle=(\S+) undo_arrived=(\d+) reverted_on_server=(\d+) survived_relaunch=(\d+) refused_without_handle=(\d+)/,
+  )
+  if (!undo) fail('the real-stack suite never reported a REAL_STACK_UNDO evidence line')
+  if (undo[1] !== 'server_issued') fail('the undo handle was not issued by the real server')
+  if (Number(undo[2]) <= 0) fail('no undo_task command ever arrived at the real server')
+  if (Number(undo[3]) <= 0) fail('the real server never reversed the change -- the undo reconciled nothing')
+  if (Number(undo[4]) <= 0) fail('the offline undo did not survive a quit and relaunch')
+  if (Number(undo[5]) <= 0) fail('an undo with no server-issued handle was not refused')
+  // `undo_arrived` is NOT self-reported enthusiasm: the spec sets it only
+  // after finding the outbox's exact bytes among the bodies the forwarding
+  // proxy watched the server receive on /commands/undo-task. It is checked
+  // here rather than through `observedTypes`, which is printed by the
+  // earlier mutations case and closed before this one ran.
+
   console.log(
     `Desktop real-stack lane passed: cases=${passedCount} synced=${evidence[1]} ` +
       `exact_bytes=${evidence[2]} outcomes=${evidence[3]},${conflict[2]} server_origin=${evidence[4]} ` +
-      `command_types=${observedTypes.length} conflicts=${conflict[3]} ` +
+      `command_types=${observedTypes.length} conflicts=${conflict[3]} undo=${undo[2]} ` +
       `digest=${manifest.applicationDigestSha256}`,
   )
 } finally {

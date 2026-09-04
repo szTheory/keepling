@@ -217,10 +217,14 @@ runLane({
  * imported, and three evidence lines: `REAL_STACK_SYNC` (a positive
  * settled-mutation count and a proven exact-bytes retry), `REAL_STACK_MUTATIONS`
  * (every one of the eight command types a person can perform ARRIVING at the
- * real server, O-41), and `REAL_STACK_CONFLICT` (capture-before-edit ordering
+ * real server, O-41), `REAL_STACK_CONFLICT` (capture-before-edit ordering
  * on the wire, plus a conflict raised by the REAL server refusing a REAL
- * second writer, O-38). A green run that settled nothing, or that only ever
- * captured, or that never heard a conflict, fails here.
+ * second writer, O-38), and `REAL_STACK_UNDO` (a REAL server-issued undo
+ * capability, an offline undo surviving a real quit and relaunch, the real
+ * server's own state reversed, and a loud refusal when no handle was ever
+ * issued, O-45). A green run that settled nothing, or that only ever
+ * captured, or that never heard a conflict, or whose undo reconciled
+ * nothing, fails here.
  *
  * Runs HEADLESS, unlike the two Playwright lanes above. Those are forced
  * windowed because their assertions are about real presentation --
@@ -237,7 +241,7 @@ runLane({
   name: 'real-stack-sync',
   parse: (stdout) => {
     const summary = stdout.match(
-      /Desktop real-stack lane passed: cases=(\d+) synced=(\d+) exact_bytes=(\d+) outcomes=(\S+) server_origin=(\S+) command_types=(\d+) conflicts=(\d+)/,
+      /Desktop real-stack lane passed: cases=(\d+) synced=(\d+) exact_bytes=(\d+) outcomes=(\S+) server_origin=(\S+) command_types=(\d+) conflicts=(\d+) undo=(\d+)/,
     )
     if (!summary) throw new Error('real-stack lane summary line not found')
     if (Number(summary[2]) <= 0) throw new Error('real-stack lane settled zero mutations against the real server')
@@ -248,6 +252,10 @@ runLane({
     // O-38: and it must have heard a conflict the REAL server raised.
     if (Number(summary[7]) <= 0) throw new Error('real-stack lane surfaced no server-raised conflict')
     if (!summary[4].split(',').includes('conflict')) throw new Error('real-stack lane observed no conflict outcome')
+    // O-45: undo was the last mutation a person can perform that reached the
+    // server never. A lane that did not follow a REAL server-issued handle
+    // all the way to the server reversing the change has not proved it.
+    if (Number(summary[8]) <= 0) throw new Error('real-stack lane never reconciled an undo against the real server')
     return Number(summary[1])
   },
   trackedInputPaths: [

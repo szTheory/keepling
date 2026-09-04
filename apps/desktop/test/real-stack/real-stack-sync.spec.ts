@@ -67,8 +67,20 @@ import {
  *
  * COMMAND TYPES ACTUALLY OBSERVED on the wire: capture_task, edit_task,
  * complete_task, reopen_task, plan_for_today, unplan_task, trash_task,
- * restore_task. `move_today_task` (reordering within Today) has no desktop
- * surface and is not exercised.
+ * restore_task, and (03-23, O-45) undo_task. `move_today_task` (reordering
+ * within Today) has no desktop surface and is not exercised.
+ *
+ * WHAT THE UNDO CASE ACTUALLY OBSERVES, stated so it is not overclaimed: a
+ * real server-issued `UndoAvailability`; an offline undo surviving a real
+ * quit and relaunch; the real server's own `completed_at` returning to null;
+ * and a refusal when no handle was ever issued. It does NOT observe an
+ * EXPIRED handle -- the server's lifetime is 24 hours
+ * (`Undo.valid_for_seconds`) and nothing here may shorten it, so the
+ * `undo_expired` / `undo_stale` / `undo_already_applied` classification is
+ * proved exhaustively at the unit boundary in
+ * `test/application/server-refusal.test.ts`, driven with the server's own
+ * `undo_no_change` bodies, and the client-side expiry refusal in
+ * `test/application/undo-reconciliation.test.ts`.
  */
 
 type PackageManifest = {
@@ -409,6 +421,23 @@ const launch = async (profilePath: string): Promise<ElectronApplication> =>
     executablePath: manifest.executablePath,
     timeout: 60_000,
   })
+
+/**
+ * Reads the SERVER-ISSUED undo capabilities the app has retained, out of its
+ * own SQLite file, read-only. Used to wait for the handle to ARRIVE before
+ * going offline -- the alternative is a sleep, and this lane does not sleep
+ * and read once (O-24/O-32).
+ */
+const readUndoHandles = (profilePath: string): Array<{ key: string; value: string }> => {
+  const database = new DatabaseSync(join(profilePath, 'namespace.sqlite3'), { readOnly: true })
+  try {
+    return database
+      .prepare(`SELECT key, value FROM namespace_metadata WHERE key LIKE 'undo_handle:%'`)
+      .all() as Array<{ key: string; value: string }>
+  } finally {
+    database.close()
+  }
+}
 
 /** Reads the durable outbox out of the app's own SQLite file, without disturbing it. */
 const readOutbox = (profilePath: string) => {
@@ -786,6 +815,171 @@ test('an offline edit never overtakes its capture, and a conflict the real serve
     console.log(
       `REAL_STACK_CONFLICT ordering=capture_task,edit_task outcomes=conflict conflicts=1 ` +
         `second_writer=real digest=${manifest.applicationDigestSha256}`,
+    )
+  } finally {
+    await application.close()
+  }
+})
+
+
+/**
+ * O-45: UNDO, all the way to the real server and back.
+ *
+ * `DesktopApplication.undoLastLocalAction` used to reverse the last action
+ * in the visible projection and enqueue NOTHING, so an undo was durable on
+ * this Mac and invisible to the server forever -- the same defect class as
+ * O-41, one operation later, on an operation MAC-01 names explicitly.
+ *
+ * It could not be closed the way O-41 was: `POST /commands/undo-task` takes
+ * a SERVER-ISSUED handle carried in the acknowledgement's `undo` field, and
+ * this client retained it nowhere. So this case follows a real handle from
+ * the moment real Phoenix mints it to the moment real PostgreSQL reflects
+ * the compensation:
+ *
+ *   1. a real `complete_task` is accepted by the real server, which issues a
+ *      real `UndoAvailability` -- read back out of the app's own store, so
+ *      "the handle arrived" is an observation, not an assumption;
+ *   2. the network is severed and the undo is performed OFFLINE;
+ *   3. the app is QUIT and RELAUNCHED, and the undo command is still there
+ *      -- immutable bytes, not a re-serialization;
+ *   4. the network returns and the SERVER's own `completed_at` goes back to
+ *      null. That, and the bytes the forwarding proxy saw arrive, are the
+ *      evidence. The client's "Synced" label is never the evidence.
+ *
+ * And the loud half: an undo of a mutation the server has never
+ * acknowledged has no handle, and is REFUSED with copy a person can read,
+ * enqueueing nothing. Silently accepting it locally and dropping it is the
+ * defect being fixed.
+ */
+test('an offline undo survives a relaunch and reverses the change on the real server', async () => {
+  test.setTimeout(600_000)
+  const profilePath = join(profileRoot, 'real-stack-undo')
+  mkdirSync(profilePath, { recursive: true })
+  await gate.open()
+  let application = await launch(profilePath)
+  const arrivalsBefore = gate.bodies.length
+
+  try {
+    let window = await application.firstWindow()
+    await expect(window.getByRole('heading', { name: 'Inbox' })).toBeVisible()
+    await signIn(application)
+
+    const run = randomUUID().slice(0, 8)
+    const title = `Ferry booking ${run}`
+    await window.getByLabel('What do you want to keep?').fill(title)
+    await window.getByRole('button', { name: 'Add Task' }).click()
+
+    const taskId = await expect
+      .poll(
+        async () => {
+          const inbox = (await (await browser.request('/api/v1/inbox')).json()) as {
+            tasks: Array<{ id: string; title: string }>
+          }
+          return inbox.tasks.find((task) => task.title === title)?.id ?? null
+        },
+        { timeout: 90_000 },
+      )
+      .not.toBeNull()
+      .then(async () => {
+        const inbox = (await (await browser.request('/api/v1/inbox')).json()) as {
+          tasks: Array<{ id: string; title: string }>
+        }
+        return inbox.tasks.find((task) => task.title === title)!.id
+      })
+
+    // -- A REAL SERVER ACCEPTS A COMPENSATABLE COMMAND ---------------------
+    await window.getByText(title).first().click()
+    await window.getByRole('button', { name: 'Complete' }).click()
+    await expect.poll(async () => (await serverTask(taskId))?.completed_at, { timeout: 60_000 }).not.toBeNull()
+
+    // The capability the REAL server minted, read back out of the app's own
+    // store. `complete_task` is in `Undo.@supported_commands`, so the real
+    // server issues one; `capture_task` is not, so the capture never does.
+    const retained = await expect
+      .poll(() => readUndoHandles(profilePath).length, { timeout: 60_000 })
+      .toBeGreaterThan(0)
+      .then(() => readUndoHandles(profilePath))
+    const availability = JSON.parse(retained.at(-1)!.value) as {
+      expiresAt: string
+      handle: string
+      label: string
+    }
+    // Server-issued, not synthesised: the shape is `UndoHandle`, the expiry
+    // is in the future, and the label is the server's own recovery copy.
+    expect(availability.handle).toMatch(/^[A-Za-z0-9_-]{43,128}$/)
+    expect(Date.parse(availability.expiresAt)).toBeGreaterThan(Date.now())
+    expect(availability.label.length).toBeGreaterThan(0)
+
+    // -- UNDO WHILE THE SERVER IS UNREACHABLE ------------------------------
+    await gate.close()
+    await window.getByRole('button', { name: 'Undo Complete' }).click()
+    await expect(window.getByRole('button', { name: 'Complete' })).toBeVisible({ timeout: 30_000 })
+
+    const queued = await expect
+      .poll(() => readOutbox(profilePath).length, { timeout: 30_000 })
+      .toBe(1)
+      .then(() => readOutbox(profilePath)[0]!)
+    expect(JSON.parse(queued.commandBytes)).toEqual({
+      handle: availability.handle,
+      mutation_id: queued.mutationId,
+      type: 'undo_task',
+      version: 1,
+    })
+    expect(queued.fingerprint).toBe(createHash('sha256').update(queued.commandBytes).digest('hex'))
+    // The server still holds the completion: the undo has NOT reached it.
+    expect((await serverTaskDirect(taskId))?.completed_at).not.toBeNull()
+
+    // -- QUIT AND RELAUNCH -------------------------------------------------
+    await application.close()
+    application = await launch(profilePath)
+    window = await application.firstWindow()
+    await expect(window.getByRole('heading', { name: 'Inbox' })).toBeVisible()
+    const afterRelaunch = readOutbox(profilePath)
+    expect(afterRelaunch).toHaveLength(1)
+    // The SAME bytes. Not re-serialized, not rebuilt from a mutation id.
+    expect(afterRelaunch[0]!.commandBytes).toBe(queued.commandBytes)
+
+    // -- THE NETWORK RETURNS -----------------------------------------------
+    await gate.open()
+    // The SERVER's own state, not the client's label.
+    await expect.poll(async () => (await serverTask(taskId))?.completed_at, { timeout: 120_000 }).toBeNull()
+    await expect.poll(() => readOutbox(profilePath).length, { timeout: 60_000 }).toBe(0)
+
+    // The exact bytes ARRIVED, verified against what the forwarding proxy
+    // saw the server receive rather than against the client's own claim.
+    const undoArrivals = gate.bodies
+      .slice(arrivalsBefore)
+      .filter(({ url }) => url.includes('/api/v1/commands/undo-task'))
+    expect(undoArrivals.map(({ body }) => body)).toContain(queued.commandBytes)
+    // And the compensation is a real server activity, not a client rewrite:
+    // the revision went UP, because the server applied a new change.
+    const compensated = (await serverTask(taskId))!
+    expect(compensated.revision).toBeGreaterThan(1)
+
+    // -- THE LOUD HALF: NO HANDLE, NO SILENT LOCAL UNDO --------------------
+    await gate.close()
+    const unsentTitle = `Ferry booking ${run} — never sent`
+    await window.getByLabel('What do you want to keep?').fill(unsentTitle)
+    await window.getByRole('button', { name: 'Add Task' }).click()
+    await expect(window.getByText(unsentTitle)).toHaveCount(1)
+    await window.getByText(unsentTitle).first().click()
+    await window.getByRole('button', { name: 'Complete' }).click()
+
+    const outboxBeforeUndo = readOutbox(profilePath).length
+    await window.getByRole('button', { name: 'Undo Complete' }).click()
+    const refusal = 'This change hasn’t reached the server yet, so it can’t be undone. Nothing was changed.'
+    await expect(window.locator('#sync-status-row [data-sync-copy]')).toHaveText(refusal, { timeout: 30_000 })
+    await expect(window.locator('#sync-status-row')).toHaveAttribute('data-sync-status', 'undo_unavailable')
+    // Nothing was changed and nothing was queued: no undo_task exists.
+    const afterRefusal = readOutbox(profilePath)
+    expect(afterRefusal).toHaveLength(outboxBeforeUndo)
+    expect(afterRefusal.map(({ commandBytes }) => (JSON.parse(commandBytes) as { type: string }).type))
+      .not.toContain('undo_task')
+    await gate.open()
+
+    console.log(
+      `REAL_STACK_UNDO handle=server_issued undo_arrived=1 reverted_on_server=1 ` +
+        `survived_relaunch=1 refused_without_handle=1 digest=${manifest.applicationDigestSha256}`,
     )
   } finally {
     await application.close()
