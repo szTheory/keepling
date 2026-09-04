@@ -22,6 +22,7 @@ import {
   type PullPage,
   type SyncAcknowledgement,
   type SyncMutation,
+  type UndoTarget,
   type SyncNamespace,
   type SyncPort,
   type SyncState,
@@ -160,8 +161,12 @@ class WorkerLocalStore implements LocalStorePort {
     return this.#request('taskSyncBasis', taskId)
   }
 
-  undoLastLocalAction(): Promise<{ applied: boolean; snapshot: WorkspaceSnapshot }> {
-    return this.#request('undoLastLocalAction')
+  undoLastLocalAction(outbound?: SyncMutation): Promise<{ applied: boolean; snapshot: WorkspaceSnapshot }> {
+    return this.#request('undoLastLocalAction', outbound)
+  }
+
+  undoTarget(): Promise<UndoTarget | null> {
+    return this.#request('undoTarget')
   }
 
   listConflicts(): Promise<ConflictRecord[]> {
@@ -360,6 +365,18 @@ const bootstrap = async () => {
           mutationId: mutation.mutationId,
           outcome: 'accepted',
           snapshot: { id: mutation.taskId, title: mutation.title },
+          // O-45: this fixture is playing the SERVER, and a server that
+          // accepts a compensatable command issues an undo capability with
+          // it (`CommandStore#issue_undo`). Shaped exactly as
+          // `UndoAvailability` publishes it -- 43 characters of the URL-safe
+          // alphabet -- so the client path under test is the same one real
+          // Phoenix drives. The real-stack lane forbids this mode entirely,
+          // which is what keeps this from standing in for that proof.
+          undo: {
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1_000).toISOString(),
+            handle: 'k'.repeat(43),
+            label: 'Undo last action',
+          },
         }
       }
       if (syncMode === 'conflict') {

@@ -30,6 +30,7 @@ type WorkerRequest = {
     | 'syncState'
     | 'taskSyncBasis'
     | 'undoLastLocalAction'
+    | 'undoTarget'
   payload?: unknown
 }
 
@@ -122,7 +123,13 @@ parentPort.on('message', (request: WorkerRequest) => {
         value = store.taskSyncBasis(request.payload as string)
         break
       case 'undoLastLocalAction':
-        value = store.undoLastLocalAction()
+        // O-45: the durable undo command travels with the request, so the
+        // projection revert and the outbox insert happen inside ONE
+        // transaction on this side of the port.
+        value = store.undoLastLocalAction(request.payload as Parameters<typeof store.undoLastLocalAction>[0])
+        break
+      case 'undoTarget':
+        value = store.undoTarget()
         break
       case 'listConflicts':
         value = store.listConflicts()

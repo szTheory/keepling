@@ -26,6 +26,7 @@ type DesktopPresentationKind =
   | 'namespace_mismatch'
   | 'local_save_failure'
   | 'store_unavailable'
+  | 'undo_unavailable'
 
 type DesktopPresentationInput =
   | { kind: 'healthy'; lastSuccessfulContact?: string }
@@ -42,6 +43,22 @@ type DesktopPresentationInput =
   | { kind: 'namespace_mismatch'; pendingCount?: number }
   | { kind: 'local_save_failure' }
   | { kind: 'store_unavailable' }
+  /**
+   * O-45. An undo this Mac REFUSED to perform, and why.
+   *
+   * `unsent`: the mutation being undone has not been acknowledged, so the
+   * server has issued no compensation capability and there is nothing to
+   * send. Syncing is a real remedy -- once the acknowledgement lands the
+   * handle exists -- so `retry` is offered.
+   *
+   * `expired`: the server-issued handle's own `expires_at` has passed. No
+   * action can change that, so none is offered. Offering a button that
+   * cannot work is the dead-remedy failure O-42 removed.
+   *
+   * This is NOT `rejected`. That row says "The server didn't accept this
+   * change", and in both cases here the server was never asked.
+   */
+  | { kind: 'undo_unavailable'; reason: 'expired' | 'unsent' }
 
 type RecoveryAction = { code: RecoveryActionCode; label: string }
 
@@ -106,6 +123,10 @@ const deriveSummary = (
       return { actions: [action('retry_save', 'Try Again')], copy: 'Couldn’t save this change on this Mac. Keep this window open and try again.', count: null, kind: input.kind, lastSuccessfulContact: null }
     case 'store_unavailable':
       return { actions: [action('retry_opening', 'Retry Opening'), action('show_recovery_options', 'Show Recovery Options')], copy: 'Keepling can’t open the tasks saved on this Mac. Your data was not replaced or removed.', count: null, kind: input.kind, lastSuccessfulContact: null }
+    case 'undo_unavailable':
+      return input.reason === 'unsent'
+        ? { actions: [action('retry', 'Retry')], copy: 'This change hasn’t reached the server yet, so it can’t be undone. Nothing was changed.', count: null, kind: input.kind, lastSuccessfulContact: null }
+        : { actions: [], copy: 'This change can no longer be undone. Nothing was changed.', count: null, kind: input.kind, lastSuccessfulContact: null }
   }
 }
 

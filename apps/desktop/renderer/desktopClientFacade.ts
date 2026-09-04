@@ -83,6 +83,15 @@ const createDesktopClientFacade = (): ClientFacade => {
     void refresh()
   })
 
+  /**
+   * KNOWN LIMIT, recorded rather than papered over (O-45). The shared
+   * `RecoveryAvailabilityView` carries `expiresAt` and `handle`, and NEITHER
+   * is rendered -- `SyncRecovery` reads only `label`. The real
+   * server-issued handle deliberately does NOT come here: it is an
+   * account-bound capability and a renderer must never hold one. So these
+   * two fields stay local placeholders; the AUTHORITY on whether an undo
+   * can happen is main, which refuses and says why.
+   */
   const publishRecovery = (label: string) => {
     recovery = { expiresAt: new Date(Date.now() + 5 * 60_000).toISOString(), handle: 'local-undo', label }
     for (const listener of recoveryListeners) listener(recovery)
@@ -174,9 +183,27 @@ const createDesktopClientFacade = (): ClientFacade => {
       return () => recoveryListeners.delete(listener)
     },
     trashTask: (taskId: string) => runResult(window.keepling.lifecycleTask({ kind: 'trash', taskId })),
+    /**
+     * O-45. An undo now either reaches the server or is REFUSED, and the
+     * refusal says which. The copy is the same wording main publishes on
+     * the status row, because a person may see either surface and being
+     * told two different things about one refusal is worse than being told
+     * nothing. `SyncRecovery` renders this in its `role="status"` region.
+     */
     undoLastChange: async () => {
       const result = await window.keepling.undoLastAction()
-      if (!result.applied) return { kind: 'rejected', message: 'Nothing to undo.' }
+      if (!result.applied) {
+        if (result.reason === 'unsent') {
+          return {
+            kind: 'rejected',
+            message: 'This change hasn’t reached the server yet, so it can’t be undone. Nothing was changed.',
+          }
+        }
+        if (result.reason === 'expired') {
+          return { kind: 'rejected', message: 'This change can no longer be undone. Nothing was changed.' }
+        }
+        return { kind: 'rejected', message: 'Nothing to undo.' }
+      }
       tasks = result.snapshot.tasks.map(mapTask)
       await refreshConflicts()
       clearRecovery()

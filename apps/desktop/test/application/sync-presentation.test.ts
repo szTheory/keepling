@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { DesktopApplication, type PendingMutation } from '../../main/application/DesktopApplication.ts'
+import { DesktopApplication, type PendingMutation, type SyncMutation } from '../../main/application/DesktopApplication.ts'
 import { GRACE_PERIOD_MS, type DesktopPresentation } from '../../main/application/presentation.ts'
 import { isSyncUnreachable, SyncUnreachableError } from '../../main/application/sync-reachability.ts'
 import { KeeplingSyncAdapter } from '../../main/adapters/sync.ts'
@@ -22,11 +22,19 @@ import { KeeplingSyncAdapter } from '../../main/adapters/sync.ts'
 
 const commandBytes = JSON.stringify({ mutation_id: 'mutation-one', task_id: 'task-one', title: 'Sync me', type: 'capture_task', version: 1 })
 
-const mutation: PendingMutation = {
+// Both shapes at once: `pendingMutations` (reconcile) reads the
+// `PendingMutation` half and `readyMutations` (a sync pass) reads the
+// `SyncMutation` half. Stating both keeps the fixture an honest stand-in for
+// what the real store returns -- `effect.entityId` in particular is what a
+// pass hands to `push` as the undo routing key (O-45).
+const mutation: PendingMutation & SyncMutation = {
   acceptedAt: '2026-09-02T12:00:00.000Z',
   commandBytes,
+  dependencies: [],
+  effect: { entityId: 'task-one', snapshot: { id: 'task-one', revision: 1, title: 'Sync me' } },
   fingerprint: 'fingerprint-one',
   mutationId: 'mutation-one',
+  resourceKeys: ['task:task-one'],
   taskId: 'task-one',
   title: 'Sync me',
 }
@@ -36,7 +44,7 @@ type SyncStubs = {
   push?: (bytes: string) => Promise<{ fingerprint: string; mutationId: string } | null>
 }
 
-const buildApplication = (sync: SyncStubs, ready: PendingMutation[] = [mutation]) =>
+const buildApplication = (sync: SyncStubs, ready: Array<PendingMutation & SyncMutation> = [mutation]) =>
   new DesktopApplication({
     clock: { now: () => '2026-09-02T12:00:00.000Z' },
     identity: { randomId: () => 'unused' },

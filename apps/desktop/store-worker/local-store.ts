@@ -21,8 +21,45 @@ import type {
 } from '../main/application/DesktopApplication.ts'
 import type { OutboundBasis } from '../main/application/outbound-commands.ts'
 
+/** The SERVER-issued undo capability, retained verbatim (O-45). */
+type RetainedUndo = { expiresAt: string; handle: string; label: string }
+
+/**
+ * The last local action a person could undo, and whether the server ever
+ * issued a capability to undo it with (O-45). `availability: null` means the
+ * acknowledgement carrying a handle has not arrived -- there is nothing to
+ * send, and nothing here may invent one.
+ */
+type UndoTarget = {
+  availability: RetainedUndo | null
+  mutationId: string | null
+  previous: { notes: string; title: string }
+  taskId: string
+}
+
 const QUICK_ENTRY_DRAFT_KEY = 'quick_entry_draft'
 const QUICK_ENTRY_SHORTCUT_KEY = 'quick_entry_shortcut'
+
+/**
+ * O-45. The server-issued undo capability for one accepted mutation, keyed
+ * by that mutation's identity.
+ *
+ * Stored in the existing `namespace_metadata` key/value table, which is the
+ * same idiom the Quick Entry draft, the sync fence, the bound namespace and
+ * the last successful contact already use. NOT a new table, for a reason
+ * that is a property of this store rather than a preference: there is
+ * exactly ONE migration and `#applyMigration` refuses to open a database
+ * whose recorded checksum for version 1 disagrees with the file on disk.
+ * Editing `0001_initial.sql` would therefore fault every EXISTING local
+ * store into `migration_checksum_drift` -- the closed "Keepling can't open
+ * the tasks saved on this Mac" recovery state -- for every person who had
+ * already run the app. Building a migration-2 mechanism to avoid that is
+ * real work with its own failure modes and is not this change's to do.
+ *
+ * A retained handle is a CAPABILITY, not task state, so it deliberately
+ * never enters `canonical_shadow`, `immutable_commands` or the projection.
+ */
+const UNDO_HANDLE_PREFIX = 'undo_handle:'
 
 type LocalStoreOptions = {
   databasePath: string
@@ -458,6 +495,16 @@ class NodeSqliteLocalStore {
         `).run(pending.task_id, snapshotJson)
         this.#upsertProjection(pending.task_id, acknowledgement.snapshot, 'synced')
       }
+      // O-45: the server-issued compensation capability, retained against
+      // the mutation it undoes. This is the ONLY writer of an undo handle;
+      // nothing derives, extends or repairs one. It is present only for the
+      // commands the server can compensate (`Undo.@supported_commands` --
+      // notably not `capture_task`), and its absence is an honest "this
+      // cannot be undone", never a reason to synthesise something.
+      if (acknowledgement.undo !== undefined) {
+        this.#retainUndoAvailability(acknowledgement.mutationId, acknowledgement.undo)
+      }
+      this.#pruneUndoAvailability(new Date().toISOString())
       this.#database.prepare(`
         UPDATE mutation_journal SET outcome = ?, terminal_snapshot_json = ? WHERE mutation_id = ?
       `).run(acknowledgement.outcome, snapshotJson, acknowledgement.mutationId)
@@ -571,7 +618,7 @@ class NodeSqliteLocalStore {
     this.#database.exec('BEGIN IMMEDIATE')
     try {
       const before = this.#requireProjectionRow(command.taskId)
-      this.#recordLastAction(command.taskId, before)
+      this.#recordLastAction(command.taskId, before, outbound?.mutationId ?? null)
       this.#database.prepare(`
         UPDATE visible_projection SET title = ?, notes = ? WHERE task_id = ?
       `).run(title, command.notes, command.taskId)
@@ -595,7 +642,7 @@ class NodeSqliteLocalStore {
     this.#database.exec('BEGIN IMMEDIATE')
     try {
       const before = this.#requireProjectionRow(command.taskId)
-      this.#recordLastAction(command.taskId, before)
+      this.#recordLastAction(command.taskId, before, outbound?.mutationId ?? null)
       if (command.kind === 'complete') {
         this.#database.prepare(`UPDATE visible_projection SET completed_at = ? WHERE task_id = ?`)
           .run(new Date().toISOString(), command.taskId)
@@ -624,7 +671,7 @@ class NodeSqliteLocalStore {
     this.#database.exec('BEGIN IMMEDIATE')
     try {
       const before = this.#requireProjectionRow(command.taskId)
-      this.#recordLastAction(command.taskId, before)
+      this.#recordLastAction(command.taskId, before, outbound?.mutationId ?? null)
       this.#database.prepare(`UPDATE visible_projection SET planned = ? WHERE task_id = ?`)
         .run(command.planned ? 1 : 0, command.taskId)
       if (outbound) this.#enqueueOutbound(outbound)
@@ -636,18 +683,50 @@ class NodeSqliteLocalStore {
     return this.snapshot()
   }
 
-  undoLastLocalAction(): { applied: boolean; snapshot: WorkspaceSnapshot } {
+  /**
+   * O-45: what the last local action was, and whether the SERVER issued a
+   * capability to undo it. `null` means there is nothing to undo at all.
+   */
+  undoTarget(): UndoTarget | null {
+    const action = this.#readLastAction()
+    if (action === null) return null
+    return {
+      availability: action.mutationId === null ? null : this.#readUndoAvailability(action.mutationId),
+      mutationId: action.mutationId,
+      previous: { notes: action.previous.notes, title: action.previous.title },
+      taskId: action.taskId,
+    }
+  }
+
+  /**
+   * Reverses the last local action AND sends it (O-45).
+   *
+   * `outbound` is REQUIRED. Until this change the projection was reversed
+   * and nothing was enqueued, so an undo was durable on this Mac and
+   * invisible to the server forever -- the same defect class as O-41, one
+   * operation later. Calling this without a durable undo command now
+   * changes NOTHING and reports `applied: false`, because silently
+   * accepting an undo locally and dropping it is precisely the behaviour
+   * being removed. The caller decides what a person is told (an unsent
+   * mutation has no handle; an expired handle can no longer be used), and
+   * that refusal is surfaced rather than swallowed.
+   *
+   * The revert and the enqueue share ONE transaction, for the same reason
+   * every other mutation does (D-03): a crash between them would leave a
+   * person told the undo is safe while the intent to send it is gone.
+   *
+   * The undo itself is deliberately not recorded as a new undoable action.
+   * The handle it consumed is one-shot server side, so a second press must
+   * find nothing rather than replay a spent capability.
+   */
+  undoLastLocalAction(outbound?: SyncMutation): { applied: boolean; snapshot: WorkspaceSnapshot } {
     this.#assertNotFenced()
+    if (outbound === undefined) return { applied: false, snapshot: this.snapshot() }
+    const action = this.#readLastAction()
+    if (action === null) return { applied: false, snapshot: this.snapshot() }
+    this.#validateOutboundUndo(outbound, action.taskId)
     this.#database.exec('BEGIN IMMEDIATE')
     try {
-      const stored = this.#database.prepare(`
-        SELECT action_json FROM last_local_action WHERE singleton = 1
-      `).get() as { action_json: string | null }
-      if (stored.action_json === null) {
-        this.#database.exec('COMMIT')
-        return { applied: false, snapshot: this.snapshot() }
-      }
-      const action = JSON.parse(stored.action_json) as { previous: ProjectionRow; taskId: string }
       this.#database.prepare(`
         UPDATE visible_projection
         SET title = ?, notes = ?, completed_at = ?, trashed_at = ?, planned = ?
@@ -660,6 +739,14 @@ class NodeSqliteLocalStore {
         action.previous.planned,
         action.taskId,
       )
+      this.#enqueueOutbound(outbound)
+      // The projection above is the reverted state; `#enqueueOutbound`
+      // upserts the effect over it, and the effect carries the same
+      // reverted title, so the row a person sees does not flicker back.
+      if (action.mutationId !== null) {
+        this.#database.prepare('DELETE FROM namespace_metadata WHERE key = ?')
+          .run(`${UNDO_HANDLE_PREFIX}${action.mutationId}`)
+      }
       this.#database.prepare(`UPDATE last_local_action SET action_json = NULL WHERE singleton = 1`).run()
       this.#database.exec('COMMIT')
     } catch (error) {
@@ -755,10 +842,65 @@ class NodeSqliteLocalStore {
     return row
   }
 
-  #recordLastAction(taskId: string, before: ProjectionRow): void {
+  /**
+   * O-45: the recorded action now carries the MUTATION IDENTITY it produced,
+   * because that identity is the only thing that can find the server-issued
+   * undo handle for it. Rows written before this change have no
+   * `mutationId`; they resolve to no availability and are refused, which is
+   * the correct answer -- there is no handle for them and one must never be
+   * invented.
+   */
+  #recordLastAction(taskId: string, before: ProjectionRow, mutationId: string | null): void {
     this.#database.prepare(`
       UPDATE last_local_action SET action_json = ? WHERE singleton = 1
-    `).run(JSON.stringify({ previous: before, taskId }))
+    `).run(JSON.stringify({ mutationId, previous: before, taskId }))
+  }
+
+  #readLastAction(): { mutationId: string | null; previous: ProjectionRow; taskId: string } | null {
+    const stored = this.#database.prepare(`
+      SELECT action_json FROM last_local_action WHERE singleton = 1
+    `).get() as { action_json: string | null }
+    if (stored.action_json === null) return null
+    const action = JSON.parse(stored.action_json) as {
+      mutationId?: string | null
+      previous: ProjectionRow
+      taskId: string
+    }
+    return { mutationId: action.mutationId ?? null, previous: action.previous, taskId: action.taskId }
+  }
+
+  #retainUndoAvailability(mutationId: string, undo: RetainedUndo): void {
+    this.#database.prepare(`
+      INSERT INTO namespace_metadata(key, value) VALUES (?, ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value
+    `).run(`${UNDO_HANDLE_PREFIX}${mutationId}`, JSON.stringify(undo))
+  }
+
+  #readUndoAvailability(mutationId: string): RetainedUndo | null {
+    const row = this.#database.prepare(`
+      SELECT value FROM namespace_metadata WHERE key = ?
+    `).get(`${UNDO_HANDLE_PREFIX}${mutationId}`) as { value: string } | undefined
+    return row === undefined ? null : (JSON.parse(row.value) as RetainedUndo)
+  }
+
+  /**
+   * Handles are one-shot server side and expire (24 hours, `Undo.valid_for_seconds`).
+   * Keeping spent or lapsed ones would accumulate dead capabilities in a
+   * plaintext store forever, so each write sweeps the ones whose own
+   * SERVER-supplied expiry has passed. Nothing here extends or renews one.
+   */
+  #pruneUndoAvailability(nowIso: string): void {
+    const rows = this.#database.prepare(`
+      SELECT key, value FROM namespace_metadata WHERE key LIKE ?
+    `).all(`${UNDO_HANDLE_PREFIX}%`) as Array<{ key: string; value: string }>
+    const now = Date.parse(nowIso)
+    if (!Number.isFinite(now)) return
+    for (const row of rows) {
+      const expiry = Date.parse((JSON.parse(row.value) as RetainedUndo).expiresAt)
+      if (!Number.isFinite(expiry) || expiry <= now) {
+        this.#database.prepare('DELETE FROM namespace_metadata WHERE key = ?').run(row.key)
+      }
+    }
   }
 
   close(): void {
@@ -867,6 +1009,35 @@ class NodeSqliteLocalStore {
     }
   }
 
+  /**
+   * O-45. `UndoTaskCommand` publishes NO `task_id` and NO
+   * `expected_revision` -- the server resolves both from the handle it
+   * minted, and `decode_undo` compares the key set exactly, so either extra
+   * key is a 400. The guard is therefore its own, and checks the two things
+   * that CAN be checked: the bytes are the exact undo shape, and the task
+   * this Mac is queueing it against is the task whose action is being
+   * undone (which is what makes the `task:<id>` resource key an honest
+   * ordering key rather than a label).
+   */
+  #validateOutboundUndo(mutation: SyncMutation, taskId: string): void {
+    const fingerprint = createHash('sha256').update(mutation.commandBytes).digest('hex')
+    const command = JSON.parse(mutation.commandBytes) as Record<string, unknown>
+    if (
+      fingerprint !== mutation.fingerprint ||
+      command.mutation_id !== mutation.mutationId ||
+      command.type !== 'undo_task' ||
+      command.version !== 1 ||
+      typeof command.handle !== 'string' ||
+      !/^[A-Za-z0-9_-]{43,128}$/.test(command.handle) ||
+      Object.keys(command).length !== 4 ||
+      mutation.effect.entityId !== taskId ||
+      mutation.resourceKeys.length !== 1 ||
+      mutation.resourceKeys[0] !== `task:${taskId}`
+    ) {
+      throw new Error('outbound undo command bytes do not match the action being undone')
+    }
+  }
+
   #validateSyncMutation(mutation: SyncMutation): void {
     const fingerprint = createHash('sha256').update(mutation.commandBytes).digest('hex')
     const command = JSON.parse(mutation.commandBytes) as Record<string, unknown>
@@ -949,4 +1120,4 @@ class NodeSqliteLocalStore {
 }
 
 export { classifyStoreFailure, deriveLocalFilePaths, NodeSqliteLocalStore, removeLocalFilesAt }
-export type { LocalStoreOptions, StoreFailureCode }
+export type { LocalStoreOptions, RetainedUndo, StoreFailureCode, UndoTarget }

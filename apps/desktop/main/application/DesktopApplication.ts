@@ -8,6 +8,7 @@ import {
 } from './presentation.ts'
 import {
   buildOutboundCommand,
+  buildUndoCommand,
   type OutboundBasis,
   type OutboundIntent,
 } from './outbound-commands.ts'
@@ -133,6 +134,24 @@ type SyncUndoAvailability = {
   label: string
 }
 
+/**
+ * The last local action a person could undo, and whether the server ever
+ * issued a capability to undo it (O-45).
+ */
+type UndoTarget = {
+  availability: SyncUndoAvailability | null
+  mutationId: string | null
+  previous: { notes: string; title: string }
+  taskId: string
+}
+
+type UndoResult = {
+  applied: boolean
+  /** Why the undo did NOT happen. Absent when it did. */
+  reason?: 'expired' | 'nothing_to_undo' | 'unsent'
+  snapshot: WorkspaceSnapshot
+}
+
 type SyncAcknowledgement = {
   fingerprint: string
   mutationId: string
@@ -168,8 +187,21 @@ interface LocalStorePort {
    * (O-16/O-30/O-41) this phase keeps finding.
    */
   taskSyncBasis?(taskId: string): Promise<OutboundBasis> | OutboundBasis
-  /** Reverses the latest recorded local edit/lifecycle action, if any. */
-  undoLastLocalAction?(): Promise<{ applied: boolean; snapshot: WorkspaceSnapshot }> | { applied: boolean; snapshot: WorkspaceSnapshot }
+  /**
+   * Reverses the latest recorded local action AND records the durable
+   * outbound undo command in the SAME transaction (O-45). Called without
+   * one it changes nothing: an undo the server will never hear about is the
+   * defect this closes, not a fallback.
+   */
+  undoLastLocalAction?(outbound?: SyncMutation): Promise<{ applied: boolean; snapshot: WorkspaceSnapshot }> | { applied: boolean; snapshot: WorkspaceSnapshot }
+  /**
+   * O-45: the last local action, and the SERVER-ISSUED capability to undo it
+   * if one was ever retained. A store that cannot answer this cannot form an
+   * undo, and the operation FAILS LOUDLY rather than degrading to a
+   * local-only undo -- silent degradation is the defect class this phase
+   * keeps finding.
+   */
+  undoTarget?(): Promise<UndoTarget | null> | UndoTarget | null
   /** Lists open sync conflicts awaiting a mine/current choice. */
   listConflicts?(): Promise<ConflictRecord[]> | ConflictRecord[]
   /** Commits the chosen field value for a sync conflict and clears it. */
@@ -393,9 +425,91 @@ class DesktopApplication {
     return snapshot
   }
 
-  async undoLastLocalAction(): Promise<{ applied: boolean; snapshot: WorkspaceSnapshot }> {
+  /**
+   * O-45: undo, made to RECONCILE.
+   *
+   * Until this, `undoLastLocalAction` reversed the last action in the
+   * visible projection and enqueued nothing, so an undo was durable on this
+   * Mac and invisible to the server forever -- the same defect class as
+   * O-41, one operation later, and MAC-01 names undo explicitly as a
+   * supported Mac operation.
+   *
+   * It could not be closed the way O-41 was. `POST /commands/undo-task`
+   * takes a SERVER-ISSUED `handle` -- an opaque, account-bound, one-shot
+   * capability delivered in the acknowledgement's `undo` field -- and this
+   * client retained it nowhere. So the handle is now retained as
+   * acknowledgements arrive, and an undo REFERENCES a retained one.
+   *
+   * ## The case that mattered most, and how it is decided
+   *
+   * An undo of a mutation whose acknowledgement has not arrived has NO
+   * handle. Three answers were available:
+   *
+   *  - accept it locally and drop it -- the defect being removed;
+   *  - defer it until the handle lands;
+   *  - REFUSE at the point of action, with honest copy.
+   *
+   * This refuses. Deferring means holding an intent with no bytes,
+   * materialising them later from a handle that may never arrive, and
+   * inventing an in-doubt state to describe the wait -- a second durability
+   * mechanism alongside the outbox, and a decision on `{ kind: 'uncertain' }`
+   * (O-47) that this change does not carry authority to make. Refusing keeps
+   * ONE mechanism and keeps the failure loud, which is what "never silently
+   * dropped" actually requires. The cost is real and is recorded: undoing a
+   * change made while offline is refused until that change has been sent,
+   * and the copy says exactly that.
+   *
+   * An EXPIRED handle is refused here too, from the server's own
+   * `expires_at` -- not a client-invented lifetime. That is not a
+   * duplicate of the server's check: offline, the server cannot be asked,
+   * and queueing a command that is already certain to be refused would
+   * report an undo as "Saved on this Mac" until a reconnect could disprove
+   * it. When this Mac IS online and the server disagrees, its
+   * `undo_expired` / `undo_stale` / `undo_already_applied` no-change is
+   * classified through the SAME closed list 03-22 built and settles the
+   * command terminally.
+   *
+   * Ordering is 03-22's resource key and nothing else: the undo carries
+   * `task:<id>`, so it cannot overtake the mutation it undoes.
+   */
+  async undoLastLocalAction(): Promise<UndoResult> {
     if (!this.#localStore.undoLastLocalAction) throw new Error('undo is unavailable')
-    const result = await this.#localStore.undoLastLocalAction()
+    // Absent capability is a LOUD FAILURE. A store that cannot report the
+    // retained handle must never fall through to a local-only undo.
+    if (!this.#localStore.undoTarget || !this.#localStore.taskSyncBasis) {
+      throw new Error('undo reconciliation is unavailable')
+    }
+    const target = await this.#localStore.undoTarget()
+    if (target === null) {
+      return { applied: false, reason: 'nothing_to_undo', snapshot: await this.#localStore.snapshot() }
+    }
+    if (target.availability === null) {
+      this.publishPresentation({ kind: 'undo_unavailable', reason: 'unsent' })
+      return { applied: false, reason: 'unsent', snapshot: await this.#localStore.snapshot() }
+    }
+    const expiresAt = Date.parse(target.availability.expiresAt)
+    const now = Date.parse(this.#clock.now())
+    if (!Number.isFinite(expiresAt) || (Number.isFinite(now) && expiresAt <= now)) {
+      this.publishPresentation({ kind: 'undo_unavailable', reason: 'expired' })
+      return { applied: false, reason: 'expired', snapshot: await this.#localStore.snapshot() }
+    }
+
+    const basis = await this.#localStore.taskSyncBasis(target.taskId)
+    const mutationId = this.#identity.randomId()
+    const built = buildUndoCommand(
+      { handle: target.availability.handle, previous: target.previous, taskId: target.taskId },
+      basis,
+      mutationId,
+    )
+    const result = await this.#localStore.undoLastLocalAction({
+      acceptedAt: this.#clock.now(),
+      commandBytes: built.commandBytes,
+      dependencies: [],
+      effect: built.effect,
+      fingerprint: createHash('sha256').update(built.commandBytes).digest('hex'),
+      mutationId,
+      resourceKeys: built.resourceKeys,
+    })
     if (result.applied) this.publishPresentation({ kind: 'local_saved', pendingCount: 1 })
     return result
   }
@@ -623,7 +737,11 @@ class DesktopApplication {
       let conflicted = 0
       let refused = 0
       for (const mutation of ready) {
-        const acknowledgement = await this.#sync.push(mutation.commandBytes)
+        // O-45: `UndoTaskCommand` publishes no `task_id`, so the task this
+        // Mac queued the command against travels alongside the bytes rather
+        // than inside them. Every other command carries its own and ignores
+        // this.
+        const acknowledgement = await this.#sync.push(mutation.commandBytes, { taskId: mutation.effect.entityId })
         if (
           acknowledgement === null ||
           acknowledgement.mutationId !== mutation.mutationId ||
@@ -708,6 +826,8 @@ export type {
   SyncSnapshot,
   SyncState,
   SyncUndoAvailability,
+  UndoResult,
+  UndoTarget,
   WorkspaceSnapshot,
   WorkspaceTask,
 }

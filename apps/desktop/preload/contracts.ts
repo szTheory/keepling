@@ -23,7 +23,7 @@ const recoveryActionCodeSchema = z.enum([
 const desktopPresentationKindSchema = z.enum([
   'healthy', 'opening', 'preparing', 'updating', 'offline', 'retryable_failure',
   'local_saved', 'uncertain', 'rejected', 'conflict', 'authentication_required',
-  'namespace_mismatch', 'local_save_failure', 'store_unavailable',
+  'namespace_mismatch', 'local_save_failure', 'store_unavailable', 'undo_unavailable',
 ])
 const recoveryActionSchema = z.object({
   code: recoveryActionCodeSchema,
@@ -85,7 +85,19 @@ const conflictSchema = z.object({
   mine: z.string(),
   taskId: z.string().min(1),
 }).strict()
-const undoResultSchema = z.object({ applied: z.boolean(), snapshot: snapshotSchema }).strict()
+/**
+ * O-45: `reason` says why an undo did NOT happen. It is additive and
+ * optional, so an applied undo is byte-identical to what this contract
+ * accepted before. The refusal itself reaches a person through the
+ * main-owned presentation row, not through this value -- `DesktopShell`
+ * discards the outcome of `undoLastChange` -- so this exists for the
+ * renderer's own messaging and for tests, never as the only surfacing.
+ */
+const undoResultSchema = z.object({
+  applied: z.boolean(),
+  reason: z.enum(['expired', 'nothing_to_undo', 'unsent']).optional(),
+  snapshot: snapshotSchema,
+}).strict()
 const resolveConflictRequestSchema = z.object({
   choice: z.enum(['current', 'mine']),
   conflictId: z.string().min(1),
