@@ -2,321 +2,208 @@
 phase: KPL-03-mac-daily-loop
 reviewed: 2026-09-04T00:00:00Z
 depth: standard
-files_reviewed: 141
+scope: gap-closure-only
+diff_base: 4a5f50a
+files_reviewed: 6
 files_reviewed_list:
-  - .github/workflows/desktop.yml
-  - .gitignore
-  - .npmrc
-  - apps/desktop/forge.config.ts
-  - apps/desktop/main/adapters/auth.ts
-  - apps/desktop/main/adapters/credentials.ts
-  - apps/desktop/main/adapters/server-config.ts
-  - apps/desktop/main/adapters/server-refusal.ts
-  - apps/desktop/main/adapters/sync.ts
-  - apps/desktop/main/application/DesktopApplication.ts
-  - apps/desktop/main/application/outbound-commands.ts
-  - apps/desktop/main/application/presentation.ts
-  - apps/desktop/main/application/sync-reachability.ts
-  - apps/desktop/main/index.ts
-  - apps/desktop/main/lifecycle.ts
-  - apps/desktop/main/menu.ts
-  - apps/desktop/main/menuLabels.ts
-  - apps/desktop/main/protocol.ts
-  - apps/desktop/main/recovery/remove-local-data.ts
-  - apps/desktop/main/windows/foreground-app.ts
-  - apps/desktop/main/windows/headless-presentation.ts
-  - apps/desktop/main/windows/main-window.ts
-  - apps/desktop/main/windows/mainWindowState.ts
-  - apps/desktop/main/windows/quick-entry-window.ts
-  - apps/desktop/main/windows/settings-window.ts
-  - apps/desktop/migrations/0001_initial.sql
-  - apps/desktop/migrations/0002_outbox_state.sql
-  - apps/desktop/package.json
-  - apps/desktop/performance-budgets.json
-  - apps/desktop/playwright.config.ts
-  - apps/desktop/preload/contracts.ts
-  - apps/desktop/preload/index.ts
-  - apps/desktop/preload/utility-preload.ts
-  - apps/desktop/renderer/DesktopShell.tsx
-  - apps/desktop/renderer/SyncStatusRow.tsx
-  - apps/desktop/renderer/UtilitySyncStatusRow.tsx
-  - apps/desktop/renderer/desktop.css
-  - apps/desktop/renderer/desktopClientFacade.ts
-  - apps/desktop/renderer/index.html
-  - apps/desktop/renderer/keyboardCommands.ts
-  - apps/desktop/renderer/main.tsx
-  - apps/desktop/renderer/quick-entry.tsx
-  - apps/desktop/renderer/settings.tsx
-  - apps/desktop/store-worker/index.ts
-  - apps/desktop/store-worker/local-store.ts
-  - apps/desktop/test/application/browser-delegated-auth.test.ts
-  - apps/desktop/test/application/client-facade-boundary.test.ts
-  - apps/desktop/test/application/conflict-presentation.test.ts
-  - apps/desktop/test/application/foreground-app.test.ts
-  - apps/desktop/test/application/lifecycle.test.ts
-  - apps/desktop/test/application/mainWindowState.test.ts
-  - apps/desktop/test/application/menuLabels.test.ts
-  - apps/desktop/test/application/offline-capture.test.ts
-  - apps/desktop/test/application/outbound-commands.test.ts
-  - apps/desktop/test/application/quick-entry-draft.test.ts
-  - apps/desktop/test/application/recovery-presentation.test.ts
-  - apps/desktop/test/application/server-refusal.test.ts
-  - apps/desktop/test/application/state-matrix.test.tsx
-  - apps/desktop/test/application/sync-presentation.test.ts
-  - apps/desktop/test/application/sync-vectors.test.ts
-  - apps/desktop/test/application/undo-reconciliation.test.ts
-  - apps/desktop/test/e2e/accessibility.spec.ts
-  - apps/desktop/test/e2e/daily-loop.spec.ts
-  - apps/desktop/test/e2e/fixture-server-sync.spec.ts
-  - apps/desktop/test/e2e/gap-closure.spec.ts
-  - apps/desktop/test/e2e/keyboard-menus.spec.ts
-  - apps/desktop/test/e2e/keyboard-quick-entry.spec.ts
-  - apps/desktop/test/e2e/lifecycle.spec.ts
-  - apps/desktop/test/e2e/sync-recovery.spec.ts
-  - apps/desktop/test/fixtures/desktopClientFacade.ts
-  - apps/desktop/test/fixtures/wired-app-harness.ts
-  - apps/desktop/test/ipc/hostile-bridge.test.ts
-  - apps/desktop/test/packaged/daily-loop.spec.ts
-  - apps/desktop/test/packaged/offline-capture.spec.ts
-  - apps/desktop/test/packaged/security.spec.ts
-  - apps/desktop/test/performance/runtime.spec.ts
-  - apps/desktop/test/real-stack/real-stack-sync.spec.ts
-  - apps/desktop/test/renderer/keyboardCommands.test.ts
-  - apps/desktop/test/renderer/sync-status-row.test.tsx
-  - apps/desktop/test/renderer/workspace-tracer.test.tsx
-  - apps/desktop/test/store/migrations-faults.test.ts
-  - apps/desktop/test/store/offline-capture.test.ts
-  - apps/desktop/test/store/outbound-mutations.test.ts
-  - apps/desktop/test/store/outbox-state-migration.test.ts
-  - apps/desktop/test/store/outbox-transmission.test.ts
-  - apps/desktop/test/store/quick-entry-draft.test.ts
-  - apps/desktop/test/store/undo-handles.test.ts
-  - apps/desktop/tsconfig.json
-  - apps/desktop/vite.harness.config.ts
-  - apps/desktop/vite.main.config.ts
-  - apps/desktop/vite.preload.config.ts
-  - apps/desktop/vite.renderer.config.ts
-  - apps/desktop/vite.utility-preload.config.ts
-  - apps/desktop/vite.worker.config.ts
-  - apps/desktop/vitest.config.ts
-  - apps/server/config/runtime.exs
-  - apps/server/lib/keepling/accounts/device_grant.ex
-  - apps/server/lib/keepling/application.ex
-  - apps/server/lib/keepling_web/auth.ex
-  - apps/server/lib/keepling_web/command_discriminator.ex
-  - apps/server/lib/keepling_web/controllers/command_controller.ex
-  - apps/server/lib/keepling_web/controllers/device_grant_controller.ex
-  - apps/server/lib/keepling_web/router.ex
-  - apps/server/test/keepling_web/device_grant_command_test.exs
-  - apps/server/test/keepling_web/device_grant_controller_test.exs
-  - apps/web/e2e/support/backend.ts
-  - apps/web/e2e/support/stack.ts
-  - apps/web/src/adapters/browserClientFacade.test.tsx
-  - apps/web/src/adapters/browserClientFacade.ts
-  - apps/web/src/app/AppShell.tsx
-  - apps/web/src/app/WorkspaceShell.test.tsx
-  - apps/web/src/app/WorkspaceShell.tsx
-  - docs/testing/desktop-dogfood.md
-  - docs/testing/desktop-performance.md
-  - docs/testing/desktop-testing.md
-  - infra/compose/compose.yml
+  - apps/desktop/test/e2e/appearance-matrix.spec.ts
   - package.json
-  - packages/contracts/openapi/keepling.yaml
-  - packages/web-ui/package.json
-  - packages/web-ui/src/ClientFacade.ts
-  - packages/web-ui/src/capture/CaptureForm.tsx
-  - packages/web-ui/src/recovery/SyncRecovery.tsx
-  - packages/web-ui/src/tasks/ConflictResolver.tsx
-  - packages/web-ui/src/tasks/TaskEditor.tsx
-  - packages/web-ui/src/tasks/TaskList.tsx
-  - packages/web-ui/src/workspace/Workspace.tsx
-  - tooling/check-contracts.mjs
-  - tooling/macos-integration/AXProbe.swift
-  - tooling/macos-integration/HotkeyRival.swift
-  - tooling/macos-integration/SystemSettings.swift
-  - tooling/macos-integration/TccProbe.swift
-  - tooling/measure-desktop-performance.mjs
   - tooling/package-desktop.mjs
-  - tooling/run-local-stack.sh
-  - tooling/run-tests.mjs
-  - tooling/select-tests.mjs
-  - tooling/smoke-desktop-packaged.mjs
-  - tooling/test-changed.mjs
-  - tooling/verify-desktop-harness.mjs
   - tooling/verify-desktop-phase.mjs
   - tooling/verify-macos-integration.mjs
-  - tooling/verify-real-stack-desktop.mjs
-excluded:
-  - pnpm-lock.yaml (lockfile)
-  - packages/contracts/generated/keepling.ts (generated code)
+  - tooling/verify-package-reproducibility.mjs
 findings:
   critical: 0
-  warning: 3
-  info: 1
-  total: 4
-status: issues-found
+  warning: 1
+  info: 2
+  total: 3
+status: issues_found
 ---
 
-# Phase KPL-03: Code Review Report
+# Phase KPL-03: Code Review Report (gap-closure scope)
 
 **Reviewed:** 2026-09-04
 **Depth:** standard
-**Files Reviewed:** 141 (2 excluded: lockfile, generated contract)
+**Files Reviewed:** 6
 **Status:** issues_found
+
+## IMPORTANT — Scope of this document
+
+This is **not** a whole-phase review. It covers only the files changed by
+KPL-03's gap-closure plans (03-25, 03-26, 03-27), computed as
+`git diff --name-only 4a5f50a..HEAD` filtered to source files. This document
+**replaces** a prior `03-REVIEW.md` that reviewed the full phase (141 files,
+plans 01-24) and recorded **0 Critical / 3 Warning / 1 Info**. That prior
+review's findings (SafeStorage `shouldReEncrypt` discarded, title-based task
+lookup after capture, Quick Entry/Settings IPC sender-trust asymmetry, and a
+discarded store-open error) are about `apps/desktop/main/**` and
+`apps/desktop/renderer/**` files that are **not** part of this diff and were
+**not re-examined here**. Anyone tracking phase-wide review status should
+treat those four findings as still outstanding until re-verified separately;
+they are recorded here only for continuity, not re-validated in this pass.
 
 ## Summary
 
-This phase wires the Electron main/preload/renderer boundary, the SafeStorage
-credential adapter, the browser-delegated OAuth/PKCE flow, the Phoenix
-device-grant auth path, and the offline-first sync/outbox state machine end to
-end for the first time. The code is unusually well hardened for a first
-integration pass: every `ipcMain.handle` call is gated behind an exact
-`WebContents`-id + main-frame + origin-URL sender check, every preload/main
-schema is `.strict()` on both sides of the IPC boundary, the packaged
-`app://renderer/` protocol handler resolves paths through a path-traversal
-guard before any filesystem read, CSP is applied at the session level with no
-`unsafe-inline` script source, `contextIsolation`/`sandbox`/`nodeIntegration`
-are correctly set on every `BrowserWindow`, the OAuth flow uses PKCE S256 with
-exact state matching and treats every browser callback as untrusted input, and
-the Phoenix device-grant path uses hashed tokens, `secure_compare`, per-grant
-generation bumping on revoke, and refresh-token replay detection with family
-revocation. I did not find any injection, auth-bypass, or credential-handling
-vulnerability that would block shipping.
+This diff is a verification-harness gap-closure pass, not application code:
+`tooling/package-desktop.mjs` (reproducibility manifest + digest-bound
+promotion + `--reuse-if-unchanged`), `tooling/verify-package-reproducibility.mjs`
+(three/N-build byte-identical comparison with a self-test),
+`tooling/verify-desktop-phase.mjs` (the aggregate gate that wires all lanes
+together plus the D-48 adversarial-fixture-ownership registry), the new
+`tooling/verify-macos-integration.mjs` macOS AX/CGEvent lane (rows A1-A15),
+and a new Playwright spec (`appearance-matrix.spec.ts`) proving five
+window-size/theme combinations behaviorally rather than by golden image.
 
-The findings below are real but narrow: an unaddressed SafeStorage key
-re-encryption signal, a title-based (rather than id-based) task lookup after
-capture that can target the wrong task when two tasks share a title, and a
-weaker sender-trust check on the Quick Entry/Settings utility IPC surface than
-the equivalent check on the main window's surface.
+Given the reviewer brief's explicit concern — "can this harness report a
+PASS it did not earn" — I traced every place that looked like a candidate for
+a vacuous pass, a stale cache, a broken restore path, or a non-deterministic
+"deterministic" shuffle:
+
+- `evaluateEvidence`/`runGateMode` in `verify-macos-integration.mjs` (the
+  digest-bound reuse of the macOS lane's evidence): binds to
+  `applicationDigestSha256`, `executableDigestSha256`, all three Swift probe
+  source digests, and the lane's *own* source digest; requires every one of
+  the 15 rows present and passing; requires a positive case count. It ships
+  its own inline self-test (`SELF-TEST-EVIDENCE`, `runEvidenceSelfTest`)
+  covering every one of those negative paths (different digest, different
+  executable, changed probe, changed lane source, missing `laneSourceDigest`
+  field, a failing row, partial-subset coverage, zero cases) plus the
+  positive path. This is sound.
+- `seededShuffle`/`mulberry32` (`verify-macos-integration.mjs:2544-2563`): a
+  standard, correctly-implemented mulberry32 PRNG seeded once from the
+  `--seed` argument, driving an in-place Fisher-Yates. Given the same seed it
+  produces the same permutation; I verified the algorithm by hand and it
+  contains no `Math.random()` fallback or per-call reseeding.
+- The system-settings capture/restore machinery
+  (`captureSystemSettings`/`applyBaselineAndVerify`/`restoreSystemSettings`/
+  `restoreBetweenRows`) restores on: normal completion (`cleanUp`), a thrown
+  `LaneFailure`, an `uncaughtException` handler, and `SIGINT`/`SIGTERM`/
+  `SIGHUP` handlers registered *before* any mutation is possible order-wise
+  (registered at module load, and `assertNoLeftoverCapture` refuses to start
+  a run at all if a prior run's capture file is still on disk, rather than
+  silently adopting a dirty machine as the new baseline). Restoration is
+  verified by re-reading settings in a **separate process** rather than
+  trusting an in-process read-back, and the capture file is deleted only
+  after that re-read confirms a match. `runSelfTestRestore` proves both the
+  mid-row-exception path and a real SIGTERM-to-a-forked-child path.
+- Reproducibility (`verify-package-reproducibility.mjs`): `compareTrees`
+  returns every entry's disposition, not just diffs, so `comparedEntries`
+  can't be silently zero; `--self-test` proves the comparator can see a real
+  content/mode/symlink diff before it's ever trusted on a real build; a
+  differing `.asar` is descended into by member rather than reported only at
+  the container level, and an unextractable archive is reported as an
+  explicit `asar-extract-unavailable` diff rather than downgraded to "same".
+  `runBuilds` refuses on a dirty tree and requires `--builds >= 2`.
+- `tooling/package-desktop.mjs`'s `--reuse-if-unchanged`: re-hashes the
+  candidate artifact's bytes on disk (both the `.app` tree and the
+  executable) against the manifest's recorded digests before ever reusing it,
+  and falls through to a full rebuild — never a hang, never a silent stale
+  reuse — on any mismatch, missing file, or unreadable manifest.
+- `verify-desktop-phase.mjs`'s `runLane`: a lane can only be marked `passed`
+  if it exited 0, its `parse` function didn't throw, and the parsed case
+  count is a finite number `> 0` — there is no "assume green" branch. The
+  `privacy` lane's `command: 'node', args: []` looked suspicious at first
+  (an argument-less `node` invocation could in principle hang waiting on
+  stdin) — I confirmed empirically
+  (`spawnSync('node', [])` with default stdio) that it exits immediately with
+  status 0 in ~20ms, because Node treats a non-TTY, immediately-EOF stdin as
+  an empty script. This is a legitimate (if terse) way to run a `parse`-only
+  lane through the same accounting path as every subprocess-backed lane; it
+  is not a hang risk.
+- `appearance-matrix.spec.ts`: resizes the real `BrowserWindow`, reads the
+  content size back and asserts it landed *before* asserting anything about
+  layout (so a resize that silently no-ops via the `?.` optional chain on
+  `getAllWindows()[0]` fails the very next assertion rather than passing
+  vacuously), and the "which regions must be non-zero" split at 1024px
+  content width is correctly derived from `Workspace.tsx`'s own breakpoint
+  and matches the five sizes actually enumerated below it.
+
+I found no Critical issue in this diff. The one Warning and two Info items
+below are genuine but narrow.
 
 ## Warnings
 
-### WR-01: `shouldReEncrypt` from `safeStorage.decryptStringAsync` is silently discarded
+### WR-01: Fixed 100ms sleep after `emulateMedia` instead of polling for the repaint
 
-**File:** `apps/desktop/main/adapters/credentials.ts:74-79`
-**Issue:** Electron's `safeStorage.decryptStringAsync` returns
-`{ result, shouldReEncrypt }`. `shouldReEncrypt: true` means the OS has
-rotated the encryption key (or otherwise wants the ciphertext refreshed) and
-the caller is expected to re-encrypt and persist the value on this read. The
-adapter reads only `.result` and never inspects or acts on `shouldReEncrypt`:
+**File:** `apps/desktop/test/e2e/appearance-matrix.spec.ts:121-125`
+**Issue:** Every other timing-sensitive spot in this same phase's harness
+(`tooling/verify-macos-integration.mjs`, see its own extensively-documented
+"poll for the condition you are about to assert, never sleep a fixed amount"
+rule) treats a fixed sleep as a proven source of flakiness on a loaded
+machine. This spec does the opposite immediately after changing the color
+scheme:
 ```ts
-async load(): Promise<string | null> {
-  const encrypted = await this.#read(this.#filePath)
-  if (encrypted === null) return null
-  if (!await this.#safeStorage.isAsyncEncryptionAvailable()) throw new Error('credential_protection_unavailable')
-  return (await this.#safeStorage.decryptStringAsync(encrypted)).result
-}
-```
-Concretely: after a macOS Keychain/OS-level key rotation, the stored
-`credential.enc` file keeps being decrypted with the old key material
-indefinitely (a decrypt success today is not evidence this keeps working after
-the *next* rotation), and the app never migrates to the rotated key as
-Electron's own API contract expects. This is a slow-burn robustness/security
-hygiene gap, not an exploitable vulnerability today.
-**Fix:**
-```ts
-async load(): Promise<string | null> {
-  const encrypted = await this.#read(this.#filePath)
-  if (encrypted === null) return null
-  if (!await this.#safeStorage.isAsyncEncryptionAvailable()) throw new Error('credential_protection_unavailable')
-  const { result, shouldReEncrypt } = await this.#safeStorage.decryptStringAsync(encrypted)
-  if (shouldReEncrypt) await this.store(result).catch(() => {})
-  return result
-}
-```
+await window.emulateMedia({ colorScheme: theme })
+// Emulating a colorScheme change alone does not force a layout pass
+// in every Electron/Chromium version; give the renderer one tick to
+// settle before measuring anything.
+await window.waitForTimeout(100)
 
-### WR-02: Post-capture "add to Today" targets a task by title match, not by identity
-
-**File:** `apps/desktop/renderer/desktopClientFacade.ts:133-151`, `apps/desktop/main/windows/quick-entry-window.ts:112-123`
-**Issue:** `window.keepling.capture()` (the preload `localAcceptanceSchema`,
-`apps/desktop/preload/contracts.ts:63-68`) returns `mutationId`/`fingerprint`/
-`snapshot`/`status` but never the id of the task that was just created. Both
-capture call sites that need to immediately act on the new task (main-window
-"Add to Today" checkbox, and Quick Entry's `addToToday`) recover the id by
-searching the returned snapshot for a task whose *title* matches the
-just-submitted title:
-```ts
-// desktopClientFacade.ts
-let task = tasks.find((candidate) => candidate.title === input.title.trim()) ?? tasks[0]!
+await expect(window.getByRole('navigation')).toBeVisible()
+await expect(window.getByRole('form', { name: 'Add task' })).toBeVisible()
+await captureOneTask(window, `Case proof ${size.width}x${size.height} ${theme}`)
 ```
+In practice the risk this creates is muted, not absent: the two `toBeVisible`
+assertions that immediately follow have Playwright's own auto-retry (default
+~5s) built in, and `captureOneTask`'s `fill`/`click`/`toBeVisible` sequence
+adds further real wall-clock time before the overflow measurement later in
+the test runs. So a slow theme repaint is unlikely to manufacture a false
+pass here — but it is exactly the pattern this phase's own macOS lane
+identified, with specific measured flakes, as unsafe on a loaded CI/dev
+machine, and a 100ms budget on a genuinely slow repaint could still let the
+overflow check (`scrollWidth <= clientWidth`, later in the test) sample a
+mid-repaint frame that happens to not yet show the layout the theme change
+would eventually produce.
+**Fix:** Replace the fixed sleep with a poll for an observable post-theme
+consequence, e.g.:
 ```ts
-// quick-entry-window.ts
-const taskId = acceptance.snapshot.tasks.find((task) => task.title === trimmed)?.id
+await window.emulateMedia({ colorScheme: theme })
+await expect(window.getByRole('navigation')).toBeVisible()
+await window.waitForFunction(
+  (expected) => document.documentElement.matches(`[data-theme="${expected}"]`) ||
+    getComputedStyle(document.documentElement).colorScheme === expected,
+  theme,
+)
 ```
-`tasks`/`snapshot.tasks` is the full workspace (`SELECT ... FROM
-visible_projection ORDER BY rowid`, `local-store.ts:773-789`), so if any
-earlier task shares the exact trimmed title with the one just captured (a
-common case for short recurring titles like "Follow up" or "Call back"),
-`.find()` returns the *first* (oldest) match rather than the new task. In
-`desktopClientFacade.ts` this is compounded by the `?? tasks[0]!` fallback: if
-for any reason no title match is found, the code falls back to the very first
-task in the entire list and applies "Add to Today" to a completely unrelated,
-arbitrary task with no error surfaced to the user.
-**Fix:** Have `capture()` return the created task's id (e.g. add `taskId` to
-`LocalAcceptance`/`localAcceptanceSchema`, populated from the already-known
-`mutation.taskId` in `DesktopApplication.capture`/`acceptCapture`), and use
-that id directly instead of a title search on both call sites. At minimum,
-drop the `?? tasks[0]!` fallback in `desktopClientFacade.ts` so an unmatched
-capture never silently mutates an unrelated task.
-
-### WR-03: Quick Entry/Settings utility IPC sender check omits the main-frame/origin checks the main window's equivalent check enforces
-
-**File:** `apps/desktop/main/windows/quick-entry-window.ts:84-89`
-**Issue:** Every `ipcMain.handle`/`ipcMain.on` channel registered by
-`QuickEntryWindowController` is guarded by:
-```ts
-#assertTrustedSender(sender: Electron.WebContents): void {
-  const isOwnWindow = this.#window !== null && sender === this.#window.webContents
-  if (!isOwnWindow && !this.#trustedSenders.has(sender)) {
-    throw new Error('untrusted Quick Entry sender')
-  }
-}
-```
-This only checks `WebContents` identity. It does not check the
-`event.senderFrame`/`isMainFrame`/frame-URL conditions that `main/protocol.ts`
-`isTrustedIpcSender` (used by every channel in `main/index.ts`, including the
-`keepling:utility:*` account channels registered directly in `main/index.ts`)
-applies — i.e. a subframe of the Quick Entry or Settings `WebContents` would
-pass this check, whereas the equivalent channel on the main window's
-`WebContents` or the account channels would reject it. Given the strict
-`will-navigate`/`setWindowOpenHandler` deny-all policy and the fact that these
-windows only ever load the packaged `app://renderer/...?view=quick-entry`
-content with no third-party iframes, this is not currently exploitable, but it
-is an inconsistency in the security boundary that later code (which might add
-an iframe, or a webview, to one of these two windows) could silently rely on
-without realizing the frame check is missing here.
-**Fix:** Reuse `isTrustedIpcSender`/`assertTrustedIpcSender` from
-`main/protocol.ts` (passing `event.senderFrame`/`event.sender.mainFrame`) in
-`QuickEntryWindowController#assertTrustedSender` instead of a bespoke
-`WebContents`-identity-only check, so every IPC surface in the app enforces
-the same trust policy.
+(adjust the predicate to whatever DOM/CSS signal the app actually emits on
+theme application) so a genuinely slow repaint extends the wait instead of
+being raced.
 
 ## Info
 
-### IN-01: `reconcile()` catches and discards the store-open error without using it
+### IN-01: `settingsState.applied` is written but never read
 
-**File:** `apps/desktop/main/application/DesktopApplication.ts:685-691`
+**File:** `tooling/verify-macos-integration.mjs:898`
+**Issue:** `applySystemSettings` sets `settingsState.applied = true` but no
+other code in the file reads `settingsState.applied` (confirmed by search —
+it is the only reference to that field). Dead state; harmless today, but a
+future reader could reasonably assume it gates some behavior (e.g. whether
+restore runs) when it does not.
+**Fix:** Remove the field, or if it was intended as a defensive check
+somewhere (e.g. in `restoreSystemSettings`, to distinguish "never mutated
+anything" from "captured but not yet mutated"), wire it in and assert on it.
+
+### IN-02: `runSelfTestRestore` is defined with no parameters but called with an argument
+
+**File:** `tooling/verify-macos-integration.mjs:2398` (definition) and `:2737` (call site)
 **Issue:**
-```ts
-try {
-  pending = await this.#localStore.pendingMutations()
-} catch (error) {
-  this.publishPresentation({ kind: 'store_unavailable' })
-  return { settled: 0 }
-}
+```js
+const runSelfTestRestore = async () => { ... }
+...
+await runSelfTestRestore(context)
 ```
-`error` is bound but never read; the underlying failure reason (e.g. the
-`StoreFailureCode` classification `local-store.ts` already computes) is
-dropped rather than logged or attached to the published presentation, making
-this specific failure harder to diagnose from a bug report than it needs to
-be. Not a correctness bug (the closed `store_unavailable` recovery state is
-still published correctly).
-**Fix:** Log `error` (or thread a `classifyStoreFailure(error)`-derived code
-into a diagnostic event) before returning, for operability rather than
-correctness.
+The extra `context` argument is silently discarded (harmless in JS), but it
+suggests either a stale signature after a refactor (the function likely used
+to need `context` and no longer does, or was always going to and the wiring
+was never finished) or a maintainer's reasonable expectation that
+`runSelfTestRestore` has access to the manifest/probe context it is passed.
+**Fix:** Drop the argument at the call site, or thread it through if a future
+change to this function needs it — either way, remove the mismatch so the
+signature reflects reality.
 
 ---
 
 _Reviewed: 2026-09-04_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
+_Scope: gap-closure diff only (plans 03-25..03-27); see "IMPORTANT — Scope" above for the superseded whole-phase review's outstanding findings._
