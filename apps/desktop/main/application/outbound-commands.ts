@@ -63,6 +63,7 @@ type OutboundCommandType =
   | 'reopen_task'
   | 'restore_task'
   | 'trash_task'
+  | 'undo_task'
   | 'unplan_task'
 
 /** The last state this client believes the server holds for one task. */
@@ -111,6 +112,23 @@ const LIFECYCLE_COMMAND_TYPES: Readonly<Record<OutboundLifecycle, OutboundComman
  * resolves to a path the contract actually publishes.
  */
 const outboundCommandPath = (type: OutboundCommandType): string => `/commands/${type.replaceAll('_', '-')}`
+
+/**
+ * O-45. The undo handle is an opaque, account-bound, ONE-SHOT capability
+ * MINTED BY THE SERVER (`UndoHandle`: 43..128 characters of the URL-safe
+ * base64 alphabet) and delivered in the `undo` field of the acknowledgement
+ * that accepted the original mutation. This client retains it and sends it
+ * back verbatim.
+ *
+ * It is never synthesised, never derived from a mutation identity, and
+ * never repaired. The shape is checked HERE, before the bytes reach the
+ * outbox, for the same reason `version` is (O-34): the server's
+ * `decode_undo` refuses a handle outside those bounds with 400
+ * `invalid_command`, and a body a real server will refuse must never become
+ * durable -- it would sit in the outbox forever, reported as "Saved on this
+ * Mac", with nothing able to settle it.
+ */
+const UNDO_HANDLE_PATTERN = /^[A-Za-z0-9_-]{43,128}$/
 
 const assertBasis = (basis: OutboundBasis): void => {
   if (!Number.isSafeInteger(basis.expectedRevision) || basis.expectedRevision < 1) {
@@ -235,7 +253,69 @@ const buildOutboundCommand = (
   }
 }
 
-export { LIFECYCLE_COMMAND_TYPES, buildOutboundCommand, outboundCommandPath }
+/**
+ * The durable bytes for one undo (O-45).
+ *
+ * Undo is the one command whose body this client cannot derive from its own
+ * state, which is why it could not be folded into `buildOutboundCommand`
+ * above: `UndoTaskCommand` publishes exactly `handle`, `mutation_id`,
+ * `version` and the optional `type` discriminator -- NO `task_id` and NO
+ * `expected_revision`. The server resolves both from the handle it minted
+ * (`CommandStore#apply_undo_delivery` reads `handle.task_id` and compares
+ * `handle.produced_revision` itself), and adding either key would be
+ * refused: `decode_undo` compares the key set EXACTLY.
+ *
+ * The task identity still travels OUTSIDE the bytes, in `effect.entityId`
+ * and in the resource key, because this client's own ordering rule needs
+ * it: an undo of a task must not overtake the mutation it undoes, and that
+ * is enforced by `task:<id>` exactly as it is for every other command
+ * (03-22). It is not a second mechanism and it is not sent to the server.
+ *
+ * The effect carries the REVERTED values, because the visible projection is
+ * a replay of (canonical shadow + outbox): an effect that dropped them
+ * would replay the pre-undo title back over the row a person just undid.
+ */
+const buildUndoCommand = (
+  input: { handle: string; previous: { notes: string; title: string }; taskId: string },
+  basis: OutboundBasis,
+  mutationId: string,
+): OutboundCommand => {
+  assertBasis(basis)
+  if (!UNDO_HANDLE_PATTERN.test(input.handle)) {
+    throw new Error('undo handle is not a handle the contract publishes')
+  }
+  const commandBytes = JSON.stringify({
+    handle: input.handle,
+    mutation_id: mutationId,
+    type: 'undo_task',
+    version: 1,
+  })
+  return {
+    commandBytes,
+    effect: {
+      entityId: input.taskId,
+      snapshot: {
+        id: input.taskId,
+        notes: input.previous.notes,
+        // The account day a `plan_for_today` resolved is the SERVER's and
+        // this client never learned it, so undoing back TO a planned state
+        // leaves the date unknown until a real acknowledgement or pull
+        // supplies it. Same reason, and same recorded consequence, as
+        // `plan_for_today` above.
+        planned_on: null,
+        // The server's undo applies a compensation and bumps the revision by
+        // one exactly as an ordinary acceptance does (`Undo.apply` sets
+        // `revision: task.revision + 1`).
+        revision: basis.expectedRevision + 1,
+        title: input.previous.title,
+      },
+    },
+    resourceKeys: [`task:${input.taskId}`],
+    type: 'undo_task',
+  }
+}
+
+export { LIFECYCLE_COMMAND_TYPES, buildOutboundCommand, buildUndoCommand, outboundCommandPath }
 export type {
   OutboundBasis,
   OutboundCommand,

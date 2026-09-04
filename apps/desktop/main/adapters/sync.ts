@@ -7,6 +7,7 @@ import type {
   SyncNamespace,
   SyncPort,
   SyncSnapshot,
+  SyncUndoAvailability,
 } from '../application/DesktopApplication.ts'
 import {
   SYNC_FAILURE_AUTHENTICATION_REQUIRED,
@@ -72,19 +73,23 @@ class SyncRefusedError extends Error {
  * claimed `conflict` would be an invalid acknowledgement and must still be
  * refused loudly.
  */
-const settleRefusal = (
-  error: unknown,
+const settleClassified = (
+  refusal: ServerRefusal | null,
   identity: { fingerprint: string; mutationId: string; taskId: string | null },
 ): SyncAcknowledgement | null => {
-  if (!(error instanceof SyncRefusedError) || identity.taskId === null) return null
-  const refusal: ServerRefusal | null = classifyServerRefusal(error.status, error.problem)
   if (refusal === null || refusal.kind === 'authentication_required') return null
+  // A conflict snapshot is a TASK snapshot and needs the identity it belongs
+  // to; a rejection carries no task state at all and the store never reads
+  // its snapshot beyond journalling it. `taskId` is absent only for an undo
+  // (O-45), whose `UndoTaskCommand` publishes no `task_id` -- and which the
+  // server answers with a no-change, never a 409.
+  if (identity.taskId === null && refusal.kind === 'conflict') return null
   if (refusal.kind === 'rejected') {
     return {
       fingerprint: identity.fingerprint,
       mutationId: identity.mutationId,
       outcome: 'rejected',
-      snapshot: { id: identity.taskId, rejection_code: refusal.code },
+      snapshot: { id: identity.taskId ?? '', rejection_code: refusal.code },
     }
   }
   return {
@@ -94,12 +99,18 @@ const settleRefusal = (
     snapshot: {
       affected_fields: refusal.affectedFields,
       conflict_id: refusal.conflictId,
-      id: identity.taskId,
+      id: identity.taskId as string,
       ...(refusal.latestRevision === null ? {} : { revision: refusal.latestRevision }),
       ...(refusal.currentTitle === null ? {} : { title: refusal.currentTitle }),
     },
   }
 }
+
+const settleRefusal = (
+  error: unknown,
+  identity: { fingerprint: string; mutationId: string; taskId: string | null },
+): SyncAcknowledgement | null =>
+  error instanceof SyncRefusedError ? settleClassified(classifyServerRefusal(error.status, error.problem), identity) : null
 
 const exactObject = (value: unknown, keys: readonly string[], label: string): Record<string, unknown> => {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) throw new Error(`${label} is invalid`)
@@ -146,6 +157,33 @@ const mapTokenResponse = (value: unknown): NativeCredentials => {
   }
 }
 
+/**
+ * O-45: the SERVER-ISSUED undo capability, read from the acknowledgement and
+ * from nothing else.
+ *
+ * `CommandAcknowledgement.undo` is a `UndoAvailability`: exactly
+ * `expires_at`, `handle` and `label`, where the handle is an opaque
+ * account-bound one-shot capability of 43..128 URL-safe base64 characters.
+ * It is present only when the accepted command was one the server can
+ * compensate (`Undo.@supported_commands` -- notably NOT `capture_task`).
+ *
+ * A MALFORMED `undo` block throws, exactly as a 200 claiming `conflict`
+ * does. Retaining a handle whose shape the contract does not publish would
+ * durably queue a body the server answers 400 `invalid_command` to, and
+ * repairing one would be synthesising a capability -- the single thing this
+ * client must never do with a credential it did not mint.
+ */
+const mapUndoAvailability = (value: unknown): SyncUndoAvailability => {
+  const undo = exactObject(value, ['expires_at', 'handle', 'label'], 'undo availability')
+  const handle = requiredString(undo.handle, 'undo availability handle')
+  if (!/^[A-Za-z0-9_-]{43,128}$/.test(handle)) throw new Error('undo availability handle is invalid')
+  return {
+    expiresAt: requiredString(undo.expires_at, 'undo availability expiry'),
+    handle,
+    label: requiredString(undo.label, 'undo availability label'),
+  }
+}
+
 const mapAcknowledgement = (
   value: unknown,
   expectedFingerprint: string,
@@ -162,6 +200,9 @@ const mapAcknowledgement = (
     mutationId: acknowledgement.mutation_id,
     outcome: acknowledgement.outcome,
     snapshot,
+    ...(acknowledgement.undo === undefined || acknowledgement.undo === null
+      ? {}
+      : { undo: mapUndoAvailability(acknowledgement.undo) }),
   }
 }
 
@@ -233,12 +274,20 @@ class KeeplingSyncAdapter implements SyncPort {
     return this.#json(url, { method: 'GET' }, true)
   }
 
-  async push(commandBytes: string): Promise<SyncAcknowledgement | null> {
+  /**
+   * `context.taskId` exists for exactly one command (O-45): `UndoTaskCommand`
+   * publishes no `task_id`, because the server resolves the task from the
+   * handle it minted. The caller supplies the task this Mac queued the undo
+   * AGAINST, which is its own local routing key -- never a claim about
+   * server state -- so a refused undo can still be journalled against the
+   * row it belongs to.
+   */
+  async push(commandBytes: string, context?: { taskId: string }): Promise<SyncAcknowledgement | null> {
     const command = JSON.parse(commandBytes) as Record<string, unknown>
     const mutationId = requiredString(command.mutation_id, 'command mutation identity')
     const commandType = requiredString(command.type, 'command type').replaceAll('_', '-')
     const fingerprint = createHash('sha256').update(commandBytes).digest('hex')
-    const taskId = typeof command.task_id === 'string' ? command.task_id : null
+    const taskId = typeof command.task_id === 'string' ? command.task_id : context?.taskId ?? null
     let response: unknown
     try {
       response = await this.#json(this.#url(`/api/v1/commands/${encodeURIComponent(commandType)}`), {
@@ -255,6 +304,14 @@ class KeeplingSyncAdapter implements SyncPort {
       if (settled === null) throw error
       return settled
     }
+    // O-45. `POST /commands/undo-task` answers a no-change with HTTP **200**
+    // and an `UndoNoChange` body (404 only for `unknown`), so this is the
+    // one settled refusal that does not arrive as a thrown non-OK status.
+    // The classification is the SAME closed list, through the same function
+    // -- not a parallel branch. An ordinary acknowledgement has no `code`
+    // and classifies as null, so this cannot swallow one.
+    const settledNoChange = settleClassified(classifyServerRefusal(200, response), { fingerprint, mutationId, taskId })
+    if (settledNoChange !== null) return settledNoChange
     const acknowledgement = mapAcknowledgement(response, fingerprint)
     if (acknowledgement.mutationId !== mutationId) throw new Error('server acknowledgement mutation mismatch')
     return acknowledgement
@@ -327,5 +384,5 @@ class KeeplingSyncAdapter implements SyncPort {
   }
 }
 
-export { KeeplingSyncAdapter, SyncRefusedError, mapNamespace, mapTokenResponse, settleRefusal }
+export { KeeplingSyncAdapter, SyncRefusedError, mapNamespace, mapTokenResponse, mapUndoAvailability, settleRefusal }
 export type { AuthorizationCodeExchange, KeeplingSyncAdapterOptions, NativeCredentials }

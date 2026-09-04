@@ -55,6 +55,40 @@ const REJECTION_CODES: ReadonlySet<string> = new Set([
   'task_not_found',
 ])
 
+/**
+ * O-45: the undo endpoint's NO-CHANGE answers, which do not arrive the way
+ * every other refusal does.
+ *
+ * `POST /commands/undo-task` publishes `UndoResult` -- a `oneOf` of
+ * `CommandAcknowledgement` and `UndoNoChange` -- and the server sends the
+ * no-change body with **HTTP 200** for `already_applied`/`expired`/`stale`
+ * and **404** only for `unknown` (`CommandStore#undo_no_change`:
+ * `status: if(outcome == :unknown, do: 404, else: 200)`). So an expired
+ * undo is not a 409 and not a 422, and adding `undo_expired` to
+ * REJECTION_CODES alone would have done nothing: those statuses are the only
+ * ones this function was ever reached for.
+ *
+ * Without this, a 200 no-change had no `snapshot`, `mapAcknowledgement`
+ * threw `server acknowledgement is invalid`, `runSyncPass` caught it, and an
+ * undo the server had DECIDED about landed on "Couldn't reach the server"
+ * with a Retry button that would retry it forever -- the identical
+ * misdiagnosis O-38 fixed for conflicts, one endpoint later.
+ *
+ * `undo_uncertain` is deliberately ABSENT. It is the only no-change the
+ * server marks `retryable: true`, and it is emitted when the stored
+ * compensation failed validation (`{:error, :invalid_inverse}`) -- the
+ * server does not know whether anything applied. Recording that as terminal
+ * would be inventing a decision nobody made. It stays loud, and what a
+ * person should SEE in that state is `{ kind: 'uncertain' }`, which has no
+ * production construction site (O-47) and is not this change's to build.
+ */
+const UNDO_NO_CHANGE_CODES: ReadonlySet<string> = new Set([
+  'undo_already_applied',
+  'undo_expired',
+  'undo_stale',
+  'undo_unknown',
+])
+
 type ServerRefusal =
   | { affectedFields: string[]; conflictId: string | null; currentTitle: string | null; kind: 'conflict'; latestRevision: number | null }
   | { code: string; kind: 'authentication_required' }
@@ -117,8 +151,13 @@ const classifyServerRefusal = (status: number, body: unknown): ServerRefusal | n
   // of them can succeed on a retry of the same immutable bytes.
   if (status === 422) return { code, kind: 'rejected' }
   if ((status === 400 || status === 404) && REJECTION_CODES.has(code)) return { code, kind: 'rejected' }
+  // O-45. The undo no-change, at the two statuses the server actually sends
+  // it with. An ordinary acknowledgement has no `code` at all and has
+  // already returned null above, so a 200 can only reach here as a
+  // `UndoNoChange`.
+  if ((status === 200 || status === 404) && UNDO_NO_CHANGE_CODES.has(code)) return { code, kind: 'rejected' }
   return null
 }
 
-export { CONFLICT_CODES, REJECTION_CODES, classifyServerRefusal }
+export { CONFLICT_CODES, REJECTION_CODES, UNDO_NO_CHANGE_CODES, classifyServerRefusal }
 export type { ServerRefusal }

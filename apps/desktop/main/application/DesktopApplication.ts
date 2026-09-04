@@ -121,11 +121,25 @@ type LocalAcceptance = {
   status: 'local_saved'
 }
 
+/**
+ * O-45: the server's own answer to "can this be undone, until when, and
+ * with what capability". Delivered in `CommandAcknowledgement.undo`
+ * (`UndoAvailability`) and retained verbatim. Every field here is
+ * SERVER-derived; this client never mints, derives, extends or repairs one.
+ */
+type SyncUndoAvailability = {
+  expiresAt: string
+  handle: string
+  label: string
+}
+
 type SyncAcknowledgement = {
   fingerprint: string
   mutationId: string
   outcome: SyncOutcome
   snapshot: SyncSnapshot
+  /** Present only when the server issued a compensation capability for this command. */
+  undo?: SyncUndoAvailability
 }
 
 interface LocalStorePort {
@@ -199,7 +213,13 @@ interface SyncPort {
    */
   configured?(): boolean
   pull?(cursor: string | null, limit: 50): Promise<PullPage>
-  push?(commandBytes: string): Promise<SyncAcknowledgement | null>
+  /**
+   * `context.taskId` is the task this Mac queued the command against. It is
+   * needed only by `undo_task`, whose contract body publishes no `task_id`
+   * (O-45); every other command carries its own. It is this client's local
+   * routing key and is never sent to the server.
+   */
+  push?(commandBytes: string, context?: { taskId: string }): Promise<SyncAcknowledgement | null>
 }
 
 interface CredentialPort {
@@ -687,6 +707,7 @@ export type {
   SyncPort,
   SyncSnapshot,
   SyncState,
+  SyncUndoAvailability,
   WorkspaceSnapshot,
   WorkspaceTask,
 }
