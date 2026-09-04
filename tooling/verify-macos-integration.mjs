@@ -389,7 +389,7 @@ const launchApplication = async (manifest, probeBinary, { profilePath, syncMode 
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
-  const handle = { child, pid: child.pid, probeBinary }
+  const handle = { child, pid: child.pid, probeBinary, profilePath }
   liveApplications.add(handle)
 
   const deadline = Date.now() + 45_000 * WAIT_SCALE
@@ -447,7 +447,7 @@ const launchApplicationWithoutAccessibility = async (manifest, { profilePath, sy
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   })
-  const handle = { child, pid: child.pid, probeBinary: null }
+  const handle = { child, pid: child.pid, probeBinary: null, profilePath }
   liveApplications.add(handle)
   await waitFor('the packaged application window to become capturable', async () => {
     if (child.exitCode !== null) fail(`the packaged application exited (${child.exitCode}) before presenting a window`)
@@ -457,9 +457,59 @@ const launchApplicationWithoutAccessibility = async (manifest, { profilePath, sy
   return handle
 }
 
+/**
+ * Being REAPED (the process table no longer holding the pid) is not the
+ * same as being gone from the window server or the accessibility session,
+ * and it is not the same as some other application having become
+ * frontmost. The next row's `ensureFrontmost` was racing a teardown that
+ * looked done at the process-table level but was still in progress at the
+ * window-server level. Skipped for the untrusted/pixel-appearance handles
+ * (`probeBinary === null`): those never touch the accessibility API at
+ * all, by design, so there is no AX session state to confirm here.
+ */
+const confirmTeardownComplete = async (handle) => {
+  if (!handle.probeBinary) return
+  const observe = () => {
+    const windows = runProbe(handle.probeBinary, ['windows', '--pid', String(handle.pid)], { allowFailure: true })
+    const hasWindow = windows.ok && Array.isArray(windows.value.windows) && windows.value.windows.length > 0
+    const frontmost = runProbe(handle.probeBinary, ['frontmost'], { allowFailure: true })
+    const isFrontmost = frontmost.ok && frontmost.value.pid === handle.pid
+    return { hasWindow, isFrontmost }
+  }
+  const settled = await waitFor(
+    `pid ${handle.pid} to leave the accessibility/window list after teardown`,
+    async () => {
+      const { hasWindow, isFrontmost } = observe()
+      return !hasWindow && !isFrontmost
+    },
+    { intervalMs: 200, onTimeout: 'return' },
+  )
+  if (!settled) {
+    const { hasWindow, isFrontmost } = observe()
+    const present = [hasWindow ? 'a window' : null, isFrontmost ? 'frontmost status' : null].filter(Boolean).join(' and ')
+    fail(`teardown of pid ${handle.pid} did not complete within the deadline -- it still holds ${present || 'residual state'}, so the next row would race an unfinished teardown`)
+  }
+}
+
+/**
+ * Removes the disposable profile the moment its own handle's teardown is
+ * confirmed, rather than only at process exit -- a long `--all` run does
+ * not need to accumulate every row's profile directory until the very end.
+ */
+const removeHandleProfile = (handle) => {
+  if (!handle.profilePath) return
+  const index = disposableProfiles.indexOf(handle.profilePath)
+  if (index !== -1) disposableProfiles.splice(index, 1)
+  rmSync(handle.profilePath, { force: true, recursive: true })
+}
+
 const quitApplication = async (handle) => {
   liveApplications.delete(handle)
-  if (handle.child.exitCode !== null) return
+  if (handle.child.exitCode !== null) {
+    await confirmTeardownComplete(handle)
+    removeHandleProfile(handle)
+    return
+  }
   handle.child.kill('SIGTERM')
   const deadline = Date.now() + 8_000 * WAIT_SCALE
   while (handle.child.exitCode === null && Date.now() < deadline) await sleep(150)
@@ -471,6 +521,8 @@ const quitApplication = async (handle) => {
     const killDeadline = Date.now() + 5_000 * WAIT_SCALE
     while (handle.child.exitCode === null && Date.now() < killDeadline) await sleep(100)
   }
+  await confirmTeardownComplete(handle)
+  removeHandleProfile(handle)
 }
 
 // ---------------------------------------------------------------------------
@@ -648,9 +700,48 @@ const ensureFrontmost = (handle) => {
  * then be measuring its own interference instead of the app's focus
  * restoration.
  */
-const postKeys = (handle, sequence, { raise = true } = {}) => {
+
+/**
+ * Chunk size for the mid-sequence focus-theft check below. Every call site
+ * in this file today passes a single-step sequence, so this only matters
+ * for a future multi-step one: a small chunk means a stolen-focus event is
+ * caught within roughly one chunk's worth of keystrokes, rather than only
+ * after the whole sequence has already been typed into the wrong window.
+ */
+const POST_KEYS_CHUNK_SIZE = 4
+
+/**
+ * `postKeys` used to assert frontmost once, then hand the WHOLE sequence to
+ * the probe. If focus was lost partway through, every remaining keystroke
+ * went somewhere else, silently -- the failure then surfaced 24 seconds
+ * later as a timeout in an unrelated assertion, and the row that happened
+ * to run next got blamed for state a completely different event caused.
+ * Delivering in chunks and re-reading frontmost after each one converts
+ * that into an immediate, named failure at the moment focus is actually
+ * lost.
+ *
+ * `assertFrontmost: false` is for the few calls that INTEND the frontmost
+ * application to change as their own direct, correct effect -- posting the
+ * global accelerator from the PRIOR application in A9 (which is supposed to
+ * bring Keepling's Quick Entry to the front), and A9's own final
+ * submit/discard key (which is supposed to close Quick Entry and hand focus
+ * back). Checking there would misreport the row's own intended behaviour as
+ * theft.
+ */
+const postKeys = (handle, sequence, { assertFrontmost = true, raise = true } = {}) => {
   if (raise) ensureFrontmost(handle)
-  return runProbe(handle.probeBinary, ['key', '--sequence', sequence])
+  const steps = sequence.split(',').map((step) => step.trim()).filter(Boolean)
+  let result = null
+  for (let index = 0; index < steps.length; index += POST_KEYS_CHUNK_SIZE) {
+    const chunk = steps.slice(index, index + POST_KEYS_CHUNK_SIZE)
+    result = runProbe(handle.probeBinary, ['key', '--sequence', chunk.join(',')])
+    if (!assertFrontmost) continue
+    const frontmost = runProbe(handle.probeBinary, ['frontmost'], { allowFailure: true })
+    if (frontmost.ok && frontmost.value.pid !== handle.pid) {
+      fail(`FOCUS_STOLEN by_pid=${frontmost.value.pid} by_bundle=${frontmost.value.bundleIdentifier ?? ''} during=${sequence}`)
+    }
+  }
+  return result
 }
 
 /**
@@ -2061,6 +2152,19 @@ const rowA8 = (context) => runRow('A8', 'Real global-shortcut collision and OS a
     // actually be gone rather than for 800ms.
     const rivalDeadline = Date.now() + 5_000 * WAIT_SCALE
     while (rival.exitCode === null && Date.now() < rivalDeadline) await sleep(100)
+    // Being reaped by Node is not the same as being gone from the process
+    // census this lane's own machine-state barrier reads. Confirm against
+    // that same census -- a waitFor, not a kill-and-hope -- so a rival that
+    // survives its own row is a named lane failure here, not a silent leak
+    // that some LATER row's `before-<row>` barrier check happens to catch.
+    await waitFor(
+      `the rival process (pid ${rival.pid}) to be gone from the process census`,
+      async () => countMatchingProcesses(context.rivalProbe) === 0,
+      { intervalMs: 150, onTimeout: 'return' },
+    )
+    if (countMatchingProcesses(context.rivalProbe) !== 0) {
+      fail(`the HotkeyRival process (pid ${rival.pid}) is still present after row A8 -- a rival that survives its row can keep holding Keepling's global shortcut on this machine`)
+    }
   }
 
   // Phase 2: with the rival gone, Keepling holds and receives its own
@@ -2150,7 +2254,11 @@ const rowA9 = (context) => runRow('A9', 'Prior-application focus and caret retur
         JSON.stringify(selectionBefore),
       )
 
-      postKeys(priorHandle, QUICK_ENTRY_ACCELERATOR)
+      // This accelerator's own correct effect is to move frontmost status
+      // FROM the prior application TO Keepling's Quick Entry -- exactly what
+      // the row is about to assert -- so the mid-sequence theft check would
+      // misreport that intended transition as FOCUS_STOLEN.
+      postKeys(priorHandle, QUICK_ENTRY_ACCELERATOR, { assertFrontmost: false })
       await waitFor('Quick Entry to open over the prior application', async () => quickEntryIsOpen(handle))
       // From here on the harness must NOT raise anything: Quick Entry takes
       // focus by itself, and forcing the application frontmost would make
@@ -2160,8 +2268,11 @@ const rowA9 = (context) => runRow('A9', 'Prior-application focus and caret retur
       // that never arrived; either way the row would measure the wrong thing.
       // Wait for the text to be readable in the field before deciding it.
       await typeIntoField(handle, CAPTURE_FIELD_LABEL, `Captured while ${ending}`, { raise: false })
-      if (ending === 'submitted') postKeys(handle, 'return', { raise: false })
-      else postKeys(handle, 'escape', { raise: false })
+      // These keys' own correct effect is to close Quick Entry and hand
+      // focus back to the prior application -- the theft check would
+      // misreport that designed handoff as FOCUS_STOLEN.
+      if (ending === 'submitted') postKeys(handle, 'return', { assertFrontmost: false, raise: false })
+      else postKeys(handle, 'escape', { assertFrontmost: false, raise: false })
       await waitFor('Quick Entry to close', async () => !quickEntryIsOpen(handle), { timeoutMs: 15_000 })
 
       // Activation is handed back by the OS asynchronously, and TextEdit
