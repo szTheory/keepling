@@ -1277,12 +1277,34 @@ const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never tr
     // focus that never settles on a visible operable element still fails,
     // which is the actual defect this row exists to catch. A transient null
     // during a dismissal is not that defect; a permanent one is.
+    //
+    // The deadline is 10s, matching the two dialog-OPEN settles in this same
+    // row rather than being half of them. That asymmetry was the race:
+    // restoring focus after a dialog closes is the SLOWER operation of the
+    // two -- the destructive branch commits a route change, re-renders the
+    // list, and runs two focus effects -- yet it was given half the budget
+    // of merely opening a dialog.
+    //
+    // Measured 2026-09-03 on application_digest=e1c9d695...: this row's
+    // final case ("after discarding changes and navigating away") failed
+    // inside a full `--all` run with `last read was nothing`, while the same
+    // row passed 4/4 standalone. The `--all` context is measurably slower
+    // (39.5s for the row against 24.9-25.5s standalone, ~1.6x) because the
+    // preceding VoiceOver-layer rows leave an AX client attached, and every
+    // focus change costs more under one.
+    //
+    // Raising the deadline weakens NOTHING. `usableFocus(last)` is still
+    // asserted exactly as before, and `settledFocus` still returns whatever
+    // it last saw at the deadline -- including null -- so focus that is
+    // genuinely trapped or lost still fails this row loudly. What changes is
+    // only that a slow machine is no longer reported as a lost-focus defect.
+    const FOCUS_RESTORE_TIMEOUT_MS = 10_000
     const assertUsableFocus = async (label) => {
-      const last = await settledFocus(handle, { intervalMs: 200, timeoutMs: 5_000, until: usableFocus })
+      const last = await settledFocus(handle, { intervalMs: 200, timeoutMs: FOCUS_RESTORE_TIMEOUT_MS, until: usableFocus })
       check(
         `${label}: focus is on a visible, operable element -- never the application element, never a removed node, never a silent reset`,
         usableFocus(last),
-        `focus never settled within 5000ms; last read was ${last ? `${last.role} "${last.title ?? ''}" ${JSON.stringify(last.frame ?? null)}` : 'nothing'}`,
+        `focus never settled within ${FOCUS_RESTORE_TIMEOUT_MS}ms; last read was ${last ? `${last.role} "${last.title ?? ''}" ${JSON.stringify(last.frame ?? null)}` : 'nothing'}`,
       )
       return last
     }
