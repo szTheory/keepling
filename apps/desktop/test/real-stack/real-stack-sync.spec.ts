@@ -119,15 +119,29 @@ let temporaryRoot: string | undefined
  * claim below is checked against the wire rather than against the client's
  * own opinion of what it sent.
  */
+/**
+ * It can also HOLD an answer (O-51). A held request is forwarded upstream
+ * exactly as usual -- real Phoenix receives the real bytes and acts on them
+ * -- and only the RESPONSE is withheld until released. That is what a
+ * request genuinely in flight is: the client has transmitted, the server
+ * has it, and the answer has not come back yet. Nothing is faked: no fetch
+ * is stubbed, no response is synthesised, and the server's own answer is
+ * what eventually arrives.
+ */
 type Gate = {
   bodies: Array<{ body: string; url: string }>
   close: () => Promise<void>
+  held: () => number
+  hold: (matcher: (url: string) => boolean) => void
   open: () => Promise<void>
+  release: () => void
 }
 
 const createGate = (): Gate => {
   const bodies: Array<{ body: string; url: string }> = []
   let server: Server | undefined
+  let holdMatcher: ((url: string) => boolean) | null = null
+  const heldDeliveries: Array<() => void> = []
 
   const build = () =>
     createServer((incoming, outgoing) => {
@@ -147,8 +161,16 @@ const createGate = (): Gate => {
           port: phoenixPort,
         },
         (response) => {
-          outgoing.writeHead(response.statusCode ?? 502, response.headers)
-          response.pipe(outgoing)
+          const deliver = () => {
+            outgoing.writeHead(response.statusCode ?? 502, response.headers)
+            response.pipe(outgoing)
+          }
+          if (holdMatcher !== null && holdMatcher(incoming.url ?? '')) {
+            response.pause()
+            heldDeliveries.push(deliver)
+            return
+          }
+          deliver()
         },
       )
       upstream.once('error', () => {
@@ -159,6 +181,14 @@ const createGate = (): Gate => {
 
   return {
     bodies,
+    held: () => heldDeliveries.length,
+    hold: (matcher: (url: string) => boolean) => {
+      holdMatcher = matcher
+    },
+    release: () => {
+      holdMatcher = null
+      for (const deliver of heldDeliveries.splice(0)) deliver()
+    },
     close: async () => {
       const current = server
       server = undefined
@@ -448,7 +478,8 @@ const readOutbox = (profilePath: string) => {
         `SELECT immutable_commands.command_bytes AS commandBytes,
                 immutable_commands.fingerprint AS fingerprint,
                 immutable_commands.mutation_id AS mutationId,
-                immutable_commands.task_id AS taskId
+                immutable_commands.task_id AS taskId,
+                outbox.state AS state
          FROM outbox JOIN immutable_commands USING (mutation_id)
          ORDER BY outbox.sequence`,
       )
@@ -456,6 +487,7 @@ const readOutbox = (profilePath: string) => {
       commandBytes: string
       fingerprint: string
       mutationId: string
+      state: string
       taskId: string
     }>
   } finally {
@@ -959,30 +991,173 @@ test('an offline undo survives a relaunch and reverses the change on the real se
     const compensated = (await serverTask(taskId))!
     expect(compensated.revision).toBeGreaterThan(1)
 
-    // -- THE LOUD HALF: NO HANDLE, NO SILENT LOCAL UNDO --------------------
+    // -- NO HANDLE, AND THE BYTES NEVER LEFT (O-51 / D-52) -----------------
+    //
+    // 03-23 refused every handle-less undo, which left Command-Z dead on a
+    // Mac with no reachable server -- the regression O-51 filed. What makes
+    // the local undo safe here is not "the command is still in the outbox":
+    // a row sits there unchanged while its POST is in flight. It is the
+    // transmission state. With the gate shut the pass fails at the PULL, so
+    // nothing was ever handed to the transport and the row is still
+    // `queued`.
     await gate.close()
     const unsentTitle = `Ferry booking ${run} — never sent`
     await window.getByLabel('What do you want to keep?').fill(unsentTitle)
     await window.getByRole('button', { name: 'Add Task' }).click()
     await expect(window.getByText(unsentTitle)).toHaveCount(1)
     await window.getByText(unsentTitle).first().click()
-    await window.getByRole('button', { name: 'Complete' }).click()
+    await window.getByRole('button', { name: 'Complete', exact: true }).click()
+    await expect(window.getByRole('button', { name: 'Reopen', exact: true })).toBeVisible()
 
-    const outboxBeforeUndo = readOutbox(profilePath).length
-    await window.getByRole('button', { name: 'Undo Complete' }).click()
-    const refusal = 'This change hasn’t reached the server yet, so it can’t be undone. Nothing was changed.'
-    await expect(window.locator('#sync-status-row [data-sync-copy]')).toHaveText(refusal, { timeout: 30_000 })
-    await expect(window.locator('#sync-status-row')).toHaveAttribute('data-sync-status', 'undo_unavailable')
-    // Nothing was changed and nothing was queued: no undo_task exists.
-    const afterRefusal = readOutbox(profilePath)
-    expect(afterRefusal).toHaveLength(outboxBeforeUndo)
-    expect(afterRefusal.map(({ commandBytes }) => (JSON.parse(commandBytes) as { type: string }).type))
+    const queuedWhileOffline = await expect
+      .poll(() => readOutbox(profilePath).map(({ state }) => state), { timeout: 30_000 })
+      .toEqual(['queued', 'queued'])
+      .then(() => readOutbox(profilePath))
+    const completeMutationId = queuedWhileOffline.at(-1)!.mutationId
+
+    await window.getByRole('button', { name: 'Undo Complete', exact: true }).click()
+    // The undo TOOK EFFECT locally...
+    await expect(window.getByRole('button', { name: 'Complete', exact: true })).toBeVisible({ timeout: 30_000 })
+    await expect(window.locator('#sync-status-row')).not.toHaveAttribute('data-sync-status', 'undo_unavailable')
+    // ...and the command is GONE, which is the half that matters: a server
+    // reached later must never flush a completion the person undid.
+    const afterUndo = readOutbox(profilePath)
+    expect(afterUndo.map(({ mutationId }) => mutationId)).not.toContain(completeMutationId)
+    expect(afterUndo.map(({ commandBytes }) => (JSON.parse(commandBytes) as { type: string }).type))
       .not.toContain('undo_task')
+
+    // -- AND THE SERVER NEVER HEARS ABOUT IT -------------------------------
     await gate.open()
+    await expect.poll(() => readOutbox(profilePath).length, { timeout: 120_000 }).toBe(0)
+    const neverSentTask = await expect
+      .poll(
+        async () => {
+          const inbox = (await (await browser.request('/api/v1/inbox')).json()) as {
+            tasks: Array<{ id: string; title: string }>
+          }
+          return inbox.tasks.find((task) => task.title === unsentTitle)?.id ?? null
+        },
+        { timeout: 120_000 },
+      )
+      .not.toBeNull()
+      .then(async () => {
+        const inbox = (await (await browser.request('/api/v1/inbox')).json()) as {
+          tasks: Array<{ id: string; title: string }>
+        }
+        return inbox.tasks.find((task) => task.title === unsentTitle)!.id
+      })
+    // The capture reached the server; the completion the person undid did
+    // not, and no compensation was needed because there was nothing to
+    // compensate.
+    expect((await serverTask(neverSentTask))?.completed_at ?? null).toBeNull()
+    const completionArrivals = gate.bodies.filter(
+      ({ body, url }) => url.includes('/api/v1/commands/') && body.includes(completeMutationId),
+    )
+    expect(completionArrivals).toEqual([])
 
     console.log(
       `REAL_STACK_UNDO handle=server_issued undo_arrived=1 reverted_on_server=1 ` +
-        `survived_relaunch=1 refused_without_handle=1 digest=${manifest.applicationDigestSha256}`,
+        `survived_relaunch=1 dropped_never_transmitted=1 never_reached_server=1 ` +
+        `digest=${manifest.applicationDigestSha256}`,
+    )
+  } finally {
+    await application.close()
+  }
+})
+
+/**
+ * O-51 / D-52, the dangerous case, proved against real behaviour rather
+ * than by asserting a branch was taken.
+ *
+ * An undo may drop a command only when its bytes were never handed to the
+ * transport. The failure this guards against is the opposite: an undo that
+ * races a command already ON THE WIRE and deletes it, leaving real Phoenix
+ * holding a change this Mac believes it removed -- the exact divergence the
+ * whole phase exists to close.
+ *
+ * So the command here is genuinely in flight. The forwarding proxy passes
+ * the real bytes to real Phoenix, which really applies them, and holds only
+ * the ANSWER. Nothing is stubbed, no sync mode is set, and the proof that
+ * the bytes truly left is the server's own state afterwards: the completion
+ * the undo was refused for is present on the server at the end.
+ */
+test('an undo racing a command that is in flight is refused, and the command survives', async () => {
+  test.setTimeout(600_000)
+  const profilePath = join(profileRoot, 'real-stack-in-flight')
+  mkdirSync(profilePath, { recursive: true })
+  await gate.open()
+  const application = await launch(profilePath)
+
+  try {
+    const window = await application.firstWindow()
+    await expect(window.getByRole('heading', { name: 'Inbox' })).toBeVisible()
+    await signIn(application)
+
+    const title = `Harbour crossing ${randomUUID().slice(0, 8)}`
+    await window.getByLabel('What do you want to keep?').fill(title)
+    await window.getByRole('button', { name: 'Add Task' }).click()
+
+    const taskId = await expect
+      .poll(
+        async () => {
+          const inbox = (await (await browser.request('/api/v1/inbox')).json()) as {
+            tasks: Array<{ id: string; title: string }>
+          }
+          return inbox.tasks.find((task) => task.title === title)?.id ?? null
+        },
+        { timeout: 90_000 },
+      )
+      .not.toBeNull()
+      .then(async () => {
+        const inbox = (await (await browser.request('/api/v1/inbox')).json()) as {
+          tasks: Array<{ id: string; title: string }>
+        }
+        return inbox.tasks.find((task) => task.title === title)!.id
+      })
+    await expect.poll(() => readOutbox(profilePath).length, { timeout: 60_000 }).toBe(0)
+
+    // -- HOLD THE ANSWER, NOT THE REQUEST ----------------------------------
+    gate.hold((url) => url.includes('/api/v1/commands/complete-task'))
+    await window.getByText(title).first().click()
+    await window.getByRole('button', { name: 'Complete', exact: true }).click()
+
+    // The client's own durable record says the bytes have been handed over,
+    // and the proxy says the server received them. Both, not either.
+    const inFlight = await expect
+      .poll(() => readOutbox(profilePath).map(({ state }) => state), { timeout: 60_000 })
+      .toEqual(['in_flight'])
+      .then(() => readOutbox(profilePath)[0]!)
+    expect(gate.held()).toBeGreaterThan(0)
+    expect(gate.bodies.some(({ body, url }) =>
+      url.includes('/api/v1/commands/complete-task') && body === inFlight.commandBytes)).toBe(true)
+
+    // -- THE UNDO THAT MUST REFUSE ------------------------------------------
+    await window.getByRole('button', { name: 'Undo Complete', exact: true }).click()
+    const refusal = 'This change is on its way to the server, so it can’t be undone yet. Nothing was changed.'
+    await expect(window.locator('#sync-status-row [data-sync-copy]')).toHaveText(refusal, { timeout: 30_000 })
+    await expect(window.locator('#sync-status-row')).toHaveAttribute('data-sync-status', 'undo_unavailable')
+    // Refused, not dropped: the same command, the same bytes, still there.
+    const afterRefusal = readOutbox(profilePath)
+    expect(afterRefusal).toHaveLength(1)
+    expect(afterRefusal[0]!.mutationId).toBe(inFlight.mutationId)
+    expect(afterRefusal[0]!.commandBytes).toBe(inFlight.commandBytes)
+    // Nothing was changed on screen either: the task is still completed.
+    await expect(window.getByRole('button', { name: 'Reopen', exact: true })).toBeVisible()
+    // And no compensation was queued behind it.
+    expect(afterRefusal.map(({ commandBytes }) => (JSON.parse(commandBytes) as { type: string }).type))
+      .not.toContain('undo_task')
+
+    // -- LET THE ANSWER THROUGH ---------------------------------------------
+    gate.release()
+    await expect.poll(() => readOutbox(profilePath).length, { timeout: 120_000 }).toBe(0)
+    // The proof the bytes really had left: the SERVER holds the completion.
+    // Had the undo dropped that command, this Mac would have deleted a
+    // change the server accepted.
+    expect((await serverTask(taskId))?.completed_at).not.toBeNull()
+
+    console.log(
+      `REAL_STACK_IN_FLIGHT held=1 refused=1 command_survived=1 ` +
+        `server_holds_completion=1 digest=${manifest.applicationDigestSha256}`,
     )
   } finally {
     await application.close()

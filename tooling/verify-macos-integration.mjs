@@ -1392,27 +1392,34 @@ const rowA5 = (context) => runRow('A5', 'Full Keyboard Access: the complete scop
     await waitFor('the restored task to leave Trash', async () => !taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
     check('restoring is reachable by keyboard alone', !taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
 
-    // O-45. This step USED to assert that Command-Z put the task back in
-    // Trash. It no longer can, and the change is deliberate.
+    // O-51 / D-52. Command-Z, on a packaged app with NO server configured.
     //
-    // `POST /commands/undo-task` takes a SERVER-ISSUED handle carried in the
-    // acknowledgement. This row runs the packaged app with NO server
-    // configured, so nothing is ever acknowledged and no handle exists. The
-    // old behaviour reversed the projection and enqueued nothing -- an undo
-    // durable on this Mac and invisible to the server forever, which is the
-    // defect O-45 filed. Refusing, and SAYING so, is the honest answer.
+    // 03-23 made every undo require a SERVER-ISSUED handle, so on this row
+    // -- where nothing is ever acknowledged and no handle can exist -- undo
+    // became a refusal, and MAC-01 names undo as a supported Mac operation.
+    // That regression (O-51) is closed by the transmission state migration
+    // 0002 adds: the restore command is `queued`, meaning its bytes were
+    // never handed to the transport, so dropping it cannot leave a server
+    // holding something this Mac deleted.
     //
-    // The row's claim is unchanged and is NOT weakened: it is about whether
-    // the keystroke reaches the app and produces a real, authored response a
-    // person can perceive -- and that is now asserted against copy found in
-    // the real AXUIElement tree, which is stronger than the previous
-    // list-membership check, plus the fact that nothing was changed.
+    // The row's claim is stronger than it was in either earlier version: the
+    // keystroke reaches the app AND produces the real, perceivable effect a
+    // person expects, asserted against the live AXUIElement tree.
     postKeys(handle, 'cmd+z')
-    await waitFor('Keepling to answer the undo keystroke', async () => windowText(handle).includes('can’t be undone'))
-    check('undo is reachable by keyboard alone, and Keepling answers it', windowText(handle).includes('can’t be undone'))
-    check('a refused undo changes nothing -- the task stays restored', !taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
+    await waitFor(
+      'the undone restore to put the task back in Trash',
+      async () => taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')),
+    )
+    check(
+      'undo is reachable by keyboard alone, and reverses the restore',
+      taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')),
+    )
+    check(
+      'nothing claims the undo was refused',
+      !windowText(handle).includes('can’t be undone'),
+    )
 
-    // The refusal row appears above the workspace, and for a beat the AX
+    // The workspace re-renders around the undone row, and for a beat the AX
     // tree reports no focused element at all. Poll for the same condition
     // this asserts.
     const stillFocused = (node) => node !== null && node.role !== 'AXApplication' && (node.frame?.width ?? 0) > 0
