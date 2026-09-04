@@ -185,12 +185,49 @@ runLane({
   trackedInputPaths: ['apps/desktop/test/e2e', 'apps/desktop/main', 'apps/desktop/preload', 'apps/desktop/renderer'],
 })
 
+/**
+ * O-40/VERIFICATION.md Gap 1: this lane used to manufacture a NEW
+ * `applicationDigestSha256` on every gate invocation (a fresh Electron make
+ * every run), which made `macos-integration` below structurally unable to
+ * find evidence for the artifact the gate had just built -- every local
+ * re-verification was doomed before it started. `--reuse-if-unchanged`
+ * (03-25 Task 3) re-hashes a prior artifact's bytes on disk and reuses it
+ * ONLY when that re-hash still matches; it refuses and falls through to a
+ * full rebuild otherwise. The lane accepts either a fresh build or a reused
+ * one as its positive case -- both are a real, currently-valid artifact.
+ */
 runLane({
-  args: ['package:desktop'],
+  args: ['package:desktop', '--', '--reuse-if-unchanged'],
   command: 'pnpm',
   name: 'package-once',
-  parse: (stdout) => (stdout.includes('Desktop package manifest:') ? 1 : 0),
+  parse: (stdout) => (stdout.includes('Desktop package manifest:') || stdout.includes('Desktop package reused:') ? 1 : 0),
   trackedInputPaths: ['apps/desktop', 'tooling/package-desktop.mjs'],
+})
+
+/**
+ * O-40: the fixed, three-build reproducibility MEASUREMENT
+ * (`pnpm verify:desktop:reproducible`) stays available as a standalone
+ * command -- it is the number this project cites as proof. This lane runs
+ * a cheaper `--builds 2` check on every gate invocation instead of the full
+ * three, because the gate pays for every build it runs on every invocation
+ * (each Electron make is tens of seconds); two separate processes is the
+ * minimum that can prove OR disprove reproducibility at all, so the gate
+ * stays fast while still re-measuring on every run rather than trusting a
+ * one-time result forever.
+ */
+runLane({
+  args: ['tooling/verify-package-reproducibility.mjs', '--builds', '2'],
+  command: 'node',
+  name: 'package-reproducible',
+  parse: (stdout) => {
+    const summary = stdout.match(/PACKAGE_REPRODUCIBILITY builds=(\d+) compared_entries=(\d+) differing_entries=(\d+) digests=(\S+)/)
+    if (!summary) throw new Error('PACKAGE_REPRODUCIBILITY summary line not found')
+    if (Number(summary[3]) > 0) throw new Error(`package reproducibility check reported ${summary[3]} differing entrie(s)`)
+    if (Number(summary[2]) === 0) throw new Error('package reproducibility check compared zero entries')
+    if (summary[4].split(',').filter(Boolean).length > 1) throw new Error(`package reproducibility check produced more than one digest: ${summary[4]}`)
+    return Number(summary[2])
+  },
+  trackedInputPaths: ['apps/desktop', 'tooling/package-desktop.mjs', 'tooling/verify-package-reproducibility.mjs'],
 })
 
 runLane({

@@ -32,6 +32,7 @@
 import { createHash } from 'node:crypto'
 import {
   cpSync,
+  existsSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -183,9 +184,100 @@ for (const relativePath of trackedInputs) {
   inputDigest.update(readFileSync(join(repositoryRoot, relativePath)))
   inputDigest.update('\0')
 }
+const inputDigestSha256 = inputDigest.digest('hex')
 
 const sourceRevision = run('git', ['-C', repositoryRoot, 'rev-parse', 'HEAD'], { capture: true })
 const architecture = process.arch
+const locatorName = `keepling-desktop-latest-manifest-${sha256(repositoryRoot).slice(0, 16)}.txt`
+const locatorPath = join(tmpdir(), locatorName)
+
+/**
+ * O-40/VERIFICATION.md Gap 1: `verify-desktop-phase.mjs`'s `package-once`
+ * lane used to manufacture a NEW `applicationDigestSha256` on every gate
+ * invocation, which made `macos-integration`'s digest-bound evidence cache
+ * structurally unable to find evidence for the artifact the gate had just
+ * built -- every local re-verification was doomed before it started. This
+ * flag lets a caller reuse a prior artifact instead, but ONLY after
+ * re-hashing its bytes on disk right now: the manifest is a claim, the hash
+ * is the proof (T-03-25-01). A manifest whose artifact has moved, been
+ * deleted, or been altered refuses loudly and falls through to a full
+ * rebuild -- it never reuses on the manifest's word alone, and it never
+ * silently rebuilds without saying why reuse was refused.
+ */
+if (process.argv.includes('--reuse-if-unchanged')) {
+  const findCandidateManifestPath = () => {
+    if (existsSync(locatorPath)) {
+      const locatedPath = readFileSync(locatorPath, 'utf8').trim()
+      if (locatedPath && existsSync(locatedPath)) return locatedPath
+    }
+    // T-03-25-02: the locator is a spoofable convenience, not a trust
+    // anchor -- if it is missing or stale, fall back to scanning sibling
+    // manifests in the same tmpdir artifact root this script itself writes
+    // into, and pick the most recently created one. Either path below is
+    // subjected to the SAME re-hash-at-reuse-time checks; nothing here is
+    // trusted on its own say-so.
+    let newestPath = null
+    let newestMtimeMs = -1
+    for (const entry of readdirSync(tmpdir(), { withFileTypes: true })) {
+      if (!entry.isDirectory() || !entry.name.startsWith('keepling-desktop-package-')) continue
+      const candidatePath = join(tmpdir(), entry.name, 'package-manifest.json')
+      if (!existsSync(candidatePath)) continue
+      const mtimeMs = statSync(candidatePath).mtimeMs
+      if (mtimeMs > newestMtimeMs) {
+        newestMtimeMs = mtimeMs
+        newestPath = candidatePath
+      }
+    }
+    return newestPath
+  }
+
+  const refuseReuse = (reason) => console.log(`Desktop package reuse refused: ${reason}`)
+
+  const candidatePath = findCandidateManifestPath()
+  if (!candidatePath) {
+    refuseReuse('no prior manifest was found')
+  } else {
+    let candidate = null
+    try {
+      candidate = JSON.parse(readFileSync(candidatePath, 'utf8'))
+    } catch {
+      refuseReuse(`manifest at ${candidatePath} is missing or invalid JSON`)
+    }
+    if (candidate) {
+      if (candidate.inputDigestSha256 !== inputDigestSha256) {
+        refuseReuse('tracked-input digest has changed since the prior manifest')
+      } else if (candidate.sourceRevision !== sourceRevision) {
+        refuseReuse('source revision has changed since the prior manifest')
+      } else if (typeof candidate.copiedApplicationPath !== 'string' || !existsSync(candidate.copiedApplicationPath)) {
+        refuseReuse(`the prior artifact no longer exists at ${candidate.copiedApplicationPath}`)
+      } else if (typeof candidate.executablePath !== 'string' || !existsSync(candidate.executablePath)) {
+        refuseReuse(`the prior executable no longer exists at ${candidate.executablePath}`)
+      } else {
+        let rehashedApplication = null
+        let rehashedExecutable = null
+        try {
+          rehashedApplication = hashDirectory(candidate.copiedApplicationPath)
+          rehashedExecutable = hashFile(candidate.executablePath)
+        } catch (error) {
+          refuseReuse(`the prior artifact could not be re-hashed: ${error instanceof Error ? error.message : String(error)}`)
+        }
+        if (rehashedApplication !== null && rehashedApplication !== candidate.applicationDigestSha256) {
+          refuseReuse('the prior artifact bytes no longer match its recorded application digest -- it was altered on disk')
+        } else if (rehashedExecutable !== null && rehashedExecutable !== candidate.executableDigestSha256) {
+          refuseReuse('the prior executable bytes no longer match its recorded executable digest -- it was altered on disk')
+        } else if (rehashedApplication !== null && rehashedExecutable !== null) {
+          // Re-point the locator at the reused manifest so a THIRD
+          // invocation in a row also finds it directly, without needing
+          // the sibling scan.
+          writeFileSync(locatorPath, `${candidatePath}\n`, 'utf8')
+          console.log(`Desktop package reused: digest=${candidate.applicationDigestSha256} manifest=${candidatePath}`)
+          process.exit(0)
+        }
+      }
+    }
+  }
+}
+
 const startedAt = Date.now()
 
 run('pnpm', ['run', 'build'])
@@ -266,7 +358,7 @@ const manifest = {
   embeddedVersions,
   executableDigestSha256: hashFile(executablePath),
   executablePath,
-  inputDigestSha256: inputDigest.digest('hex'),
+  inputDigestSha256,
   platform: 'darwin',
   schemaVersion: 1,
   sourceRevision,
@@ -277,7 +369,6 @@ const manifest = {
 const manifestPath = join(artifactRoot, 'package-manifest.json')
 mkdirSync(artifactRoot, { recursive: true })
 writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' })
-const locatorName = `keepling-desktop-latest-manifest-${sha256(repositoryRoot).slice(0, 16)}.txt`
-writeFileSync(join(tmpdir(), locatorName), `${manifestPath}\n`, { encoding: 'utf8' })
+writeFileSync(locatorPath, `${manifestPath}\n`, { encoding: 'utf8' })
 
 console.log(`Desktop package manifest: ${manifestPath}`)
