@@ -47,6 +47,7 @@ type Harness = {
 
 const harness = (options: {
   now?: string
+  unsent?: (reason: 'asked') => { applied: boolean; reason: 'blocked' | 'dropped' | 'nothing_to_undo' | 'transmitted' | 'unknown'; snapshot: WorkspaceSnapshot }
   target?: {
     availability: { expiresAt: string; handle: string; label: string } | null
     mutationId: string | null
@@ -75,6 +76,7 @@ const harness = (options: {
       return { applied: true, snapshot: snapshotOf('before') }
     },
     undoTarget: () => options.target ?? null,
+    ...(options.unsent === undefined ? {} : { undoUnsentLocalAction: () => options.unsent!('asked') }),
   } satisfies LocalStorePort
 
   return {
@@ -126,6 +128,66 @@ describe('undo reconciliation (O-45)', () => {
     )
     // A remedy, not a label (O-42): syncing is what makes the handle arrive.
     expect(presentation.actions).toEqual([{ code: 'retry', label: 'Retry' }])
+  })
+
+  /**
+   * O-51 / D-52. The cost 03-23 recorded: on a Mac with NO server
+   * configured nothing is ever acknowledged, so no handle ever exists and
+   * every Command-Z was a refusal -- while MAC-01 names undo as a supported
+   * Mac operation.
+   *
+   * The answer is not "trust the outbox". It is the store PROVING the bytes
+   * were never handed to the transport, which only the transmission state
+   * added by migration 0002 can do. The application asks; it never assumes.
+   */
+  it('undoes locally, and DROPS the command, when the store proves the bytes never left', async () => {
+    const dropped: string[] = []
+    const { application, enqueued } = harness({
+      target: { ...available, availability: null },
+      unsent: (reason) => {
+        dropped.push(reason)
+        return { applied: true, reason: 'dropped' as const, snapshot: snapshotOf('before') }
+      },
+    })
+    const result = await application.undoLastLocalAction()
+
+    expect(result).toMatchObject({ applied: true, snapshot: snapshotOf('before') })
+    expect(dropped).toEqual(['asked'])
+    // Nothing is sent: there is no compensation to send, because there is
+    // nothing on the server to compensate for.
+    expect(enqueued).toEqual([])
+    expect(application.presentationSnapshot().summary.kind).not.toBe('undo_unavailable')
+  })
+
+  it('REFUSES with honest copy when the command may already have been transmitted', async () => {
+    const { application, enqueued } = harness({
+      target: { ...available, availability: null },
+      unsent: () => ({ applied: false, reason: 'transmitted' as const, snapshot: snapshotOf('after') }),
+    })
+    const result = await application.undoLastLocalAction()
+
+    expect(result).toMatchObject({ applied: false, reason: 'in_flight' })
+    expect(enqueued).toEqual([])
+    const presentation = application.presentationSnapshot().summary
+    expect(presentation.kind).toBe('undo_unavailable')
+    // NOT the "hasn't reached the server yet" copy: this client does not
+    // know that, and saying it would be a guess presented as a fact.
+    expect(presentation.copy).toBe(
+      'This change is on its way to the server, so it can’t be undone yet. Nothing was changed.',
+    )
+    expect(presentation.actions).toEqual([{ code: 'retry', label: 'Retry' }])
+  })
+
+  it('REFUSES when a later queued command was built on the change being undone', async () => {
+    const { application } = harness({
+      target: { ...available, availability: null },
+      unsent: () => ({ applied: false, reason: 'blocked' as const, snapshot: snapshotOf('after') }),
+    })
+    const result = await application.undoLastLocalAction()
+    expect(result).toMatchObject({ applied: false, reason: 'unsent' })
+    expect(application.presentationSnapshot().summary.copy).toBe(
+      'This change hasn’t reached the server yet, so it can’t be undone. Nothing was changed.',
+    )
   })
 
   it('REFUSES, loudly and visibly, when the server-issued handle has expired', async () => {
