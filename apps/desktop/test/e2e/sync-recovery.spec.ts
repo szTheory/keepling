@@ -131,7 +131,7 @@ test('the real worker thread reports a closed failure code and transparently ret
   const databasePath = join(root, 'namespace.sqlite3')
 
   // A prior successful run left a real committed task on disk.
-  const seedCommandBytes = '{"mutation_id":"mutation-seed","task_id":"task-seed","title":"Before permission loss","type":"capture_task"}'
+  const seedCommandBytes = '{"mutation_id":"mutation-seed","task_id":"task-seed","title":"Before permission loss","type":"capture_task","version":1}'
   const seedWorker = new Worker(workerPath, { workerData: { databasePath, migrationPath } })
   const seedResponse = await requestFromWorker(seedWorker, 1, 'acceptCapture', {
     acceptedAt: '2026-09-02T12:00:00.000Z',
@@ -180,7 +180,7 @@ test('the real worker thread reports a closed failure code and transparently ret
  * `DesktopApplication` proof.
  */
 const captureCommand = (mutationId: string, taskId: string, title: string) => {
-  const commandBytes = JSON.stringify({ mutation_id: mutationId, task_id: taskId, title, type: 'capture_task' })
+  const commandBytes = JSON.stringify({ mutation_id: mutationId, task_id: taskId, title, type: 'capture_task', version: 1 })
   return {
     acceptedAt: '2026-09-02T12:00:00.000Z',
     commandBytes,

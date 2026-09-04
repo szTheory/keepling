@@ -67,7 +67,7 @@ const hardKill = async (application: ElectronApplication): Promise<void> => {
 /** Builds a "retained" namespace.sqlite3 -- schema already migrated and one task already committed -- as if from a prior session, BEFORE the packaged app ever opens this profile. */
 const seedRetainedFixture = (profilePath: string, taskId: string, title: string): void => {
   const databasePath = join(profilePath, 'namespace.sqlite3')
-  const commandBytes = JSON.stringify({ mutation_id: `${taskId}-mutation`, task_id: taskId, title, type: 'capture_task' })
+  const commandBytes = JSON.stringify({ mutation_id: `${taskId}-mutation`, task_id: taskId, title, type: 'capture_task', version: 1 })
   const store = new NodeSqliteLocalStore({
     databasePath,
     migrationPath,

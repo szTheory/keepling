@@ -35,7 +35,7 @@ const fixtureRoot = (name: string): string => {
 const migrationPath = new URL('../../migrations/0001_initial.sql', import.meta.url)
 
 const mutationFor = (mutationId: string, taskId: string, title: string) => {
-  const commandBytes = JSON.stringify({ mutation_id: mutationId, task_id: taskId, title, type: 'capture_task' })
+  const commandBytes = JSON.stringify({ mutation_id: mutationId, task_id: taskId, title, type: 'capture_task', version: 1 })
   return {
     acceptedAt: '2026-09-02T12:00:00.000Z',
     commandBytes,

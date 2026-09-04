@@ -22,8 +22,8 @@ const fixture = () => {
 
 const mutation = {
   acceptedAt: '2026-09-02T12:00:00.000Z',
-  commandBytes: '{"mutation_id":"mutation-store","task_id":"task-store","title":"Survive relaunch","type":"capture_task"}',
-  fingerprint: '1b8d1931c9218aca18871493971e8d54561c6f509bc7c8cf645c1fcf8fcf0e60',
+  commandBytes: '{"mutation_id":"mutation-store","task_id":"task-store","title":"Survive relaunch","type":"capture_task","version":1}',
+  fingerprint: '3febd03c82b15599d7c12b262fec0dd130eecba2a0719bfbe300803b0992ed34',
   mutationId: 'mutation-store',
   taskId: 'task-store',
   title: 'Survive relaunch',

@@ -20,7 +20,7 @@ import { KeeplingSyncAdapter } from '../../main/adapters/sync.ts'
  *     fingerprint exactly settles nothing and lands on "Saved on this Mac".
  */
 
-const commandBytes = JSON.stringify({ mutation_id: 'mutation-one', task_id: 'task-one', title: 'Sync me', type: 'capture_task' })
+const commandBytes = JSON.stringify({ mutation_id: 'mutation-one', task_id: 'task-one', title: 'Sync me', type: 'capture_task', version: 1 })
 
 const mutation: PendingMutation = {
   acceptedAt: '2026-09-02T12:00:00.000Z',

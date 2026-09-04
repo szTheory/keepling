@@ -65,7 +65,12 @@ describe('DesktopApplication offline capture', () => {
     expect(result.status).toBe('local_saved')
     expect(store.accepted).toHaveLength(1)
     expect(store.accepted[0]?.commandBytes).toBe(
-      '{"mutation_id":"mutation-offline","task_id":"task-offline","title":"Keep the exact intent","type":"capture_task"}',
+      // The EXACT contract body (CaptureTaskCommand: mutation_id, task_id,
+      // title, version) plus the `type` discriminator the durable outbox
+      // needs to still be routable after a relaunch. Measured against a real
+      // Phoenix server: bytes without `version` are refused 400
+      // invalid_command, so bytes without it can never settle (O-34/O-37).
+      '{"mutation_id":"mutation-offline","task_id":"task-offline","title":"Keep the exact intent","type":"capture_task","version":1}',
     )
     expect(store.accepted[0]?.fingerprint).toMatch(/^[a-f0-9]{64}$/)
     expect(result.snapshot.tasks[0]?.syncStatus).toBe('saved_on_this_mac')

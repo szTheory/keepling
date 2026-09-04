@@ -241,11 +241,23 @@ class DesktopApplication {
 
     const mutationId = this.#identity.randomId()
     const taskId = this.#identity.randomId()
+    // The durable, retried-verbatim intent (D-03). Its shape is the
+    // contract's `CaptureTaskCommand` -- mutation_id, task_id, title,
+    // version -- plus the optional `type` discriminator, and it is fixed
+    // here because these exact bytes are what a real server receives.
+    //
+    // `version` was missing until O-34 pointed this client at real Phoenix
+    // for the first time and the server refused the body 400
+    // invalid_command. `type` stays IN the bytes because an outbox that
+    // survives a relaunch has nothing else to route by, and re-serializing
+    // on retry is forbidden; the server verifies it against the endpoint
+    // and never routes on it (KeeplingWeb.CommandDiscriminator).
     const commandBytes = JSON.stringify({
       mutation_id: mutationId,
       task_id: taskId,
       title,
       type: 'capture_task',
+      version: 1,
     })
     const mutation: PendingMutation = {
       acceptedAt: this.#clock.now(),

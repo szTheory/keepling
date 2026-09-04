@@ -694,8 +694,13 @@ class NodeSqliteLocalStore {
       command.mutation_id !== mutation.mutationId ||
       command.task_id !== mutation.taskId ||
       command.title !== mutation.title ||
-      command.type !== 'capture_task'
+      command.type !== 'capture_task' ||
+      command.version !== 1
     ) {
+      // `version` is checked here and not only at the transport, because
+      // bytes the server will refuse must never reach the outbox in the
+      // first place: an unpushable command sits there forever, reported as
+      // "Saved on this Mac", with nothing ever able to settle it.
       throw new Error('immutable command bytes do not match mutation fields')
     }
   }
