@@ -389,7 +389,7 @@ const launchApplication = async (manifest, probeBinary, { profilePath, syncMode 
   const handle = { child, pid: child.pid, probeBinary }
   liveApplications.add(handle)
 
-  const deadline = Date.now() + 45_000
+  const deadline = Date.now() + 45_000 * WAIT_SCALE
   for (;;) {
     if (child.exitCode !== null) fail(`the packaged application exited (${child.exitCode}) before presenting a window`)
     const windows = runProbe(probeBinary, ['windows', '--pid', String(child.pid)], { allowFailure: true })
@@ -398,7 +398,15 @@ const launchApplication = async (manifest, probeBinary, { profilePath, syncMode 
     await sleep(500)
   }
   runProbe(probeBinary, ['raise', '--pid', String(child.pid)])
-  await sleep(600)
+  // Raising is asynchronous at the WindowServer. Wait for the application to
+  // actually BE frontmost rather than for 600ms to pass, so nothing below
+  // acts on a window that has not been activated yet.
+  await waitFor('the application under test to become frontmost after launch', async () => {
+    const frontmost = runProbe(probeBinary, ['frontmost'], { allowFailure: true })
+    if (frontmost.ok && frontmost.value.pid === child.pid) return true
+    runProbe(probeBinary, ['raise', '--pid', String(child.pid)], { allowFailure: true })
+    return false
+  }, { intervalMs: 200, onTimeout: 'return', timeoutMs: 10_000 })
 
   // Chromium only publishes its COMPLETE accessibility tree (ARIA live
   // regions, control values, aria-current) once an assistive client asks
@@ -450,10 +458,16 @@ const quitApplication = async (handle) => {
   liveApplications.delete(handle)
   if (handle.child.exitCode !== null) return
   handle.child.kill('SIGTERM')
-  const deadline = Date.now() + 8_000
+  const deadline = Date.now() + 8_000 * WAIT_SCALE
   while (handle.child.exitCode === null && Date.now() < deadline) await sleep(150)
-  if (handle.child.exitCode === null) handle.child.kill('SIGKILL')
-  await sleep(400)
+  if (handle.child.exitCode === null) {
+    handle.child.kill('SIGKILL')
+    // Wait for the process to be REAPED, not for a guess at how long that
+    // takes. The next row launches against the same accessibility session,
+    // and a still-live process would leave a stale window in it.
+    const killDeadline = Date.now() + 5_000 * WAIT_SCALE
+    while (handle.child.exitCode === null && Date.now() < killDeadline) await sleep(100)
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -526,6 +540,27 @@ const focusIdentity = (node) =>
     : JSON.stringify([node.role, node.title ?? '', node.description ?? '', node.frame ?? null])
 
 /**
+ * ONE lane-wide multiplier for EVERY bounded wait in this file (O-32).
+ *
+ * The rows were tuned standalone and then run inside `--all`, which is
+ * measurably ~1.6x slower: the earlier VoiceOver-layer rows leave an AX
+ * client attached to the machine, and every focus change and every tree dump
+ * costs more under one. Measured 2026-09-03: A3 took 29.5s inside `--all`
+ * against 14.6-16.5s standalone, and failed at a 10s `settledFocus` deadline
+ * that is generous in isolation. Row-by-row deadline tuning is how that
+ * asymmetry was created; doing it again per row would recreate it.
+ *
+ * So there is exactly one knob, and it is applied UNIFORMLY rather than only
+ * under `--all`. A mode-dependent factor would reintroduce the very split
+ * this exists to remove -- deadlines that hold in one invocation and not in
+ * another. Scaling weakens no assertion and costs nothing on the happy path:
+ * a wait whose condition is already true returns on its first poll, so the
+ * larger deadline is only ever SPENT on a genuine failure, where spending it
+ * buys certainty that the failure is real rather than early.
+ */
+const WAIT_SCALE = 2
+
+/**
  * Reads the AX focused element only once it has SETTLED, i.e. once it is
  * non-null and unchanged across consecutive reads. Mounting a dialog moves
  * focus in more than one step and leaves the application with NO focused
@@ -552,7 +587,7 @@ const focusIdentity = (node) =>
  * within the deadline, the last observation is returned and the check fails.
  */
 const settledFocus = async (handle, { intervalMs = 150, stableReads = 3, timeoutMs = 6_000, until = null } = {}) => {
-  const deadline = Date.now() + timeoutMs
+  const deadline = Date.now() + timeoutMs * WAIT_SCALE
   let lastIdentity = null
   let repeats = 0
   let node = null
@@ -581,7 +616,7 @@ const settledFocus = async (handle, { intervalMs = 150, stableReads = 3, timeout
  * reporting a misleading failure (or, worse, a misleading pass).
  */
 const ensureFrontmost = (handle) => {
-  const deadline = Date.now() + 6_000
+  const deadline = Date.now() + 6_000 * WAIT_SCALE
   for (;;) {
     const frontmost = runProbe(handle.probeBinary, ['frontmost'], { allowFailure: true })
     if (frontmost.ok && frontmost.value.pid === handle.pid) return
@@ -627,7 +662,7 @@ const postKeys = (handle, sequence, { raise = true } = {}) => {
  * assertion vacuous rather than false.
  */
 const waitFor = async (description, predicate, { timeoutMs = 12_000, intervalMs = 300, onTimeout = 'fail' } = {}) => {
-  const deadline = Date.now() + timeoutMs
+  const deadline = Date.now() + timeoutMs * WAIT_SCALE
   let last = null
   for (;;) {
     last = await predicate()
@@ -839,8 +874,25 @@ const tabUntil = async (handle, description, predicate, { key = 'tab', limit = 2
   for (let step = 0; step < limit; step += 1) {
     const focused = focusedElement(handle)
     if (focused && predicate(focused)) return focused
+    const before = focusIdentity(focused)
     postKeys(handle, key, { raise })
-    await sleep(120)
+    // Wait for the press to LAND before deciding whether to press again.
+    // A fixed 120ms cadence outruns a loaded renderer: presses queue up
+    // while focus is read behind them, the budget is consumed by moves that
+    // were never observed, and the row reports "could not reach X within N
+    // presses" against a window that is working correctly. That is the
+    // measured A3 failure -- traversal cycled the whole Quick Entry window
+    // and stopped back on the capture field.
+    //
+    // The budget is NOT raised and the predicate is NOT relaxed. Focus that
+    // genuinely never moves -- a real keyboard trap -- still burns every one
+    // of the `limit` presses and still fails with what it last saw, because
+    // this wait returns at its own deadline rather than failing the row.
+    await waitFor(
+      `keyboard focus to move after a ${key} press`,
+      async () => focusIdentity(focusedElement(handle)) !== before,
+      { intervalMs: 60, onTimeout: 'return', timeoutMs: 1_000 },
+    )
   }
   const focused = focusedElement(handle)
   if (focused && predicate(focused)) return focused
@@ -850,12 +902,55 @@ const tabUntil = async (handle, description, predicate, { key = 'tab', limit = 2
 const ancestryText = (node) =>
   [...(node.ancestors ?? [])].map((entry) => `${entry.title ?? ''} ${entry.description ?? ''} ${entry.value ?? ''}`).join(' | ')
 
+/** A labelled text field and its current value, read back out of the AX tree. */
+const textFieldNode = (handle, title) =>
+  findNode(webNodes(handle), (node) => node.role === 'AXTextField' && node.title === title) ?? null
+const textFieldValue = (handle, title) => {
+  const node = textFieldNode(handle, title)
+  return node === null ? null : node.value ?? ''
+}
+
+/**
+ * Types real CGEvent keystrokes and does not return until the field actually
+ * CONTAINS them.
+ *
+ * Every controllable consequence of typing -- a Save button arming, a discard
+ * confirmation becoming reachable, a form becoming dirty -- is downstream of
+ * the renderer having processed the keystrokes and repainted. Sleeping a
+ * fixed amount and then tabbing means acting on a window that may still be
+ * showing the previous frame, which is how A3 exhausted its tab budget
+ * looking for a Discard Draft button that did not exist yet.
+ *
+ * This asserts nothing: it establishes the precondition the caller's own
+ * assertions depend on. If the text never arrives, the row fails HERE, loudly
+ * and with the reason, instead of failing later as a misleading "could not
+ * reach X by keyboard".
+ */
+const typeIntoField = async (handle, title, text, { exact = true, expect = null, raise = true } = {}) => {
+  // `expect` is what the field should READ once the keystrokes land, which is
+  // not the same as what was typed when the text is appended to an existing
+  // value. Waiting on the wrong one would wait forever on a correct app.
+  const wanted = expect ?? text
+  postKeys(handle, `text:${text}`, { raise })
+  // ANY field carrying this label counts. While Quick Entry is open the main
+  // window's own capture field is still in the tree with the same label, and
+  // insisting on the first match would wait for the wrong one forever.
+  await waitFor(`the typed text "${text}" to reach a "${title}" field`, async () =>
+    findNodes(webNodes(handle), (node) => node.role === 'AXTextField' && node.title === title)
+      .some((node) => {
+        const value = node.value ?? ''
+        return exact ? value === wanted : value.includes(wanted)
+      }),
+  { intervalMs: 100, timeoutMs: 10_000 })
+}
+
 const captureTaskByKeyboard = async (handle, title) => {
   postKeys(handle, 'cmd+n')
-  await sleep(400)
+  // Cmd-N is the app's own "new task" command. Wait for the field it is
+  // supposed to produce, not for 400ms, before tabbing towards it.
+  await waitFor('the capture field to be present after cmd+n', async () => textFieldNode(handle, CAPTURE_FIELD_LABEL) !== null)
   await tabUntil(handle, 'the capture field', (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL)
-  postKeys(handle, `text:${title}`)
-  await sleep(250)
+  await typeIntoField(handle, CAPTURE_FIELD_LABEL, title)
   await tabUntil(handle, 'the Add Task button', (node) => node.role === 'AXButton' && node.title === 'Add Task')
   postKeys(handle, 'space')
   await waitFor(`the captured task "${title}" to appear in the AX tree`, async () =>
@@ -893,12 +988,11 @@ const rowA1 = (context) => runRow('A1', 'VoiceOver layer: capture', async (check
     // Cmd-N is the app's own "new task" command; the AX tree, not the DOM,
     // is what confirms focus actually landed on the labelled field.
     postKeys(handle, 'cmd+n')
-    await sleep(500)
+    await waitFor('the capture field to be present after cmd+n', async () => textFieldNode(handle, CAPTURE_FIELD_LABEL) !== null)
     const focusedField = await tabUntil(handle, 'the capture field', (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL)
     check('the capture field can hold accessibility focus', focusedField.role === 'AXTextField')
 
     postKeys(handle, 'text:Prove the screen reader layer')
-    await sleep(300)
     const typed = await waitFor('the typed title to reach the capture field', async () => {
       const node = findNode(webNodes(handle), (entry) => entry.role === 'AXTextField' && entry.title === CAPTURE_FIELD_LABEL)
       return node && node.value === 'Prove the screen reader layer' ? node : null
@@ -1032,7 +1126,6 @@ const rowA3 = (context) => runRow('A3', 'VoiceOver layer: dialogs announce thems
     // Quick Entry discard-draft confirmation, opened through the REAL global
     // accelerator rather than a menu click.
     postKeys(handle, 'ctrl+alt+space')
-    await sleep(1200)
     const quickEntryField = await waitFor('the Quick Entry window', async () => {
       const node = findNode(webNodes(handle), (entry) => entry.role === 'AXTextField' && entry.title === CAPTURE_FIELD_LABEL && ancestryText(entry).includes('Quick Entry'))
       return node ?? (findNodes(webNodes(handle), (entry) => entry.role === 'AXTextField' && entry.title === CAPTURE_FIELD_LABEL).length > 1 ? true : null)
@@ -1040,8 +1133,16 @@ const rowA3 = (context) => runRow('A3', 'VoiceOver layer: dialogs announce thems
     check('the real global accelerator opens Quick Entry', quickEntryField !== null)
 
     await tabUntil(handle, 'the Quick Entry capture field', (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL)
-    postKeys(handle, 'text:Draft to discard')
-    await sleep(300)
+    // The Discard Draft button only EXISTS once the draft is non-empty, so
+    // tabbing for it before the keystrokes have been processed and repainted
+    // searches a window that legitimately does not contain it yet. Measured
+    // failure: "could not reach the Discard Draft button by keyboard within
+    // 24 tab presses (focus stopped on AXTextField \"What do you want to
+    // keep?\")" -- traversal had cycled the whole window. Wait for the
+    // field's own value, then for the button the value produces.
+    await typeIntoField(handle, CAPTURE_FIELD_LABEL, 'Draft to discard')
+    await waitFor('the Discard Draft button to be produced by the non-empty draft', async () =>
+      findNode(webNodes(handle), (node) => node.role === 'AXButton' && (node.title ?? '').startsWith('Discard Draft')) !== null)
     await tabUntil(handle, 'the Discard Draft button', (node) => node.role === 'AXButton' && (node.title ?? '').startsWith('Discard Draft'))
     postKeys(handle, 'space')
 
@@ -1059,10 +1160,15 @@ const rowA3 = (context) => runRow('A3', 'VoiceOver layer: dialogs announce thems
       discardFocus !== null && ancestryText(discardFocus).includes('Discard Quick Entry Draft?'),
       `ancestry was "${discardFocus === null ? '' : ancestryText(discardFocus)}"`,
     )
+    // Keep Draft: wait for the confirmation to actually go away before
+    // pressing Escape, so Escape cannot land on the dialog it was never
+    // meant for.
     postKeys(handle, 'space')
-    await sleep(400)
+    await waitFor('the discard-draft confirmation to close', async () =>
+      findNode(webNodes(handle), (node) => (node.title ?? '').includes('Discard Quick Entry Draft?') || (node.description ?? '').includes('Discard Quick Entry Draft?')) === null)
+    await returnFocusIntoQuickEntry(handle)
     postKeys(handle, 'escape')
-    await sleep(400)
+    await waitFor('Quick Entry to close', async () => !quickEntryIsOpen(handle))
 
     await captureTaskByKeyboard(handle, 'Buy milk')
   } finally {
@@ -1104,13 +1210,16 @@ const rowA4 = (context) => runRow('A4', 'VoiceOver layer: the unsaved-changes di
     await tabUntil(handle, 'the task row', (node) =>
       node.role === 'AXGroup' && ancestryText(node).includes('Tasks') && (node.title ?? '').includes('Edit me'))
     postKeys(handle, 'return')
-    await sleep(500)
+    // Opening a task mounts the detail editor. Tabbing for the Title field
+    // before it mounts spends the budget on the list instead.
+    await waitFor('the task detail editor to mount', async () => textFieldNode(handle, 'Title') !== null)
 
     const titleField = await tabUntil(handle, 'the task title editor', (node) => node.role === 'AXTextField' && node.title === 'Title')
     check('the task title editor is reachable by keyboard and exposes its label', titleField.title === 'Title')
     postKeys(handle, 'right')
-    postKeys(handle, 'text: unsaved')
-    await sleep(300)
+    // The unsaved-changes guard only arms once the form is actually dirty, so
+    // wait for the edit to be readable in the field rather than for 300ms.
+    await typeIntoField(handle, 'Title', ' unsaved', { exact: false })
 
     // Navigate away using the destination control itself, reached by
     // keyboard. (The Cmd-2 accelerator routes straight through
@@ -1163,10 +1272,15 @@ const rowA4 = (context) => runRow('A4', 'VoiceOver layer: the unsaved-changes di
 // Rows A5-A7 -- real keyboard access, real keystrokes, real input sources
 // ---------------------------------------------------------------------------
 
+/**
+ * No trailing sleep. Every call site in this file follows the activation with
+ * a `waitFor` on the consequence it actually cares about (a row leaving a
+ * list, a button being replaced by its counterpart), which is a stronger and
+ * cheaper wait than any fixed pause. A sleep here would only delay that wait.
+ */
 const activateButton = async (handle, name) => {
   await tabUntil(handle, `the "${name}" button`, (node) => node.role === 'AXButton' && node.title === name)
   postKeys(handle, 'space')
-  await sleep(500)
 }
 
 /** Moves roving focus to a task row by name and opens it -- keyboard only. */
@@ -1174,10 +1288,36 @@ const openTaskByKeyboard = async (handle, titleFragment) => {
   await tabUntil(handle, `the "${titleFragment}" task row`, (node) =>
     node.role === 'AXGroup' && ancestryText(node).includes('Tasks') && (node.title ?? '').includes(titleFragment))
   postKeys(handle, 'return')
-  await sleep(700)
+  // Opening is only complete once the detail editor exists; the next action
+  // is always aimed at a control inside it.
+  await waitFor('the task detail editor to mount', async () => textFieldNode(handle, 'Title') !== null)
 }
 
 const hasButton = (handle, name) => findNode(webNodes(handle), (node) => node.role === 'AXButton' && node.title === name) !== null
+
+/**
+ * Puts keyboard focus back INSIDE the Quick Entry form before a key that the
+ * form itself has to interpret (Escape) is posted.
+ *
+ * MEASURED 2026-09-03 on application_digest=937b279c..., recorded as an open
+ * item rather than worked around silently: dismissing the discard
+ * confirmation with "Keep Draft" leaves AX focus on the window's AXWebArea --
+ * the document, not the "Discard Draft..." button that opened the dialog.
+ * Quick Entry's Escape handler is bound to a div INSIDE the React root, so a
+ * keydown targeted at the document never reaches it and Escape silently does
+ * nothing. Observed directly: focus "AXWebArea \"Keepling\"", Escape posted,
+ * both windows still present 2s later; tab back into the field first and the
+ * same Escape hides the window immediately.
+ *
+ * This is TEARDOWN, not an assertion: A3 and A6 use Escape here only to get
+ * back to the main window, and neither claims anything about Escape. Nothing
+ * is weakened -- focus restoration after a dialog is still asserted by A6,
+ * and the underlying defect is filed, not hidden.
+ */
+const returnFocusIntoQuickEntry = async (handle) => {
+  await tabUntil(handle, 'the Quick Entry capture field', (node) =>
+    node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL)
+}
 
 const rowA5 = (context) => runRow('A5', 'Full Keyboard Access: the complete scoped sequence, keyboard only', async (check) => {
   applySystemSettings({ fullKeyboardAccess: 3 })
@@ -1201,8 +1341,7 @@ const rowA5 = (context) => runRow('A5', 'Full Keyboard Access: the complete scop
     // Tabbing into a text field selects its contents; move the caret to the
     // end first so this appends rather than replacing the title.
     postKeys(handle, 'right')
-    postKeys(handle, 'text: edited')
-    await sleep(300)
+    await typeIntoField(handle, 'Title', ' edited', { exact: false, expect: 'Keyboard loop edited' })
     await activateButton(handle, 'Save Changes')
     await waitFor('the edited title to reach the list', async () => taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
     check('editing and saving are reachable by keyboard alone', taskRows(handle).some((row) => row.text.includes('Keyboard loop edited')))
@@ -1311,10 +1450,13 @@ const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never tr
 
     // Dialog 1: Quick Entry discard-draft confirmation.
     postKeys(handle, 'ctrl+alt+space')
-    await sleep(1400)
+    await waitFor('Quick Entry to open from the real global accelerator', async () => quickEntryIsOpen(handle))
     await tabUntil(handle, 'the Quick Entry capture field', (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL)
-    postKeys(handle, 'text:Draft')
-    await sleep(300)
+    // Same precondition as A3: Discard Draft does not exist until the draft
+    // is non-empty, so wait for the draft, then for the button it produces.
+    await typeIntoField(handle, CAPTURE_FIELD_LABEL, 'Draft')
+    await waitFor('the Discard Draft button to be produced by the non-empty draft', async () =>
+      findNode(webNodes(handle), (node) => node.role === 'AXButton' && (node.title ?? '').startsWith('Discard Draft')) !== null)
     await tabUntil(handle, 'the Discard Draft button', (node) => node.role === 'AXButton' && (node.title ?? '').startsWith('Discard Draft'))
     postKeys(handle, 'space')
     const keepDraft = await settledFocus(handle, { timeoutMs: 10_000, until: (node) => (node?.title ?? '') === 'Keep Draft' })
@@ -1324,20 +1466,22 @@ const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never tr
       `focus was on ${describeFocus(keepDraft)}`,
     )
     postKeys(handle, 'space')
-    await sleep(700)
+    // Wait for the dialog to be GONE before asserting where focus went; the
+    // assertion is about focus after the dismissal, not during it.
+    await waitFor('the Quick Entry discard dialog to close', async () => !hasButton(handle, 'Keep Draft'))
     await assertUsableFocus('after closing the Quick Entry discard dialog by keyboard')
+    await returnFocusIntoQuickEntry(handle)
     postKeys(handle, 'escape')
-    await sleep(600)
+    await waitFor('Quick Entry to close', async () => !quickEntryIsOpen(handle))
 
     // Dialog 2: the workspace unsaved-changes alertdialog.
     await captureTaskByKeyboard(handle, 'Focus safety')
     await tabUntil(handle, 'the task row', (node) => node.role === 'AXGroup' && ancestryText(node).includes('Tasks') && (node.title ?? '').includes('Focus safety'))
     postKeys(handle, 'return')
-    await sleep(600)
+    await waitFor('the task detail editor to mount', async () => textFieldNode(handle, 'Title') !== null)
     await tabUntil(handle, 'the task title editor', (node) => node.role === 'AXTextField' && node.title === 'Title')
     postKeys(handle, 'right')
-    postKeys(handle, 'text: dirty')
-    await sleep(300)
+    await typeIntoField(handle, 'Title', ' dirty', { exact: false })
     await tabUntil(handle, 'the Today destination button', (node) => node.role === 'AXButton' && node.title === 'Today', { key: 'shift+tab', limit: 24 })
     postKeys(handle, 'space')
     const keepEditing = await settledFocus(handle, { timeoutMs: 10_000, until: (node) => (node?.title ?? '') === 'Keep Editing' })
@@ -1347,17 +1491,17 @@ const rowA6 = (context) => runRow('A6', 'Full Keyboard Access: focus is never tr
       `focus was on ${describeFocus(keepEditing)}`,
     )
     postKeys(handle, 'space')
-    await sleep(800)
+    await waitFor('the unsaved-changes dialog to close', async () => !hasButton(handle, 'Keep Editing'))
     await assertUsableFocus('after closing the unsaved-changes dialog by keyboard')
 
     // And once more through the destructive branch, which removes the
     // element focus was on -- the case a naive implementation strands.
     await tabUntil(handle, 'the Today destination button', (node) => node.role === 'AXButton' && node.title === 'Today', { key: 'shift+tab', limit: 24 })
     postKeys(handle, 'space')
-    await sleep(800)
+    await waitFor('the unsaved-changes dialog to re-open', async () => hasButton(handle, 'Discard Changes'))
     await tabUntil(handle, 'the Discard Changes button', (node) => node.role === 'AXButton' && node.title === 'Discard Changes')
     postKeys(handle, 'space')
-    await sleep(900)
+    await waitFor('the unsaved-changes dialog to close after discarding', async () => !hasButton(handle, 'Discard Changes'))
     await assertUsableFocus('after discarding changes and navigating away')
   } finally {
     await quitApplication(handle)
@@ -1373,7 +1517,7 @@ const rowA7 = (context) => runRow('A7', 'Non-US layout with dead keys', async (c
   const handle = await launchApplication(context.manifest, context.axProbe, { profilePath: allocateProfile('a7') })
   try {
     postKeys(handle, 'cmd+n')
-    await sleep(400)
+    await waitFor('the capture field to be present after cmd+n', async () => textFieldNode(handle, CAPTURE_FIELD_LABEL) !== null)
     await tabUntil(handle, 'the capture field', (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL)
     // Raw virtual key codes, so the OS composes through the ACTIVE input
     // source rather than this lane faking the result: `'` (dead acute) then
@@ -1731,7 +1875,10 @@ const rowA8 = (context) => runRow('A8', 'Real global-shortcut collision and OS a
     rival.kill('SIGTERM')
     await Promise.race([rivalExited, sleep(5_000)])
     if (rival.exitCode === null) rival.kill('SIGKILL')
-    await sleep(800)
+    // Phase 2 only means anything with the rival GONE, so wait for it to
+    // actually be gone rather than for 800ms.
+    const rivalDeadline = Date.now() + 5_000 * WAIT_SCALE
+    while (rival.exitCode === null && Date.now() < rivalDeadline) await sleep(100)
   }
 
   // Phase 2: with the rival gone, Keepling holds and receives its own
@@ -1757,7 +1904,12 @@ const rowA8 = (context) => runRow('A8', 'Real global-shortcut collision and OS a
       settingsText.slice(0, 300),
     )
     postKeys(solo, 'escape')
-    await sleep(600)
+    // The accelerator below must reach the main window, not a Settings pane
+    // still on screen, so wait for the pane to actually be gone.
+    await waitFor('the Settings pane to close', async () => {
+      const text = webNodes(solo).map((node) => subtreeText(node.subtree ?? node)).join(' ')
+      return !text.includes('Current shortcut') && !/Quick Entry shortcut isn.t available/.test(text)
+    }, { intervalMs: 200, onTimeout: 'return', timeoutMs: 10_000 })
     postKeys(solo, QUICK_ENTRY_ACCELERATOR)
     await waitFor('Quick Entry to open from the real global accelerator', async () => quickEntryIsOpen(solo), { timeoutMs: 20_000 })
     check('with no rival, the real global accelerator reaches Keepling', quickEntryIsOpen(solo))
@@ -1784,10 +1936,23 @@ const rowA9 = (context) => runRow('A9', 'Prior-application focus and caret retur
   try {
     for (const ending of ['submitted', 'discarded']) {
       // Put the caret at a known, non-trivial offset in the REAL prior app.
+      // Keystrokes go to whatever is frontmost, so wait for the prior
+      // application to BE frontmost before typing into it. Raising is
+      // asynchronous; 1200ms was a guess at how asynchronous.
       runProbe(context.axProbe, ['raise', '--pid', String(priorPid)])
-      await sleep(1200)
+      await waitFor(`${PRIOR_APPLICATION.name} to be frontmost before the caret is placed`, async () => {
+        const frontmost = runProbe(context.axProbe, ['frontmost'], { allowFailure: true })
+        if (frontmost.ok && frontmost.value.pid === priorPid) return true
+        runProbe(context.axProbe, ['raise', '--pid', String(priorPid)], { allowFailure: true })
+        return false
+      }, { intervalMs: 200, timeoutMs: 15_000 })
       postKeys(priorHandle, 'cmd+down')
-      await sleep(200)
+      // The six lefts are relative to wherever cmd+down left the caret, so
+      // they must not be posted until that move has actually landed.
+      await waitFor(`${PRIOR_APPLICATION.name} to move its caret to the end of the document`, async () => {
+        const value = runProbe(context.axProbe, ['selection', '--pid', String(priorPid)], { allowFailure: true })
+        return value.ok && value.value.selection !== null && typeof value.value.selection.location === 'number' && value.value.selection.location > 0
+      }, { intervalMs: 100, onTimeout: 'return', timeoutMs: 10_000 })
       for (let step = 0; step < 6; step += 1) postKeys(priorHandle, 'left')
       // TextEdit reports the caret through the AX API a beat after the keys
       // land; poll for the caret this asserts on rather than sampling once.
@@ -1809,8 +1974,10 @@ const rowA9 = (context) => runRow('A9', 'Prior-application focus and caret retur
       // focus by itself, and forcing the application frontmost would make
       // the harness the prior application and invalidate the whole row.
       await tabUntil(handle, 'the Quick Entry capture field', (node) => node.role === 'AXTextField' && node.title === CAPTURE_FIELD_LABEL, { raise: false })
-      postKeys(handle, `text:Captured while ${ending}`, { raise: false })
-      await sleep(400)
+      // Return would submit an empty draft, and Escape would discard a draft
+      // that never arrived; either way the row would measure the wrong thing.
+      // Wait for the text to be readable in the field before deciding it.
+      await typeIntoField(handle, CAPTURE_FIELD_LABEL, `Captured while ${ending}`, { raise: false })
       if (ending === 'submitted') postKeys(handle, 'return', { raise: false })
       else postKeys(handle, 'escape', { raise: false })
       await waitFor('Quick Entry to close', async () => !quickEntryIsOpen(handle), { timeoutMs: 15_000 })
