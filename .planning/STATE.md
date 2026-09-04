@@ -1,19 +1,19 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-current_phase: 03
-current_phase_name: Mac Daily Loop
-status: executing
-stopped_at: Completed KPL-03-27-PLAN.md -- VERIFICATION.md Gap 2 closed, all 27 KPL-03 plans now have summaries
-last_updated: "2026-09-04T19:22:59.190Z"
+current_phase: 4
+current_phase_name: Native iPhone Daily Loop
+status: planning
+stopped_at: Phase KPL-03 complete, ready to plan Phase 4
+last_updated: "2026-09-04T19:43:49.999Z"
 last_activity: 2026-09-04
-last_activity_desc: Completed 03-27-PLAN.md -- closed VERIFICATION.md Gap 2 (desktop visual-snapshot evidence)
-state_head: fddc8e390d3adb3eba86765b33874be927a87242
+last_activity_desc: Phase KPL-03 complete, transitioned to Phase 4
+state_head: 38532612eb35b7c62b7312883d518de03c5cc6be
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 65
-  completed_plans: 65
+  completed_plans: 64
 milestone_name: milestone
 ---
 
@@ -28,12 +28,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 ## Current Position
 
-Phase: KPL-03 (Mac Daily Loop) — ALL 27 PLANS COMPLETE (VERIFICATION.md gaps closed by 03-25/03-26/03-27)
-Plan: 27 of 27
+Phase: 4 — Native iPhone Daily Loop
+Plan: Not started
 Total Plans in Phase: 27
-Status: Executing Phase KPL-03
-Last activity: 2026-09-04 — Completed 03-27-PLAN.md (VERIFICATION.md Gap 2 closed)
-Last Activity Description: 03-27 built appearance-matrix.spec.ts (5 sizes x 2 themes) and amended 03-UI-SPEC.md's evidence contract, correcting the erroneous visual-dimension sign-off
+Status: Ready to plan
+Last activity: 2026-09-04 — Phase KPL-03 complete, transitioned to Phase 4
+Last Activity Description: Phase KPL-03 complete, transitioned to Phase 4
 Progress: [██████████] 100%
 
 ## Accumulated Context
@@ -242,7 +242,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 ## Session
 
 **Last session:** 2026-09-04T19:22:59.102Z
-**Stopped at:** Completed KPL-03-27-PLAN.md -- VERIFICATION.md Gap 2 closed, all 27 KPL-03 plans now have summaries
+**Stopped at:** Phase KPL-03 complete, ready to plan Phase 4
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
