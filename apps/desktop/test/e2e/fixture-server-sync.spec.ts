@@ -1,3 +1,22 @@
+/**
+ * RENAMED from `real-stack-sync.spec.ts` (O-34). It never had a real stack:
+ * every adapter below is constructed against an in-process fixture server
+ * and a stubbed `fetch` pointed at the deliberately non-resolving host
+ * `server.keepling.invalid`. The old name was enough to get MAC-03 checked
+ * on a false citation, and hours later unchecked again once someone read the
+ * file instead of trusting its title.
+ *
+ * It is kept, not deleted, because what it actually does is valuable and is
+ * NOT covered by the real-stack lane: PKCE with exact state matching, an
+ * unsolicited callback from a competing app, single-use authorization codes,
+ * refresh rotation, server-detected refresh replay, sign-out fencing order,
+ * and a hostile server answering with someone else's mutation identity.
+ * Several of those are hard or impossible to induce against an honest real
+ * server, which is exactly what a contract-faithful fixture is for.
+ *
+ * The real-server claim lives in `test/real-stack/real-stack-sync.spec.ts`.
+ */
+
 import { createHash } from 'node:crypto'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'

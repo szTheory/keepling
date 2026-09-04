@@ -203,6 +203,51 @@ runLane({
 })
 
 /**
+ * O-34/O-37/D-49: the PACKAGED artifact against a REAL Phoenix server on
+ * REAL PostgreSQL, through the same harness the web lane proves against.
+ *
+ * Every other lane above fakes its transport, and for a long time so did a
+ * spec literally named `real-stack-sync`. The first run of this lane found
+ * three genuine client/server disagreements that no amount of fixture
+ * testing had surfaced, which is the argument for it existing at all.
+ *
+ * Its runner enforces the anti-vacuity rules that a name cannot:
+ * `KEEPLING_TEST_SYNC_MODE` unset in both the spec and the environment, no
+ * stubbed `fetch`, no `.invalid` host, the shared backend harness actually
+ * imported, and a `REAL_STACK_SYNC` evidence line reporting a positive
+ * settled-mutation count and a proven exact-bytes retry. A green run that
+ * settled nothing fails here.
+ *
+ * Runs HEADLESS, unlike the two Playwright lanes above. Those are forced
+ * windowed because their assertions are about real presentation --
+ * visibility, focus, window ordering. This lane asserts none of that: its
+ * claims are about bytes on a socket and rows in PostgreSQL, so a window on
+ * screen would add cost and prove nothing.
+ *
+ * If PostgreSQL or Phoenix cannot start, this lane FAILS loudly with the
+ * real error. It is never skipped, and it never degrades to a fake.
+ */
+runLane({
+  args: ['tooling/verify-real-stack-desktop.mjs'],
+  command: 'node',
+  name: 'real-stack-sync',
+  parse: (stdout) => {
+    const summary = stdout.match(
+      /Desktop real-stack lane passed: cases=(\d+) synced=(\d+) exact_bytes=(\d+) outcomes=(\S+)/,
+    )
+    if (!summary) throw new Error('real-stack lane summary line not found')
+    if (Number(summary[2]) <= 0) throw new Error('real-stack lane settled zero mutations against the real server')
+    if (Number(summary[3]) <= 0) throw new Error('real-stack lane proved no exact-bytes retry')
+    return Number(summary[1])
+  },
+  trackedInputPaths: [
+    'apps/desktop/test/real-stack',
+    'apps/web/e2e/support/backend.ts',
+    'tooling/verify-real-stack-desktop.mjs',
+  ],
+})
+
+/**
  * The macOS layer (rows A1-A15): the real AXUIElement tree VoiceOver speaks,
  * real CGEvent keystrokes, real input sources, and real system
  * accessibility/appearance settings, all against the SAME packaged artifact
@@ -362,7 +407,8 @@ const ownershipRegistry = [
   { category: 'lifecycle', file: 'apps/desktop/test/e2e/lifecycle.spec.ts', testName: 'quit is bounded and every post-COMMIT mutation survives it without waiting on the network' },
   { category: 'wake', file: 'tooling/measure-desktop-performance.mjs', testName: 'wake_reconnect_main_thread_work_ms' },
   { category: 'removal', file: 'apps/desktop/test/e2e/sync-recovery.spec.ts', testName: 'the second confirmation closes the store before deleting its whole file inventory and verifies absence' },
-  { category: 'auth', file: 'apps/desktop/test/e2e/real-stack-sync.spec.ts', testName: 'fences the active namespace before best-effort remote revocation' },
+  { category: 'auth', file: 'apps/desktop/test/e2e/fixture-server-sync.spec.ts', testName: 'fences the active namespace before best-effort remote revocation' },
+  { category: 'real-server', file: 'apps/desktop/test/real-stack/real-stack-sync.spec.ts', testName: 'the packaged app authorizes, captures offline, reconnects, and reaches Synced against real Phoenix and real PostgreSQL' },
   { category: 'sequence', file: 'apps/desktop/test/ipc/hostile-bridge.test.ts', testName: 'a sequence gap triggers an opaque presentation-snapshot refetch instead of applying the pushed value directly' },
   { category: 'theme', file: 'apps/desktop/test/e2e/accessibility.spec.ts', testName: 'a theme/contrast/motion change while a dialog is open never traps or discards focus' },
   { category: 'conflict', file: 'apps/desktop/test/e2e/daily-loop.spec.ts', testName: 'surfaces a sync conflict inline and requires an explicit mine/current choice' },
