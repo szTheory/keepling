@@ -217,15 +217,15 @@ Progress: [█████████░] 97%
 
 ## Next Action
 
-Run `pnpm test:phase-1` (not run since 03-02), then proceed to phase verification for KPL-03. The desktop phase gate is green (`node tooling/verify-desktop-phase.mjs` → lanes=9 failed=0), so requirements MAC-02/03/04/05 and QUAL-03/04 can now be checked against real evidence rather than deferred. Read `.planning/phases/KPL-03-mac-daily-loop/.continue-here.md` first; O-24 and O-27 are now CLOSED, and open items O-23, O-25, O-28 and O-29 are the live ones (O-25 -- the non-blocking CI job -- is the load-bearing one now that the lane's trustworthiness has been measured locally).
+Run `pnpm test:phase-1` (not run since 03-02), then proceed to phase verification for KPL-03. The desktop phase gate is green (`node tooling/verify-desktop-phase.mjs` → lanes=9 failed=0), so requirements MAC-02/03/04/05 and QUAL-03/04 can now be checked against real evidence rather than deferred. Read `.planning/phases/KPL-03-mac-daily-loop/.continue-here.md` first; O-32 is now CLOSED (the macOS lane's standalone/`--all` deadline asymmetry is gone, measured, not padded), and O-36 is NEW -- a real Quick Entry defect where Escape stops working after "Keep Draft". Treat `open_items` as untrusted until verified against source (O-22).
 
 ---
 *State initialized: 2026-08-28*
 
 ## Session
 
-**Last session:** 2026-09-03T22:35:00.000Z
-**Stopped at:** Completed 03-18-PLAN.md (O-24 and O-27 closed; the macOS lane no longer sleeps-then-reads-once, measured 10/10 full runs with 150/150 rows; desktop phase gate lanes=9 failed=0 on evidence for digest 5f8ad9fa...)
+**Last session:** 2026-09-04T01:35:00.000Z
+**Stopped at:** Completed 03-20-PLAN.md (O-32 closed, O-36 filed; the macOS lane no longer sleeps-then-ACTS -- 9 sleeps left, all inside polling loops; five consecutive --all runs at rows=15 failed=0 cases=92; A3 11.55-11.92s in --all against 11.75-11.89s standalone, from 29.5s against 14.6-16.5s; desktop phase gate lanes=9 failed=0 on evidence for digest 937b279c...)
 **Resume file:** None
 
 ## Performance Metrics
@@ -285,6 +285,7 @@ Run `pnpm test:phase-1` (not run since 03-02), then proceed to phase verificatio
 | Phase KPL-03 P15 | 2h 35m | 4 tasks | 11 files |
 | Phase KPL-03 P16 | 75min | 2 tasks | 7 files |
 | Phase KPL-03 P18 | 60min | 3 tasks | 3 files |
+| Phase KPL-03 P20 | 75min | 3 tasks | 2 files |
 
 ### Blockers
 
