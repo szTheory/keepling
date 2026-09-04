@@ -167,7 +167,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 26/27 plans executed (3 gap-closure plans added 2026-09-04 from 03-VERIFICATION.md)
+**Plans:** 27/27 plans executed (3 gap-closure plans added 2026-09-04 from 03-VERIFICATION.md)
 
 Plans:
 
@@ -176,7 +176,7 @@ Plans:
 - [x] 03-24-PLAN.md — Give undo back to a Mac with no server, without opening a divergence window.
 - [x] 03-25-PLAN.md — Make packaged Mac bytes reproducible so digest-bound macOS evidence survives a rebuild (Gap 1b).
 - [x] 03-26-PLAN.md — Remove the macOS lane's order-dependent cross-row interference as a class, and record a reproducible A1-A15 pass (Gap 1a).
-- [ ] 03-27-PLAN.md — Build behavioral appearance evidence at the five named window sizes and amend the UI-SPEC evidence contract and sign-off (Gap 2).
+- [x] 03-27-PLAN.md — Build behavioral appearance evidence at the five named window sizes and amend the UI-SPEC evidence contract and sign-off (Gap 2).
 
 - [x] 03-18-PLAN.md
 - [x] 03-19-PLAN.md

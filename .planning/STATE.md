@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: Completed KPL-03-26-PLAN.md
-last_updated: "2026-09-04T18:53:24.110Z"
+stopped_at: Completed KPL-03-27-PLAN.md -- VERIFICATION.md Gap 2 closed, all 27 KPL-03 plans now have summaries
+last_updated: "2026-09-04T19:22:59.190Z"
 last_activity: 2026-09-04
-last_activity_desc: Phase KPL-03 execution started
-state_head: 14894c4da926ea97be502bb954bdc812279badaa
+last_activity_desc: Completed 03-27-PLAN.md -- closed VERIFICATION.md Gap 2 (desktop visual-snapshot evidence)
+state_head: fddc8e390d3adb3eba86765b33874be927a87242
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 65
-  completed_plans: 63
+  completed_plans: 65
 milestone_name: milestone
 ---
 
@@ -28,13 +28,13 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 ## Current Position
 
-Phase: KPL-03 (Mac Daily Loop) — EXECUTING
-Plan: 3 of 27
+Phase: KPL-03 (Mac Daily Loop) — ALL 27 PLANS COMPLETE (VERIFICATION.md gaps closed by 03-25/03-26/03-27)
+Plan: 27 of 27
 Total Plans in Phase: 27
 Status: Executing Phase KPL-03
-Last activity: 2026-09-04 — Phase KPL-03 execution started
-Last Activity Description: Phase KPL-03 execution started
-Progress: [██████████] 99%
+Last activity: 2026-09-04 — Completed 03-27-PLAN.md (VERIFICATION.md Gap 2 closed)
+Last Activity Description: 03-27 built appearance-matrix.spec.ts (5 sizes x 2 themes) and amended 03-UI-SPEC.md's evidence contract, correcting the erroneous visual-dimension sign-off
+Progress: [██████████] 100%
 
 ## Accumulated Context
 
@@ -205,6 +205,7 @@ Progress: [██████████] 99%
 - [Phase 03]: D-52 implemented in 03-24 with a three-state outbox (queued | in_flight | uncertain): a transport failure yields uncertain, never queued, because a failed fetch cannot say whether the bytes left.
 - [Phase 03]: Measured (not assumed) that desktop packaging at HEAD is byte-reproducible across separate invocations; no non-determinism source needed removal, documented in package-desktop.mjs and permanently re-checked by the package-reproducible gate lane.
 - [Phase 03]: 03-26: machine-state census + focus-theft detection + seeded shuffle closes VERIFICATION.md Gap 1's remaining half — A9 previously blamed A8; today's failure was A1 (first row, no predecessor), falsifying the per-row-pair hypothesis. A class-level machine-state barrier (real reads, refuse loudly, restore between rows) plus mid-sequence FOCUS_STOLEN detection replaced row-by-row diagnosis. A Rule 1 regression the barrier's own teardown cleanup introduced (deleting A3's shared profile early) was found and fixed during this plan's own verification.
+- [Phase 03]: [Phase KPL-03]: 03-27 closed VERIFICATION.md Gap 2 by amending 03-UI-SPEC.md's evidence contract (per-dimension table naming a test title or macOS row id, or NOT BUILT with evidence) and building appearance-matrix.spec.ts for the one genuinely uncovered dimension (five window sizes, both themes); the erroneous visual-dimension sign-off is corrected in a dated record beside the original, never rewritten.
 
 ### Retained Research
 
@@ -240,8 +241,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-04T18:53:24.020Z
-**Stopped at:** Completed KPL-03-26-PLAN.md
+**Last session:** 2026-09-04T19:22:59.102Z
+**Stopped at:** Completed KPL-03-27-PLAN.md -- VERIFICATION.md Gap 2 closed, all 27 KPL-03 plans now have summaries
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -309,6 +310,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-03 P24 | 1h05m | 3 tasks | 22 files |
 | Phase KPL-03 P25 | 45min | 3 tasks | 4 files |
 | Phase KPL-03 P26 | 2h 30min | 3 tasks | 1 files |
+| Phase KPL-03 P27 | 70min | 3 tasks | 2 files |
 
 ### Blockers
 
