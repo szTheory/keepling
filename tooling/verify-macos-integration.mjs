@@ -79,7 +79,8 @@ const ALL_ROWS = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8', 'A9', 'A10', '
 const selfTestRestore = hasFlag('self-test-restore')
 const gateMode = hasFlag('gate')
 const runAllRows = hasFlag('all')
-const restoreOnly = hasFlag('restore')
+const restoreFromCapture = hasFlag('restore-from-capture')
+const restoreOnly = hasFlag('restore') || restoreFromCapture
 const withoutAccessibilityTrust = hasFlag('without-accessibility-trust')
 
 /**
@@ -103,6 +104,8 @@ if (!selfTestRestore && !gateMode && !runAllRows && !restoreOnly && !withoutAcce
     '  --self-test-restore      prove settings are restored after a failure and',
     '                           after a real interruption',
     '  --restore                manually restore settings from the last capture',
+    '  --restore-from-capture   restore from a leftover settings-capture.json (a',
+    '                           previous run that did not restore) and delete it',
   ].join('\n'))
   process.exit(1)
 }
@@ -711,11 +714,20 @@ const settingsState = {
 
 const readSystemSettings = () => runProbe(settingsState.probeBinary, ['capture']).value
 
+/**
+ * The one place on disk that marks "a run mutated the machine and has not
+ * yet proven it put everything back". Its presence is a signal in its own
+ * right (see `assertNoLeftoverCapture`), so it is deleted only at the single
+ * point that has just verified restoration by re-reading -- never
+ * pre-emptively, and never just because a process is about to exit.
+ */
+const settingsCapturePath = join(cacheDir, 'settings-capture.json')
+
 const captureSystemSettings = () => {
   if (settingsState.baseline !== null) return settingsState.baseline
   const baseline = readSystemSettings()
   mkdirSync(cacheDir, { recursive: true })
-  settingsState.capturePath = join(cacheDir, 'settings-capture.json')
+  settingsState.capturePath = settingsCapturePath
   writeFileSync(settingsState.capturePath, JSON.stringify(baseline, null, 2))
   settingsState.baseline = baseline
   console.log(`SETTINGS captured=${Object.keys(baseline).filter((key) => key !== 'inputSource').length} file=${settingsState.capturePath}`)
@@ -766,31 +778,31 @@ const selectInputSource = (identifier) => {
 }
 
 /**
- * Synchronous on purpose: `process.on('exit')` cannot await, and a restore
- * that only runs on the happy path is not a restore.
+ * The core restore-and-verify cycle, shared by the exit-scoped restore
+ * (`restoreSystemSettings`, called once per process) and the row-scoped
+ * restore (`restoreBetweenRows`, called after every row). Neither the input
+ * source nor any managed setting is left to whatever the last row set --
+ * this puts BOTH back to baseline and proves it by re-reading in a separate
+ * process, never trusting an in-process read-back.
  */
-const restoreSystemSettings = ({ verify = true } = {}) => {
-  if (settingsState.baseline === null || settingsState.restored) return true
-  settingsState.restored = true
-
+const applyBaselineAndVerify = () => {
   if (settingsState.inputSource !== null) {
     const { enabledByUs, identifier, previous } = settingsState.inputSource
     if (previous !== null) spawnSync(settingsState.probeBinary, ['select-input-source', '--id', previous], { encoding: 'utf8' })
     if (enabledByUs) spawnSync(settingsState.probeBinary, ['disable-input-source', '--id', identifier], { encoding: 'utf8' })
+    settingsState.inputSource = null
   }
 
   const restoreTo = {}
   for (const key of MANAGED_KEYS) restoreTo[key] = settingsState.baseline[key] ?? null
   spawnSync(settingsState.probeBinary, ['apply', '--settings', JSON.stringify(restoreTo)], { encoding: 'utf8' })
 
-  if (!verify) return true
   const after = spawnSync(settingsState.probeBinary, ['capture'], { encoding: 'utf8' })
   let current
   try {
     current = JSON.parse(after.stdout)
   } catch {
-    console.error('macOS integration lane failed: could not re-read system settings to verify restoration')
-    return false
+    return { ok: false, reason: 'could not re-read system settings to verify restoration' }
   }
   const differences = []
   for (const key of MANAGED_KEYS) {
@@ -805,14 +817,50 @@ const restoreSystemSettings = ({ verify = true } = {}) => {
   const actualEnabled = JSON.stringify(current.inputSource?.enabled ?? [])
   if (expectedEnabled !== actualEnabled) differences.push(`enabled input sources: expected ${expectedEnabled}, found ${actualEnabled}`)
 
-  if (differences.length > 0) {
-    console.error(`SETTINGS restore=FAILED differences=${differences.length}`)
-    for (const difference of differences) console.error(`  ${difference}`)
+  if (differences.length > 0) return { ok: false, reason: `restore verification found ${differences.length} difference(s): ${differences.join('; ')}` }
+  return { ok: true }
+}
+
+/**
+ * Synchronous on purpose: `process.on('exit')` cannot await, and a restore
+ * that only runs on the happy path is not a restore.
+ *
+ * The capture file is deleted here, after -- and only after -- restoration
+ * is verified. Deleting it earlier or unconditionally would erase the one
+ * durable record of what to put back if this very restore then failed.
+ */
+const restoreSystemSettings = ({ verify = true } = {}) => {
+  if (settingsState.baseline === null || settingsState.restored) return true
+  settingsState.restored = true
+
+  if (!verify) {
+    applyBaselineAndVerify()
+    return true
+  }
+
+  const outcome = applyBaselineAndVerify()
+  if (!outcome.ok) {
+    console.error(`SETTINGS restore=FAILED ${outcome.reason}`)
     console.error(`The captured original values remain at ${settingsState.capturePath}.`)
     return false
   }
   console.log('SETTINGS restore=VERIFIED every mutated setting matches its captured value')
+  if (settingsState.capturePath && existsSync(settingsState.capturePath)) rmSync(settingsState.capturePath, { force: true })
   return true
+}
+
+/**
+ * Runs between every row, not only at process exit -- this is what stops a
+ * non-baseline input source or managed setting from a row that mutated one
+ * from ever being inherited by the row that runs after it. Failure here is
+ * a loud lane failure, never a soft continue: a between-row restore that
+ * cannot prove it worked is exactly the silent laundering this barrier
+ * exists to catch.
+ */
+const restoreBetweenRows = (rowId) => {
+  if (settingsState.baseline === null) return
+  const outcome = applyBaselineAndVerify()
+  if (!outcome.ok) fail(`between-row restore after ${rowId} failed: ${outcome.reason}`)
 }
 
 let restoreFailed = false
@@ -834,6 +882,104 @@ process.on('uncaughtException', (error) => {
   restoreSystemSettings()
   process.exit(1)
 })
+
+// ---------------------------------------------------------------------------
+// Machine-state census: the barrier every run and every row passes through
+// ---------------------------------------------------------------------------
+
+/**
+ * A9's failure was blamed on A8. Today's failure is A1 -- the FIRST row of
+ * its own run, with no predecessor to inherit from. Both facts are explained
+ * by state that outlives a ROW and outlives a RUN: a non-baseline input
+ * source or managed setting left by `restoreSystemSettings` being
+ * exit-scoped rather than row-scoped, or a leftover Keepling/rival process
+ * from a run that never reached its own teardown. This census makes that
+ * state visible and `assertCleanSlate` makes it fatal, at the exact
+ * transition where it would otherwise be silently inherited.
+ *
+ * `pgrep -f <path>` is matched against the packaged application's own
+ * executable path and the compiled rival probe's own binary path -- real,
+ * absolute paths unique to this checkout's build output, not a name guess
+ * that could also match an unrelated process. macOS `pgrep` never reports
+ * itself as a match for its own invocation, verified empirically.
+ */
+const countMatchingProcesses = (executablePath) => {
+  if (!executablePath) return 0
+  const result = spawnSync('pgrep', ['-f', executablePath], { encoding: 'utf8' })
+  if (result.status !== 0) return 0
+  return result.stdout.split('\n').map((line) => line.trim()).filter(Boolean).length
+}
+
+/**
+ * A structured record built ONLY from real reads: the actual managed
+ * settings and input source (through the same `SystemSettings capture` the
+ * rest of the lane already trusts), and the actual running processes (not an
+ * assumption about what should be running).
+ */
+const censusMachineState = (context) => ({
+  keeplingProcesses: countMatchingProcesses(context.manifest.executablePath),
+  rivalProcesses: countMatchingProcesses(context.rivalProbe),
+  settings: readSystemSettings(),
+})
+
+const logMachineState = (label, census) => {
+  const managed = Object.fromEntries(MANAGED_KEYS.map((key) => [key, census.settings[key] ?? null]))
+  console.log(`MACHINE_STATE at=${label} input_source=${census.settings.inputSource?.id ?? ''} managed=${JSON.stringify(managed)} keepling_processes=${census.keeplingProcesses} rival_processes=${census.rivalProcesses}`)
+}
+
+/**
+ * Fails loudly, naming EVERY item that does not match `expected` -- never a
+ * warning, never a soft continue, never a skipped row (O-29's standing rule
+ * applied to machine state itself). This is what turns an order-dependent
+ * failure into an attributed one: the message names the transition
+ * (`at=<label>`) where the mismatch was first observed, not the row that
+ * happened to run next and inherit it.
+ */
+const assertCleanSlate = (label, expected, census) => {
+  logMachineState(label, census)
+  const problems = []
+  for (const key of MANAGED_KEYS) {
+    const expectedValue = expected.settings[key] ?? null
+    const foundValue = census.settings[key] ?? null
+    if (JSON.stringify(expectedValue) !== JSON.stringify(foundValue)) problems.push({ expected: expectedValue, found: foundValue, key })
+  }
+  const expectedSourceId = expected.settings.inputSource?.id ?? null
+  const foundSourceId = census.settings.inputSource?.id ?? null
+  if (expectedSourceId !== foundSourceId) problems.push({ expected: expectedSourceId, found: foundSourceId, key: 'inputSource.id' })
+  if (census.keeplingProcesses !== expected.keeplingProcesses) {
+    problems.push({ expected: expected.keeplingProcesses, found: census.keeplingProcesses, key: 'keepling_processes' })
+  }
+  if (census.rivalProcesses !== expected.rivalProcesses) {
+    problems.push({ expected: expected.rivalProcesses, found: census.rivalProcesses, key: 'rival_processes' })
+  }
+  if (problems.length === 0) return
+  for (const problem of problems) {
+    console.error(`MACHINE_STATE_DIRTY at=${label} item=${problem.key} expected=${JSON.stringify(problem.expected)} found=${JSON.stringify(problem.found)}`)
+  }
+  const remedies = []
+  if (problems.some((problem) => problem.key === 'keepling_processes')) remedies.push('kill the leftover Keepling process(es) before re-running')
+  if (problems.some((problem) => problem.key === 'rival_processes')) remedies.push('kill the leftover HotkeyRival process(es) before re-running')
+  fail(`machine state at ${label} does not match the expected clean slate (${problems.map((problem) => problem.key).join(', ')})${remedies.length > 0 ? ` -- ${remedies.join('; ')}` : ''}`)
+}
+
+/**
+ * A leftover `settings-capture.json` means a PREVIOUS run mutated the
+ * machine and never proved it put things back. Adopting the machine's
+ * current state as this run's baseline in that case is exactly the
+ * laundering path this barrier exists to close: the leaked state would be
+ * captured as "correct", restored to at the end, and reported
+ * `restore=VERIFIED` over a machine that never returned to its original
+ * condition. So this check runs BEFORE `captureSystemSettings` ever writes
+ * anything, and refuses rather than capturing over it.
+ */
+const assertNoLeftoverCapture = () => {
+  if (!existsSync(settingsCapturePath)) return
+  console.error(`MACHINE_STATE_DIRTY at=before-first-row item=settings-capture.json expected=${JSON.stringify(null)} found=${JSON.stringify(settingsCapturePath)}`)
+  fail(
+    `a previous run of this lane did not restore system settings -- ${settingsCapturePath} still exists. ` +
+    'Run `node tooling/verify-macos-integration.mjs --restore-from-capture` to restore and clear it, then re-run.',
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Row registry
@@ -2345,15 +2491,15 @@ const runGateMode = (manifest) => {
 
 const main = async () => {
   if (restoreOnly) {
-    const capturePath = join(cacheDir, 'settings-capture.json')
-    if (!existsSync(capturePath)) {
-      console.error(`macOS integration lane: nothing to restore -- no settings capture exists at ${capturePath}`)
+    if (!existsSync(settingsCapturePath)) {
+      console.error(`macOS integration lane: nothing to restore -- no settings capture exists at ${settingsCapturePath}`)
       process.exit(1)
     }
     settingsState.probeBinary = compileProbe('SystemSettings').binaryPath
-    settingsState.baseline = JSON.parse(readFileSync(capturePath, 'utf8'))
-    settingsState.capturePath = capturePath
+    settingsState.baseline = JSON.parse(readFileSync(settingsCapturePath, 'utf8'))
+    settingsState.capturePath = settingsCapturePath
     settingsState.inputSource = null
+    settingsState.restored = false
     if (!restoreSystemSettings()) process.exit(1)
     console.log('macOS integration lane: system settings restored from the last capture')
     process.exit(0)
@@ -2418,7 +2564,23 @@ const main = async () => {
   const unimplemented = requestedRows.filter((row) => ROW_REGISTRY[row] === undefined)
   if (unimplemented.length > 0) fail(`row(s) ${unimplemented.join(',')} have no implementation -- an unimplemented row is a failure, never a skip`)
 
-  for (const row of rows) await ROW_REGISTRY[row].run(context)
+  // The machine-state barrier: refuse before starting on a machine that is
+  // not in the state every row assumes, then keep it that way between rows
+  // rather than only at process exit. `assertNoLeftoverCapture` must run
+  // BEFORE `captureSystemSettings` ever writes anything, or a leftover file
+  // from an interrupted previous run would be silently overwritten and its
+  // "a restore is still owed" signal lost.
+  assertNoLeftoverCapture()
+  captureSystemSettings()
+  const expectedCleanSlate = () => ({ keeplingProcesses: 0, rivalProcesses: 0, settings: settingsState.baseline })
+  assertCleanSlate('before-first-row', expectedCleanSlate(), censusMachineState(context))
+
+  for (const row of rows) {
+    assertCleanSlate(`before-${row}`, expectedCleanSlate(), censusMachineState(context))
+    await ROW_REGISTRY[row].run(context)
+    restoreBetweenRows(row)
+    assertCleanSlate(`after-${row}`, expectedCleanSlate(), censusMachineState(context))
+  }
 
   // Only a COMPLETE, wholly passing run becomes reusable evidence. A partial
   // `--rows` run is for developing the lane, not for satisfying the gate.
