@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto'
-import { mkdirSync, readFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { test, expect, _electron as electron, type ElectronApplication, type Page } from '@playwright/test'
 
 import { NodeSqliteLocalStore } from '../../store-worker/local-store.ts'
@@ -100,15 +101,86 @@ test('the packaged app opens a retained (already-migrated) database from a prior
     await application.close()
   }
 
-  // The migration ledger records EXACTLY ONE row for version 1 -- opening a
-  // retained database never re-inserts a duplicate migration record.
+  // The migration ledger records EXACTLY ONE row PER version -- opening a
+  // retained database never re-inserts a duplicate migration record. Since
+  // 03-24 the lineage has two versions, so this is a real multi-version
+  // check rather than a single-row one.
   const databasePath = join(profilePath, 'namespace.sqlite3')
   const ledgerDb = new DatabaseSync(databasePath, { defensive: true, timeout: 2_500 })
-  const ledger = ledgerDb.prepare('SELECT version FROM schema_migrations').all() as Array<{ version: number }>
+  const ledger = ledgerDb.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
   const taskRows = ledgerDb.prepare('SELECT title FROM visible_projection ORDER BY title').all() as Array<{ title: string }>
   ledgerDb.close()
-  expect(ledger).toHaveLength(1)
+  expect(ledger.map((row) => row.version)).toEqual([1, 2])
   expect(taskRows.map((row) => row.title)).toEqual(['Book the dentist', 'Renew the passport before the trip'])
+})
+
+/**
+ * O-51 / D-52, the truth this plan is most exposed on, proved by the
+ * SHIPPED artifact rather than by a unit test of the runner.
+ *
+ * A migration that ships is the riskiest thing in this plan: on a person's
+ * Mac the database already exists, already holds their tasks, and may hold
+ * unsent commands. So this seeds a genuine pre-0002 database -- built by
+ * the same store code against a migrations directory containing only
+ * `0001_initial.sql` -- with a task AND a queued command, then lets the
+ * PACKAGED app open it. Nothing here asserts the migration "would" work.
+ */
+test('the packaged app migrates a database written before the outbox state column, keeping its tasks and its queued commands', async () => {
+  const profilePath = allocateProfile('pre-0002-upgrade')
+  const priorSchemaDirectory = join(profilePath, 'prior-schema')
+  mkdirSync(priorSchemaDirectory, { recursive: true })
+  copyFileSync(fileURLToPath(migrationPath), join(priorSchemaDirectory, '0001_initial.sql'))
+
+  const databasePath = join(profilePath, 'namespace.sqlite3')
+  const taskId = 'pre-0002-task'
+  const commandBytes = JSON.stringify({ mutation_id: `${taskId}-mutation`, task_id: taskId, title: 'Ferry tickets for June', type: 'capture_task', version: 1 })
+  const older = new NodeSqliteLocalStore({
+    databasePath,
+    migrationPath: join(priorSchemaDirectory, '0001_initial.sql'),
+  })
+  older.acceptCapture({
+    acceptedAt: '2026-08-01T09:00:00.000Z',
+    commandBytes,
+    fingerprint: createHash('sha256').update(commandBytes).digest('hex'),
+    mutationId: `${taskId}-mutation`,
+    taskId,
+    title: 'Ferry tickets for June',
+  })
+  older.close()
+
+  const beforeDb = new DatabaseSync(databasePath, { defensive: true, timeout: 2_500 })
+  const beforeLedger = beforeDb.prepare('SELECT version FROM schema_migrations').all() as Array<{ version: number }>
+  beforeDb.close()
+  expect(beforeLedger.map((row) => row.version)).toEqual([1])
+
+  const { application, window } = await launch(profilePath, 'offline')
+  try {
+    // The task survived the migration and is on screen in the shipped app.
+    await expect(window.getByText('Ferry tickets for June')).toBeVisible()
+    // And the store is still writable afterwards.
+    await window.getByLabel('What do you want to keep?').fill('Pack the tent')
+    await window.getByRole('button', { name: 'Add Task' }).click()
+    await expect(window.getByText('Pack the tent')).toBeVisible()
+  } finally {
+    await application.close()
+  }
+
+  const afterDb = new DatabaseSync(databasePath, { defensive: true, timeout: 2_500 })
+  const ledger = afterDb.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
+  const queued = afterDb
+    .prepare(`SELECT outbox.state AS state, immutable_commands.command_bytes AS bytes
+              FROM outbox JOIN immutable_commands USING (mutation_id) ORDER BY outbox.sequence`)
+    .all() as Array<{ bytes: string; state: string }>
+  afterDb.close()
+
+  expect(ledger.map((row) => row.version)).toEqual([1, 2])
+  // The queued command survived with its EXACT bytes -- never re-serialized,
+  // never dropped and recreated -- and it is `uncertain` rather than
+  // `queued`: the client that enqueued it recorded no transmission state,
+  // so its history is unknown, and unknown is never assumed to be
+  // never-sent. The second command, enqueued after the migration, is.
+  expect(queued.map((row) => row.state)).toEqual(['uncertain', 'queued'])
+  expect(queued[0]!.bytes).toBe(commandBytes)
 })
 
 test('the packaged app completes capture, edit, complete/reopen, Today placement, and trash/restore through the exact copied executable', async () => {
