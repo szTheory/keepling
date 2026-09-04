@@ -167,7 +167,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 16/17 plans executed
+**Plans:** 22/22 plans executed
 
 Plans:
 
@@ -309,7 +309,7 @@ attempted now.
 |-------|--------|--------------|----------|
 | 1. One Trustworthy Task | Complete    | 13 | 74% |
 | 2. Synchronization and Replaceable Server | In Progress | 12 | 91% |
-| 3. Mac Daily Loop | In Progress| 7 | 100% (21/21 plans; MAC-04 still blocked by O-38, so the phase is not verified) |
+| 3. Mac Daily Loop | In Progress| 7 | 100% (22/22 plans; O-38 and O-41 closed by 03-22, so MAC-03/MAC-04 are ready to be re-derived (O-17/O-48) — the phase is not verified until they are) |
 | 4. Native iPhone Daily Loop | ○ Pending | 4 | 0% |
 | 5. Safe Agent Access | ○ Pending | 5 | 0% |
 | 6. Portability and Trust Release | ○ Pending | 1 + cross-cutting verification | 0% |

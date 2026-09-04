@@ -29,12 +29,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-03 (Mac Daily Loop) — EXECUTING
-Plan: 21 of 21
-Total Plans in Phase: 21
+Plan: 22 of 22
+Total Plans in Phase: 22
 Status: Executing Phase KPL-03
-Last activity: 2026-09-04 — Plan 03-21 complete (O-36, O-34 and O-37 closed; the packaged Mac app now reaches a real server)
-Last Activity Description: Escape is bound at the window so no focus position can disable it, and the discard dialog restores focus to its invoker. Under D-49 the device-grant credential class may mutate, with the browser CSRF posture unchanged and pinned by tests. A new real-stack lane runs the PACKAGED app against real Phoenix on real PostgreSQL, reusing the web lane's harness: it authorizes through the real device grant, captures offline, retries the exact bytes, and reaches Synced on an exact receipt — outcome "accepted" only, no conflict path claimed (O-38). Gate: lanes=10 failed=0.
-Progress: [█████████░] 97%
+Last activity: 2026-09-04 — Plan 03-22 complete (O-41, O-38, O-42 and the O-31(a) half closed; the Mac sync seam carries every mutation and can hear a conflict)
+Last Activity Description: Completing, reopening, trashing, restoring, retitling and moving to Today now build the contract command body and enqueue it in the SAME transaction as the local projection write; all eight command types were observed ARRIVING at real Phoenix, with capture-before-edit ordering proven on the wire and enforced by resource key rather than by a journal dependency that no outcome could clear. The adapter classifies a closed list of server refusals instead of throwing, so a real 409 from a real second writer becomes conflict copy with a live Review Conflict action in the shipped window — a 401 stays its own tagged state and is never collapsed into a per-mutation rejection. Every authored recovery action is now a remedy, with Retry and Export built because neither existed. Quick Entry and Settings get the row over a new, read-only, schema-validated channel. Rule 2: computeSyncBackoff had never been called, so a reconnected app never synced until someone typed. Gate: lanes=10 failed=0.
+Progress: [██████████] 99%
 
 ## Accumulated Context
 
@@ -43,6 +43,10 @@ Progress: [█████████░] 97%
 - [Phase 03]: D-49 — the device-grant credential class may mutate; the command surface is extended to accept it rather than forking a native API, because iPhone and MCP would inherit the same split and SRV-02 exists to keep one set of semantic invariants across adapters.
 - [Phase 03]: A bearer-authenticated request requires no Origin, because CSRF rides ambient cookie authentication a browser attaches automatically; the browser posture is unchanged and pinned by tests rather than by comment.
 - [Phase 03]: Durable command bytes carry an optional `type` discriminator that the server verifies against the endpoint and never routes on — an outbox that retries exact bytes has nothing else to route by after a relaunch.
+- [Phase 03]: Outbound ordering is enforced by resource key (`task:<id>`), never by a journal dependency — a dependency only clears on an accepted outcome, so once conflicts became reachable it would strand a task's whole chain in the outbox forever with nothing able to settle it.
+- [Phase 03]: The client settles a CLOSED list of server refusals (the four 409 conflict codes, every 422, `invalid_command`, `task_not_found`). A 401 is its own tagged state and is never collapsed into a per-mutation rejection, because every authentication problem carries `retryable: false`. Everything unlisted keeps throwing — an unheard answer is never a settled one.
+- [Phase 03]: `CommandAcknowledgement.outcome` stays strict at `accepted`/`already_satisfied`, because that is what the contract publishes; a conflict arrives as a 409 problem, not as a 200. Widening the acknowledgement validator would convert a genuine contract violation into a silent one.
+- [Phase 03]: A refusal never overwrites the local row from the server's answer and never replays the canonical shadow over it — a 409 carries only the affected fields, and replaying would erase the person's edit while the copy promises it is still there.
 - [Phase 03]: Quick Entry binds Escape on the window, not on a React subtree, so no focus position can silently disable it; a global accelerator was rejected because it would swallow Escape from every other Mac application.
 - [Phase 03]: The real-stack lane is its own directory and Playwright project, so the other packaged specs stay runnable without Elixir/PostgreSQL and a zero-case real-stack run cannot hide inside another lane’s count.
 - Keepling is the confirmed working product and repository name; formal trademark/namespace clearance remains open.
@@ -222,15 +226,18 @@ Progress: [█████████░] 97%
 
 ## Next Action
 
-Re-derive MAC-03 and MAC-05 against the new real-server evidence (O-17), then run `pnpm test:phase-1` and proceed to phase verification for KPL-03. The desktop phase gate is green at `lanes=10 failed=0` including the new `real-stack-sync` lane. Read `.planning/phases/KPL-03-mac-daily-loop/.continue-here.md` first, and treat `open_items` as untrusted until verified against source (O-22). O-34, O-36 and O-37 are CLOSED. Still open and relevant: O-38 (the adapter throws on the conflict/rejected outcomes the server emits — MAC-04 blocker, owned by 03-22), O-39 (stale Settings account state after sign-in), O-40 (the packaged application digest is not reproducible across invocations, which the macOS evidence binding depends on — do NOT fix by loosening that binding).
+Re-derive MAC-03 and MAC-04 against the 03-22 evidence (O-17, D-50), reading `.planning/phases/KPL-03-mac-daily-loop/03-22-SUMMARY.md` — specifically its "What the tests actually exercised — honestly" section, which states which outcomes and command types were observed and which were not, rather than this line. Then run `pnpm test:phase-1` and proceed to phase verification for KPL-03. The desktop phase gate is green at `lanes=10 failed=0` with every lane at a positive case count. Read `.planning/phases/KPL-03-mac-daily-loop/.continue-here.md` first, and treat `open_items` as untrusted until verified against source (O-22).
+
+CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and relevant: O-39 (stale Settings account state after sign-in), O-40 (the packaged application digest is not reproducible across invocations, which the macOS evidence binding depends on — do NOT fix by loosening that binding; it behaved exactly as recorded during 03-22 and cost one re-record), O-43 (a refused local change has no durable home — the next pull reverts it), O-44 (the desktop conflict chooser is title-only), O-45 (undo is the same defect class as O-41 and needs server-issued undo handles), O-46/O-47 (`preparing` and `uncertain` still have no production construction site — reported for a recorded decision, deliberately not wired speculatively), O-48 (the requirement re-derivation itself).
 
 ---
 *State initialized: 2026-08-28*
 
 ## Session
 
-**Last session:** 2026-09-04T03:10:00.000Z
-**Stopped at:** Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
+**Last session:** 2026-09-04T04:20:00.000Z
+**Stopped at:** Completed 03-22-PLAN.md (O-41 closed — all eight command types observed arriving at real Phoenix, final_revision=8, outbox drained; O-38 closed both halves — a real second writer's divergence became conflict copy in the shipped window, proven non-vacuous by deliberate mutation; O-42 closed — every authored action dispatches, with retrySync and exportLocalData built; O-31(a) closed — Quick Entry and Settings show the row over a read-only channel; Rule 2 fix: computeSyncBackoff had never been called anywhere, so a reconnected app never synced until the person made another change; O-43..O-48 filed; desktop phase gate lanes=10 failed=0)
+**Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
 ## Performance Metrics
@@ -238,6 +245,7 @@ Re-derive MAC-03 and MAC-05 against the new real-server evidence (O-17), then ru
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase KPL-03 P21 | ~3h | 3 tasks | 19 files |
+| Phase KPL-03 P22 | ~4h | 4 tasks | 26 files |
 | Phase KPL-01 P01 | 16min | 2 tasks | 3 files |
 | Phase KPL-01 P02 | 8min | 2 tasks | 13 files |
 | Phase KPL-01 P04 | 10min | 2 tasks | 13 files |
