@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: Completed 03-25-PLAN.md
-last_updated: "2026-09-04T16:49:19.634Z"
+stopped_at: Completed KPL-03-26-PLAN.md
+last_updated: "2026-09-04T18:53:24.110Z"
 last_activity: 2026-09-04
 last_activity_desc: Phase KPL-03 execution started
-state_head: b0d3830224966fa4f90d9a611695f43d90ab34ce
+state_head: 14894c4da926ea97be502bb954bdc812279badaa
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 65
-  completed_plans: 62
+  completed_plans: 63
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-03 (Mac Daily Loop) — EXECUTING
-Plan: 2 of 27
+Plan: 3 of 27
 Total Plans in Phase: 27
 Status: Executing Phase KPL-03
 Last activity: 2026-09-04 — Phase KPL-03 execution started
@@ -204,6 +204,7 @@ Progress: [██████████] 99%
 - [Phase 03]: undo_uncertain is never settled by the client, because the server itself does not know whether the compensation applied; it stays loud and O-47 stays open
 - [Phase 03]: D-52 implemented in 03-24 with a three-state outbox (queued | in_flight | uncertain): a transport failure yields uncertain, never queued, because a failed fetch cannot say whether the bytes left.
 - [Phase 03]: Measured (not assumed) that desktop packaging at HEAD is byte-reproducible across separate invocations; no non-determinism source needed removal, documented in package-desktop.mjs and permanently re-checked by the package-reproducible gate lane.
+- [Phase 03]: 03-26: machine-state census + focus-theft detection + seeded shuffle closes VERIFICATION.md Gap 1's remaining half — A9 previously blamed A8; today's failure was A1 (first row, no predecessor), falsifying the per-row-pair hypothesis. A class-level machine-state barrier (real reads, refuse loudly, restore between rows) plus mid-sequence FOCUS_STOLEN detection replaced row-by-row diagnosis. A Rule 1 regression the barrier's own teardown cleanup introduced (deleting A3's shared profile early) was found and fixed during this plan's own verification.
 
 ### Retained Research
 
@@ -239,8 +240,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-04T16:49:19.540Z
-**Stopped at:** Completed 03-25-PLAN.md
+**Last session:** 2026-09-04T18:53:24.020Z
+**Stopped at:** Completed KPL-03-26-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -307,6 +308,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-03 P23 | ~2h | 3 tasks | 18 files |
 | Phase KPL-03 P24 | 1h05m | 3 tasks | 22 files |
 | Phase KPL-03 P25 | 45min | 3 tasks | 4 files |
+| Phase KPL-03 P26 | 2h 30min | 3 tasks | 1 files |
 
 ### Blockers
 
