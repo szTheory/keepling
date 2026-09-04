@@ -29,17 +29,22 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-03 (Mac Daily Loop) — EXECUTING
-Plan: 17 of 17
-Total Plans in Phase: 17
+Plan: 21 of 21
+Total Plans in Phase: 21
 Status: Executing Phase KPL-03
-Last activity: 2026-09-03 — Plan 03-17 complete (test filters fixed, test:changed, headless E2E, macOS CI TCC experiment)
-Last Activity Description: Local test runs are scopeable, change-aware and optionally windowless; gate and CI unchanged in comprehensiveness. Gate reports lanes=9 failed=1 until O-27 re-records macOS row evidence for the new packaged digest.
+Last activity: 2026-09-04 — Plan 03-21 complete (O-36, O-34 and O-37 closed; the packaged Mac app now reaches a real server)
+Last Activity Description: Escape is bound at the window so no focus position can disable it, and the discard dialog restores focus to its invoker. Under D-49 the device-grant credential class may mutate, with the browser CSRF posture unchanged and pinned by tests. A new real-stack lane runs the PACKAGED app against real Phoenix on real PostgreSQL, reusing the web lane's harness: it authorizes through the real device grant, captures offline, retries the exact bytes, and reaches Synced on an exact receipt — outcome "accepted" only, no conflict path claimed (O-38). Gate: lanes=10 failed=0.
 Progress: [█████████░] 97%
 
 ## Accumulated Context
 
 ### Decisions
 
+- [Phase 03]: D-49 — the device-grant credential class may mutate; the command surface is extended to accept it rather than forking a native API, because iPhone and MCP would inherit the same split and SRV-02 exists to keep one set of semantic invariants across adapters.
+- [Phase 03]: A bearer-authenticated request requires no Origin, because CSRF rides ambient cookie authentication a browser attaches automatically; the browser posture is unchanged and pinned by tests rather than by comment.
+- [Phase 03]: Durable command bytes carry an optional `type` discriminator that the server verifies against the endpoint and never routes on — an outbox that retries exact bytes has nothing else to route by after a relaunch.
+- [Phase 03]: Quick Entry binds Escape on the window, not on a React subtree, so no focus position can silently disable it; a global accelerator was rejected because it would swallow Escape from every other Mac application.
+- [Phase 03]: The real-stack lane is its own directory and Playwright project, so the other packaged specs stay runnable without Elixir/PostgreSQL and a zero-case real-stack run cannot hide inside another lane’s count.
 - Keepling is the confirmed working product and repository name; formal trademark/namespace clearance remains open.
 - One coordinating monorepo owns planning, apps, shared contracts/tokens, infrastructure, and release evidence.
 - Framework directories are documented now but scaffolded only when their vertical phase starts.
@@ -217,21 +222,22 @@ Progress: [█████████░] 97%
 
 ## Next Action
 
-Run `pnpm test:phase-1` (not run since 03-02), then proceed to phase verification for KPL-03. The desktop phase gate is green (`node tooling/verify-desktop-phase.mjs` → lanes=9 failed=0), so requirements MAC-02/03/04/05 and QUAL-03/04 can now be checked against real evidence rather than deferred. Read `.planning/phases/KPL-03-mac-daily-loop/.continue-here.md` first; O-32 is now CLOSED (the macOS lane's standalone/`--all` deadline asymmetry is gone, measured, not padded), and O-36 is NEW -- a real Quick Entry defect where Escape stops working after "Keep Draft". Treat `open_items` as untrusted until verified against source (O-22).
+Re-derive MAC-03 and MAC-05 against the new real-server evidence (O-17), then run `pnpm test:phase-1` and proceed to phase verification for KPL-03. The desktop phase gate is green at `lanes=10 failed=0` including the new `real-stack-sync` lane. Read `.planning/phases/KPL-03-mac-daily-loop/.continue-here.md` first, and treat `open_items` as untrusted until verified against source (O-22). O-34, O-36 and O-37 are CLOSED. Still open and relevant: O-38 (the adapter throws on the conflict/rejected outcomes the server emits — MAC-04 blocker, owned by 03-22), O-39 (stale Settings account state after sign-in), O-40 (the packaged application digest is not reproducible across invocations, which the macOS evidence binding depends on — do NOT fix by loosening that binding).
 
 ---
 *State initialized: 2026-08-28*
 
 ## Session
 
-**Last session:** 2026-09-04T01:35:00.000Z
-**Stopped at:** Completed 03-20-PLAN.md (O-32 closed, O-36 filed; the macOS lane no longer sleeps-then-ACTS -- 9 sleeps left, all inside polling loops; five consecutive --all runs at rows=15 failed=0 cases=92; A3 11.55-11.92s in --all against 11.75-11.89s standalone, from 29.5s against 14.6-16.5s; desktop phase gate lanes=9 failed=0 on evidence for digest 937b279c...)
+**Last session:** 2026-09-04T03:10:00.000Z
+**Stopped at:** Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
 ## Performance Metrics
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
+| Phase KPL-03 P21 | ~3h | 3 tasks | 19 files |
 | Phase KPL-01 P01 | 16min | 2 tasks | 3 files |
 | Phase KPL-01 P02 | 8min | 2 tasks | 13 files |
 | Phase KPL-01 P04 | 10min | 2 tasks | 13 files |
