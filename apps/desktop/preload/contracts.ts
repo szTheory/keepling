@@ -95,7 +95,10 @@ const conflictSchema = z.object({
  */
 const undoResultSchema = z.object({
   applied: z.boolean(),
-  reason: z.enum(['expired', 'nothing_to_undo', 'unsent']).optional(),
+  // O-51: `in_flight` is the refusal for a command whose bytes have been
+  // handed to the transport with no outcome yet -- distinct from `unsent`,
+  // which claims the change is still only on this Mac.
+  reason: z.enum(['expired', 'in_flight', 'nothing_to_undo', 'unsent']).optional(),
   snapshot: snapshotSchema,
 }).strict()
 const resolveConflictRequestSchema = z.object({

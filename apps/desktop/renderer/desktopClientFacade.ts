@@ -199,6 +199,15 @@ const createDesktopClientFacade = (): ClientFacade => {
             message: 'This change hasn’t reached the server yet, so it can’t be undone. Nothing was changed.',
           }
         }
+        if (result.reason === 'in_flight') {
+          // O-51. NOT the `unsent` copy: this Mac does not know whether the
+          // server has the change, and saying it is still here would be a
+          // guess presented as a fact.
+          return {
+            kind: 'rejected',
+            message: 'This change is on its way to the server, so it can’t be undone yet. Nothing was changed.',
+          }
+        }
         if (result.reason === 'expired') {
           return { kind: 'rejected', message: 'This change can no longer be undone. Nothing was changed.' }
         }

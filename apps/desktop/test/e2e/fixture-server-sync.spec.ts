@@ -360,10 +360,14 @@ const buildLoop = (server: FixtureServer) => {
     credentials,
     identity: { randomId: () => crypto.randomUUID() },
     localStore: {
+      // O-51: delegated to the REAL store, so this lane exercises the real
+      // transmission state machine rather than a permissive double.
+      abandonTransmission: async (mutationId) => localStore.abandonTransmission(mutationId),
       acceptCapture: async (mutation) => localStore.acceptCapture(mutation),
       acknowledge: async (acknowledgement) => localStore.acknowledge(acknowledgement),
       acknowledgeSync: async (acknowledgement) => localStore.acknowledgeSync(acknowledgement),
       applyPull: async (page) => localStore.applyPull(page),
+      beginTransmission: async (mutationId, fingerprint) => localStore.beginTransmission(mutationId, fingerprint),
       bindNamespace: async (namespace) => localStore.bindNamespace(namespace),
       close: async () => localStore.close(),
       pendingMutations: async () => localStore.pendingMutations(),
