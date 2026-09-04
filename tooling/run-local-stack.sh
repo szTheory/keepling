@@ -20,11 +20,13 @@ check_config() {
   for path in \
     apps/server/mix.exs \
     apps/web/playwright.config.ts \
+    apps/web/e2e/support/backend.ts \
     apps/web/e2e/support/stack.ts \
     packages/contracts/openapi/keepling.yaml; do
     require_file "$path"
   done
 
+  node --experimental-strip-types --check apps/web/e2e/support/backend.ts
   node --experimental-strip-types --check apps/web/e2e/support/stack.ts
   pnpm --filter @keepling/web exec playwright test --list >/dev/null
   echo "Local stack configuration passed: PostgreSQL 18.6, Phoenix, and Vite use one owned Playwright origin"

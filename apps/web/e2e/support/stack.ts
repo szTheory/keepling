@@ -1,36 +1,39 @@
 import { spawn, type ChildProcess } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
-import { mkdir, mkdtemp, rm } from 'node:fs/promises'
+import { mkdtemp, rm } from 'node:fs/promises'
 import { createServer, request, type Server } from 'node:http'
-import { connect } from 'node:net'
-import { tmpdir, userInfo } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from '@playwright/test'
 
-type OwnedChild = {
-  child: ChildProcess
-  label: string
-}
+import {
+  configuredPort,
+  resolvedHost,
+  runtimePreflight,
+  selectedRuntime,
+  startBackend,
+  stopOwnedProcess,
+  waitForPort,
+  type OwnedChild,
+} from './backend.ts'
 
-const supportDirectory = dirname(fileURLToPath(import.meta.url))
+/**
+ * The WEB lane's stack: the shared real backend (`backend.ts` -- real
+ * PostgreSQL, real migrations, the real seed, real Phoenix) plus the two
+ * pieces only a BROWSER needs on top, Vite and a single-origin proxy.
+ *
+ * The PostgreSQL/Phoenix half used to live in this file. It was moved to
+ * `backend.ts` so `apps/desktop/test/packaged/real-stack-sync.spec.ts` can
+ * prove the packaged Mac app against the SAME real server rather than
+ * against a second, drifting copy of this harness.
+ */
+
+const supportDirectory = fileURLToPath(new URL('.', import.meta.url))
 const repositoryRoot = resolve(supportDirectory, '../../../..')
 const webRoot = join(repositoryRoot, 'apps/web')
-const runtimePreflight = join(repositoryRoot, 'tooling/runtime-preflight.sh')
-const host = process.env.KEEPLING_E2E_HOST ?? '127.0.0.1'
-
-if (host !== '127.0.0.1') {
-  throw new Error('Keepling test services must bind only to 127.0.0.1')
-}
-
-const configuredPort = (name: string, fallback: string) => {
-  const value = Number(process.env[name] ?? fallback)
-  if (!Number.isInteger(value) || value < 1024 || value > 65_535) {
-    throw new Error(`${name} must be an integer from 1024 through 65535`)
-  }
-  return value
-}
+const host = resolvedHost()
 
 const publicPort = configuredPort('KEEPLING_E2E_PORT', '4173')
 const vitePort = configuredPort('KEEPLING_E2E_VITE_PORT', '4174')
@@ -47,50 +50,13 @@ let proxyServer: Server | undefined
 let temporaryRoot: string | undefined
 let cleaningUp = false
 
-const selectedRuntime = (args: string[]) => [
-  runtimePreflight,
-  ['--exec', '--', ...args],
-] as const
-
-const commandEnvironment = (databaseUrl: string) => ({
-  ...process.env,
-  KEEPLING_E2E_SEED: 'phase-1',
-  KEEPLING_ENABLE_TEST_FAULTS: '1',
-  KEEPLING_TEST_DATABASE_URL: databaseUrl,
-  KEEPLING_TEST_FAULT_TOKEN: testFaultToken,
-  KEEPLING_TEST_SECRET_KEY_BASE:
-    process.env.KEEPLING_TEST_SECRET_KEY_BASE ?? randomBytes(64).toString('hex'),
-  MIX_ENV: 'test',
-  PHX_SERVER: 'true',
-  PORT: String(phoenixPort),
-})
-
-const runChecked = async (
-  label: string,
-  command: string,
-  args: string[],
-  cwd: string,
-  env = process.env,
-) =>
-  new Promise<void>((resolvePromise, reject) => {
-    const child = spawn(command, args, { cwd, env, stdio: 'inherit' })
-    child.once('error', reject)
-    child.once('exit', (code, signal) => {
-      if (code === 0) {
-        resolvePromise()
-        return
-      }
-      reject(new Error(`${label} exited with ${signal ?? `code ${String(code)}`}`))
-    })
-  })
-
 const spawnOwned = (
   label: string,
   command: string,
   args: string[],
   cwd: string,
-  env = process.env,
-) => {
+  env: NodeJS.ProcessEnv = process.env,
+): ChildProcess => {
   const child = spawn(command, args, {
     cwd,
     detached: true,
@@ -104,49 +70,6 @@ const spawnOwned = (
     }
   })
   return child
-}
-
-const waitForPort = async (label: string, port: number) => {
-  const deadline = Date.now() + 60_000
-  while (Date.now() < deadline) {
-    const ready = await new Promise<boolean>((resolvePromise) => {
-      const socket = connect({ host, port })
-      socket.setTimeout(500)
-      socket.once('connect', () => {
-        socket.destroy()
-        resolvePromise(true)
-      })
-      socket.once('error', () => resolvePromise(false))
-      socket.once('timeout', () => {
-        socket.destroy()
-        resolvePromise(false)
-      })
-    })
-    if (ready) return
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 100))
-  }
-  throw new Error(`${label} did not listen on ${host}:${String(port)}`)
-}
-
-const stopOwnedProcess = async ({ child, label }: OwnedChild) => {
-  if (!child.pid || child.exitCode !== null) return
-  try {
-    process.kill(-child.pid, 'SIGTERM')
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error
-  }
-  await Promise.race([
-    new Promise<void>((resolvePromise) => child.once('exit', () => resolvePromise())),
-    new Promise<void>((resolvePromise) => setTimeout(resolvePromise, 5_000)),
-  ])
-  if (child.exitCode === null) {
-    try {
-      process.kill(-child.pid, 'SIGKILL')
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error
-    }
-  }
-  process.stderr.write(`Stopped owned ${label} process group ${String(child.pid)}\n`)
 }
 
 const cleanup = async (exitCode: number, reason?: string) => {
@@ -171,70 +94,26 @@ const start = async () => {
   process.once('unhandledRejection', (error) => void cleanup(1, String(error)))
 
   temporaryRoot = await mkdtemp(join(tmpdir(), 'keepling-playwright-'))
-  const dataDirectory = join(temporaryRoot, 'postgres')
-  const socketDirectory = join(temporaryRoot, 'socket')
-  await mkdir(socketDirectory)
 
-  const [preflight, initdbArgs] = selectedRuntime([
-    'initdb',
-    '--auth-host=trust',
-    '--auth-local=trust',
-    '--encoding=UTF8',
-    '--no-locale',
-    '-D',
-    dataDirectory,
-  ])
-  await runChecked('PostgreSQL initdb', preflight, initdbArgs, repositoryRoot)
-
-  const [, postgresArgs] = selectedRuntime([
-    'postgres',
-    '-D',
-    dataDirectory,
-    '-h',
-    host,
-    '-k',
-    socketDirectory,
-    '-p',
-    String(postgresPort),
-  ])
-  spawnOwned('PostgreSQL', preflight, postgresArgs, repositoryRoot)
-  await waitForPort('PostgreSQL', postgresPort)
-
-  const databaseUser = encodeURIComponent(userInfo().username)
-  const databaseUrl = `ecto://${databaseUser}@${host}:${String(postgresPort)}/keepling_e2e`
-  const env = commandEnvironment(databaseUrl)
-  const [, createdbArgs] = selectedRuntime([
-    'createdb',
-    '-h',
-    host,
-    '-p',
-    String(postgresPort),
-    'keepling_e2e',
-  ])
-  await runChecked('PostgreSQL createdb', preflight, createdbArgs, repositoryRoot, env)
-
-  for (const [label, mixCommand] of [
-    ['database migrations', 'cd apps/server && mix ecto.migrate'],
-    ['deterministic seed', 'cd apps/server && mix run priv/repo/seeds.exs'],
-  ] as const) {
-    const [, args] = selectedRuntime(['sh', '-c', mixCommand])
-    await runChecked(label, preflight, args, repositoryRoot, env)
-  }
-
-  const [, phoenixArgs] = selectedRuntime([
-    'sh',
-    '-c',
-    'cd apps/server && mix phx.server',
-  ])
-  spawnOwned('Phoenix', preflight, phoenixArgs, repositoryRoot, env)
-  await waitForPort('Phoenix', phoenixPort)
+  const backend = await startBackend({
+    faultToken: testFaultToken,
+    onUnexpectedExit: (reason) => {
+      if (!cleaningUp) void cleanup(1, reason)
+    },
+    ownedChildren,
+    phoenixPort,
+    postgresPort,
+    secretKeyBase:
+      process.env.KEEPLING_TEST_SECRET_KEY_BASE ?? randomBytes(64).toString('hex'),
+    temporaryRoot,
+  })
 
   spawnOwned(
     'Vite',
     'pnpm',
     ['exec', 'vite', '--host', host, '--port', String(vitePort), '--strictPort'],
     webRoot,
-    env,
+    backend.environment,
   )
   await waitForPort('Vite', vitePort)
 
