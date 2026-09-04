@@ -407,7 +407,17 @@ describe('every ipcMain.handle registration in main/index.ts is sender-checked b
     // dependency -- every trigger site runs AFTER the durable commit.
     expect(source).toContain('let syncPassInFlight: Promise<void> | null = null')
     expect(source).toContain('if (syncPassInFlight !== null || syncAdapter === null) return')
-    expect([...source.matchAll(/scheduleSyncPass\(\)/g)]).toHaveLength(5)
+    // Five mutation trigger sites plus the SIXTH added by 03-22: the
+    // backed-off retry of a non-empty outbox. Without it a pass ran only
+    // when a person made another change, so an app that reconnected never
+    // synchronized until they happened to type something -- and MAC-03 says
+    // a mutation is made and LATER RECONCILED.
+    expect([...source.matchAll(/scheduleSyncPass\(\)/g)]).toHaveLength(6)
+    expect(source).toContain('computeSyncBackoff(syncRetryAttempt, Math.random)')
+    // Bounded and self-cancelling: one timer at a time, never holding the
+    // app open, cancelled on quit.
+    expect(source).toContain('if (syncRetryTimer !== null || syncAdapter === null) return')
+    expect(source).toContain('cancelSyncRetry()')
   })
 
   it('exposes no generic invoke/send channel and no raw callback surface in the preload bridge module source', async () => {
