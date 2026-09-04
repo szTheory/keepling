@@ -116,8 +116,9 @@ try {
   if (failedMatch) fail(`the real-stack suite reported ${failedMatch[1]} failing test(s)`)
   if (passedCount <= 0) fail('the real-stack suite reported zero passing tests')
 
-  // The evidence line the spec prints only after it has genuinely settled a
-  // mutation against the real server. Without it a green run means nothing.
+  // The evidence lines the spec prints only after it has genuinely settled
+  // something against the real server. Without them a green run means
+  // nothing -- a suite that executed and asserted nothing still exits 0.
   const evidence = stdout.match(
     /REAL_STACK_SYNC synced=(\d+) pushed_exact_bytes=(\d+) outcomes=(\S+) server_origin=(\S+)/,
   )
@@ -125,9 +126,40 @@ try {
   if (Number(evidence[1]) <= 0) fail('the real-stack suite settled zero mutations')
   if (Number(evidence[2]) <= 0) fail('the real-stack suite proved no exact-bytes retry')
 
+  // O-41. `capture_task` was the ONLY command type this client could ever
+  // construct, and the whole point of closing it is that the others reach a
+  // real server. A run that observed only captures has not proved that, so
+  // the lane names every type it must have seen ARRIVE rather than trusting
+  // that a green suite exercised them.
+  const mutations = stdout.match(/REAL_STACK_MUTATIONS command_types=(\S+) final_revision=(\d+) outbox=(\d+)/)
+  if (!mutations) fail('the real-stack suite never reported a REAL_STACK_MUTATIONS evidence line')
+  const observedTypes = mutations[1].split(',')
+  const requiredTypes = [
+    'capture_task', 'complete_task', 'edit_task', 'plan_for_today',
+    'reopen_task', 'restore_task', 'trash_task', 'unplan_task',
+  ]
+  for (const type of requiredTypes) {
+    if (!observedTypes.includes(type)) fail(`the real server never received a ${type} command`)
+  }
+  if (Number(mutations[2]) <= 1) fail('the real server never advanced the task revision -- nothing was accepted')
+  if (Number(mutations[3]) !== 0) fail('the real-stack suite left unsent commands in the outbox')
+
+  // O-38. The conflict must come from the REAL server refusing a REAL
+  // second writer. A lane that reported a conflict without one would be
+  // asserting a fixture.
+  const conflict = stdout.match(
+    /REAL_STACK_CONFLICT ordering=(\S+) outcomes=(\S+) conflicts=(\d+) second_writer=(\S+)/,
+  )
+  if (!conflict) fail('the real-stack suite never reported a REAL_STACK_CONFLICT evidence line')
+  if (conflict[1] !== 'capture_task,edit_task') fail('the real-stack suite did not prove capture-before-edit ordering')
+  if (!conflict[2].split(',').includes('conflict')) fail('the real-stack suite observed no conflict outcome')
+  if (Number(conflict[3]) <= 0) fail('the real-stack suite surfaced zero conflicts')
+  if (conflict[4] !== 'real') fail('the conflict was not produced by a real second writer')
+
   console.log(
     `Desktop real-stack lane passed: cases=${passedCount} synced=${evidence[1]} ` +
-      `exact_bytes=${evidence[2]} outcomes=${evidence[3]} server_origin=${evidence[4]} ` +
+      `exact_bytes=${evidence[2]} outcomes=${evidence[3]},${conflict[2]} server_origin=${evidence[4]} ` +
+      `command_types=${observedTypes.length} conflicts=${conflict[3]} ` +
       `digest=${manifest.applicationDigestSha256}`,
   )
 } finally {

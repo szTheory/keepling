@@ -214,9 +214,13 @@ runLane({
  * Its runner enforces the anti-vacuity rules that a name cannot:
  * `KEEPLING_TEST_SYNC_MODE` unset in both the spec and the environment, no
  * stubbed `fetch`, no `.invalid` host, the shared backend harness actually
- * imported, and a `REAL_STACK_SYNC` evidence line reporting a positive
- * settled-mutation count and a proven exact-bytes retry. A green run that
- * settled nothing fails here.
+ * imported, and three evidence lines: `REAL_STACK_SYNC` (a positive
+ * settled-mutation count and a proven exact-bytes retry), `REAL_STACK_MUTATIONS`
+ * (every one of the eight command types a person can perform ARRIVING at the
+ * real server, O-41), and `REAL_STACK_CONFLICT` (capture-before-edit ordering
+ * on the wire, plus a conflict raised by the REAL server refusing a REAL
+ * second writer, O-38). A green run that settled nothing, or that only ever
+ * captured, or that never heard a conflict, fails here.
  *
  * Runs HEADLESS, unlike the two Playwright lanes above. Those are forced
  * windowed because their assertions are about real presentation --
@@ -233,11 +237,17 @@ runLane({
   name: 'real-stack-sync',
   parse: (stdout) => {
     const summary = stdout.match(
-      /Desktop real-stack lane passed: cases=(\d+) synced=(\d+) exact_bytes=(\d+) outcomes=(\S+)/,
+      /Desktop real-stack lane passed: cases=(\d+) synced=(\d+) exact_bytes=(\d+) outcomes=(\S+) server_origin=(\S+) command_types=(\d+) conflicts=(\d+)/,
     )
     if (!summary) throw new Error('real-stack lane summary line not found')
     if (Number(summary[2]) <= 0) throw new Error('real-stack lane settled zero mutations against the real server')
     if (Number(summary[3]) <= 0) throw new Error('real-stack lane proved no exact-bytes retry')
+    // O-41: `capture_task` was the only command type this client could ever
+    // construct. A lane that observed one type has not proved it closed.
+    if (Number(summary[6]) < 8) throw new Error('real-stack lane observed fewer than the eight command types a person can perform')
+    // O-38: and it must have heard a conflict the REAL server raised.
+    if (Number(summary[7]) <= 0) throw new Error('real-stack lane surfaced no server-raised conflict')
+    if (!summary[4].split(',').includes('conflict')) throw new Error('real-stack lane observed no conflict outcome')
     return Number(summary[1])
   },
   trackedInputPaths: [

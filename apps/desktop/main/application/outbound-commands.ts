@@ -42,6 +42,16 @@
  * `expected_revision` has a contract minimum of 1 and a freshly captured
  * task is revision 1 on the server, so an unacknowledged task's basis
  * resolves to 1 rather than to a fabricated higher number.
+ *
+ * Each command's EFFECT records `expectedRevision + 1`, because that is
+ * what the server produces when it accepts one (`Task#finish` sets
+ * `revision: task.revision + 1`). Without that, two commands queued on one
+ * task before the first is acknowledged would both claim the same expected
+ * revision, and `trash_task`/`restore_task` -- which the server compares
+ * EXACTLY -- would be refused on the second. This is a prediction, not a
+ * fact: an `already_satisfied` answer bumps nothing, so the prediction can
+ * be one too high. When it is, the server raises a real conflict and the
+ * person is now told (O-38) instead of the command being retried forever.
  */
 
 type OutboundLifecycle = 'complete' | 'reopen' | 'restore' | 'trash'
@@ -150,7 +160,7 @@ const buildOutboundCommand = (
           id: intent.taskId,
           notes: intent.notes,
           planned_on: basis.basePlannedOn,
-          revision: basis.expectedRevision,
+          revision: basis.expectedRevision + 1,
           title,
         },
       },
@@ -181,7 +191,7 @@ const buildOutboundCommand = (
           id: intent.taskId,
           notes: basis.baseNotes,
           planned_on: basis.basePlannedOn,
-          revision: basis.expectedRevision,
+          revision: basis.expectedRevision + 1,
           title: basis.baseTitle,
         },
       },
@@ -216,7 +226,7 @@ const buildOutboundCommand = (
         // server answers with a real conflict -- which is now surfaced
         // (O-38) rather than swallowed.
         planned_on: null,
-        revision: basis.expectedRevision,
+        revision: basis.expectedRevision + 1,
         title: basis.baseTitle,
       },
     },

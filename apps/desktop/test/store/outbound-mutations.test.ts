@@ -175,6 +175,28 @@ describe('durable outbound mutations (O-41)', () => {
     store.close()
   })
 
+  it('advances the predicted revision along a chain, so a strict lifecycle command is not refused for staleness', () => {
+    const store = openStore()
+    store.acknowledge({
+      fingerprint: capture.fingerprint,
+      mutationId: capture.mutationId,
+      outcome: 'accepted',
+      snapshot: { id: TASK_ID, notes: '', planned_on: null, revision: 1, title: 'Book the ferry' },
+    })
+    store.editTask(
+      { notes: '', taskId: TASK_ID, title: 'Retitled' },
+      outbound(store, { kind: 'edit', notes: '', taskId: TASK_ID, title: 'Retitled' }, 'm-edit'),
+    )
+    // Queued BEFORE the edit is acknowledged. The server compares
+    // `expected_revision` exactly for trash_task, so repeating the edit's
+    // revision here would be refused for staleness the moment the edit is
+    // accepted and bumps it.
+    const trash = outbound(store, { kind: 'lifecycle', lifecycle: 'trash', taskId: TASK_ID }, 'm-trash')
+    expect(JSON.parse(trash.commandBytes)).toMatchObject({ expected_revision: 2, type: 'trash_task' })
+    expect(JSON.parse(store.readyMutations()[0]!.commandBytes)).toMatchObject({ expected_revision: 1 })
+    store.close()
+  })
+
   it('holds a whole chain of mutations on one task in the order they were made', () => {
     const store = openStore()
     store.editTask(
