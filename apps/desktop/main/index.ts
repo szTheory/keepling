@@ -26,6 +26,7 @@ import {
   type SyncState,
   type WorkspaceSnapshot,
 } from './application/DesktopApplication.ts'
+import type { OutboundBasis } from './application/outbound-commands.ts'
 import { createFileWindowStatePort, DesktopLifecycle } from './lifecycle.ts'
 import { buildApplicationMenu } from './menu.ts'
 import {
@@ -138,16 +139,24 @@ class WorkerLocalStore implements LocalStorePort {
     return this.#request('snapshot')
   }
 
-  editTask(command: EditTaskCommand): Promise<WorkspaceSnapshot> {
-    return this.#request('editTask', command)
+  // O-41: the local command and its durable outbound intent travel together
+  // in ONE worker request, because the store commits them in one
+  // transaction. Two requests would open a crash window between the local
+  // write and the outbound record, and D-03 does not allow one.
+  editTask(command: EditTaskCommand, outbound?: SyncMutation): Promise<WorkspaceSnapshot> {
+    return this.#request('editTask', { command, outbound })
   }
 
-  applyLifecycle(command: LifecycleCommand): Promise<WorkspaceSnapshot> {
-    return this.#request('applyLifecycle', command)
+  applyLifecycle(command: LifecycleCommand, outbound?: SyncMutation): Promise<WorkspaceSnapshot> {
+    return this.#request('applyLifecycle', { command, outbound })
   }
 
-  applyMoveToday(command: MoveTodayCommand): Promise<WorkspaceSnapshot> {
-    return this.#request('applyMoveToday', command)
+  applyMoveToday(command: MoveTodayCommand, outbound?: SyncMutation): Promise<WorkspaceSnapshot> {
+    return this.#request('applyMoveToday', { command, outbound })
+  }
+
+  taskSyncBasis(taskId: string): Promise<OutboundBasis> {
+    return this.#request('taskSyncBasis', taskId)
   }
 
   undoLastLocalAction(): Promise<{ applied: boolean; snapshot: WorkspaceSnapshot }> {

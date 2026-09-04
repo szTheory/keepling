@@ -28,6 +28,7 @@ type WorkerRequest = {
     | 'setSyncFence'
     | 'snapshot'
     | 'syncState'
+    | 'taskSyncBasis'
     | 'undoLastLocalAction'
   payload?: unknown
 }
@@ -98,14 +99,27 @@ parentPort.on('message', (request: WorkerRequest) => {
       case 'snapshot':
         value = store.snapshot()
         break
-      case 'editTask':
-        value = store.editTask(request.payload as Parameters<typeof store.editTask>[0])
+      // O-41: each of these carries BOTH the local command and its durable
+      // outbound intent, because the store commits them in one transaction.
+      // Sending them as two requests would put a worker round-trip -- and a
+      // crash window -- between the local write and the outbound record.
+      case 'editTask': {
+        const payload = request.payload as { command: Parameters<typeof store.editTask>[0]; outbound?: Parameters<typeof store.editTask>[1] }
+        value = store.editTask(payload.command, payload.outbound)
         break
-      case 'applyLifecycle':
-        value = store.applyLifecycle(request.payload as Parameters<typeof store.applyLifecycle>[0])
+      }
+      case 'applyLifecycle': {
+        const payload = request.payload as { command: Parameters<typeof store.applyLifecycle>[0]; outbound?: Parameters<typeof store.applyLifecycle>[1] }
+        value = store.applyLifecycle(payload.command, payload.outbound)
         break
-      case 'applyMoveToday':
-        value = store.applyMoveToday(request.payload as Parameters<typeof store.applyMoveToday>[0])
+      }
+      case 'applyMoveToday': {
+        const payload = request.payload as { command: Parameters<typeof store.applyMoveToday>[0]; outbound?: Parameters<typeof store.applyMoveToday>[1] }
+        value = store.applyMoveToday(payload.command, payload.outbound)
+        break
+      }
+      case 'taskSyncBasis':
+        value = store.taskSyncBasis(request.payload as string)
         break
       case 'undoLastLocalAction':
         value = store.undoLastLocalAction()

@@ -6,6 +6,11 @@ import {
   type DesktopPresentation,
   type DesktopPresentationInput,
 } from './presentation.ts'
+import {
+  buildOutboundCommand,
+  type OutboundBasis,
+  type OutboundIntent,
+} from './outbound-commands.ts'
 import { removeLocalNamespaceData, type RemoveLocalDataOutcome } from '../recovery/remove-local-data.ts'
 import { isSyncUnreachable } from './sync-reachability.ts'
 
@@ -130,12 +135,25 @@ interface LocalStorePort {
   acknowledge(acknowledgement: SyncAcknowledgement): Promise<WorkspaceSnapshot>
   acknowledgeSync?(acknowledgement: SyncAcknowledgement): Promise<void> | void
   applyPull?(page: PullPage): Promise<void> | void
-  /** Local-only durable task edit (D-03: commit-first, never claims "Synced"). */
-  editTask?(command: EditTaskCommand): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
-  /** Local-only durable lifecycle transition (complete/reopen/trash/restore). */
-  applyLifecycle?(command: LifecycleCommand): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
-  /** Local-only durable Today placement. */
-  applyMoveToday?(command: MoveTodayCommand): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
+  /**
+   * Durable task edit (D-03: commit-first, never claims "Synced"). `outbound`
+   * is the durable outbound intent and commits in the SAME transaction as
+   * the local projection write (O-41).
+   */
+  editTask?(command: EditTaskCommand, outbound?: SyncMutation): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
+  /** Durable lifecycle transition (complete/reopen/trash/restore), plus its outbound intent. */
+  applyLifecycle?(command: LifecycleCommand, outbound?: SyncMutation): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
+  /** Durable Today placement, plus its outbound intent. */
+  applyMoveToday?(command: MoveTodayCommand, outbound?: SyncMutation): Promise<WorkspaceSnapshot> | WorkspaceSnapshot
+  /**
+   * O-41: what this client believes the SERVER holds for one task, which is
+   * what a non-capture command's base values and expected revision must
+   * describe. A store that cannot answer this cannot form an outbound
+   * intent, and the operation FAILS LOUDLY rather than silently degrading
+   * to a local-only write -- silent degradation is exactly the defect class
+   * (O-16/O-30/O-41) this phase keeps finding.
+   */
+  taskSyncBasis?(taskId: string): Promise<OutboundBasis> | OutboundBasis
   /** Reverses the latest recorded local edit/lifecycle action, if any. */
   undoLastLocalAction?(): Promise<{ applied: boolean; snapshot: WorkspaceSnapshot }> | { applied: boolean; snapshot: WorkspaceSnapshot }
   /** Lists open sync conflicts awaiting a mine/current choice. */
@@ -292,28 +310,65 @@ class DesktopApplication {
     }
   }
 
+  /**
+   * O-41: forms the durable outbound intent for a non-capture mutation.
+   *
+   * Identical in shape to what `capture` does inline -- a mutation identity,
+   * the exact serialized contract body, and the SHA-256 of those bytes --
+   * because the retry, relaunch and exact-acknowledgement rules are the
+   * same rules and must not have a second implementation.
+   *
+   * `dependencies` is deliberately EMPTY. Ordering is enforced by the
+   * resource key (`task:<id>`), which `readyMutations` uses to keep any
+   * mutation from overtaking an earlier outbox entry touching the same
+   * task. A journal dependency would ALSO block, but it only unblocks on an
+   * `accepted`/`already_satisfied` outcome -- so once conflicts became
+   * reachable (O-38) a conflicted capture would strand every later mutation
+   * on that task in the outbox forever, reported as "Saved on this Mac"
+   * with nothing able to settle it. The resource key has no such stuck
+   * state: the earlier entry leaves the outbox on ANY terminal outcome.
+   */
+  async #buildOutbound(intent: OutboundIntent): Promise<SyncMutation> {
+    if (!this.#localStore.taskSyncBasis) throw new Error('outbound synchronization intent is unavailable')
+    const basis = await this.#localStore.taskSyncBasis(intent.taskId)
+    const mutationId = this.#identity.randomId()
+    const built = buildOutboundCommand(intent, basis, mutationId)
+    return {
+      acceptedAt: this.#clock.now(),
+      commandBytes: built.commandBytes,
+      dependencies: [],
+      effect: built.effect,
+      fingerprint: createHash('sha256').update(built.commandBytes).digest('hex'),
+      mutationId,
+      resourceKeys: built.resourceKeys,
+    }
+  }
+
   async editTask(command: EditTaskCommand): Promise<WorkspaceSnapshot> {
     const title = command.title.trim()
     if (title.length === 0 || [...title].length > 512) {
       throw new Error('task title must contain between 1 and 512 Unicode scalar values')
     }
     if (!this.#localStore.editTask) throw new Error('task editing is unavailable')
+    const outbound = await this.#buildOutbound({ kind: 'edit', notes: command.notes, taskId: command.taskId, title })
     // D-03 boundary: durable commit before "Saved on this Mac" is reported.
-    const snapshot = await this.#localStore.editTask({ ...command, title })
+    const snapshot = await this.#localStore.editTask({ ...command, title }, outbound)
     this.publishPresentation({ kind: 'local_saved', pendingCount: 1 })
     return snapshot
   }
 
   async applyLifecycle(command: LifecycleCommand): Promise<WorkspaceSnapshot> {
     if (!this.#localStore.applyLifecycle) throw new Error('task lifecycle actions are unavailable')
-    const snapshot = await this.#localStore.applyLifecycle(command)
+    const outbound = await this.#buildOutbound({ kind: 'lifecycle', lifecycle: command.kind, taskId: command.taskId })
+    const snapshot = await this.#localStore.applyLifecycle(command, outbound)
     this.publishPresentation({ kind: 'local_saved', pendingCount: 1 })
     return snapshot
   }
 
   async moveToday(command: MoveTodayCommand): Promise<WorkspaceSnapshot> {
     if (!this.#localStore.applyMoveToday) throw new Error('Today placement is unavailable')
-    const snapshot = await this.#localStore.applyMoveToday(command)
+    const outbound = await this.#buildOutbound({ kind: 'move_today', planned: command.planned, taskId: command.taskId })
+    const snapshot = await this.#localStore.applyMoveToday(command, outbound)
     this.publishPresentation({ kind: 'local_saved', pendingCount: 1 })
     return snapshot
   }

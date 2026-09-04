@@ -19,6 +19,7 @@ import type {
   SyncState,
   WorkspaceSnapshot,
 } from '../main/application/DesktopApplication.ts'
+import type { OutboundBasis } from '../main/application/outbound-commands.ts'
 
 const QUICK_ENTRY_DRAFT_KEY = 'quick_entry_draft'
 const QUICK_ENTRY_SHORTCUT_KEY = 'quick_entry_shortcut'
@@ -189,38 +190,103 @@ class NodeSqliteLocalStore {
     this.#validateSyncMutation(mutation)
     this.#database.exec('BEGIN IMMEDIATE')
     try {
-      this.#database.prepare(`
-        INSERT INTO immutable_commands(
-          mutation_id, task_id, command_bytes, fingerprint, accepted_at,
-          resource_keys_json, effect_snapshot_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        mutation.mutationId,
-        mutation.effect.entityId,
-        mutation.commandBytes,
-        mutation.fingerprint,
-        mutation.acceptedAt,
-        JSON.stringify(mutation.resourceKeys),
-        JSON.stringify(mutation.effect.snapshot),
-      )
-      this.#database.prepare(`
-        INSERT INTO mutation_journal(mutation_id, outcome, terminal_snapshot_json)
-        VALUES (?, 'pending', NULL)
-      `).run(mutation.mutationId)
-      for (const dependency of mutation.dependencies) {
-        this.#database.prepare(`
-          INSERT INTO mutation_dependencies(mutation_id, dependency_mutation_id) VALUES (?, ?)
-        `).run(mutation.mutationId, dependency)
-      }
-      this.#upsertProjection(mutation.effect.entityId, mutation.effect.snapshot, 'saved_on_this_mac')
-      this.#database.prepare(`
-        INSERT INTO outbox(mutation_id, sequence)
-        VALUES (?, COALESCE((SELECT MAX(sequence) + 1 FROM outbox), 1))
-      `).run(mutation.mutationId)
+      this.#enqueueOutbound(mutation)
       this.#database.exec('COMMIT')
     } catch (error) {
       this.#database.exec('ROLLBACK')
       throw error
+    }
+  }
+
+  /**
+   * The ONE durable enqueue (O-41). Callers must already hold a
+   * transaction: `acceptMutation` opens its own, and
+   * `editTask`/`applyLifecycle`/`applyMoveToday` call this INSIDE the very
+   * transaction that writes the local projection, because "a client reports
+   * mutation success only after its local projection and durable outbox
+   * entry commit atomically" (D-03) is not satisfied by two transactions in
+   * a row -- a crash between them loses the outbound intent while the person
+   * has already been told the change is safe.
+   */
+  #enqueueOutbound(mutation: SyncMutation): void {
+    this.#database.prepare(`
+      INSERT INTO immutable_commands(
+        mutation_id, task_id, command_bytes, fingerprint, accepted_at,
+        resource_keys_json, effect_snapshot_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      mutation.mutationId,
+      mutation.effect.entityId,
+      mutation.commandBytes,
+      mutation.fingerprint,
+      mutation.acceptedAt,
+      JSON.stringify(mutation.resourceKeys),
+      JSON.stringify(mutation.effect.snapshot),
+    )
+    this.#database.prepare(`
+      INSERT INTO mutation_journal(mutation_id, outcome, terminal_snapshot_json)
+      VALUES (?, 'pending', NULL)
+    `).run(mutation.mutationId)
+    for (const dependency of mutation.dependencies) {
+      this.#database.prepare(`
+        INSERT INTO mutation_dependencies(mutation_id, dependency_mutation_id) VALUES (?, ?)
+      `).run(mutation.mutationId, dependency)
+    }
+    this.#upsertProjection(mutation.effect.entityId, mutation.effect.snapshot, 'saved_on_this_mac')
+    this.#database.prepare(`
+      INSERT INTO outbox(mutation_id, sequence)
+      VALUES (?, COALESCE((SELECT MAX(sequence) + 1 FROM outbox), 1))
+    `).run(mutation.mutationId)
+  }
+
+  /**
+   * What this client believes the SERVER currently holds for one task
+   * (O-41), which is what `base_values`/`base_planned_on`/`expected_revision`
+   * must describe.
+   *
+   * The chain matters. For a task with nothing queued the basis is the
+   * canonical shadow -- the last snapshot the server itself supplied. For a
+   * task that ALREADY has queued mutations the basis is the effect of the
+   * last queued one, because those will be delivered first (they hold an
+   * earlier outbox sequence and the same resource key, so `readyMutations`
+   * cannot let a later one overtake them). Using the shadow in that case
+   * would send the same stale base twice and the server would report a
+   * conflict against a value this client had itself just supplied.
+   *
+   * `expected_revision` has a contract minimum of 1 and a captured task is
+   * revision 1 on the server, so an unacknowledged task resolves to 1 rather
+   * than to a fabricated higher number. The revision is not the conflict gate
+   * for `edit_task` (a three-way field merge is), so a stale revision on an
+   * offline edit is safe; for `trash_task`/`restore_task` the server compares
+   * it exactly, and a genuine divergence is a genuine conflict.
+   */
+  taskSyncBasis(taskId: string): OutboundBasis {
+    const projection = this.#requireProjectionRow(taskId)
+    const queued = this.#database.prepare(`
+      SELECT immutable_commands.effect_snapshot_json AS effect_snapshot_json
+      FROM outbox JOIN immutable_commands USING (mutation_id)
+      WHERE immutable_commands.task_id = ?
+      ORDER BY outbox.sequence DESC LIMIT 1
+    `).get(taskId) as { effect_snapshot_json: string | null } | undefined
+    const shadow = this.#database.prepare(`
+      SELECT snapshot_json FROM canonical_shadow WHERE entity_id = ?
+    `).get(taskId) as { snapshot_json: string } | undefined
+
+    const queuedSnapshot = queued?.effect_snapshot_json
+      ? (JSON.parse(queued.effect_snapshot_json) as SyncSnapshot)
+      : null
+    const shadowSnapshot = shadow ? (JSON.parse(shadow.snapshot_json) as SyncSnapshot) : null
+    const basisSnapshot = queuedSnapshot ?? shadowSnapshot
+    const revisionCandidates = [queuedSnapshot?.revision, shadowSnapshot?.revision]
+    const expectedRevision = revisionCandidates.find(
+      (value): value is number => typeof value === 'number' && Number.isSafeInteger(value) && value >= 1,
+    ) ?? 1
+
+    return {
+      baseNotes: typeof basisSnapshot?.notes === 'string' ? basisSnapshot.notes : projection.notes,
+      basePlannedOn: typeof basisSnapshot?.planned_on === 'string' ? basisSnapshot.planned_on : null,
+      baseTitle: typeof basisSnapshot?.title === 'string' ? basisSnapshot.title : projection.title,
+      expectedRevision,
     }
   }
 
@@ -446,11 +512,12 @@ class NodeSqliteLocalStore {
     }
   }
 
-  editTask(command: EditTaskCommand): WorkspaceSnapshot {
+  editTask(command: EditTaskCommand, outbound?: SyncMutation): WorkspaceSnapshot {
     this.#assertNotFenced()
     const title = command.title.trim()
     if (title.length === 0 || [...title].length > 512) throw new Error('invalid task title')
     if ([...command.notes].length > 50_000) throw new Error('invalid task notes')
+    if (outbound) this.#validateOutbound(outbound, command.taskId, ['edit_task'])
     this.#database.exec('BEGIN IMMEDIATE')
     try {
       const before = this.#requireProjectionRow(command.taskId)
@@ -458,6 +525,10 @@ class NodeSqliteLocalStore {
       this.#database.prepare(`
         UPDATE visible_projection SET title = ?, notes = ? WHERE task_id = ?
       `).run(title, command.notes, command.taskId)
+      // O-41: the outbound intent joins the SAME transaction as the local
+      // projection write. Two transactions in a row would satisfy neither
+      // D-03 nor the person, who has already been told the change is safe.
+      if (outbound) this.#enqueueOutbound(outbound)
       this.#database.exec('COMMIT')
     } catch (error) {
       this.#database.exec('ROLLBACK')
@@ -466,8 +537,11 @@ class NodeSqliteLocalStore {
     return this.snapshot()
   }
 
-  applyLifecycle(command: LifecycleCommand): WorkspaceSnapshot {
+  applyLifecycle(command: LifecycleCommand, outbound?: SyncMutation): WorkspaceSnapshot {
     this.#assertNotFenced()
+    if (outbound) {
+      this.#validateOutbound(outbound, command.taskId, ['complete_task', 'reopen_task', 'restore_task', 'trash_task'])
+    }
     this.#database.exec('BEGIN IMMEDIATE')
     try {
       const before = this.#requireProjectionRow(command.taskId)
@@ -485,6 +559,7 @@ class NodeSqliteLocalStore {
         this.#database.prepare(`UPDATE visible_projection SET trashed_at = NULL WHERE task_id = ?`)
           .run(command.taskId)
       }
+      if (outbound) this.#enqueueOutbound(outbound)
       this.#database.exec('COMMIT')
     } catch (error) {
       this.#database.exec('ROLLBACK')
@@ -493,14 +568,16 @@ class NodeSqliteLocalStore {
     return this.snapshot()
   }
 
-  applyMoveToday(command: MoveTodayCommand): WorkspaceSnapshot {
+  applyMoveToday(command: MoveTodayCommand, outbound?: SyncMutation): WorkspaceSnapshot {
     this.#assertNotFenced()
+    if (outbound) this.#validateOutbound(outbound, command.taskId, ['plan_for_today', 'unplan_task'])
     this.#database.exec('BEGIN IMMEDIATE')
     try {
       const before = this.#requireProjectionRow(command.taskId)
       this.#recordLastAction(command.taskId, before)
       this.#database.prepare(`UPDATE visible_projection SET planned = ? WHERE task_id = ?`)
         .run(command.planned ? 1 : 0, command.taskId)
+      if (outbound) this.#enqueueOutbound(outbound)
       this.#database.exec('COMMIT')
     } catch (error) {
       this.#database.exec('ROLLBACK')
@@ -702,6 +779,41 @@ class NodeSqliteLocalStore {
       // first place: an unpushable command sits there forever, reported as
       // "Saved on this Mac", with nothing ever able to settle it.
       throw new Error('immutable command bytes do not match mutation fields')
+    }
+  }
+
+  /**
+   * O-41 outbound guard, the same discipline `#validateMutation` applies to
+   * a capture and for the same reason: bytes a server will refuse must
+   * never reach the outbox in the first place. An unpushable command sits
+   * there forever, reported as "Saved on this Mac", with nothing ever able
+   * to settle it -- which is exactly how the missing `version` (O-34)
+   * would have poisoned every queue on every Mac had a real server not
+   * finally been pointed at.
+   *
+   * The type must also be one the CALLER expects. A `trash_task` body
+   * arriving through `editTask` is a client bug, and the server would
+   * answer 400 on the discriminator anyway; refusing it here keeps the
+   * failure loud and local instead of durable and remote.
+   */
+  #validateOutbound(mutation: SyncMutation, taskId: string, allowedTypes: readonly string[]): void {
+    const fingerprint = createHash('sha256').update(mutation.commandBytes).digest('hex')
+    const command = JSON.parse(mutation.commandBytes) as Record<string, unknown>
+    if (
+      fingerprint !== mutation.fingerprint ||
+      command.mutation_id !== mutation.mutationId ||
+      command.task_id !== taskId ||
+      mutation.effect.entityId !== taskId ||
+      command.version !== 1 ||
+      typeof command.type !== 'string' ||
+      !allowedTypes.includes(command.type) ||
+      typeof command.expected_revision !== 'number' ||
+      !Number.isSafeInteger(command.expected_revision) ||
+      command.expected_revision < 1 ||
+      mutation.resourceKeys.length === 0 ||
+      new Set(mutation.resourceKeys).size !== mutation.resourceKeys.length
+    ) {
+      throw new Error('outbound command bytes do not match the mutation being recorded')
     }
   }
 
