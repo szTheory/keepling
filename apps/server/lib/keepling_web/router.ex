@@ -24,6 +24,16 @@ defmodule KeeplingWeb.Router do
     plug KeeplingWeb.Auth, :authenticate_device_grant
   end
 
+  # D-49. Either credential class, each judged by its own rules.
+  pipeline :client_authenticated do
+    plug KeeplingWeb.Auth, :authenticate_client
+  end
+
+  pipeline :client_mutation do
+    plug KeeplingWeb.Auth, :authenticate_client_mutation
+    plug KeeplingWeb.CommandDiscriminator
+  end
+
   pipeline :test_fixture do
     plug KeeplingWeb.Auth, :require_test_fixture
     plug :protect_from_forgery
@@ -45,6 +55,16 @@ defmodule KeeplingWeb.Router do
     if Mix.env() == :test,
       do: [:api, :authenticated, :mutation, :test_fault],
       else: [:api, :authenticated, :mutation]
+
+  # D-49: the SHARED command surface -- the one place a mutation is accepted
+  # from any adapter. `:client_mutation` admits either credential class and
+  # applies each one's own guards (see KeeplingWeb.Auth#authenticate_client);
+  # it does NOT relax anything for the browser. Session-management routes are
+  # deliberately NOT here: they stay browser-only below.
+  command_pipelines =
+    if Mix.env() == :test,
+      do: [:api, :client_mutation, :test_fault],
+      else: [:api, :client_mutation]
 
   recent_auth_mutation_pipelines =
     if Mix.env() == :test,
@@ -107,14 +127,23 @@ defmodule KeeplingWeb.Router do
     get "/completed", TaskViewController, :completed
     get "/trash", CommandController, :trash
     get "/organizations", CommandController, :organizations
-    get "/mutations/:mutation_id", CommandController, :mutation
     get "/today/mutations/:mutation_id", TaskViewController, :mutation
     get "/tasks/:task_id", CommandController, :task
     get "/tasks/:task_id/activity", ActivityController, :index
   end
 
+  # D-49. A client that may ISSUE a mutation must be able to read that
+  # mutation's exact stored receipt -- reconciliation after a dropped
+  # connection is the whole reason an offline client keeps a mutation
+  # identity. Read and write move together, or the write is unsettleable.
   scope "/api/v1", KeeplingWeb do
-    pipe_through mutation_pipelines
+    pipe_through [:api, :client_authenticated]
+
+    get "/mutations/:mutation_id", CommandController, :mutation
+  end
+
+  scope "/api/v1", KeeplingWeb do
+    pipe_through command_pipelines
 
     post "/commands/capture-task", CommandController, :capture_task
     post "/commands/edit-task", CommandController, :edit_task
@@ -138,6 +167,14 @@ defmodule KeeplingWeb.Router do
     post "/commands/assign-task-organizations",
          CommandController,
          :assign_task_organizations
+
+  end
+
+  # Session management is NOT part of the shared command surface. A device
+  # grant must never be able to mint, rename, or end a BROWSER session, so
+  # these keep the browser-only pipeline they have always had.
+  scope "/api/v1", KeeplingWeb do
+    pipe_through mutation_pipelines
 
     post "/reauthenticate", AuthController, :reauthenticate
     post "/logout", AuthController, :logout

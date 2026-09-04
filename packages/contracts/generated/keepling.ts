@@ -893,6 +893,7 @@ export interface components {
             readonly fields: components["schemas"]["OrganizationAssignmentValues"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -905,6 +906,7 @@ export interface components {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly task_id: components["schemas"]["TaskIdentity"];
             readonly title: string;
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -973,6 +975,7 @@ export interface components {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly name: components["schemas"]["OrganizationName"];
             readonly organization_id: components["schemas"]["OrganizationIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -995,12 +998,19 @@ export interface components {
             readonly label: string;
             readonly revoked: boolean;
         };
+        /**
+         * @description Optional self-description carried inside a command by an OFFLINE client. Such a client commits the serialized bytes to a durable outbox before reporting success and retries those exact bytes, never re-serialized, so after a relaunch the bytes are all that survives and must say which command they are. An online client posts to a typed endpoint and forgets, so it neither sends nor needs this.
+         *     The server NEVER routes on this value. Routing comes from the URL alone; the server checks that the client's own description agrees with the endpoint and refuses the request when it does not.
+         * @enum {string}
+         */
+        readonly DurableCommandType: "archive_organization" | "assign_task_organizations" | "capture_task" | "clarify_task" | "complete_task" | "create_organization" | "edit_task" | "edit_task_dates" | "move_today_task" | "plan_for_today" | "rename_organization" | "reopen_task" | "resolve_task_conflict" | "restore_task" | "return_to_inbox" | "trash_task" | "unarchive_organization" | "undo_task" | "unplan_task";
         readonly EditTaskCommand: {
             readonly base_values: components["schemas"]["TaskDetailValues"];
             readonly expected_revision: components["schemas"]["Revision"];
             readonly fields: components["schemas"]["TaskDetailValues"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -1010,6 +1020,7 @@ export interface components {
             readonly fields: components["schemas"]["TaskDateValues"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -1093,6 +1104,7 @@ export interface components {
             readonly expected_revision: components["schemas"]["Revision"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly organization_id: components["schemas"]["OrganizationIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -1121,6 +1133,7 @@ export interface components {
             readonly expected_revision: components["schemas"]["Revision"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -1165,6 +1178,7 @@ export interface components {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly name: components["schemas"]["OrganizationName"];
             readonly organization_id: components["schemas"]["OrganizationIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -1174,6 +1188,7 @@ export interface components {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly selections: components["schemas"]["ConflictSelections"];
             readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -1191,6 +1206,7 @@ export interface components {
             readonly expected_revision: components["schemas"]["Revision"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -1332,6 +1348,7 @@ export interface components {
             readonly expected_revision: components["schemas"]["Revision"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -1394,6 +1411,7 @@ export interface components {
             readonly expected_order_revision: components["schemas"]["Revision"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };
@@ -1445,6 +1463,7 @@ export interface components {
         readonly UndoTaskCommand: {
             readonly handle: components["schemas"]["UndoHandle"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly type?: components["schemas"]["DurableCommandType"];
             /** @constant */
             readonly version: 1;
         };

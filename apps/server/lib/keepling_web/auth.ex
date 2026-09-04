@@ -17,6 +17,8 @@ defmodule KeeplingWeb.Auth do
   def call(conn, :require_trusted_origin), do: require_trusted_origin(conn)
   def call(conn, :require_test_fixture), do: require_test_fixture(conn)
   def call(conn, :authenticate_device_grant), do: authenticate_device_grant(conn)
+  def call(conn, :authenticate_client), do: authenticate_client(conn, false)
+  def call(conn, :authenticate_client_mutation), do: authenticate_client(conn, true)
 
   def establish_session(conn, session) do
     Plug.CSRFProtection.delete_csrf_token()
@@ -72,6 +74,47 @@ defmodule KeeplingWeb.Auth do
     |> assign(:recently_authenticated?, Map.get(session, :recently_authenticated?, true))
   end
 
+  # D-49. ONE credential decision for the shared command surface.
+  #
+  # A request presenting `Authorization: Bearer` is a NATIVE client (Mac
+  # today, iPhone and MCP later). It is authenticated by its device grant,
+  # and no Origin is required, because `require_trusted_origin` and
+  # `protect_from_forgery` defend against CSRF -- an attack that rides
+  # AMBIENT COOKIE authentication a browser attaches automatically. A bearer
+  # client has no ambient credential to ride: the token is attached only by
+  # code that already holds it. Not demanding an Origin here is therefore
+  # standard practice, not a relaxation.
+  #
+  # EVERY OTHER REQUEST IS A BROWSER and takes exactly the path it took
+  # before D-49 -- `load_session`, `require_authenticated`,
+  # `protect_from_forgery`, then `require_trusted_origin` for mutations --
+  # in that order, with nothing removed and nothing made conditional. That
+  # is pinned by test/keepling_web/device_grant_command_test.exs rather than
+  # asserted here in prose.
+  defp authenticate_client(conn, mutation?) do
+    case get_req_header(conn, "authorization") do
+      ["Bearer " <> credential] when credential != "" ->
+        conn
+        # No session is involved, so there is no CSRF token to verify and
+        # nothing for `protect_from_forgery` to protect.
+        |> put_private(:plug_skip_csrf_protection, true)
+        |> authenticate_device_grant()
+
+      _no_bearer_credential ->
+        conn
+        |> load_session()
+        |> require_authenticated()
+        |> browser_guards(mutation?)
+    end
+  end
+
+  defp browser_guards(%{halted: true} = conn, _mutation?), do: conn
+
+  defp browser_guards(conn, mutation?) do
+    conn = Phoenix.Controller.protect_from_forgery(conn, [])
+    if mutation?, do: require_trusted_origin(conn), else: conn
+  end
+
   defp authenticate_device_grant(conn) do
     with ["Bearer " <> credential] when credential != "" <-
            get_req_header(conn, "authorization"),
@@ -79,6 +122,12 @@ defmodule KeeplingWeb.Auth do
       conn
       |> assign(:current_device_grant_id, authenticated.grant_id)
       |> assign(:device_grant_namespace, authenticated.namespace)
+      # D-49: the account and the client kind are derived from the GRANT and
+      # from nowhere else. No request input reaches either, so a native
+      # client can never write outside the namespace its credential is
+      # bound to.
+      |> assign(:current_account_id, authenticated.account_id)
+      |> assign(:current_client_kind, authenticated.client_kind)
     else
       {:error, :infrastructure_failure} ->
         conn

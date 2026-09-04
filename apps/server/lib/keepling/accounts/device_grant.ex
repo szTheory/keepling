@@ -184,7 +184,7 @@ defmodule Keepling.Accounts.DeviceGrant do
            SQL.query(
              Repo,
              """
-             SELECT id, account_id, generation
+             SELECT id, account_id, generation, client_kind
              FROM device_grants
              WHERE access_token_hash = $1
                AND access_expires_at > $2
@@ -192,10 +192,18 @@ defmodule Keepling.Accounts.DeviceGrant do
              """,
              [hash_token(access_token), now]
            ) do
-      [grant_id, account_id, generation] = row
+      [grant_id, account_id, generation, client_kind] = row
 
+      # `account_id` is returned in its raw dumped form alongside the
+      # namespace: D-49 lets a device grant MUTATE, and the command surface
+      # needs the account the grant is bound to without re-deriving it from
+      # the namespace subject at every call site. `client_kind` travels with
+      # it so a Mac capture is recorded as "electron" in the user's own
+      # activity feed rather than as "web".
       {:ok,
        %{
+         account_id: account_id,
+         client_kind: client_kind,
          grant_id: uuid_string(grant_id),
          namespace: namespace(config, account_id, generation)
        }}

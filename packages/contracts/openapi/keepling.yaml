@@ -633,6 +633,9 @@ paths:
     post:
       operationId: captureTask
       summary: Capture one titled task into explicit Inbox state
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -662,6 +665,9 @@ paths:
     post:
       operationId: editTask
       summary: Edit only touched title or notes fields while preserving Inbox state
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -693,6 +699,9 @@ paths:
     post:
       operationId: resolveTaskConflict
       summary: Resolve one persisted affected-field task conflict against its latest revision
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -724,6 +733,9 @@ paths:
     post:
       operationId: clarifyTask
       summary: Atomically edit touched details and move a task out of Inbox
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -755,6 +767,9 @@ paths:
     post:
       operationId: returnToInbox
       summary: Explicitly restore canonical Inbox membership
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -784,6 +799,9 @@ paths:
     post:
       operationId: completeTask
       summary: Complete a task through the revision-aware semantic lifecycle boundary
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -813,6 +831,9 @@ paths:
     post:
       operationId: reopenTask
       summary: Reopen a task and recompute active projections from preserved fields
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -842,6 +863,9 @@ paths:
     post:
       operationId: trashTask
       summary: Move a task to durable recoverable Trash at its exact revision
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -871,6 +895,9 @@ paths:
     post:
       operationId: restoreTask
       summary: Restore a task at its exact revision and return authoritative destinations
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -900,6 +927,9 @@ paths:
     post:
       operationId: undoTask
       summary: Apply one bounded account-authorized semantic compensation
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -931,6 +961,9 @@ paths:
     post:
       operationId: editTaskDates
       summary: Edit touched planned and deadline civil dates independently
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -962,6 +995,9 @@ paths:
     post:
       operationId: planForToday
       summary: Resolve the configured account day at acceptance and plan the task for it
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -993,6 +1029,9 @@ paths:
     post:
       operationId: moveTodayTask
       summary: Move a task earlier or later within its server-owned Today section
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -1022,6 +1061,9 @@ paths:
     post:
       operationId: unplanTask
       summary: Remove deliberate planned placement without changing the deadline
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -1053,6 +1095,9 @@ paths:
     post:
       operationId: createOrganization
       summary: Create a stable-ID project or tag
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -1082,6 +1127,9 @@ paths:
     post:
       operationId: renameOrganization
       summary: Rename a project or tag by stable identity
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -1113,6 +1161,9 @@ paths:
     post:
       operationId: archiveOrganization
       summary: Archive a project or tag by stable identity
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -1142,6 +1193,9 @@ paths:
     post:
       operationId: unarchiveOrganization
       summary: Unarchive a project or tag by stable identity
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -1171,6 +1225,9 @@ paths:
     post:
       operationId: assignTaskOrganizations
       summary: Assign one project and many flat tags by stable identity
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       requestBody:
         required: true
         content:
@@ -1202,6 +1259,9 @@ paths:
     get:
       operationId: getMutation
       summary: Look up the exact stored terminal result by mutation identity
+      security:
+        - DeviceBearer: []
+        - BrowserSession: []
       parameters:
         - in: path
           name: mutation_id
@@ -1233,6 +1293,15 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
 components:
   securitySchemes:
+    BrowserSession:
+      type: apiKey
+      in: cookie
+      name: _keepling_key
+      description: >-
+        Ambient browser session cookie. Requests authenticated this way are
+        additionally required to carry a same-origin Origin header and a CSRF
+        token; a bearer client is not, because CSRF rides ambient credentials
+        a browser attaches automatically and a bearer client has none.
     DeviceBearer:
       type: http
       scheme: bearer
@@ -1285,6 +1354,39 @@ components:
           schema:
             $ref: '#/components/schemas/Problem'
   schemas:
+    DurableCommandType:
+      description: >-
+        Optional self-description carried inside a command by an OFFLINE
+        client. Such a client commits the serialized bytes to a durable
+        outbox before reporting success and retries those exact bytes, never
+        re-serialized, so after a relaunch the bytes are all that survives
+        and must say which command they are. An online client posts to a
+        typed endpoint and forgets, so it neither sends nor needs this.
+
+        The server NEVER routes on this value. Routing comes from the URL
+        alone; the server checks that the client's own description agrees
+        with the endpoint and refuses the request when it does not.
+      type: string
+      enum:
+        - archive_organization
+        - assign_task_organizations
+        - capture_task
+        - clarify_task
+        - complete_task
+        - create_organization
+        - edit_task
+        - edit_task_dates
+        - move_today_task
+        - plan_for_today
+        - rename_organization
+        - reopen_task
+        - resolve_task_conflict
+        - restore_task
+        - return_to_inbox
+        - trash_task
+        - unarchive_organization
+        - undo_task
+        - unplan_task
     MutationTrustState:
       type: string
       enum: [local_saved, checking, accepted, rejected, conflict, authentication_required, quarantined]
@@ -2070,6 +2172,8 @@ components:
           $ref: '#/components/schemas/MutationIdentity'
         task_id:
           $ref: '#/components/schemas/TaskIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2106,6 +2210,8 @@ components:
           type: string
           minLength: 1
           maxLength: 512
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2161,6 +2267,8 @@ components:
           $ref: '#/components/schemas/OrganizationName'
         organization_id:
           $ref: '#/components/schemas/OrganizationIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2341,6 +2449,8 @@ components:
           $ref: '#/components/schemas/MutationIdentity'
         task_id:
           $ref: '#/components/schemas/TaskIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2379,6 +2489,8 @@ components:
           $ref: '#/components/schemas/MutationIdentity'
         task_id:
           $ref: '#/components/schemas/TaskIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2465,6 +2577,8 @@ components:
           $ref: '#/components/schemas/ConflictSelections'
         task_id:
           $ref: '#/components/schemas/TaskIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2489,6 +2603,8 @@ components:
           $ref: '#/components/schemas/MutationIdentity'
         task_id:
           $ref: '#/components/schemas/TaskIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2510,6 +2626,8 @@ components:
           $ref: '#/components/schemas/MutationIdentity'
         task_id:
           $ref: '#/components/schemas/TaskIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2597,6 +2715,8 @@ components:
           $ref: '#/components/schemas/UndoHandle'
         mutation_id:
           $ref: '#/components/schemas/MutationIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2693,6 +2813,8 @@ components:
           $ref: '#/components/schemas/MutationIdentity'
         organization_id:
           $ref: '#/components/schemas/OrganizationIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2799,6 +2921,8 @@ components:
           $ref: '#/components/schemas/OrganizationName'
         organization_id:
           $ref: '#/components/schemas/OrganizationIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2863,6 +2987,8 @@ components:
           $ref: '#/components/schemas/MutationIdentity'
         task_id:
           $ref: '#/components/schemas/TaskIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1
@@ -2976,6 +3102,8 @@ components:
           $ref: '#/components/schemas/MutationIdentity'
         task_id:
           $ref: '#/components/schemas/TaskIdentity'
+        type:
+          $ref: '#/components/schemas/DurableCommandType'
         version:
           type: integer
           const: 1

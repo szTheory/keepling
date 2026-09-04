@@ -581,12 +581,17 @@ defmodule KeeplingWeb.CommandController do
   defp cast_optional_uuid(value),
     do: if(match?({:ok, _uuid}, Ecto.UUID.cast(value)), do: :ok, else: :error)
 
+  # D-49: `current_account_id` and `current_client_kind` are assigned by
+  # KeeplingWeb.Auth from whichever credential authenticated the request --
+  # a browser session or a device grant -- and never from request input. The
+  # client kind was previously hardcoded "web", which would have recorded a
+  # Mac capture as a browser capture in the user's own activity feed.
   defp context(conn) do
     %{
       accepted_at: DateTime.utc_now() |> DateTime.truncate(:microsecond),
       account_id: conn.assigns.current_account_id,
       actor_type: "user",
-      client_kind: "web"
+      client_kind: Map.get(conn.assigns, :current_client_kind, "web")
     }
   end
 

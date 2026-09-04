@@ -78,11 +78,13 @@ defmodule KeeplingWeb.DeviceGrantCommandTest do
 
     # The exact stored terminal result, by mutation identity -- the read the
     # Mac app's reconcile path depends on to settle without re-pushing.
+    # 201 is the contract's documented status for replaying a stored ACCEPTED
+    # acknowledgement (getMutation declares both 201 and 200).
     receipt =
       build_conn()
       |> bearer(credential)
       |> get("/api/v1/mutations/#{mutation_id}")
-      |> json_response(200)
+      |> json_response(201)
 
     assert receipt["mutation_id"] == mutation_id
     assert receipt["task_id"] == task_id
@@ -253,6 +255,56 @@ defmodule KeeplingWeb.DeviceGrantCommandTest do
              |> put_req_header("origin", "http://attacker.example")
              |> post("/api/v1/commands/capture-task", capture_body())
              |> json_response(403)
+  end
+
+  test "the durable command bytes an offline client actually sends are accepted verbatim", %{
+    credential: credential
+  } do
+    # This is the EXACT shape apps/desktop serializes into its outbox and
+    # retries byte for byte: the contract body plus the `type` discriminator
+    # the bytes need in order to still be routable after a relaunch.
+    mutation_id = Ecto.UUID.generate()
+
+    assert %{"outcome" => "accepted"} =
+             build_conn()
+             |> bearer(credential)
+             |> post("/api/v1/commands/capture-task", %{
+               "mutation_id" => mutation_id,
+               "task_id" => Ecto.UUID.generate(),
+               "title" => "Sent by a durable outbox",
+               "type" => "capture_task",
+               "version" => 1
+             })
+             |> json_response(201)
+  end
+
+  test "a discriminator that disagrees with the endpoint is refused, never guessed at", %{
+    credential: credential
+  } do
+    # HOSTILE. Routing comes from the URL and only from the URL. A body
+    # describing itself as a different command is a client bug or an attack;
+    # honouring either interpretation silently would be worse than refusing.
+    for declared <- ["complete_task", "trash_task", "", "not-a-command"] do
+      assert %{"code" => "invalid_command"} =
+               build_conn()
+               |> bearer(credential)
+               |> post(
+                 "/api/v1/commands/capture-task",
+                 Map.put(capture_body(), "type", declared)
+               )
+               |> json_response(400)
+    end
+  end
+
+  test "an online client that omits the discriminator is unaffected", %{account_id: account_id} do
+    {:ok, session} = Keepling.Accounts.create_session(account_id, label: "Web", client_kind: "web")
+
+    assert %{"outcome" => "accepted"} =
+             build_conn()
+             |> browser_session(session)
+             |> trusted_origin()
+             |> post("/api/v1/commands/capture-task", capture_body())
+             |> json_response(201)
   end
 
   defp capture_body do
