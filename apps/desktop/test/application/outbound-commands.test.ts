@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildOutboundCommand,
+  buildUndoCommand,
   outboundCommandPath,
   type OutboundBasis,
   type OutboundIntent,
@@ -177,5 +178,80 @@ describe('outbound command bytes (O-41)', () => {
     const command = buildOutboundCommand({ kind: 'lifecycle', lifecycle: 'trash', taskId: TASK_ID }, basis, MUTATION_ID)
     expect(command.effect.snapshot.title).toBe(basis.baseTitle)
     expect(command.effect.entityId).toBe(TASK_ID)
+  })
+})
+
+
+/**
+ * O-45. The undo command is the ONE command whose body this client cannot
+ * derive from its own state: `handle` is an opaque, account-bound, one-shot
+ * capability MINTED BY THE SERVER and delivered in the `undo` field of the
+ * acknowledgement (`UndoAvailability`). It is retained, never synthesised,
+ * and never rebuilt from a mutation identity.
+ *
+ * The bytes are asserted against `UndoTaskCommand` in the checked-in
+ * contract, exactly as every other command above -- and against the
+ * server's own decoder discipline, which compares the key set EXACTLY
+ * (`CommandController.decode_undo` requires `["handle", "mutation_id",
+ * "version"]` after `CommandDiscriminator` has verified and REMOVED
+ * `type`).
+ */
+const HANDLE = 'x'.repeat(43)
+
+const undoInput = {
+  handle: HANDLE,
+  previous: { notes: 'the notes before the action', title: 'Book the ferry' },
+  taskId: TASK_ID,
+}
+
+describe('undo command bytes (O-45)', () => {
+  it('carries exactly the fields UndoTaskCommand requires and nothing else', () => {
+    const command = buildUndoCommand(undoInput, basis, MUTATION_ID)
+    const body = JSON.parse(command.commandBytes) as Record<string, unknown>
+
+    expect(command.type).toBe('undo_task')
+    expect(body).toEqual({
+      handle: HANDLE,
+      mutation_id: MUTATION_ID,
+      type: 'undo_task',
+      version: 1,
+    })
+    for (const field of requiredFields('UndoTaskCommand')) expect(Object.keys(body)).toContain(field)
+    for (const key of Object.keys(body)) expect(propertyNames('UndoTaskCommand')).toContain(key)
+  })
+
+  it('is a type the contract publishes, at a path the contract publishes', () => {
+    expect(durableCommandTypes).toContain('undo_task')
+    expect(publishedPaths).toContain(outboundCommandPath('undo_task'))
+  })
+
+  it('leaves the exact key set the server decoder accepts once `type` is stripped', () => {
+    const body = JSON.parse(buildUndoCommand(undoInput, basis, MUTATION_ID).commandBytes) as Record<string, unknown>
+    const { type: _discriminator, ...routed } = body
+    expect(Object.keys(routed).sort()).toEqual(['handle', 'mutation_id', 'version'])
+  })
+
+  it('carries no task identity in the bytes, because UndoTaskCommand publishes none', () => {
+    const body = JSON.parse(buildUndoCommand(undoInput, basis, MUTATION_ID).commandBytes) as Record<string, unknown>
+    expect(body).not.toHaveProperty('task_id')
+    expect(body).not.toHaveProperty('expected_revision')
+  })
+
+  it('scopes the undo to its task by resource key, so it cannot overtake the mutation it undoes', () => {
+    expect(buildUndoCommand(undoInput, basis, MUTATION_ID).resourceKeys).toEqual([`task:${TASK_ID}`])
+    expect(buildUndoCommand(undoInput, basis, MUTATION_ID).effect.entityId).toBe(TASK_ID)
+  })
+
+  it('carries the REVERTED values in its effect, so an outbox replay restores rather than blanks the row', () => {
+    const effect = buildUndoCommand(undoInput, basis, MUTATION_ID).effect.snapshot
+    expect(effect.title).toBe('Book the ferry')
+    expect(effect.notes).toBe('the notes before the action')
+    expect(effect.revision).toBe(basis.expectedRevision + 1)
+  })
+
+  it('refuses a handle the contract would not publish rather than queueing bytes the server will refuse', () => {
+    for (const handle of ['', 'short', `${HANDLE}!`, 'x'.repeat(129)]) {
+      expect(() => buildUndoCommand({ ...undoInput, handle }, basis, MUTATION_ID)).toThrow('undo handle')
+    }
   })
 })

@@ -222,3 +222,166 @@ describe('KeeplingSyncAdapter.push against what the server answers (O-38)', () =
     await expect(adapter.push(bytes)).rejects.toThrow('server acknowledgement is invalid')
   })
 })
+
+/**
+ * O-45. The undo endpoint answers a NO-CHANGE differently from every other
+ * command surface, and the difference was load-bearing enough to be worth
+ * stating: `POST /commands/undo-task` publishes `UndoResult`, a `oneOf` of
+ * `CommandAcknowledgement` and `UndoNoChange`, and the server returns the
+ * no-change body with **HTTP 200** for `already_applied` / `expired` /
+ * `stale` / `uncertain` and **404** only for `unknown`
+ * (`CommandStore#undo_no_change`: `status: if(outcome == :unknown, do: 404,
+ * else: 200)`).
+ *
+ * So an expired undo is NOT a 409 or a 422. Before this, `mapAcknowledgement`
+ * saw a 200 with no `snapshot`, threw `server acknowledgement is invalid`,
+ * `runSyncPass` caught it, and an undo the server had DECIDED about landed on
+ * "Couldn't reach the server" with a Retry button that would retry it forever
+ * -- the same misdiagnosis O-38 fixed for conflicts, one endpoint later.
+ *
+ * `undo_uncertain` is deliberately NOT settled. It is the only no-change the
+ * server marks `retryable: true`, and it means the server does not know
+ * whether the compensation applied. Calling that terminal would be inventing
+ * a decision nobody made; it stays loud. What a person should SEE in that
+ * state is `{ kind: 'uncertain' }`, which is O-47 and out of this plan's
+ * scope.
+ */
+const undoNoChange = (code: string, outcome: string, retryable = false) => ({
+  code,
+  mutation_id: 'm-1',
+  outcome,
+  recovery_action: null,
+  retryable,
+  title: 'Undo unavailable',
+})
+
+describe('classifying what the undo endpoint answered (O-45)', () => {
+  it('treats every non-retryable undo no-change as a terminal rejection, at the status the server sends it', () => {
+    expect(classifyServerRefusal(200, undoNoChange('undo_expired', 'expired'))).toEqual({
+      code: 'undo_expired',
+      kind: 'rejected',
+    })
+    expect(classifyServerRefusal(200, undoNoChange('undo_already_applied', 'already_applied'))).toEqual({
+      code: 'undo_already_applied',
+      kind: 'rejected',
+    })
+    expect(classifyServerRefusal(200, undoNoChange('undo_stale', 'stale'))).toEqual({
+      code: 'undo_stale',
+      kind: 'rejected',
+    })
+    // `unknown` is the ONLY undo no-change the server answers 404 with.
+    expect(classifyServerRefusal(404, undoNoChange('undo_unknown', 'unknown'))).toEqual({
+      code: 'undo_unknown',
+      kind: 'rejected',
+    })
+  })
+
+  it('NEVER settles undo_uncertain -- the server itself does not know, so neither may this client', () => {
+    expect(classifyServerRefusal(200, undoNoChange('undo_uncertain', 'uncertain', true))).toBeNull()
+  })
+
+  it('does not mistake an ordinary acknowledgement for a no-change', () => {
+    expect(classifyServerRefusal(200, { mutation_id: 'm-1', outcome: 'accepted', snapshot: { id: 't-1' } })).toBeNull()
+  })
+})
+
+const undoBytes = JSON.stringify({
+  handle: 'u'.repeat(43),
+  mutation_id: 'm-undo',
+  type: 'undo_task',
+  version: 1,
+})
+
+describe('KeeplingSyncAdapter.push for an undo (O-45)', () => {
+  it('posts the retained handle to /commands/undo-task and settles an accepted undo', async () => {
+    const adapter = adapterWith((url, init) => {
+      expect(url).toContain('/api/v1/commands/undo-task')
+      expect(String(init?.body)).toBe(undoBytes)
+      return new Response(
+        JSON.stringify({ mutation_id: 'm-undo', outcome: 'accepted', revision: 5, snapshot: { id: 't-1', revision: 5, title: 'Book the ferry' } }),
+        { headers: { 'content-type': 'application/json' }, status: 200 },
+      )
+    })
+    await expect(adapter.push(undoBytes, { taskId: 't-1' })).resolves.toMatchObject({
+      mutationId: 'm-undo',
+      outcome: 'accepted',
+    })
+  })
+
+  it('settles an expired undo as a rejection rather than retrying it forever', async () => {
+    const adapter = adapterWith(() =>
+      new Response(JSON.stringify(undoNoChange('undo_expired', 'expired')), {
+        headers: { 'content-type': 'application/json' },
+        status: 200,
+      }),
+    )
+    await expect(adapter.push(undoBytes, { taskId: 't-1' })).resolves.toMatchObject({
+      mutationId: 'm-undo',
+      outcome: 'rejected',
+      snapshot: { id: 't-1', rejection_code: 'undo_expired' },
+    })
+  })
+
+  it('settles an unknown handle (404) as a rejection, never as a transport failure', async () => {
+    const adapter = adapterWith(() => problemResponse(404, undoNoChange('undo_unknown', 'unknown')))
+    await expect(adapter.push(undoBytes, { taskId: 't-1' })).resolves.toMatchObject({
+      outcome: 'rejected',
+      snapshot: { rejection_code: 'undo_unknown' },
+    })
+  })
+
+  it('keeps an uncertain undo LOUD -- it is not a decision this client may record', async () => {
+    const adapter = adapterWith(() =>
+      new Response(JSON.stringify(undoNoChange('undo_uncertain', 'uncertain', true)), {
+        headers: { 'content-type': 'application/json' },
+        status: 200,
+      }),
+    )
+    await expect(adapter.push(undoBytes, { taskId: 't-1' })).rejects.toThrow('server acknowledgement is invalid')
+  })
+})
+
+/**
+ * O-45. The handle is SERVER-ISSUED and arrives in the acknowledgement's
+ * `undo` field (`UndoAvailability`: expires_at, handle, label). Nothing here
+ * may derive one, and a malformed one is a contract violation, not something
+ * to repair -- `mapAcknowledgement` stays strict for the same reason it
+ * refuses a 200 claiming `conflict`.
+ */
+describe('retaining the server-issued undo availability (O-45)', () => {
+  const accepted = (undo: unknown) =>
+    new Response(
+      JSON.stringify({
+        mutation_id: 'm-1',
+        outcome: 'accepted',
+        snapshot: { id: 't-1', revision: 2, title: 'Book the ferry' },
+        ...(undo === undefined ? {} : { undo }),
+      }),
+      { headers: { 'content-type': 'application/json' }, status: 200 },
+    )
+
+  it('carries the server’s handle, expiry and label through to the acknowledgement', async () => {
+    const undo = { expires_at: '2026-09-05T12:00:00Z', handle: 'h'.repeat(43), label: 'Undo completion' }
+    const adapter = adapterWith(() => accepted(undo))
+    await expect(adapter.push(bytes)).resolves.toMatchObject({
+      undo: { expiresAt: '2026-09-05T12:00:00Z', handle: 'h'.repeat(43), label: 'Undo completion' },
+    })
+  })
+
+  it('reports no availability when the server issued none', async () => {
+    const adapter = adapterWith(() => accepted(undefined))
+    expect((await adapter.push(bytes))?.undo).toBeUndefined()
+  })
+
+  it('refuses a malformed undo availability rather than retaining a handle the contract does not publish', async () => {
+    for (const undo of [
+      { expires_at: '2026-09-05T12:00:00Z', handle: 'too-short', label: 'Undo completion' },
+      { expires_at: '2026-09-05T12:00:00Z', handle: 'h'.repeat(43) },
+      { expires_at: '2026-09-05T12:00:00Z', handle: 'h'.repeat(43), label: 'Undo', unexpected: true },
+      { expires_at: '', handle: 'h'.repeat(43), label: 'Undo completion' },
+    ]) {
+      const adapter = adapterWith(() => accepted(undo))
+      await expect(adapter.push(bytes)).rejects.toThrow('undo availability')
+    }
+  })
+})
