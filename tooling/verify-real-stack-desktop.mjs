@@ -162,14 +162,35 @@ try {
   // real server has proved nothing about it. Every field below is an
   // observation the spec can only print after the real server acted.
   const undo = stdout.match(
-    /REAL_STACK_UNDO handle=(\S+) undo_arrived=(\d+) reverted_on_server=(\d+) survived_relaunch=(\d+) refused_without_handle=(\d+)/,
+    /REAL_STACK_UNDO handle=(\S+) undo_arrived=(\d+) reverted_on_server=(\d+) survived_relaunch=(\d+) dropped_never_transmitted=(\d+) never_reached_server=(\d+)/,
   )
   if (!undo) fail('the real-stack suite never reported a REAL_STACK_UNDO evidence line')
   if (undo[1] !== 'server_issued') fail('the undo handle was not issued by the real server')
   if (Number(undo[2]) <= 0) fail('no undo_task command ever arrived at the real server')
   if (Number(undo[3]) <= 0) fail('the real server never reversed the change -- the undo reconciled nothing')
   if (Number(undo[4]) <= 0) fail('the offline undo did not survive a quit and relaunch')
-  if (Number(undo[5]) <= 0) fail('an undo with no server-issued handle was not refused')
+  // O-51/D-52. `refused_without_handle` was the claim until 03-24, and it
+  // is no longer the shipped behaviour: an undo of a command whose bytes
+  // were never handed to the transport DROPS it. The two fields that
+  // replace it are what make that safe -- the command was removed, and the
+  // server never received it once the network came back. The refusal claim
+  // moved to the in-flight case below, where it belongs.
+  if (Number(undo[5]) <= 0) fail('a never-transmitted command was not dropped by the undo')
+  if (Number(undo[6]) <= 0) fail('the dropped command was not proved absent from the real server')
+
+  // O-51/D-52, the dangerous case. An undo racing a command already on the
+  // wire must REFUSE, not drop -- otherwise the server holds a change this
+  // Mac deleted. This cannot be proved by asserting a branch was taken, so
+  // the spec holds a real answer from real Phoenix and asserts against the
+  // server's own state afterwards.
+  const inFlight = stdout.match(
+    /REAL_STACK_IN_FLIGHT held=(\d+) refused=(\d+) command_survived=(\d+) server_holds_completion=(\d+)/,
+  )
+  if (!inFlight) fail('the real-stack suite never reported a REAL_STACK_IN_FLIGHT evidence line')
+  if (Number(inFlight[1]) <= 0) fail('no command was ever genuinely held in flight')
+  if (Number(inFlight[2]) <= 0) fail('an undo racing an in-flight command was not refused')
+  if (Number(inFlight[3]) <= 0) fail('the in-flight command did not survive the refused undo')
+  if (Number(inFlight[4]) <= 0) fail('the server does not hold the change the undo was refused for')
   // `undo_arrived` is NOT self-reported enthusiasm: the spec sets it only
   // after finding the outbox's exact bytes among the bodies the forwarding
   // proxy watched the server receive on /commands/undo-task. It is checked
