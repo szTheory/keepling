@@ -98,5 +98,27 @@ export default defineConfig({
       name: 'packaged',
       testMatch: ['packaged/**/*.spec.ts'],
     },
+    /**
+     * The real-stack lane is its OWN project, and its specs live in their own
+     * directory rather than in `packaged/`, deliberately.
+     *
+     * It is a packaged-artifact lane like the others, but it is the only one
+     * that needs a REAL backend -- Elixir, PostgreSQL, migrations, a seeded
+     * database. Folding it into `packaged` would make every existing packaged
+     * spec unrunnable without that toolchain, and would hide its case count
+     * inside another lane's, so a real-stack run that executed ZERO cases
+     * would be invisible. It also keeps `tooling/smoke-desktop-packaged.mjs`'s
+     * "every file in test/packaged is a packaged spec" rule true, instead of
+     * teaching that script an exception -- an exception list is exactly how a
+     * spec stops being run without anyone noticing.
+     *
+     * Its runner is `tooling/verify-real-stack-desktop.mjs` and its gate lane
+     * is `real-stack-sync`.
+     */
+    {
+      name: 'real-stack',
+      testMatch: ['real-stack/**/*.spec.ts'],
+      timeout: 600_000,
+    },
   ],
 })

@@ -14,12 +14,13 @@
     "stack:local": "./tooling/run-local-stack.sh --start",
     "test:changed": "node tooling/select-tests.mjs",
     "test:desktop": "pnpm --dir apps/desktop test",
+    "test:desktop:changed": "node tooling/test-changed.mjs",
     "test:desktop:e2e": "pnpm --dir apps/desktop test:e2e",
     "test:desktop:ipc": "pnpm --dir apps/desktop test:ipc",
     "test:phase-1": "./tooling/test-phase-1.sh --run",
     "typecheck:desktop": "pnpm --dir apps/desktop typecheck",
     "typecheck:web": "pnpm --filter @keepling/web typecheck",
-    "test:desktop:changed": "node tooling/test-changed.mjs"
+    "verify:desktop:real-stack": "node tooling/verify-real-stack-desktop.mjs"
   },
   "devDependencies": {
     "openapi-typescript": "7.13.0",
