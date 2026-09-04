@@ -22,8 +22,14 @@ import { useEffect, useState } from 'react'
  *    anti-flicker grace period are quiet states by design, so the row must
  *    disappear rather than say "everything is fine" -- a persistent
  *    reassurance is exactly the claim this app must not make.
- *  - It is announced politely, not assertively: a background synchronization
- *    change is information, never an interruption of what someone is typing.
+ *  - It is NOT a live region. The workspace already owns exactly one
+ *    announcer (`packages/web-ui/src/recovery/SyncRecovery.tsx`), and
+ *    `test/e2e/accessibility.spec.ts` pins that count at one on purpose --
+ *    a second announcer would turn every background synchronization change
+ *    into an interruption of whatever someone is typing. This row is a
+ *    labeled, always-inspectable complementary landmark instead, which is
+ *    precisely what MAC-04 asks for: a state a person can INSPECT without
+ *    reading logs.
  */
 type PresentationSummary = {
   copy: string | null
@@ -50,9 +56,7 @@ function SyncStatusRow() {
       data-sync-status={summary.kind}
       id="sync-status-row"
     >
-      <p aria-atomic="true" aria-live="polite" role="status">
-        {summary.copy}
-      </p>
+      <p>{summary.copy}</p>
     </aside>
   )
 }
