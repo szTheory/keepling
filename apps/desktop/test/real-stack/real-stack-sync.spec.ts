@@ -361,6 +361,18 @@ const serverTask = async (taskId: string): Promise<ServerTask | null> => {
   return (await response.json()) as ServerTask
 }
 
+/**
+ * The same read, straight to Phoenix rather than through the gate. Used
+ * only where the gate is deliberately CLOSED: the gate models this Mac's
+ * network being down, not the server being down, so a test observation
+ * must not travel over the link it just severed.
+ */
+const serverTaskDirect = async (taskId: string): Promise<ServerTask | null> => {
+  const response = await secondWriter.request(`/api/v1/tasks/${encodeURIComponent(taskId)}`)
+  if (response.status !== 200) return null
+  return (await response.json()) as ServerTask
+}
+
 /** Whether the SERVER holds this task in Trash. */
 const serverTrashHolds = async (taskId: string): Promise<boolean> => {
   const response = await browser.request('/api/v1/trash')
@@ -608,7 +620,18 @@ test('every mutation a person can perform reaches real Phoenix and reconciles ag
     await window.getByText(editedTitle).click()
     await window.getByRole('button', { name: 'Restore' }).click()
     await expect.poll(() => serverTrashHolds(taskId), { timeout: 60_000 }).toBe(false)
-    await expect.poll(async () => (await serverTask(taskId))?.trashed_at ?? 'absent', { timeout: 60_000 }).toBeNull()
+    await expect
+      .poll(
+        async () => {
+          const task = await serverTask(taskId)
+          // NOT `?? 'absent'`: `trashed_at` is legitimately null on a
+          // restored task, and nullish coalescing would report the exact
+          // value under assertion as the sentinel for "not found".
+          return task === null ? 'absent' : task.trashed_at
+        },
+        { timeout: 60_000 },
+      )
+      .toBeNull()
 
     // The outbox drained: nothing is left that this Mac still intends to
     // send. "Synced" on a row is a claim; an empty outbox is the fact.
@@ -729,7 +752,7 @@ test('an offline edit never overtakes its capture, and a conflict the real serve
       method: 'POST',
     })
     expect(secondWrite.status, 'the second writer must really change the task').toBe(200)
-    expect((await serverTask(taskId))?.title).toBe(elsewhere)
+    expect((await serverTaskDirect(taskId))?.title).toBe(elsewhere)
 
     // Reconnect. The app's queued edit is now based on a value the server
     // has moved past, and the server's own three-way merge refuses it.
