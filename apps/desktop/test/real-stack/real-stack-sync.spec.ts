@@ -933,7 +933,10 @@ test('an offline undo survives a relaunch and reverses the change on the real se
     await application.close()
     application = await launch(profilePath)
     window = await application.firstWindow()
-    await expect(window.getByRole('heading', { name: 'Inbox' })).toBeVisible()
+    // The workspace region, not the empty-state heading: D-06 restores the
+    // previously selected task, so the relaunched window opens on the task
+    // detail and the "Inbox" heading is not on screen.
+    await expect(window.getByRole('region', { name: 'Inbox' })).toBeVisible({ timeout: 30_000 })
     const afterRelaunch = readOutbox(profilePath)
     expect(afterRelaunch).toHaveLength(1)
     // The SAME bytes. Not re-serialized, not rebuilt from a mutation id.
