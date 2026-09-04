@@ -4,11 +4,11 @@ milestone: v1.0
 current_phase: 4
 current_phase_name: Native iPhone Daily Loop
 status: planning
-stopped_at: Phase KPL-03 complete, ready to plan Phase 4
-last_updated: "2026-09-04T19:43:49.999Z"
+stopped_at: Phase KPL-04 context gathered
+last_updated: "2026-09-04T23:43:43.634Z"
 last_activity: 2026-09-04
 last_activity_desc: Phase KPL-03 complete, transitioned to Phase 4
-state_head: 38532612eb35b7c62b7312883d518de03c5cc6be
+state_head: e74b3944ef526c260be6b621d2ec0a6a884755eb
 progress:
   total_phases: 6
   completed_phases: 2
@@ -241,10 +241,10 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-04T19:22:59.102Z
-**Stopped at:** Phase KPL-03 complete, ready to plan Phase 4
+**Last session:** 2026-09-04T23:43:43.262Z
+**Stopped at:** Phase KPL-04 context gathered
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
-**Resume file:** None
+**Resume file:** .planning/phases/KPL-04-native-iphone-daily-loop/04-CONTEXT.md
 
 ## Performance Metrics
 
