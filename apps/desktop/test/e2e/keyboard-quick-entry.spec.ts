@@ -231,3 +231,66 @@ test('shortcut collision is visible and directly rebindable, never a silent fall
     await application.close()
   }
 })
+
+/**
+ * O-36 (MAC-02). MEASURED DEFECT, reproduced twice with a standalone
+ * AXProbe: after the discard confirmation is dismissed with `Keep Draft`,
+ * AX focus lands on `AXWebArea "Keepling"` -- the document -- rather than
+ * on a control, and Escape silently stops working. `quick-entry.tsx` bound
+ * its key handler as `<div onKeyDown={...}>`, and React's synthetic keydown
+ * only fires for keys delivered INTO that subtree; with focus on the body
+ * the event never reaches it. Tabbing back into the field made the very
+ * same Escape work immediately.
+ *
+ * Two independent defects, so two independent tests. Fixing only the first
+ * leaves the trap armed for the next dialog that returns focus to nowhere.
+ */
+test('the discard confirmation returns focus to a control when it closes', { tag: '@windowed' }, async () => {
+  const profilePath = allocateDisposableProfile('quick-entry-discard-focus-restoration')
+  const { application } = await launch(profilePath)
+  try {
+    const quickEntryWindow = await openQuickEntry(application)
+    await quickEntryWindow.getByLabel('What do you want to keep?').fill('Renew the passport')
+    await quickEntryWindow.getByRole('button', { name: 'Discard Draft…' }).click()
+    await expect(quickEntryWindow.getByRole('button', { name: 'Keep Draft' })).toBeFocused()
+
+    await quickEntryWindow.getByRole('button', { name: 'Keep Draft' }).click()
+
+    // The invoking control, not the document. A dialog that returns focus
+    // to nowhere is a keyboard-navigation defect in its own right, and is
+    // what D-06/MAC-02 mean by focus restoration.
+    await expect(quickEntryWindow.getByRole('button', { name: 'Discard Draft…' })).toBeFocused()
+  } finally {
+    await application.close()
+  }
+})
+
+test('Escape hides Quick Entry even with focus on the document rather than a control', { tag: '@windowed' }, async () => {
+  const profilePath = allocateDisposableProfile('quick-entry-escape-from-document')
+  const { application } = await launch(profilePath)
+  try {
+    const quickEntryWindow = await openQuickEntry(application)
+    await quickEntryWindow.getByLabel('What do you want to keep?').fill('Renew the passport')
+    await quickEntryWindow.waitForTimeout(400)
+
+    // Put focus exactly where the AXProbe measured it: on the document,
+    // outside any control. This is deliberately INDEPENDENT of the focus
+    // restoration fixed above -- the guarantee must be structural, so that
+    // any future focus-to-body path cannot silently disable the key.
+    await quickEntryWindow.evaluate(() => {
+      ;(document.activeElement as HTMLElement | null)?.blur()
+    })
+    await expect
+      .poll(() => quickEntryWindow.evaluate(() => document.activeElement?.tagName ?? null))
+      .toBe('BODY')
+
+    await quickEntryWindow.keyboard.press('Escape')
+    await expect.poll(() => isQuickEntryOpen(application)).toBe(false)
+
+    // Escape hides, never discards (D-11): the draft is still there.
+    const reopened = await openQuickEntry(application)
+    await expect(reopened.getByLabel('What do you want to keep?')).toHaveValue('Renew the passport')
+  } finally {
+    await application.close()
+  }
+})
