@@ -343,11 +343,25 @@ test('the packaged app authorizes, captures offline, reconnects, and reaches Syn
     // actions; nothing pushes a change into it when the browser callback
     // lands, so it keeps showing "Finish signing in..." until it re-reads.
     // Reloading is a READ, not a nudge to the app -- the authorization
-    // either happened in the main process or it did not. Filed as an open
-    // item rather than fixed here; it is a staleness defect in a pane, not
-    // part of O-34.
-    await settings.reload()
-    await expect(settings.getByTestId('account-state')).toHaveText('Connected.', { timeout: 30_000 })
+    // either happened in the main process or it did not. Filed as O-39
+    // rather than fixed here: it is a staleness defect in a pane, not O-34.
+    //
+    // Polled, not read once. `handleCallback` clears the in-flight request
+    // BEFORE awaiting the real token exchange over a real socket, so there
+    // is a genuine window in which the pane reads neither "authorizing" nor
+    // "connected" but "Signed out." -- measured, as a flake, on the second
+    // run of this lane. Polling for the condition being asserted is not a
+    // weakening: a state that never arrives still fails, and `expect.poll`
+    // reports the last text it actually saw.
+    await expect
+      .poll(
+        async () => {
+          await settings.reload()
+          return settings.getByTestId('account-state').innerText()
+        },
+        { intervals: [500], timeout: 60_000 },
+      )
+      .toBe('Connected.')
 
     // The five-field namespace is SERVER-derived. The client configured
     // 127.0.0.1:<gate>; the origin the app now holds is the one the SERVER
