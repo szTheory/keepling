@@ -148,7 +148,19 @@ type UndoTarget = {
 type UndoResult = {
   applied: boolean
   /** Why the undo did NOT happen. Absent when it did. */
-  reason?: 'expired' | 'nothing_to_undo' | 'unsent'
+  reason?: 'expired' | 'in_flight' | 'nothing_to_undo' | 'unsent'
+  snapshot: WorkspaceSnapshot
+}
+
+/**
+ * The store's answer about a mutation the server may never have received
+ * (O-51). Closed, and deliberately not a boolean: a refusal has to be
+ * described to a person truthfully, and "queued behind a successor" and
+ * "possibly already sent" are different things to be told.
+ */
+type UndoDropOutcome = {
+  applied: boolean
+  reason: 'blocked' | 'dropped' | 'nothing_to_undo' | 'transmitted' | 'unknown'
   snapshot: WorkspaceSnapshot
 }
 
@@ -218,6 +230,31 @@ interface LocalStorePort {
   getShortcutPreference?(): Promise<string | null> | string | null
   /** Persists a newly chosen Quick Entry global-shortcut accelerator. */
   setShortcutPreference?(accelerator: string): Promise<void> | void
+  /**
+   * O-51 / D-52. Undo of a mutation the server never received: the store
+   * decides, because only the store holds the transmission state that can
+   * PROVE the bytes never left. The application never infers this from the
+   * outbox's contents -- a row sits there unchanged while its POST is in
+   * flight, which is exactly how a wrong drop would happen.
+   *
+   * A store that does not implement this cannot prove anything, so the
+   * application refuses the undo. Refusing is the conservative answer and
+   * the visible one; it never degrades to a local-only undo.
+   */
+  undoUnsentLocalAction?(): Promise<UndoDropOutcome> | UndoDropOutcome
+  /**
+   * O-51. Marks a queued command's bytes as handed to the transport, in the
+   * instant BEFORE they are. Required whenever anything is pushed: without
+   * it the store would keep reporting a live request as never-transmitted
+   * and an undo could drop a command the server is accepting.
+   */
+  beginTransmission?(mutationId: string, fingerprint: string): Promise<void> | void
+  /**
+   * O-51. The request ended with no outcome. The row becomes `uncertain` --
+   * still pushed, never droppable -- because a failed `fetch` cannot say
+   * whether the bytes left (O-47).
+   */
+  abandonTransmission?(mutationId: string): Promise<void> | void
   pendingMutations(): Promise<PendingMutation[]>
   readyMutations?(): Promise<SyncMutation[]> | SyncMutation[]
   /**
@@ -483,10 +520,7 @@ class DesktopApplication {
     if (target === null) {
       return { applied: false, reason: 'nothing_to_undo', snapshot: await this.#localStore.snapshot() }
     }
-    if (target.availability === null) {
-      this.publishPresentation({ kind: 'undo_unavailable', reason: 'unsent' })
-      return { applied: false, reason: 'unsent', snapshot: await this.#localStore.snapshot() }
-    }
+    if (target.availability === null) return this.#undoWithoutHandle()
     const expiresAt = Date.parse(target.availability.expiresAt)
     const now = Date.parse(this.#clock.now())
     if (!Number.isFinite(expiresAt) || (Number.isFinite(now) && expiresAt <= now)) {
@@ -512,6 +546,55 @@ class DesktopApplication {
     })
     if (result.applied) this.publishPresentation({ kind: 'local_saved', pendingCount: 1 })
     return result
+  }
+
+  /**
+   * O-51 / D-52: an undo with no server-issued handle.
+   *
+   * 03-23 refused every one of these, which is right for a mutation the
+   * server has seen and wrong for one it has not: on a Mac with no server
+   * configured NOTHING is ever acknowledged, so Command-Z was dead while
+   * MAC-01 promises it. If the bytes never left this machine there is
+   * nothing to reconcile with and no divergence window to open.
+   *
+   * The proof is the store's, not this method's. `undoUnsentLocalAction`
+   * drops the command only when its transmission state says `queued`, and
+   * every other answer -- in flight, uncertain, settled, absent, or blocked
+   * behind a successor built on it -- comes back as a refusal. A store that
+   * cannot answer at all is treated as a refusal too, never as permission.
+   */
+  async #undoWithoutHandle(): Promise<UndoResult> {
+    const refuse = async (reason: 'in_flight' | 'unsent'): Promise<UndoResult> => {
+      this.publishPresentation({ kind: 'undo_unavailable', reason })
+      return { applied: false, reason, snapshot: await this.#localStore.snapshot() }
+    }
+    if (!this.#localStore.undoUnsentLocalAction) return refuse('unsent')
+
+    const outcome = await this.#localStore.undoUnsentLocalAction()
+    if (!outcome.applied) {
+      if (outcome.reason === 'nothing_to_undo') {
+        return { applied: false, reason: 'nothing_to_undo', snapshot: outcome.snapshot }
+      }
+      // `transmitted` is the only answer where this Mac does not know
+      // whether the server has the command, and it is the only one that
+      // gets copy saying so.
+      return refuse(outcome.reason === 'transmitted' ? 'in_flight' : 'unsent')
+    }
+
+    // The undo REMOVED sync work rather than creating any, so the row must
+    // not keep claiming a pending change that no longer exists. The count
+    // is the store's, never a guess.
+    const pendingCount = (await this.#localStore.syncState?.())?.outbox.length
+    if (pendingCount === undefined || pendingCount > 0) {
+      this.publishPresentation({ kind: 'local_saved', pendingCount })
+    } else if (this.#sync.configured?.() === false) {
+      // O-30: there is no server to have synchronized with, so the honest
+      // row is the same one a pass publishes here.
+      this.publishPresentation({ kind: 'offline' })
+    } else {
+      this.publishPresentation({ kind: 'healthy' })
+    }
+    return { applied: true, snapshot: outcome.snapshot }
   }
 
   async listConflicts(): Promise<ConflictRecord[]> {
@@ -736,17 +819,43 @@ class DesktopApplication {
       // failed, and both landed on "Couldn't reach the server."
       let conflicted = 0
       let refused = 0
+      // O-51. Absent capability is a LOUD FAILURE, and this one is
+      // load-bearing for durability: without transmission state the store
+      // reports a command whose bytes are on the wire as never-transmitted,
+      // and an undo drops a command the server is accepting. A store that
+      // cannot record it must not be pushed through at all.
+      if (ready.length > 0 && (!this.#localStore.beginTransmission || !this.#localStore.abandonTransmission)) {
+        throw new Error('outbox transmission state is unavailable')
+      }
       for (const mutation of ready) {
         // O-45: `UndoTaskCommand` publishes no `task_id`, so the task this
         // Mac queued the command against travels alongside the bytes rather
         // than inside them. Every other command carries its own and ignores
         // this.
-        const acknowledgement = await this.#sync.push(mutation.commandBytes, { taskId: mutation.effect.entityId })
+        //
+        // O-51: the row is marked in flight BEFORE the bytes are handed
+        // over, and released on every path that does not settle it, so the
+        // window in which an undo could drop a transmitted command does not
+        // exist rather than being small.
+        await this.#localStore.beginTransmission?.(mutation.mutationId, mutation.fingerprint)
+        let acknowledgement: SyncAcknowledgement | null
+        try {
+          acknowledgement = await this.#sync.push(mutation.commandBytes, { taskId: mutation.effect.entityId })
+        } catch (error) {
+          await this.#localStore.abandonTransmission?.(mutation.mutationId)
+          throw error
+        }
         if (
           acknowledgement === null ||
           acknowledgement.mutationId !== mutation.mutationId ||
           acknowledgement.fingerprint !== mutation.fingerprint
-        ) continue
+        ) {
+          // An answer that cannot be matched to what was sent settles
+          // nothing, so the command stays queued for delivery -- but it has
+          // been transmitted, and `uncertain` is what says so.
+          await this.#localStore.abandonTransmission?.(mutation.mutationId)
+          continue
+        }
         await (this.#localStore.acknowledgeSync?.(acknowledgement)
           ?? this.#localStore.acknowledge(acknowledgement))
         if (acknowledgement.outcome === 'conflict') conflicted += 1
@@ -826,6 +935,7 @@ export type {
   SyncSnapshot,
   SyncState,
   SyncUndoAvailability,
+  UndoDropOutcome,
   UndoResult,
   UndoTarget,
   WorkspaceSnapshot,

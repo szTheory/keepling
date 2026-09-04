@@ -5,12 +5,14 @@ import { classifyStoreFailure, NodeSqliteLocalStore, removeLocalFilesAt, type Lo
 type WorkerRequest = {
   id: number
   operation:
+    | 'abandonTransmission'
     | 'acceptCapture'
     | 'acknowledge'
     | 'acknowledgeSync'
     | 'applyLifecycle'
     | 'applyMoveToday'
     | 'applyPull'
+    | 'beginTransmission'
     | 'bindNamespace'
     | 'clearDraft'
     | 'close'
@@ -31,6 +33,7 @@ type WorkerRequest = {
     | 'taskSyncBasis'
     | 'undoLastLocalAction'
     | 'undoTarget'
+    | 'undoUnsentLocalAction'
   payload?: unknown
 }
 
@@ -172,6 +175,24 @@ parentPort.on('message', (request: WorkerRequest) => {
         break
       case 'readyMutations':
         value = store.readyMutations()
+        break
+      // O-51. Without these three routed here the SHIPPED app would run the
+      // whole state machine in a store the main process cannot reach -- the
+      // same "implemented but never routed" defect O-16 was. The push loop
+      // refuses to run without the first two, and an undo with no handle
+      // refuses without the third.
+      case 'beginTransmission': {
+        const [mutationId, fingerprint] = request.payload as [string, string]
+        store.beginTransmission(mutationId, fingerprint)
+        value = null
+        break
+      }
+      case 'abandonTransmission':
+        store.abandonTransmission(request.payload as string)
+        value = null
+        break
+      case 'undoUnsentLocalAction':
+        value = store.undoUnsentLocalAction()
         break
       case 'acknowledgeSync':
         store.acknowledgeSync(request.payload as Parameters<typeof store.acknowledgeSync>[0])

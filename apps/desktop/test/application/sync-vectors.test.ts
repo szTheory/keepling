@@ -110,11 +110,16 @@ describe('Phase 2 synchronization vectors', () => {
       clock: { now: () => vectors.fixed_clock },
       identity: { randomId: () => 'unused' },
       localStore: {
+        abandonTransmission: async (mutationId) => { events.push(`abandon:${mutationId}`) },
         acceptCapture: async () => { throw new Error('unused') },
         acceptMutation: async () => { throw new Error('unused') },
         acknowledge: async () => ({ tasks: [] }),
         acknowledgeSync: async () => undefined,
         applyPull: async () => undefined,
+        // O-51: recorded in the SAME ordered log as the pull and the push,
+        // so "in flight is entered before the bytes are handed over" is a
+        // property of the observed sequence rather than a claim about it.
+        beginTransmission: async (mutationId) => { events.push(`begin:${mutationId}`) },
         close: async () => undefined,
         pendingMutations: async () => [mutation],
         readyMutations: async () => [mutation],
@@ -136,7 +141,15 @@ describe('Phase 2 synchronization vectors', () => {
 
     await application.runSyncPass()
 
-    expect(events).toEqual(['pull:50', `push:${commandBytes}`])
+    // The push answered with an unmatched acknowledgement (`null`), so the
+    // row is released as UNCERTAIN rather than left in flight -- and never
+    // back to queued, which is what would make it droppable again.
+    expect(events).toEqual([
+      'pull:50',
+      'begin:mutation-exact',
+      `push:${commandBytes}`,
+      'abandon:mutation-exact',
+    ])
   })
 
   it('fences prior intent when any server-derived namespace dimension changes', () => {

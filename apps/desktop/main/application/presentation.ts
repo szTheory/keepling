@@ -51,6 +51,13 @@ type DesktopPresentationInput =
    * send. Syncing is a real remedy -- once the acknowledgement lands the
    * handle exists -- so `retry` is offered.
    *
+   * `in_flight`: the mutation's bytes have been handed to the transport and
+   * no outcome has arrived -- it is in flight, or a previous attempt ended
+   * without an answer. This Mac does NOT know whether the server holds it,
+   * so the undo is refused rather than guessing, and the copy does not
+   * claim the change is still local. Syncing settles it either way, so
+   * `retry` is offered.
+   *
    * `expired`: the server-issued handle's own `expires_at` has passed. No
    * action can change that, so none is offered. Offering a button that
    * cannot work is the dead-remedy failure O-42 removed.
@@ -58,7 +65,7 @@ type DesktopPresentationInput =
    * This is NOT `rejected`. That row says "The server didn't accept this
    * change", and in both cases here the server was never asked.
    */
-  | { kind: 'undo_unavailable'; reason: 'expired' | 'unsent' }
+  | { kind: 'undo_unavailable'; reason: 'expired' | 'in_flight' | 'unsent' }
 
 type RecoveryAction = { code: RecoveryActionCode; label: string }
 
@@ -124,9 +131,14 @@ const deriveSummary = (
     case 'store_unavailable':
       return { actions: [action('retry_opening', 'Retry Opening'), action('show_recovery_options', 'Show Recovery Options')], copy: 'Keepling can’t open the tasks saved on this Mac. Your data was not replaced or removed.', count: null, kind: input.kind, lastSuccessfulContact: null }
     case 'undo_unavailable':
-      return input.reason === 'unsent'
-        ? { actions: [action('retry', 'Retry')], copy: 'This change hasn’t reached the server yet, so it can’t be undone. Nothing was changed.', count: null, kind: input.kind, lastSuccessfulContact: null }
-        : { actions: [], copy: 'This change can no longer be undone. Nothing was changed.', count: null, kind: input.kind, lastSuccessfulContact: null }
+      switch (input.reason) {
+        case 'unsent':
+          return { actions: [action('retry', 'Retry')], copy: 'This change hasn’t reached the server yet, so it can’t be undone. Nothing was changed.', count: null, kind: input.kind, lastSuccessfulContact: null }
+        case 'in_flight':
+          return { actions: [action('retry', 'Retry')], copy: 'This change is on its way to the server, so it can’t be undone yet. Nothing was changed.', count: null, kind: input.kind, lastSuccessfulContact: null }
+        case 'expired':
+          return { actions: [], copy: 'This change can no longer be undone. Nothing was changed.', count: null, kind: input.kind, lastSuccessfulContact: null }
+      }
   }
 }
 

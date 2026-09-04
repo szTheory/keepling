@@ -22,6 +22,7 @@ import {
   type PullPage,
   type SyncAcknowledgement,
   type SyncMutation,
+  type UndoDropOutcome,
   type UndoTarget,
   type SyncNamespace,
   type SyncPort,
@@ -238,6 +239,23 @@ class WorkerLocalStore implements LocalStorePort {
 
   readyMutations(): Promise<SyncMutation[]> {
     return this.#request('readyMutations')
+  }
+
+  // O-51. The transmission state machine and the undo drop, forwarded to
+  // the worker that owns the database. `DesktopApplication` refuses to push
+  // through a store missing the first two, and refuses an undo through one
+  // missing the third, so an unforwarded method here is a loud failure
+  // rather than a silent local-only undo.
+  beginTransmission(mutationId: string, fingerprint: string): Promise<void> {
+    return this.#request('beginTransmission', [mutationId, fingerprint])
+  }
+
+  abandonTransmission(mutationId: string): Promise<void> {
+    return this.#request('abandonTransmission', mutationId)
+  }
+
+  undoUnsentLocalAction(): Promise<UndoDropOutcome> {
+    return this.#request('undoUnsentLocalAction')
   }
 
   acknowledgeSync(acknowledgement: SyncAcknowledgement): Promise<void> {

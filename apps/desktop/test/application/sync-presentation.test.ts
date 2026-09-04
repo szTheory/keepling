@@ -49,9 +49,13 @@ const buildApplication = (sync: SyncStubs, ready: Array<PendingMutation & SyncMu
     clock: { now: () => '2026-09-02T12:00:00.000Z' },
     identity: { randomId: () => 'unused' },
     localStore: {
+      // O-51: required, not decorative -- the application refuses to push
+      // through a store that cannot record transmission state.
+      abandonTransmission: async () => undefined,
       acceptCapture: async () => { throw new Error('unused') },
       acceptMutation: async () => { throw new Error('unused') },
       acknowledge: async () => ({ tasks: [] }),
+      beginTransmission: async () => undefined,
       acknowledgeSync: async () => undefined,
       applyPull: async () => undefined,
       close: async () => undefined,
@@ -180,10 +184,12 @@ describe('offline versus rejected (O-30 / MAC-04 fifth state)', () => {
       clock: { now: () => '2026-09-03T12:00:00.000Z' },
       identity: { randomId: () => 'unused' },
       localStore: {
+        abandonTransmission: async () => undefined,
         acceptCapture: async () => { throw new Error('unused') },
         acknowledge: async () => ({ tasks: [] }),
         acknowledgeSync: async () => undefined,
         applyPull: async () => undefined,
+        beginTransmission: async () => undefined,
         close: async () => undefined,
         pendingMutations: async () => [mutation],
         readyMutations: async () => [mutation],

@@ -48,9 +48,14 @@ const buildApplication = (
     clock: { now: () => '2026-09-04T12:00:00.000Z' },
     identity: { randomId: () => 'unused' },
     localStore: {
+      // O-51: this double records transmission state instead of storing it.
+      // The application refuses to push at all through a store that cannot,
+      // so these are required rather than decorative.
+      abandonTransmission: async () => undefined,
       acceptCapture: async () => { throw new Error('unused') },
       acknowledge: async () => ({ tasks: [] }),
       acknowledgeSync: async (acknowledgement) => { acknowledged.push(acknowledgement) },
+      beginTransmission: async () => undefined,
       applyPull: async () => undefined,
       close: async () => undefined,
       pendingMutations: async () => [],

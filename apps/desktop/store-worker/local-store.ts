@@ -22,6 +22,13 @@ import type {
 } from '../main/application/DesktopApplication.ts'
 import type { OutboundBasis } from '../main/application/outbound-commands.ts'
 
+/**
+ * Why an undo of a never-transmitted mutation was or was not performed
+ * (O-51). Closed, and deliberately more precise than a boolean: the caller
+ * has to tell a person something true about a refusal.
+ */
+type UndoDropReason = 'blocked' | 'dropped' | 'nothing_to_undo' | 'transmitted' | 'unknown'
+
 /** The SERVER-issued undo capability, retained verbatim (O-45). */
 type RetainedUndo = { expiresAt: string; handle: string; label: string }
 
@@ -176,6 +183,7 @@ class NodeSqliteLocalStore {
     })
     this.#database.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA synchronous = FULL;')
     this.#applyMigration(options.migrationPath)
+    this.#recoverInterruptedTransmissions()
     this.#verifyInvariants()
   }
 
@@ -367,6 +375,7 @@ class NodeSqliteLocalStore {
              immutable_commands.task_id, immutable_commands.resource_keys_json,
              immutable_commands.effect_snapshot_json
       FROM outbox JOIN immutable_commands USING (mutation_id)
+      WHERE outbox.state <> 'in_flight'
       ORDER BY outbox.sequence
     `).all() as MutationRow[]
     const mutations = rows.map((row) => this.#rowToSyncMutation(row))
@@ -382,6 +391,175 @@ class NodeSqliteLocalStore {
         earlier.resourceKeys.every((key) => !mutation.resourceKeys.includes(key)),
       )
     }).slice(0, 25)
+  }
+
+  /**
+   * O-51. The moment before this command's bytes are handed to the
+   * transport. From here on an undo may NOT drop it: the client cannot know
+   * whether the server saw it, and dropping a command the server accepted is
+   * the divergence D-52 exists to avoid.
+   *
+   * The fingerprint is checked against the stored command, so a caller can
+   * never mark one row as the transmission of another's bytes. A row that is
+   * absent or already in flight is a caller bug and throws -- silently
+   * doing nothing here would leave a live request looking never-sent.
+   */
+  beginTransmission(mutationId: string, fingerprint: string): void {
+    const row = this.#database.prepare(`
+      SELECT outbox.state AS state, immutable_commands.fingerprint AS fingerprint
+      FROM outbox JOIN immutable_commands USING (mutation_id)
+      WHERE outbox.mutation_id = ?
+    `).get(mutationId) as { fingerprint: string; state: string } | undefined
+    if (row === undefined) throw new Error('transmission has no queued command')
+    if (row.fingerprint !== fingerprint) throw new Error('transmission fingerprint does not match the queued command')
+    if (row.state === 'in_flight') throw new Error('transmission is already in flight')
+    this.#database.prepare(`UPDATE outbox SET state = 'in_flight' WHERE mutation_id = ?`).run(mutationId)
+  }
+
+  /**
+   * O-51. The request ended without an outcome -- the transport failed, or
+   * the caller could not match the answer to the command it sent.
+   *
+   * The row becomes `uncertain`, NEVER `queued`. `fetch` rejecting cannot
+   * distinguish "the request never left" from "it left and the answer was
+   * lost" (O-47), so this is exactly the ambiguity the drop rule refuses to
+   * resolve in the client's favour. It stays pushable, because
+   * retransmitting the same immutable bytes under the same mutation
+   * identity is what the server's idempotency is for.
+   *
+   * A row the acknowledgement already removed is not an error: settling and
+   * abandoning race by nature, and the settled answer wins.
+   */
+  abandonTransmission(mutationId: string): void {
+    this.#database.prepare(`
+      UPDATE outbox SET state = 'uncertain' WHERE mutation_id = ? AND state = 'in_flight'
+    `).run(mutationId)
+  }
+
+  /**
+   * O-51. A process that ended mid-POST leaves `in_flight` rows with no
+   * outcome. They are promoted to `uncertain` at the next open -- NOT reset
+   * to `queued`, which would silently make a possibly-transmitted command
+   * droppable again and reopen the divergence window on every crash.
+   *
+   * Promotion, not reset: the rows keep their bytes, their sequence and
+   * their place in the queue, and are pushed again on the next pass.
+   *
+   * Two deliberate narrownesses:
+   *
+   *  - It runs only at schema version 2 or above, because the column it
+   *    repairs is what version 2 adds. A store opened against an older
+   *    migration set (the fault fixtures do this to BUILD a pre-0002
+   *    database) has no interrupted transmissions to recover: nothing could
+   *    have marked one.
+   *  - It reads before it writes, so opening a READ-ONLY database file with
+   *    nothing in flight still succeeds and still fails only on write
+   *    (D-22/D-38). When something IS in flight and the file cannot be
+   *    written, the open fails loudly instead: a store that cannot record
+   *    what it does not know must not be used to answer questions about it.
+   */
+  #recoverInterruptedTransmissions(): void {
+    if (this.#appliedSchemaVersion() < 2) return
+    const interrupted = this.#database.prepare(`
+      SELECT COUNT(*) AS total FROM outbox WHERE state = 'in_flight'
+    `).get() as { total: number }
+    if (interrupted.total === 0) return
+    this.#database.prepare(`UPDATE outbox SET state = 'uncertain' WHERE state = 'in_flight'`).run()
+  }
+
+  #appliedSchemaVersion(): number {
+    const row = this.#database.prepare(`
+      SELECT MAX(version) AS version FROM schema_migrations
+    `).get() as { version: number | null }
+    return row.version ?? 0
+  }
+
+  /**
+   * O-51 / D-52: undo of a mutation the server never received.
+   *
+   * This is the ONLY path that removes a command from the outbox without an
+   * answer from the server, so every reason it can refuse is spelled out
+   * rather than collapsed into a boolean:
+   *
+   *   `dropped`         the command was `queued` -- its bytes were never
+   *                     handed to the transport -- so there is nothing to
+   *                     reconcile and it is removed outright, in the SAME
+   *                     transaction that reverts what a person sees.
+   *   `nothing_to_undo` no recorded local action.
+   *   `transmitted`     the command is `in_flight` or `uncertain`. The
+   *                     server may hold it. Refused.
+   *   `blocked`         a LATER queued command shares its resource key, so
+   *                     dropping this one would send the successor against
+   *                     a base the server never received. Refused.
+   *   `unknown`         no outbox row for the recorded action, or an action
+   *                     recorded before mutation identity existed. Absent
+   *                     state is ambiguous state. Refused.
+   *
+   * The command rows are deleted rather than tombstoned. Bytes that never
+   * left the machine have no counterpart anywhere to reconcile against, and
+   * leaving `immutable_commands`/`mutation_journal` behind would keep a
+   * `pending` journal entry for a command nothing can ever settle.
+   */
+  undoUnsentLocalAction(): { applied: boolean; reason: UndoDropReason; snapshot: WorkspaceSnapshot } {
+    this.#assertNotFenced()
+    const refuse = (reason: UndoDropReason) => ({ applied: false, reason, snapshot: this.snapshot() })
+    const action = this.#readLastAction()
+    if (action === null) return refuse('nothing_to_undo')
+    if (action.mutationId === null) return refuse('unknown')
+
+    const target = this.#database.prepare(`
+      SELECT outbox.sequence AS sequence, outbox.state AS state,
+             immutable_commands.resource_keys_json AS resource_keys_json
+      FROM outbox JOIN immutable_commands USING (mutation_id)
+      WHERE outbox.mutation_id = ?
+    `).get(action.mutationId) as { resource_keys_json: string; sequence: number; state: string } | undefined
+    if (target === undefined) return refuse('unknown')
+    if (target.state !== 'queued') return refuse('transmitted')
+
+    const resourceKeys = new Set(JSON.parse(target.resource_keys_json) as string[])
+    const successors = this.#database.prepare(`
+      SELECT immutable_commands.resource_keys_json AS resource_keys_json
+      FROM outbox JOIN immutable_commands USING (mutation_id)
+      WHERE outbox.sequence > ?
+    `).all(target.sequence) as Array<{ resource_keys_json: string }>
+    const blocked = successors.some((successor) =>
+      (JSON.parse(successor.resource_keys_json) as string[]).some((key) => resourceKeys.has(key)),
+    )
+    if (blocked) return refuse('blocked')
+
+    this.#database.exec('BEGIN IMMEDIATE')
+    try {
+      this.#database.prepare(`
+        UPDATE visible_projection
+        SET title = ?, notes = ?, completed_at = ?, trashed_at = ?, planned = ?
+        WHERE task_id = ?
+      `).run(
+        action.previous.title,
+        action.previous.notes,
+        action.previous.completed_at,
+        action.previous.trashed_at,
+        action.previous.planned,
+        action.taskId,
+      )
+      // Children first: foreign keys are ON, and the command row is the
+      // parent of all three.
+      this.#database.prepare('DELETE FROM outbox WHERE mutation_id = ?').run(action.mutationId)
+      this.#database.prepare('DELETE FROM mutation_dependencies WHERE mutation_id = ? OR dependency_mutation_id = ?')
+        .run(action.mutationId, action.mutationId)
+      this.#database.prepare('DELETE FROM conflicts WHERE mutation_id = ?').run(action.mutationId)
+      this.#database.prepare('DELETE FROM mutation_journal WHERE mutation_id = ?').run(action.mutationId)
+      this.#database.prepare('DELETE FROM immutable_commands WHERE mutation_id = ?').run(action.mutationId)
+      this.#database.prepare('DELETE FROM namespace_metadata WHERE key = ?')
+        .run(`${UNDO_HANDLE_PREFIX}${action.mutationId}`)
+      // One level of undo (O-2): a second press finds nothing rather than
+      // walking back through history this store does not keep.
+      this.#database.prepare('UPDATE last_local_action SET action_json = NULL WHERE singleton = 1').run()
+      this.#database.exec('COMMIT')
+    } catch (error) {
+      this.#database.exec('ROLLBACK')
+      throw error
+    }
+    return { applied: true, reason: 'dropped', snapshot: this.snapshot() }
   }
 
   acknowledgeSync(acknowledgement: SyncAcknowledgement): void {
@@ -1193,4 +1371,4 @@ class NodeSqliteLocalStore {
 }
 
 export { classifyStoreFailure, deriveLocalFilePaths, NodeSqliteLocalStore, removeLocalFilesAt }
-export type { LocalStoreOptions, RetainedUndo, StoreFailureCode, UndoTarget }
+export type { LocalStoreOptions, RetainedUndo, StoreFailureCode, UndoDropReason, UndoTarget }
