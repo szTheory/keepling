@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
 status: executing
-stopped_at: Completed 03-17-PLAN.md (local test scoping, test:changed, headless E2E, macOS CI TCC experiment; gate lanes=9 failed=1 pending O-27 evidence re-record)
-last_updated: "2026-09-03T20:18:17.495Z"
-last_activity: 2026-09-02
+stopped_at: "Completed 03-23-PLAN.md (O-45 closed — undo reconciles against a real server: a server-issued handle is retained, an offline undo survives quit and relaunch and reverses the change in real PostgreSQL, and an undo with no handle is refused out loud; the plan's prose located the undo expiry in the 409/422 path and the CONTRACT won — the undo endpoint answers a no-change with HTTP 200; O-51 filed: undo is now unavailable on a Mac with no server configured, decide it with O-43; O-43/O-46/O-47 untouched; desktop phase gate lanes=10 failed=0)"
+last_updated: "2026-09-04T04:51:07.837Z"
+last_activity: 2026-09-04
 last_activity_desc: Phase KPL-03 execution started
-state_head: b810736bdc716792df60ca67e3c7cab605fe5843
+state_head: 9ccd53d0fe91273f86729a63b5dcb366c93a5e1c
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 55
-  completed_plans: 53
+  total_plans: 61
+  completed_plans: 60
 milestone_name: milestone
 ---
 
@@ -200,6 +200,8 @@ Progress: [██████████] 99%
 - [Phase KPL-03]: The macos-integration lane runs once per packaged artifact and the phase gate reuses evidence bound to that exact applicationDigestSha256 plus the Swift probe source digests; missing, stale, partial or failing evidence is a loud failure, never a skip.
 - [Phase 03]: Quick Entry returns focus by hiding Keepling itself (app.hide()), which macOS turns into activation of the prior application with its caret intact — no TCC Automation prompt and no native module, at the cost of also hiding Keepling's main window (O-23).
 - [Phase 03]: A settle predicate must be strictly weaker than the assertion it precedes, and quiescence is not universally valid — a pending macOS dead key is stable indefinitely.
+- [Phase 03]: Undo of a mutation the server never acknowledged is REFUSED at the point of action with authored copy, not deferred and not accepted locally — deferring would need a second durability mechanism and a decision on O-47
+- [Phase 03]: undo_uncertain is never settled by the client, because the server itself does not know whether the compensation applied; it stays loud and O-47 stays open
 
 ### Retained Research
 
@@ -235,8 +237,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-04T04:20:00.000Z
-**Stopped at:** Completed 03-22-PLAN.md (O-41 closed — all eight command types observed arriving at real Phoenix, final_revision=8, outbox drained; O-38 closed both halves — a real second writer's divergence became conflict copy in the shipped window, proven non-vacuous by deliberate mutation; O-42 closed — every authored action dispatches, with retrySync and exportLocalData built; O-31(a) closed — Quick Entry and Settings show the row over a read-only channel; Rule 2 fix: computeSyncBackoff had never been called anywhere, so a reconnected app never synced until the person made another change; O-43..O-48 filed; desktop phase gate lanes=10 failed=0)
+**Last session:** 2026-09-04T04:51:00.871Z
+**Stopped at:** Completed 03-23-PLAN.md (O-45 closed — undo reconciles against a real server: a server-issued handle is retained, an offline undo survives quit and relaunch and reverses the change in real PostgreSQL, and an undo with no handle is refused out loud; the plan's prose located the undo expiry in the 409/422 path and the CONTRACT won — the undo endpoint answers a no-change with HTTP 200; O-51 filed: undo is now unavailable on a Mac with no server configured, decide it with O-43; O-43/O-46/O-47 untouched; desktop phase gate lanes=10 failed=0)
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -300,8 +302,10 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-03 P16 | 75min | 2 tasks | 7 files |
 | Phase KPL-03 P18 | 60min | 3 tasks | 3 files |
 | Phase KPL-03 P20 | 75min | 3 tasks | 2 files |
+| Phase KPL-03 P23 | ~2h | 3 tasks | 18 files |
 
 ### Blockers
 
 - O-21: prior-application focus return after Quick Entry is unimplemented in the shipped app -- QuickEntryWindowController calls an optional foregroundApp port that has no implementation and is never passed in main/index.ts#bootstrap(). Found by row A9; a fifth GAP-1 instance. Blocks the macos-integration lane going green.
 - O-22: Cmd-1/Cmd-2 route through facade.setRoute in DesktopShell.tsx and bypass the unsaved-changes guard that mouse navigation goes through.
+- O-51: undo is now unavailable on a Mac with no server configured — a disclosed cost of closing O-45; decide it together with O-43, not separately

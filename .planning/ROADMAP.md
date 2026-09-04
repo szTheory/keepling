@@ -167,9 +167,16 @@ Plans:
 **Mode:** mvp
 **Requirements:** MAC-01..05, QUAL-03..04, SRV-02 (Electron adapter proof)
 **UI hint:** yes
-**Plans:** 22/22 plans executed
+**Plans:** 23/23 plans executed
 
 Plans:
+
+- [x] 03-18-PLAN.md
+- [x] 03-19-PLAN.md
+- [x] 03-20-PLAN.md
+- [x] 03-21-PLAN.md
+- [x] 03-22-PLAN.md
+- [x] 03-23-PLAN.md
 
 - [x] 03-17-PLAN.md
 
@@ -224,7 +231,7 @@ Plans:
 
 **Wave 11** *(blocked on Wave 10 completion)*
 
-- [ ] 03-06-PLAN.md — Bind exact packaged bytes to CI, accessibility, and bounded dogfood evidence.
+- [x] 03-06-PLAN.md — Bind exact packaged bytes to CI, accessibility, and bounded dogfood evidence.
 
 **Success Criteria**:
 
