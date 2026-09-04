@@ -161,9 +161,25 @@ runLane({
   trackedInputPaths: ['apps/desktop/test/ipc', 'apps/desktop/preload', 'apps/desktop/main/protocol.ts'],
 })
 
+/**
+ * Both Playwright lanes run WINDOWED here, forced -- never inheriting the
+ * developer's value.
+ *
+ * `apps/desktop/playwright.config.ts` defaults to headless so a tight local
+ * loop does not seize the screen, and excludes the `@windowed` specs (real
+ * focus, window ordering, visibility) because headless cannot honestly assert
+ * them. This gate is the one place that coverage still happens: there is no
+ * git remote, so CI has never run and never will.
+ *
+ * Inheriting the variable here would mean the `@windowed` specs run NOWHERE,
+ * and their absence would be silent -- the gate would report a green
+ * `electron-e2e` lane having never opened a window. That is exactly the
+ * vacuity class this phase has spent its time removing. Force the value.
+ */
 runLane({
   args: ['test:desktop:e2e'],
   command: 'pnpm',
+  env: { KEEPLING_TEST_HEADLESS: '0' },
   name: 'electron-e2e',
   parse: playwrightSummary,
   trackedInputPaths: ['apps/desktop/test/e2e', 'apps/desktop/main', 'apps/desktop/preload', 'apps/desktop/renderer'],
@@ -180,6 +196,7 @@ runLane({
 runLane({
   args: ['smoke:desktop:packaged'],
   command: 'pnpm',
+  env: { KEEPLING_TEST_HEADLESS: '0' },
   name: 'packaged',
   parse: playwrightSummary,
   trackedInputPaths: ['apps/desktop/test/packaged', 'tooling/smoke-desktop-packaged.mjs'],

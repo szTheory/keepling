@@ -34,22 +34,44 @@ process.env.KEEPLING_FORBIDDEN_USER_DATA_DIR = forbiddenUserDataDir
 process.once('exit', () => rmSync(profileRoot, { force: true, recursive: true }))
 
 /**
- * Opt-in headless E2E (`KEEPLING_TEST_HEADLESS=1`, local convenience only).
+ * Headless E2E BY DEFAULT (`KEEPLING_TEST_HEADLESS=0` to force windowed).
  *
- * The app suppresses window PRESENTATION under that flag (see
+ * The app suppresses window PRESENTATION under this flag (see
  * `apps/desktop/main/windows/headless-presentation.ts`); Playwright keeps
  * driving the renderer over CDP. Specs whose assertions depend on REAL
  * presentation -- `BrowserWindow.isVisible()`, focus, window ordering -- are
  * tagged `@windowed` and are EXCLUDED here rather than weakened to pass.
  *
- * Never defaulted, and deliberately not set in CI: CI has no screen to take
- * over and benefits from the windowed path being exercised. `grepInvert` is
- * therefore `undefined` unless the developer opts in.
+ * WHY THE DEFAULT FLIPPED (2026-09-04). This was opt-in, on the stated
+ * reasoning that "CI has no screen to take over and benefits from the
+ * windowed path being exercised". That reasoning was sound when written and
+ * is now false: this repository has NO git remote, so
+ * `.github/workflows/desktop.yml` has never executed and cannot. The windowed
+ * path was therefore being exercised in exactly one place -- a developer's own
+ * screen, on every tight loop, which is the cost this flag exists to remove.
+ *
+ * The coverage that opt-in default was protecting is NOT dropped, it MOVES:
+ * `tooling/verify-desktop-phase.mjs` sets `KEEPLING_TEST_HEADLESS=0` on both
+ * the `electron-e2e` and `packaged` lanes, so the full windowed suite --
+ * `@windowed` specs included -- runs at every gate invocation. Fast loop is
+ * headless and scoped; the authoritative run is windowed and complete.
+ *
+ * If you ever make the gate honour an inherited `KEEPLING_TEST_HEADLESS`,
+ * the `@windowed` specs stop running ANYWHERE and their absence is silent.
+ * That is the vacuity trap this phase has been removing everywhere else: a
+ * check that reports success because it observed nothing. Keep the gate
+ * forcing the value.
  */
-const headless = process.env.KEEPLING_TEST_HEADLESS === '1'
-if (headless) {
-  console.log('playwright: KEEPLING_TEST_HEADLESS=1 -- excluding @windowed specs (run them windowed to cover them)')
-}
+const headless = process.env.KEEPLING_TEST_HEADLESS !== '0'
+// The main process reads this variable directly, so normalise it here rather
+// than leaving the renderer-side and main-side notions of "headless" free to
+// disagree: an unset variable must mean headless in BOTH.
+process.env.KEEPLING_TEST_HEADLESS = headless ? '1' : '0'
+console.log(
+  headless
+    ? 'playwright: headless (default) -- excluding @windowed specs. KEEPLING_TEST_HEADLESS=0 runs them.'
+    : 'playwright: windowed (KEEPLING_TEST_HEADLESS=0) -- running the complete suite including @windowed specs.',
+)
 
 export default defineConfig({
   expect: { timeout: 10_000 },
