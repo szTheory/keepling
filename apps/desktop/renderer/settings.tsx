@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
+import UtilitySyncStatusRow from './UtilitySyncStatusRow.tsx'
+
 /**
  * Settings (D-10, D-14 `Command-,`). Surfaces the configurable Quick Entry
  * global shortcut and, when registration failed (a collision with another
@@ -84,6 +86,8 @@ function Settings() {
   return (
     <section aria-label="Settings">
       <h1>Settings</h1>
+      {/* O-31(a): the same main-owned synchronization row, copy verbatim. */}
+      <UtilitySyncStatusRow />
       <h2>Quick Entry Shortcut</h2>
       {status === null ? null : status.registered ? (
         <p>Current shortcut: {status.accelerator}</p>

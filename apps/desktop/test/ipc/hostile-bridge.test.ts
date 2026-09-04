@@ -323,11 +323,17 @@ describe('every ipcMain.handle registration in main/index.ts is sender-checked b
     // Settings window). The loop below therefore accepts either trust
     // helper, and the case after it proves the account variant is used ONLY
     // on account channels -- a strictly stronger assertion than before.
-    expect(handlerBodies.length).toBeGreaterThanOrEqual(16)
+    // 03-22 (O-31a) added `keepling:utility:presentation-snapshot`, read by
+    // the Quick Entry and Settings windows, which uses the DISJOINT
+    // `assertTrustedUtilitySender` (those two windows and no other). The
+    // case after this one pins that helper to `keepling:utility:*` channels
+    // only, so it can never widen the main window's surface.
+    expect(handlerBodies.length).toBeGreaterThanOrEqual(19)
     for (const [, body] of handlerBodies) {
       const trustCheckIndex = Math.max(
         body!.indexOf('assertTrustedSender(event)'),
         body!.indexOf('assertTrustedAccountSender(event)'),
+        body!.indexOf('assertTrustedUtilitySender(event)'),
       )
       expect(trustCheckIndex, `handler body missing a trusted-sender check:\n${body}`).toBeGreaterThanOrEqual(0)
       const applicationCallIndex = body!.indexOf('desktopApplication.')
@@ -345,7 +351,28 @@ describe('every ipcMain.handle registration in main/index.ts is sender-checked b
     for (const [, channel, body] of handlers) {
       const usesAccountTrust = body!.includes('assertTrustedAccountSender(event)')
       expect(usesAccountTrust, `${channel} uses the wrong trust helper`).toBe(channel!.startsWith('keepling:account:'))
+      const usesUtilityTrust = body!.includes('assertTrustedUtilitySender(event)')
+      expect(usesUtilityTrust, `${channel} uses the wrong trust helper`).toBe(channel!.startsWith('keepling:utility:'))
     }
+  })
+
+  it('the utility trust helper evaluates the SAME closed policy against the two utility windows, and NOTHING else', async () => {
+    const { readFile } = await import('node:fs/promises')
+    const { fileURLToPath } = await import('node:url')
+    const source = await readFile(fileURLToPath(new URL('../../main/index.ts', import.meta.url)), 'utf8')
+    const helper = source.slice(
+      source.indexOf('const assertTrustedUtilitySender'),
+      source.indexOf("ipcMain.handle('keepling:utility:presentation-snapshot'"),
+    )
+    expect(helper).toContain('isTrustedIpcSender')
+    expect(helper).toContain('utilityWindows()')
+    expect(helper).toContain("IpcSecurityError('untrusted_sender')")
+    // Disjoint from the main window on purpose: a utility window must not
+    // become a second sender for the main window's task-mutation surface.
+    expect(helper).not.toContain('lifecycle.getMainWindow()')
+    const sources = source.slice(source.indexOf('const utilityWindows'), source.indexOf('const assertTrustedUtilitySender'))
+    expect(sources).toContain('quickEntry.getWindow()')
+    expect(sources).toContain('settings.getWindow()')
   })
 
   it('the account trust helper evaluates the SAME closed policy, only against a second main-owned window', async () => {
@@ -949,5 +976,46 @@ describe('utility preload bridge (Settings account surface): hostile calls never
   it('accountStatus(): a malformed main-side response is rejected before it reaches the renderer', async () => {
     ipcRendererMock.invoke.mockImplementationOnce(async () => ({ ...validAccountStatus, accessToken: 'leaked' }))
     await expect((exposedApi.accountStatus as () => Promise<unknown>)()).rejects.toThrow()
+  })
+
+  // O-31(a): the synchronization row reaching Quick Entry and Settings.
+  it('subscribes to the utility presentation channel at MODULE LOAD, before any renderer code runs', () => {
+    // Registering on first `subscribePresentation` instead would leave a
+    // window in which a push arrives unobserved -- the same guarantee the
+    // main bridge makes, made the same way.
+    expect(ipcRendererMock.on).toHaveBeenCalledWith(
+      'keepling:utility:presentation-changed',
+      expect.any(Function),
+    )
+  })
+
+  it('delivers a valid presentation push to a utility subscriber', () => {
+    const seen: unknown[] = []
+    ;(exposedApi.subscribePresentation as (s: (p: unknown) => void) => () => void)((presentation) => seen.push(presentation))
+    const listener = ipcRendererMock.on.mock.calls.find(
+      (call) => call[0] === 'keepling:utility:presentation-changed',
+    )![1] as (event: unknown, raw: unknown) => void
+    listener(null, validPresentation)
+    expect(seen).toEqual([validPresentation])
+  })
+
+  it('drops a malformed presentation push rather than handing it to the renderer', () => {
+    const seen: unknown[] = []
+    ;(exposedApi.subscribePresentation as (s: (p: unknown) => void) => () => void)((presentation) => seen.push(presentation))
+    const listener = ipcRendererMock.on.mock.calls.find(
+      (call) => call[0] === 'keepling:utility:presentation-changed',
+    )![1] as (event: unknown, raw: unknown) => void
+    listener(null, { sequence: 1, summary: { kind: 'made_up' } })
+    listener(null, { ...validPresentation, summary: { ...validPresentation.summary, actions: 'not-an-array' } })
+    expect(seen).toEqual([])
+  })
+
+  it('carries no recovery action and no write capability across the utility bridge', () => {
+    // The remedies act on the main window's Sync & Recovery region, which
+    // does not exist in a utility window. Widening this bridge to carry
+    // them would widen it for a surface that could not use them.
+    for (const forbidden of ['retrySync', 'exportLocalData', 'removeLocalData', 'resolveConflict', 'editTask']) {
+      expect(exposedApi).not.toHaveProperty(forbidden)
+    }
   })
 })

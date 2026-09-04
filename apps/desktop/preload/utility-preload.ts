@@ -5,6 +5,8 @@ import {
   accountConnectOutcomeSchema,
   accountConnectRequestSchema,
   accountStatusSchema,
+  decideSequenceOutcome,
+  desktopPresentationSchema,
 } from './contracts.ts'
 
 /**
@@ -46,6 +48,65 @@ const shortcutStatusSchema = z.object({
   accelerator: z.string().min(1),
   registered: z.boolean(),
 }).strict()
+
+/**
+ * O-31(a): the synchronization row, delivered to the utility windows.
+ *
+ * Quick Entry and Settings load THIS bridge, not `preload/index.ts`, so
+ * `window.keepling` and its `subscribePresentation` do not exist in their
+ * JS context at all -- a person capturing through Quick Entry while offline
+ * was told nothing, because there was no channel to tell them on.
+ *
+ * This follows the main bridge's presentation pattern exactly rather than
+ * inventing a second one: the listener is registered at MODULE LOAD, before
+ * any renderer code runs, so no push can arrive unobserved; every push is
+ * parsed against the SAME strict schema; and the same D-29 sequence
+ * decision applies, with a detected gap closed by refetching the
+ * authoritative snapshot rather than by guessing what was missed.
+ *
+ * It stays read-only. No recovery action crosses this bridge: the remedies
+ * live on the main window, which owns the Sync & Recovery region they act
+ * on. Widening this bridge to carry them would be widening it for no
+ * surface that could use them.
+ */
+type DesktopPresentation = z.infer<typeof desktopPresentationSchema>
+
+let lastPresentationSequence: number | null = null
+const presentationSubscribers = new Set<(presentation: DesktopPresentation) => void>()
+
+const deliverPresentation = (presentation: DesktopPresentation): void => {
+  for (const subscriber of presentationSubscribers) subscriber(presentation)
+}
+
+const refetchAuthoritativePresentation = async (): Promise<void> => {
+  let value: DesktopPresentation
+  try {
+    value = desktopPresentationSchema.parse(await ipcRenderer.invoke('keepling:utility:presentation-snapshot'))
+  } catch {
+    return
+  }
+  lastPresentationSequence = value.sequence
+  deliverPresentation(value)
+}
+
+ipcRenderer.on('keepling:utility:presentation-changed', (_event, raw) => {
+  let value: DesktopPresentation
+  try {
+    value = desktopPresentationSchema.parse(raw)
+  } catch {
+    // A malformed push (from a compromised/buggy main) is dropped, never
+    // handed to the renderer and never crashes it.
+    return
+  }
+  const outcome = decideSequenceOutcome(lastPresentationSequence, value.sequence)
+  if (outcome === 'ignore_stale') return
+  if (outcome === 'refetch') {
+    void refetchAuthoritativePresentation()
+    return
+  }
+  lastPresentationSequence = value.sequence
+  deliverPresentation(value)
+})
 
 const keeplingUtility = Object.freeze({
   capture: async (request: unknown) => localAcceptanceSchema.parse(
@@ -90,6 +151,16 @@ const keeplingUtility = Object.freeze({
     ipcRenderer.on('keepling:quick-entry:focus-title', listener)
     return () => {
       ipcRenderer.removeListener('keepling:quick-entry:focus-title', listener)
+    }
+  },
+  subscribePresentation: (subscriber: (presentation: DesktopPresentation) => void) => {
+    presentationSubscribers.add(subscriber)
+    // Deliver an immediate baseline (main-owned authoritative truth) rather
+    // than leaving a freshly opened Quick Entry window blank until the next
+    // commit's push -- which, offline, may never come.
+    void refetchAuthoritativePresentation()
+    return () => {
+      presentationSubscribers.delete(subscriber)
     }
   },
   onShortcutStatus: (subscriber: (status: z.infer<typeof shortcutStatusSchema>) => void) => {

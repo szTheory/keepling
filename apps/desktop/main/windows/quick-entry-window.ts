@@ -185,6 +185,16 @@ class QuickEntryWindowController {
   }
 
   /**
+   * O-31(a): the live window, so `main/index.ts` can publish the
+   * synchronization presentation to it and validate its IPC sender against
+   * the same exact-`WebContents`-id decision every other surface uses.
+   * Mirrors `SettingsWindowController#getWindow`.
+   */
+  getWindow(): BrowserWindow | null {
+    return this.#window !== null && !this.#window.isDestroyed() ? this.#window : null
+  }
+
+  /**
    * Opens (or refocuses) the single resident Quick Entry window. Repeated
    * invocation while already open focuses the existing window rather than
    * creating a second one (MAC-02 probe predicate).

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
+import UtilitySyncStatusRow from './UtilitySyncStatusRow.tsx'
+
 /**
  * Quick Entry (D-09/D-11, UI-SPEC "Quick Entry Contract"). Title-first,
  * `Destination: Inbox` plus optional `Add to Today`, `Add Task` commits.
@@ -151,6 +153,12 @@ function QuickEntry() {
 
   return (
     <div>
+      {/*
+        O-31(a): the main-owned synchronization row. Rendered ABOVE the form
+        so someone capturing while offline reads it before they commit,
+        rather than discovering afterwards that nothing left this Mac.
+      */}
+      <UtilitySyncStatusRow />
       <form
         aria-label="Quick Entry"
         onSubmit={(event) => {

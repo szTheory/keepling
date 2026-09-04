@@ -693,6 +693,7 @@ const bootstrap = async () => {
     desktopApplication,
     onBeforeQuit: () => {
       unsubscribePresentation()
+      unsubscribeUtilityPresentation()
       quickEntry.dispose()
     },
     rendererUrl: rendererBase,
@@ -837,6 +838,55 @@ const bootstrap = async () => {
     preloadPath: utilityPreloadPath,
     quickEntryController: quickEntry,
     rendererUrl: `${rendererBase}?view=settings`,
+  })
+
+  /**
+   * O-31(a): the utility windows are NOT the main window and do not share
+   * its bridge.
+   *
+   * Quick Entry and Settings load `preload/utility.cjs`, which exposes
+   * `window.keeplingUtility` and deliberately nothing else -- `window.keepling`
+   * and its `subscribePresentation` simply do not exist in their JS context.
+   * So this is a new validated channel plus publisher wiring, not a
+   * component mount, and it stays as narrow as the rest of that bridge:
+   * copy only, no recovery actions. The remedies live on the main window,
+   * which owns the Sync & Recovery region they focus; a Quick Entry window
+   * exists to capture in two seconds, not to host recovery.
+   *
+   * Resolved lazily on every publish rather than captured, because both
+   * windows are created, destroyed and recreated over a session.
+   */
+  const utilityWindows = (): BrowserWindow[] =>
+    [quickEntry.getWindow(), settings.getWindow()].filter((window): window is BrowserWindow => window !== null)
+
+  const assertTrustedUtilitySender = (event: Electron.IpcMainInvokeEvent) => {
+    const senderFrame = event.senderFrame
+    const shared = {
+      isMainFrame: senderFrame !== null && senderFrame === event.sender.mainFrame,
+      senderFrameUrl: senderFrame?.url ?? null,
+      senderId: event.sender.id,
+    }
+    const trustedIds = utilityWindows().map((window) => window.webContents.id)
+    if (!trustedIds.some((trustedSenderId) => isTrustedIpcSender({ ...shared, trustedSenderId }))) {
+      throw new IpcSecurityError('untrusted_sender')
+    }
+  }
+
+  ipcMain.handle('keepling:utility:presentation-snapshot', async (event) => {
+    assertTrustedUtilitySender(event)
+    return desktopApplication.presentationSnapshot()
+  })
+
+  // The SAME closed, main-owned row, published on its own channel so the
+  // narrow utility bridge never has to learn the main window's vocabulary.
+  // Registered HERE, after both controllers exist, rather than beside the
+  // main-window subscriber above: a presentation published between the two
+  // points would otherwise hit these bindings in their temporal dead zone
+  // and throw out of a subscriber.
+  const unsubscribeUtilityPresentation = desktopApplication.subscribePresentation((presentation) => {
+    for (const utility of utilityWindows()) {
+      utility.webContents.send('keepling:utility:presentation-changed', presentation)
+    }
   })
 
   /**
