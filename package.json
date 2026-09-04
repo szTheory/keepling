@@ -20,7 +20,8 @@
     "test:phase-1": "./tooling/test-phase-1.sh --run",
     "typecheck:desktop": "pnpm --dir apps/desktop typecheck",
     "typecheck:web": "pnpm --filter @keepling/web typecheck",
-    "verify:desktop:real-stack": "node tooling/verify-real-stack-desktop.mjs"
+    "verify:desktop:real-stack": "node tooling/verify-real-stack-desktop.mjs",
+    "verify:desktop:reproducible": "node tooling/verify-package-reproducibility.mjs"
   },
   "devDependencies": {
     "openapi-typescript": "7.13.0",
