@@ -20,6 +20,10 @@ function QuickEntry() {
   const [confirmingDiscard, setConfirmingDiscard] = useState(false)
   const titleFieldRef = useRef<HTMLInputElement>(null)
   const keepDraftButtonRef = useRef<HTMLButtonElement>(null)
+  const discardTriggerRef = useRef<HTMLButtonElement>(null)
+  // Only restore focus for a dialog that was actually open, so the very
+  // first render (dialog closed) never steals focus from the title field.
+  const dialogWasOpenRef = useRef(false)
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -37,8 +41,27 @@ function QuickEntry() {
 
   useEffect(() => window.keeplingUtility.onFocusTitle(() => titleFieldRef.current?.focus()), [])
 
+  // O-36 (1/2). A dialog that returns focus to NOWHERE is a
+  // keyboard-navigation defect in its own right, and it is what D-06/MAC-02
+  // mean by focus restoration. Measured before this fix: dismissing the
+  // confirmation with `Keep Draft` left AX focus on `AXWebArea "Keepling"`
+  // -- the document -- rather than on any control.
+  //
+  // Focus returns to the control that OPENED the dialog when that control
+  // still exists (`Keep Draft`), and falls back to the title field when it
+  // does not (`Discard Draft` removes the draft, so `Discard Draft…`
+  // unmounts with it). The fallback is not cosmetic: it is the path taken
+  // on the confirm branch.
   useEffect(() => {
-    if (confirmingDiscard) keepDraftButtonRef.current?.focus()
+    if (confirmingDiscard) {
+      keepDraftButtonRef.current?.focus()
+      return
+    }
+    if (!dialogWasOpenRef.current) return
+    dialogWasOpenRef.current = false
+    const invoker = discardTriggerRef.current
+    if (invoker !== null && invoker.isConnected) invoker.focus()
+    else titleFieldRef.current?.focus()
   }, [confirmingDiscard])
 
   // Persist the draft as the person types (D-11 "durable draft"), debounced
@@ -79,18 +102,45 @@ function QuickEntry() {
     window.keeplingUtility.hide()
   }
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.nativeEvent.isComposing) return
-    if (event.key === 'Escape') {
-      event.preventDefault()
-      requestHide()
-      return
+  /**
+   * O-36 (2/2). THE WINDOW, not a subtree.
+   *
+   * This was `<div onKeyDown={handleKeyDown}>`, and React's synthetic
+   * keydown only fires for keys delivered INTO that subtree. Whenever focus
+   * sat on the document instead of a control -- measured after the discard
+   * confirmation closed, but reachable from any future focus-to-body path --
+   * Escape reached the body, never descended into the div, and silently did
+   * nothing. Tabbing back into the field made the very same key work.
+   *
+   * Binding on `window` makes the guarantee STRUCTURAL rather than
+   * incidental: there is no focus position inside this window from which
+   * Escape can fail. It is deliberately NOT a main-process global
+   * accelerator -- Escape is a window-local key, and a global one would
+   * swallow Escape from every other application on this Mac.
+   *
+   * The live handler is held in a ref so the listener is registered exactly
+   * once, yet always sees the current draft and submission state.
+   */
+  const keyDownRef = useRef<(event: KeyboardEvent) => void>(() => undefined)
+  useEffect(() => {
+    keyDownRef.current = (event: KeyboardEvent) => {
+      if (event.isComposing) return
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        requestHide()
+        return
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+        event.preventDefault()
+        void submit()
+      }
     }
-    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
-      event.preventDefault()
-      void submit()
-    }
-  }
+  })
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => keyDownRef.current(event)
+    window.addEventListener('keydown', listener)
+    return () => window.removeEventListener('keydown', listener)
+  }, [])
 
   const confirmDiscard = () => {
     window.keeplingUtility.requestDiscard()
@@ -100,7 +150,7 @@ function QuickEntry() {
   }
 
   return (
-    <div onKeyDown={handleKeyDown}>
+    <div>
       <form
         aria-label="Quick Entry"
         onSubmit={(event) => {
@@ -129,7 +179,14 @@ function QuickEntry() {
           Add Task
         </button>
         {title.trim() !== '' ? (
-          <button onClick={() => setConfirmingDiscard(true)} type="button">
+          <button
+            onClick={() => {
+              dialogWasOpenRef.current = true
+              setConfirmingDiscard(true)
+            }}
+            ref={discardTriggerRef}
+            type="button"
+          >
             Discard Draft…
           </button>
         ) : null}
