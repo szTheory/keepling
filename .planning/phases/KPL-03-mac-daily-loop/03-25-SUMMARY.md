@@ -160,3 +160,12 @@ None - no external service configuration required.
 ---
 *Phase: KPL-03-mac-daily-loop*
 *Completed: 2026-09-04*
+
+## Self-Check: PASSED
+
+- `tooling/verify-package-reproducibility.mjs` exists on disk: FOUND
+- `.planning/phases/KPL-03-mac-daily-loop/03-25-SUMMARY.md` exists on disk: FOUND
+- Commit `a768b6b` (Task 1) found in git log: FOUND
+- Commit `e7b6789` (Task 2) found in git log: FOUND
+- Commit `e9cebb5` (Task 3) found in git log: FOUND
+- Re-ran plan-level `<verification>`: `--self-test` exits 0 (`failed=0`, 7 cases); `--builds 3` exits 0 (`differing_entries=0`, `compared_entries=1198`, one digest); `verify-desktop-phase.mjs` reports `package-reproducible status=PASS` with 599 cases, two consecutive runs same `applicationDigestSha256`; `git diff --stat -- tooling/verify-macos-integration.mjs` is empty.

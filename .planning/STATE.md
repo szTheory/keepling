@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 current_phase: 03
-current_phase_name: mac-daily-loop
-status: verification-gaps
-stopped_at: KPL-03 gates run -- verification gaps_found (4/5)
-last_updated: "2026-09-04T15:48:13.975Z"
+current_phase_name: Mac Daily Loop
+status: executing
+stopped_at: Completed 03-25-PLAN.md
+last_updated: "2026-09-04T16:49:19.634Z"
 last_activity: 2026-09-04
-last_activity_desc: Phase KPL-03 planning complete — 27 plans ready
-state_head: 4b27a9ed185e5cfd17878dec2c236772df4e3c69
+last_activity_desc: Phase KPL-03 execution started
+state_head: b0d3830224966fa4f90d9a611695f43d90ab34ce
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 65
-  completed_plans: 61
+  completed_plans: 62
 milestone_name: milestone
 ---
 
@@ -28,12 +28,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 ## Current Position
 
-Phase: KPL-03 (mac-daily-loop) — READY TO EXECUTE
-Plan: 24 of 24 (all summarized)
+Phase: KPL-03 (Mac Daily Loop) — EXECUTING
+Plan: 2 of 27
 Total Plans in Phase: 27
-Status: KPL-03 verification returned gaps_found (4/5 must-haves) — phase NOT complete
-Last activity: 2026-09-04 — KPL-03 tail gates run for the first time (no plan work remained)
-Last Activity Description: Phase KPL-03 planning complete — 27 plans ready
+Status: Executing Phase KPL-03
+Last activity: 2026-09-04 — Phase KPL-03 execution started
+Last Activity Description: Phase KPL-03 execution started
 Progress: [██████████] 99%
 
 ## Accumulated Context
@@ -203,6 +203,7 @@ Progress: [██████████] 99%
 - [Phase 03]: Undo of a mutation the server never acknowledged is REFUSED at the point of action with authored copy, not deferred and not accepted locally — deferring would need a second durability mechanism and a decision on O-47
 - [Phase 03]: undo_uncertain is never settled by the client, because the server itself does not know whether the compensation applied; it stays loud and O-47 stays open
 - [Phase 03]: D-52 implemented in 03-24 with a three-state outbox (queued | in_flight | uncertain): a transport failure yields uncertain, never queued, because a failed fetch cannot say whether the bytes left.
+- [Phase 03]: Measured (not assumed) that desktop packaging at HEAD is byte-reproducible across separate invocations; no non-determinism source needed removal, documented in package-desktop.mjs and permanently re-checked by the package-reproducible gate lane.
 
 ### Retained Research
 
@@ -238,8 +239,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-04T05:39:18.089Z
-**Stopped at:** Completed 03-24-PLAN.md (O-51 closed)
+**Last session:** 2026-09-04T16:49:19.540Z
+**Stopped at:** Completed 03-25-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -305,6 +306,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-03 P20 | 75min | 3 tasks | 2 files |
 | Phase KPL-03 P23 | ~2h | 3 tasks | 18 files |
 | Phase KPL-03 P24 | 1h05m | 3 tasks | 22 files |
+| Phase KPL-03 P25 | 45min | 3 tasks | 4 files |
 
 ### Blockers
 
