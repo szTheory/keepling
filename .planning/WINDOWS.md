@@ -745,6 +745,66 @@ last_updated: 2026-09-03T23:50:09.007Z
     "reason": "",
     "recorded_at": "2026-09-03T20:47:11.845Z",
     "resolved_at": "2026-09-03T23:49:58.349Z"
+  },
+  {
+    "id": 57,
+    "kind": "unmet-truth",
+    "phase": "KPL-03",
+    "file": "apps/desktop/store-worker/local-store.ts",
+    "line": null,
+    "description": "A locally REFUSED change has no durable home: the refused command is terminal and leaves the outbox, so the next applyPull replays the canonical shadow and the person's version is lost -- while the authored copy says \"Your version is still on this Mac.\" (O-43). Do NOT resolve by keeping refused commands queued.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-04T04:12:07.673Z",
+    "resolved_at": null
+  },
+  {
+    "id": 58,
+    "kind": "unmet-truth",
+    "phase": "KPL-03",
+    "file": "packages/web-ui/src/tasks/ConflictResolver.tsx",
+    "line": null,
+    "description": "The desktop conflict chooser is title-only, so a lifecycle/Trash conflict reaches a person as copy plus a refresh but with no mine/current choice; apps/web already has the multi-field resolver (O-44)",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-04T04:12:07.673Z",
+    "resolved_at": null
+  },
+  {
+    "id": 59,
+    "kind": "unmet-truth",
+    "phase": "KPL-03",
+    "file": "apps/desktop/main/application/DesktopApplication.ts",
+    "line": null,
+    "description": "undoLastLocalAction reverses a local change and enqueues NO outbound command, so an undo is invisible to the server -- the same defect class as O-41, needing server-issued undo handles the client does not retain (O-45)",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-04T04:12:07.673Z",
+    "resolved_at": null
+  },
+  {
+    "id": 60,
+    "kind": "unmet-truth",
+    "phase": "KPL-03",
+    "file": "apps/desktop/main/application/presentation.ts",
+    "line": null,
+    "description": "{ kind: preparing } has authored copy and no production construction site; the real site is a first-run bootstrap branch (KeeplingSyncAdapter.bootstrap() is called from nowhere). Reported for a recorded decision, deliberately not wired speculatively and not deleted (O-46)",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-04T04:12:07.673Z",
+    "resolved_at": null
+  },
+  {
+    "id": 61,
+    "kind": "unmet-truth",
+    "phase": "KPL-03",
+    "file": "apps/desktop/main/application/presentation.ts",
+    "line": null,
+    "description": "{ kind: uncertain } and its check_again action have authored copy and no production construction site; constructing it honestly needs the transport to distinguish \"never left\" from \"left, answer lost\". Reported for a recorded decision, deliberately not wired speculatively and not deleted (O-47)",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-04T04:12:07.673Z",
+    "resolved_at": null
   }
 ]
 ````
