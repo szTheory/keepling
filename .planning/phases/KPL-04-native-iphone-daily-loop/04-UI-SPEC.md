@@ -1,7 +1,7 @@
 ---
 phase: KPL-04
 slug: native-iphone-daily-loop
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: "2026-09-04"
@@ -242,21 +242,103 @@ There is no server hard-delete, local cryptographic-erasure claim, bulk task del
 
 ## UI Considerations
 
-Applicable state considerations resolved: 8 covered, 3 backstop, 0 unresolved.
+Shape-rooted UI state coverage, produced by the `ui-consideration-probe` engine over the eight described surfaces of this contract and resolved post-verification. Empty-state and error-state **copy** is owned by `## Copywriting Contract` and the inherited `03-UI-SPEC.md` exact-state table; the rows below reference that copy rather than restating it.
 
-Element IDs: E1 Today tab/list; E2 Inbox tab/list; E3 task detail/editor; E4 capture sheet; E5 `tabViewBottomAccessory`; E6 `Sync & Recovery` sheet; E7 conflict resolver (detail-view section); E8 overflow menu / nav-bar toolbar.
+**Elements probed:** E1 Today tab / task list · E2 Inbox tab / task list · E3 Task detail & editor · E4 Capture sheet · E5 `tabViewBottomAccessory` · E6 `Sync & Recovery` sheet · E7 Conflict resolver section · E8 Nav-bar toolbar & overflow menu
 
-| Category | Element(s) | Status | Resolution / Reason |
-|----------|------------|--------|-----------------------|
-| Empty | E1, E2, E6 | ✅ covered | Authoritative zero-result states use the exact empty-state copy above (`Inbox Is Clear`, `Nothing for Today`, `No Changes Need Your Attention`); unfilled capture/editor forms retain labels and prevent invalid commit. |
-| Loading | E1–E8 | ✅ covered | Preserve stable list/sheet content and drafts; use named `Opening…`/`Preparing…`/delayed `Updating…` states inherited from the Mac exact-state table; never substitute an empty state or perpetual spinner. |
-| Error | E1–E8 | ✅ covered | Retain entered/durable content, show the exact contextual problem from the inherited state table, and provide a specific safe recovery action (`Retry`, `Review`, `Sign In`, etc.). |
-| Populated | E1, E2, E3, E6, E7 | ✅ covered | Stable `List`/detail geometry, independent scroll per screen, bounded per-task exception rendering, complete Full Keyboard Access/Switch Control navigation via D-27's mirrored controls. |
-| Partial | E1–E8 | ✅ covered | Preserve all valid local and nonconflicting draft/task content; absent optional fields remain absent; conditional actions are disabled or omitted rather than hiding retained state. |
-| Overflow (long text) | E3, E7 | 🧪 backstop | `{ statement: "Task titles, notes, and recovery copy that exceed the visible row/field measure wrap or truncate without shrinking below the declared type sizes, with an accessible 'Show Full Value' disclosure reachable for long notes, verified by a held-out long-text snapshot/XCUITest case across Dynamic Type sizes.", verification: backstop }` |
-| Zero / one / many | E1, E2, E6 | ✅ covered | Zero uses the authoritative empty copy; one keeps normal row geometry and singular wording; many uses stable native scrolling and bounded counts in `Sync & Recovery` without unbounded badges. |
-| Dynamic Type / accessibility scaling | E1–E8 | 🧪 backstop | `{ statement: "Every supported screen renders correctly, with no clipped or truncated-below-legibility text and 44pt-minimum hit targets preserved, across the accessibility Dynamic Type content-size category range, verified by D-48's XCTest snapshot matrix and performAccessibilityAudit run.", verification: backstop }` |
-| Reduce Motion / Differentiate Without Color | E1–E8 | 🧪 backstop | `{ statement: "State transitions (completion, undo, sync-accessory appearance/disappearance, conflict presentation) remain immediate and meaning-preserving with Reduce Motion and Differentiate Without Color environment overrides enabled, verified by D-48's environment-override snapshot pass.", verification: backstop }` |
+**Coverage:** 50 applicable considerations — 50 resolved (34 explicit, 16 backstop), 0 unresolved.
+
+Element kinds were authored (not left to the prose classifier) so a surface that is genuinely both a list and a form raises both category sets.
+
+### E1 — Today tab / task list
+
+| Consideration | Status | Resolution |
+|---|---|---|
+| Empty / no data | ✅ explicit | Today's authoritative zero state renders heading `Nothing for Today` and body `Add a task or choose an existing task to make it part of today.` — never reused for opening, preparing, updating, or failed-loading states; asserted by the XCUITest authoritative-empty case. |
+| Loading / in-flight | ✅ explicit | On Today: Loading uses the named `Opening…` / `Preparing…` / delayed `Updating…` states from the inherited 03-UI-SPEC exact-state table, preserving existing content and drafts; no perpetual spinner, and an in-flight state is never substituted with the authoritative empty state. Asserted by the XCUITest opening/preparing/updating cases. |
+| Error / failure | ✅ explicit | On Today: Failures retain all entered and durable content and render the exact contextual message from the inherited 03-UI-SPEC state table (offline, local-save failure, retryable server failure, uncertain acceptance, rejection, conflict, authentication fence, unrecoverable local store) with a specific safe recovery action (`Retry`, `Review`, `Sign In and Continue`); backend vocabulary never appears in primary copy. Asserted by the XCUITest state-matrix gate. |
+| Populated / happy path | ✅ explicit | Today at typical volume renders stable 52px task rows with 44×44pt minimum touch targets, independent scroll, swipe-complete/reopen with `allowsFullSwipe: true`, and every gesture mirrored as a named control reachable by Full Keyboard Access and Switch Control. |
+| Partial / incomplete | ✅ explicit | On Today: Partial data preserves every valid local and nonconflicting value: absent optional fields stay absent rather than being synthesised, and actions that cannot apply are disabled or omitted rather than hiding retained content. |
+| Overflow / truncation | 🧪 backstop | `{ statement: "On Today: Content exceeding its container scrolls or wraps within native `List`/`NavigationStack`/sheet geometry without clipping, overlapping the bottom accessory, or shrinking below the declared type sizes, and the accessory never visually clips the capture affordance — verified by a held-out XCTest snapshot case across the Dynamic Type range including accessibility sizes.", verification: backstop }` |
+| Zero / one / many | ✅ explicit | On Today: Zero uses the authoritative empty copy above; one keeps normal row geometry and singular wording; many uses stable native scrolling with bounded counts and no unbounded badge numbers. Announcements batch into a bounded summary (`3 changes saved on this iPhone`) rather than one per acknowledgement. |
+| Long text | 🧪 backstop | `{ statement: "On Today: Unusually long task titles, notes, and recovery copy wrap or truncate without dropping below the declared Label/Body/Heading/Display sizes, with an accessible `Show Full Value` disclosure for long notes and no quoted task content leaking into system chrome — verified by a held-out long-text XCTest snapshot plus `performAccessibilityAudit(for: [.textClipped, .dynamicType, .hitRegion])` across the accessibility Dynamic Type range.", verification: backstop }` |
+
+### E2 — Inbox tab / task list
+
+| Consideration | Status | Resolution |
+|---|---|---|
+| Empty / no data | ✅ explicit | Inbox's authoritative zero state renders heading `Inbox Is Clear`, body `Captured tasks appear here until you move them out.` and the `New Task` action; distinct from opening/preparing/updating/failed states; asserted by the XCUITest authoritative-empty case. |
+| Loading / in-flight | ✅ explicit | On Inbox: Loading uses the named `Opening…` / `Preparing…` / delayed `Updating…` states from the inherited 03-UI-SPEC exact-state table, preserving existing content and drafts; no perpetual spinner, and an in-flight state is never substituted with the authoritative empty state. Asserted by the XCUITest opening/preparing/updating cases. |
+| Error / failure | ✅ explicit | On Inbox: Failures retain all entered and durable content and render the exact contextual message from the inherited 03-UI-SPEC state table (offline, local-save failure, retryable server failure, uncertain acceptance, rejection, conflict, authentication fence, unrecoverable local store) with a specific safe recovery action (`Retry`, `Review`, `Sign In and Continue`); backend vocabulary never appears in primary copy. Asserted by the XCUITest state-matrix gate. |
+| Populated / happy path | ✅ explicit | Inbox at typical volume renders the same stable row geometry with per-task exceptions rendered inline beside the affected row and never duplicated into a separate global list. |
+| Partial / incomplete | ✅ explicit | On Inbox: Partial data preserves every valid local and nonconflicting value: absent optional fields stay absent rather than being synthesised, and actions that cannot apply are disabled or omitted rather than hiding retained content. |
+| Overflow / truncation | 🧪 backstop | `{ statement: "On Inbox: Content exceeding its container scrolls or wraps within native `List`/`NavigationStack`/sheet geometry without clipping, overlapping the bottom accessory, or shrinking below the declared type sizes, and the accessory never visually clips the capture affordance — verified by a held-out XCTest snapshot case across the Dynamic Type range including accessibility sizes.", verification: backstop }` |
+| Zero / one / many | ✅ explicit | On Inbox: Zero uses the authoritative empty copy above; one keeps normal row geometry and singular wording; many uses stable native scrolling with bounded counts and no unbounded badge numbers. Announcements batch into a bounded summary (`3 changes saved on this iPhone`) rather than one per acknowledgement. |
+| Long text | 🧪 backstop | `{ statement: "On Inbox: Unusually long task titles, notes, and recovery copy wrap or truncate without dropping below the declared Label/Body/Heading/Display sizes, with an accessible `Show Full Value` disclosure for long notes and no quoted task content leaking into system chrome — verified by a held-out long-text XCTest snapshot plus `performAccessibilityAudit(for: [.textClipped, .dynamicType, .hitRegion])` across the accessibility Dynamic Type range.", verification: backstop }` |
+
+### E3 — Task detail & editor
+
+| Consideration | Status | Resolution |
+|---|---|---|
+| Empty / no data | ✅ explicit | A task with no notes renders the notes field empty with its label retained (absent optional fields stay absent, never filled with placeholder prose); `Save Changes` stays available only for a valid title. |
+| Loading / in-flight | ✅ explicit | On the task detail/editor: Loading uses the named `Opening…` / `Preparing…` / delayed `Updating…` states from the inherited 03-UI-SPEC exact-state table, preserving existing content and drafts; no perpetual spinner, and an in-flight state is never substituted with the authoritative empty state. Asserted by the XCUITest opening/preparing/updating cases. |
+| Error / failure | ✅ explicit | On the task detail/editor: Failures retain all entered and durable content and render the exact contextual message from the inherited 03-UI-SPEC state table (offline, local-save failure, retryable server failure, uncertain acceptance, rejection, conflict, authentication fence, unrecoverable local store) with a specific safe recovery action (`Retry`, `Review`, `Sign In and Continue`); backend vocabulary never appears in primary copy. Asserted by the XCUITest state-matrix gate. |
+| Partial / incomplete | ✅ explicit | On the task detail/editor: Partial data preserves every valid local and nonconflicting value: absent optional fields stay absent rather than being synthesised, and actions that cannot apply are disabled or omitted rather than hiding retained content. |
+| Overflow / truncation | 🧪 backstop | `{ statement: "On the task detail/editor: Content exceeding its container scrolls or wraps within native `List`/`NavigationStack`/sheet geometry without clipping, overlapping the bottom accessory, or shrinking below the declared type sizes, and the accessory never visually clips the capture affordance — verified by a held-out XCTest snapshot case across the Dynamic Type range including accessibility sizes.", verification: backstop }` |
+| Long text | 🧪 backstop | `{ statement: "On the task detail/editor: Unusually long task titles, notes, and recovery copy wrap or truncate without dropping below the declared Label/Body/Heading/Display sizes, with an accessible `Show Full Value` disclosure for long notes and no quoted task content leaking into system chrome — verified by a held-out long-text XCTest snapshot plus `performAccessibilityAudit(for: [.textClipped, .dynamicType, .hitRegion])` across the accessibility Dynamic Type range.", verification: backstop }` |
+
+### E4 — Capture sheet
+
+| Consideration | Status | Resolution |
+|---|---|---|
+| Empty / no data | ✅ explicit | An unopened/unfilled capture sheet shows the prompt `What do you want to keep?`, `Destination: Inbox`, and `Add to Today`, with `Add Task` unavailable until the title is nonempty; an empty draft is discarded silently, a nonempty one never is. |
+| Loading / in-flight | ✅ explicit | On the capture sheet: Loading uses the named `Opening…` / `Preparing…` / delayed `Updating…` states from the inherited 03-UI-SPEC exact-state table, preserving existing content and drafts; no perpetual spinner, and an in-flight state is never substituted with the authoritative empty state. Asserted by the XCUITest opening/preparing/updating cases. |
+| Error / failure | ✅ explicit | On the capture sheet: Failures retain all entered and durable content and render the exact contextual message from the inherited 03-UI-SPEC state table (offline, local-save failure, retryable server failure, uncertain acceptance, rejection, conflict, authentication fence, unrecoverable local store) with a specific safe recovery action (`Retry`, `Review`, `Sign In and Continue`); backend vocabulary never appears in primary copy. Asserted by the XCUITest state-matrix gate. |
+| Partial / incomplete | ✅ explicit | On the capture sheet: Partial data preserves every valid local and nonconflicting value: absent optional fields stay absent rather than being synthesised, and actions that cannot apply are disabled or omitted rather than hiding retained content. |
+| Overflow / truncation | 🧪 backstop | `{ statement: "On the capture sheet: Content exceeding its container scrolls or wraps within native `List`/`NavigationStack`/sheet geometry without clipping, overlapping the bottom accessory, or shrinking below the declared type sizes, and the accessory never visually clips the capture affordance — verified by a held-out XCTest snapshot case across the Dynamic Type range including accessibility sizes.", verification: backstop }` |
+| Long text | 🧪 backstop | `{ statement: "On the capture sheet: Unusually long task titles, notes, and recovery copy wrap or truncate without dropping below the declared Label/Body/Heading/Display sizes, with an accessible `Show Full Value` disclosure for long notes and no quoted task content leaking into system chrome — verified by a held-out long-text XCTest snapshot plus `performAccessibilityAudit(for: [.textClipped, .dynamicType, .hitRegion])` across the accessibility Dynamic Type range.", verification: backstop }` |
+
+### E5 — `tabViewBottomAccessory`
+
+| Consideration | Status | Resolution |
+|---|---|---|
+| Loading / in-flight | ✅ explicit | While work is in flight the accessory shows transient work-in-progress only after the grace period and only when nothing higher in the D-38 priority order (actionable exception, then undoable action) claims the slot; healthy synchronization leaves the accessory absent, not merely quiet. |
+| Error / failure | ✅ explicit | On the bottom accessory: Failures retain all entered and durable content and render the exact contextual message from the inherited 03-UI-SPEC state table (offline, local-save failure, retryable server failure, uncertain acceptance, rejection, conflict, authentication fence, unrecoverable local store) with a specific safe recovery action (`Retry`, `Review`, `Sign In and Continue`); backend vocabulary never appears in primary copy. Asserted by the XCUITest state-matrix gate. |
+| Overflow / truncation | 🧪 backstop | `{ statement: "On the bottom accessory: Content exceeding its container scrolls or wraps within native `List`/`NavigationStack`/sheet geometry without clipping, overlapping the bottom accessory, or shrinking below the declared type sizes, and the accessory never visually clips the capture affordance — verified by a held-out XCTest snapshot case across the Dynamic Type range including accessibility sizes.", verification: backstop }` |
+| Long text | 🧪 backstop | `{ statement: "On the bottom accessory: Unusually long task titles, notes, and recovery copy wrap or truncate without dropping below the declared Label/Body/Heading/Display sizes, with an accessible `Show Full Value` disclosure for long notes and no quoted task content leaking into system chrome — verified by a held-out long-text XCTest snapshot plus `performAccessibilityAudit(for: [.textClipped, .dynamicType, .hitRegion])` across the accessibility Dynamic Type range.", verification: backstop }` |
+
+### E6 — `Sync & Recovery` sheet
+
+| Consideration | Status | Resolution |
+|---|---|---|
+| Empty / no data | ✅ explicit | The no-exceptions state renders heading `No Changes Need Your Attention` plus coarse last-contact copy (`Last successful contact: 8 minutes ago`); it never says `Everything synced` or claims global completeness. |
+| Loading / in-flight | ✅ explicit | On the Sync & Recovery sheet: Loading uses the named `Opening…` / `Preparing…` / delayed `Updating…` states from the inherited 03-UI-SPEC exact-state table, preserving existing content and drafts; no perpetual spinner, and an in-flight state is never substituted with the authoritative empty state. Asserted by the XCUITest opening/preparing/updating cases. |
+| Error / failure | ✅ explicit | On the Sync & Recovery sheet: Failures retain all entered and durable content and render the exact contextual message from the inherited 03-UI-SPEC state table (offline, local-save failure, retryable server failure, uncertain acceptance, rejection, conflict, authentication fence, unrecoverable local store) with a specific safe recovery action (`Retry`, `Review`, `Sign In and Continue`); backend vocabulary never appears in primary copy. Asserted by the XCUITest state-matrix gate. |
+| Populated / happy path | ✅ explicit | The populated sheet lists only changes that need attention, bounded, each deep-linking to its task; it never mirrors healthy per-task state into a second global inventory. |
+| Partial / incomplete | ✅ explicit | On the Sync & Recovery sheet: Partial data preserves every valid local and nonconflicting value: absent optional fields stay absent rather than being synthesised, and actions that cannot apply are disabled or omitted rather than hiding retained content. |
+| Overflow / truncation | 🧪 backstop | `{ statement: "On the Sync & Recovery sheet: Content exceeding its container scrolls or wraps within native `List`/`NavigationStack`/sheet geometry without clipping, overlapping the bottom accessory, or shrinking below the declared type sizes, and the accessory never visually clips the capture affordance — verified by a held-out XCTest snapshot case across the Dynamic Type range including accessibility sizes.", verification: backstop }` |
+| Zero / one / many | ✅ explicit | On the Sync & Recovery sheet: Zero uses the authoritative empty copy above; one keeps normal row geometry and singular wording; many uses stable native scrolling with bounded counts and no unbounded badge numbers. Announcements batch into a bounded summary (`3 changes saved on this iPhone`) rather than one per acknowledgement. |
+| Long text | 🧪 backstop | `{ statement: "On the Sync & Recovery sheet: Unusually long task titles, notes, and recovery copy wrap or truncate without dropping below the declared Label/Body/Heading/Display sizes, with an accessible `Show Full Value` disclosure for long notes and no quoted task content leaking into system chrome — verified by a held-out long-text XCTest snapshot plus `performAccessibilityAudit(for: [.textClipped, .dynamicType, .hitRegion])` across the accessibility Dynamic Type range.", verification: backstop }` |
+
+### E7 — Conflict resolver section
+
+| Consideration | Status | Resolution |
+|---|---|---|
+| Empty / no data | ✅ explicit | With no conflicting fields the resolver section is absent from the detail view entirely — no empty resolver shell, no residual `Use Mine`/`Use Current` controls. |
+| Loading / in-flight | ✅ explicit | On the conflict resolver: Loading uses the named `Opening…` / `Preparing…` / delayed `Updating…` states from the inherited 03-UI-SPEC exact-state table, preserving existing content and drafts; no perpetual spinner, and an in-flight state is never substituted with the authoritative empty state. Asserted by the XCUITest opening/preparing/updating cases. |
+| Error / failure | ✅ explicit | A resolution attempt that fails leaves both versions and any nonconflicting draft fields intact and re-offers `Use Mine` / `Use Current` / `Keep Editing`; `Keep Editing` always returns without mutation. |
+| Partial / incomplete | ✅ explicit | On the conflict resolver: Partial data preserves every valid local and nonconflicting value: absent optional fields stay absent rather than being synthesised, and actions that cannot apply are disabled or omitted rather than hiding retained content. |
+| Overflow / truncation | 🧪 backstop | `{ statement: "On the conflict resolver: Content exceeding its container scrolls or wraps within native `List`/`NavigationStack`/sheet geometry without clipping, overlapping the bottom accessory, or shrinking below the declared type sizes, and the accessory never visually clips the capture affordance — verified by a held-out XCTest snapshot case across the Dynamic Type range including accessibility sizes.", verification: backstop }` |
+| Long text | 🧪 backstop | `{ statement: "On the conflict resolver: Unusually long task titles, notes, and recovery copy wrap or truncate without dropping below the declared Label/Body/Heading/Display sizes, with an accessible `Show Full Value` disclosure for long notes and no quoted task content leaking into system chrome — verified by a held-out long-text XCTest snapshot plus `performAccessibilityAudit(for: [.textClipped, .dynamicType, .hitRegion])` across the accessibility Dynamic Type range.", verification: backstop }` |
+
+### E8 — Nav-bar toolbar & overflow menu
+
+| Consideration | Status | Resolution |
+|---|---|---|
+| Loading / in-flight | ✅ explicit | Toolbar capture and the overflow menu's `Sync & Recovery` / `Undo {Action}` rows remain reachable during any in-flight state — the toolbar capture action is never gated on accessory or synchronization state. |
+| Error / failure | ✅ explicit | On the toolbar/overflow menu: Failures retain all entered and durable content and render the exact contextual message from the inherited 03-UI-SPEC state table (offline, local-save failure, retryable server failure, uncertain acceptance, rejection, conflict, authentication fence, unrecoverable local store) with a specific safe recovery action (`Retry`, `Review`, `Sign In and Continue`); backend vocabulary never appears in primary copy. Asserted by the XCUITest state-matrix gate. |
+| Overflow / truncation | 🧪 backstop | `{ statement: "On the toolbar/overflow menu: Content exceeding its container scrolls or wraps within native `List`/`NavigationStack`/sheet geometry without clipping, overlapping the bottom accessory, or shrinking below the declared type sizes, and the accessory never visually clips the capture affordance — verified by a held-out XCTest snapshot case across the Dynamic Type range including accessibility sizes.", verification: backstop }` |
+| Long text | 🧪 backstop | `{ statement: "On the toolbar/overflow menu: Unusually long task titles, notes, and recovery copy wrap or truncate without dropping below the declared Label/Body/Heading/Display sizes, with an accessible `Show Full Value` disclosure for long notes and no quoted task content leaking into system chrome — verified by a held-out long-text XCTest snapshot plus `performAccessibilityAudit(for: [.textClipped, .dynamicType, .hitRegion])` across the accessibility Dynamic Type range.", verification: backstop }` |
 
 ---
 
@@ -304,12 +386,14 @@ If a third-party Swift package is later proposed for UI (none is currently plann
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
-- [ ] Dimension 7 Inventory Provenance: PASS
+Verified by `gsd-ui-checker` (all 7 dimensions evaluated, 2026-09-04) — **APPROVED**, no blocking issues.
 
-**Approval:** pending
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: FLAG (non-blocking) — no explicit focal point declared for the primary screens; executor infers visual priority. Recommendation: name the primary visual anchor on Today/Inbox (the task list) and the secondary anchor (the `Sync & Recovery` control) at plan time.
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
+- [x] Dimension 7 Inventory Provenance: FLAG (non-blocking) — `Could not enumerate` carries a real reason (platform SDK, not a package registry) and the list is explicitly declared non-exhaustive; recommendation is to formalise the provenance statement as a single declarative line for cross-phase consistency.
+
+**Approval:** approved — 5 PASS, 2 FLAG (both non-blocking recommendations)
