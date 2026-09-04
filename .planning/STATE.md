@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 current_phase: 03
 current_phase_name: Mac Daily Loop
-status: executing
-stopped_at: Completed 03-24-PLAN.md (O-51 closed)
-last_updated: "2026-09-04T05:39:22.734Z"
+status: verification-gaps
+stopped_at: KPL-03 gates run -- verification gaps_found (4/5)
+last_updated: "2026-09-04T15:07:30.277Z"
 last_activity: 2026-09-04
-last_activity_desc: Phase KPL-03 execution started
-state_head: aace10e1e1eceb1b817ad354a02698568db4fca1
+last_activity_desc: KPL-03 tail gates run -- regression PASSED, code review 0C/3W, verification gaps_found 4/5
+state_head: 1679fed3cabdcc17af731495008a8fb34a832f1d
 progress:
   total_phases: 6
   completed_phases: 1
@@ -28,12 +28,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 ## Current Position
 
-Phase: KPL-03 (Mac Daily Loop) — EXECUTING
-Plan: 22 of 22
-Total Plans in Phase: 22
-Status: Executing Phase KPL-03
-Last activity: 2026-09-04 — Plan 03-22 complete (O-41, O-38, O-42 and the O-31(a) half closed; the Mac sync seam carries every mutation and can hear a conflict)
-Last Activity Description: Completing, reopening, trashing, restoring, retitling and moving to Today now build the contract command body and enqueue it in the SAME transaction as the local projection write; all eight command types were observed ARRIVING at real Phoenix, with capture-before-edit ordering proven on the wire and enforced by resource key rather than by a journal dependency that no outcome could clear. The adapter classifies a closed list of server refusals instead of throwing, so a real 409 from a real second writer becomes conflict copy with a live Review Conflict action in the shipped window — a 401 stays its own tagged state and is never collapsed into a per-mutation rejection. Every authored recovery action is now a remedy, with Retry and Export built because neither existed. Quick Entry and Settings get the row over a new, read-only, schema-validated channel. Rule 2: computeSyncBackoff had never been called, so a reconnected app never synced until someone typed. Gate: lanes=10 failed=0.
+Phase: KPL-03 (Mac Daily Loop) — GATES RUN, GAPS FOUND
+Plan: 24 of 24 (all summarized)
+Total Plans in Phase: 24
+Status: KPL-03 verification returned gaps_found (4/5 must-haves) — phase NOT complete
+Last activity: 2026-09-04 — KPL-03 tail gates run for the first time (no plan work remained)
+Last Activity Description: /gsd-execute-phase found 0 incomplete plans and resumed at the phase gates (#2868). REGRESSION GATE PASSED: ./tooling/test-phase-1.sh --run, exit 0, all ten KPL-01 lanes green (153 units, 25 real-stack Playwright cases, 3/3 automated-UAT checkpoints) -- KPL-03 did not regress KPL-01, and this is the ONLY record of that fact, since GSD writes no artifact for a passing regression gate (see O-57 for the port-55431 trap that fakes a failure here). CODE REVIEW: 03-REVIEW.md, 0 Critical / 3 Warning / 1 Info, advisory; Electron IPC boundary and Phoenix device-grant path clean; WR-02 is the one with real blast radius (post-capture 'Add to Today' matches the new task by title, not id, and can mutate an unrelated task). VERIFICATION: 03-VERIFICATION.md, gaps_found 4/5. Gap 1 (major) -- a fresh verify-desktop-phase.mjs gives lanes=10 failed=2, not the failed=0 quoted all phase; macos-integration has no evidence for the current digest and the recording --all run aborts at row A1, which passes standalone. A1 is the FIRST row, so this is evidence AGAINST O-55's A8-predecessor hypothesis: diagnose the --all interference as a class. Gap 2 (minor) -- still no desktop visual-snapshot evidence despite 03-UI-SPEC.md. MAC-01..05, QUAL-03, QUAL-04, SRV-02 reverted out of Complete in REQUIREMENTS.md (#2388).
 Progress: [██████████] 99%
 
 ## Accumulated Context
