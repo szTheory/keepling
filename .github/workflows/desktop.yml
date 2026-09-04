@@ -142,20 +142,37 @@ jobs:
   # that provably need no Accessibility grant -- so one real run settles the
   # question either way.
   #
-  # `continue-on-error: true` is temporary and MUST be removed. A permanently
-  # non-blocking test job is exactly the vacuous green this phase spent two
-  # plans removing: after the first real run, either make this required or
-  # delete it (tracked as an open item in .planning/HANDOFF.json).
+  # RESOLVED 2026-09-04 (O-25). `continue-on-error` was written as temporary,
+  # to be removed "after the first real run". THERE HAS BEEN NO FIRST RUN AND
+  # THERE CANNOT BE ONE: this repository has no git remote, so no workflow in
+  # this file has ever executed. Waiting for a run that cannot arrive would
+  # have left a permanently non-blocking job forever -- exactly the vacuous
+  # green this phase spent two plans removing.
+  #
+  # So it is resolved the other way: `continue-on-error` is GONE and the job is
+  # in `desktop-promote`'s `needs`. If a remote is ever added, this job blocks
+  # promotion the first time it runs, on evidence nobody has seen yet.
+  #
+  # THAT IS INTENTIONAL, and the first run may well fail. The open question it
+  # was built to answer -- what a hosted macOS runner actually grants for
+  # Accessibility, Screen Recording and Full Disk Access -- is still open. The
+  # job probes TCC, PRINTS the report, and runs only the rows that provably
+  # need no Accessibility grant (`--without-accessibility-trust`). If it fails
+  # on that first run, read the printed probe report before changing anything:
+  # the correct response is to narrow which ROWS run on a hosted runner, never
+  # to restore `continue-on-error` and never to weaken a row so it passes.
+  #
+  # Until a remote exists, NOTHING in this file is evidence of anything. The
+  # only authoritative gate on this project is the local
+  # `node tooling/verify-desktop-phase.mjs`.
   #
   # Follows the same build-once/download-many discipline as every other test
   # job: it downloads the exact bytes `desktop-package` produced and NEVER
-  # rebuilds. It is deliberately absent from `desktop-promote`'s `needs`, so
-  # it can never contribute to a promotion decision while it is an experiment.
+  # rebuilds.
   desktop-macos-integration:
     needs: [desktop-package]
     runs-on: macos-15
     timeout-minutes: 30
-    continue-on-error: true
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -215,7 +232,7 @@ jobs:
   # promotion attempt for the same digest and refuses a manifest missing any
   # required digest field.
   desktop-promote:
-    needs: [desktop-units, desktop-package, desktop-packaged, desktop-e2e]
+    needs: [desktop-units, desktop-package, desktop-packaged, desktop-e2e, desktop-macos-integration]
     runs-on: macos-15
     timeout-minutes: 10
     steps:
