@@ -83,6 +83,21 @@ const restoreFromCapture = hasFlag('restore-from-capture')
 const restoreOnly = hasFlag('restore') || restoreFromCapture
 const withoutAccessibilityTrust = hasFlag('without-accessibility-trust')
 
+// A full recording run passing is a claim about the ROWS, not about one
+// lucky ordering. `--order shuffle --seed <n>` proves that by running the
+// same selection in a different, but reproducible, order.
+const orderMode = flagValue('order') ?? 'source'
+if (orderMode !== 'source' && orderMode !== 'shuffle') {
+  console.error(`macOS integration lane failed: unknown --order value "${orderMode}" (expected "source" or "shuffle")`)
+  process.exit(1)
+}
+const orderSeedRaw = flagValue('seed')
+const orderSeed = orderSeedRaw === null ? null : Number(orderSeedRaw)
+if (orderMode === 'shuffle' && (orderSeed === null || !Number.isFinite(orderSeed))) {
+  console.error('macOS integration lane failed: --order shuffle requires --seed <n>')
+  process.exit(1)
+}
+
 /**
  * This lane drives real keyboard input and changes real system settings on
  * whatever machine it runs on, so it never starts by accident. Every mode
@@ -106,6 +121,8 @@ if (!selfTestRestore && !gateMode && !runAllRows && !restoreOnly && !withoutAcce
     '  --restore                manually restore settings from the last capture',
     '  --restore-from-capture   restore from a leftover settings-capture.json (a',
     '                           previous run that did not restore) and delete it',
+    '  --order shuffle --seed N  run the selected rows in a deterministic',
+    '                           shuffled order instead of the source order',
   ].join('\n'))
   process.exit(1)
 }
@@ -217,7 +234,7 @@ const readEvidence = (applicationDigest) => {
   }
 }
 
-const writeEvidence = (manifest, rows) => {
+const writeEvidence = (manifest, rows, { rowOrderMode = 'source', rowOrderSeed = null } = {}) => {
   mkdirSync(evidenceDir, { recursive: true })
   const record = {
     applicationDigestSha256: manifest.applicationDigestSha256,
@@ -225,6 +242,11 @@ const writeEvidence = (manifest, rows) => {
     laneSourceDigest: laneSourceDigest(),
     probeSourceDigests: probeSourceDigests(),
     recordedAt: new Date().toISOString(),
+    // `rowOrder` is the order rows actually RAN in (the order `rowResults`
+    // was pushed), so a reader can tell whether a given evidence record was
+    // produced under the source order or a shuffled one -- the whole point
+    // of proving the pass is a property of the rows, not of one ordering.
+    rowOrder: rows.map((row) => row.id),
     rowSelection: rows.length === ALL_ROWS.length ? 'complete' : 'partial',
     rows: rows.map((row) => ({
       cases: row.cases,
@@ -234,6 +256,7 @@ const writeEvidence = (manifest, rows) => {
       requiresAccessibilityTrust: ROW_REGISTRY[row.id]?.requiresAccessibilityTrust ?? null,
       title: row.title,
     })),
+    seed: rowOrderMode === 'shuffle' ? rowOrderSeed : null,
     sourceRevision: manifest.sourceRevision,
     totalCases: rows.reduce((sum, row) => sum + row.cases, 0),
   }
@@ -364,10 +387,28 @@ const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, mil
 const disposableProfiles = []
 const liveApplications = new Set()
 
+/**
+ * Most rows allocate one profile for one handle. A3 deliberately reuses the
+ * SAME profile across two separate handles (capture a task, quit, relaunch
+ * with `syncMode: 'conflict'` against the identical on-disk data) -- so a
+ * profile cannot simply be deleted the moment its FIRST handle's teardown
+ * completes, or the second handle launches against an already-wiped
+ * directory. Reference counting is what lets `removeHandleProfile` clean up
+ * promptly for the (overwhelmingly common) one-handle-per-profile case
+ * without deleting out from under a row that intentionally shares one.
+ */
+const profileRefCounts = new Map()
+
 const allocateProfile = (label) => {
   const path = mkdtempSync(join(tmpdir(), `keepling-macos-${label}-`))
   disposableProfiles.push(path)
+  profileRefCounts.set(path, 1)
   return path
+}
+
+/** Call before handing an already-allocated profile path to a SECOND handle. */
+const retainProfile = (path) => {
+  profileRefCounts.set(path, (profileRefCounts.get(path) ?? 0) + 1)
 }
 
 const launchApplication = async (manifest, probeBinary, { profilePath, syncMode = 'offline', extraEnv = {} }) => {
@@ -498,6 +539,12 @@ const confirmTeardownComplete = async (handle) => {
  */
 const removeHandleProfile = (handle) => {
   if (!handle.profilePath) return
+  const remaining = (profileRefCounts.get(handle.profilePath) ?? 1) - 1
+  if (remaining > 0) {
+    profileRefCounts.set(handle.profilePath, remaining)
+    return
+  }
+  profileRefCounts.delete(handle.profilePath)
   const index = disposableProfiles.indexOf(handle.profilePath)
   if (index !== -1) disposableProfiles.splice(index, 1)
   rmSync(handle.profilePath, { force: true, recursive: true })
@@ -1421,6 +1468,12 @@ const rowA3 = (context) => runRow('A3', 'VoiceOver layer: dialogs announce thems
 
     await captureTaskByKeyboard(handle, 'Buy milk')
   } finally {
+    // This row deliberately reuses `profilePath` for the conflict handle
+    // below, against the SAME on-disk data -- retain it before `handle`'s
+    // teardown runs, or `removeHandleProfile` would delete the directory
+    // (and the just-captured task) the moment this quit completes, leaving
+    // nothing for the conflict fixture to report a conflict against.
+    retainProfile(profilePath)
     await quitApplication(handle)
   }
 
@@ -2478,6 +2531,38 @@ const runInternalMutateThenWait = async () => {
 }
 
 // ---------------------------------------------------------------------------
+// Row ordering
+// ---------------------------------------------------------------------------
+
+/**
+ * A tiny, dependency-free, seeded PRNG (mulberry32) -- this lane installs
+ * NOTHING to prove order-independence. Deterministic so the exact same
+ * `--seed` always reproduces the exact same order, which is what makes
+ * `ROW_ORDER mode=shuffle seed=<n>` a reproducible claim rather than a
+ * one-off.
+ */
+const mulberry32 = (seed) => {
+  let state = seed >>> 0
+  return () => {
+    state = (state + 0x6D2B79F5) | 0
+    let t = Math.imul(state ^ (state >>> 15), 1 | state)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+/** Fisher-Yates, driven by the seeded PRNG above. */
+const seededShuffle = (items, seed) => {
+  const random = mulberry32(seed)
+  const result = [...items]
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapWith = Math.floor(random() * (index + 1))
+    ;[result[index], result[swapWith]] = [result[swapWith], result[index]]
+  }
+  return result
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -2671,9 +2756,15 @@ const main = async () => {
   }
 
 
-  const rows = requestedRows.filter((row) => ROW_REGISTRY[row] !== undefined)
+  const unorderedRows = requestedRows.filter((row) => ROW_REGISTRY[row] !== undefined)
   const unimplemented = requestedRows.filter((row) => ROW_REGISTRY[row] === undefined)
   if (unimplemented.length > 0) fail(`row(s) ${unimplemented.join(',')} have no implementation -- an unimplemented row is a failure, never a skip`)
+
+  // A full recording pass is a claim about the ROWS, not about one lucky
+  // ordering. `--order shuffle --seed <n>` permutes the SELECTED rows with a
+  // deterministic seeded PRNG; the default stays the source order.
+  const rows = orderMode === 'shuffle' ? seededShuffle(unorderedRows, orderSeed) : unorderedRows
+  if (orderMode === 'shuffle') console.log(`ROW_ORDER mode=shuffle seed=${orderSeed} order=${rows.join(',')}`)
 
   // The machine-state barrier: refuse before starting on a machine that is
   // not in the state every row assumes, then keep it that way between rows
@@ -2695,8 +2786,10 @@ const main = async () => {
 
   // Only a COMPLETE, wholly passing run becomes reusable evidence. A partial
   // `--rows` run is for developing the lane, not for satisfying the gate.
+  // Completeness is independent of order: every row must be present and
+  // passing, regardless of which order they ran in.
   const coversEveryRow = ALL_ROWS.every((row) => rowResults.some((result) => result.id === row && result.passed))
-  if (coversEveryRow) writeEvidence(manifest, rowResults)
+  if (coversEveryRow) writeEvidence(manifest, rowResults, { rowOrderMode: orderMode, rowOrderSeed: orderSeed })
   else if (runAllRows) console.log('LANE_EVIDENCE recorded=false reason=not-every-row-passed')
   else console.log('LANE_EVIDENCE recorded=false reason=partial-row-selection-is-never-recorded-as-gate-evidence')
 }
