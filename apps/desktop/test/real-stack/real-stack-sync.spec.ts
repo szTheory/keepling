@@ -337,23 +337,36 @@ const signIn = async (application: ElectronApplication): Promise<Page> => {
   return settings
 }
 
-/** What the SERVER holds for one task. Never the client's opinion of itself. */
-const serverTask = async (taskId: string): Promise<{
+type ServerTask = {
   completed_at: string | null
   planned_on: string | null
   revision: number
   title: string
   trashed_at: string | null
-}> => {
+}
+
+/**
+ * What the SERVER holds for one task. Never the client's opinion of itself.
+ *
+ * Returns `null` rather than throwing when the server does not have it, so
+ * a poll keeps polling instead of aborting on the first attempt -- and so
+ * "the server does not have this" is itself an assertable observation.
+ * `GET /api/v1/tasks/:id` deliberately excludes trashed tasks
+ * (`CommandStore#get_task`: `trashed_at IS NULL`), which is why the Trash
+ * step below reads `/api/v1/trash` instead.
+ */
+const serverTask = async (taskId: string): Promise<ServerTask | null> => {
   const response = await browser.request(`/api/v1/tasks/${encodeURIComponent(taskId)}`)
-  expect(response.status, 'the real server must know this task').toBe(200)
-  return (await response.json()) as {
-    completed_at: string | null
-    planned_on: string | null
-    revision: number
-    title: string
-    trashed_at: string | null
-  }
+  if (response.status !== 200) return null
+  return (await response.json()) as ServerTask
+}
+
+/** Whether the SERVER holds this task in Trash. */
+const serverTrashHolds = async (taskId: string): Promise<boolean> => {
+  const response = await browser.request('/api/v1/trash')
+  if (response.status !== 200) return false
+  const body = (await response.json()) as { tasks: Array<{ id: string }> }
+  return body.tasks.some((task) => task.id === taskId)
 }
 
 /** The command types the SERVER actually received, recorded by the forwarding proxy. */
@@ -559,40 +572,43 @@ test('every mutation a person can perform reaches real Phoenix and reconciles ag
         }
         return inbox.tasks.find((task) => task.title === title)!.id
       })
-    expect((await serverTask(taskId)).revision).toBe(1)
+    expect((await serverTask(taskId))?.revision).toBe(1)
 
     // Every non-capture mutation, driven through the SHIPPED UI -- the same
     // controls a person presses, not an IPC call.
     const editedTitle = 'Book the ferry to Mull'
-    await window.getByText(title).click()
+    await window.getByText(title).first().click()
     await window.locator('#task-editor-title').fill(editedTitle)
     await window.keyboard.press('Meta+s')
     await expect(window.getByRole('heading', { name: editedTitle })).toBeVisible()
-    await expect.poll(async () => (await serverTask(taskId)).title, { timeout: 60_000 }).toBe(editedTitle)
+    await expect.poll(async () => (await serverTask(taskId))?.title, { timeout: 60_000 }).toBe(editedTitle)
 
     await window.getByRole('button', { name: 'Complete' }).click()
-    await expect.poll(async () => (await serverTask(taskId)).completed_at, { timeout: 60_000 }).not.toBeNull()
+    await expect.poll(async () => (await serverTask(taskId))?.completed_at, { timeout: 60_000 }).not.toBeNull()
 
     await window.getByRole('button', { name: 'Reopen' }).click()
-    await expect.poll(async () => (await serverTask(taskId)).completed_at, { timeout: 60_000 }).toBeNull()
+    await expect.poll(async () => (await serverTask(taskId))?.completed_at, { timeout: 60_000 }).toBeNull()
 
     await window.getByRole('button', { name: 'Add to Today' }).click()
-    await expect.poll(async () => (await serverTask(taskId)).planned_on, { timeout: 60_000 }).not.toBeNull()
+    await expect.poll(async () => (await serverTask(taskId))?.planned_on, { timeout: 60_000 }).not.toBeNull()
 
     await window.getByRole('button', { name: 'Today', exact: true }).click()
     await window.getByText(editedTitle).click()
     await window.getByRole('button', { name: 'Remove from Today' }).click()
-    await expect.poll(async () => (await serverTask(taskId)).planned_on, { timeout: 60_000 }).toBeNull()
+    await expect.poll(async () => (await serverTask(taskId))?.planned_on, { timeout: 60_000 }).toBeNull()
 
     await window.getByRole('button', { name: 'Inbox', exact: true }).click()
     await window.getByText(editedTitle).click()
     await window.getByRole('button', { name: 'Move to Trash' }).click()
-    await expect.poll(async () => (await serverTask(taskId)).trashed_at, { timeout: 60_000 }).not.toBeNull()
+    // `GET /api/v1/tasks/:id` excludes trashed tasks, so the server's Trash
+    // view is where a trashed task can honestly be observed.
+    await expect.poll(() => serverTrashHolds(taskId), { timeout: 60_000 }).toBe(true)
 
     await window.getByRole('button', { name: 'Trash', exact: true }).click()
     await window.getByText(editedTitle).click()
     await window.getByRole('button', { name: 'Restore' }).click()
-    await expect.poll(async () => (await serverTask(taskId)).trashed_at, { timeout: 60_000 }).toBeNull()
+    await expect.poll(() => serverTrashHolds(taskId), { timeout: 60_000 }).toBe(false)
+    await expect.poll(async () => (await serverTask(taskId))?.trashed_at ?? 'absent', { timeout: 60_000 }).toBeNull()
 
     // The outbox drained: nothing is left that this Mac still intends to
     // send. "Synced" on a row is a claim; an empty outbox is the fact.
@@ -606,7 +622,7 @@ test('every mutation a person can perform reaches real Phoenix and reconciles ag
       expect(observedTypes, `the server never received a ${type} command`).toContain(type)
     }
 
-    const final = await serverTask(taskId)
+    const final = (await serverTask(taskId))!
     expect(final.title).toBe(editedTitle)
     // Seven accepted mutations after the capture, each of which the server
     // bumps by one. A client whose commands were refused would sit at 1.
@@ -652,13 +668,16 @@ test('an offline edit never overtakes its capture, and a conflict the real serve
     // Capture AND edit while the server is unreachable, so both are queued
     // before either can be delivered.
     await gate.close()
-    const original = 'Ferry booking'
+    // Unique per run: the account's earlier tasks are pulled into this
+    // fresh profile too, and Playwright's text matching is substring-based.
+    const run = randomUUID().slice(0, 8)
+    const original = `Ferry booking ${run}`
     await window.getByLabel('What do you want to keep?').fill(original)
     await window.getByRole('button', { name: 'Add Task' }).click()
     await expect(window.getByText(original)).toHaveCount(1)
 
-    const mine = 'Ferry booking — mine'
-    await window.getByText(original).click()
+    const mine = `Ferry booking ${run} — mine`
+    await window.getByText(original).first().click()
     await window.locator('#task-editor-title').fill(mine)
     await window.keyboard.press('Meta+s')
     await expect(window.getByRole('heading', { name: mine })).toBeVisible()
@@ -681,14 +700,14 @@ test('an offline edit never overtakes its capture, and a conflict the real serve
       .map(({ body }) => (JSON.parse(body) as { task_id?: string; type: string }))
       .filter((command) => command.task_id === taskId)
     expect(arrivals.map((command) => command.type)).toEqual(['capture_task', 'edit_task'])
-    expect(await serverTask(taskId).then((task) => task.title)).toBe(mine)
+    expect((await serverTask(taskId))?.title).toBe(mine)
 
     // -- A REAL CONFLICT --------------------------------------------------
-    const baseline = await serverTask(taskId)
+    const baseline = (await serverTask(taskId))!
     await gate.close()
 
-    const conflicting = 'Ferry booking — retitled on this Mac'
-    await window.getByText(mine).click()
+    const conflicting = `Ferry booking ${run} — retitled on this Mac`
+    await window.getByText(mine).first().click()
     await window.locator('#task-editor-title').fill(conflicting)
     await window.keyboard.press('Meta+s')
     await expect(window.getByRole('heading', { name: conflicting })).toBeVisible()
@@ -696,7 +715,7 @@ test('an offline edit never overtakes its capture, and a conflict the real serve
     // A REAL second writer, through the REAL server, while this Mac cannot
     // reach it. Nothing here answers on the server's behalf.
     await secondWriter.signIn()
-    const elsewhere = 'Ferry booking — changed on the phone'
+    const elsewhere = `Ferry booking ${run} — changed on the phone`
     const secondWrite = await secondWriter.request('/api/v1/commands/edit-task', {
       body: JSON.stringify({
         base_values: { title: baseline.title },
@@ -710,7 +729,7 @@ test('an offline edit never overtakes its capture, and a conflict the real serve
       method: 'POST',
     })
     expect(secondWrite.status, 'the second writer must really change the task').toBe(200)
-    expect((await serverTask(taskId)).title).toBe(elsewhere)
+    expect((await serverTask(taskId))?.title).toBe(elsewhere)
 
     // Reconnect. The app's queued edit is now based on a value the server
     // has moved past, and the server's own three-way merge refuses it.
@@ -739,7 +758,7 @@ test('an offline edit never overtakes its capture, and a conflict the real serve
     // retried forever against a server that has already decided.
     await expect.poll(() => readOutbox(profilePath).length, { timeout: 60_000 }).toBe(0)
     // And the server was NOT overwritten by the refused edit.
-    expect((await serverTask(taskId)).title).toBe(elsewhere)
+    expect((await serverTask(taskId))?.title).toBe(elsewhere)
 
     console.log(
       `REAL_STACK_CONFLICT ordering=capture_task,edit_task outcomes=conflict conflicts=1 ` +
