@@ -156,6 +156,10 @@ test('the packaged session denies an unrequested-permission surface (geolocation
         )
       }),
     )
+    // O-28 guard: `not.toBe('granted')` alone passes for `undefined` or any
+    // unexpected value. Assert the permission was actually DENIED -- the
+    // positive fact this test exists to establish.
+    expect(outcome).toMatch(/^denied:/)
     expect(outcome).not.toBe('granted')
   } finally {
     await application.close()

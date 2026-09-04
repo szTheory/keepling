@@ -80,6 +80,12 @@ test('focus and selection are independent: roving list focus moves without chang
     // Roving focus alone (no Enter) never marks a row as the selected task
     // (D-05): aria-current stays unset on both rows.
     await expect(firstRow).not.toHaveAttribute('aria-current', 'true')
+    // O-28 guard: a negated locator matcher PASSES against a locator that
+    // resolves to nothing, so a row that never rendered would report a
+    // false pass here. `firstRow` is already proven present by the
+    // `toBeFocused` above; prove `secondRow` is present too before reading
+    // its absent attribute.
+    await expect(secondRow).toBeVisible()
     await expect(secondRow).not.toHaveAttribute('aria-current', 'true')
 
     await window.keyboard.press('ArrowDown')
@@ -90,6 +96,9 @@ test('focus and selection are independent: roving list focus moves without chang
     // selection (aria-current) now tracks the row focus already reached.
     await window.keyboard.press('Enter')
     await expect(secondRow).toHaveAttribute('aria-current', 'true')
+    // O-28 guard: same reason -- the interesting claim is that a row that
+    // IS on screen is not marked current, never that it vanished.
+    await expect(firstRow).toBeVisible()
     await expect(firstRow).not.toHaveAttribute('aria-current', 'true')
   } finally {
     await application.close()
@@ -257,6 +266,11 @@ test('theme: color-scheme follows the emulated OS appearance instead of a hardco
     const lightBackground = await window.evaluate(() => getComputedStyle(document.body).backgroundColor)
     await window.emulateMedia({ colorScheme: 'dark' })
     const darkBackground = await window.evaluate(() => getComputedStyle(document.body).backgroundColor)
+    // O-28 guard: assert both readings are REAL resolved colors first. A
+    // pair of empty or malformed values could otherwise differ for a
+    // reason that has nothing to do with the appearance following the OS.
+    expect(lightBackground).toMatch(/^rgba?\(/)
+    expect(darkBackground).toMatch(/^rgba?\(/)
     expect(darkBackground).not.toBe(lightBackground)
   } finally {
     await application.close()
@@ -271,6 +285,9 @@ test('contrast: forced-colors mode renders without crashing and preserves real, 
     await window.reload()
     await expect(window.getByLabel('What do you want to keep?')).toBeVisible()
     const color = await window.evaluate(() => getComputedStyle(document.body).color)
+    // O-28 guard: `not.toBe('')` alone admits anything at all, including a
+    // value that is not a color. State what was actually read.
+    expect(color).toMatch(/^rgba?\(/)
     expect(color).not.toBe('')
   } finally {
     await application.close()
@@ -287,6 +304,10 @@ test('motion: prefers-reduced-motion removes the button hover transition; no-pre
       const button = document.querySelector('button')
       return button ? getComputedStyle(button).transitionDuration : null
     })
+    // O-28 guard: the evaluate above returns `null` when there is no button
+    // to measure, and `null !== '0s'` would have passed vacuously -- a
+    // window that never rendered a control would have "proved" motion.
+    expect(withMotion).toMatch(/^[\d.]+s$/)
     expect(withMotion).not.toBe('0s')
 
     await window.emulateMedia({ reducedMotion: 'reduce' })
