@@ -2,17 +2,17 @@
 gsd_state_version: 1.0
 milestone: v1.0
 current_phase: 03
-current_phase_name: Mac Daily Loop
+current_phase_name: mac-daily-loop
 status: verification-gaps
 stopped_at: KPL-03 gates run -- verification gaps_found (4/5)
-last_updated: "2026-09-04T15:07:30.277Z"
+last_updated: "2026-09-04T15:48:13.975Z"
 last_activity: 2026-09-04
-last_activity_desc: KPL-03 tail gates run -- regression PASSED, code review 0C/3W, verification gaps_found 4/5
-state_head: 1679fed3cabdcc17af731495008a8fb34a832f1d
+last_activity_desc: Phase KPL-03 planning complete — 27 plans ready
+state_head: 4b27a9ed185e5cfd17878dec2c236772df4e3c69
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 62
+  total_plans: 65
   completed_plans: 61
 milestone_name: milestone
 ---
@@ -28,12 +28,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 ## Current Position
 
-Phase: KPL-03 (Mac Daily Loop) — GATES RUN, GAPS FOUND
+Phase: KPL-03 (mac-daily-loop) — READY TO EXECUTE
 Plan: 24 of 24 (all summarized)
-Total Plans in Phase: 24
+Total Plans in Phase: 27
 Status: KPL-03 verification returned gaps_found (4/5 must-haves) — phase NOT complete
 Last activity: 2026-09-04 — KPL-03 tail gates run for the first time (no plan work remained)
-Last Activity Description: /gsd-execute-phase found 0 incomplete plans and resumed at the phase gates (#2868). REGRESSION GATE PASSED: ./tooling/test-phase-1.sh --run, exit 0, all ten KPL-01 lanes green (153 units, 25 real-stack Playwright cases, 3/3 automated-UAT checkpoints) -- KPL-03 did not regress KPL-01, and this is the ONLY record of that fact, since GSD writes no artifact for a passing regression gate (see O-57 for the port-55431 trap that fakes a failure here). CODE REVIEW: 03-REVIEW.md, 0 Critical / 3 Warning / 1 Info, advisory; Electron IPC boundary and Phoenix device-grant path clean; WR-02 is the one with real blast radius (post-capture 'Add to Today' matches the new task by title, not id, and can mutate an unrelated task). VERIFICATION: 03-VERIFICATION.md, gaps_found 4/5. Gap 1 (major) -- a fresh verify-desktop-phase.mjs gives lanes=10 failed=2, not the failed=0 quoted all phase; macos-integration has no evidence for the current digest and the recording --all run aborts at row A1, which passes standalone. A1 is the FIRST row, so this is evidence AGAINST O-55's A8-predecessor hypothesis: diagnose the --all interference as a class. Gap 2 (minor) -- still no desktop visual-snapshot evidence despite 03-UI-SPEC.md. MAC-01..05, QUAL-03, QUAL-04, SRV-02 reverted out of Complete in REQUIREMENTS.md (#2388).
+Last Activity Description: Phase KPL-03 planning complete — 27 plans ready
 Progress: [██████████] 99%
 
 ## Accumulated Context
