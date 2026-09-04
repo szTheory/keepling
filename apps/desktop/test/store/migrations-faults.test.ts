@@ -54,19 +54,19 @@ describe('NodeSqliteLocalStore fault safety', () => {
     const fresh = new NodeSqliteLocalStore({ databasePath, migrationPath })
     fresh.close()
 
-    // "Forward-migration" for the current single-version lineage means
-    // reopening against the SAME migration file re-validates the checksum
-    // ledger without reapplying anything -- this is exactly D-37's
-    // "reject checksum drift" contract exercised on the happy path.
+    // "Forward-migration" means reopening against the SAME ordered
+    // migration set re-validates every recorded checksum without reapplying
+    // anything -- exactly D-37's "reject checksum drift" contract exercised
+    // on the happy path. Since 03-24 the lineage has TWO versions, so this
+    // is now a real multi-version no-op rather than a single-row one.
     const reopened = new NodeSqliteLocalStore({ databasePath, migrationPath })
     const ledgerDb = new DatabaseSync(databasePath, { defensive: true, timeout: 2_500 })
-    const ledger = ledgerDb.prepare('SELECT version, checksum FROM schema_migrations').all() as Array<{
+    const ledger = ledgerDb.prepare('SELECT version, checksum FROM schema_migrations ORDER BY version').all() as Array<{
       checksum: string
       version: number
     }>
     ledgerDb.close()
-    expect(ledger).toHaveLength(1)
-    expect(ledger[0]?.version).toBe(1)
+    expect(ledger.map((row) => row.version)).toEqual([1, 2])
     reopened.close()
   })
 

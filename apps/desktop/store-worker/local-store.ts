@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
-import { dirname } from 'node:path'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs'
+import { basename, dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { DatabaseSync } from 'node:sqlite'
 
 import type {
@@ -927,31 +928,103 @@ class NodeSqliteLocalStore {
     if (fenced) throw new Error(`local writes are fenced: ${fenced.value}`)
   }
 
+  /**
+   * The migration runner, generalised (O-51). It applies an ORDERED set of
+   * migrations and preserves the checksum binding D-37 requires: a version
+   * whose recorded checksum disagrees with the file on disk fails loudly and
+   * the store does not open. Nothing here repairs, reapplies or rewrites a
+   * ledger row.
+   *
+   * `migrationPath` still names ONE file -- the initial schema -- because
+   * every existing caller passes exactly that, and because the fault suite
+   * proves drift by pointing the option at a deliberately corrupted copy in
+   * a temporary directory. The remaining migrations are its SIBLINGS: any
+   * `NNNN_*.sql` beside it, ordered by the version its name carries, with
+   * the explicitly named file winning for its own version. So a real install
+   * (whose file sits in the shipped `migrations/` directory) picks up every
+   * later migration automatically, and a fault fixture pointing at a lone
+   * corrupted file still exercises exactly the version it names.
+   *
+   * The set must be contiguous from 1. A gap means a build shipped without
+   * a migration it depends on, and applying what is present would produce a
+   * schema no version number describes.
+   */
+  #collectMigrations(migrationPath: string | URL): Array<{ path: string; version: number }> {
+    const initialPath = migrationPath instanceof URL ? fileURLToPath(migrationPath) : migrationPath
+    const versionOf = (name: string): number | null => {
+      const matched = /^(\d{4})_[A-Za-z0-9_-]+\.sql$/.exec(name)
+      return matched === null ? null : Number(matched[1])
+    }
+    const byVersion = new Map<number, string>()
+    for (const entry of readdirSync(dirname(initialPath))) {
+      const version = versionOf(entry)
+      if (version !== null) byVersion.set(version, join(dirname(initialPath), entry))
+    }
+    // The explicitly named file is authoritative for its own version, so a
+    // fault fixture's corrupted copy is what gets checksummed rather than a
+    // pristine sibling of the same name.
+    byVersion.set(versionOf(basename(initialPath)) ?? 1, initialPath)
+    const ordered = [...byVersion.entries()]
+      .map(([version, path]) => ({ path, version }))
+      .sort((left, right) => left.version - right.version)
+    ordered.forEach((migration, index) => {
+      if (migration.version !== index + 1) {
+        throw new Error(`migration set is not contiguous: expected version ${index + 1}, found ${migration.version}`)
+      }
+    })
+    return ordered
+  }
+
   #applyMigration(migrationPath: string | URL): void {
-    const migration = readFileSync(migrationPath, 'utf8')
-    const checksum = createHash('sha256').update(migration).digest('hex')
-    const hasLedger = this.#database.prepare(`
+    const migrations = this.#collectMigrations(migrationPath)
+    const ledgerPresent = (): boolean => this.#database.prepare(`
       SELECT 1 AS present FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations'
     `).get() !== undefined
 
-    if (hasLedger) {
-      const applied = this.#database.prepare(`
-        SELECT checksum FROM schema_migrations WHERE version = 1
-      `).get() as { checksum: string } | undefined
-      if (applied?.checksum !== checksum) throw new Error('migration checksum mismatch for version 1')
-      return
+    for (const migration of migrations) {
+      const contents = readFileSync(migration.path, 'utf8')
+      const checksum = createHash('sha256').update(contents).digest('hex')
+      // Re-read each time: the ledger table is created BY migration 1, so it
+      // is absent for the first iteration of a fresh database and present
+      // for every one after it.
+      if (ledgerPresent()) {
+        const applied = this.#database.prepare(`
+          SELECT checksum FROM schema_migrations WHERE version = ?
+        `).get(migration.version) as { checksum: string } | undefined
+        if (applied !== undefined) {
+          if (applied.checksum !== checksum) {
+            throw new Error(`migration checksum mismatch for version ${String(migration.version)}`)
+          }
+          continue
+        }
+      }
+
+      this.#database.exec('BEGIN IMMEDIATE')
+      try {
+        this.#database.exec(contents)
+        this.#database.prepare(`
+          INSERT INTO schema_migrations(version, checksum, applied_at) VALUES (?, ?, ?)
+        `).run(migration.version, checksum, new Date().toISOString())
+        this.#database.exec('COMMIT')
+      } catch (error) {
+        this.#database.exec('ROLLBACK')
+        throw error
+      }
     }
 
-    this.#database.exec('BEGIN IMMEDIATE')
-    try {
-      this.#database.exec(migration)
-      this.#database.prepare(`
-        INSERT INTO schema_migrations(version, checksum, applied_at) VALUES (1, ?, ?)
-      `).run(checksum, new Date().toISOString())
-      this.#database.exec('COMMIT')
-    } catch (error) {
-      this.#database.exec('ROLLBACK')
-      throw error
+    // The other direction, checked only AFTER the known set validates so a
+    // drifted file still reports drift: a ledger version this build carries
+    // no migration for means the database was migrated by a NEWER Keepling.
+    // Opening it anyway would let an older binary write rows a newer
+    // schema's constraints were written to govern.
+    if (!ledgerPresent()) return
+    const ahead = this.#database.prepare(`
+      SELECT version FROM schema_migrations WHERE version > ? ORDER BY version LIMIT 1
+    `).get(migrations.length) as { version: number } | undefined
+    if (ahead !== undefined) {
+      throw new Error(
+        `database schema version ${String(ahead.version)} is ahead of the ${String(migrations.length)} migrations this build carries`,
+      )
     }
   }
 
