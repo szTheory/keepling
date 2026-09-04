@@ -11,6 +11,7 @@ import { FileServerConfiguration } from './adapters/server-config.ts'
 import { KeeplingSyncAdapter } from './adapters/sync.ts'
 import {
   DesktopApplication,
+  computeSyncBackoff,
   type ConflictRecord,
   type EditTaskCommand,
   type LifecycleCommand,
@@ -504,18 +505,61 @@ const bootstrap = async () => {
    * captures cannot stack concurrent pulls or duplicate a push.
    */
   let syncPassInFlight: Promise<void> | null = null
+  let syncRetryTimer: ReturnType<typeof setTimeout> | null = null
+  let syncRetryAttempt = 0
+
+  /**
+   * Rule 2 addition, found while proving O-41 end to end against a real
+   * server: `computeSyncBackoff` was DEFINED, EXPORTED, and called from
+   * nowhere -- not by production, not by a test. The same
+   * complete-but-unreachable shape as O-9/O-12/O-16/O-30/O-41/O-42.
+   *
+   * Its absence was not cosmetic. A pass ran only when a person made
+   * another change, so an app that went offline, queued work, and came back
+   * online would sit there indefinitely showing "Saved on this Mac" until
+   * the person happened to type something -- and MAC-03 says a mutation is
+   * made and LATER RECONCILED, not "reconciled the next time you have
+   * another idea". Everything already committed stays durable either way;
+   * this is what makes "later" arrive on its own.
+   *
+   * Bounded and self-cancelling: one timer at a time, `unref`'d so it never
+   * holds the app open, and the attempt counter resets the moment a pass
+   * leaves nothing behind.
+   */
+  const scheduleSyncRetry = (): void => {
+    if (syncRetryTimer !== null || syncAdapter === null) return
+    const delayMs = computeSyncBackoff(syncRetryAttempt, Math.random)
+    syncRetryAttempt += 1
+    syncRetryTimer = setTimeout(() => {
+      syncRetryTimer = null
+      scheduleSyncPass()
+    }, delayMs)
+    ;(syncRetryTimer as unknown as { unref?: () => void }).unref?.()
+  }
+
+  const cancelSyncRetry = (): void => {
+    if (syncRetryTimer !== null) clearTimeout(syncRetryTimer)
+    syncRetryTimer = null
+  }
+
   const scheduleSyncPass = (): void => {
     if (syncPassInFlight !== null || syncAdapter === null) return
     syncPassInFlight = (async () => {
+      let unsettled = true
       try {
         const token = authorization === null ? null : await authorization.accessToken()
         if (token === null) return
         await desktopApplication.runSyncPass()
+        // The outbox, not the pass's return value, is the fact: a pass can
+        // succeed and still leave commands that were not ready this time.
+        unsettled = (await localStore.syncState()).outbox.length > 0
       } catch {
         // Offline, unauthenticated, or refused: the durable outbox keeps
         // the exact intent, and nothing claims "Synced".
       } finally {
         syncPassInFlight = null
+        if (unsettled) scheduleSyncRetry()
+        else syncRetryAttempt = 0
       }
     })()
   }
@@ -537,6 +581,11 @@ const bootstrap = async () => {
     { kind: 'ran'; pulled: number; settled: number } | { kind: 'failed'; reason: string } | { kind: 'unavailable' }
   > => {
     if (syncAdapter === null) return { kind: 'unavailable' }
+    // A person pressing Retry means NOW, so the backoff starts over rather
+    // than making them wait out whatever delay the automatic retry had
+    // climbed to.
+    cancelSyncRetry()
+    syncRetryAttempt = 0
     while (syncPassInFlight !== null) await syncPassInFlight
     let outcome: Awaited<ReturnType<typeof retrySyncNow>> = { kind: 'unavailable' }
     syncPassInFlight = (async () => {
@@ -694,6 +743,7 @@ const bootstrap = async () => {
     onBeforeQuit: () => {
       unsubscribePresentation()
       unsubscribeUtilityPresentation()
+      cancelSyncRetry()
       quickEntry.dispose()
     },
     rendererUrl: rendererBase,

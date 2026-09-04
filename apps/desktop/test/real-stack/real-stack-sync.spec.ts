@@ -534,18 +534,31 @@ test('every mutation a person can perform reaches real Phoenix and reconciles ag
     await expect(window.getByRole('heading', { name: 'Inbox' })).toBeVisible()
     await signIn(application)
 
-    const title = 'Book the ferry'
+    const title = `Book the ferry ${randomUUID().slice(0, 8)}`
     await window.getByLabel('What do you want to keep?').fill(title)
     await window.getByRole('button', { name: 'Add Task' }).click()
-    await expect(window.getByText('Synced')).toHaveCount(1, { timeout: 60_000 })
 
-    // The identity comes from the SERVER, so everything below is anchored to
-    // the row PostgreSQL actually holds.
-    const inbox = (await (await browser.request('/api/v1/inbox')).json()) as {
-      tasks: Array<{ id: string; title: string }>
-    }
-    const taskId = inbox.tasks.find((task) => task.title === title)!.id
-    expect(taskId, 'the real server must hold the captured task').toBeTruthy()
+    // The readiness signal is the SERVER holding the task, not a label in
+    // the client's own window. The account's other tasks are pulled into
+    // this fresh profile too, so counting "Synced" rows would be counting
+    // the wrong thing.
+    const taskId = await expect
+      .poll(
+        async () => {
+          const inbox = (await (await browser.request('/api/v1/inbox')).json()) as {
+            tasks: Array<{ id: string; title: string }>
+          }
+          return inbox.tasks.find((task) => task.title === title)?.id ?? null
+        },
+        { timeout: 90_000 },
+      )
+      .not.toBeNull()
+      .then(async () => {
+        const inbox = (await (await browser.request('/api/v1/inbox')).json()) as {
+          tasks: Array<{ id: string; title: string }>
+        }
+        return inbox.tasks.find((task) => task.title === title)!.id
+      })
     expect((await serverTask(taskId)).revision).toBe(1)
 
     // Every non-capture mutation, driven through the SHIPPED UI -- the same
@@ -656,9 +669,10 @@ test('an offline edit never overtakes its capture, and a conflict the real serve
     expect(JSON.parse(queued[1]!.commandBytes)).toMatchObject({ type: 'edit_task' })
     const taskId = queued[0]!.taskId
 
+    // Reconnecting is enough: the app retries a non-empty outbox on its own
+    // backoff now, so nothing here has to nudge it.
     await gate.open()
-    await expect(window.getByText('Synced')).toHaveCount(1, { timeout: 90_000 })
-    await expect.poll(() => readOutbox(profilePath).length, { timeout: 60_000 }).toBe(0)
+    await expect.poll(() => readOutbox(profilePath).length, { timeout: 120_000 }).toBe(0)
 
     // What the SERVER received, in the order it received it.
     const arrivals = gate.bodies
