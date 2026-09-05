@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 04
 current_phase_name: Native iPhone Daily Loop
 status: executing
-stopped_at: Completed 04-02-PLAN.md (storage durability gates G1-G6)
-last_updated: "2026-09-05T02:49:53.924Z"
+stopped_at: Completed 04-03-PLAN.md (sync reducer N-version corroboration + manifest gate)
+last_updated: "2026-09-05T03:11:39.950Z"
 last_activity: 2026-09-04
 last_activity_desc: Phase KPL-04 execution started
-state_head: 8e7cd7ef1ef88c81eaea96459507a8d92db521ef
+state_head: 5a52bfd4d2f320a15232caadecc394b98a7a2e47
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 82
-  completed_plans: 66
+  completed_plans: 67
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
-Plan: 3 of 17
+Plan: 4 of 17
 Total Plans in Phase: 17
 Status: Executing Phase KPL-04
 Last activity: 2026-09-04 — Phase KPL-04 execution started
@@ -211,6 +211,8 @@ Progress: [██████████] 100%
 - [Phase 04]: SyncFeedEnvelope.payload's oneOf is left without a formal discriminator after two real attempts proved broken/corrupting against the pinned swift-openapi-generator; disambiguation relies on disjoint required-field sets instead.
 - [Phase 04]: [Phase 04]: Fence checks moved to a pre-write dbPool.read check so a fenced write is observably zero commits AND zero rollbacks, not a rollback inside an opened transaction.
 - [Phase 04]: [Phase 04]: mutation_dependencies now receives real (often empty) writes inside acceptMutation's transaction as structural provenance only; ordering enforcement stays resource-key-based per the Phase 03 decision.
+- [Phase 04]: 04-03: No sync-state-machine vocabulary change needed -- background execution already maps to v1's relaunch action; expired authentication and account-switch fencing belong to the separate account-lifecycle state machine, not SyncReducer
+- [Phase 04]: 04-03: VectorConformanceTests.swift drives SyncReducer (Task 2's pure reducer), not GRDBLocalStore -- GRDBLocalStore lacks dependencies-aware readyMutations/applyPull/fence-reading, and extending it was out of this plan's authorized scope
 
 ### Retained Research
 
@@ -246,8 +248,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-05T02:49:53.772Z
-**Stopped at:** Completed 04-02-PLAN.md (storage durability gates G1-G6)
+**Last session:** 2026-09-05T03:11:39.800Z
+**Stopped at:** Completed 04-03-PLAN.md (sync reducer N-version corroboration + manifest gate)
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -318,6 +320,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-03 P27 | 70min | 3 tasks | 2 files |
 | Phase 04 P01 | 300min | 3 tasks | 36 files |
 | Phase KPL-04 P02 | ~2h | 3 tasks | 15 files |
+| Phase KPL-04 P03 | ~90 min | 3 tasks | 11 files |
 
 ### Blockers
 
