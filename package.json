@@ -19,11 +19,12 @@
     "test:desktop:e2e": "pnpm --dir apps/desktop test:e2e",
     "test:desktop:ipc": "pnpm --dir apps/desktop test:ipc",
     "test:phase-1": "./tooling/test-phase-1.sh --run",
+    "tokens:swift": "node tooling/emit-swift-tokens.mjs",
     "typecheck:desktop": "pnpm --dir apps/desktop typecheck",
     "typecheck:web": "pnpm --filter @keepling/web typecheck",
     "verify:desktop:real-stack": "node tooling/verify-real-stack-desktop.mjs",
-    "verify:ios:phase": "node tooling/verify-ios-phase.mjs",
-    "verify:desktop:reproducible": "node tooling/verify-package-reproducibility.mjs"
+    "verify:desktop:reproducible": "node tooling/verify-package-reproducibility.mjs",
+    "verify:ios:phase": "node tooling/verify-ios-phase.mjs"
   },
   "devDependencies": {
     "openapi-typescript": "7.13.0",
