@@ -1,0 +1,134 @@
+{
+  "version": 1,
+  "description": "D-14/Pitfall 2 (04-RESEARCH.md): explicit-null coverage for every nullable field reachable from KeeplingSyncAdapter's wire operations (bootstrap/pull/push/lookup/revoke). Direct inspection of all 13 files under packages/contracts/vectors/ (04-05-SUMMARY.md 'Deviations') found NONE contain a literal wire-DTO-shaped payload -- every vector file is an abstract domain-reducer fixture (e.g. sync.json's {id, revision, title} snapshot), never a full contract-conformant object satisfying a generated DTO's required-field set. This file is therefore the corpus that closes Pitfall 2's own warning ('should be spot-checked, not assumed') for every nullable field this plan's scope touches: each fixture below carries an EXPLICIT JSON null for the field(s) named in its own 'nullFields' list -- decodesAs names the generated Swift type DecodeRoundTripTests.swift decodes it into.",
+  "fixtures": [
+    {
+      "name": "task_snapshot_every_nullable_field_null",
+      "decodesAs": "TaskSnapshot",
+      "nullFields": ["completed_at", "deadline_on", "planned_on", "project", "trashed_at"],
+      "json": {
+        "captured_at": "2026-09-01T12:00:00Z",
+        "completed_at": null,
+        "deadline_on": null,
+        "id": "task-null-coverage",
+        "inbox_state": "inbox",
+        "notes": "",
+        "planned_on": null,
+        "project": null,
+        "revision": 1,
+        "tags": [],
+        "title": "Nullable coverage fixture",
+        "trashed_at": null
+      }
+    },
+    {
+      "name": "sync_feed_envelope_entity_fields_null",
+      "decodesAs": "SyncFeedEnvelope",
+      "nullFields": ["entity_id", "entity_revision", "entity_type"],
+      "json": {
+        "entity_id": null,
+        "entity_revision": null,
+        "entity_type": null,
+        "inserted_at": "2026-09-01T12:00:00Z",
+        "kind": "command_outcome",
+        "mutation_id": "mutation-null-coverage",
+        "ordinal": 0,
+        "payload": {
+          "result": {
+            "mutation_id": "mutation-null-coverage",
+            "outcome": "accepted",
+            "revision": 1,
+            "snapshot": {
+              "captured_at": "2026-09-01T12:00:00Z",
+              "id": "task-null-coverage",
+              "inbox_state": "inbox",
+              "notes": "",
+              "revision": 1,
+              "tags": [],
+              "title": "Nullable coverage fixture"
+            },
+            "task_id": "task-null-coverage",
+            "warnings": []
+          },
+          "status": 201
+        },
+        "sequence": 1
+      }
+    },
+    {
+      "name": "sync_feed_page_coverage_cursor_null",
+      "decodesAs": "SyncFeedPage",
+      "nullFields": ["coverage_cursor"],
+      "json": {
+        "changes": [],
+        "coverage_cursor": null,
+        "has_more": false
+      }
+    },
+    {
+      "name": "sync_bootstrap_page_next_cursor_null",
+      "decodesAs": "SyncBootstrapPage",
+      "nullFields": ["next_cursor"],
+      "json": {
+        "entities": [],
+        "high_water": { "ordinal": -1, "sequence": 0 },
+        "next_cursor": null
+      }
+    },
+    {
+      "name": "problem_every_optional_field_null",
+      "decodesAs": "Problem",
+      "nullFields": ["detail", "affected_fields", "active_unfinished_task_count", "current_revision", "conflict"],
+      "json": {
+        "type": "about:blank",
+        "title": "Refused",
+        "status": 422,
+        "detail": null,
+        "code": "title_required",
+        "retryable": false,
+        "recovery_action": "none",
+        "affected_fields": null,
+        "active_unfinished_task_count": null,
+        "current_revision": null,
+        "conflict": null
+      }
+    },
+    {
+      "name": "conflict_field_base_current_mine_null",
+      "decodesAs": "ConflictField",
+      "nullFields": ["base", "current", "mine"],
+      "json": {
+        "base": null,
+        "current": null,
+        "field": "title",
+        "mine": null
+      }
+    },
+    {
+      "name": "command_acknowledgement_resolved_conflict_id_and_undo_absent_but_snapshot_optionals_null",
+      "decodesAs": "CommandAcknowledgement",
+      "nullFields": ["snapshot.completed_at", "snapshot.trashed_at", "snapshot.deadline_on", "snapshot.planned_on", "snapshot.project"],
+      "json": {
+        "mutation_id": "mutation-null-coverage",
+        "outcome": "accepted",
+        "revision": 1,
+        "snapshot": {
+          "captured_at": "2026-09-01T12:00:00Z",
+          "completed_at": null,
+          "deadline_on": null,
+          "id": "task-null-coverage",
+          "inbox_state": "inbox",
+          "notes": "",
+          "planned_on": null,
+          "project": null,
+          "revision": 1,
+          "tags": [],
+          "title": "Nullable coverage fixture",
+          "trashed_at": null
+        },
+        "task_id": "task-null-coverage",
+        "warnings": []
+      }
+    }
+  ]
+}
