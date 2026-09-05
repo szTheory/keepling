@@ -25,6 +25,7 @@ adding a file, never by editing the runner.
 | `sync-pass` | `node tooling/verify-ios-phase.mjs --lane sync-pass` | `KeeplingCoreTests` (`SyncPassTests`) | Plan 04-08's bounded pull-before-push orchestrator: the three-state transmission machine (`queued` → `in_flight` → settled/`uncertain`, never back to `queued`), FIFO ordering within a resource key, concurrency-safe claiming (two concurrent passes against one row produce exactly one push), fence refusal before any request is built, and authentication-required handling with zero rows marked rejected |
 | `lifecycle` | `node tooling/verify-ios-phase.mjs --lane lifecycle` | `KeeplingCoreTests` (`BackgroundAccelerationTests`) | Plan 04-08's scene-phase/background-refresh proof: the background handler and the foreground driver call the IDENTICAL `runSyncPass` entry point, every supported behavior is correct with the background path disabled entirely, and a background expiration leaves every outbox row in a legal state |
 | `core-loop` | `node tooling/verify-ios-phase.mjs --lane core-loop` | `KeeplingUITests` (`CoreLoopTests`, `GestureMirrorTests`) | Plan 04-09's daily loop driven end to end on the simulator (capture, appear in Inbox, open, edit, save, complete, reopen, trash, restore, all through the task detail view's named controls) and the locked gesture contract (trailing full swipe completes an open task, the swipe reveal never offers Trash, the row's long-press context menu does, and Trash removes the row from Inbox) |
+| `app-intents` | `node tooling/verify-ios-phase.mjs --lane app-intents` | `AppIntentsTests` (`CaptureIntentTests`, `CompleteIntentTests`, `IntentPrivacyTests`) | Plan 04-12's Capture/Complete App Intents: one process-wide `GRDBLocalStore` handle shared between the app and every intent (`IntentStoreAccess`, no path-taking initializer), byte-identical command bytes against the sheet's own `OutboundCommands.capture` producer, empty-title/unknown-task/already-completed/fenced-namespace refusal behavior, a durable capture draft surviving an intent invocation, and D-23/D-36 on the intent surface (no credential/token/cursor/fingerprint in any intent-surfaced string, no deferred-surface framework or affordance anywhere under `apps/ios/Sources`) |
 
 Run every lane (the phase gate, always comprehensive):
 
@@ -39,6 +40,16 @@ node tooling/verify-ios-phase.mjs --lane accessory-probe
 ```
 
 ## Disclosures
+
+### App Intents testing harness — `AppIntentsTesting` unavailable on the pinned SDK (04-12-PLAN.md Task 2)
+
+**Claim under test:** Both `CaptureTaskIntent` and `CompleteTaskIntent` are driven through the same resolution path Shortcuts and Siri actually take, not merely a bare `perform()` call.
+
+**What was verified:** 04-RESEARCH.md's recommended harness for this is `AppIntentsTesting`'s resolve-and-perform API. Before writing any test, this Mac's pinned toolchain was searched directly for the framework: no `AppIntentsTesting.framework`, `.swiftmodule`, or matching filename exists anywhere under `iPhoneSimulator26.5.sdk` or `Xcode.app` (Xcode 17F113). 04-PATTERNS.md records no in-repo App Intent precedent to fall back on either — this plan is the first App Intent surface in the codebase.
+
+**The fallback taken:** every test in `CaptureIntentTests`, `CompleteIntentTests`, and `IntentPrivacyTests` (`Tests/AppIntentsTests/`) drives `AppIntent.perform()` directly. This is a WEAKER harness than resolve-and-perform: it exercises the intent's own logic (store access, `OutboundCommands` production, the fence check, error surfacing) faithfully, but does not exercise the framework's own parameter-resolution machinery (the `requestValue`/prompting cycle Siri and Shortcuts drive when a required parameter is missing). `IntentPrivacyTests.testAParameterResolutionFailureSurfacesAsANamedIntentErrorRatherThanAnUnhandledThrow` covers what IS reachable without the framework: an invalid parameter value (an empty title) surfaces as a named, catchable Swift error rather than crashing the host process.
+
+**Disclosed, not silently substituted**, per the plan's own required fallback language (04-12-PLAN.md Task 2) — if `AppIntentsTesting` becomes available on a future SDK, the resolve-and-perform path should replace the direct `perform()` calls in these three files.
 
 ### `tabViewBottomAccessory` absence — measured, not assumed (04-04-PLAN.md Task 1)
 
