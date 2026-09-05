@@ -1,0 +1,163 @@
+import Foundation
+
+/// Thrown by a `LocalStorePort` method this tracer plan deliberately does
+/// not implement. The full method surface mirrors
+/// `apps/desktop/store-worker/local-store.ts`'s public API (04-01-PLAN.md
+/// Task 3) so later plans (04-02, 04-09) extend this port rather than
+/// replace it; only `acceptMutation`, `acknowledge`, `readyMutations`, and
+/// `snapshot` are implemented here.
+public struct UnimplementedInTracerError: Error, Sendable, Equatable {
+    public let member: String
+    public init(_ member: String) { self.member = member }
+}
+
+/// One durable local mutation, ready to be persisted atomically alongside
+/// its projection effect (mirrors `SyncMutation` in
+/// `apps/desktop/main/application/DesktopApplication.ts`).
+public struct LocalMutation: Sendable, Equatable {
+    public let mutationId: String
+    public let taskId: String
+    public let commandBytes: String
+    public let fingerprint: String
+    public let acceptedAt: String
+    public let resourceKeys: [String]
+    public let title: String
+
+    public init(
+        mutationId: String,
+        taskId: String,
+        commandBytes: String,
+        fingerprint: String,
+        acceptedAt: String,
+        resourceKeys: [String],
+        title: String
+    ) {
+        self.mutationId = mutationId
+        self.taskId = taskId
+        self.commandBytes = commandBytes
+        self.fingerprint = fingerprint
+        self.acceptedAt = acceptedAt
+        self.resourceKeys = resourceKeys
+        self.title = title
+    }
+}
+
+/// The local result of a capture, reported only after the durable
+/// transaction committed (D-03 -- never before).
+public struct LocalAcceptance: Sendable, Equatable {
+    public let mutationId: String
+    public let fingerprint: String
+    public let taskId: String
+    public let title: String
+}
+
+/// A page of changes pulled from the server (mirrors `PullPage`).
+public struct PullPage: Sendable, Equatable {
+    public struct Change: Sendable, Equatable {
+        public let entityId: String
+        public let snapshotJSON: String
+        public init(entityId: String, snapshotJSON: String) {
+            self.entityId = entityId
+            self.snapshotJSON = snapshotJSON
+        }
+    }
+    public let cursor: String?
+    public let changes: [Change]
+    public init(cursor: String?, changes: [Change]) {
+        self.cursor = cursor
+        self.changes = changes
+    }
+}
+
+/// A terminal server answer to one durable mutation (mirrors
+/// `SyncAcknowledgement`). `snapshotJSON` is the canonical task snapshot on
+/// `accepted`/`already_satisfied`; other outcomes carry no task state.
+public struct SyncAcknowledgement: Sendable, Equatable {
+    public enum Outcome: String, Sendable, Equatable {
+        case accepted
+        case alreadySatisfied = "already_satisfied"
+        case rejected
+        case stale
+        case conflict
+    }
+    public let mutationId: String
+    public let fingerprint: String
+    public let outcome: Outcome
+    public let snapshotJSON: String
+
+    public init(mutationId: String, fingerprint: String, outcome: Outcome, snapshotJSON: String) {
+        self.mutationId = mutationId
+        self.fingerprint = fingerprint
+        self.outcome = outcome
+        self.snapshotJSON = snapshotJSON
+    }
+}
+
+/// One row in the visible projection (what a person sees on this iPhone).
+public struct ProjectionRow: Sendable, Equatable {
+    public let taskId: String
+    public let title: String
+    public let syncStatus: String
+    public let notes: String
+    public let completedAt: String?
+    public let trashedAt: String?
+    public let planned: Bool
+}
+
+/// A whole-workspace snapshot (mirrors `WorkspaceSnapshot`).
+public struct WorkspaceSnapshot: Sendable, Equatable {
+    public let tasks: [ProjectionRow]
+}
+
+/// This client's local view of sync progress (mirrors `SyncState`).
+public struct LocalSyncState: Sendable, Equatable {
+    public let cursor: String?
+    public let outbox: [String]
+    public let readyPushes: [String]
+}
+
+public enum UndoDropReason: String, Sendable, Equatable {
+    case blocked, dropped, nothingToUndo = "nothing_to_undo", transmitted, unknown
+}
+
+public struct UndoResult: Sendable, Equatable {
+    public let applied: Bool
+    public let reason: UndoDropReason
+}
+
+/// The Swift reimplementation of `apps/desktop/store-worker/local-store.ts`'s
+/// public surface (04-PATTERNS.md "exact (same port surface, reimplemented
+/// as a Swift protocol)"). Only the tracer's four members are implemented in
+/// this plan; the rest throw `UnimplementedInTracerError` until Plans
+/// 04-02/04-09 replace them (04-01-PLAN.md Task 3).
+public protocol LocalStorePort: Sendable {
+    /// Durably accepts one local mutation: writes the visible projection
+    /// row, the immutable command bytes + fingerprint, the mutation
+    /// journal entry, and the outbox row in ONE transaction (D-03), and
+    /// reports local acceptance only after that transaction commits.
+    func acceptMutation(_ mutation: LocalMutation) throws -> LocalAcceptance
+
+    /// Applies a bounded pull page into the canonical shadow.
+    func applyPull(_ page: PullPage) throws
+
+    /// Settles a terminal server acknowledgement: verifies mutation
+    /// identity + fingerprint, applies canonical state only on a
+    /// successful outcome, deletes the exact outbox row, and treats a
+    /// replay of an already-settled acknowledgement as a no-op success
+    /// (D-09).
+    @discardableResult
+    func acknowledge(_ acknowledgement: SyncAcknowledgement) throws -> WorkspaceSnapshot
+
+    /// Mutations whose bytes have never been handed to the transport (or
+    /// whose prior attempt never received an answer), in outbox order,
+    /// dependency- and resource-key-ordering-safe.
+    func readyMutations() throws -> [LocalMutation]
+
+    func undoLastLocalAction() throws -> UndoResult
+
+    func resolveConflict(conflictId: String, selection: [String: String]) throws -> WorkspaceSnapshot
+
+    func snapshot() throws -> WorkspaceSnapshot
+
+    func syncState() throws -> LocalSyncState
+}
