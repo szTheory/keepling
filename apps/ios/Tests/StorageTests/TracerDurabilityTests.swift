@@ -65,6 +65,42 @@ final class TracerDurabilityTests: XCTestCase {
         XCTAssertEqual(try reopened.snapshot().tasks.count, 0)
     }
 
+    func testFailureInsideTheWriteClosureLeavesNoPartialStateAcrossAllFourTables() throws {
+        let path = storePath()
+        let store = try GRDBLocalStore(path: path)
+        let built = try CaptureCommand.build(title: "First capture", mutationId: "m-dup", taskId: "t-dup-1")
+        let first = LocalMutation(
+            mutationId: built.mutationId, taskId: built.taskId, commandBytes: built.commandBytes,
+            fingerprint: built.fingerprint, acceptedAt: "2026-01-01T00:00:00Z",
+            resourceKeys: ["task:\(built.taskId)"], title: built.title
+        )
+        _ = try store.acceptMutation(first)
+        XCTAssertEqual(try store.countRows(in: "visible_projection"), 1)
+
+        // A SECOND mutation reusing the SAME mutation_id violates
+        // immutable_commands' PRIMARY KEY on the very first statement
+        // INSIDE this call's own `dbPool.write` closure -- a real failure
+        // mid-transaction, not a pre-transaction validation rejection like
+        // the fingerprint-mismatch test above. GRDB rolls the whole
+        // closure back on any thrown error.
+        let built2 = try CaptureCommand.build(title: "Second capture, same identity", mutationId: "m-dup", taskId: "t-dup-2")
+        let duplicate = LocalMutation(
+            mutationId: built2.mutationId, taskId: built2.taskId, commandBytes: built2.commandBytes,
+            fingerprint: built2.fingerprint, acceptedAt: "2026-01-01T00:00:01Z",
+            resourceKeys: ["task:\(built2.taskId)"], title: built2.title
+        )
+        XCTAssertThrowsError(try store.acceptMutation(duplicate))
+
+        // The FIRST capture's rows still stand; the second's contributed
+        // NOTHING -- no orphan visible_projection row for t-dup-2, no
+        // partial outbox/journal entry for the failed attempt.
+        XCTAssertEqual(try store.countRows(in: "visible_projection"), 1)
+        XCTAssertEqual(try store.countRows(in: "immutable_commands"), 1)
+        XCTAssertEqual(try store.countRows(in: "mutation_journal"), 1)
+        XCTAssertEqual(try store.countRows(in: "outbox"), 1)
+        XCTAssertEqual(try store.snapshot().tasks.first?.title, "First capture")
+    }
+
     func testMigrationLedgerAppliesAllElevenStrictTablesExactlyOnce() throws {
         let path = storePath()
         let store = try GRDBLocalStore(path: path)
