@@ -113,6 +113,13 @@ targets:
       - path: Tests/KeeplingUITests
     dependencies:
       - target: Keepling
+      # 04-10-PLAN.md Task 1: AnnouncementTests.swift is a plain XCTestCase
+      # (no XCUIApplication launch) unit-testing AnnouncementDebouncer
+      # directly, so it needs KeeplingCore's compiled module at compile
+      # time -- `target: Keepling` alone (a UI-test host-app link) does not
+      # provide that; the equivalent unit-test targets above depend on the
+      # package directly for the same reason.
+      - package: KeeplingCore
     settings:
       base:
         SWIFT_VERSION: "6.3"
