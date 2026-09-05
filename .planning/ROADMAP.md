@@ -254,7 +254,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
-**Plans:** 10/17 plans executed
+**Plans:** 11/17 plans executed
 
 Plans:
 **Wave 1**
@@ -290,7 +290,7 @@ Plans:
 
 **Wave 8** *(blocked on Wave 7 completion)*
 
-- [ ] 04-11-PLAN.md — Named, timerless undo as a compensating semantic action through the server-issued handle.
+- [x] 04-11-PLAN.md — Named, timerless undo as a compensating semantic action through the server-issued handle.
 
 **Wave 9** *(blocked on Wave 8 completion)*
 
