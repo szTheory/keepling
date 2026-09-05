@@ -254,7 +254,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
-**Plans:** 7/17 plans executed
+**Plans:** 8/17 plans executed
 
 Plans:
 **Wave 1**
@@ -278,7 +278,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 04-08-PLAN.md — The bounded sync pass, outbound commands for the full supported loop, and background execution proven to be acceleration only.
+- [x] 04-08-PLAN.md — The bounded sync pass, outbound commands for the full supported loop, and background execution proven to be acceleration only.
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
