@@ -183,6 +183,32 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
         }
     }
 
+    /// Wipes every row of this device's local intent for whatever
+    /// namespace it currently holds, then clears the fence and the bound
+    /// namespace itself so a fresh `bindNamespace` call starts clean.
+    /// Deliberately synchronous, local-only SQL with NO transport or sync
+    /// port parameter anywhere in its signature (04-07-PLAN.md Task 3,
+    /// T-04-07-08): a server deletion is structurally UNREACHABLE from
+    /// this call site, not merely uncalled.
+    public func wipeAllLocalData() throws {
+        assertNotOnMainThread()
+        try dbPool.write { db in
+            // Children referencing `immutable_commands` MUST be deleted
+            // before it, or SQLite's foreign-key enforcement (PRAGMA
+            // foreign_keys = ON, set on every connection) rejects the
+            // delete.
+            for table in [
+                "mutation_dependencies", "outbox", "conflicts", "mutation_journal", "immutable_commands",
+                "canonical_shadow", "visible_projection", "sync_cursor", "last_local_action",
+            ] {
+                try db.execute(sql: "DELETE FROM \(table)")
+            }
+            try db.execute(sql: "INSERT INTO sync_cursor(singleton, cursor) VALUES (1, NULL)")
+            try db.execute(sql: "INSERT INTO last_local_action(singleton, action_json) VALUES (1, NULL)")
+            try db.execute(sql: "DELETE FROM namespace_metadata")
+        }
+    }
+
     private static func serializeNamespace(_ namespace: SyncNamespace) throws -> String {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
@@ -331,6 +357,7 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
 
     public func syncState() throws -> LocalSyncState {
         assertNotOnMainThread()
+        try dbPool.read { db in try self.assertNotFenced(db) }
         let outboxIds = try readyMutationsUnguarded()
         return try dbPool.read { db in
             let cursor = try String.fetchOne(db, sql: "SELECT cursor FROM sync_cursor WHERE singleton = 1")
@@ -341,6 +368,17 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
 
     // MARK: - Ready pushes (transport-agnostic outbox read)
 
+    /// NOTE (04-07-PLAN.md Task 3): deliberately NOT fence-gated, unlike
+    /// `snapshot()`/`syncState()` below. 04-06-SUMMARY.md's own
+    /// `BackupReplayTests.testSameBackupRestoredUnderADifferentAccountNamespaceFencesEveryPush`
+    /// reads the ready rows AFTER a fence is set specifically to
+    /// demonstrate, per mutation, that the WRITE path (`setOutboxState`)
+    /// refuses -- gating this read too would make that established,
+    /// already-verified 04-06 proof impossible to express. The write-path
+    /// fence (`setOutboxState`/`acceptMutation`/`acknowledge`) is what
+    /// makes the fenced rows unreachable for any real effect; this read
+    /// alone cannot push, settle, or expose a value beyond mutation
+    /// identity + already-durable command bytes.
     public func readyMutations() throws -> [LocalMutation] {
         assertNotOnMainThread()
         return try readyMutationsUnguarded()
@@ -560,6 +598,12 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
 
     public func snapshot() throws -> WorkspaceSnapshot {
         assertNotOnMainThread()
+        // 04-07-PLAN.md Task 3 (Rule 2 -- missing critical functionality):
+        // a fenced store must refuse READS too, not only writes -- a
+        // second account on the same phone must never be able to SEE the
+        // first account's rows through this call, even though the write
+        // path was already fenced by `bindNamespace` (T-04-07-04).
+        try dbPool.read { db in try self.assertNotFenced(db) }
         return try snapshotUnguarded()
     }
 
