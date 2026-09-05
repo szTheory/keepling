@@ -1,0 +1,299 @@
+import Combine
+import Foundation
+import KeeplingCore
+
+/// The iPhone analogue of the desktop's frozen `ClientFacade`
+/// (`packages/web-ui`, 03-CONTEXT.md D-45): a presentation-only boundary
+/// exposing a snapshot value, a subscription, and named task/navigation
+/// operations. No view holds a store handle, a transport, a credential, a
+/// cursor, or a fingerprint -- every presentation type below (`WorkspaceItem`,
+/// `ConflictPresentation`, `DraftPresentation`) is a plain, `Sendable`,
+/// GRDB-free value the facade derives from `KeeplingCore`'s own
+/// storage-neutral `ProjectionRow`/`ConflictRecord`/`CaptureDraft` types
+/// (04-09-PLAN.md Task 1, `ShellBoundaryTests` enforces this structurally).
+///
+/// `WorkspaceFacade` talks ONLY to `LocalStorePort` -- it never constructs a
+/// `KeeplingApplication` or a `SyncPort` itself. The already-running
+/// `ScenePhaseDriver`/`BackgroundRefresh` (04-08-PLAN.md Task 3, wired in
+/// `KeeplingApp.swift`) push whatever this facade durably accepts into the
+/// outbox; the facade's job stops at "durably accepted on this iPhone"
+/// (D-03), exactly like the tracer's `RootView.capture(title:)` did before
+/// this plan replaced it.
+@MainActor
+public final class WorkspaceFacade: ObservableObject {
+    private let store: any LocalStorePort
+
+    /// The full workspace snapshot, presentation-shaped. Every view reads
+    /// this ONE published value -- never the store directly.
+    @Published public private(set) var items: [WorkspaceItem] = []
+
+    public init(store: any LocalStorePort) {
+        self.store = store
+    }
+
+    // MARK: - Snapshot
+
+    /// Reloads `items` from the store. Runs the store call off the main
+    /// actor (`Task.detached`), mirroring the tracer's own
+    /// `RootView.reload()` -- `GRDBLocalStore` traps in Debug builds if
+    /// entered from the main thread.
+    public func refresh() async {
+        let store = self.store
+        let snapshot = await Task.detached(priority: .userInitiated) {
+            (try? store.snapshot()) ?? WorkspaceSnapshot(tasks: [])
+        }.value
+        var presented: [WorkspaceItem] = []
+        for row in snapshot.tasks {
+            let conflict = await Task.detached(priority: .userInitiated) {
+                try? store.activeConflict(forTaskId: row.taskId)
+            }.value ?? nil
+            presented.append(WorkspaceItem(row: row, conflict: conflict.map(ConflictPresentation.init)))
+        }
+        items = presented
+    }
+
+    /// Today's items: unfinished, uncompleted tasks planned onto Today.
+    /// Trashed and completed tasks never appear on either tab in this
+    /// phase (no "recently completed" or Trash-browsing surface exists
+    /// yet -- D-49: Trash is reachable only through the context menu/
+    /// detail view, never a list; a completed task's mirrored controls
+    /// (Reopen, Trash/Restore) remain reachable through the task detail
+    /// view, which stays pushed across the transition).
+    public var todayItems: [WorkspaceItem] {
+        items.filter { $0.planned && !$0.isTrashed && !$0.isCompleted }
+    }
+
+    /// Inbox items: unfinished, uncompleted, untrashed, not planned onto
+    /// Today.
+    public var inboxItems: [WorkspaceItem] {
+        items.filter { !$0.planned && !$0.isTrashed && !$0.isCompleted }
+    }
+
+    public func item(forTaskId taskId: String) -> WorkspaceItem? {
+        items.first { $0.taskId == taskId }
+    }
+
+    // MARK: - Capture (D-35)
+
+    @discardableResult
+    public func capture(title: String, addToToday: Bool) async throws -> String {
+        let mutationId = UUID().uuidString
+        let taskId = UUID().uuidString
+        let built = try OutboundCommands.capture(title: title, mutationId: mutationId, taskId: taskId)
+        try await accept(built, planned: addToToday)
+        if addToToday {
+            // Capture only produces `planned: false`; a second, independent
+            // command expresses "also place on Today" -- the local effect
+            // flips optimistically, exactly as `OutboundCommands.planForToday`
+            // documents (the server resolves the actual account day).
+            let planMutationId = UUID().uuidString
+            let basis = try await revisionBasis(forTaskId: taskId, title: title, notes: "")
+            let planned = try OutboundCommands.planForToday(true, taskId: taskId, basis: basis, mutationId: planMutationId)
+            try await accept(planned, planned: true)
+        }
+        await refresh()
+        return taskId
+    }
+
+    // MARK: - Edit / clarify
+
+    public func saveChanges(taskId: String, title: String, notes: String) async throws {
+        guard let item = item(forTaskId: taskId) else { return }
+        let basis = try await revisionBasis(forTaskId: taskId, title: item.title, notes: item.notes)
+        var touched = OutboundCommands.TouchedFields()
+        if title != item.title { touched = OutboundCommands.TouchedFields(title: title, notes: touched.notes) }
+        if notes != item.notes { touched = OutboundCommands.TouchedFields(title: touched.title, notes: notes) }
+        guard touched.title != nil || touched.notes != nil else { return }
+        let built = try OutboundCommands.edit(taskId: taskId, touched: touched, basis: basis, mutationId: UUID().uuidString)
+        try await accept(built, planned: item.planned)
+        await refresh()
+    }
+
+    /// `Save & Move Out of Inbox` -- the Inbox clarify action. Produces the
+    /// identical wire shape as `saveChanges`, with the `clarify_task` type
+    /// discriminator (the server moves the task out of Inbox as its own
+    /// side effect; this client expresses no local Inbox-membership field).
+    public func clarify(taskId: String, title: String, notes: String) async throws {
+        guard let item = item(forTaskId: taskId) else { return }
+        let basis = try await revisionBasis(forTaskId: taskId, title: item.title, notes: item.notes)
+        let touched = OutboundCommands.TouchedFields(
+            title: title == item.title ? nil : title,
+            notes: notes == item.notes ? nil : notes
+        )
+        let built = try OutboundCommands.edit(
+            taskId: taskId, touched: touched.isTouchedFieldsEmpty ? OutboundCommands.TouchedFields(title: title, notes: notes) : touched,
+            basis: basis, mutationId: UUID().uuidString, asClarify: true
+        )
+        try await accept(built, planned: item.planned)
+        await refresh()
+    }
+
+    // MARK: - Lifecycle
+
+    public func complete(taskId: String) async throws { try await lifecycle(.complete, taskId: taskId) }
+    public func reopen(taskId: String) async throws { try await lifecycle(.reopen, taskId: taskId) }
+    public func trash(taskId: String) async throws { try await lifecycle(.trash, taskId: taskId) }
+    public func restore(taskId: String) async throws { try await lifecycle(.restore, taskId: taskId) }
+
+    private func lifecycle(_ transition: OutboundCommands.Lifecycle, taskId: String) async throws {
+        guard let item = item(forTaskId: taskId) else { return }
+        let basis = try await revisionBasis(forTaskId: taskId, title: item.title, notes: item.notes)
+        let acceptedAt = ISO8601DateFormatter().string(from: Date())
+        let built = try OutboundCommands.lifecycle(transition, taskId: taskId, basis: basis, mutationId: UUID().uuidString, acceptedAt: acceptedAt)
+        let planned = transition == .trash ? item.planned : (built.effect.planned)
+        try await accept(built, planned: planned)
+        await refresh()
+    }
+
+    // MARK: - Conflict resolution
+
+    /// `Use Mine` / `Use Current` (04-UI-SPEC.md Conflict resolver): sends a
+    /// fresh `edit` command carrying the chosen field values against
+    /// CURRENT server truth (a freshly read basis, revision included) --
+    /// never a local merge. `Keep Editing` calls neither of these and
+    /// mutates nothing.
+    public func resolveConflict(taskId: String, useMine: Bool) async throws {
+        guard let item = item(forTaskId: taskId), let conflict = item.conflict else { return }
+        let chosen = useMine ? conflict.mine : conflict.current
+        let store = self.store
+        let freshBasis = try await Task.detached(priority: .userInitiated) {
+            OutboundCommands.Basis(
+                baseTitle: item.title,
+                baseNotes: item.notes,
+                baseCompletedAt: item.completedAt,
+                baseTrashedAt: item.trashedAt,
+                basePlanned: item.planned,
+                expectedRevision: (try? store.expectedRevision(forTaskId: taskId)) ?? 1
+            )
+        }.value
+        var touched = OutboundCommands.TouchedFields()
+        if let title = chosen["title"] { touched = OutboundCommands.TouchedFields(title: title, notes: touched.notes) }
+        if let notes = chosen["notes"] { touched = OutboundCommands.TouchedFields(title: touched.title, notes: notes) }
+        if touched.title != nil || touched.notes != nil {
+            let built = try OutboundCommands.edit(taskId: taskId, touched: touched, basis: freshBasis, mutationId: UUID().uuidString)
+            try await accept(built, planned: item.planned)
+        }
+        try await Task.detached(priority: .userInitiated) {
+            try? store.clearConflict(conflictId: conflict.conflictId)
+        }.value
+        await refresh()
+    }
+
+    // MARK: - Durable capture draft (D-35)
+
+    public func loadDraft() async -> DraftPresentation {
+        let store = self.store
+        let draft = await Task.detached(priority: .userInitiated) {
+            (try? store.loadDraft()) ?? CaptureDraft(title: "", addToToday: false)
+        }.value
+        return DraftPresentation(title: draft.title, addToToday: draft.addToToday)
+    }
+
+    public func saveDraft(title: String, addToToday: Bool) async {
+        let store = self.store
+        await Task.detached(priority: .userInitiated) {
+            try? store.saveDraft(CaptureDraft(title: title, addToToday: addToToday))
+        }.value
+    }
+
+    public func discardDraft() async {
+        let store = self.store
+        await Task.detached(priority: .userInitiated) {
+            try? store.clearDraft()
+        }.value
+    }
+
+    // MARK: - Private helpers
+
+    private func revisionBasis(forTaskId taskId: String, title: String, notes: String) async throws -> OutboundCommands.Basis {
+        guard let item = item(forTaskId: taskId) else {
+            let store = self.store
+            let revision = try await Task.detached(priority: .userInitiated) { try store.expectedRevision(forTaskId: taskId) }.value
+            return OutboundCommands.Basis(baseTitle: title, baseNotes: notes, expectedRevision: revision)
+        }
+        let store = self.store
+        let revision = try await Task.detached(priority: .userInitiated) { try store.expectedRevision(forTaskId: taskId) }.value
+        return OutboundCommands.Basis(
+            baseTitle: title,
+            baseNotes: notes,
+            baseCompletedAt: item.completedAt,
+            baseTrashedAt: item.trashedAt,
+            basePlanned: item.planned,
+            expectedRevision: revision
+        )
+    }
+
+    private func accept(_ built: OutboundCommands.Built, planned: Bool) async throws {
+        let mutation = LocalMutation(
+            mutationId: built.mutationId,
+            taskId: built.taskId,
+            commandBytes: built.commandBytes,
+            fingerprint: built.fingerprint,
+            acceptedAt: ISO8601DateFormatter().string(from: Date()),
+            resourceKeys: built.resourceKeys,
+            title: built.effect.title,
+            effect: LocalMutation.ProjectionEffect(
+                notes: built.effect.notes,
+                completedAt: built.effect.completedAt,
+                trashedAt: built.effect.trashedAt,
+                planned: planned
+            )
+        )
+        let store = self.store
+        try await Task.detached(priority: .userInitiated) {
+            _ = try store.acceptMutation(mutation)
+        }.value
+    }
+}
+
+private extension OutboundCommands.TouchedFields {
+    var isTouchedFieldsEmpty: Bool { title == nil && notes == nil }
+}
+
+// MARK: - Presentation types (no store, transport, credential, cursor, or fingerprint)
+
+public struct WorkspaceItem: Sendable, Equatable, Identifiable {
+    public var id: String { taskId }
+    public let taskId: String
+    public let title: String
+    public let notes: String
+    public let syncStatus: String
+    public let completedAt: String?
+    public let trashedAt: String?
+    public let planned: Bool
+    public let conflict: ConflictPresentation?
+
+    public var isCompleted: Bool { completedAt != nil }
+    public var isTrashed: Bool { trashedAt != nil }
+
+    init(row: ProjectionRow, conflict: ConflictPresentation?) {
+        taskId = row.taskId
+        title = row.title
+        notes = row.notes
+        syncStatus = row.syncStatus
+        completedAt = row.completedAt
+        trashedAt = row.trashedAt
+        planned = row.planned
+        self.conflict = conflict
+    }
+}
+
+public struct ConflictPresentation: Sendable, Equatable {
+    public let conflictId: String
+    public let affectedFields: [String]
+    public let mine: [String: String]
+    public let current: [String: String]
+
+    init(_ record: ConflictRecord) {
+        conflictId = record.conflictId
+        affectedFields = record.affectedFields
+        mine = record.mine
+        current = record.current
+    }
+}
+
+public struct DraftPresentation: Sendable, Equatable {
+    public let title: String
+    public let addToToday: Bool
+    public var isEmpty: Bool { title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+}

@@ -1,8 +1,9 @@
 import KeeplingCore
 import SwiftUI
 
-/// Minimal single-screen root (Plan 04-09 builds the two-tab TabView shell;
-/// this plan's tracer only needs one screen to host the capture sheet).
+/// The app entry point. Routes to `RootTabView` (D-25's two-tab shell,
+/// 04-09-PLAN.md Task 1) via one `WorkspaceFacade` constructed once here --
+/// the single presentation-only boundary every view depends on.
 @main
 struct KeeplingApp: App {
     // Non-nil only when `KEEPLING_ACCESSORY_PROBE_MODE` is present in the
@@ -17,6 +18,11 @@ struct KeeplingApp: App {
     // (04-08-PLAN.md Task 3).
     private let scenePhaseDriver: ScenePhaseDriver?
     private let backgroundRefresh: BackgroundRefresh?
+    // Constructed once in `init()`, not per `body` evaluation -- `body` is a
+    // computed property SwiftUI can re-evaluate, and a fresh
+    // `WorkspaceFacade` on every evaluation would silently drop its
+    // `@Published items` state (04-09-PLAN.md Task 1).
+    private let facade: WorkspaceFacade?
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -25,6 +31,7 @@ struct KeeplingApp: App {
             self.store = nil
             self.scenePhaseDriver = nil
             self.backgroundRefresh = nil
+            self.facade = nil
             return
         }
         self.probeMode = nil
@@ -47,6 +54,7 @@ struct KeeplingApp: App {
         // swiftlint:disable:next force_try
         let openedStore = try! GRDBLocalStore(path: path)
         store = openedStore
+        facade = WorkspaceFacade(store: openedStore)
 
         // 04-08-PLAN.md Task 3: the scene-phase driver and background
         // refresh handler both need a `KeeplingApplication`, which needs a
@@ -77,7 +85,7 @@ struct KeeplingApp: App {
             if let probeMode {
                 AccessoryProbeRootView(mode: probeMode)
             } else {
-                RootView(store: store!)
+                RootTabView(facade: facade!)
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
