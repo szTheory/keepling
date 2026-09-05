@@ -254,7 +254,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
-**Plans:** 9/17 plans executed
+**Plans:** 10/17 plans executed
 
 Plans:
 **Wave 1**
@@ -286,7 +286,7 @@ Plans:
 
 **Wave 7** *(blocked on Wave 6 completion)*
 
-- [ ] 04-10-PLAN.md — One authoritative sync presentation, the conditional bottom accessory, the Sync & Recovery sheet, and debounced announcements.
+- [x] 04-10-PLAN.md — One authoritative sync presentation, the conditional bottom accessory, the Sync & Recovery sheet, and debounced announcements.
 
 **Wave 8** *(blocked on Wave 7 completion)*
 
