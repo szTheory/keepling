@@ -122,7 +122,7 @@ final class DeviceGrantTests: XCTestCase {
         var remaining = entropy
         return DeviceGrantClient(
             baseURL: URL(string: "https://keepling.example.com")!,
-            configuration: DeviceGrantConfiguration(installationId: "installation-1", label: "Keepling for iPhone", redirectURI: "keeplingios://auth/callback"),
+            configuration: DeviceGrantConfiguration(installationId: "installation-1", label: "Keepling for iPhone", redirectURI: "keepling://ios/auth/callback"),
             credentialStore: credentialStore,
             namespaceActivator: activator,
             transport: transport,
@@ -156,7 +156,7 @@ final class DeviceGrantTests: XCTestCase {
 
         // An attacker/malformed redirect attempting to smuggle namespace
         // authority through the one untrusted input this flow accepts.
-        var components = URLComponents(url: URL(string: "keeplingios://auth/callback")!, resolvingAgainstBaseURL: false)!
+        var components = URLComponents(url: URL(string: "keepling://ios/auth/callback")!, resolvingAgainstBaseURL: false)!
         components.queryItems = [
             URLQueryItem(name: "code", value: "some-code"),
             URLQueryItem(name: "state", value: "some-state"),
@@ -187,7 +187,7 @@ final class DeviceGrantTests: XCTestCase {
         let namespace = makeNamespace()
         transport.enqueue(operationID: "exchangeNativeAuthorizationCode", status: 200, value: makeTokenResponse(accessToken: "access-1", refreshToken: "refresh-1", namespace: namespace))
 
-        var callback = URLComponents(url: URL(string: "keeplingios://auth/callback")!, resolvingAgainstBaseURL: false)!
+        var callback = URLComponents(url: URL(string: "keepling://ios/auth/callback")!, resolvingAgainstBaseURL: false)!
         callback.queryItems = [URLQueryItem(name: "code", value: "auth-code-1"), URLQueryItem(name: "state", value: state)]
 
         let credentials = try await client.completeAuthorization(callbackURL: callback.url!)

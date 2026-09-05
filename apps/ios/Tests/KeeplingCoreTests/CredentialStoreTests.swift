@@ -162,7 +162,7 @@ final class CredentialStoreTests: XCTestCase {
 
         let client = DeviceGrantClient(
             baseURL: URL(string: "https://keepling.example.com")!,
-            configuration: DeviceGrantConfiguration(installationId: "installation-1", label: "Keepling for iPhone", redirectURI: "keeplingios://auth/callback"),
+            configuration: DeviceGrantConfiguration(installationId: "installation-1", label: "Keepling for iPhone", redirectURI: "keepling://ios/auth/callback"),
             credentialStore: credentialStore,
             namespaceActivator: BindingNamespaceActivator(store: store),
             transport: transport,
@@ -181,7 +181,7 @@ final class CredentialStoreTests: XCTestCase {
         transport.enqueue(operationID: "exchangeNativeAuthorizationCode", status: 200, value: Components.Schemas.NativeTokenResponse(
             access_token: accessSecret, expires_in: ._900, namespace: namespace, refresh_token: refreshSecret, token_type: .Bearer
         ))
-        var callback = URLComponents(url: URL(string: "keeplingios://auth/callback")!, resolvingAgainstBaseURL: false)!
+        var callback = URLComponents(url: URL(string: "keepling://ios/auth/callback")!, resolvingAgainstBaseURL: false)!
         callback.queryItems = [URLQueryItem(name: "code", value: "auth-code-leak-scan"), URLQueryItem(name: "state", value: state)]
         _ = try await client.completeAuthorization(callbackURL: callback.url!)
 

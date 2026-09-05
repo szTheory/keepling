@@ -42,16 +42,19 @@ targets:
         # undo is a named, persistent control (D-30), never a shake gesture.
         UIApplicationSupportsShakeToEdit: false
         # 04-07-PLAN.md Task 1: the registered ASWebAuthenticationSession
-        # callback scheme for the native device-grant PKCE flow. Deliberately
-        # DISTINCT from the desktop's `keepling://auth/callback`
-        # (apps/desktop/main/adapters/auth.ts) -- a private-use scheme is
-        # first-come per-OS, and this app registers its own so an iOS-side
-        # collision with a future third native client is this app's own to
-        # avoid, never inherited from the Mac client's registration.
+        # callback scheme for the native device-grant PKCE flow. This app's
+        # callback (`keepling://ios/auth/callback`) is distinct from the
+        # desktop's `keepling://auth/callback`
+        # (apps/desktop/main/adapters/auth.ts) by HOST, not by scheme: the
+        # server's redirect_uris!/1 allowlist validator requires every entry
+        # to be an exact private-use `keepling://host/path` URI. A
+        # private-use scheme is first-come per-OS, so sharing `keepling`
+        # with the Mac client cannot collide -- they never register on the
+        # same OS.
         CFBundleURLTypes:
           - CFBundleURLName: com.szTheory.keepling.auth
             CFBundleURLSchemes:
-              - keeplingios
+              - keepling
 
   KeeplingCoreTests:
     type: bundle.unit-test

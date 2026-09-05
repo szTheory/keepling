@@ -23,7 +23,7 @@
 			<string>com.szTheory.keepling.auth</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>keeplingios</string>
+				<string>keepling</string>
 			</array>
 		</dict>
 	</array>

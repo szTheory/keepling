@@ -155,15 +155,17 @@ config :keepling, :device_grants,
   server_instance: device_grant_server_instance,
   redirect_uris: %{
     "electron" => ["keepling://auth/callback"],
-    # 04-07-PLAN.md Task 1: the iPhone app registers its OWN
-    # ASWebAuthenticationSession callback scheme
-    # (`apps/ios/project.yml`), deliberately distinct from the desktop's
-    # `keepling://auth/callback` -- a private-use scheme is first-come
-    # per-OS, so there is no reason to share one across two different
-    # native client kinds, and doing so would make a future third native
-    # client's registration choice depend on which of the first two it
-    # happened to collide with.
-    "iphone" => ["keeplingios://auth/callback"]
+    # 04-07-PLAN.md Task 1: the iPhone app's ASWebAuthenticationSession
+    # callback is distinct from the desktop's `keepling://auth/callback`,
+    # but distinguishes itself by HOST (`ios`) rather than by scheme.
+    # redirect_uris!/1 in application.ex requires every allowlist entry to
+    # be an exact private-use `keepling://host/path` URI; a separate
+    # `keeplingios` scheme violates that invariant, and widening the
+    # validator to accept arbitrary schemes would weaken the allowlist for
+    # every client. A private-use scheme is first-come per-OS, so desktop
+    # and iPhone sharing `keepling` cannot collide -- they never register
+    # on the same OS.
+    "iphone" => ["keepling://ios/auth/callback"]
   }
 
 config :keepling, KeeplingWeb.Endpoint,

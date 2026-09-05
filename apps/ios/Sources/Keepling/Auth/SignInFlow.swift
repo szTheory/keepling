@@ -59,7 +59,7 @@ public struct SignInFlow: View {
     private let callbackURLScheme: String
     private let presenter = ASWebAuthenticationSessionPresenter()
 
-    public init(serverBaseURL: URL, client: DeviceGrantClient, callbackURLScheme: String = "keeplingios") {
+    public init(serverBaseURL: URL, client: DeviceGrantClient, callbackURLScheme: String = "keepling") {
         self.serverBaseURL = serverBaseURL
         self.client = client
         self.callbackURLScheme = callbackURLScheme
