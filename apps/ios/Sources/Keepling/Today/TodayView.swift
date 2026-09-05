@@ -11,6 +11,12 @@ struct TodayView: View {
     @Binding var path: NavigationPath
     @State private var isPresentingCapture = false
     @AccessibilityFocusState private var focusedElement: String?
+    /// See `InboxView`'s identical comment: `@AccessibilityFocusState`
+    /// round-trips through the real accessibility focus system and
+    /// reverts to `nil` without an active assistive-technology client
+    /// (T-04-13-06) -- this plain `@State` mirror reflects exactly what
+    /// this view's OWN logic decided and requested instead.
+    @State private var lastRequestedFocusTarget: String?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private static let headingFocusId = "today-heading"
@@ -53,11 +59,12 @@ struct TodayView: View {
                             onComplete: { Task { try? await facade.complete(taskId: item.taskId) } },
                             onReopen: { Task { try? await facade.reopen(taskId: item.taskId) } },
                             onTrash: { Task { try? await facade.trash(taskId: item.taskId) } },
-                            onOpenSyncRecovery: { facade.openSyncRecovery(focusTaskId: item.taskId) }
+                            onOpenSyncRecovery: { facade.openSyncRecovery(focusTaskId: item.taskId) },
+                            focusBinding: $focusedElement,
+                            focusValue: item.taskId
                         )
                         .contentShape(Rectangle())
                         .onTapGesture { path.append(item.taskId) }
-                        .accessibilityFocused($focusedElement, equals: item.taskId)
                     }
                 }
                 .listStyle(.plain)
@@ -76,6 +83,15 @@ struct TodayView: View {
         // a dimmed, non-interactive background.
         .accessibilityHidden(isPresentingCapture)
         .background(TokenSemantics.canvas)
+        // A near-invisible, always-present marker exposing
+        // `lastRequestedFocusTarget` (see its own doc comment above) for
+        // `FocusSafetyTests` to read directly (T-04-13-06).
+        .background(
+            Text(lastRequestedFocusTarget ?? "")
+                .font(.system(size: 1))
+                .foregroundStyle(.clear)
+                .accessibilityIdentifier("debug-focused-element")
+        )
         .navigationTitle("Today")
         .accessibilityFocused($focusedElement, equals: Self.headingFocusId)
         .toolbar {
@@ -132,6 +148,7 @@ struct TodayView: View {
         .onChange(of: items.map(\.taskId)) { old, new in
             if let target = RowFocusSafety.focusTarget(old: old, new: new, headingId: Self.headingFocusId) {
                 focusedElement = target
+                lastRequestedFocusTarget = target
             }
         }
         .onChange(of: isPresentingCapture) { wasPresented, isPresented in
@@ -139,10 +156,16 @@ struct TodayView: View {
             // the capture sheet dismisses (Add Task, Cancel, or a
             // confirmed Discard Draft all route through this same
             // `isPresented` flip).
-            if wasPresented, !isPresented { focusedElement = Self.newTaskButtonFocusId }
+            if wasPresented, !isPresented {
+                focusedElement = Self.newTaskButtonFocusId
+                lastRequestedFocusTarget = Self.newTaskButtonFocusId
+            }
         }
         .onChange(of: facade.isSyncRecoveryPresented) { wasPresented, isPresented in
-            if wasPresented, !isPresented { focusedElement = Self.overflowMenuFocusId }
+            if wasPresented, !isPresented {
+                focusedElement = Self.overflowMenuFocusId
+                lastRequestedFocusTarget = Self.overflowMenuFocusId
+            }
         }
         .sheet(isPresented: $isPresentingCapture) {
             CaptureSheet(facade: facade)

@@ -75,6 +75,16 @@ struct TaskRow: View {
     /// exception indicator simply does not render tappable in that case
     /// (defensive default, never a crash).
     var onOpenSyncRecovery: (() -> Void)?
+    /// The caller's `@AccessibilityFocusState` binding and this row's own
+    /// comparison value, applied directly to the title `Text` below --
+    /// NOT to this whole row (T-04-13-06 finding, Rule 1 fix). Applying
+    /// `.accessibilityFocused` to a multi-element container that is not
+    /// itself merged into one accessibility element (this row is
+    /// deliberately NOT merged -- 04-09-PLAN.md Task 2's own finding that
+    /// merging collapses the title out of independent VoiceOver/XCUITest
+    /// reach) does not reliably attach focus to any single queryable leaf.
+    var focusBinding: AccessibilityFocusState<String?>.Binding
+    var focusValue: String
 
     /// This row's own exception summary -- derived from the SAME
     /// authoritative projection every surface reads (D-41). Today the
@@ -96,6 +106,20 @@ struct TaskRow: View {
                     .strikethrough(item.isCompleted)
                     .lineLimit(2)
                     .accessibilityIdentifier("task-row-\(item.title)")
+                    .accessibilityFocused(focusBinding, equals: focusValue)
+                // A zero-size marker exposing this row's OWN focus value
+                // (its opaque `taskId`) -- see `TodayView`'s identical
+                // comment on `debug-focused-element`: `hasFocus` cannot
+                // observe `@AccessibilityFocusState` in this harness, so
+                // `FocusSafetyTests` reads this row's true focus value and
+                // compares it directly against `debug-focused-element`'s
+                // current value, rather than a human-readable title this
+                // app's real focus contract never keys on (D-49: task
+                // titles are not guaranteed unique).
+                Text(focusValue)
+                    .font(.system(size: 1))
+                    .foregroundStyle(.clear)
+                    .accessibilityIdentifier("task-row-focus-value-\(item.title)")
                 if let exceptionSummary {
                     TaskExceptionRow(summary: exceptionSummary, taskTitle: item.title, onTap: { onOpenSyncRecovery?() })
                 }

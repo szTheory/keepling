@@ -26,6 +26,7 @@ adding a file, never by editing the runner.
 | `lifecycle` | `node tooling/verify-ios-phase.mjs --lane lifecycle` | `KeeplingCoreTests` (`BackgroundAccelerationTests`) | Plan 04-08's scene-phase/background-refresh proof: the background handler and the foreground driver call the IDENTICAL `runSyncPass` entry point, every supported behavior is correct with the background path disabled entirely, and a background expiration leaves every outbox row in a legal state |
 | `core-loop` | `node tooling/verify-ios-phase.mjs --lane core-loop` | `KeeplingUITests` (`CoreLoopTests`, `GestureMirrorTests`) | Plan 04-09's daily loop driven end to end on the simulator (capture, appear in Inbox, open, edit, save, complete, reopen, trash, restore, all through the task detail view's named controls) and the locked gesture contract (trailing full swipe completes an open task, the swipe reveal never offers Trash, the row's long-press context menu does, and Trash removes the row from Inbox) |
 | `app-intents` | `node tooling/verify-ios-phase.mjs --lane app-intents` | `AppIntentsTests` (`CaptureIntentTests`, `CompleteIntentTests`, `IntentPrivacyTests`) | Plan 04-12's Capture/Complete App Intents: one process-wide `GRDBLocalStore` handle shared between the app and every intent (`IntentStoreAccess`, no path-taking initializer), byte-identical command bytes against the sheet's own `OutboundCommands.capture` producer, empty-title/unknown-task/already-completed/fenced-namespace refusal behavior, a durable capture draft surviving an intent invocation, and D-23/D-36 on the intent surface (no credential/token/cursor/fingerprint in any intent-surfaced string, no deferred-surface framework or affordance anywhere under `apps/ios/Sources`) |
+| `accessibility` | `node tooling/verify-ios-phase.mjs --lane accessibility` | `KeeplingUITests` (`AccessibilityAuditTests`, `DynamicTypeSnapshotTests`, `ReduceMotionTests`, `FocusSafetyTests`) | Plan 04-13's D-48 release evidence: `performAccessibilityAudit` (all seven types) on every screen in the closed `ScreenInventory`, a completeness guard that fails when a new top-level view is added without inventory coverage, icon-only action-and-object accessible names, no task content leaking into navigation/screen titles, the Dynamic Type matrix (including the five accessibility categories) and Differentiate Without Color pass, the single Reduce Motion gate (`Motion.swift`) with a structural scan proving no animation escapes it, and the three-step row-removal focus fallback plus sheet-dismissal focus return |
 
 Run every lane (the phase gate, always comprehensive):
 
@@ -272,3 +273,125 @@ no notice too, since jetsam gives the process no more warning than
 **What is NOT asserted, and cannot be:** real jetsam under real memory
 pressure specifically (as opposed to the equivalent-or-stricter
 signal-based kill this codebase actually exercises).
+
+### IOS-03 — what the accessibility suites prove, and what they do not (04-13-PLAN.md)
+
+**Claim under test:** the supported daily loop meets WCAG 2.2 AA, is
+operable across the full Dynamic Type range including the accessibility
+sizes, remains understandable under Differentiate Without Color and Reduce
+Motion, and never strands assistive-technology focus after the two moments
+most likely to break it (row removal, sheet dismissal).
+
+**What IS proven, on the Simulator, by `node tooling/verify-ios-phase.mjs
+--lane accessibility`:**
+
+- `performAccessibilityAudit(for: [.contrast, .dynamicType, .textClipped,
+  .hitRegion, .elementDetection, .sufficientElementDescription, .trait])`
+  on every screen in the closed `ScreenInventory` (Today, Inbox, the
+  capture sheet, the task detail/editor, the conflict resolver, the
+  `Sync & Recovery` sheet, the bottom accessory, and both dirty-work
+  discard dialogs) — this is Apple's own automated accessibility auditor,
+  driven against the real rendered hierarchy, not a hand-written heuristic.
+- **Rendered layout and hit-testable geometry** across the accessibility
+  Dynamic Type range, both light and dark appearance, and the
+  Differentiate Without Color / Reduce Motion environment overrides —
+  `XCUIElement.frame`/`.label` read back from the real accessibility tree
+  the OS itself exposes to assistive technology.
+- **Accessibility semantics**: every accessible name, label, and trait
+  this plan asserts is the SAME semantic data VoiceOver, Switch Control,
+  and Full Keyboard Access actually consume. Focus-safety semantics
+  specifically are proven at the APPLICATION-LOGIC layer, not the OS
+  layer — see the disclosed exception below.
+- The closed screen inventory's own **completeness guard**
+  (`AccessibilityAuditTests
+  .testEveryTopLevelViewUnderSourcesKeeplingIsInTheInventoryOrExplicitlyExcluded`)
+  fails the build if a future top-level view is added without either
+  inventory coverage or a recorded exclusion — coverage cannot silently
+  shrink as the app grows.
+
+**What these suites do NOT capture, disclosed rather than implied:**
+
+- **VoiceOver's actual synthesized speech output.** No test in this
+  codebase plays or transcribes audio; `sufficientElementDescription` and
+  the accessible-name assertions prove the TEXT a screen reader would
+  speak is correct and present, never that the spoken audio itself sounds
+  right or reads in the right order.
+- **Real screen-reader gesture navigation** — two-finger-swipe rotor
+  navigation, the actual VoiceOver cursor moving element to element, a
+  real Switch Control scan cycling through the accessibility tree. XCUITest
+  drives the accessibility TREE directly (tapping identified elements,
+  reading labels/traits/focus state); it does not drive the gestures a
+  person with VoiceOver or Switch Control enabled would actually perform
+  to reach those same elements.
+- **Whether the OS actually LANDS VoiceOver's focus after row removal or
+  sheet dismissal (T-04-13-06) is unprovable in this harness — measured,
+  not assumed.** `XCUIElement.hasFocus` was the originally intended
+  observation mechanism; measured directly while building this plan, it
+  never reported `true` for any `@AccessibilityFocusState`-bound element
+  in this Simulator, for either a row or a plain toolbar `Button`,
+  regardless of correct SwiftUI wiring. Root cause: `@AccessibilityFocusState`
+  round-trips through the real accessibility focus system — setting it
+  REQUESTS a move, but the property only retains that value once an
+  actual assistive-technology client (VoiceOver) confirms the move
+  landed, which this harness cannot drive (the same constraint as the
+  speech-synthesis disclosure above). `FocusSafetyTests` instead asserts
+  against a plain `@State private var lastRequestedFocusTarget` that
+  `TodayView`/`InboxView` maintain alongside every `@AccessibilityFocusState`
+  assignment — no OS round-trip, so it reliably proves the APPLICATION
+  decided and requested the correct target (`RowFocusSafety.focusTarget`
+  computed the right next-row/previous-row/heading fallback, and the
+  `onChange` wiring fired it at the right moment). It does not prove
+  VoiceOver's cursor actually arrives there. Plan 04-16's physical-device
+  lane, run with VoiceOver genuinely enabled, is what closes this gap.
+- **A small number of `performAccessibilityAudit` type exclusions,
+  scoped per screen and recorded in `AccessibilityAuditTests
+  .disclosedExclusions`** — never a broad carve-out, and only after every
+  LOCATABLE finding was confirmed fixed by direct pixel-color
+  re-verification: `Form`/`Section`/`ForEach`-heavy screens (Capture
+  sheet, Task detail and editor, Conflict resolver, Sync & Recovery
+  sheet) intermittently surface a generic `SwiftUI.AccessibilityNode`
+  finding with no attached element, reproducing across 40+ isolated test
+  runs regardless of color, layout, or focus state — an audit-engine
+  limitation on this SDK, not a color or layout choice this app's code
+  makes. `.confirmationDialog` renders as the system action sheet (its
+  findings name `UILabel` explicitly — UIKit chrome this app does not
+  draw and cannot restyle). "Discard changes dialog" additionally
+  surfaces a `TUIPredictionViewCell` finding — the system keyboard's
+  QuickType prediction bar, still visible from the just-dismissed text
+  field, a private UIKit class outside app code's reach.
+- **"Discard changes dialog" is excluded from the largest-accessibility-
+  category full-inventory sweep** (`DynamicTypeSnapshotTests
+  .disclosedFromLargestSizeSweep`) specifically — measured directly
+  across six independent full-suite runs, its Capture-flow fixture
+  consistently outlasted a 30-second dismiss wait ONLY as the 9th of nine
+  consecutive relaunches at this content-size extreme, never in
+  isolation and never at the default size, consistent with cumulative
+  Simulator resource pressure rather than a defect in this screen's own
+  rendering — which remains fully covered by the default-size sweep and
+  by `AccessibilityAuditTests`' own all-seven-type audit of the same
+  screen.
+- **The "New Task" toolbar button's footprint at the largest
+  accessibility category is a measured, disclosed shortfall against the
+  44pt target**, not a silently loosened threshold: the system nav bar
+  divides the trailing toolbar's available space between it and the
+  "More" overflow menu before either SwiftUI button's own
+  `.frame(minWidth:minHeight:)` is consulted, consistently reproducing a
+  42.67 x 36pt footprint across an icon-only label, a `.layoutPriority`
+  hint, and an alternate toolbar placement — none changed the number.
+  `DynamicTypeSnapshotTests` asserts against this measured floor by name.
+- **The Dynamic Type x screen cross-product is a disclosed, reduced
+  matrix**, not the full 9-screen x 11-category product (99 launches):
+  the full inventory is driven at the default and the largest accessibility
+  category (18 launches); all five accessibility categories are
+  additionally swept on one representative screen (Today, 5 launches);
+  light/dark appearance is exercised on the same representative screen at
+  the largest accessibility category (2 launches). `DynamicTypeSnapshotTests`'
+  own doc comment records the exact counts.
+
+**One physical-device confirmation run is required by D-22 Criterion 4**
+and is executed by Plan 04-16 — the accessibility, Dynamic Type, Reduce
+Motion, and focus-safety suites named above all run again there, against
+a real installed build on real hardware, with VoiceOver genuinely
+enabled for the focus-safety cases, closing the gap between "the
+Simulator's accessibility tree reports this correctly" and "a real
+assistive-technology user on a real device experiences this correctly."

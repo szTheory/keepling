@@ -8,6 +8,20 @@ struct InboxView: View {
     @Binding var path: NavigationPath
     @State private var isPresentingCapture = false
     @AccessibilityFocusState private var focusedElement: String?
+    /// The last focus target this view's OWN logic computed and
+    /// requested, mirrored into a plain `@State` alongside every
+    /// `focusedElement =` assignment below -- measured directly while
+    /// building this plan (T-04-13-06): `@AccessibilityFocusState`'s
+    /// stored value round-trips through the REAL accessibility focus
+    /// system, and reverts to `nil` when no assistive-technology client
+    /// (VoiceOver) is running to confirm the requested move, which is not
+    /// achievable in this automated harness (the same constraint already
+    /// disclosed for VoiceOver speech synthesis). This plain `@State`
+    /// mirror has no such round-trip -- it reflects exactly what THIS
+    /// APP'S OWN LOGIC decided and requested, which is what
+    /// `FocusSafetyTests` verifies; whether the OS actually LANDS
+    /// VoiceOver focus there is the disclosed, unprovable remainder.
+    @State private var lastRequestedFocusTarget: String?
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private static let headingFocusId = "inbox-heading"
@@ -40,11 +54,12 @@ struct InboxView: View {
                             onComplete: { Task { try? await facade.complete(taskId: item.taskId) } },
                             onReopen: { Task { try? await facade.reopen(taskId: item.taskId) } },
                             onTrash: { Task { try? await facade.trash(taskId: item.taskId) } },
-                            onOpenSyncRecovery: { facade.openSyncRecovery(focusTaskId: item.taskId) }
+                            onOpenSyncRecovery: { facade.openSyncRecovery(focusTaskId: item.taskId) },
+                            focusBinding: $focusedElement,
+                            focusValue: item.taskId
                         )
                         .contentShape(Rectangle())
                         .onTapGesture { path.append(item.taskId) }
-                        .accessibilityFocused($focusedElement, equals: item.taskId)
                     }
                 }
                 .listStyle(.plain)
@@ -55,6 +70,15 @@ struct InboxView: View {
         // up (T-04-13 finding, Rule 1 fix).
         .accessibilityHidden(isPresentingCapture)
         .background(TokenSemantics.canvas)
+        // See `TodayView`'s identical comment: a near-invisible marker
+        // exposing `lastRequestedFocusTarget` for `FocusSafetyTests`
+        // (T-04-13-06).
+        .background(
+            Text(lastRequestedFocusTarget ?? "")
+                .font(.system(size: 1))
+                .foregroundStyle(.clear)
+                .accessibilityIdentifier("debug-focused-element")
+        )
         .navigationTitle("Inbox")
         .accessibilityFocused($focusedElement, equals: Self.headingFocusId)
         .toolbar {
@@ -104,13 +128,20 @@ struct InboxView: View {
         .onChange(of: items.map(\.taskId)) { old, new in
             if let target = RowFocusSafety.focusTarget(old: old, new: new, headingId: Self.headingFocusId) {
                 focusedElement = target
+                lastRequestedFocusTarget = target
             }
         }
         .onChange(of: isPresentingCapture) { wasPresented, isPresented in
-            if wasPresented, !isPresented { focusedElement = Self.newTaskButtonFocusId }
+            if wasPresented, !isPresented {
+                focusedElement = Self.newTaskButtonFocusId
+                lastRequestedFocusTarget = Self.newTaskButtonFocusId
+            }
         }
         .onChange(of: facade.isSyncRecoveryPresented) { wasPresented, isPresented in
-            if wasPresented, !isPresented { focusedElement = Self.overflowMenuFocusId }
+            if wasPresented, !isPresented {
+                focusedElement = Self.overflowMenuFocusId
+                lastRequestedFocusTarget = Self.overflowMenuFocusId
+            }
         }
         .sheet(isPresented: $isPresentingCapture) {
             CaptureSheet(facade: facade)
