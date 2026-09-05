@@ -15,6 +15,11 @@ import GRDB
 /// exact replay (D-09).
 public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
     private let dbPool: DatabasePool
+    /// Where an unrecoverable-store halt and a namespace fence are recorded
+    /// (D-23, 04-15-PLAN.md). Defaults to the process-wide `DiagnosticLog
+    /// .shared` so every existing call site gains diagnostics with no
+    /// signature break; a test injects its own isolated instance.
+    private let diagnostics: DiagnosticLog
 
     /// The store's own durable-unit path, exposed so a caller (tests, and
     /// a future backup/restore feature) can build a `DurableUnit` against
@@ -81,8 +86,9 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
     /// connection `DatabasePool` opens (writer and every reader) -- not
     /// just the writer -- satisfying "verified per connection" before any
     /// migration runs.
-    public init(path: String) throws {
+    public init(path: String, diagnostics: DiagnosticLog = .shared) throws {
         self.path = path
+        self.diagnostics = diagnostics
         try FileManager.default.createDirectory(
             atPath: (path as NSString).deletingLastPathComponent,
             withIntermediateDirectories: true
@@ -95,7 +101,14 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
             try db.execute(sql: "PRAGMA synchronous = FULL")
         }
         dbPool = try DatabasePool(path: path, configuration: configuration)
-        try Self.applyMigrations(dbPool)
+        do {
+            try Self.applyMigrations(dbPool)
+        } catch let error as StoreUnrecoverable {
+            diagnostics.record(DiagnosticEvent(
+                operation: .none, transition: .unrecoverableHalt, errorClass: Self.errorClass(for: error), timestamp: Date()
+            ))
+            throw error
+        }
         // D-08: the store file carries iOS file-protection, never
         // SQLCipher (D-07 rejects SQLCipher explicitly). G7 (D-04) asserted
         // by DataProtectionTests.swift: .completeUntilFirstUserAuthentication,
@@ -114,6 +127,32 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
     }
 
     // MARK: - Migration ledger (D-04 G4, D-37)
+
+    /// Maps every `StoreUnrecoverable` case to its own named diagnostic
+    /// error class (D-23) -- exhaustive over the closed error type, so a
+    /// future case added to `StoreUnrecoverable` without a matching branch
+    /// here fails to compile rather than silently falling through.
+    static func errorClass(for error: StoreUnrecoverable) -> DiagnosticErrorClass {
+        switch error {
+        case .checksumDrift: return .unrecoverableChecksumDrift
+        case .aheadOfLedger: return .unrecoverableAheadOfLedger
+        case .migrationMidApplyFailure: return .unrecoverableMigrationMidApplyFailure
+        case .integrityCheckFailed: return .unrecoverableIntegrityCheckFailed
+        }
+    }
+
+    /// Maps a fence reason string (`GRDBLocalStore`'s own free-form
+    /// `namespace_metadata.sync_fence` value) to its named diagnostic error
+    /// class -- the one place a `String` fence reason is translated into
+    /// the closed `DiagnosticErrorClass` vocabulary, never carried through
+    /// to a diagnostic event as free text.
+    static func errorClass(forFenceReason reason: String) -> DiagnosticErrorClass {
+        switch reason {
+        case "namespace_mismatch": return .fenceNamespaceMismatch
+        case SignOutCoordinator.fenceReason: return .fenceSignedOut
+        default: return .fenceOther
+        }
+    }
 
     static let migrations: [MigrationLedger.MigrationDefinition] = [
         MigrationLedger.MigrationDefinition(version: Migration0001Initial.version, sql: Migration0001Initial.sql),
@@ -137,6 +176,13 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
             sql: "INSERT INTO namespace_metadata(key, value) VALUES ('sync_fence', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
             arguments: [reason]
         )
+        // D-23: every real fence write (a `bindNamespace` mismatch, or a
+        // direct `setSyncFence(reason:)` call from sign-out) is diagnosed
+        // by NAME, never by the reason string itself -- `errorClass(forFenceReason:)`
+        // is the one place that translation happens.
+        diagnostics.record(DiagnosticEvent(
+            operation: .none, transition: .namespaceFence, errorClass: Self.errorClass(forFenceReason: reason), timestamp: Date()
+        ))
     }
 
     /// The real D-09/D-03 fencing trigger (mirrors desktop's

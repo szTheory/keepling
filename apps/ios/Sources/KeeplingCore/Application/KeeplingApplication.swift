@@ -9,6 +9,12 @@ import Foundation
 public final class KeeplingApplication: @unchecked Sendable {
     private let store: GRDBLocalStore
     private let syncPort: any SyncPort
+    /// Where every transmission-transition, settlement, and
+    /// authentication-required diagnostic event is recorded (D-23,
+    /// 04-15-PLAN.md). Defaults to the process-wide `DiagnosticLog.shared`
+    /// so every existing call site gains diagnostics with no signature
+    /// break; a test injects its own isolated instance.
+    private let diagnostics: DiagnosticLog
 
     /// The observable result of one pass, for a driver/test to inspect.
     public enum SyncPassOutcome: Sendable, Equatable {
@@ -34,9 +40,29 @@ public final class KeeplingApplication: @unchecked Sendable {
         case pullPageTooLarge
     }
 
-    public init(store: GRDBLocalStore, syncPort: any SyncPort) {
+    public init(store: GRDBLocalStore, syncPort: any SyncPort, diagnostics: DiagnosticLog = .shared) {
         self.store = store
         self.syncPort = syncPort
+        self.diagnostics = diagnostics
+    }
+
+    /// Parses a mutation's own UUID identity for a diagnostic event's
+    /// operation field. Production mutation identities are always minted
+    /// as `UUID().uuidString` (`WorkspaceFacade.capture`, `OutboundCommands`),
+    /// so this always succeeds in practice; `.none` is the honest fallback
+    /// for a value that does not parse, never a fabricated identity.
+    private static func operationIdentity(for mutationId: String) -> DiagnosticOperationIdentity {
+        UUID(uuidString: mutationId).map(DiagnosticOperationIdentity.mutation) ?? .none
+    }
+
+    private static func errorClass(for outcome: SyncAcknowledgement.Outcome) -> DiagnosticErrorClass {
+        switch outcome {
+        case .accepted: return .settledAccepted
+        case .alreadySatisfied: return .settledAlreadySatisfied
+        case .rejected: return .settledRejected
+        case .stale: return .settledStale
+        case .conflict: return .settledConflict
+        }
     }
 
     /// Pulls before it pushes, applies at most `SyncReducer.maximumPullChanges`
@@ -74,6 +100,9 @@ public final class KeeplingApplication: @unchecked Sendable {
             )
             try store.applyPull(localPage)
         } catch is SyncAuthenticationRequired {
+            diagnostics.record(DiagnosticEvent(
+                operation: .none, transition: .authenticationRequired, errorClass: .authenticationRequired, timestamp: Date()
+            ))
             return .authenticationRequired
         }
         // `SyncUnreachable`/`SyncPortRefused` and any other pull failure
@@ -107,22 +136,32 @@ public final class KeeplingApplication: @unchecked Sendable {
             // claims zero rows here, so it is never pushed twice.
             guard try store.claimForTransmission(mutationId: mutation.mutationId) else { continue }
             pushedCount += 1
+            let operation = Self.operationIdentity(for: mutation.mutationId)
+            diagnostics.record(DiagnosticEvent(operation: operation, transition: .queuedToInFlight, errorClass: .none, timestamp: Date()))
 
             do {
                 let acknowledgement = try await syncPort.push(mutation)
                 try store.acknowledge(acknowledgement)
                 settledCount += 1
+                diagnostics.record(DiagnosticEvent(
+                    operation: operation, transition: .inFlightToSettled,
+                    errorClass: Self.errorClass(for: acknowledgement.outcome), timestamp: Date()
+                ))
             } catch is SyncAuthenticationRequired {
                 // The row this pass just claimed is left `uncertain` --
                 // NEVER `queued` (D-52 monotonicity) and NEVER `rejected`
                 // (an auth failure is not a per-mutation decision the
                 // server made about THIS command).
                 try store.setOutboxState(mutationId: mutation.mutationId, to: "uncertain")
+                diagnostics.record(DiagnosticEvent(
+                    operation: operation, transition: .authenticationRequired, errorClass: .authenticationRequired, timestamp: Date()
+                ))
                 return .authenticationRequired
             } catch is SyncUnreachable {
                 // A thrown transport error cannot say whether the bytes
                 // left -- `uncertain` is the only honest destination.
                 try store.setOutboxState(mutationId: mutation.mutationId, to: "uncertain")
+                diagnostics.record(DiagnosticEvent(operation: operation, transition: .inFlightToUncertain, errorClass: .none, timestamp: Date()))
             } catch is SyncPortRefused {
                 // An answered refusal outside the closed settleable set is
                 // ALSO treated conservatively as `uncertain`, never
@@ -132,6 +171,7 @@ public final class KeeplingApplication: @unchecked Sendable {
                 // (Plan 04-09's retry/reconciliation concern), not a guess
                 // made here.
                 try store.setOutboxState(mutationId: mutation.mutationId, to: "uncertain")
+                diagnostics.record(DiagnosticEvent(operation: operation, transition: .inFlightToUncertain, errorClass: .none, timestamp: Date()))
             }
         }
 

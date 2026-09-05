@@ -99,7 +99,10 @@ public struct PullPage: Sendable, Equatable {
 /// caller-synthesized full snapshot, because settlement must not be able
 /// to blank a field the server did not name.
 public struct SyncAcknowledgement: Sendable, Equatable {
-    public enum Outcome: String, Sendable, Equatable {
+    /// `CaseIterable` (04-15-PLAN.md Task 1): lets `DiagnosticCoverageTests`
+    /// derive "every settlement outcome" from this closed source type
+    /// rather than a hand-written list living only in the test file.
+    public enum Outcome: String, Sendable, Equatable, CaseIterable {
         case accepted
         case alreadySatisfied = "already_satisfied"
         case rejected
