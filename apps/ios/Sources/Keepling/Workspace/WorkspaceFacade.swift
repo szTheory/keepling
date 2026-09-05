@@ -362,7 +362,14 @@ public extension WorkspaceFacade {
     /// deterministically into any state in the closed set without a real
     /// `KeeplingApplication`/`SyncPort` round trip. `KeeplingApp.swift`
     /// reads `KEEPLING_UITEST_SYNC_STATE` and calls this once at launch.
-    func applyUITestSyncState(_ raw: String, now: Date = Date()) {
+    /// `count`, when supplied (04-14-PLAN.md Task 1: `KEEPLING_UITEST_SYNC_STATE_COUNT`),
+    /// overrides the hardcoded `1` this hook previously always passed for
+    /// every count-carrying state -- letting `SyncStateMatrixTests` prove
+    /// the "many" case is genuinely BOUNDED (`SyncPresentation
+    /// .boundedCount`'s existing 99 ceiling, 04-10-PLAN.md Task 1) rather
+    /// than only ever exercising the trivial `count == 1` case.
+    func applyUITestSyncState(_ raw: String, now: Date = Date(), count: Int? = nil) {
+        let c = count ?? 1
         let input: SyncPresentationInput
         switch raw {
         case "healthy": input = .healthy()
@@ -370,13 +377,13 @@ public extension WorkspaceFacade {
         case "preparing": input = .preparing
         case "updating_past_grace": input = .updating(startedAt: now.addingTimeInterval(-(SyncPassScheduler.activeGracePeriod + 1)))
         case "offline": input = .offline()
-        case "local_acceptance": input = .localAcceptance(pendingCount: 1)
+        case "local_acceptance": input = .localAcceptance(pendingCount: c)
         case "local_save_failure": input = .localSaveFailure
-        case "retryable_failure": input = .retryableFailure(pendingCount: 1)
-        case "uncertain": input = .uncertain(pendingCount: 1)
-        case "rejected": input = .rejected(affectedCount: 1)
-        case "conflict": input = .conflict(affectedCount: 1)
-        case "authentication_fence": input = .authenticationFence(pendingCount: 1)
+        case "retryable_failure": input = .retryableFailure(pendingCount: c)
+        case "uncertain": input = .uncertain(pendingCount: c)
+        case "rejected": input = .rejected(affectedCount: c)
+        case "conflict": input = .conflict(affectedCount: c)
+        case "authentication_fence": input = .authenticationFence(pendingCount: c)
         case "unrecoverable": input = .unrecoverable(.integrityCheckFailed(version: 1, detail: "uitest"))
         default: return
         }

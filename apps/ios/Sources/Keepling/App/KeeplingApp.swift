@@ -41,6 +41,30 @@ struct KeeplingApp: App {
         // `CompleteTaskIntent` so the app and every intent open the SAME
         // process-wide store handle (D-37), never a second one.
         let path = IntentStoreAccess.storePath()
+
+        // 04-14-PLAN.md Task 1 (T-04-14-01): every UI-test-only
+        // state-injection hook in this `init` is enclosed in `#if DEBUG`
+        // blocks, compiled OUT of a Release build entirely -- not merely
+        // gated by an environment variable a Release binary would still
+        // contain the code path to read. This IS the deterministic
+        // state-injection seam every one of the twelve presentation states
+        // plus the zero/one/many/partial-data shapes is reached through
+        // (`StateInjection.swift`, `SyncStateMatrixTests.swift`); its
+        // absence from a Release build is this task's own acceptance
+        // criterion, checked structurally by this plan's own `<verify>`
+        // node script (a `#if DEBUG`/`#if TESTING` condition must wrap
+        // this read) and confirmed by inspecting the compiled Release
+        // configuration's preprocessor output.
+        //
+        // MUST run BEFORE `IntentStoreAccess.sharedStore()` opens the
+        // process-wide handle below -- deleting the on-disk file out from
+        // under an already-open GRDB connection is undefined (WAL/SHM
+        // files left dangling against a stale file handle), which is
+        // exactly the bug this comment now documents rather than silently
+        // reintroduces: an earlier revision of this file opened the store
+        // FIRST and reset second, which corrupted every UI-test run that
+        // set `KEEPLING_UITEST_RESET_STORE`.
+        #if DEBUG
         // UI-test-only reset hook: XCUITest launches a fresh app process
         // each run but the simulator's Application Support directory
         // persists across launches, so without this a UI test would
@@ -50,6 +74,8 @@ struct KeeplingApp: App {
             try? FileManager.default.removeItem(atPath: path + "-wal")
             try? FileManager.default.removeItem(atPath: path + "-shm")
         }
+        #endif
+
         // A store that fails to open is a launch-time fatal condition in
         // this tracer -- D-22's "never present a false empty workspace"
         // rule means the app must not silently start with no store at all.
@@ -59,15 +85,108 @@ struct KeeplingApp: App {
         let builtFacade = WorkspaceFacade(store: openedStore)
         facade = builtFacade
 
+        #if DEBUG
+        // 04-14-PLAN.md Task 1: pre-seeds a durable capture draft (D-35)
+        // through the SAME `saveDraft` round trip `CaptureDraftTests`
+        // exercises -- AFTER the reset-store wipe above (so a fresh store
+        // has nothing stale in it) and using the SAME process-wide
+        // `openedStore` handle every other command in this file uses,
+        // never a second connection racing the wipe above. `saveDraft`
+        // asserts `assertNotOnMainThread()` (mirrors every other
+        // `GRDBLocalStore` write) -- `init()` runs on the main thread, so
+        // this MUST be dispatched off it, exactly like every other seed
+        // hook in this file already does via `Task.detached`.
+        if let draftTitle = ProcessInfo.processInfo.environment["KEEPLING_UITEST_SEED_DRAFT"] {
+            Task.detached(priority: .userInitiated) {
+                try? openedStore.saveDraft(CaptureDraft(title: draftTitle, addToToday: false))
+            }
+        }
+
         // UI-test-only fixture hooks (04-10-PLAN.md Task 2): launch
         // deterministically into a fixed synchronization/undo state so
         // `SyncRecoveryTests` can assert accessory/sheet/overflow-menu
         // rendering per state without a real sync pass.
         if let testState = ProcessInfo.processInfo.environment["KEEPLING_UITEST_SYNC_STATE"] {
-            builtFacade.applyUITestSyncState(testState)
+            // 04-14-PLAN.md Task 1: `KEEPLING_UITEST_SYNC_STATE_COUNT`
+            // overrides the hardcoded `pendingCount`/`affectedCount: 1`
+            // every state carried before -- proving the "many" case is
+            // genuinely bounded (`SyncPresentation.boundedCount`'s
+            // existing 99 ceiling), not merely reachable at count 1.
+            let count = ProcessInfo.processInfo.environment["KEEPLING_UITEST_SYNC_STATE_COUNT"].flatMap(Int.init)
+            builtFacade.applyUITestSyncState(testState, count: count)
         }
         if ProcessInfo.processInfo.environment["KEEPLING_UITEST_UNDO_AVAILABLE"] == "1" {
             builtFacade.updateUndoAvailability(UndoAvailabilityPresentation(actionLabel: "Undo Trash"))
+        }
+        // 04-14-PLAN.md Task 1: seeds `count` real tasks through the SAME
+        // `capture -> acceptMutation -> acknowledge(accepted)` path every
+        // other seed hook in this file uses -- never a synthesized
+        // `WorkspaceItem` -- so `SyncStateMatrixTests` can drive the zero
+        // (item count 0, the store's own untouched empty state), one, and
+        // many item-count shapes deterministically. Titles are numbered so
+        // a "many" run's rows are individually distinguishable.
+        if let rawCount = ProcessInfo.processInfo.environment["KEEPLING_UITEST_SEED_ITEM_COUNT"], let count = Int(rawCount), count > 0 {
+            Task.detached(priority: .userInitiated) {
+                for index in 0..<count {
+                    let mutationId = UUID().uuidString
+                    let taskId = UUID().uuidString
+                    guard let built = try? OutboundCommands.capture(title: "Seeded item \(index + 1)", mutationId: mutationId, taskId: taskId) else { continue }
+                    let mutation = LocalMutation(
+                        mutationId: built.mutationId, taskId: built.taskId, commandBytes: built.commandBytes,
+                        fingerprint: built.fingerprint, acceptedAt: ISO8601DateFormatter().string(from: Date()),
+                        resourceKeys: built.resourceKeys, title: built.effect.title
+                    )
+                    _ = try? openedStore.acceptMutation(mutation)
+                    _ = try? openedStore.acknowledge(SyncAcknowledgement(
+                        mutationId: mutationId, fingerprint: built.fingerprint, outcome: .accepted,
+                        snapshotJSON: "{\"id\":\"\(taskId)\",\"revision\":1,\"title\":\"Seeded item \(index + 1)\"}"
+                    ))
+                }
+                await builtFacade.refresh()
+            }
+        }
+        // 04-14-PLAN.md Task 2: seeds ONE real task whose title and notes
+        // come from the held-out `Fixtures/long-text.json` values, passed
+        // through by `OverflowAndLongTextTests` rather than read from the
+        // fixture file a second time by this app-target process --
+        // `capture` carries the title (bounded at 512 scalars, the same
+        // client-side bound `OutboundCommands.capture` itself enforces),
+        // then a real `edit` command touches ONLY `notes` (bounded at
+        // 50000 scalars) so the resulting row exercises the identical
+        // outbound path every other command in this app uses -- never a
+        // synthesized `WorkspaceItem` with fabricated field values.
+        if let longTitle = ProcessInfo.processInfo.environment["KEEPLING_UITEST_SEED_LONGTEXT_TITLE"] {
+            let longNotes = ProcessInfo.processInfo.environment["KEEPLING_UITEST_SEED_LONGTEXT_NOTES"] ?? ""
+            Task.detached(priority: .userInitiated) {
+                let taskId = UUID().uuidString
+                let captureMutationId = UUID().uuidString
+                guard let captureBuilt = try? OutboundCommands.capture(title: longTitle, mutationId: captureMutationId, taskId: taskId) else { return }
+                _ = try? openedStore.acceptMutation(LocalMutation(
+                    mutationId: captureBuilt.mutationId, taskId: captureBuilt.taskId, commandBytes: captureBuilt.commandBytes,
+                    fingerprint: captureBuilt.fingerprint, acceptedAt: ISO8601DateFormatter().string(from: Date()),
+                    resourceKeys: captureBuilt.resourceKeys, title: captureBuilt.effect.title
+                ))
+                _ = try? openedStore.acknowledge(SyncAcknowledgement(
+                    mutationId: captureMutationId, fingerprint: captureBuilt.fingerprint, outcome: .accepted,
+                    snapshotJSON: uitestSnapshotJSON(id: taskId, revision: 1, title: captureBuilt.effect.title)
+                ))
+                if !longNotes.isEmpty, let editBuilt = try? OutboundCommands.edit(
+                    taskId: taskId, touched: .init(notes: longNotes),
+                    basis: .init(baseTitle: captureBuilt.effect.title, baseNotes: "", expectedRevision: 1),
+                    mutationId: UUID().uuidString
+                ) {
+                    _ = try? openedStore.acceptMutation(LocalMutation(
+                        mutationId: editBuilt.mutationId, taskId: editBuilt.taskId, commandBytes: editBuilt.commandBytes,
+                        fingerprint: editBuilt.fingerprint, acceptedAt: ISO8601DateFormatter().string(from: Date()),
+                        resourceKeys: editBuilt.resourceKeys, title: editBuilt.effect.title
+                    ))
+                    _ = try? openedStore.acknowledge(SyncAcknowledgement(
+                        mutationId: editBuilt.mutationId, fingerprint: editBuilt.fingerprint, outcome: .accepted,
+                        snapshotJSON: uitestSnapshotJSON(id: taskId, revision: 2, title: editBuilt.effect.title)
+                    ))
+                }
+                await builtFacade.refresh()
+            }
         }
         // UI-test-only fixture hook (04-10-PLAN.md Task 3): seeds one REAL
         // per-task conflict through the actual capture -> acknowledge(
@@ -159,6 +278,7 @@ struct KeeplingApp: App {
                 }
             }
         }
+        #endif // DEBUG -- 04-14-PLAN.md Task 1 (T-04-14-01)
 
         // 04-08-PLAN.md Task 3: the scene-phase driver and background
         // refresh handler both need a `KeeplingApplication`, which needs a
@@ -197,3 +317,20 @@ struct KeeplingApp: App {
         }
     }
 }
+
+#if DEBUG
+/// 04-14-PLAN.md Task 2: builds a valid `snapshotJSON` value via
+/// `JSONSerialization` rather than hand-interpolating a string literal (the
+/// established pattern every OTHER seed hook in this file uses) --
+/// hand-interpolation is unsafe for the long-text fixture specifically,
+/// since an arbitrary Unicode title could itself contain an unescaped `"`
+/// or `\` and silently corrupt the surrounding hand-built JSON.
+private func uitestSnapshotJSON(id: String, revision: Int, title: String) -> String {
+    let object: [String: Any] = ["id": id, "revision": revision, "title": title]
+    guard let data = try? JSONSerialization.data(withJSONObject: object),
+          let json = String(data: data, encoding: .utf8) else {
+        return "{\"id\":\"\(id)\",\"revision\":\(revision)}"
+    }
+    return json
+}
+#endif

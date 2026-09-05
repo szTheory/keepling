@@ -36,16 +36,28 @@ struct BottomAccessoryView: View {
     /// this (not `summary.kind == .healthy` directly) to decide whether to
     /// omit the accessory call site entirely.
     static func hasContent(summary: SyncPresentationSummary, undoAvailability: UndoAvailabilityPresentation?) -> Bool {
-        summary.isActionableException || undoAvailability != nil || summary.kind == .updating
+        summary.isActionableException || undoAvailability != nil
+            || summary.kind == .updating || summary.kind == .offline || summary.kind == .localAcceptance
     }
 
+    /// 04-14-PLAN.md Task 1: `.offline` and `.localAcceptance` are two more
+    /// of this plan's own twelve-state matrix that previously had NO
+    /// construction site at all -- `SyncCopy.offline`/`SyncCopy
+    /// .localAcceptance` existed and were fully unit-tested at the
+    /// `SyncPresentation.derive` layer (04-10-PLAN.md Task 1), but nothing
+    /// under `Sources/Keepling` ever read `summary.copy` for either kind.
+    /// Both are routine, non-actionable states (`isActionableException` is
+    /// `false` for both, by design -- D-38 "healthy is silent" extends to
+    /// "routine is quiet, not silent": muted styling, no recovery action),
+    /// so they render through this SAME `row(text:...)` helper `.updating`
+    /// already used, with the identical muted color.
     var body: some View {
         Group {
             if summary.isActionableException {
                 row(text: summary.copy, textColor: TokenSemantics.primaryText, actions: summary.actions)
             } else if let undoAvailability {
                 undoRow(undoAvailability)
-            } else if summary.kind == .updating {
+            } else if summary.kind == .updating || summary.kind == .offline || summary.kind == .localAcceptance {
                 row(text: summary.copy, textColor: TokenSemantics.mutedText, actions: summary.actions)
             } else {
                 healthyFallback
@@ -90,6 +102,20 @@ struct BottomAccessoryView: View {
                     .foregroundStyle(textColor)
                     .lineLimit(2)
                     .accessibilityIdentifier("sync-accessory-text")
+            }
+            // 04-14-PLAN.md Task 1: `summary.count` was already derived and
+            // unit-tested at `SyncPresentation.derive`'s `boundedCount`
+            // ceiling (04-10-PLAN.md Task 1, max 99) but never actually
+            // RENDERED anywhere -- so "many" affected items could never
+            // visibly prove the bounded-count truth this plan's own state
+            // matrix asserts. A `nil`/`0` count renders nothing (no bare
+            // "(0)"); any positive count renders the ALREADY-bounded
+            // value verbatim, never re-clamped or reformatted here.
+            if let count = summary.count, count > 0 {
+                Text("(\(count))")
+                    .font(TokenSemantics.Typography.label)
+                    .foregroundStyle(textColor)
+                    .accessibilityIdentifier("sync-accessory-count")
             }
             Spacer(minLength: 0)
             ForEach(actions, id: \.code) { recoveryAction in

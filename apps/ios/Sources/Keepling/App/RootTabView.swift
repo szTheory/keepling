@@ -53,7 +53,20 @@ struct RootTabView: View {
 
     var body: some View {
         Group {
-            if shouldAttachAccessory {
+            // 04-14-PLAN.md Task 1: `.opening`/`.preparing` are the two
+            // states 04-13-SUMMARY.md's own inherited Phase-3 lesson (O-46/
+            // O-47) names as having no production construction site on the
+            // Mac -- SyncCopy carried their exact copy, but nothing ever
+            // rendered it. This blocking, full-screen loading surface is
+            // that construction site on the iPhone: it REPLACES the tab
+            // content (never composes alongside it), so a person can never
+            // see "Nothing for Today"/"Inbox Is Clear" (the authoritative
+            // EMPTY state) substituted for a state where the workspace has
+            // not finished opening/preparing at all (D-22, this plan's own
+            // "never substitute a loading state for empty" prohibition).
+            if facade.syncPresentation.kind == .opening || facade.syncPresentation.kind == .preparing {
+                loadingOverlay
+            } else if shouldAttachAccessory {
                 tabs.tabViewBottomAccessory {
                     BottomAccessoryView(
                         summary: facade.syncPresentation,
@@ -89,6 +102,37 @@ struct RootTabView: View {
     /// binding.
     private var syncRecoveryPresentedBinding: Binding<Bool> {
         Binding(get: { facade.isSyncRecoveryPresented }, set: { facade.isSyncRecoveryPresented = $0 })
+    }
+
+    /// The `.opening`/`.preparing` full-screen construction site (see the
+    /// `body` comment above). Renders `SyncCopy.opening`/`SyncCopy
+    /// .preparing` verbatim from the one derived summary -- never a second,
+    /// inline copy of that string -- with a `ProgressView` so the state
+    /// reads as in-flight, never as a static/broken screen.
+    private var loadingOverlay: some View {
+        VStack(spacing: TokenSemantics.Space.md) {
+            ProgressView()
+            if let copy = facade.syncPresentation.copy {
+                Text(copy)
+                    .font(TokenSemantics.Typography.body)
+                    .foregroundStyle(TokenSemantics.mutedText)
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("sync-loading-text")
+            }
+        }
+        .padding(TokenSemantics.Space.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(TokenSemantics.surface)
+        // NOTE: no `.accessibilityIdentifier` on this CONTAINER -- see
+        // `BottomAccessoryView`'s/`SyncRecoverySheet`'s identical
+        // established note: a container identifier overrides every
+        // child's own identifier (observed directly here too: an earlier
+        // revision set `sync-loading-overlay` here and it collapsed the
+        // `ProgressView`'s `ActivityIndicator` element AND the `Text`
+        // leaf's own `sync-loading-text` identifier down to this single
+        // container value, on the wrong element TYPE for either query).
+        // `sync-loading-text` on the leaf `Text` above is this overlay's
+        // sole, reliable query point.
     }
 
     private var tabs: some View {
