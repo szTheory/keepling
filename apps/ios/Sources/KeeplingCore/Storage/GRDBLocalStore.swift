@@ -16,6 +16,17 @@ import GRDB
 public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
     private let dbPool: DatabasePool
 
+    /// The store's own durable-unit path, exposed so a caller (tests, and
+    /// a future backup/restore feature) can build a `DurableUnit` against
+    /// this exact store without re-deriving the path convention (04-06-PLAN.md
+    /// Task 2).
+    public let path: String
+
+    /// The db/-wal/-shm treated as one durable unit (D-09). Never build a
+    /// competing `DurableUnit(databasePath:)` elsewhere in `Sources` for
+    /// THIS store's path -- this is the one accessor.
+    public var durableUnit: DurableUnit { DurableUnit(databasePath: path) }
+
     public enum StoreError: Error, Equatable {
         case fencedForWrites(String)
         case fingerprintMismatch
@@ -23,6 +34,8 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
         case unknownAcknowledgementMutation
         case invalidPullPage
         case outboxTransitionRejected(from: String, to: String)
+        case incompleteNamespace
+        case conflictDetailsEncodingFailed
     }
 
     #if DEBUG
@@ -69,6 +82,7 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
     /// just the writer -- satisfying "verified per connection" before any
     /// migration runs.
     public init(path: String) throws {
+        self.path = path
         try FileManager.default.createDirectory(
             atPath: (path as NSString).deletingLastPathComponent,
             withIntermediateDirectories: true
@@ -83,14 +97,20 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
         dbPool = try DatabasePool(path: path, configuration: configuration)
         try Self.applyMigrations(dbPool)
         // D-08: the store file carries iOS file-protection, never
-        // SQLCipher (D-07 rejects SQLCipher explicitly). Plan 04-06 asserts
-        // the exact protection class; this call sets the class this plan
-        // already commits to so a later assertion has something real to
-        // check, rather than leaving the file at the platform default.
+        // SQLCipher (D-07 rejects SQLCipher explicitly). G7 (D-04) asserted
+        // by DataProtectionTests.swift: .completeUntilFirstUserAuthentication,
+        // never .complete.
         try? FileManager.default.setAttributes(
             [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
             ofItemAtPath: path
         )
+        // D-09: the db/-wal/-shm durable unit is excluded from backup as
+        // one unit, applied AFTER migrations run so the -wal/-shm sidecars
+        // a WAL-mode connection creates already exist on disk to mark.
+        // `try?` mirrors the file-protection call above: a backup-exclusion
+        // failure must not prevent the store from opening -- it is the
+        // belt (D-09), never the brace the replay-no-op proof is.
+        try? DurableUnit(databasePath: path).excludeFromBackup()
     }
 
     // MARK: - Migration ledger (D-04 G4, D-37)
@@ -109,6 +129,65 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
     private func assertNotFenced(_ db: Database) throws {
         let fenced = try String.fetchOne(db, sql: "SELECT value FROM namespace_metadata WHERE key = 'sync_fence'")
         if let fenced { throw StoreError.fencedForWrites(fenced) }
+    }
+
+    private func writeFence(_ db: Database, reason: String) throws {
+        try db.execute(
+            sql: "INSERT INTO namespace_metadata(key, value) VALUES ('sync_fence', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            arguments: [reason]
+        )
+    }
+
+    /// The real D-09/D-03 fencing trigger (mirrors desktop's
+    /// `bindNamespace`): binds this store to `namespace` the first time,
+    /// and on every later call compares against what it is already bound
+    /// to. A restored store carries the namespace it was bound to BEFORE
+    /// the restore -- if the account signing in now disagrees, this fences
+    /// the store for writes and returns `false` rather than silently
+    /// letting a previous account's outbox push (04-06-PLAN.md Task 2).
+    /// Throws on an incomplete tuple -- a partially-populated namespace
+    /// would compare unequal to itself across launches for the wrong
+    /// reason (a missing field, not a real account change).
+    @discardableResult
+    public func bindNamespace(_ namespace: SyncNamespace) throws -> Bool {
+        assertNotOnMainThread()
+        guard namespace.isComplete else { throw StoreError.incompleteNamespace }
+        let serialized = try Self.serializeNamespace(namespace)
+        return try dbPool.write { db in
+            let existing = try String.fetchOne(db, sql: "SELECT value FROM namespace_metadata WHERE key = 'sync_namespace'")
+            if let existing, existing != serialized {
+                try self.writeFence(db, reason: "namespace_mismatch")
+                return false
+            }
+            try db.execute(
+                sql: "INSERT INTO namespace_metadata(key, value) VALUES ('sync_namespace', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                arguments: [serialized]
+            )
+            return true
+        }
+    }
+
+    /// Sets (`reason` non-`nil`) or clears (`reason == nil`) the
+    /// synchronization fence directly -- the production counterpart of
+    /// `__test_setFence`, for a caller (e.g. a future sign-out flow) that
+    /// already knows the fence reason without going through
+    /// `bindNamespace`'s comparison.
+    public func setSyncFence(reason: String?) throws {
+        assertNotOnMainThread()
+        try dbPool.write { db in
+            if let reason {
+                try self.writeFence(db, reason: reason)
+            } else {
+                try db.execute(sql: "DELETE FROM namespace_metadata WHERE key = 'sync_fence'")
+            }
+        }
+    }
+
+    private static func serializeNamespace(_ namespace: SyncNamespace) throws -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys]
+        let data = try encoder.encode(namespace)
+        return String(data: data, encoding: .utf8) ?? "{}"
     }
 
     // MARK: - Main-thread discipline (D-04 G5, D-34)
@@ -325,8 +404,17 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
         assertNotOnMainThread()
         try dbPool.read { db in try self.assertNotFenced(db) }
         try dbPool.write { db in
+            #if DEBUG
+            // Structural (not inferred) proof that settlement is one
+            // transaction, exactly the technique `acceptMutation` (D-04
+            // G2) already established -- `SettlementTests` reuses it
+            // rather than inferring the single-transaction claim.
+            self.__test_onTransactionStart?(db)
+            #endif
+
             let pending = try Row.fetchOne(db, sql: """
-                SELECT immutable_commands.fingerprint AS fingerprint, immutable_commands.task_id AS task_id
+                SELECT immutable_commands.fingerprint AS fingerprint, immutable_commands.task_id AS task_id,
+                       immutable_commands.effect_snapshot_json AS effect_snapshot_json
                 FROM outbox JOIN immutable_commands USING (mutation_id)
                 WHERE outbox.mutation_id = ?
                 """, arguments: [acknowledgement.mutationId])
@@ -346,6 +434,7 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
             let pendingFingerprint: String = pending["fingerprint"]
             guard pendingFingerprint == acknowledgement.fingerprint else { throw StoreError.fingerprintMismatch }
             let taskId: String = pending["task_id"]
+            let effectSnapshotJSON: String = pending["effect_snapshot_json"]
 
             if acknowledgement.outcome == .accepted || acknowledgement.outcome == .alreadySatisfied {
                 try db.execute(
@@ -355,9 +444,40 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
                     """,
                     arguments: [taskId, acknowledgement.snapshotJSON]
                 )
+                // Recomputes the visible projection from the now-canonical
+                // snapshot (D-04 G8 "recomputes the projection"), not only
+                // its sync status -- an `already_satisfied` replay may be
+                // settling bytes accepted in an earlier process, so the
+                // title this projection shows must converge to what the
+                // server actually holds, not merely what was proposed.
+                if let canonicalTitle = Self.stringField("title", inJSON: acknowledgement.snapshotJSON) {
+                    try db.execute(
+                        sql: "UPDATE visible_projection SET title = ?, sync_status = 'synced' WHERE task_id = ?",
+                        arguments: [canonicalTitle, taskId]
+                    )
+                } else {
+                    try db.execute(
+                        sql: "UPDATE visible_projection SET sync_status = 'synced' WHERE task_id = ?",
+                        arguments: [taskId]
+                    )
+                }
+            }
+            // A `conflict`/`rejected` outcome deliberately touches NEITHER
+            // canonical_shadow NOR visible_projection: the server's 409
+            // body carries only the affected fields, and replaying that
+            // partial body into either table would blank a field it never
+            // named while a person's still-local edit is standing there --
+            // exactly the "silent data-shaped lie" desktop's own acknowledge
+            // disclosure warns against. The next real pull brings true
+            // canonical state; until then the local row stands unmodified.
+
+            if let undo = acknowledgement.undo {
                 try db.execute(
-                    sql: "UPDATE visible_projection SET sync_status = 'synced' WHERE task_id = ?",
-                    arguments: [taskId]
+                    sql: """
+                    INSERT INTO namespace_metadata(key, value) VALUES (?, ?)
+                    ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                    """,
+                    arguments: ["undo_handle:\(acknowledgement.mutationId)", Self.encodeUndoHandle(undo)]
                 )
             }
 
@@ -369,8 +489,71 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
             // does: the server has decided, and retrying the same
             // immutable bytes cannot change its mind.
             try db.execute(sql: "DELETE FROM outbox WHERE mutation_id = ?", arguments: [acknowledgement.mutationId])
+
+            if acknowledgement.outcome == .conflict {
+                let detailsJSON = try Self.buildConflictDetailsJSON(
+                    affectedFields: acknowledgement.affectedFields,
+                    mineSnapshotJSON: effectSnapshotJSON,
+                    currentSnapshotJSON: acknowledgement.snapshotJSON
+                )
+                try db.execute(
+                    sql: """
+                    INSERT INTO conflicts(conflict_id, mutation_id, details_json) VALUES (?, ?, ?)
+                    ON CONFLICT(conflict_id) DO UPDATE SET details_json = excluded.details_json
+                    """,
+                    arguments: ["conflict:\(acknowledgement.mutationId)", acknowledgement.mutationId, detailsJSON]
+                )
+            }
         }
         return try snapshotUnguarded()
+    }
+
+    /// Reads one string field out of a JSON object string. Used only to
+    /// pull `title` back out of `snapshotJSON` for the projection recompute
+    /// above -- returns `nil` (never throws, never defaults) for a field
+    /// the snapshot does not carry, since not every acknowledgement carries
+    /// a title (a conflict/rejection never reaches this call site at all).
+    private static func stringField(_ field: String, inJSON json: String) -> String? {
+        guard let data = json.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return nil }
+        return object[field] as? String
+    }
+
+    private static func encodeUndoHandle(_ undo: SyncAcknowledgement.UndoAvailabilityHandle) -> String {
+        let payload: [String: Any] = ["handle": undo.handle, "label": undo.label, "expiresAt": undo.expiresAt]
+        let data = (try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])) ?? Data("{}".utf8)
+        return String(data: data, encoding: .utf8) ?? "{}"
+    }
+
+    /// Builds the `conflicts.details_json` body: `mine` and `current` each
+    /// restricted to exactly the server-named `affectedFields` -- never a
+    /// field either side did not report, matching the same "only the
+    /// affected fields" discipline `acknowledge` itself enforces on
+    /// `canonical_shadow`/`visible_projection` above.
+    private static func buildConflictDetailsJSON(
+        affectedFields: [String],
+        mineSnapshotJSON: String,
+        currentSnapshotJSON: String
+    ) throws -> String {
+        func fields(from json: String) -> [String: Any] {
+            guard let data = json.data(using: .utf8),
+                  let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            else { return [:] }
+            return object
+        }
+        let mineAll = fields(from: mineSnapshotJSON)
+        let currentAll = fields(from: currentSnapshotJSON)
+        var mine: [String: Any] = [:]
+        var current: [String: Any] = [:]
+        for field in affectedFields {
+            if let value = mineAll[field] { mine[field] = value }
+            if let value = currentAll[field] { current[field] = value }
+        }
+        let payload: [String: Any] = ["affected_fields": affectedFields, "mine": mine, "current": current]
+        let data = try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
+        guard let string = String(data: data, encoding: .utf8) else { throw StoreError.conflictDetailsEncodingFailed }
+        return string
     }
 
     // MARK: - Snapshot
@@ -449,6 +632,14 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
         try dbPool.read { db in
             try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM \(table)") ?? 0
         }
+    }
+
+    /// Test-only: every row of a named table, ordered by `rowid` for
+    /// deterministic before/after comparison. Used by `SettlementTests`'
+    /// full-table-snapshot proof that a refused or replayed acknowledgement
+    /// mutates nothing.
+    public func __test_fetchAllRows(table: String) throws -> [Row] {
+        try dbPool.read { db in try Row.fetchAll(db, sql: "SELECT * FROM \(table) ORDER BY rowid") }
     }
 
     public func outboxState(forMutationId mutationId: String) throws -> String? {

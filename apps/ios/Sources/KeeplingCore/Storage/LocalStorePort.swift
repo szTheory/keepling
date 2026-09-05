@@ -71,7 +71,10 @@ public struct PullPage: Sendable, Equatable {
 
 /// A terminal server answer to one durable mutation (mirrors
 /// `SyncAcknowledgement`). `snapshotJSON` is the canonical task snapshot on
-/// `accepted`/`already_satisfied`; other outcomes carry no task state.
+/// `accepted`/`already_satisfied`; on `conflict` it carries ONLY the
+/// server's own affected-field values (04-06-PLAN.md Task 1) -- never a
+/// caller-synthesized full snapshot, because settlement must not be able
+/// to blank a field the server did not name.
 public struct SyncAcknowledgement: Sendable, Equatable {
     public enum Outcome: String, Sendable, Equatable {
         case accepted
@@ -80,16 +83,50 @@ public struct SyncAcknowledgement: Sendable, Equatable {
         case stale
         case conflict
     }
+
+    /// The server-issued compensation capability, retained against the
+    /// mutation it undoes (mirrors desktop's `RetainedUndo` / O-45). Named
+    /// as a plain value here rather than importing `Transport`'s
+    /// `SyncUndoAvailability` -- `Storage` must not depend on `Transport`
+    /// (04-PATTERNS.md layering), so the two types are structurally
+    /// identical but independently declared at their own layer boundary.
+    public struct UndoAvailabilityHandle: Sendable, Equatable {
+        public let handle: String
+        public let label: String
+        public let expiresAt: String
+        public init(handle: String, label: String, expiresAt: String) {
+            self.handle = handle
+            self.label = label
+            self.expiresAt = expiresAt
+        }
+    }
+
     public let mutationId: String
     public let fingerprint: String
     public let outcome: Outcome
     public let snapshotJSON: String
+    /// The exact field names the server named as diverged on a `conflict`
+    /// outcome (04-06-PLAN.md Task 1). Empty for every other outcome.
+    public let affectedFields: [String]
+    /// Present only when the accepted command was one the server can
+    /// compensate. `nil` is an honest "this cannot be undone" -- never a
+    /// reason to synthesize one (04-06-PLAN.md Task 1 behavior).
+    public let undo: UndoAvailabilityHandle?
 
-    public init(mutationId: String, fingerprint: String, outcome: Outcome, snapshotJSON: String) {
+    public init(
+        mutationId: String,
+        fingerprint: String,
+        outcome: Outcome,
+        snapshotJSON: String,
+        affectedFields: [String] = [],
+        undo: UndoAvailabilityHandle? = nil
+    ) {
         self.mutationId = mutationId
         self.fingerprint = fingerprint
         self.outcome = outcome
         self.snapshotJSON = snapshotJSON
+        self.affectedFields = affectedFields
+        self.undo = undo
     }
 }
 
@@ -118,6 +155,32 @@ public struct LocalSyncState: Sendable, Equatable {
 
 public enum UndoDropReason: String, Sendable, Equatable {
     case blocked, dropped, nothingToUndo = "nothing_to_undo", transmitted, unknown
+}
+
+/// The five-field account/server namespace tuple this store is bound to
+/// (mirrors desktop `DesktopApplication.ts`'s `SyncNamespace`, cited in
+/// 02-03-SUMMARY.md). `bindNamespace` is the D-09/D-03 real fencing
+/// trigger: a restored store whose serialized tuple disagrees with what it
+/// was bound to fences itself for writes rather than silently pushing a
+/// previous account's outbox into this one (04-06-PLAN.md Task 2).
+public struct SyncNamespace: Sendable, Equatable, Codable {
+    public let issuer: String
+    public let origin: String
+    public let serverInstance: String
+    public let accountSubject: String
+    public let generation: String
+
+    public init(issuer: String, origin: String, serverInstance: String, accountSubject: String, generation: String) {
+        self.issuer = issuer
+        self.origin = origin
+        self.serverInstance = serverInstance
+        self.accountSubject = accountSubject
+        self.generation = generation
+    }
+
+    var isComplete: Bool {
+        !issuer.isEmpty && !origin.isEmpty && !serverInstance.isEmpty && !accountSubject.isEmpty && !generation.isEmpty
+    }
 }
 
 public struct UndoResult: Sendable, Equatable {
