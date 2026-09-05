@@ -1,0 +1,114 @@
+# XcodeGen source of truth for Keepling.xcodeproj (never hand-edited).
+# Regenerate with: xcodegen generate --spec apps/ios/project.yml --project apps/ios
+name: Keepling
+options:
+  bundleIdPrefix: com.szTheory
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+
+packages:
+  KeeplingCore:
+    path: .
+
+targets:
+  Keepling:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Sources/Keepling
+    dependencies:
+      - package: KeeplingCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.szTheory.keepling
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.3"
+        # D-21: a build-digest string the running process can read back at
+        # verification time (Plan 04-16 physical-device evidence binding).
+        # Set from a build setting rather than hand-maintained so it always
+        # reflects the actual build, never a stale hand-edited literal.
+        KEEPLING_BUILD_DIGEST: "$(MARKETING_VERSION)+$(CURRENT_PROJECT_VERSION)"
+    info:
+      path: Sources/Keepling/App/Info.plist
+      properties:
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        KeeplingBuildDigest: "$(KEEPLING_BUILD_DIGEST)"
+        # D-31: reject the legacy shake-to-undo/edit menu gesture. Keepling's
+        # undo is a named, persistent control (D-30), never a shake gesture.
+        UIApplicationSupportsShakeToEdit: false
+
+  KeeplingCoreTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Tests/KeeplingCoreTests
+    dependencies:
+      - package: KeeplingCore
+    settings:
+      base:
+        SWIFT_VERSION: "6.3"
+        GENERATE_INFOPLIST_FILE: YES
+
+  StorageTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Tests/StorageTests
+    dependencies:
+      - package: KeeplingCore
+    settings:
+      base:
+        SWIFT_VERSION: "6.3"
+        GENERATE_INFOPLIST_FILE: YES
+
+  KeeplingUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Tests/KeeplingUITests
+    dependencies:
+      - target: Keepling
+    settings:
+      base:
+        SWIFT_VERSION: "6.3"
+        TEST_TARGET_NAME: Keepling
+        GENERATE_INFOPLIST_FILE: YES
+
+  AppIntentsTests:
+    type: bundle.unit-test
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: Tests/AppIntentsTests
+    dependencies:
+      - target: Keepling
+    settings:
+      base:
+        SWIFT_VERSION: "6.3"
+        GENERATE_INFOPLIST_FILE: YES
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Keepling.app/Keepling"
+
+schemes:
+  Keepling:
+    build:
+      targets:
+        Keepling: all
+        KeeplingCoreTests: [test]
+        StorageTests: [test]
+        KeeplingUITests: [test]
+        AppIntentsTests: [test]
+    test:
+      targets:
+        - KeeplingCoreTests
+        - StorageTests
+        - KeeplingUITests
+        - AppIntentsTests

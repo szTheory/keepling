@@ -14,6 +14,10 @@ apps/desktop/dist-harness/
 .artifacts/
 DerivedData/
 *.xcuserstate
+.build-tools/
+apps/ios/Keepling.xcodeproj/
+apps/ios/.build/
+apps/ios/.swiftpm/
 .env
 .env.*
 !.env.example

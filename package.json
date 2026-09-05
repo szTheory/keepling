@@ -8,6 +8,7 @@
     "contracts:generate": "openapi-typescript packages/contracts/openapi/keepling.yaml --output packages/contracts/generated/keepling.ts --alphabetize --immutable",
     "dev:desktop": "pnpm --dir apps/desktop dev",
     "dev:web": "pnpm --filter @keepling/web dev",
+    "generate:ios:client": "node tooling/generate-ios-client.mjs",
     "lint:web": "pnpm --filter @keepling/web lint",
     "package:desktop": "pnpm --dir apps/desktop package",
     "smoke:desktop:packaged": "pnpm --dir apps/desktop smoke:packaged",
@@ -21,6 +22,7 @@
     "typecheck:desktop": "pnpm --dir apps/desktop typecheck",
     "typecheck:web": "pnpm --filter @keepling/web typecheck",
     "verify:desktop:real-stack": "node tooling/verify-real-stack-desktop.mjs",
+    "verify:ios:phase": "node tooling/verify-ios-phase.mjs",
     "verify:desktop:reproducible": "node tooling/verify-package-reproducibility.mjs"
   },
   "devDependencies": {
