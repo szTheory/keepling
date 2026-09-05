@@ -27,8 +27,42 @@ public final class WorkspaceFacade: ObservableObject {
     /// this ONE published value -- never the store directly.
     @Published public private(set) var items: [WorkspaceItem] = []
 
+    /// The ONE derived synchronization summary the accessory, every
+    /// per-task inline row, and the `Sync & Recovery` sheet all read
+    /// identically (04-10-PLAN.md Task 1, D-41) -- none of those three
+    /// surfaces recomputes it. Defaults to silent/healthy; a driver calls
+    /// `updateSyncPresentation` as `KeeplingApplication.runSyncPass`
+    /// outcomes and transport errors become known. Wiring every one of
+    /// those live signals through `ScenePhaseDriver`/`BackgroundRefresh`
+    /// end to end is this plan's disclosed remaining gap (see
+    /// 04-10-SUMMARY.md) -- the projection, its priority order, and every
+    /// consuming view are complete and independently tested against this
+    /// published value today.
+    @Published public private(set) var syncPresentation: SyncPresentationSummary = SyncPresentation.derive(.healthy(), now: Date())
+
+    /// Whether a named `Undo {Action}` control is currently available
+    /// (D-30). `nil` when there is nothing to undo. This plan builds only
+    /// the presentation-priority arbitration point the accessory needs
+    /// between an available undo and an actionable exception (04-UI-SPEC.md
+    /// Navigation, Tab, and Gesture Contract) -- the full semantic-undo
+    /// feature (persistent until superseded, compensating server action,
+    /// separate from in-field `UndoManager`) is a disclosed later plan's
+    /// concern.
+    @Published public private(set) var undoAvailability: UndoAvailabilityPresentation?
+
     public init(store: any LocalStorePort) {
         self.store = store
+    }
+
+    /// Feeds a newly observed synchronization state into the one derived
+    /// summary every surface reads (04-10-PLAN.md Task 1). `now` is
+    /// injected so grace-period absorption stays deterministic under test.
+    public func updateSyncPresentation(_ input: SyncPresentationInput, now: Date = Date()) {
+        syncPresentation = SyncPresentation.derive(input, now: now)
+    }
+
+    public func updateUndoAvailability(_ availability: UndoAvailabilityPresentation?) {
+        undoAvailability = availability
     }
 
     // MARK: - Snapshot
@@ -243,6 +277,35 @@ public final class WorkspaceFacade: ObservableObject {
         try await Task.detached(priority: .userInitiated) {
             _ = try store.acceptMutation(mutation)
         }.value
+    }
+}
+
+public extension WorkspaceFacade {
+    /// UI-test-only fixture hook (mirrors `KEEPLING_UITEST_RESET_STORE`'s
+    /// launch-environment pattern): maps a fixed string to a
+    /// `SyncPresentationInput` so `SyncRecoveryTests` can launch the app
+    /// deterministically into any state in the closed set without a real
+    /// `KeeplingApplication`/`SyncPort` round trip. `KeeplingApp.swift`
+    /// reads `KEEPLING_UITEST_SYNC_STATE` and calls this once at launch.
+    func applyUITestSyncState(_ raw: String, now: Date = Date()) {
+        let input: SyncPresentationInput
+        switch raw {
+        case "healthy": input = .healthy()
+        case "opening": input = .opening
+        case "preparing": input = .preparing
+        case "updating_past_grace": input = .updating(startedAt: now.addingTimeInterval(-(SyncPassScheduler.activeGracePeriod + 1)))
+        case "offline": input = .offline()
+        case "local_acceptance": input = .localAcceptance(pendingCount: 1)
+        case "local_save_failure": input = .localSaveFailure
+        case "retryable_failure": input = .retryableFailure(pendingCount: 1)
+        case "uncertain": input = .uncertain(pendingCount: 1)
+        case "rejected": input = .rejected(affectedCount: 1)
+        case "conflict": input = .conflict(affectedCount: 1)
+        case "authentication_fence": input = .authenticationFence(pendingCount: 1)
+        case "unrecoverable": input = .unrecoverable(.integrityCheckFailed(version: 1, detail: "uitest"))
+        default: return
+        }
+        updateSyncPresentation(input, now: now)
     }
 }
 

@@ -1,3 +1,4 @@
+import KeeplingCore
 import SwiftUI
 
 /// The root of the app (D-25): a two-tab `TabView` -- **Today** and
@@ -23,7 +24,52 @@ struct RootTabView: View {
         case inbox
     }
 
+    /// Whether the accessory has anything to show right now (D-38's
+    /// priority order, applied by `SyncPresentationSummary
+    /// .isActionableException` -- this view computes no order of its
+    /// own).
+    private var accessoryHasContent: Bool {
+        BottomAccessoryView.hasContent(summary: facade.syncPresentation, undoAvailability: facade.undoAvailability)
+    }
+
+    /// 04-04-PLAN.md measured that genuine `tabViewBottomAccessory`
+    /// absence on this pinned SDK requires the `conditionalModifier`
+    /// configuration -- attaching the modifier unconditionally, even with
+    /// empty content, reproduces a 48pt reserved, hit-testable phantom
+    /// region (T-04-04-01). So when absence IS achievable (the measured
+    /// case today), the call site below is omitted entirely whenever there
+    /// is nothing to show; only when a future SDK measurement records
+    /// `.absenceNotAchievable` is the modifier attached unconditionally,
+    /// with `BottomAccessoryView` rendering the disclosed empty fallback
+    /// for a healthy state (D-40).
+    private var shouldAttachAccessory: Bool {
+        switch currentAccessoryHostability {
+        case .absenceAchievable:
+            return accessoryHasContent
+        case .absenceNotAchievable:
+            return true
+        }
+    }
+
     var body: some View {
+        if shouldAttachAccessory {
+            tabs.tabViewBottomAccessory {
+                BottomAccessoryView(
+                    summary: facade.syncPresentation,
+                    undoAvailability: facade.undoAvailability,
+                    hostability: currentAccessoryHostability,
+                    // Task 3 (SyncRecoverySheet.swift) wires the actual
+                    // full-screen sheet presentation this action opens.
+                    onAction: { _ in },
+                    onUndo: {}
+                )
+            }
+        } else {
+            tabs
+        }
+    }
+
+    private var tabs: some View {
         TabView(selection: $selectedTab) {
             Tab("Today", systemImage: "sun.max", value: AppTab.today) {
                 NavigationStack(path: $todayPath) {
@@ -43,16 +89,6 @@ struct RootTabView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
-        // No `.tabViewBottomAccessory` call site exists here at all (not an
-        // always-applied modifier with empty content). 04-04-PLAN.md
-        // measured that genuine absence on this SDK requires the
-        // `conditionalModifier` configuration (`AccessoryHostability
-        // .currentAccessoryHostability`) -- attaching the modifier
-        // unconditionally, even with empty content, reproduces a 48pt
-        // reserved, hit-testable phantom region (T-04-04-01). This plan
-        // builds no accessory content (Plan 04-10's concern); the correct
-        // way to honor `conditionalModifier` with nothing to show is to
-        // omit the call site entirely, not to apply it with `EmptyView()`.
         .tint(TokenSemantics.accent)
     }
 }

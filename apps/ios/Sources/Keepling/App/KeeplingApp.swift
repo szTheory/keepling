@@ -54,7 +54,19 @@ struct KeeplingApp: App {
         // swiftlint:disable:next force_try
         let openedStore = try! GRDBLocalStore(path: path)
         store = openedStore
-        facade = WorkspaceFacade(store: openedStore)
+        let builtFacade = WorkspaceFacade(store: openedStore)
+        facade = builtFacade
+
+        // UI-test-only fixture hooks (04-10-PLAN.md Task 2): launch
+        // deterministically into a fixed synchronization/undo state so
+        // `SyncRecoveryTests` can assert accessory/sheet/overflow-menu
+        // rendering per state without a real sync pass.
+        if let testState = ProcessInfo.processInfo.environment["KEEPLING_UITEST_SYNC_STATE"] {
+            builtFacade.applyUITestSyncState(testState)
+        }
+        if ProcessInfo.processInfo.environment["KEEPLING_UITEST_UNDO_AVAILABLE"] == "1" {
+            builtFacade.updateUndoAvailability(UndoAvailabilityPresentation(actionLabel: "Undo Trash"))
+        }
 
         // 04-08-PLAN.md Task 3: the scene-phase driver and background
         // refresh handler both need a `KeeplingApplication`, which needs a

@@ -3,7 +3,7 @@ import Foundation
 /// A named, labeled recovery action a `SyncPresentationSummary` may offer.
 /// Mirrors `apps/desktop/main/application/presentation.ts`'s
 /// `RecoveryAction`/`RecoveryActionCode`.
-public enum SyncRecoveryActionCode: String, Sendable, Equatable {
+public enum SyncRecoveryActionCode: String, Sendable, Equatable, Hashable {
     case inspect
     case retry
     case checkAgain = "check_again"
@@ -44,6 +44,22 @@ public enum SyncPresentationKind: String, Sendable, Equatable, CaseIterable {
     case conflict
     case authenticationFence = "authentication_fence"
     case unrecoverable
+}
+
+/// Whether a named `Undo {Action}` control is currently available in the
+/// shared bottom-accessory slot (04-UI-SPEC.md Undo Contract, D-30). The
+/// accessory's priority order (D-38) places an actionable exception above
+/// an available undo, which is placed above transient work-in-progress --
+/// `BottomAccessoryView` reads this value and `SyncPresentationSummary
+/// .isActionableException` to pick exactly one, computing no order of its
+/// own.
+public struct UndoAvailabilityPresentation: Sendable, Equatable {
+    /// e.g. `Undo Complete`, `Undo Trash` (04-UI-SPEC.md Copywriting
+    /// Contract).
+    public let actionLabel: String
+    public init(actionLabel: String) {
+        self.actionLabel = actionLabel
+    }
 }
 
 /// The closed input union `SyncPresentation.derive` accepts -- one case per
