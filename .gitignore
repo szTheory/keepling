@@ -18,6 +18,8 @@ DerivedData/
 apps/ios/Keepling.xcodeproj/
 apps/ios/.build/
 apps/ios/.swiftpm/
+apps/ios/Tests/StorageTests/Fixtures/*.sqlite-wal
+apps/ios/Tests/StorageTests/Fixtures/*.sqlite-shm
 .env
 .env.*
 !.env.example

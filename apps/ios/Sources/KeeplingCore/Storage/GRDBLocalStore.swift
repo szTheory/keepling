@@ -21,10 +21,47 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
         case fingerprintMismatch
         case mutationIdentityMismatch
         case unknownAcknowledgementMutation
-        case migrationChecksumMismatch(version: Int)
-        case migrationSetAheadOfLedger(foundVersion: Int, knownVersionCount: Int)
         case invalidPullPage
+        case outboxTransitionRejected(from: String, to: String)
     }
+
+    #if DEBUG
+    /// Test-only fault-injection points inside `acceptMutation`'s single
+    /// transaction (D-04 G3). Named after the table-boundary each brackets,
+    /// per `<behavior>`'s enumerated list: projection, command bytes,
+    /// journal, dependency edges, outbox.
+    ///
+    /// `#if DEBUG`-gated: this entire enum and the closure property below
+    /// compile out of Release builds, which is what excludes the fault
+    /// seam from a shipped (Release-configuration) `Keepling` app binary
+    /// while still living in `KeeplingCore` for `StorageTests` to reach via
+    /// `@testable import` in Debug test builds.
+    public enum FaultInjectionPoint: String, Sendable {
+        case beforeProjection
+        case afterProjectionBeforeCommandBytes
+        case afterCommandBytesBeforeJournal
+        case afterJournalBeforeDependencyEdges
+        case afterDependencyEdgesBeforeOutbox
+    }
+
+    /// Set by a test to throw at a named point inside the acceptance
+    /// write. `nil` (the production default) never fires.
+    public var __test_injectFailure: ((FaultInjectionPoint) throws -> Void)?
+
+    /// Called, if set, as the very first statement inside
+    /// `acceptMutation`'s write transaction, with the real `Database` --
+    /// lets a test register `afterNextTransaction(onCommit:onRollback:)`
+    /// on the SAME transaction the acceptance write runs in, which is the
+    /// structural (not inferred) proof D-04 G2 requires.
+    public var __test_onTransactionStart: ((Database) -> Void)?
+
+    /// Substituted by a test so the main-thread precondition below can be
+    /// observed tripping without actually trapping the test host process
+    /// (iOS's Foundation carries no `Process`/fork API a test could use to
+    /// catch a real signal). `nil` in production: a real violation really
+    /// traps via `preconditionFailure`.
+    nonisolated(unsafe) public static var mainThreadViolationHandler: (@Sendable () -> Void)?
+    #endif
 
     /// Opens (creating if needed) the store at `path`. Every PRAGMA D-04 G1
     /// requires is set inside `prepareDatabase`, which GRDB calls for EVERY
@@ -58,54 +95,13 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
 
     // MARK: - Migration ledger (D-04 G4, D-37)
 
-    private static let migrations: [(version: Int, sql: String)] = [
-        (Migration0001Initial.version, Migration0001Initial.sql),
-        (Migration0002OutboxState.version, Migration0002OutboxState.sql),
+    static let migrations: [MigrationLedger.MigrationDefinition] = [
+        MigrationLedger.MigrationDefinition(version: Migration0001Initial.version, sql: Migration0001Initial.sql),
+        MigrationLedger.MigrationDefinition(version: Migration0002OutboxState.version, sql: Migration0002OutboxState.sql),
     ]
 
     private static func applyMigrations(_ dbPool: DatabasePool) throws {
-        try dbPool.write { db in
-            let ledgerPresent = try Bool.fetchOne(db, sql: """
-                SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'schema_migrations')
-                """) ?? false
-
-            for migration in migrations {
-                let checksum = sha256Hex(migration.sql)
-                var present = ledgerPresent
-                // The ledger table itself is created BY migration 1, so it
-                // is absent for the very first iteration on a fresh store.
-                if try db.tableExists("schema_migrations") { present = true }
-                if present {
-                    let existingChecksum = try String.fetchOne(
-                        db,
-                        sql: "SELECT checksum FROM schema_migrations WHERE version = ?",
-                        arguments: [migration.version]
-                    )
-                    if let existingChecksum {
-                        if existingChecksum != checksum {
-                            throw StoreError.migrationChecksumMismatch(version: migration.version)
-                        }
-                        continue
-                    }
-                }
-                try db.execute(sql: migration.sql)
-                try db.execute(
-                    sql: "INSERT INTO schema_migrations(version, checksum, applied_at) VALUES (?, ?, ?)",
-                    arguments: [migration.version, checksum, ISO8601DateFormatter().string(from: Date())]
-                )
-            }
-
-            if try db.tableExists("schema_migrations") {
-                let ahead = try Int.fetchOne(
-                    db,
-                    sql: "SELECT version FROM schema_migrations WHERE version > ? ORDER BY version LIMIT 1",
-                    arguments: [migrations.count]
-                )
-                if let ahead {
-                    throw StoreError.migrationSetAheadOfLedger(foundVersion: ahead, knownVersionCount: migrations.count)
-                }
-            }
-        }
+        try MigrationLedger.apply(migrations, to: dbPool)
     }
 
     // MARK: - Fencing (D-03 namespace fencing)
@@ -115,14 +111,56 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
         if let fenced { throw StoreError.fencedForWrites(fenced) }
     }
 
-    // MARK: - Capture / acceptance (D-03/D-04 G2)
+    // MARK: - Main-thread discipline (D-04 G5, D-34)
+
+    /// Traps in Debug builds if entered from the main thread. `<action>`
+    /// requires this cover every store method a caller can reach, not only
+    /// the acceptance write, because a stall reading the workspace snapshot
+    /// on the main thread is exactly as much of a UI freeze as a stall
+    /// writing one. GRDB's own internal WAL auto-checkpoint runs on GRDB's
+    /// dedicated writer dispatch queue, never on the calling thread, so
+    /// there is no separate application-reachable "checkpoint callback"
+    /// surface to guard independently from the write path itself -- the
+    /// per-call guard below is this precondition's complete coverage.
+    private func assertNotOnMainThread(_ function: StaticString = #function) {
+        guard Thread.isMainThread else { return }
+        #if DEBUG
+        if let handler = Self.mainThreadViolationHandler {
+            handler()
+            return
+        }
+        #endif
+        preconditionFailure("GRDBLocalStore.\(function) must never be called from the main thread")
+    }
+
+    // MARK: - Capture / acceptance (D-03/D-04 G2/G3)
 
     public func acceptMutation(_ mutation: LocalMutation) throws -> LocalAcceptance {
+        assertNotOnMainThread()
         let computedFingerprint = sha256Hex(mutation.commandBytes)
         guard computedFingerprint == mutation.fingerprint else { throw StoreError.fingerprintMismatch }
 
+        // The fence check runs on a READ connection, BEFORE `dbPool.write`
+        // is ever called -- a fenced namespace refuses the write without
+        // opening (and then rolling back) a transaction at all, which is
+        // what makes "zero commits AND zero rollbacks" an observable,
+        // structural property rather than an artifact of where inside the
+        // transaction the check happens to sit (D-04 G3 fence ordering).
+        try dbPool.read { db in try self.assertNotFenced(db) }
+
         try dbPool.write { db in
-            try self.assertNotFenced(db)
+            #if DEBUG
+            self.__test_onTransactionStart?(db)
+            try self.__test_injectFailure?(.beforeProjection)
+            #endif
+            try db.execute(
+                sql: "INSERT INTO visible_projection(task_id, title, sync_status) VALUES (?, ?, 'saved_on_this_mac')",
+                arguments: [mutation.taskId, mutation.title]
+            )
+
+            #if DEBUG
+            try self.__test_injectFailure?(.afterProjectionBeforeCommandBytes)
+            #endif
             let effectSnapshotJSON = "{\"id\":\"\(mutation.taskId)\",\"revision\":0,\"title\":\(jsonStringLiteral(mutation.title))}"
             try db.execute(
                 sql: """
@@ -136,14 +174,47 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
                     mutation.acceptedAt, jsonArrayLiteral(mutation.resourceKeys), effectSnapshotJSON,
                 ]
             )
+
+            #if DEBUG
+            try self.__test_injectFailure?(.afterCommandBytesBeforeJournal)
+            #endif
             try db.execute(
                 sql: "INSERT INTO mutation_journal(mutation_id, outcome, terminal_snapshot_json) VALUES (?, 'pending', NULL)",
                 arguments: [mutation.mutationId]
             )
-            try db.execute(
-                sql: "INSERT INTO visible_projection(task_id, title, sync_status) VALUES (?, ?, 'saved_on_this_mac')",
-                arguments: [mutation.taskId, mutation.title]
-            )
+
+            #if DEBUG
+            try self.__test_injectFailure?(.afterJournalBeforeDependencyEdges)
+            #endif
+            // Structural provenance only -- [Phase 03] "Outbound ordering
+            // is enforced by resource key, never by a journal dependency"
+            // stays true: these edges are an auditable record of which
+            // still-outstanding mutation(s) touched the same resource
+            // key(s) before this one, not the mechanism that gates outbox
+            // draining.
+            for resourceKey in mutation.resourceKeys {
+                let priorMutationIds = try String.fetchAll(
+                    db,
+                    sql: """
+                    SELECT DISTINCT immutable_commands.mutation_id
+                    FROM immutable_commands
+                    JOIN outbox ON outbox.mutation_id = immutable_commands.mutation_id,
+                         json_each(immutable_commands.resource_keys_json) AS resource_key
+                    WHERE resource_key.value = ? AND immutable_commands.mutation_id <> ?
+                    """,
+                    arguments: [resourceKey, mutation.mutationId]
+                )
+                for dependencyMutationId in priorMutationIds {
+                    try db.execute(
+                        sql: "INSERT OR IGNORE INTO mutation_dependencies(mutation_id, dependency_mutation_id) VALUES (?, ?)",
+                        arguments: [mutation.mutationId, dependencyMutationId]
+                    )
+                }
+            }
+
+            #if DEBUG
+            try self.__test_injectFailure?(.afterDependencyEdgesBeforeOutbox)
+            #endif
             try db.execute(
                 sql: "INSERT INTO outbox(mutation_id, sequence) VALUES (?, COALESCE((SELECT MAX(sequence) + 1 FROM outbox), 1))",
                 arguments: [mutation.mutationId]
@@ -165,29 +236,38 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
     // MARK: - Not implemented in this tracer plan
 
     public func applyPull(_ page: PullPage) throws {
+        assertNotOnMainThread()
         throw UnimplementedInTracerError("applyPull")
     }
 
     public func undoLastLocalAction() throws -> UndoResult {
+        assertNotOnMainThread()
         throw UnimplementedInTracerError("undoLastLocalAction")
     }
 
     public func resolveConflict(conflictId: String, selection: [String: String]) throws -> WorkspaceSnapshot {
+        assertNotOnMainThread()
         throw UnimplementedInTracerError("resolveConflict")
     }
 
     public func syncState() throws -> LocalSyncState {
-        let outboxIds = try readyMutations().map(\.mutationId)
+        assertNotOnMainThread()
+        let outboxIds = try readyMutationsUnguarded()
         return try dbPool.read { db in
             let cursor = try String.fetchOne(db, sql: "SELECT cursor FROM sync_cursor WHERE singleton = 1")
             let allOutbox = try String.fetchAll(db, sql: "SELECT mutation_id FROM outbox ORDER BY sequence")
-            return LocalSyncState(cursor: cursor, outbox: allOutbox, readyPushes: outboxIds)
+            return LocalSyncState(cursor: cursor, outbox: allOutbox, readyPushes: outboxIds.map(\.mutationId))
         }
     }
 
     // MARK: - Ready pushes (transport-agnostic outbox read)
 
     public func readyMutations() throws -> [LocalMutation] {
+        assertNotOnMainThread()
+        return try readyMutationsUnguarded()
+    }
+
+    private func readyMutationsUnguarded() throws -> [LocalMutation] {
         try dbPool.read { db in
             let rows = try Row.fetchAll(db, sql: """
                 SELECT immutable_commands.mutation_id, immutable_commands.task_id,
@@ -214,10 +294,36 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
         }
     }
 
+    // MARK: - Outbox state machine (monotonic: queued -> in_flight/uncertain, never back to queued)
+
+    /// Moves one outbox row's transmission state forward. `queued` is a
+    /// one-way departure gate: once a row has left it, no caller -- not
+    /// even a retry path -- may move it back, because a transport failure
+    /// cannot distinguish "the request never left" from "it left and the
+    /// answer was lost" ([Phase 03] D-52).
+    @discardableResult
+    public func setOutboxState(mutationId: String, to newState: String) throws -> Bool {
+        assertNotOnMainThread()
+        try dbPool.read { db in try self.assertNotFenced(db) }
+        return try dbPool.write { db in
+            guard let current = try String.fetchOne(
+                db, sql: "SELECT state FROM outbox WHERE mutation_id = ?", arguments: [mutationId]
+            ) else { return false }
+
+            if newState == "queued" && current != "queued" {
+                throw StoreError.outboxTransitionRejected(from: current, to: newState)
+            }
+            try db.execute(sql: "UPDATE outbox SET state = ? WHERE mutation_id = ?", arguments: [newState, mutationId])
+            return true
+        }
+    }
+
     // MARK: - Settlement (D-04 G8 / D-09 replay-no-op)
 
     @discardableResult
     public func acknowledge(_ acknowledgement: SyncAcknowledgement) throws -> WorkspaceSnapshot {
+        assertNotOnMainThread()
+        try dbPool.read { db in try self.assertNotFenced(db) }
         try dbPool.write { db in
             let pending = try Row.fetchOne(db, sql: """
                 SELECT immutable_commands.fingerprint AS fingerprint, immutable_commands.task_id AS task_id
@@ -264,12 +370,17 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
             // immutable bytes cannot change its mind.
             try db.execute(sql: "DELETE FROM outbox WHERE mutation_id = ?", arguments: [acknowledgement.mutationId])
         }
-        return try snapshot()
+        return try snapshotUnguarded()
     }
 
     // MARK: - Snapshot
 
     public func snapshot() throws -> WorkspaceSnapshot {
+        assertNotOnMainThread()
+        return try snapshotUnguarded()
+    }
+
+    private func snapshotUnguarded() throws -> WorkspaceSnapshot {
         try dbPool.read { db in
             let rows = try Row.fetchAll(db, sql: """
                 SELECT task_id, title, sync_status, notes, completed_at, trashed_at, planned
@@ -295,13 +406,43 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
     /// Exposed for G1/G6-style durability-posture assertions: reads every
     /// PRAGMA this store depends on directly off a real connection, rather
     /// than trusting `prepareDatabase` silently ran.
-    public func readDurabilityPosture() throws -> (foreignKeys: Bool, journalMode: String, synchronous: Int) {
+    public func readDurabilityPosture() throws -> (foreignKeys: Bool, journalMode: String, synchronous: Int, busyTimeoutMs: Int) {
+        try dbPool.read { db in try Self.readPosture(db) }
+    }
+
+    static func readPosture(_ db: Database) throws -> (foreignKeys: Bool, journalMode: String, synchronous: Int, busyTimeoutMs: Int) {
+        let foreignKeys = try Int.fetchOne(db, sql: "PRAGMA foreign_keys") ?? 0
+        let journalMode = try String.fetchOne(db, sql: "PRAGMA journal_mode") ?? ""
+        let synchronous = try Int.fetchOne(db, sql: "PRAGMA synchronous") ?? -1
+        let busyTimeoutMs = try Int.fetchOne(db, sql: "PRAGMA busy_timeout") ?? -1
+        return (foreignKeys == 1, journalMode, synchronous, busyTimeoutMs)
+    }
+
+    /// Test-only (G1): holds one real `DatabasePool` reader connection open
+    /// until every participant named by `barrier`'s initial `enter()` count
+    /// has itself entered this function -- proving `DatabasePool` was
+    /// forced to open more than one concurrent reader connection, rather
+    /// than serially reusing a single one, before reading the pragma on
+    /// each (04-RESEARCH.md Open Question 3; mirrors the Phase 1 explicit
+    /// reusable-barrier convention).
+    public func __test_readPostureHoldingConnectionOpen(
+        barrier: DispatchGroup,
+        releaseSignal: DispatchSemaphore
+    ) throws -> (foreignKeys: Bool, journalMode: String, synchronous: Int, busyTimeoutMs: Int) {
         try dbPool.read { db in
-            let foreignKeys = try Int.fetchOne(db, sql: "PRAGMA foreign_keys") ?? 0
-            let journalMode = try String.fetchOne(db, sql: "PRAGMA journal_mode") ?? ""
-            let synchronous = try Int.fetchOne(db, sql: "PRAGMA synchronous") ?? -1
-            return (foreignKeys == 1, journalMode, synchronous)
+            let posture = try Self.readPosture(db)
+            barrier.leave()
+            releaseSignal.wait()
+            return posture
         }
+    }
+
+    public func integrityCheckResults() throws -> [String] {
+        try dbPool.read { db in try String.fetchAll(db, sql: "PRAGMA integrity_check") }
+    }
+
+    public func foreignKeyCheckViolations() throws -> [Row] {
+        try dbPool.read { db in try Row.fetchAll(db, sql: "PRAGMA foreign_key_check") }
     }
 
     public func countRows(in table: String) throws -> Int {
@@ -333,6 +474,23 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
                 arguments: [reason]
             )
         }
+    }
+
+    /// Test-only: executes arbitrary SQL directly against the pool's writer
+    /// connection -- used by `DurabilityPostureTests` to attempt an
+    /// orphan-foreign-key insert and prove SQLite rejects it, without
+    /// needing a dedicated production write method for every adversarial
+    /// probe.
+    public func __test_executeRawSQL(_ sql: String, arguments: StatementArguments = StatementArguments()) throws {
+        try dbPool.write { db in try db.execute(sql: sql, arguments: arguments) }
+    }
+
+    /// Test-only: truncates the WAL into the main database file so a copy
+    /// of just the `.sqlite` path (no `-wal`/`-shm` sidecars) is a complete,
+    /// self-contained fixture -- used when generating the committed
+    /// `Tests/StorageTests/Fixtures/` databases.
+    public func __test_checkpointTruncate() throws {
+        try dbPool.writeWithoutTransaction { db in _ = try db.checkpoint(.truncate) }
     }
 }
 
