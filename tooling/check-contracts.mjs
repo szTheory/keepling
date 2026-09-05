@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { accessSync, constants, readFileSync } from 'node:fs'
+import { accessSync, constants, readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import process from 'node:process'
 
@@ -353,6 +353,121 @@ const validateRedactionVectors = (vectors) => {
   return vectors.state_facts.length
 }
 
+/**
+ * D-15 cross-consumer gate (04-03-PLAN.md Task 3): every one of the 13
+ * golden vector files in packages/contracts/vectors/ declares its required
+ * consumers in manifest.json. This fails loudly when a listed consumer did
+ * not (or can no longer be proven to) execute a file it is listed for --
+ * never a silent, hand-maintained assumption.
+ *
+ * Evidence differs by consumer, disclosed here rather than uniformly
+ * faked:
+ *   - swift / typescript: a machine-readable executed-file report, emitted
+ *     by that harness's OWN test run (VectorConformanceTests.swift /
+ *     sync-vectors.test.ts) and committed, so a consumer that silently
+ *     stops executing a file changes this committed evidence -- a real,
+ *     reviewable diff, not an invisible regression.
+ *   - elixir: no Elixir test file is in this plan's authorized
+ *     files_modified, so elixir evidence is computed by a live grep over
+ *     every checked-in apps/server/test/**\/*.exs file for a literal
+ *     reference to `vectors/<file>` -- dynamically computed at check time,
+ *     never a hand-maintained array, and it changes the moment a test
+ *     stops referencing a file.
+ */
+const vectorsDirectory = resolve(repositoryRoot, 'packages/contracts/vectors')
+const manifestPath = resolve(vectorsDirectory, 'manifest.json')
+
+const gitGrep = (pattern, paths) => {
+  const result = spawnSync('git', ['-C', repositoryRoot, 'grep', '-l', pattern, '--', ...paths], { encoding: 'utf8' })
+  // git grep exits 1 when there are zero matches -- not a tool failure.
+  if (result.status !== 0 && result.status !== 1) {
+    fail(`git grep failed while checking elixir vector consumption: ${result.stderr}`)
+  }
+  return result.stdout.split('\n').filter(Boolean)
+}
+
+const readExecutedFileReport = (consumer) => {
+  const reportPath = resolve(repositoryRoot, 'tooling/vector-conformance-reports', `${consumer}.json`)
+  try {
+    const report = JSON.parse(readFileSync(reportPath, 'utf8'))
+    if (report.consumer !== consumer || !Array.isArray(report.executedFiles)) {
+      fail(`${reportPath} is malformed (expected {consumer: "${consumer}", executedFiles: [...]})`)
+    }
+    return new Set(report.executedFiles)
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      fail(`missing executed-file report for consumer "${consumer}" at ${reportPath} -- run its test suite to regenerate, then commit the report`)
+    }
+    throw error
+  }
+}
+
+/**
+ * The one property this whole gate exists to enforce, isolated into a
+ * function small enough to unit-test directly (see the malformed-fixture
+ * check just below): a consumer is "proven executed" for a file only when
+ * `hasExecuted(consumer, file)` says so.
+ */
+const assertConsumerExecutedFile = (consumer, file, hasExecuted) => {
+  if (!hasExecuted(consumer, file)) {
+    fail(`manifest lists "${consumer}" for ${file}, but its executed-file evidence does not include ${file}`)
+  }
+}
+
+const validateVectorManifest = () => {
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+  if (manifest.version !== 1) fail('vector manifest version must be 1')
+  const manifestFiles = Object.keys(manifest.files ?? {})
+
+  const actualFiles = readdirSync(vectorsDirectory)
+    .filter((entry) => entry.endsWith('.json') && entry !== 'manifest.json')
+    .sort()
+  if (actualFiles.length !== 13) fail(`expected 13 vector files, found ${actualFiles.length}: ${actualFiles.join(', ')}`)
+  for (const file of actualFiles) {
+    if (!manifestFiles.includes(file)) fail(`vector file not in manifest: ${file}`)
+  }
+  for (const file of manifestFiles) {
+    if (!actualFiles.includes(file)) fail(`manifest lists a vector file that no longer exists: ${file}`)
+  }
+
+  const reportCache = new Map()
+  const hasExecuted = (consumer, file) => {
+    if (consumer === 'elixir') return gitGrep(`vectors/${file}`, ['apps/server/test']).length > 0
+    if (!reportCache.has(consumer)) reportCache.set(consumer, readExecutedFileReport(consumer))
+    return reportCache.get(consumer).has(file)
+  }
+
+  let checkedEntries = 0
+  for (const [file, entry] of Object.entries(manifest.files)) {
+    const consumers = entry.consumers
+    if (!Array.isArray(consumers) || consumers.length === 0) fail(`manifest entry for ${file} has no consumers`)
+    for (const consumer of consumers) {
+      checkedEntries += 1
+      assertConsumerExecutedFile(consumer, file, hasExecuted)
+    }
+  }
+  return { files: manifestFiles.length, checkedEntries }
+}
+
+const vectorManifestResult = validateVectorManifest()
+
+// Regression proof (Task 3 acceptance criterion): the gate must actually
+// FAIL when a listed consumer's evidence does not include a file it is
+// listed for. Exercised here against synthetic data -- never the real
+// manifest/reports -- so this runs on every `pnpm contracts:check`
+// invocation, not only once during authoring.
+{
+  const fakeEvidence = (consumer, file) => file === 'file-the-consumer-really-executed.json'
+  let threw = false
+  try {
+    assertConsumerExecutedFile('swift', 'file-the-consumer-did-not-execute.json', fakeEvidence)
+  } catch (error) {
+    threw = true
+    if (!String(error.message).includes('does not include')) throw error
+  }
+  if (!threw) fail('known missing executed-file evidence was accepted by the cross-consumer gate')
+}
+
 const schema = JSON.parse(readFileSync(syncSchema, 'utf8'))
 if (schema.$schema !== 'https://json-schema.org/draft/2020-12/schema' || !schema.$defs?.case) {
   fail('schema must be a closed Draft 2020-12 state-machine contract')
@@ -424,3 +539,6 @@ process.stdout.write(
   `Contract drift check passed: OpenAPI agrees; ${executedSyncCases} sync cases, ${executedCompatibility.cases} compatibility cases, ${executedCompatibility.codecs} codec fixtures, ${executedCompatibility.lanes} skew lanes, and ${executedRedactionFacts} trust facts validated\n`,
 )
 for (const input of executedCompatibility.laneInputs) process.stdout.write(`Compatibility lane: ${input}\n`)
+process.stdout.write(
+  `Vector manifest gate passed: ${vectorManifestResult.files} vector files, ${vectorManifestResult.checkedEntries} consumer entries proven executed\n`,
+)

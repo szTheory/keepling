@@ -1,8 +1,9 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, afterAll, describe, expect, it } from 'vitest'
 
 import {
   DesktopApplication,
@@ -16,6 +17,24 @@ const roots: string[] = []
 const migrationPath = new URL('../../migrations/0001_initial.sql', import.meta.url)
 
 const openStore = (databasePath: string) => new NodeSqliteLocalStore({ databasePath, migrationPath })
+
+/**
+ * D-15 cross-consumer manifest gate (04-03-PLAN.md Task 3): emits a
+ * machine-readable, committed record of which
+ * `packages/contracts/vectors/*.json` files this harness actually executed
+ * cases from, so `tooling/check-contracts.mjs` proves consumer execution
+ * from this harness's OWN reporting rather than trusting a hand-maintained
+ * list. `sync.json` is the only file this test drives (it is the only
+ * vector file bound to `sync-state-machine.schema.json`).
+ */
+const emitExecutedFileReport = () => {
+  const reportsDir = fileURLToPath(new URL('../../../../tooling/vector-conformance-reports/', import.meta.url))
+  mkdirSync(reportsDir, { recursive: true })
+  writeFileSync(
+    join(reportsDir, 'typescript.json'),
+    JSON.stringify({ consumer: 'typescript', executedFiles: ['sync.json'] }, null, 0),
+  )
+}
 
 type WireMutation = {
   accepted_at: string
@@ -39,6 +58,10 @@ const vectorMutation = (mutation: WireMutation): SyncMutation => ({
 
 afterEach(() => {
   for (const root of roots.splice(0)) rmSync(root, { force: true, recursive: true })
+})
+
+afterAll(() => {
+  emitExecutedFileReport()
 })
 
 describe('Phase 2 synchronization vectors', () => {
