@@ -65,6 +65,27 @@ public final class WorkspaceFacade: ObservableObject {
         undoAvailability = availability
     }
 
+    // MARK: - Sync & Recovery presentation state (D-39)
+
+    /// Whether the full-screen `Sync & Recovery` sheet is presented.
+    /// Public and settable (not `private(set)`) so `RootTabView`'s
+    /// `.sheet(isPresented:)` binding can flip it back to `false` on
+    /// dismiss (swipe-down or the sheet's own Close button).
+    @Published public var isSyncRecoveryPresented: Bool = false
+
+    /// The task the sheet should scroll to when opened via a per-task
+    /// exception's deep link -- `nil` when opened from the accessory or
+    /// the overflow-menu row (no specific task to focus).
+    @Published public private(set) var syncRecoveryFocusTaskId: String?
+
+    /// Opens the `Sync & Recovery` sheet -- from the accessory's
+    /// `Sync & Recovery` action, the overflow-menu row on either tab, or a
+    /// per-task exception's deep link (D-39).
+    public func openSyncRecovery(focusTaskId: String? = nil) {
+        syncRecoveryFocusTaskId = focusTaskId
+        isSyncRecoveryPresented = true
+    }
+
     // MARK: - Snapshot
 
     /// Reloads `items` from the store. Runs the store call off the main

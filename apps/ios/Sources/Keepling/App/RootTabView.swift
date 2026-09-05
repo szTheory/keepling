@@ -52,21 +52,43 @@ struct RootTabView: View {
     }
 
     var body: some View {
-        if shouldAttachAccessory {
-            tabs.tabViewBottomAccessory {
-                BottomAccessoryView(
-                    summary: facade.syncPresentation,
-                    undoAvailability: facade.undoAvailability,
-                    hostability: currentAccessoryHostability,
-                    // Task 3 (SyncRecoverySheet.swift) wires the actual
-                    // full-screen sheet presentation this action opens.
-                    onAction: { _ in },
-                    onUndo: {}
-                )
+        Group {
+            if shouldAttachAccessory {
+                tabs.tabViewBottomAccessory {
+                    BottomAccessoryView(
+                        summary: facade.syncPresentation,
+                        undoAvailability: facade.undoAvailability,
+                        hostability: currentAccessoryHostability,
+                        // Every recovery action opens the SAME full-screen
+                        // sheet (D-39) -- the accessory does not itself
+                        // resolve anything.
+                        onAction: { _ in facade.openSyncRecovery() },
+                        onUndo: {}
+                    )
+                }
+            } else {
+                tabs
             }
-        } else {
-            tabs
         }
+        // `Sync & Recovery` is presented FULL SCREEN (04-UI-SPEC.md
+        // Synchronization and Recovery Presentation, D-39) -- `.sheet`
+        // alone renders the iPhone "large detent" card with rounded
+        // corners and a visible gap above it, not genuine full screen;
+        // `.fullScreenCover` is the modifier that actually covers the
+        // whole display.
+        .fullScreenCover(isPresented: syncRecoveryPresentedBinding) {
+            SyncRecoverySheet(facade: facade)
+        }
+    }
+
+    /// A settable binding over `facade.isSyncRecoveryPresented` --
+    /// `WorkspaceFacade` is the single owner of this presentation state so
+    /// every opener (accessory action, overflow-menu row on either tab,
+    /// a per-task exception's deep link) shares one source of truth, and
+    /// SwiftUI's own dismiss gesture can flip it back through this same
+    /// binding.
+    private var syncRecoveryPresentedBinding: Binding<Bool> {
+        Binding(get: { facade.isSyncRecoveryPresented }, set: { facade.isSyncRecoveryPresented = $0 })
     }
 
     private var tabs: some View {

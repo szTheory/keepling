@@ -67,6 +67,38 @@ struct KeeplingApp: App {
         if ProcessInfo.processInfo.environment["KEEPLING_UITEST_UNDO_AVAILABLE"] == "1" {
             builtFacade.updateUndoAvailability(UndoAvailabilityPresentation(actionLabel: "Undo Trash"))
         }
+        // UI-test-only fixture hook (04-10-PLAN.md Task 3): seeds one REAL
+        // per-task conflict through the actual capture -> acknowledge(
+        // outcome: .conflict) path `KeeplingApplication.runSyncPass` itself
+        // drives (04-06-PLAN.md Task 1) -- never a synthesized/faked
+        // `WorkspaceItem`, so `SyncRecoveryTests` exercises the same
+        // conflict-recording code a real sync pass exercises.
+        if ProcessInfo.processInfo.environment["KEEPLING_UITEST_SEED_CONFLICT"] == "1" {
+            Task.detached(priority: .userInitiated) {
+                let mutationId = UUID().uuidString
+                let taskId = UUID().uuidString
+                guard let built = try? OutboundCommands.capture(title: "Conflicted Task", mutationId: mutationId, taskId: taskId) else { return }
+                let mutation = LocalMutation(
+                    mutationId: built.mutationId,
+                    taskId: built.taskId,
+                    commandBytes: built.commandBytes,
+                    fingerprint: built.fingerprint,
+                    acceptedAt: ISO8601DateFormatter().string(from: Date()),
+                    resourceKeys: built.resourceKeys,
+                    title: built.effect.title,
+                    effect: LocalMutation.ProjectionEffect(
+                        notes: built.effect.notes, completedAt: built.effect.completedAt, trashedAt: built.effect.trashedAt, planned: false
+                    )
+                )
+                _ = try? openedStore.acceptMutation(mutation)
+                let currentJSON = "{\"id\":\"\(taskId)\",\"title\":\"Conflicted Task\",\"revision\":2}"
+                _ = try? openedStore.acknowledge(SyncAcknowledgement(
+                    mutationId: mutationId, fingerprint: built.fingerprint, outcome: .conflict,
+                    snapshotJSON: currentJSON, affectedFields: ["title"]
+                ))
+                await builtFacade.refresh()
+            }
+        }
 
         // 04-08-PLAN.md Task 3: the scene-phase driver and background
         // refresh handler both need a `KeeplingApplication`, which needs a

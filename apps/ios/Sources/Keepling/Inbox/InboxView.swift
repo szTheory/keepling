@@ -1,3 +1,4 @@
+import KeeplingCore
 import SwiftUI
 
 /// Inbox's tab root (D-25): a native `List` of captured, unplanned tasks,
@@ -32,7 +33,8 @@ struct InboxView: View {
                             item: item,
                             onComplete: { Task { try? await facade.complete(taskId: item.taskId) } },
                             onReopen: { Task { try? await facade.reopen(taskId: item.taskId) } },
-                            onTrash: { Task { try? await facade.trash(taskId: item.taskId) } }
+                            onTrash: { Task { try? await facade.trash(taskId: item.taskId) } },
+                            onOpenSyncRecovery: { facade.openSyncRecovery(focusTaskId: item.taskId) }
                         )
                         .contentShape(Rectangle())
                         .onTapGesture { path.append(item.taskId) }
@@ -53,6 +55,27 @@ struct InboxView: View {
                     Label("New Task", systemImage: "plus")
                 }
                 .accessibilityIdentifier("new-task-button")
+                .frame(minWidth: TokenSemantics.Layout.target, minHeight: TokenSemantics.Layout.target)
+            }
+            // D-39: a persistent `Sync & Recovery` overflow-menu row on
+            // BOTH tabs, present even when everything is quiet -- that is
+            // precisely when a person doubts whether anything is working.
+            // D-30's Undo mirror lives in the same menu when an undo is
+            // available.
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    if let undo = facade.undoAvailability {
+                        Button(undo.actionLabel) {}
+                            .accessibilityIdentifier("overflow-undo")
+                    }
+                    Button(SyncCopy.recoveryTitle) {
+                        facade.openSyncRecovery()
+                    }
+                    .accessibilityIdentifier("overflow-sync-recovery")
+                } label: {
+                    Label("More", systemImage: "ellipsis.circle")
+                }
+                .accessibilityIdentifier("overflow-menu")
                 .frame(minWidth: TokenSemantics.Layout.target, minHeight: TokenSemantics.Layout.target)
             }
         }

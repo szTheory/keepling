@@ -1,3 +1,4 @@
+import KeeplingCore
 import SwiftUI
 
 /// Focus safety after a row is removed by completion or trashing
@@ -69,6 +70,22 @@ struct TaskRow: View {
     let onComplete: () -> Void
     let onReopen: () -> Void
     let onTrash: () -> Void
+    /// Opens the `Sync & Recovery` sheet deep-linked to this task (D-39).
+    /// `nil` in call sites that have not yet wired the sheet -- the
+    /// exception indicator simply does not render tappable in that case
+    /// (defensive default, never a crash).
+    var onOpenSyncRecovery: (() -> Void)?
+
+    /// This row's own exception summary -- derived from the SAME
+    /// authoritative projection every surface reads (D-41). Today the
+    /// only per-task exception this codebase models is an active conflict
+    /// (`WorkspaceItem.conflict`, 04-09-PLAN.md Task 1); a disclosed gap
+    /// this SUMMARY records is that per-task rejected/uncertain modeling
+    /// awaits a later plan's data wiring.
+    private var exceptionSummary: SyncPresentationSummary? {
+        guard item.conflict != nil else { return nil }
+        return SyncPresentation.derive(.conflict(affectedCount: 1), now: Date())
+    }
 
     var body: some View {
         HStack(spacing: TokenSemantics.Space.sm) {
@@ -79,10 +96,8 @@ struct TaskRow: View {
                     .strikethrough(item.isCompleted)
                     .lineLimit(2)
                     .accessibilityIdentifier("task-row-\(item.title)")
-                if item.conflict != nil {
-                    Text("Needs your attention")
-                        .font(TokenSemantics.Typography.label)
-                        .foregroundStyle(TokenSemantics.accent)
+                if let exceptionSummary {
+                    TaskExceptionRow(summary: exceptionSummary, taskTitle: item.title, onTap: { onOpenSyncRecovery?() })
                 }
             }
             Spacer(minLength: 0)

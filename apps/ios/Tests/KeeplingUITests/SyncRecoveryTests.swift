@@ -16,11 +16,12 @@ final class SyncRecoveryTests: XCTestCase {
         continueAfterFailure = false
     }
 
-    private func launch(state: String? = nil, undoAvailable: Bool = false) -> XCUIApplication {
+    private func launch(state: String? = nil, undoAvailable: Bool = false, seedConflict: Bool = false) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["KEEPLING_UITEST_RESET_STORE"] = "1"
         if let state { app.launchEnvironment["KEEPLING_UITEST_SYNC_STATE"] = state }
         if undoAvailable { app.launchEnvironment["KEEPLING_UITEST_UNDO_AVAILABLE"] = "1" }
+        if seedConflict { app.launchEnvironment["KEEPLING_UITEST_SEED_CONFLICT"] = "1" }
         app.launch()
         return app
     }
@@ -95,5 +96,75 @@ final class SyncRecoveryTests: XCTestCase {
         let newTaskButton = app.buttons["new-task-button"]
         XCTAssertTrue(newTaskButton.waitForExistence(timeout: 5))
         XCTAssertTrue(newTaskButton.isHittable, "capture must stay reachable independent of accessory state")
+    }
+
+    // MARK: - Persistent overflow-menu `Sync & Recovery` row (D-39) -- present even when quiet
+
+    func testOverflowMenuOffersSyncRecoveryRowEvenWhenHealthy() throws {
+        let app = launch(state: "healthy")
+        let overflow = app.buttons["overflow-menu"]
+        XCTAssertTrue(overflow.waitForExistence(timeout: 5))
+        overflow.tap()
+        XCTAssertTrue(app.buttons["overflow-sync-recovery"].waitForExistence(timeout: 5))
+    }
+
+    func testOverflowMenuIsPresentOnBothTabs() throws {
+        let app = launch(state: "healthy")
+        XCTAssertTrue(app.buttons["overflow-menu"].waitForExistence(timeout: 5))
+        app.buttons["Today"].tap()
+        XCTAssertTrue(app.buttons["overflow-menu"].waitForExistence(timeout: 5))
+    }
+
+    // MARK: - Sync & Recovery sheet: no-exceptions empty state, never a completeness claim
+
+    func testSyncRecoverySheetShowsNoChangesEmptyStateWhenNothingNeedsAttention() throws {
+        let app = launch(state: "healthy")
+        app.buttons["overflow-menu"].tap()
+        app.buttons["overflow-sync-recovery"].tap()
+        XCTAssertTrue(app.staticTexts["sync-recovery-no-changes-heading"].waitForExistence(timeout: 5))
+        XCTAssertEqual(app.staticTexts["sync-recovery-no-changes-heading"].label, "No Changes Need Your Attention")
+    }
+
+    func testSyncRecoverySheetPresentsFullScreen() throws {
+        let app = launch(state: "healthy")
+        app.buttons["overflow-menu"].tap()
+        app.buttons["overflow-sync-recovery"].tap()
+        let navBar = app.navigationBars["Sync & Recovery"]
+        XCTAssertTrue(navBar.waitForExistence(timeout: 5))
+        // The presented content reaches the very top of the display,
+        // right up to (not below) the status bar -- a `.sheet`'s "large
+        // detent" card is always inset from the top edge by a visible
+        // margin and rounded corners; `.fullScreenCover` (used here
+        // instead of `.sheet`) is not.
+        XCTAssertLessThan(navBar.frame.minY, 80, "full-screen presentation must not be inset from the top the way a card sheet is")
+        XCTAssertFalse(app.tabBars.firstMatch.isHittable, "the root tab bar must not be reachable underneath a full-screen cover")
+    }
+
+    // MARK: - No navigation bar carries a persistent synchronization status glyph (D-40)
+
+    func testNoNavigationBarContainsASynchronizationStatusGlyph() throws {
+        let app = launch(state: "conflict")
+        XCTAssertTrue(app.staticTexts["sync-accessory-text"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.navigationBars.images["sync-status-glyph"].exists)
+        XCTAssertFalse(app.navigationBars.otherElements["sync-status-glyph"].exists)
+    }
+
+    // MARK: - A seeded per-task conflict lists in the sheet and deep-links both ways
+
+    func testASeededConflictAppearsInlineAndInTheSyncRecoverySheetWithWorkingDeepLinks() throws {
+        let app = launch(seedConflict: true)
+        let exceptionRow = app.buttons["task-exception-Conflicted Task"]
+        XCTAssertTrue(exceptionRow.waitForExistence(timeout: 10), "the seeded conflict must render its inline exception row")
+
+        // Deep link forward: tapping the inline exception opens the sheet
+        // at that entry.
+        exceptionRow.tap()
+        let sheetRow = app.staticTexts["sync-recovery-row-title-Conflicted Task"]
+        XCTAssertTrue(sheetRow.waitForExistence(timeout: 5), "the sheet must list the seeded conflict")
+
+        // Deep link onward: tapping the sheet's entry navigates to that
+        // task's detail view.
+        sheetRow.tap()
+        XCTAssertTrue(app.textFields["detail-title-field"].waitForExistence(timeout: 5), "tapping the sheet entry must navigate to the task detail")
     }
 }
