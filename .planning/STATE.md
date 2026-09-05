@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 04
 current_phase_name: Native iPhone Daily Loop
 status: executing
-stopped_at: Completed KPL-04-08-PLAN.md
-last_updated: "2026-09-05T08:42:29.275Z"
+stopped_at: Completed KPL-04-09-PLAN.md
+last_updated: "2026-09-05T12:05:42.667Z"
 last_activity: 2026-09-05
 last_activity_desc: Plan 04-06 complete; next plan 04-07
-state_head: 4ec69dc0a56d0df63900ca956fd24f4b87880405
+state_head: 4c4af14eeba86e8fe0a6763704b453ff9947b198
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 82
-  completed_plans: 72
+  completed_plans: 73
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
-Plan: 9 of 17
+Plan: 10 of 17
 Total Plans in Phase: 17
 Status: Executing Phase KPL-04
 Last activity: 2026-09-05 — Plan 04-06 complete (6 of 17)
@@ -220,6 +220,8 @@ Progress: [████░░░░░░] 35%
 - [Phase KPL-04]: iOS registers its own ASWebAuthenticationSession callback scheme (keeplingios://auth/callback), distinct from desktop's keepling:// scheme — A private-use scheme is first-come per-OS; sharing one across native client kinds has no benefit and complicates future clients
 - [Phase KPL-04]: GRDBLocalStore.snapshot()/syncState() are fence-gated but readyMutations() deliberately is not — Preserves 04-06's already-verified BackupReplayTests proof that reads ready rows to demonstrate the write path refuses per mutation
 - [Phase 04]: KeeplingSyncAdapter.push and GRDBLocalStore.acceptMutation generalized beyond capture_task-only, since the plan's own objective (every command travels, joins one transaction) was unsatisfiable against the pre-existing tracer-only code.
+- [Phase KPL-04]: A list row is a plain view with .onTapGesture navigating via NavigationPath.append, never NavigationLink(value:) -- NavigationLink's automatic accessibility grouping collapses a row's child text into one opaque Button element, making the title's own accessibility identifier unreachable.
+- [Phase KPL-04]: Completion and trashing both remove a row from Today/Inbox in this phase (no recently-completed or Trash-browsing surface yet); Reopen/Restore stay reachable only through the task detail view, which remains pushed across the transition.
 
 ### Retained Research
 
@@ -255,8 +257,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-05T08:42:29.081Z
-**Stopped at:** Completed KPL-04-08-PLAN.md
+**Last session:** 2026-09-05T12:05:34.748Z
+**Stopped at:** Completed KPL-04-09-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -333,6 +335,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-04 P06 | ~2h | 2 tasks | 9 files |
 | Phase KPL-04 P07 | 2h | 3 tasks | 14 files |
 | Phase KPL-04 P08 | ~3h | 3 tasks | 18 files |
+| Phase KPL-04 P09 | ~5h | 3 tasks | 22 files |
 
 ### Blockers
 

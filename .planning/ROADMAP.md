@@ -254,7 +254,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
-**Plans:** 8/17 plans executed
+**Plans:** 9/17 plans executed
 
 Plans:
 **Wave 1**
@@ -282,7 +282,7 @@ Plans:
 
 **Wave 6** *(blocked on Wave 5 completion)*
 
-- [ ] 04-09-PLAN.md — The two-tab daily loop: lists, the locked gesture contract, task detail and conflict resolver, and the durable capture draft.
+- [x] 04-09-PLAN.md — The two-tab daily loop: lists, the locked gesture contract, task detail and conflict resolver, and the durable capture draft.
 
 **Wave 7** *(blocked on Wave 6 completion)*
 
