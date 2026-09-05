@@ -1418,6 +1418,15 @@ components:
       minLength: 1
       maxLength: 4096
       description: Opaque authenticated feed or bootstrap position bound to the server-derived installation namespace.
+    NullableSyncCursor:
+      # See NullableCivilDate for why this restates SyncCursor's own shape
+      # via `type: [string, 'null']` instead of wrapping a $ref in
+      # oneOf/anyOf -- that wrapper shape verified to drop the referencing
+      # property entirely from swift-openapi-generator's output.
+      type: [string, 'null']
+      minLength: 1
+      maxLength: 4096
+      description: Opaque authenticated feed or bootstrap position bound to the server-derived installation namespace, or absent.
     SyncPosition:
       type: object
       additionalProperties: false
@@ -1446,9 +1455,7 @@ components:
           items:
             $ref: '#/components/schemas/SyncFeedEnvelope'
         coverage_cursor:
-          oneOf:
-            - $ref: '#/components/schemas/SyncCursor'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableSyncCursor'
         has_more:
           type: boolean
     SyncFeedEnvelope:
@@ -1469,9 +1476,7 @@ components:
           type: [string, 'null']
           format: uuid
         entity_revision:
-          oneOf:
-            - $ref: '#/components/schemas/Revision'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableRevision'
         entity_type:
           type: [string, 'null']
           enum: [command, task, organization, conflict, collection_membership, undo, null]
@@ -1588,9 +1593,7 @@ components:
         planned_on:
           $ref: '#/components/schemas/NullableCivilDate'
         project_id:
-          oneOf:
-            - $ref: '#/components/schemas/OrganizationIdentity'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableOrganizationIdentity'
         revision:
           $ref: '#/components/schemas/Revision'
         tag_ids:
@@ -1639,9 +1642,7 @@ components:
           items: {$ref: '#/components/schemas/SyncBootstrapEntity'}
         high_water: {$ref: '#/components/schemas/SyncPosition'}
         next_cursor:
-          oneOf:
-            - $ref: '#/components/schemas/SyncCursor'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableSyncCursor'
     SyncBootstrapEntity:
       type: object
       additionalProperties: false
@@ -1979,6 +1980,13 @@ components:
       minLength: 1
       maxLength: 1024
       description: Opaque HMAC-authenticated account/task/revision-bound keyset cursor.
+    NullableActivityCursor:
+      # See NullableCivilDate for why this restates ActivityCursor's own
+      # shape rather than wrapping a $ref in oneOf/anyOf.
+      type: [string, 'null']
+      minLength: 1
+      maxLength: 1024
+      description: Opaque HMAC-authenticated account/task/revision-bound keyset cursor, or absent.
     ActivityDateChange:
       type: object
       additionalProperties: false
@@ -2004,6 +2012,12 @@ components:
           format: date
     ActivityIdentity:
       type: integer
+      format: int64
+      minimum: 1
+    NullableActivityIdentity:
+      # See NullableCivilDate for why this restates ActivityIdentity's own
+      # shape rather than wrapping a $ref in oneOf/anyOf.
+      type: [integer, 'null']
       format: int64
       minimum: 1
     ActivityInstantChange:
@@ -2067,9 +2081,7 @@ components:
             - iphone
             - mcp
         from_revision:
-          oneOf:
-            - $ref: '#/components/schemas/Revision'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableRevision'
         mutation_id:
           $ref: '#/components/schemas/MutationIdentity'
         outcome:
@@ -2100,9 +2112,7 @@ components:
             - task_restored
             - task_undo_applied
         undone_activity_id:
-          oneOf:
-            - $ref: '#/components/schemas/ActivityIdentity'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableActivityIdentity'
         version:
           type: integer
           const: 1
@@ -2122,13 +2132,9 @@ components:
           type: string
           const: organization
         new:
-          oneOf:
-            - $ref: '#/components/schemas/TaskOrganizationReference'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableTaskOrganizationReference'
         old:
-          oneOf:
-            - $ref: '#/components/schemas/TaskOrganizationReference'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableTaskOrganizationReference'
     ActivityOrganizationsChange:
       type: object
       additionalProperties: false
@@ -2170,9 +2176,7 @@ components:
           items:
             $ref: '#/components/schemas/ActivityItem'
         next_cursor:
-          oneOf:
-            - $ref: '#/components/schemas/ActivityCursor'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableActivityCursor'
     ActivityStateChange:
       type: object
       additionalProperties: false
@@ -2399,6 +2403,13 @@ components:
       minLength: 1
       maxLength: 2048
       description: Opaque HMAC-authenticated account/view/revision-bound complete keyset.
+    NullableTaskViewCursor:
+      # See NullableCivilDate for why this restates TaskViewCursor's own
+      # shape rather than wrapping a $ref in oneOf/anyOf.
+      type: [string, 'null']
+      minLength: 1
+      maxLength: 2048
+      description: Opaque HMAC-authenticated account/view/revision-bound complete keyset, or absent.
     TaskViewItem:
       type: object
       additionalProperties: false
@@ -2477,13 +2488,9 @@ components:
           items:
             $ref: '#/components/schemas/TaskViewItem'
         next_cursor:
-          oneOf:
-            - $ref: '#/components/schemas/TaskViewCursor'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableTaskViewCursor'
         order_revision:
-          oneOf:
-            - $ref: '#/components/schemas/Revision'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableRevision'
         view:
           type: string
           enum:
@@ -2838,9 +2845,7 @@ components:
         - tag_ids
       properties:
         project_id:
-          oneOf:
-            - $ref: '#/components/schemas/OrganizationIdentity'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableOrganizationIdentity'
         tag_ids:
           type: array
           uniqueItems: true
@@ -2848,6 +2853,11 @@ components:
             $ref: '#/components/schemas/OrganizationIdentity'
     OrganizationIdentity:
       type: string
+      format: uuid
+    NullableOrganizationIdentity:
+      # See NullableCivilDate for why this restates OrganizationIdentity's
+      # own shape rather than wrapping a $ref in oneOf/anyOf.
+      type: [string, 'null']
       format: uuid
     OrganizationKind:
       type: string
@@ -2984,6 +2994,12 @@ components:
           const: 1
     Revision:
       type: integer
+      format: int64
+      minimum: 1
+    NullableRevision:
+      # See NullableCivilDate for why this restates Revision's own shape
+      # rather than wrapping a $ref in oneOf/anyOf.
+      type: [integer, 'null']
       format: int64
       minimum: 1
     RecoveryRequest:
@@ -3179,9 +3195,21 @@ components:
       format: date
       description: Canonical civil date with no time or device-zone interpretation.
     NullableCivilDate:
-      oneOf:
-        - $ref: '#/components/schemas/CivilDate'
-        - type: 'null'
+      # A `oneOf: [{$ref: CivilDate}, {type: 'null'}]` wrapper (both the
+      # pre-existing OpenAPI-3.0-style anyOf form and its literal 3.1
+      # oneOf re-spelling) was verified against the real pinned
+      # swift-openapi-generator (Task 2's 1.13.1) to silently DROP the
+      # entire referencing property from the generated Swift struct --
+      # not merely decode it non-optionally, the property does not exist
+      # at all. swift-openapi-generator's own docs
+      # (Handling-nullable-schemas.md) state nullability of a $ref
+      # propagates from the TARGET schema's own `type`, so a direct
+      # `type: [string, 'null']` union restates CivilDate's own shape
+      # here instead of wrapping a reference to it. Verified: the
+      # property using this schema regenerates as a proper `String?`.
+      type: [string, 'null']
+      format: date
+      description: Canonical civil date with no time or device-zone interpretation, or absent.
     TaskDateValues:
       type: object
       additionalProperties: false
@@ -3229,9 +3257,7 @@ components:
         planned_on:
           $ref: '#/components/schemas/NullableCivilDate'
         project:
-          oneOf:
-            - $ref: '#/components/schemas/TaskOrganizationReference'
-            - type: 'null'
+          $ref: '#/components/schemas/NullableTaskOrganizationReference'
         revision:
           $ref: '#/components/schemas/Revision'
         tags:
@@ -3245,6 +3271,29 @@ components:
           format: date-time
     TaskOrganizationReference:
       type: object
+      additionalProperties: false
+      required:
+        - archived
+        - id
+        - name
+      properties:
+        archived:
+          type: boolean
+        id:
+          $ref: '#/components/schemas/OrganizationIdentity'
+        name:
+          $ref: '#/components/schemas/OrganizationName'
+    NullableTaskOrganizationReference:
+      # See NullableCivilDate for the same generator-verified constraint;
+      # this variant additionally proves the pattern for an object $ref
+      # (not just a primitive one), by duplicating TaskOrganizationReference's
+      # own body under `type: [object, 'null']` rather than wrapping a $ref
+      # to it in oneOf/anyOf. TaskOrganizationReference itself is
+      # deliberately left untouched (still always-required, non-null)
+      # because it is also used in strictly non-nullable positions (array
+      # items) elsewhere in this file; widening its own root type would
+      # have made every one of those sites nullable too.
+      type: [object, 'null']
       additionalProperties: false
       required:
         - archived

@@ -848,7 +848,7 @@ export interface components {
             readonly changes: readonly components["schemas"]["ActivityChange"][];
             /** @enum {string} */
             readonly client_kind: "web" | "electron" | "iphone" | "mcp";
-            readonly from_revision: components["schemas"]["Revision"] | null;
+            readonly from_revision: components["schemas"]["NullableRevision"];
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             /** @constant */
             readonly outcome: "accepted";
@@ -857,7 +857,7 @@ export interface components {
             readonly to_revision: components["schemas"]["Revision"];
             /** @enum {string} */
             readonly type: "task_captured" | "task_details_updated" | "task_planned" | "task_unplanned" | "task_clarified" | "task_returned_to_inbox" | "task_completed" | "task_reopened" | "task_trashed" | "task_restored" | "task_undo_applied";
-            readonly undone_activity_id: components["schemas"]["ActivityIdentity"] | null;
+            readonly undone_activity_id: components["schemas"]["NullableActivityIdentity"];
             /** @constant */
             readonly version: 1;
         };
@@ -869,8 +869,8 @@ export interface components {
              * @enum {string}
              */
             readonly kind: "organization";
-            readonly new: components["schemas"]["TaskOrganizationReference"] | null;
-            readonly old: components["schemas"]["TaskOrganizationReference"] | null;
+            readonly new: components["schemas"]["NullableTaskOrganizationReference"];
+            readonly old: components["schemas"]["NullableTaskOrganizationReference"];
         };
         readonly ActivityOrganizationsChange: {
             /** @constant */
@@ -887,7 +887,7 @@ export interface components {
             /** @description Canonical IANA timezone used to display accepted activity time. */
             readonly account_timezone: string;
             readonly items: readonly components["schemas"]["ActivityItem"][];
-            readonly next_cursor: components["schemas"]["ActivityCursor"] | null;
+            readonly next_cursor: components["schemas"]["NullableActivityCursor"];
         };
         readonly ActivityStateChange: {
             /** @enum {string} */
@@ -1107,7 +1107,28 @@ export interface components {
             /** @constant */
             readonly token_type: "Bearer";
         };
-        readonly NullableCivilDate: components["schemas"]["CivilDate"] | null;
+        /** @description Opaque HMAC-authenticated account/task/revision-bound keyset cursor, or absent. */
+        readonly NullableActivityCursor: string | null;
+        /** Format: int64 */
+        readonly NullableActivityIdentity: number | null;
+        /**
+         * Format: date
+         * @description Canonical civil date with no time or device-zone interpretation, or absent.
+         */
+        readonly NullableCivilDate: string | null;
+        /** Format: uuid */
+        readonly NullableOrganizationIdentity: string | null;
+        /** Format: int64 */
+        readonly NullableRevision: number | null;
+        /** @description Opaque authenticated feed or bootstrap position bound to the server-derived installation namespace, or absent. */
+        readonly NullableSyncCursor: string | null;
+        readonly NullableTaskOrganizationReference: {
+            readonly archived: boolean;
+            readonly id: components["schemas"]["OrganizationIdentity"];
+            readonly name: components["schemas"]["OrganizationName"];
+        } | null;
+        /** @description Opaque HMAC-authenticated account/view/revision-bound complete keyset, or absent. */
+        readonly NullableTaskViewCursor: string | null;
         readonly OpaqueGrantCredential: string;
         readonly OrganizationAcknowledgement: {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
@@ -1118,7 +1139,7 @@ export interface components {
             readonly snapshot: components["schemas"]["OrganizationSnapshot"];
         };
         readonly OrganizationAssignmentValues: {
-            readonly project_id: components["schemas"]["OrganizationIdentity"] | null;
+            readonly project_id: components["schemas"]["NullableOrganizationIdentity"];
             readonly tag_ids: readonly components["schemas"]["OrganizationIdentity"][];
         };
         /** Format: uuid */
@@ -1291,7 +1312,7 @@ export interface components {
         readonly SyncBootstrapPage: {
             readonly entities: readonly components["schemas"]["SyncBootstrapEntity"][];
             readonly high_water: components["schemas"]["SyncPosition"];
-            readonly next_cursor: components["schemas"]["SyncCursor"] | null;
+            readonly next_cursor: components["schemas"]["NullableSyncCursor"];
         };
         readonly SyncCollectionTombstone: {
             /** @enum {string} */
@@ -1308,7 +1329,7 @@ export interface components {
         readonly SyncFeedEnvelope: {
             /** Format: uuid */
             readonly entity_id: string | null;
-            readonly entity_revision: components["schemas"]["Revision"] | null;
+            readonly entity_revision: components["schemas"]["NullableRevision"];
             /** @enum {string|null} */
             readonly entity_type: "command" | "task" | "organization" | "conflict" | "collection_membership" | "undo" | null;
             /** Format: date-time */
@@ -1323,7 +1344,7 @@ export interface components {
         };
         readonly SyncFeedPage: {
             readonly changes: readonly components["schemas"]["SyncFeedEnvelope"][];
-            readonly coverage_cursor: components["schemas"]["SyncCursor"] | null;
+            readonly coverage_cursor: components["schemas"]["NullableSyncCursor"];
             readonly has_more: boolean;
         };
         /** @enum {string} */
@@ -1352,7 +1373,7 @@ export interface components {
             readonly inbox_state: "inbox" | "clarified";
             readonly notes: string;
             readonly planned_on: components["schemas"]["NullableCivilDate"];
-            readonly project_id: components["schemas"]["OrganizationIdentity"] | null;
+            readonly project_id: components["schemas"]["NullableOrganizationIdentity"];
             readonly revision: components["schemas"]["Revision"];
             readonly tag_ids: readonly components["schemas"]["OrganizationIdentity"][];
             readonly title: string;
@@ -1398,7 +1419,7 @@ export interface components {
             readonly inbox_state: "inbox" | "clarified";
             readonly notes: string;
             readonly planned_on: components["schemas"]["NullableCivilDate"];
-            readonly project: components["schemas"]["TaskOrganizationReference"] | null;
+            readonly project: components["schemas"]["NullableTaskOrganizationReference"];
             readonly revision: components["schemas"]["Revision"];
             readonly tags: readonly components["schemas"]["TaskOrganizationReference"][];
             readonly title: string;
@@ -1432,8 +1453,8 @@ export interface components {
             readonly account_day: string;
             readonly account_timezone: string;
             readonly items: readonly components["schemas"]["TaskViewItem"][];
-            readonly next_cursor: components["schemas"]["TaskViewCursor"] | null;
-            readonly order_revision: components["schemas"]["Revision"] | null;
+            readonly next_cursor: components["schemas"]["NullableTaskViewCursor"];
+            readonly order_revision: components["schemas"]["NullableRevision"];
             /** @enum {string} */
             readonly view: "inbox" | "today" | "upcoming" | "completed";
         };
