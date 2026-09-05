@@ -20,6 +20,7 @@ adding a file, never by editing the runner.
 | `tracer-e2e` | `node tooling/verify-ios-phase.mjs --lane tracer-e2e` | `KeeplingUITests` (`TracerCaptureUITests`) | The capture flow driven end to end on the simulator: SwiftUI capture sheet → durable local commit → visible in the Inbox list |
 | `vector-conformance` | `node tooling/verify-ios-phase.mjs --lane vector-conformance` | `KeeplingCoreTests` (`VectorConformanceTests`) | The Swift `SyncReducer`'s agreement with the Elixir reference model and the TypeScript desktop consumer on `packages/contracts/vectors/sync.json` |
 | `accessory-probe` | `node tooling/verify-ios-phase.mjs --lane accessory-probe` | `KeeplingUITests` (`AccessoryAbsenceProbeTests`) | Whether `tabViewBottomAccessory` can be made genuinely absent on this Mac's pinned SDK — measured on rendered geometry and hit-testability, never on text content, plus a permanent regression on the named achieving configuration |
+| `durability-posture` | `node tooling/verify-ios-phase.mjs --lane durability-posture` | `StorageTests` (`SettlementTests`, `DurableUnitTests`, `BackupReplayTests`, `DataProtectionTests`) | The Plan 04-06 D-04 G7/G8 durability-gate proof: full terminal-acknowledgement settlement (identity + fingerprint, canonical/conflict application, journal terminalization, projection recompute, exact outbox-row delete, all in one transaction), the db/-wal/-shm durable unit's all-or-none move/copy/delete, the D-09 hand-restored-store replay-no-op and account-namespace-fence adversarial fixture, and the G7 at-rest protection-class split between what the simulator proves and what only a physical device can |
 
 Run every lane (the phase gate, always comprehensive):
 
@@ -107,3 +108,71 @@ in a shipped build path. The probe scene renders no user data — a static
 `"Probe scene"` label, the `AccessoryHostability` capability description
 exposed as an accessibility value, and the accessory marker itself, which
 carries either nothing or the literal string `"Status"`.
+
+### G7 at-rest data protection — simulator versus device (04-06-PLAN.md Task 2)
+
+**Claim under test:** D-04 gate G7 requires the store file's protection
+class to be `.completeUntilFirstUserAuthentication` (never `.complete`),
+and requires a background write while the device is locked to not fail
+with an I/O error or terminate the process with `0xdead10cc`.
+
+**What the simulator lane (`DataProtectionTests`) actually proves:**
+
+- The store file's requested protection class reads back as
+  `.completeUntilFirstUserAuthentication`, never `.complete`.
+- The db/-wal/-shm durable unit is fully excluded from device backup.
+
+**An empirical correction to how that first claim is read back:**
+`FileManager.attributesOfItem(atPath:)`'s `.protectionKey` entry reads back
+`nil` on the iOS Simulator's host filesystem — confirmed directly during
+this plan's execution — even immediately after a `setAttributes` call that
+returned successfully. `URL.resourceValues(forKeys: [.fileProtectionKey])`
+reads back the real requested value correctly on the same file, on the
+same simulator. `DataProtectionTests` uses the `URLResourceValues`
+accessor for exactly this reason; a future test reaching for
+`FileManager.attributesOfItem` here would silently reintroduce a false
+negative (an assertion that always fails, or worse, one that is written to
+tolerate the `nil` and so proves nothing).
+
+**What the simulator lane CANNOT prove, and does not claim to:** the iOS
+Simulator has no lock state and enforces no Data Protection restriction at
+all — the protection-class attribute can be set and read back as a plain
+piece of file metadata, but no simulator write is ever actually blocked or
+delayed by it, locked device or not. Whether a real background write
+while a real device is locked avoids `SQLITE_IOERR`/`0xdead10cc` can only
+be observed on a physical device with a passcode set. `DataProtectionTests`
+carries `testBackgroundWriteWhileLockedDoesNotTakeAnIOErrorOrTerminate`,
+which every lane this plan runs (simulator) skips with a named, disclosed
+reason rather than passing vacuously or asserting something it cannot
+observe. Plan 04-16's physical-device lane is the one place this half can
+be driven for real, using actual device lock-state control this test
+target does not have.
+
+### D-09 backup-replay adversarial fixture (04-06-PLAN.md Task 2)
+
+`BackupReplayTests` proves the belt-and-braces claim D-09 rests on:
+backup exclusion (the brace) is necessary but not sufficient, because a
+person can still restore an old iCloud/iTunes backup, or hand-copy a
+database file, bypassing the exclusion flag entirely. The belt — server
+mutation-identity plus fingerprint checking making any replay a
+no-op — is what has to hold regardless:
+
+- A store snapshotted (via `DurableUnit.copy`) WHILE it still carries
+  pending outbox rows, then restored (via `DurableUnit.restoreContents`)
+  OVER a live store that has since settled those same mutations normally,
+  replays every restored outbox row as `already_satisfied`, creates zero
+  duplicate `visible_projection` rows, and converges `canonical_shadow` to
+  exactly one row per task — quoted in 04-06-SUMMARY.md's own verification
+  section.
+- The SAME backup restored under a DIFFERENT account namespace (a
+  `bindNamespace` call whose tuple disagrees with what the file was bound
+  to) is fenced: `bindNamespace` returns `false`, records
+  `sync_fence = 'namespace_mismatch'` durably, and every subsequent push
+  attempt (`setOutboxState(..., to: "in_flight")`, the first write any
+  push performs) refuses before opening a transaction, both immediately
+  and after a relaunch.
+- A structural source scan (`testAppGroupContainerAPINeverAppearsUnderSources`)
+  fails the build if `forSecurityApplicationGroupIdentifier` ever
+  reappears under `apps/ios/Sources` — D-07's App Group storage hazard
+  (RESEARCH.md Pitfall 4), guarded permanently rather than by code-review
+  discipline alone.
