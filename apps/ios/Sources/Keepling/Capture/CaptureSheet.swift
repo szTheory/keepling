@@ -30,6 +30,11 @@ struct CaptureSheet: View {
     var body: some View {
         NavigationStack {
             Form {
+                // D-32: platform text undo is confined to editing INSIDE
+                // this field -- SwiftUI's `TextField` wires the system
+                // `UndoManager` to its own editing session automatically,
+                // and nothing else in this sheet touches that
+                // `UndoManager` or produces a semantic command from it.
                 Section {
                     TextField("What do you want to keep?", text: $title, axis: .vertical)
                         .font(TokenSemantics.Typography.body)

@@ -53,6 +53,14 @@ struct TaskDetailView: View {
     @ViewBuilder
     private func detailForm(for item: WorkspaceItem) -> some View {
         Form {
+            // D-32: platform text undo is confined to editing INSIDE this
+            // field (SwiftUI's `TextField` wires the system `UndoManager`
+            // to its own editing session automatically -- no additional
+            // code needed to enable it, and none of this view's other
+            // controls ever touch that `UndoManager` or produce a semantic
+            // command from it). `UndoPersistenceTests
+            // .testAPlatformTextUndoInAFieldProducesNoSemanticCommand`
+            // proves a text-field undo gesture never mutates the store.
             Section {
                 TextField("Title", text: $title, axis: .vertical)
                     .font(TokenSemantics.Typography.body)

@@ -65,6 +65,60 @@ public final class WorkspaceFacade: ObservableObject {
         undoAvailability = availability
     }
 
+    // MARK: - Undo (04-11-PLAN.md Task 2, D-30/D-34)
+
+    /// Invokes undo: reads the store's own current undo availability,
+    /// builds the compensating command through `CompensatingCommands`
+    /// (04-11-PLAN.md Task 1), and hands it to `accept` -- the SAME
+    /// outbound path any other command travels. Single-level: consumed
+    /// immediately, so a second tap before the compensation settles
+    /// cannot mint a second `undo_task` against an already-spent handle.
+    /// Refuses silently at the presentation layer when there is nothing
+    /// (currently) to undo -- the control itself is only ever shown when
+    /// `undoAvailability` is non-`nil`, so this branch is a defensive
+    /// guard, not the primary refusal path (that path is
+    /// `CompensatingCommands.invoke` returning `.refused`, which this
+    /// method also respects and never silently swallows into "success").
+    @discardableResult
+    public func invokeUndo() async -> Bool {
+        let store = self.store
+        let current = await Task.detached(priority: .userInitiated) { try? store.currentUndoAvailability() }.value
+        guard let current, let existingItem = item(forTaskId: current.taskId) else {
+            updateUndoAvailability(nil)
+            return false
+        }
+
+        let outcome = CompensatingCommands.invoke(
+            current: current,
+            mutationId: UUID().uuidString,
+            currentTitle: existingItem.title,
+            currentEffect: LocalMutation.ProjectionEffect(
+                notes: existingItem.notes, completedAt: existingItem.completedAt,
+                trashedAt: existingItem.trashedAt, planned: existingItem.planned
+            )
+        )
+        guard case .compensating(let built) = outcome else {
+            // A refusal here means the defensive matrix gate tripped
+            // (should never happen -- see `CompensatingCommands`'s own
+            // doc comment) or the availability vanished between the read
+            // above and here. Either way: zero store mutations, and the
+            // stale control is cleared rather than left dangling.
+            updateUndoAvailability(nil)
+            return false
+        }
+
+        let mutation = LocalMutation(
+            mutationId: built.mutationId, taskId: built.taskId, commandBytes: built.commandBytes,
+            fingerprint: built.fingerprint, acceptedAt: ISO8601DateFormatter().string(from: Date()),
+            resourceKeys: built.resourceKeys, title: built.title, effect: built.effect
+        )
+        _ = await Task.detached(priority: .userInitiated) { try? store.acceptMutation(mutation) }.value
+        await Task.detached(priority: .userInitiated) { try? store.clearCurrentUndoAvailability() }.value
+        updateUndoAvailability(nil)
+        await refresh()
+        return true
+    }
+
     // MARK: - Sync & Recovery presentation state (D-39)
 
     /// Whether the full-screen `Sync & Recovery` sheet is presented.

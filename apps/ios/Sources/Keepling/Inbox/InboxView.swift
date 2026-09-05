@@ -65,8 +65,7 @@ struct InboxView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     if let undo = facade.undoAvailability {
-                        Button(undo.actionLabel) {}
-                            .accessibilityIdentifier("overflow-undo")
+                        UndoControl(availability: undo, onUndo: { Task { await facade.invokeUndo() } }).menuRow
                     }
                     Button(SyncCopy.recoveryTitle) {
                         facade.openSyncRecovery()

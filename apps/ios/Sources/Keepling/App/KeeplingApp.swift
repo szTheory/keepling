@@ -100,6 +100,64 @@ struct KeeplingApp: App {
             }
         }
 
+        // UI-test-only fixture hook (04-11-PLAN.md Task 2): seeds one or
+        // more REAL undo availabilities through the actual capture ->
+        // accept -> acknowledge(undo:) path `GRDBLocalStore.acknowledge`
+        // itself drives (04-11-PLAN.md Task 1) -- never a synthesized
+        // `UndoAvailabilityPresentation`, so `UndoPersistenceTests` can
+        // exercise `WorkspaceFacade.invokeUndo()` end to end and prove a
+        // SECOND real settlement replaces the first's label. Comma-
+        // separated steps, each `trash` or `complete`; each seeds a fresh
+        // task and settles ITS lifecycle command with a server-shaped
+        // (but locally fabricated) undo handle -- there is no live server
+        // in a UI test, so this is the same "drive the real local
+        // machinery, fabricate only the wire answer" technique
+        // `KEEPLING_UITEST_SEED_CONFLICT` above already established.
+        if let seedUndo = ProcessInfo.processInfo.environment["KEEPLING_UITEST_SEED_UNDO"] {
+            Task.detached(priority: .userInitiated) {
+                for step in seedUndo.split(separator: ",") {
+                    let taskId = UUID().uuidString
+                    let captureMutationId = UUID().uuidString
+                    guard let captureBuilt = try? OutboundCommands.capture(title: "Seeded \(step)", mutationId: captureMutationId, taskId: taskId) else { continue }
+                    _ = try? openedStore.acceptMutation(LocalMutation(
+                        mutationId: captureBuilt.mutationId, taskId: captureBuilt.taskId, commandBytes: captureBuilt.commandBytes,
+                        fingerprint: captureBuilt.fingerprint, acceptedAt: ISO8601DateFormatter().string(from: Date()),
+                        resourceKeys: captureBuilt.resourceKeys, title: captureBuilt.effect.title
+                    ))
+                    _ = try? openedStore.acknowledge(SyncAcknowledgement(
+                        mutationId: captureMutationId, fingerprint: captureBuilt.fingerprint, outcome: .accepted,
+                        snapshotJSON: "{\"id\":\"\(taskId)\",\"revision\":1,\"title\":\"Seeded \(step)\"}"
+                    ))
+
+                    let transition: OutboundCommands.Lifecycle = step == "complete" ? .complete : .trash
+                    let label = step == "complete" ? "Undo Complete" : "Undo Trash"
+                    let lifecycleMutationId = UUID().uuidString
+                    guard let lifecycleBuilt = try? OutboundCommands.lifecycle(
+                        transition, taskId: taskId, basis: .init(baseTitle: "Seeded \(step)", baseNotes: "", expectedRevision: 1),
+                        mutationId: lifecycleMutationId, acceptedAt: ISO8601DateFormatter().string(from: Date())
+                    ) else { continue }
+                    _ = try? openedStore.acceptMutation(LocalMutation(
+                        mutationId: lifecycleBuilt.mutationId, taskId: lifecycleBuilt.taskId, commandBytes: lifecycleBuilt.commandBytes,
+                        fingerprint: lifecycleBuilt.fingerprint, acceptedAt: ISO8601DateFormatter().string(from: Date()),
+                        resourceKeys: lifecycleBuilt.resourceKeys, title: lifecycleBuilt.effect.title,
+                        effect: LocalMutation.ProjectionEffect(
+                            notes: lifecycleBuilt.effect.notes, completedAt: lifecycleBuilt.effect.completedAt,
+                            trashedAt: lifecycleBuilt.effect.trashedAt, planned: lifecycleBuilt.effect.planned
+                        )
+                    ))
+                    _ = try? openedStore.acknowledge(SyncAcknowledgement(
+                        mutationId: lifecycleMutationId, fingerprint: lifecycleBuilt.fingerprint, outcome: .accepted,
+                        snapshotJSON: "{\"id\":\"\(taskId)\",\"revision\":2,\"title\":\"Seeded \(step)\"}",
+                        undo: SyncAcknowledgement.UndoAvailabilityHandle(handle: String(repeating: "h", count: 43), label: label, expiresAt: "2027-01-01T00:00:00Z")
+                    ))
+                    if let current = try? openedStore.currentUndoAvailability() {
+                        await builtFacade.updateUndoAvailability(UndoAvailabilityPresentation(actionLabel: current.label))
+                    }
+                    await builtFacade.refresh()
+                }
+            }
+        }
+
         // 04-08-PLAN.md Task 3: the scene-phase driver and background
         // refresh handler both need a `KeeplingApplication`, which needs a
         // `SyncPort`. Server discovery/sign-in wiring the driver reads a

@@ -63,7 +63,7 @@ struct RootTabView: View {
                         // sheet (D-39) -- the accessory does not itself
                         // resolve anything.
                         onAction: { _ in facade.openSyncRecovery() },
-                        onUndo: {}
+                        onUndo: { Task { await facade.invokeUndo() } }
                     )
                 }
             } else {

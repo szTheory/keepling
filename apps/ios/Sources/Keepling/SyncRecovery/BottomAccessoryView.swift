@@ -103,21 +103,12 @@ struct BottomAccessoryView: View {
         .padding(.horizontal, TokenSemantics.Space.md)
     }
 
+    // 04-11-PLAN.md Task 2: the row layout itself lives in `UndoControl`
+    // (`Sources/Keepling/Undo/UndoControl.swift`) -- ONE definition shared
+    // with the overflow-menu row, so the exact label and identifiers match
+    // in both places this control appears.
     @ViewBuilder
     private func undoRow(_ undo: UndoAvailabilityPresentation) -> some View {
-        HStack(spacing: TokenSemantics.Space.sm) {
-            Text(undo.actionLabel)
-                .font(TokenSemantics.Typography.label)
-                .foregroundStyle(TokenSemantics.accent)
-                .accessibilityIdentifier("sync-accessory-undo-label")
-            Spacer(minLength: 0)
-            Button(undo.actionLabel) { onUndo() }
-                .font(TokenSemantics.Typography.label)
-                .foregroundStyle(TokenSemantics.accent)
-                .frame(minWidth: TokenSemantics.Layout.target, minHeight: TokenSemantics.Layout.target)
-                .accessibilityLabel(undo.actionLabel)
-                .accessibilityIdentifier("sync-accessory-undo")
-        }
-        .padding(.horizontal, TokenSemantics.Space.md)
+        UndoControl(availability: undo, onUndo: onUndo).accessoryRow
     }
 }
