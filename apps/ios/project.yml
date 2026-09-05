@@ -41,6 +41,17 @@ targets:
         # D-31: reject the legacy shake-to-undo/edit menu gesture. Keepling's
         # undo is a named, persistent control (D-30), never a shake gesture.
         UIApplicationSupportsShakeToEdit: false
+        # 04-07-PLAN.md Task 1: the registered ASWebAuthenticationSession
+        # callback scheme for the native device-grant PKCE flow. Deliberately
+        # DISTINCT from the desktop's `keepling://auth/callback`
+        # (apps/desktop/main/adapters/auth.ts) -- a private-use scheme is
+        # first-come per-OS, and this app registers its own so an iOS-side
+        # collision with a future third native client is this app's own to
+        # avoid, never inherited from the Mac client's registration.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.szTheory.keepling.auth
+            CFBundleURLSchemes:
+              - keeplingios
 
   KeeplingCoreTests:
     type: bundle.unit-test

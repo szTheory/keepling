@@ -155,7 +155,15 @@ config :keepling, :device_grants,
   server_instance: device_grant_server_instance,
   redirect_uris: %{
     "electron" => ["keepling://auth/callback"],
-    "iphone" => ["keepling://auth/callback"]
+    # 04-07-PLAN.md Task 1: the iPhone app registers its OWN
+    # ASWebAuthenticationSession callback scheme
+    # (`apps/ios/project.yml`), deliberately distinct from the desktop's
+    # `keepling://auth/callback` -- a private-use scheme is first-come
+    # per-OS, so there is no reason to share one across two different
+    # native client kinds, and doing so would make a future third native
+    # client's registration choice depend on which of the first two it
+    # happened to collide with.
+    "iphone" => ["keeplingios://auth/callback"]
   }
 
 config :keepling, KeeplingWeb.Endpoint,
