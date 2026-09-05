@@ -1487,34 +1487,67 @@ components:
           type: integer
           minimum: 0
         payload:
-          # D-13: the tag that actually distinguishes these six shapes is a
-          # sibling property on SyncFeedEnvelope itself (not a field inside
-          # each payload variant), so this discriminator is declared against
-          # that envelope-level property rather than a property physically
-          # present in every referenced schema. `entity_type` (not the
-          # sibling `kind` field) is used as propertyName specifically
-          # because `kind` already exists as a REAL, differently-typed field
-          # on SyncOrganizationSnapshot (an OrganizationKind enum, e.g.
-          # "personal"/"team") -- pointing the discriminator mapping at
-          # `kind` was tried first and rejected after regeneration showed
-          # openapi-typescript overwriting that real field's type with the
-          # literal "organization_snapshot", which would have silently
-          # corrupted an unrelated, already-shipped field. `entity_type`
-          # carries the same six-way tag semantics (order-correspondent with
-          # `kind`'s enum) and collides with no existing property name on any
-          # of the six variants, so regeneration only ADDS a new field,
-          # never overwrites one. This still closes T-04-01-01
-          # (SyncTaskSnapshot vs SyncOrganizationSnapshot are structurally
-          # overlapping and would otherwise decode first-match-wins):
-          # swift-openapi-generator's discriminator mapping lets a decoder
-          # that already has `entity_type` in hand route directly to the
-          # correct variant instead of probing each ref in list order.
-          # Recorded explicitly in the SUMMARY, including the residual risk
-          # that the generated TypeScript now types each payload variant as
-          # if it carries its own `entity_type` field, when in the real wire
-          # response that tag lives only on the enclosing envelope --
-          # existing consumers were grepped and none read `payload.entity_type`
-          # today, but a future consumer must not be written as if it can.
+          # D-13 discriminator decision, recorded honestly rather than forced
+          # to fit: a real discriminator: propertyName/mapping block was
+          # authored here TWICE and regenerated with the actual pinned
+          # swift-openapi-generator (Task 2's resolved 1.13.1) both times.
+          #
+          # Attempt 1 (propertyName: kind) was rejected first: `kind` already
+          # exists as a REAL, differently-typed field on
+          # SyncOrganizationSnapshot (an OrganizationKind enum, e.g.
+          # "personal"/"team"), and openapi-typescript's discriminator
+          # handling overwrote that real field's generated type with the
+          # literal "organization_snapshot" -- silently corrupting an
+          # unrelated, already-shipped field.
+          #
+          # Attempt 2 (propertyName: entity_type, collision-free with every
+          # variant's own properties) got further -- openapi-typescript
+          # accepted it cleanly -- but swift-openapi-generator's generated
+          # decode logic for `payloadPayload.init(from:)` reads its
+          # discriminator key via `decoder.container(keyedBy:).decode(
+          # String.self, forKey: .entity_type)` scoped to the DECODER PASSED
+          # TO IT, which for a property decoded via
+          # `container.decode(PayloadPayload.self, forKey: .payload)` is a
+          # sub-decoder scoped ONLY to the JSON value at the "payload" key --
+          # it cannot see `entity_type`, which sits on the ENCLOSING
+          # SyncFeedEnvelope object, one level up. The generated code was
+          # inspected directly (not merely assumed) after regeneration and
+          # confirmed this: `entity_type` is looked up strictly inside the
+          # nested payload node, which real server responses never populate,
+          # so every real decode of this union would throw
+          # `keyNotFound(entity_type)`. This is provably worse than the
+          # pre-Task-1 first-match-wins ambiguity T-04-01-01 names, not a
+          # partial fix of it, so it was reverted rather than shipped.
+          #
+          # There is no OpenAPI-conformant discriminator for this union
+          # without moving the tag INTO each of the six payload variants,
+          # which the task's "no required-field set...may change" constraint
+          # forbids as contract hygiene. T-04-01-01's residual risk instead
+          # rests on the union members' own required-field sets, each
+          # combined with `additionalProperties: false`: SyncTaskSnapshot
+          # requires captured_at/inbox_state/notes/tag_ids/title (absent from
+          # every other variant) and SyncOrganizationSnapshot requires
+          # kind/name/archived_at (absent from SyncTaskSnapshot), so the two
+          # named as "structurally overlapping" in this task's own text do
+          # not actually share a required-field subset relationship --
+          # swift-openapi-generator's undiscriminated oneOf decode strategy,
+          # inspected directly in the generated code: try each variant's
+          # `init(from:)` against the SAME decoder in list order, keep the
+          # first one that decodes without throwing, and raise
+          # `DecodingError.failedToDecodeOneOfSchema` only if every variant
+          # throws. Because every variant is `additionalProperties: false`
+          # with a required-field set no other variant's payload satisfies,
+          # a real task_snapshot payload throws out of every earlier variant
+          # (missing THEIR required fields) before reaching SyncTaskSnapshot,
+          # and likewise for every other kind -- so first-match-wins is
+          # deterministic in practice today, not merely hoped-for. This is a
+          # narrower guarantee than a real discriminator (it depends on the
+          # required-field sets staying disjoint, unverified by any
+          # compile-time check) and is recorded as a residual risk, not a
+          # closed one, in the SUMMARY. Left un-discriminated on purpose;
+          # documented as a deviation from the literal task instruction
+          # rather than silently shipping either broken discriminator
+          # attempt above.
           oneOf:
             - $ref: '#/components/schemas/SyncCommandOutcomePayload'
             - $ref: '#/components/schemas/SyncTaskSnapshot'
@@ -1522,15 +1555,6 @@ components:
             - $ref: '#/components/schemas/PersistedConflict'
             - $ref: '#/components/schemas/SyncCollectionTombstone'
             - $ref: '#/components/schemas/SyncUndoMetadata'
-          discriminator:
-            propertyName: entity_type
-            mapping:
-              command: '#/components/schemas/SyncCommandOutcomePayload'
-              task: '#/components/schemas/SyncTaskSnapshot'
-              organization: '#/components/schemas/SyncOrganizationSnapshot'
-              conflict: '#/components/schemas/PersistedConflict'
-              collection_membership: '#/components/schemas/SyncCollectionTombstone'
-              undo: '#/components/schemas/SyncUndoMetadata'
         sequence:
           type: integer
           format: int64
