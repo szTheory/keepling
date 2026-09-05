@@ -62,6 +62,32 @@ public enum WireMappers {
         )
     }
 
+    /// `Components.Schemas.RestoreAcknowledgement` -> `SyncAcknowledgement`
+    /// (04-08-PLAN.md Task 2). `restore-task`'s 200 answer is a richer,
+    /// contract-distinct shape than the other nine commands' shared
+    /// `CommandAcknowledgement` (it additionally carries `destinations` and
+    /// `warnings`) -- those two fields are genuinely out of THIS plan's
+    /// scope (no presentation surface consumes them yet) and are
+    /// deliberately dropped here rather than smuggled into `snapshotJSON`
+    /// unexamined; only `id`/`revision` (the fields `SyncAcknowledgement`'s
+    /// settlement path actually reads) are carried through.
+    public static func mapRestoreAcknowledgement(
+        _ acknowledgement: Components.Schemas.RestoreAcknowledgement,
+        expectedFingerprint: String
+    ) throws -> SyncAcknowledgement {
+        guard !acknowledgement.mutation_id.isEmpty else {
+            throw WireMapperError.invalidField("mutation_id")
+        }
+        let outcome: SyncAcknowledgement.Outcome = acknowledgement.outcome == .accepted ? .accepted : .alreadySatisfied
+        let snapshotJSON = try encodeToJSONString(acknowledgement.snapshot, field: "snapshot")
+        return SyncAcknowledgement(
+            mutationId: acknowledgement.mutation_id,
+            fingerprint: expectedFingerprint,
+            outcome: outcome,
+            snapshotJSON: snapshotJSON
+        )
+    }
+
     /// `Components.Schemas.UndoAvailability` -> `SyncUndoAvailability`. A
     /// handle whose shape the contract does not publish throws NAMING THE
     /// FIELD rather than being retained -- retaining a malformed handle

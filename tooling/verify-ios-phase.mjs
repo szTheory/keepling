@@ -97,7 +97,15 @@ const runLane = ({ command, args, cwd, env, name, parse, trackedInputPaths }) =>
 const xcodebuildSummary = (stdout) => {
   if (/\*\* TEST FAILED \*\*/.test(stdout)) throw new Error('xcodebuild reported TEST FAILED')
   if (!/\*\* TEST SUCCEEDED \*\*/.test(stdout)) throw new Error('xcodebuild summary line "** TEST SUCCEEDED **" not found')
-  const executed = stdout.match(/Executed (\d+) tests?,\s*with (\d+) failures?/)
+  // A disclosed skip (04-06/04-08) changes xcodebuild's own summary wording
+  // to "Executed N tests, with K test(s) skipped and M failures" -- the
+  // optional non-capturing group below tolerates that wording without
+  // treating a skip as a reason to disregard the real executed-test total
+  // (04-08-PLAN.md Task 3's `KEEPLING_TEST_SERVER_URL`-gated real-stack
+  // test is the first lane whose ONLY test class carries a skip, so no
+  // earlier non-skipped class summary line was available to accidentally
+  // satisfy the old, stricter pattern).
+  const executed = stdout.match(/Executed (\d+) tests?,\s*with(?:\s+\d+\s+tests?\s+skipped\s+and)?\s*(\d+) failures?/)
   if (!executed) throw new Error('xcodebuild "Executed N tests" summary not found')
   const total = Number(executed[1])
   const failures = Number(executed[2])

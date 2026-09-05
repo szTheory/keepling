@@ -359,12 +359,145 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
         )
     }
 
-    // MARK: - Not implemented in this tracer plan
+    // MARK: - Pull (04-08-PLAN.md Task 2)
 
+    /// Applies a bounded pull page into the canonical shadow: only a change
+    /// whose revision is `>=` the entity's existing shadow revision
+    /// replaces it (last-writer-by-revision, mirrors `SyncReducer.pull`'s
+    /// `apply_changes` rule -- never "last pull wins" by arrival order
+    /// alone). The visible projection is recomputed from the new canonical
+    /// value UNLESS the task still has an outstanding outbox mutation: an
+    /// outstanding mutation's own optimistic effect must keep standing
+    /// (the projection is a replay of canonical shadow + outbox, exactly as
+    /// `SyncReducer.replayVisible` defines it) -- a pull must never
+    /// overwrite a person's own unsent edit with a value the server has not
+    /// yet seen it.
     public func applyPull(_ page: PullPage) throws {
         assertNotOnMainThread()
-        throw UnimplementedInTracerError("applyPull")
+        try dbPool.read { db in try self.assertNotFenced(db) }
+        try dbPool.write { db in
+            for change in page.changes {
+                let existingJSON = try String.fetchOne(
+                    db, sql: "SELECT snapshot_json FROM canonical_shadow WHERE entity_id = ?", arguments: [change.entityId]
+                )
+                let existingRevision = existingJSON.flatMap { Self.intField("revision", inJSON: $0) } ?? -1
+                let newRevision = Self.intField("revision", inJSON: change.snapshotJSON) ?? 0
+                guard newRevision >= existingRevision else { continue }
+
+                try db.execute(
+                    sql: """
+                    INSERT INTO canonical_shadow(entity_id, snapshot_json) VALUES (?, ?)
+                    ON CONFLICT(entity_id) DO UPDATE SET snapshot_json = excluded.snapshot_json
+                    """,
+                    arguments: [change.entityId, change.snapshotJSON]
+                )
+
+                let hasOutstandingMutation = try Int.fetchOne(
+                    db,
+                    sql: """
+                    SELECT COUNT(*) FROM outbox JOIN immutable_commands USING (mutation_id)
+                    WHERE immutable_commands.task_id = ?
+                    """,
+                    arguments: [change.entityId]
+                ) ?? 0
+
+                guard hasOutstandingMutation == 0 else { continue }
+
+                let title = Self.stringField("title", inJSON: change.snapshotJSON)
+                let rowExists = try Bool.fetchOne(
+                    db, sql: "SELECT EXISTS(SELECT 1 FROM visible_projection WHERE task_id = ?)", arguments: [change.entityId]
+                ) ?? false
+                if rowExists {
+                    if let title {
+                        try db.execute(
+                            sql: "UPDATE visible_projection SET title = ?, sync_status = 'synced' WHERE task_id = ?",
+                            arguments: [title, change.entityId]
+                        )
+                    } else {
+                        try db.execute(
+                            sql: "UPDATE visible_projection SET sync_status = 'synced' WHERE task_id = ?",
+                            arguments: [change.entityId]
+                        )
+                    }
+                } else if let title {
+                    // A pull can introduce a task this device has never
+                    // captured locally (created on another device).
+                    try db.execute(
+                        sql: "INSERT INTO visible_projection(task_id, title, sync_status) VALUES (?, ?, 'synced')",
+                        arguments: [change.entityId, title]
+                    )
+                }
+            }
+            if let cursor = page.cursor {
+                try db.execute(sql: "UPDATE sync_cursor SET cursor = ? WHERE singleton = 1", arguments: [cursor])
+            }
+        }
     }
+
+    private static func intField(_ field: String, inJSON json: String) -> Int? {
+        guard let data = json.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return nil }
+        if let number = object[field] as? NSNumber { return number.intValue }
+        return nil
+    }
+
+    // MARK: - Outbox claim (D-52 three-state transmission, concurrency-safe)
+
+    /// The `queued`/`uncertain` -> `in_flight` claim, performed as ONE
+    /// compare-and-swap update inside the selecting transaction: only a row
+    /// whose CURRENT state is `queued` or `uncertain` is claimed, and
+    /// `db.changesCount` (not merely "no error") is what reports success.
+    /// A second concurrent pass racing for the SAME row finds it already
+    /// `in_flight` and claims zero rows -- this update statement itself IS
+    /// the lock (GRDB serializes all writers through the pool's single
+    /// writer connection), not an external lock this plan would otherwise
+    /// need to invent.
+    @discardableResult
+    public func claimForTransmission(mutationId: String) throws -> Bool {
+        assertNotOnMainThread()
+        try dbPool.read { db in try self.assertNotFenced(db) }
+        return try dbPool.write { db in
+            try db.execute(
+                sql: "UPDATE outbox SET state = 'in_flight' WHERE mutation_id = ? AND state IN ('queued', 'uncertain')",
+                arguments: [mutationId]
+            )
+            return db.changesCount > 0
+        }
+    }
+
+    /// Every outstanding outbox mutation (any state, including `in_flight`),
+    /// in sequence order, with its resource keys -- the full ordering
+    /// context `SyncPassScheduler`'s lane-blocking computation needs.
+    /// Unlike `readyMutations()` this does NOT exclude `in_flight` rows: an
+    /// in-flight mutation on a resource key still blocks a later queued
+    /// mutation on the SAME key from being selected concurrently (FIFO
+    /// within a resource key, mirrors `SyncReducer.readyPushes`).
+    public func allOutstandingMutationsInOrder() throws -> [(mutation: LocalMutation, state: String)] {
+        assertNotOnMainThread()
+        return try dbPool.read { db in
+            let rows = try Row.fetchAll(db, sql: """
+                SELECT immutable_commands.mutation_id, immutable_commands.task_id,
+                       immutable_commands.command_bytes, immutable_commands.fingerprint,
+                       immutable_commands.accepted_at, immutable_commands.resource_keys_json,
+                       visible_projection.title, outbox.state
+                FROM outbox
+                JOIN immutable_commands USING (mutation_id)
+                JOIN visible_projection ON visible_projection.task_id = immutable_commands.task_id
+                ORDER BY outbox.sequence
+                """)
+            return rows.map { row in
+                let mutation = LocalMutation(
+                    mutationId: row["mutation_id"], taskId: row["task_id"], commandBytes: row["command_bytes"],
+                    fingerprint: row["fingerprint"], acceptedAt: row["accepted_at"],
+                    resourceKeys: decodeJSONStringArray(row["resource_keys_json"]), title: row["title"]
+                )
+                return (mutation: mutation, state: row["state"])
+            }
+        }
+    }
+
+    // MARK: - Not implemented in this tracer plan
 
     public func undoLastLocalAction() throws -> UndoResult {
         assertNotOnMainThread()
