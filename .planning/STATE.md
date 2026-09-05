@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 04
 current_phase_name: Native iPhone Daily Loop
 status: executing
-stopped_at: Phase KPL-04 UI-SPEC approved
-last_updated: "2026-09-05T01:25:20.588Z"
+stopped_at: Completed 04-01-PLAN.md (contract normalization, apps/ios scaffold, capture tracer)
+last_updated: "2026-09-05T02:15:49.209Z"
 last_activity: 2026-09-04
-last_activity_desc: Phase KPL-04 planning complete — 17 plans ready
-state_head: c0724858da5e6d811260bb15180a6a0c9cb25e6c
+last_activity_desc: Phase KPL-04 execution started
+state_head: 17136efb1e1d84198710a489afae178e14f438c1
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 82
-  completed_plans: 64
+  completed_plans: 65
 milestone_name: milestone
 ---
 
@@ -24,16 +24,16 @@ milestone_name: milestone
 See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 **Core value:** Jon can trust Keepling as his daily task system on Mac and iPhone: capture is immediate, accepted changes are never silently lost or overwritten, and both human and agent actions remain inspectable and recoverable.  
-**Current focus:** Phase KPL-03 — Mac Daily Loop
+**Current focus:** Phase KPL-04 — Native iPhone Daily Loop
 
 ## Current Position
 
-Phase: KPL-04 (Native iPhone Daily Loop) — READY TO EXECUTE
-Plan: Not started
+Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
+Plan: 2 of 17
 Total Plans in Phase: 17
-Status: Ready to execute
-Last activity: 2026-09-04 — Phase KPL-03 complete, transitioned to Phase 4
-Last Activity Description: Phase KPL-04 planning complete — 17 plans ready
+Status: Executing Phase KPL-04
+Last activity: 2026-09-04 — Phase KPL-04 execution started
+Last Activity Description: Phase KPL-04 execution started
 Progress: [██████████] 100%
 
 ## Accumulated Context
@@ -206,6 +206,9 @@ Progress: [██████████] 100%
 - [Phase 03]: Measured (not assumed) that desktop packaging at HEAD is byte-reproducible across separate invocations; no non-determinism source needed removal, documented in package-desktop.mjs and permanently re-checked by the package-reproducible gate lane.
 - [Phase 03]: 03-26: machine-state census + focus-theft detection + seeded shuffle closes VERIFICATION.md Gap 1's remaining half — A9 previously blamed A8; today's failure was A1 (first row, no predecessor), falsifying the per-row-pair hypothesis. A class-level machine-state barrier (real reads, refuse loudly, restore between rows) plus mid-sequence FOCUS_STOLEN detection replaced row-by-row diagnosis. A Rule 1 regression the barrier's own teardown cleanup introduced (deleting A3's shared profile early) was found and fixed during this plan's own verification.
 - [Phase 03]: [Phase KPL-03]: 03-27 closed VERIFICATION.md Gap 2 by amending 03-UI-SPEC.md's evidence contract (per-dimension table naming a test title or macOS row id, or NOT BUILT with evidence) and building appearance-matrix.spec.ts for the one genuinely uncovered dimension (five window sizes, both themes); the erroneous visual-dimension sign-off is corrected in a dated record beside the original, never rewritten.
+- [Phase 04]: iOS carries all 11 desktop STRICT tables (D-35's 'nine tables' enumerates categories, not a literal count); visible_projection.sync_status keeps the desktop's literal 'saved_on_this_mac' stored value.
+- [Phase 04]: Nullable references in the OpenAPI contract use a dedicated Nullable<Base> schema (type: [X,'null']) instead of a oneOf/anyOf-null wrapper, because the wrapper form silently deletes the property from swift-openapi-generator output.
+- [Phase 04]: SyncFeedEnvelope.payload's oneOf is left without a formal discriminator after two real attempts proved broken/corrupting against the pinned swift-openapi-generator; disambiguation relies on disjoint required-field sets instead.
 
 ### Retained Research
 
@@ -241,10 +244,10 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-04T23:55:41.922Z
-**Stopped at:** Phase KPL-04 UI-SPEC approved
+**Last session:** 2026-09-05T02:15:49.047Z
+**Stopped at:** Completed 04-01-PLAN.md (contract normalization, apps/ios scaffold, capture tracer)
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
-**Resume file:** .planning/phases/KPL-04-native-iphone-daily-loop/04-UI-SPEC.md
+**Resume file:** None
 
 ## Performance Metrics
 
@@ -311,6 +314,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-03 P25 | 45min | 3 tasks | 4 files |
 | Phase KPL-03 P26 | 2h 30min | 3 tasks | 1 files |
 | Phase KPL-03 P27 | 70min | 3 tasks | 2 files |
+| Phase 04 P01 | 300min | 3 tasks | 36 files |
 
 ### Blockers
 
