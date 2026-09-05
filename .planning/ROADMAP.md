@@ -254,7 +254,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
-**Plans:** 3/17 plans executed
+**Plans:** 4/17 plans executed
 
 Plans:
 **Wave 1**
@@ -265,7 +265,7 @@ Plans:
 
 - [x] 04-02-PLAN.md — Durable local store: 11 STRICT tables, an app-owned migration ledger that halts on drift, and gates G1-G6.
 - [x] 04-03-PLAN.md — The Swift sync reducer as a third independent implementation, with structural vector conformance and a cross-runtime consumer gate.
-- [ ] 04-04-PLAN.md — Measure whether the bottom accessory can be genuinely absent on SDK 26.5, and emit the committed Swift design tokens.
+- [x] 04-04-PLAN.md — Measure whether the bottom accessory can be genuinely absent on SDK 26.5, and emit the committed Swift design tokens.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
