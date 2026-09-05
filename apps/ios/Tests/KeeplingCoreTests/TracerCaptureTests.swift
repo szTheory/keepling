@@ -34,7 +34,7 @@ final class TracerCaptureTests: XCTestCase {
             fingerprint: sha256Hex("not the same bytes"), acceptedAt: "2026-01-01T00:00:00Z",
             resourceKeys: ["task:t-1"], title: "x"
         )
-        XCTAssertThrowsError(try store.acceptMutation(mutation)) { error in
+        XCTAssertThrowsError(try offMain { try store.acceptMutation(mutation) }) { error in
             XCTAssertEqual(error as? GRDBLocalStore.StoreError, .fingerprintMismatch)
         }
     }
@@ -47,11 +47,11 @@ final class TracerCaptureTests: XCTestCase {
             fingerprint: built.fingerprint, acceptedAt: "2026-01-01T00:00:00Z",
             resourceKeys: ["task:\(built.taskId)"], title: built.title
         )
-        let acceptance = try store.acceptMutation(mutation)
+        let acceptance = try offMain { try store.acceptMutation(mutation) }
         XCTAssertEqual(acceptance.mutationId, "m-2")
         XCTAssertEqual(acceptance.title, "Buy milk")
 
-        let snapshot = try store.snapshot()
+        let snapshot = try offMain { try store.snapshot() }
         XCTAssertEqual(snapshot.tasks.count, 1)
         XCTAssertEqual(snapshot.tasks[0].syncStatus, "saved_on_this_mac")
     }
@@ -64,16 +64,16 @@ final class TracerCaptureTests: XCTestCase {
             fingerprint: built.fingerprint, acceptedAt: "2026-01-01T00:00:00Z",
             resourceKeys: ["task:\(built.taskId)"], title: built.title
         )
-        _ = try store.acceptMutation(mutation)
-        XCTAssertEqual(try store.readyMutations().count, 1)
+        _ = try offMain { try store.acceptMutation(mutation) }
+        XCTAssertEqual(try offMain { try store.readyMutations() }.count, 1)
 
         let ack = SyncAcknowledgement(
             mutationId: "m-3", fingerprint: built.fingerprint, outcome: .accepted,
             snapshotJSON: #"{"id":"t-3","revision":1,"title":"Water plants"}"#
         )
-        _ = try store.acknowledge(ack)
+        _ = try offMain { try store.acknowledge(ack) }
 
-        XCTAssertEqual(try store.readyMutations().count, 0)
+        XCTAssertEqual(try offMain { try store.readyMutations() }.count, 0)
         XCTAssertEqual(try store.outboxState(forMutationId: "m-3"), nil)
         XCTAssertEqual(try store.journalOutcome(forMutationId: "m-3"), "accepted")
     }
@@ -86,14 +86,28 @@ final class TracerCaptureTests: XCTestCase {
             fingerprint: built.fingerprint, acceptedAt: "2026-01-01T00:00:00Z",
             resourceKeys: ["task:\(built.taskId)"], title: built.title
         )
-        _ = try store.acceptMutation(mutation)
+        _ = try offMain { try store.acceptMutation(mutation) }
         let ack = SyncAcknowledgement(
             mutationId: "m-4", fingerprint: built.fingerprint, outcome: .accepted,
             snapshotJSON: #"{"id":"t-4","revision":1,"title":"Feed cat"}"#
         )
-        _ = try store.acknowledge(ack)
+        _ = try offMain { try store.acknowledge(ack) }
         // Second application of the SAME acknowledgement: no-op success.
-        XCTAssertNoThrow(try store.acknowledge(ack))
+        XCTAssertNoThrow(try offMain { try store.acknowledge(ack) })
+    }
+
+    /// 04-02-PLAN.md Task 3 (G5) added a debug main-thread precondition to
+    /// every `LocalStorePort` entry point; XCTest runs on the main thread
+    /// by default, so these pre-existing calls now run off it.
+    private func offMain<T>(_ work: @escaping () throws -> T) throws -> T {
+        let semaphore = DispatchSemaphore(value: 0)
+        nonisolated(unsafe) var result: Result<T, Error>!
+        DispatchQueue.global().async {
+            do { result = .success(try work()) } catch { result = .failure(error) }
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return try result.get()
     }
 
     private func makeStore() throws -> GRDBLocalStore {

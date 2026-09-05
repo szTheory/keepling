@@ -14,6 +14,23 @@ final class TracerDurabilityTests: XCTestCase {
             .appendingPathComponent("keepling-durability-test.sqlite").path
     }
 
+    /// 04-02-PLAN.md Task 3 (G5) added a debug main-thread precondition to
+    /// every `LocalStorePort` entry point. XCTest runs test methods on the
+    /// main thread by default, so this file's pre-existing synchronous
+    /// calls now need to run off it -- exactly the discipline G5 exists to
+    /// enforce, so this strengthens these tests rather than working around
+    /// the guard.
+    private func offMain<T>(_ work: @escaping () throws -> T) throws -> T {
+        let semaphore = DispatchSemaphore(value: 0)
+        nonisolated(unsafe) var result: Result<T, Error>!
+        DispatchQueue.global().async {
+            do { result = .success(try work()) } catch { result = .failure(error) }
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return try result.get()
+    }
+
     func testCommittedCaptureSurvivesReopenWithExactlyOneQueuedOutboxRow() throws {
         let path = storePath()
         let built = try CaptureCommand.build(title: "Renew passport", mutationId: "m-durable-1", taskId: "t-durable-1")
@@ -25,16 +42,16 @@ final class TracerDurabilityTests: XCTestCase {
 
         do {
             let store = try GRDBLocalStore(path: path)
-            _ = try store.acceptMutation(mutation)
+            _ = try offMain { try store.acceptMutation(mutation) }
         }
         // A fresh store instance over the SAME file is the real relaunch --
         // no store handle survives across this boundary.
         let reopened = try GRDBLocalStore(path: path)
-        let snapshot = try reopened.snapshot()
+        let snapshot = try offMain { try reopened.snapshot() }
         XCTAssertEqual(snapshot.tasks.count, 1)
         XCTAssertEqual(snapshot.tasks[0].title, "Renew passport")
 
-        let ready = try reopened.readyMutations()
+        let ready = try offMain { try reopened.readyMutations() }
         XCTAssertEqual(ready.count, 1)
         XCTAssertEqual(ready[0].mutationId, "m-durable-1")
         XCTAssertEqual(try reopened.outboxState(forMutationId: "m-durable-1"), "queued")
@@ -53,7 +70,7 @@ final class TracerDurabilityTests: XCTestCase {
             fingerprint: sha256Hex("different bytes"), acceptedAt: "2026-01-01T00:00:00Z",
             resourceKeys: ["task:t-bad"], title: "should never land"
         )
-        XCTAssertThrowsError(try store.acceptMutation(badMutation))
+        XCTAssertThrowsError(try offMain { try store.acceptMutation(badMutation) })
 
         XCTAssertEqual(try store.countRows(in: "visible_projection"), 0)
         XCTAssertEqual(try store.countRows(in: "immutable_commands"), 0)
@@ -62,7 +79,7 @@ final class TracerDurabilityTests: XCTestCase {
 
         // Reopening confirms nothing was left behind on disk either.
         let reopened = try GRDBLocalStore(path: path)
-        XCTAssertEqual(try reopened.snapshot().tasks.count, 0)
+        XCTAssertEqual(try offMain { try reopened.snapshot() }.tasks.count, 0)
     }
 
     func testFailureInsideTheWriteClosureLeavesNoPartialStateAcrossAllFourTables() throws {
@@ -74,7 +91,7 @@ final class TracerDurabilityTests: XCTestCase {
             fingerprint: built.fingerprint, acceptedAt: "2026-01-01T00:00:00Z",
             resourceKeys: ["task:\(built.taskId)"], title: built.title
         )
-        _ = try store.acceptMutation(first)
+        _ = try offMain { try store.acceptMutation(first) }
         XCTAssertEqual(try store.countRows(in: "visible_projection"), 1)
 
         // A SECOND mutation reusing the SAME mutation_id violates
@@ -89,7 +106,7 @@ final class TracerDurabilityTests: XCTestCase {
             fingerprint: built2.fingerprint, acceptedAt: "2026-01-01T00:00:01Z",
             resourceKeys: ["task:\(built2.taskId)"], title: built2.title
         )
-        XCTAssertThrowsError(try store.acceptMutation(duplicate))
+        XCTAssertThrowsError(try offMain { try store.acceptMutation(duplicate) })
 
         // The FIRST capture's rows still stand; the second's contributed
         // NOTHING -- no orphan visible_projection row for t-dup-2, no
@@ -98,7 +115,7 @@ final class TracerDurabilityTests: XCTestCase {
         XCTAssertEqual(try store.countRows(in: "immutable_commands"), 1)
         XCTAssertEqual(try store.countRows(in: "mutation_journal"), 1)
         XCTAssertEqual(try store.countRows(in: "outbox"), 1)
-        XCTAssertEqual(try store.snapshot().tasks.first?.title, "First capture")
+        XCTAssertEqual(try offMain { try store.snapshot() }.tasks.first?.title, "First capture")
     }
 
     func testMigrationLedgerAppliesAllElevenStrictTablesExactlyOnce() throws {
@@ -131,7 +148,7 @@ final class TracerDurabilityTests: XCTestCase {
             fingerprint: built.fingerprint, acceptedAt: "2026-01-01T00:00:00Z",
             resourceKeys: ["task:\(built.taskId)"], title: built.title
         )
-        XCTAssertThrowsError(try store.acceptMutation(mutation)) { error in
+        XCTAssertThrowsError(try offMain { try store.acceptMutation(mutation) }) { error in
             guard case .fencedForWrites = error as? GRDBLocalStore.StoreError else {
                 return XCTFail("expected fencedForWrites, got \(error)")
             }

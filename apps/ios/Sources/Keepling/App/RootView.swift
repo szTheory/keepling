@@ -23,21 +23,28 @@ struct RootView: View {
                         .accessibilityIdentifier("new-task-button")
                 }
             }
-            .task { reload() }
+            .task { await reload() }
             .sheet(isPresented: $isPresentingCapture) {
                 CaptureSheet { title in
-                    try capture(title: title)
-                    reload()
+                    try await capture(title: title)
+                    await reload()
                 }
             }
         }
     }
 
-    private func reload() {
-        tasks = (try? store.snapshot().tasks) ?? []
+    /// Both store calls below run off the main actor via `Task.detached`
+    /// (D-04 G5): `GRDBLocalStore` traps in Debug builds if entered from
+    /// the main thread, and a SwiftUI view's own action closures and
+    /// `.task` modifier run on the main actor by default.
+    private func reload() async {
+        let store = self.store
+        tasks = await Task.detached(priority: .userInitiated) {
+            (try? store.snapshot().tasks) ?? []
+        }.value
     }
 
-    private func capture(title: String) throws {
+    private func capture(title: String) async throws {
         let mutationId = UUID().uuidString
         let taskId = UUID().uuidString
         let built = try CaptureCommand.build(title: title, mutationId: mutationId, taskId: taskId)
@@ -50,6 +57,9 @@ struct RootView: View {
             resourceKeys: ["task:\(built.taskId)"],
             title: built.title
         )
-        _ = try store.acceptMutation(mutation)
+        let store = self.store
+        try await Task.detached(priority: .userInitiated) {
+            _ = try store.acceptMutation(mutation)
+        }.value
     }
 }
