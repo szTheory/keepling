@@ -15,6 +15,26 @@ public struct UnimplementedInTracerError: Error, Sendable, Equatable {
 /// its projection effect (mirrors `SyncMutation` in
 /// `apps/desktop/main/application/DesktopApplication.ts`).
 public struct LocalMutation: Sendable, Equatable {
+    /// The full local-projection effect a mutation applies (04-08-PLAN.md
+    /// Task 1). Defaulted to a fresh-capture shape (`notes: ""`,
+    /// `completedAt`/`trashedAt: nil`, `planned: false`) so every caller
+    /// that pre-dates this plan (the capture tracer, its tests) is
+    /// unaffected -- additive, not a breaking signature change, mirroring
+    /// 04-06/04-07's own `SyncAcknowledgement` extension pattern.
+    public struct ProjectionEffect: Sendable, Equatable {
+        public let notes: String
+        public let completedAt: String?
+        public let trashedAt: String?
+        public let planned: Bool
+
+        public init(notes: String = "", completedAt: String? = nil, trashedAt: String? = nil, planned: Bool = false) {
+            self.notes = notes
+            self.completedAt = completedAt
+            self.trashedAt = trashedAt
+            self.planned = planned
+        }
+    }
+
     public let mutationId: String
     public let taskId: String
     public let commandBytes: String
@@ -22,6 +42,7 @@ public struct LocalMutation: Sendable, Equatable {
     public let acceptedAt: String
     public let resourceKeys: [String]
     public let title: String
+    public let effect: ProjectionEffect
 
     public init(
         mutationId: String,
@@ -30,7 +51,8 @@ public struct LocalMutation: Sendable, Equatable {
         fingerprint: String,
         acceptedAt: String,
         resourceKeys: [String],
-        title: String
+        title: String,
+        effect: ProjectionEffect = ProjectionEffect()
     ) {
         self.mutationId = mutationId
         self.taskId = taskId
@@ -39,6 +61,7 @@ public struct LocalMutation: Sendable, Equatable {
         self.acceptedAt = acceptedAt
         self.resourceKeys = resourceKeys
         self.title = title
+        self.effect = effect
     }
 }
 

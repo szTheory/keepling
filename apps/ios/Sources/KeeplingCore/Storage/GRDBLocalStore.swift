@@ -258,9 +258,30 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
             self.__test_onTransactionStart?(db)
             try self.__test_injectFailure?(.beforeProjection)
             #endif
+            // An UPSERT, not a bare INSERT (04-08-PLAN.md Task 1): capture
+            // is the only command that creates a brand-new row; every other
+            // supported command (edit, clarify, return-to-inbox, plan,
+            // unplan, complete, reopen, trash, restore) targets a task that
+            // already has one. `effect` carries every projection column a
+            // command that does not touch it must nonetheless preserve --
+            // this is a replay of (basis + this command's change), never a
+            // partial write that would blank an untouched column.
             try db.execute(
-                sql: "INSERT INTO visible_projection(task_id, title, sync_status) VALUES (?, ?, 'saved_on_this_mac')",
-                arguments: [mutation.taskId, mutation.title]
+                sql: """
+                INSERT INTO visible_projection(task_id, title, sync_status, notes, completed_at, trashed_at, planned)
+                VALUES (?, ?, 'saved_on_this_mac', ?, ?, ?, ?)
+                ON CONFLICT(task_id) DO UPDATE SET
+                  title = excluded.title,
+                  sync_status = 'saved_on_this_mac',
+                  notes = excluded.notes,
+                  completed_at = excluded.completed_at,
+                  trashed_at = excluded.trashed_at,
+                  planned = excluded.planned
+                """,
+                arguments: [
+                    mutation.taskId, mutation.title, mutation.effect.notes,
+                    mutation.effect.completedAt, mutation.effect.trashedAt, mutation.effect.planned ? 1 : 0,
+                ]
             )
 
             #if DEBUG
