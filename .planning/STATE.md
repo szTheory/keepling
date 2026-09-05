@@ -5,10 +5,10 @@ current_phase: 04
 current_phase_name: Native iPhone Daily Loop
 status: executing
 stopped_at: Completed 04-06-PLAN.md
-last_updated: "2026-09-05T06:33:59.463Z"
+last_updated: "2026-09-05T06:35:08.469Z"
 last_activity: 2026-09-04
 last_activity_desc: Phase KPL-04 execution started
-state_head: 0e552228a098d46c8d35cc766b2388b192724b22
+state_head: 573bd0507f851dc24ef64bfc26d8f58400e5c69e
 progress:
   total_phases: 6
   completed_phases: 2
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
-Plan: 7 of 17
+Plan: 8 of 17
 Total Plans in Phase: 17
 Status: Executing Phase KPL-04
 Last activity: 2026-09-04 — Phase KPL-04 execution started
@@ -209,12 +209,14 @@ Progress: [██████████] 100%
 - [Phase 04]: iOS carries all 11 desktop STRICT tables (D-35's 'nine tables' enumerates categories, not a literal count); visible_projection.sync_status keeps the desktop's literal 'saved_on_this_mac' stored value.
 - [Phase 04]: Nullable references in the OpenAPI contract use a dedicated Nullable<Base> schema (type: [X,'null']) instead of a oneOf/anyOf-null wrapper, because the wrapper form silently deletes the property from swift-openapi-generator output.
 - [Phase 04]: SyncFeedEnvelope.payload's oneOf is left without a formal discriminator after two real attempts proved broken/corrupting against the pinned swift-openapi-generator; disambiguation relies on disjoint required-field sets instead.
-- [Phase 04]: [Phase 04]: Fence checks moved to a pre-write dbPool.read check so a fenced write is observably zero commits AND zero rollbacks, not a rollback inside an opened transaction.
-- [Phase 04]: [Phase 04]: mutation_dependencies now receives real (often empty) writes inside acceptMutation's transaction as structural provenance only; ordering enforcement stays resource-key-based per the Phase 03 decision.
+- [Phase 04]: Fence checks moved to a pre-write dbPool.read check so a fenced write is observably zero commits AND zero rollbacks, not a rollback inside an opened transaction.
+- [Phase 04]: mutation_dependencies now receives real (often empty) writes inside acceptMutation's transaction as structural provenance only; ordering enforcement stays resource-key-based per the Phase 03 decision.
 - [Phase 04]: 04-03: No sync-state-machine vocabulary change needed -- background execution already maps to v1's relaunch action; expired authentication and account-switch fencing belong to the separate account-lifecycle state machine, not SyncReducer
 - [Phase 04]: 04-03: VectorConformanceTests.swift drives SyncReducer (Task 2's pure reducer), not GRDBLocalStore -- GRDBLocalStore lacks dependencies-aware readyMutations/applyPull/fence-reading, and extending it was out of this plan's authorized scope
 - [Phase 04]: Accessory absence IS achievable on iOS SDK 26.5 via a conditionally-applied tabViewBottomAccessory modifier, contrary to the RESEARCH.md-era DTS finding; measured, not assumed
 - [Phase 04]: The real bindNamespace/setSyncFence D-03 account-fencing trigger closes the gap 04-02's __test_setFence comment deferred to this plan; a hand-restored store now fences itself on account mismatch instead of only being simulatable via a test-only seam.
+- [Phase 04]: The acknowledgement validator stays strict at accepted/already_satisfied for a 200 answer; the conflict path enters settlement from the refusal classifier, not a widened success validator, so a 409 problem cannot be silently reclassified as success.
+- [Phase 04]: DurableUnit treats the db/-wal/-shm store files as one value with all-or-none move/copy/delete, preventing a partial filesystem operation from handing a restored store a database file with no matching WAL.
 
 ### Retained Research
 
@@ -250,7 +252,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-05T06:33:59.308Z
+**Last session:** 2026-09-05T06:34:54.720Z
 **Stopped at:** Completed 04-06-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
@@ -326,6 +328,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-04 P04 | ~2h | 2 tasks | 11 files |
 | Phase KPL-04 P05 | ~3h | 3 tasks | 12 files |
 | Phase KPL-04 P06 | ~2h | 2 tasks | 9 files |
+| Phase 04 P06 | unknown (continuation agent) | 2 tasks | 7 files |
 
 ### Blockers
 
