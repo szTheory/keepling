@@ -614,7 +614,8 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
 
             let pending = try Row.fetchOne(db, sql: """
                 SELECT immutable_commands.fingerprint AS fingerprint, immutable_commands.task_id AS task_id,
-                       immutable_commands.effect_snapshot_json AS effect_snapshot_json
+                       immutable_commands.effect_snapshot_json AS effect_snapshot_json,
+                       immutable_commands.command_bytes AS command_bytes
                 FROM outbox JOIN immutable_commands USING (mutation_id)
                 WHERE outbox.mutation_id = ?
                 """, arguments: [acknowledgement.mutationId])
@@ -679,6 +680,27 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
                     """,
                     arguments: ["undo_handle:\(acknowledgement.mutationId)", Self.encodeUndoHandle(undo)]
                 )
+            }
+
+            // 04-11-PLAN.md Task 1: retain/clear the single-level CURRENT
+            // undo availability on EVERY settled acknowledgement, not only
+            // an accepted one -- `UndoAvailability.derive` returning `nil`
+            // (this acknowledgement carries no handle) IS the clearing
+            // signal, exactly as true for a `conflict`/`rejected` outcome
+            // (which never carries `.undo`) as it is for an `accepted`
+            // command outside the closed supported matrix. This is what
+            // keeps undo single-level: the latest supported change only.
+            let originalCommandType = Self.stringField("type", inJSON: pending["command_bytes"] as String) ?? ""
+            if let current = UndoAvailability.derive(from: acknowledgement, taskId: taskId, originalCommandType: originalCommandType) {
+                try db.execute(
+                    sql: """
+                    INSERT INTO namespace_metadata(key, value) VALUES ('current_undo_availability', ?)
+                    ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                    """,
+                    arguments: [Self.encodeCurrentUndoAvailability(current)]
+                )
+            } else {
+                try db.execute(sql: "DELETE FROM namespace_metadata WHERE key = 'current_undo_availability'")
             }
 
             try db.execute(
@@ -788,6 +810,56 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
             }
             return WorkspaceSnapshot(tasks: tasks)
         }
+    }
+
+    // MARK: - Undo availability (04-11-PLAN.md Task 1)
+
+    public func currentUndoAvailability() throws -> UndoAvailability? {
+        assertNotOnMainThread()
+        return try dbPool.read { db in
+            try self.assertNotFenced(db)
+            guard let json = try String.fetchOne(db, sql: "SELECT value FROM namespace_metadata WHERE key = 'current_undo_availability'") else {
+                return nil
+            }
+            return Self.decodeCurrentUndoAvailability(json)
+        }
+    }
+
+    public func clearCurrentUndoAvailability() throws {
+        assertNotOnMainThread()
+        try dbPool.write { db in
+            try self.assertNotFenced(db)
+            try db.execute(sql: "DELETE FROM namespace_metadata WHERE key = 'current_undo_availability'")
+        }
+    }
+
+    private static func encodeCurrentUndoAvailability(_ availability: UndoAvailability) -> String {
+        let payload: [String: Any] = [
+            "mutationId": availability.mutationId,
+            "taskId": availability.taskId,
+            "handle": availability.handle,
+            "label": availability.label,
+            "expiresAt": availability.expiresAt,
+            "originalCommandType": availability.originalCommandType,
+        ]
+        let data = (try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])) ?? Data("{}".utf8)
+        return String(data: data, encoding: .utf8) ?? "{}"
+    }
+
+    private static func decodeCurrentUndoAvailability(_ json: String) -> UndoAvailability? {
+        guard let data = json.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let mutationId = object["mutationId"] as? String,
+              let taskId = object["taskId"] as? String,
+              let handle = object["handle"] as? String,
+              let label = object["label"] as? String,
+              let expiresAt = object["expiresAt"] as? String,
+              let originalCommandType = object["originalCommandType"] as? String
+        else { return nil }
+        return UndoAvailability(
+            mutationId: mutationId, taskId: taskId, handle: handle,
+            label: label, expiresAt: expiresAt, originalCommandType: originalCommandType
+        )
     }
 
     // MARK: - Basis / conflict reads (04-09-PLAN.md Task 3)

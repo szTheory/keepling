@@ -178,6 +178,34 @@ public final class KeeplingSyncAdapter: SyncPort, @unchecked Sendable {
             case .undocumented(let status, _): throw SyncPortRefused(status: status, code: nil)
             }
 
+        case "undo_task":
+            let command = try decoder.decode(Components.Schemas.UndoTaskCommand.self, from: bytes)
+            let output: Operations.undoTask.Output
+            do { output = try await client.undoTask(.init(body: .json(command))) } catch { throw SyncUnreachable(underlying: error) }
+            switch output {
+            case .ok(let r):
+                switch r.body {
+                case .json(let undoResult):
+                    switch undoResult {
+                    case .CommandAcknowledgement(let acknowledgement):
+                        guard acknowledgement.mutation_id == mutation.mutationId else { throw SyncPortError.mutationMismatch }
+                        return try WireMappers.mapCommandAcknowledgement(acknowledgement, expectedFingerprint: mutation.fingerprint)
+                    case .UndoNoChange(let noChange):
+                        return try settleUndoNoChange(noChange, mutationId: mutation.mutationId, fingerprint: mutation.fingerprint)
+                    }
+                }
+            case .badRequest(let r): return try settleOrThrow(status: 400, response: r, taskId: mutation.taskId, fingerprint: mutation.fingerprint, mutationId: mutation.mutationId)
+            case .unauthorized(let r): return try settleOrThrow(status: 401, response: r, taskId: mutation.taskId, fingerprint: mutation.fingerprint, mutationId: mutation.mutationId)
+            case .forbidden(let r): return try settleOrThrow(status: 403, response: r, taskId: mutation.taskId, fingerprint: mutation.fingerprint, mutationId: mutation.mutationId)
+            case .notFound(let r):
+                switch r.body {
+                case .json(let noChange):
+                    return try settleUndoNoChange(noChange, mutationId: mutation.mutationId, fingerprint: mutation.fingerprint)
+                }
+            case .serviceUnavailable(let r): return try settleOrThrow(status: 503, response: r, taskId: mutation.taskId, fingerprint: mutation.fingerprint, mutationId: mutation.mutationId)
+            case .undocumented(let status, _): throw SyncPortRefused(status: status, code: nil)
+            }
+
         default:
             // Outside this plan's ten-command scope (organizations,
             // activity, search are not iPhone surfaces in Phase 4).
@@ -448,6 +476,31 @@ public final class KeeplingSyncAdapter: SyncPort, @unchecked Sendable {
             let snapshotJSON = try jsonString(payload)
             return SyncAcknowledgement(mutationId: mutationId, fingerprint: fingerprint, outcome: .conflict, snapshotJSON: snapshotJSON)
         }
+    }
+
+    /// The `undo-task` endpoint's 200/404 "no change" answer
+    /// (04-11-PLAN.md Task 1). `undo_uncertain` is the ONE code this
+    /// client refuses to settle -- the server itself does not know
+    /// whether the compensation applied, so treating it as either
+    /// accepted or rejected would be a guess presented as a fact,
+    /// mirroring the unclassified-refusal-throws pattern 04-08 already
+    /// established (`SyncPortRefused` -> `runSyncPass` moves the row to
+    /// `uncertain`, never `queued`, never guessed into `rejected`).
+    /// Every OTHER code (already applied/expired/stale/unknown) is a
+    /// genuine, terminal negative answer -- settled as `.rejected` so the
+    /// compensating row leaves the outbox without `acknowledge` ever
+    /// touching canonical/local state for it.
+    private func settleUndoNoChange(
+        _ noChange: Components.Schemas.UndoNoChange,
+        mutationId: String,
+        fingerprint: String
+    ) throws -> SyncAcknowledgement {
+        guard noChange.mutation_id == mutationId else { throw SyncPortError.mutationMismatch }
+        if noChange.code == .undo_uncertain {
+            throw SyncPortRefused(status: 200, code: noChange.code.rawValue)
+        }
+        let snapshotJSON = (try? jsonString(["code": noChange.code.rawValue])) ?? "{}"
+        return SyncAcknowledgement(mutationId: mutationId, fingerprint: fingerprint, outcome: .rejected, snapshotJSON: snapshotJSON)
     }
 
     private func refused(status: Int, response: Components.Responses.ProblemResponse) throws -> Error {

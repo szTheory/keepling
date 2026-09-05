@@ -212,6 +212,59 @@ public struct UndoResult: Sendable, Equatable {
     public let reason: UndoDropReason
 }
 
+/// The single-level current undo availability (D-30, mirrors desktop's
+/// `RetainedUndo` / O-45, 04-11-PLAN.md Task 1): the server-issued handle,
+/// its exact copy label, and the original task/command it compensates.
+/// Declared here (Storage), not in `Application/UndoAvailability.swift`,
+/// because `WireMapperBoundaryTests` enforces structurally that
+/// `LocalStorePort.swift` never NAMES a generated wire type -- and this
+/// client's own value type intentionally shares its name with the
+/// generated `Components.Schemas.UndoAvailability` schema (the concepts
+/// are the same fact, seen from two sides of the wire boundary), so it
+/// must be a LOCAL declaration here for that boundary test to recognize it
+/// as this client's own type rather than a generated-type leak (mirrors
+/// `UndoResult`'s own local declaration immediately above, and this file's
+/// own doc comment precedent for `UndoResult` vs.
+/// `Components.Schemas.UndoResult`). `Application/UndoAvailability.swift`
+/// adds the pure `derive(from:taskId:originalCommandType:)` logic as an
+/// extension on this type.
+public struct UndoAvailability: Sendable, Equatable {
+    /// The mutation identity of the ORIGINAL command this availability
+    /// compensates.
+    public let mutationId: String
+    /// The task the original command targeted.
+    public let taskId: String
+    /// The server-issued, account-bound one-shot capability
+    /// (43-128-char URL-safe token). Never synthesized locally.
+    public let handle: String
+    /// The exact server-authored `Undo {Action}` label (e.g.
+    /// `Undo Trash`, `Undo task edit`) -- read directly from the server's
+    /// own `UndoAvailability.label` wire field, never recomputed from the
+    /// original command's type on this client.
+    public let label: String
+    /// The handle's own expiry, as the server reports it.
+    public let expiresAt: String
+    /// The `type` discriminator of the ORIGINAL command that was
+    /// acknowledged (e.g. `trash_task`, `edit_task`).
+    public let originalCommandType: String
+
+    public init(
+        mutationId: String,
+        taskId: String,
+        handle: String,
+        label: String,
+        expiresAt: String,
+        originalCommandType: String
+    ) {
+        self.mutationId = mutationId
+        self.taskId = taskId
+        self.handle = handle
+        self.label = label
+        self.expiresAt = expiresAt
+        self.originalCommandType = originalCommandType
+    }
+}
+
 /// One task's active conflict, read back for the detail view's resolver
 /// section (04-09-PLAN.md Task 3). `mine`/`current` are restricted to
 /// exactly `affectedFields` -- the same "only the affected fields"
@@ -314,4 +367,17 @@ public protocol LocalStorePort: Sendable {
     /// confirmed `Discard Draft`, or silently after a successful capture
     /// (the draft became a real task; nothing to keep).
     func clearDraft() throws
+
+    /// The single-level current undo availability (04-11-PLAN.md Task 1,
+    /// D-30) -- `UndoAvailability.derive`'s last non-`nil` result, retained
+    /// by `acknowledge` and cleared the same way. `nil` means there is
+    /// nothing to undo right now.
+    func currentUndoAvailability() throws -> UndoAvailability?
+
+    /// Clears the current undo availability WITHOUT settling anything --
+    /// called once a compensating command has been durably accepted
+    /// (single-level: consuming it supersedes it immediately, so a second
+    /// tap before the compensation settles cannot mint a second
+    /// `undo_task` against the same already-spent handle).
+    func clearCurrentUndoAvailability() throws
 }
