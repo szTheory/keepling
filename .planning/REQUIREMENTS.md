@@ -40,7 +40,7 @@
 ### Native iPhone
 
 - [ ] **IOS-01**: User can capture, view Inbox and Today, edit, complete, reopen, trash, restore, and undo in a native SwiftUI iPhone client.
-- [ ] **IOS-02**: User can mutate tasks without connectivity, terminate the app, relaunch, and later reconcile without losing or duplicating accepted intent.
+- [x] **IOS-02**: User can mutate tasks without connectivity, terminate the app, relaunch, and later reconcile without losing or duplicating accepted intent.
 - [ ] **IOS-03**: User receives a platform-native touch, accessibility, Dynamic Type, and Reduce Motion experience for the supported daily loop.
 - [ ] **IOS-04**: User can distinguish local, syncing, conflict, authentication-expired, and unrecoverable states on a physical iPhone.
 
