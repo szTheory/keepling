@@ -257,23 +257,57 @@ Plans:
 **Plans:** 17 plans
 
 Plans:
+**Wave 1**
 
 - [ ] 04-01-PLAN.md — TRACER: normalize the wire contract, scaffold apps/ios, and capture one task end to end from simulator to real server.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
 - [ ] 04-02-PLAN.md — Durable local store: 11 STRICT tables, an app-owned migration ledger that halts on drift, and gates G1-G6.
 - [ ] 04-03-PLAN.md — The Swift sync reducer as a third independent implementation, with structural vector conformance and a cross-runtime consumer gate.
 - [ ] 04-04-PLAN.md — Measure whether the bottom accessory can be genuinely absent on SDK 26.5, and emit the committed Swift design tokens.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
 - [ ] 04-05-PLAN.md — Wire transport: decode round-trip over every vector payload, unreachable-versus-refused classification, and hand-written mappers.
 - [ ] 04-06-PLAN.md — Terminal settlement (G8), the durable unit and backup exclusion, and the restored-store replay-no-op fixture.
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
 - [ ] 04-07-PLAN.md — Device-grant PKCE authentication, Keychain credentials, server-only namespace activation, and account fencing.
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
 - [ ] 04-08-PLAN.md — The bounded sync pass, outbound commands for the full supported loop, and background execution proven to be acceleration only.
+
+**Wave 6** *(blocked on Wave 5 completion)*
+
 - [ ] 04-09-PLAN.md — The two-tab daily loop: lists, the locked gesture contract, task detail and conflict resolver, and the durable capture draft.
+
+**Wave 7** *(blocked on Wave 6 completion)*
+
 - [ ] 04-10-PLAN.md — One authoritative sync presentation, the conditional bottom accessory, the Sync & Recovery sheet, and debounced announcements.
+
+**Wave 8** *(blocked on Wave 7 completion)*
+
 - [ ] 04-11-PLAN.md — Named, timerless undo as a compensating semantic action through the server-issued handle.
+
+**Wave 9** *(blocked on Wave 8 completion)*
+
 - [ ] 04-12-PLAN.md — Capture and Complete App Intents in the main target, sharing one store handle, with deferred surfaces provably absent.
+
+**Wave 10** *(blocked on Wave 9 completion)*
+
 - [ ] 04-13-PLAN.md — Accessibility as release evidence: audits on every screen, the Dynamic Type matrix, Reduce Motion, and focus safety.
 - [ ] 04-14-PLAN.md — Deterministic state injection, the twelve-state matrix, and the held-out overflow and long-text suite.
 - [ ] 04-15-PLAN.md — Diagnostics that reconstruct a bad day without carrying task content, credentials, cursors, or fingerprints.
+
+**Wave 11** *(blocked on Wave 10 completion)*
+
 - [ ] 04-16-PLAN.md — The physical-device evidence lane: signed build, read-back attestation, and real-stack recovery scenarios.
+
+**Wave 12** *(blocked on Wave 11 completion)*
+
 - [ ] 04-17-PLAN.md — The assembled anti-vacuous iOS phase gate, the requirement-to-lane map, and one consolidated disclosures section.
 
 **Success Criteria**:

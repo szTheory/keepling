@@ -1,18 +1,18 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-current_phase: 4
+current_phase: 04
 current_phase_name: Native iPhone Daily Loop
-status: planning
-stopped_at: Phase KPL-04 context gathered
-last_updated: "2026-09-04T23:43:43.634Z"
+status: executing
+stopped_at: Phase KPL-04 UI-SPEC approved
+last_updated: "2026-09-05T01:25:20.588Z"
 last_activity: 2026-09-04
-last_activity_desc: Phase KPL-03 complete, transitioned to Phase 4
-state_head: e74b3944ef526c260be6b621d2ec0a6a884755eb
+last_activity_desc: Phase KPL-04 planning complete — 17 plans ready
+state_head: c0724858da5e6d811260bb15180a6a0c9cb25e6c
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 65
+  total_plans: 82
   completed_plans: 64
 milestone_name: milestone
 ---
@@ -28,12 +28,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 ## Current Position
 
-Phase: 4 — Native iPhone Daily Loop
+Phase: KPL-04 (Native iPhone Daily Loop) — READY TO EXECUTE
 Plan: Not started
-Total Plans in Phase: 27
-Status: Ready to plan
+Total Plans in Phase: 17
+Status: Ready to execute
 Last activity: 2026-09-04 — Phase KPL-03 complete, transitioned to Phase 4
-Last Activity Description: Phase KPL-03 complete, transitioned to Phase 4
+Last Activity Description: Phase KPL-04 planning complete — 17 plans ready
 Progress: [██████████] 100%
 
 ## Accumulated Context
@@ -241,10 +241,10 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-04T23:43:43.262Z
-**Stopped at:** Phase KPL-04 context gathered
+**Last session:** 2026-09-04T23:55:41.922Z
+**Stopped at:** Phase KPL-04 UI-SPEC approved
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
-**Resume file:** .planning/phases/KPL-04-native-iphone-daily-loop/04-CONTEXT.md
+**Resume file:** .planning/phases/KPL-04-native-iphone-daily-loop/04-UI-SPEC.md
 
 ## Performance Metrics
 
