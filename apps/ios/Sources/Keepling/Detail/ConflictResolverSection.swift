@@ -78,6 +78,21 @@ struct ConflictResolverSection: View {
             Text(value ?? "")
                 .font(TokenSemantics.Typography.body)
                 .foregroundStyle(TokenSemantics.primaryText)
+                // 04-14-PLAN.md Task 2 finding: `.fixedSize(vertical: true)`
+                // with NO `.lineLimit` forces this `Text` to its FULL
+                // intrinsic height regardless of content length --
+                // measured directly at the 512-scalar maximum title
+                // length, this rendered a single value block ~2300pt
+                // tall (over two and a half screen-heights), making the
+                // entire section unnavigable within any reasonable
+                // scroll budget. A title diff does not need the Notes
+                // section's own `Show Full Value` disclosure (titles are
+                // capped at 512 scalars, an order of magnitude shorter
+                // than notes' 50000) -- a bounded `.lineLimit` gives
+                // `Text`'s own truncation (an ellipsis, never a hard
+                // clip) something to truncate WITHIN, restoring this
+                // section to a normal, scrollable size.
+                .lineLimit(6)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

@@ -105,6 +105,19 @@ struct TaskRow: View {
                     .foregroundStyle(TokenSemantics.primaryText)
                     .strikethrough(item.isCompleted)
                     .lineLimit(2)
+                    // 04-14-PLAN.md Task 2 finding: without an explicit
+                    // max-width, an EXTREMELY long, contiguous title (the
+                    // 512-scalar overflow fixture) measured directly via
+                    // `performAccessibilityAudit(.textClipped)` as
+                    // genuinely CLIPPED rather than ellipsis-truncated at
+                    // the largest accessibility Dynamic Type category --
+                    // this row's intrinsic content width was not properly
+                    // constrained by the List cell alone at that extreme.
+                    // An explicit leading-aligned max-width frame gives
+                    // `.lineLimit(2)`'s own truncation a bounded box to
+                    // truncate within, confirmed fixed by re-running the
+                    // same audit.
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier("task-row-\(item.title)")
                     .accessibilityFocused(focusBinding, equals: focusValue)
                 // A zero-size marker exposing this row's OWN focus value

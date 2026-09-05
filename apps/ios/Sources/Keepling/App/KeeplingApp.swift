@@ -170,22 +170,102 @@ struct KeeplingApp: App {
                     mutationId: captureMutationId, fingerprint: captureBuilt.fingerprint, outcome: .accepted,
                     snapshotJSON: uitestSnapshotJSON(id: taskId, revision: 1, title: captureBuilt.effect.title)
                 ))
+                // The edit(notes) mutation's OWN settlement is the FINAL
+                // one on this Inbox task -- a CONFLICT, not an acceptance
+                // (mirrors `KEEPLING_UITEST_SEED_CONFLICT`'s established
+                // technique: acknowledge the mutation you just accepted,
+                // with `.conflict` instead of `.accepted`) -- so this task
+                // covers the "Inbox", "Task detail and editor", "Sync &
+                // Recovery sheet", "Conflict resolver", and "Bottom
+                // accessory" elements. The accessory's rendered copy for
+                // `.conflict` is `SyncCopy.conflict`, the exact string
+                // `long-text.json`'s own `recoveryCopyLongest` records.
+                // A mutation can only be acknowledged ONCE -- acknowledging
+                // the ALREADY-SETTLED capture mutation a second time (an
+                // earlier revision of this hook tried exactly that) is a
+                // no-op against an outbox row that is no longer pending.
+                //
+                // Deliberately NOT planned for Today: `WorkspaceFacade
+                // .inboxItems`/`.todayItems` partition on the SAME
+                // `planned` boolean (`!$0.planned` / `$0.planned`) -- a
+                // task planned for Today disappears from `inboxItems`
+                // entirely in this client's projection, so the "Today"
+                // and "Inbox" elements need genuinely SEPARATE tasks, not
+                // one task assumed to satisfy both (an earlier revision
+                // of this hook made exactly that wrong assumption and
+                // `testInboxRenders...` failed as a direct result).
                 if !longNotes.isEmpty, let editBuilt = try? OutboundCommands.edit(
                     taskId: taskId, touched: .init(notes: longNotes),
                     basis: .init(baseTitle: captureBuilt.effect.title, baseNotes: "", expectedRevision: 1),
                     mutationId: UUID().uuidString
                 ) {
+                    // `effect:` MUST be passed explicitly -- the default
+                    // `LocalMutation.ProjectionEffect()` is `notes: ""`,
+                    // which would silently overwrite `visible_projection
+                    // .notes` back to EMPTY at `acceptMutation`'s own
+                    // UPSERT (an earlier revision of this hook omitted
+                    // this and `testTaskDetailRenders...` failed as a
+                    // direct result: the Show Full Value disclosure never
+                    // appeared because the optimistic local projection
+                    // never actually held the long notes text at all).
                     _ = try? openedStore.acceptMutation(LocalMutation(
                         mutationId: editBuilt.mutationId, taskId: editBuilt.taskId, commandBytes: editBuilt.commandBytes,
                         fingerprint: editBuilt.fingerprint, acceptedAt: ISO8601DateFormatter().string(from: Date()),
-                        resourceKeys: editBuilt.resourceKeys, title: editBuilt.effect.title
+                        resourceKeys: editBuilt.resourceKeys, title: editBuilt.effect.title,
+                        effect: LocalMutation.ProjectionEffect(notes: editBuilt.effect.notes, completedAt: nil, trashedAt: nil, planned: false)
                     ))
                     _ = try? openedStore.acknowledge(SyncAcknowledgement(
-                        mutationId: editBuilt.mutationId, fingerprint: editBuilt.fingerprint, outcome: .accepted,
-                        snapshotJSON: uitestSnapshotJSON(id: taskId, revision: 2, title: editBuilt.effect.title)
+                        mutationId: editBuilt.mutationId, fingerprint: editBuilt.fingerprint, outcome: .conflict,
+                        snapshotJSON: uitestSnapshotJSON(id: taskId, revision: 2, title: editBuilt.effect.title),
+                        affectedFields: ["title"]
                     ))
                 }
+
+                // A SECOND, separately seeded task -- planned for Today,
+                // never conflicted -- covers the "Today" element on its
+                // own terms (Today's own overflow/clipping considerations
+                // do not require an active exception).
+                let todayTaskId = UUID().uuidString
+                let todayMutationId = UUID().uuidString
+                if let todayBuilt = try? OutboundCommands.capture(title: longTitle, mutationId: todayMutationId, taskId: todayTaskId) {
+                    _ = try? openedStore.acceptMutation(LocalMutation(
+                        mutationId: todayBuilt.mutationId, taskId: todayBuilt.taskId, commandBytes: todayBuilt.commandBytes,
+                        fingerprint: todayBuilt.fingerprint, acceptedAt: ISO8601DateFormatter().string(from: Date()),
+                        resourceKeys: todayBuilt.resourceKeys, title: todayBuilt.effect.title
+                    ))
+                    _ = try? openedStore.acknowledge(SyncAcknowledgement(
+                        mutationId: todayMutationId, fingerprint: todayBuilt.fingerprint, outcome: .accepted,
+                        snapshotJSON: uitestSnapshotJSON(id: todayTaskId, revision: 1, title: todayBuilt.effect.title)
+                    ))
+                    if let planBuilt = try? OutboundCommands.planForToday(
+                        true, taskId: todayTaskId,
+                        basis: .init(baseTitle: todayBuilt.effect.title, baseNotes: "", expectedRevision: 1),
+                        mutationId: UUID().uuidString
+                    ) {
+                        _ = try? openedStore.acceptMutation(LocalMutation(
+                            mutationId: planBuilt.mutationId, taskId: planBuilt.taskId, commandBytes: planBuilt.commandBytes,
+                            fingerprint: planBuilt.fingerprint, acceptedAt: ISO8601DateFormatter().string(from: Date()),
+                            resourceKeys: planBuilt.resourceKeys, title: planBuilt.effect.title,
+                            effect: LocalMutation.ProjectionEffect(notes: planBuilt.effect.notes, completedAt: nil, trashedAt: nil, planned: true)
+                        ))
+                        _ = try? openedStore.acknowledge(SyncAcknowledgement(
+                            mutationId: planBuilt.mutationId, fingerprint: planBuilt.fingerprint, outcome: .accepted,
+                            snapshotJSON: uitestSnapshotJSON(id: todayTaskId, revision: 2, title: planBuilt.effect.title)
+                        ))
+                    }
+                }
                 await builtFacade.refresh()
+                // The bottom accessory reads `facade.syncPresentation`
+                // (a SEPARATE published value from `items`, per D-41 --
+                // never auto-derived from a per-task conflict) -- setting
+                // it explicitly here is this fixture hook's job, exactly
+                // as `KEEPLING_UITEST_SYNC_STATE` does for every other
+                // accessory-driven UI test in this codebase; the real
+                // production wiring from a live conflict into this same
+                // value is 04-10-SUMMARY.md's own disclosed remaining gap
+                // (`runSyncPass` -> `updateSyncPresentation`), not
+                // something this test-only hook can or should fill in.
+                await builtFacade.updateSyncPresentation(.conflict(affectedCount: 1))
             }
         }
         // UI-test-only fixture hook (04-10-PLAN.md Task 3): seeds one REAL
