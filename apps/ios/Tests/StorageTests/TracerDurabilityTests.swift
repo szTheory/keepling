@@ -121,11 +121,11 @@ final class TracerDurabilityTests: XCTestCase {
     func testMigrationLedgerAppliesAllElevenStrictTablesExactlyOnce() throws {
         let path = storePath()
         let store = try GRDBLocalStore(path: path)
-        XCTAssertEqual(try store.countRows(in: "schema_migrations"), 2)
+        XCTAssertEqual(try store.countRows(in: "schema_migrations"), 3) // 04-09-PLAN.md Task 3 added Migration0003CaptureDraft
 
         // Reopening must not re-apply or duplicate ledger rows.
         let reopened = try GRDBLocalStore(path: path)
-        XCTAssertEqual(try reopened.countRows(in: "schema_migrations"), 2)
+        XCTAssertEqual(try reopened.countRows(in: "schema_migrations"), 3)
     }
 
     func testDurabilityPostureIsSetBeforeAnyMigrationRuns() throws {

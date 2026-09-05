@@ -118,6 +118,7 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
     static let migrations: [MigrationLedger.MigrationDefinition] = [
         MigrationLedger.MigrationDefinition(version: Migration0001Initial.version, sql: Migration0001Initial.sql),
         MigrationLedger.MigrationDefinition(version: Migration0002OutboxState.version, sql: Migration0002OutboxState.sql),
+        MigrationLedger.MigrationDefinition(version: Migration0003CaptureDraft.version, sql: Migration0003CaptureDraft.sql),
     ]
 
     private static func applyMigrations(_ dbPool: DatabasePool) throws {
@@ -205,6 +206,13 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
             }
             try db.execute(sql: "INSERT INTO sync_cursor(singleton, cursor) VALUES (1, NULL)")
             try db.execute(sql: "INSERT INTO last_local_action(singleton, action_json) VALUES (1, NULL)")
+            // 04-09-PLAN.md Task 3 (Rule 2 -- missing critical
+            // functionality): a capture draft is account-scoped intent,
+            // not device-scoped -- signing out one account and into
+            // another on the same iPhone must never leak the first
+            // account's unsent draft text into the second account's
+            // capture sheet.
+            try db.execute(sql: "UPDATE capture_draft SET title = '', add_to_today = 0, updated_at = NULL WHERE singleton = 1")
             try db.execute(sql: "DELETE FROM namespace_metadata")
         }
     }
@@ -779,6 +787,91 @@ public final class GRDBLocalStore: LocalStorePort, @unchecked Sendable {
                 )
             }
             return WorkspaceSnapshot(tasks: tasks)
+        }
+    }
+
+    // MARK: - Basis / conflict reads (04-09-PLAN.md Task 3)
+
+    public func expectedRevision(forTaskId taskId: String) throws -> Int {
+        assertNotOnMainThread()
+        return try dbPool.read { db in
+            let json = try String.fetchOne(db, sql: "SELECT snapshot_json FROM canonical_shadow WHERE entity_id = ?", arguments: [taskId])
+            return json.flatMap { Self.intField("revision", inJSON: $0) } ?? 1
+        }
+    }
+
+    public func activeConflict(forTaskId taskId: String) throws -> ConflictRecord? {
+        assertNotOnMainThread()
+        return try dbPool.read { db in
+            guard let row = try Row.fetchOne(
+                db,
+                sql: """
+                SELECT conflicts.conflict_id AS conflict_id, conflicts.details_json AS details_json
+                FROM conflicts JOIN immutable_commands ON immutable_commands.mutation_id = conflicts.mutation_id
+                WHERE immutable_commands.task_id = ?
+                ORDER BY conflicts.rowid DESC LIMIT 1
+                """,
+                arguments: [taskId]
+            ) else { return nil }
+            let conflictId: String = row["conflict_id"]
+            let detailsJSON: String = row["details_json"]
+            guard let data = detailsJSON.data(using: .utf8),
+                  let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let affectedFields = object["affected_fields"] as? [String]
+            else { return nil }
+            func stringify(_ raw: Any?) -> [String: String] {
+                guard let dictionary = raw as? [String: Any] else { return [:] }
+                return dictionary.reduce(into: [:]) { accumulator, pair in accumulator[pair.key] = "\(pair.value)" }
+            }
+            return ConflictRecord(
+                conflictId: conflictId,
+                taskId: taskId,
+                affectedFields: affectedFields,
+                mine: stringify(object["mine"]),
+                current: stringify(object["current"])
+            )
+        }
+    }
+
+    public func clearConflict(conflictId: String) throws {
+        assertNotOnMainThread()
+        try dbPool.write { db in
+            try db.execute(sql: "DELETE FROM conflicts WHERE conflict_id = ?", arguments: [conflictId])
+        }
+    }
+
+    // MARK: - Durable capture draft (D-35, 04-09-PLAN.md Task 3)
+
+    public func saveDraft(_ draft: CaptureDraft) throws {
+        assertNotOnMainThread()
+        try dbPool.write { db in
+            try db.execute(
+                sql: """
+                UPDATE capture_draft SET title = ?, add_to_today = ?, updated_at = ? WHERE singleton = 1
+                """,
+                arguments: [draft.title, draft.addToToday ? 1 : 0, ISO8601DateFormatter().string(from: Date())]
+            )
+        }
+    }
+
+    public func loadDraft() throws -> CaptureDraft {
+        assertNotOnMainThread()
+        return try dbPool.read { db in
+            guard let row = try Row.fetchOne(db, sql: "SELECT title, add_to_today FROM capture_draft WHERE singleton = 1") else {
+                return CaptureDraft(title: "", addToToday: false)
+            }
+            let title: String = row["title"]
+            let addToToday: Int = row["add_to_today"]
+            return CaptureDraft(title: title, addToToday: addToToday == 1)
+        }
+    }
+
+    public func clearDraft() throws {
+        assertNotOnMainThread()
+        try dbPool.write { db in
+            try db.execute(
+                sql: "UPDATE capture_draft SET title = '', add_to_today = 0, updated_at = NULL WHERE singleton = 1"
+            )
         }
     }
 

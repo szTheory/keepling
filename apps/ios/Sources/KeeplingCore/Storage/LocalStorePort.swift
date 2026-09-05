@@ -167,6 +167,7 @@ public struct ProjectionRow: Sendable, Equatable {
 /// A whole-workspace snapshot (mirrors `WorkspaceSnapshot`).
 public struct WorkspaceSnapshot: Sendable, Equatable {
     public let tasks: [ProjectionRow]
+    public init(tasks: [ProjectionRow]) { self.tasks = tasks }
 }
 
 /// This client's local view of sync progress (mirrors `SyncState`).
@@ -211,6 +212,41 @@ public struct UndoResult: Sendable, Equatable {
     public let reason: UndoDropReason
 }
 
+/// One task's active conflict, read back for the detail view's resolver
+/// section (04-09-PLAN.md Task 3). `mine`/`current` are restricted to
+/// exactly `affectedFields` -- the same "only the affected fields"
+/// discipline `GRDBLocalStore.acknowledge` already enforces when it writes
+/// `conflicts.details_json` (04-06-PLAN.md Task 1).
+public struct ConflictRecord: Sendable, Equatable {
+    public let conflictId: String
+    public let taskId: String
+    public let affectedFields: [String]
+    public let mine: [String: String]
+    public let current: [String: String]
+
+    public init(conflictId: String, taskId: String, affectedFields: [String], mine: [String: String], current: [String: String]) {
+        self.conflictId = conflictId
+        self.taskId = taskId
+        self.affectedFields = affectedFields
+        self.mine = mine
+        self.current = current
+    }
+}
+
+/// The durable capture draft (D-35): title, the optional `Add to Today`
+/// placement, and a durability marker -- `title` empty means "no draft".
+public struct CaptureDraft: Sendable, Equatable {
+    public let title: String
+    public let addToToday: Bool
+
+    public init(title: String, addToToday: Bool) {
+        self.title = title
+        self.addToToday = addToToday
+    }
+
+    public var isEmpty: Bool { title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+}
+
 /// The Swift reimplementation of `apps/desktop/store-worker/local-store.ts`'s
 /// public surface (04-PATTERNS.md "exact (same port surface, reimplemented
 /// as a Swift protocol)"). Only the tracer's four members are implemented in
@@ -246,4 +282,36 @@ public protocol LocalStorePort: Sendable {
     func snapshot() throws -> WorkspaceSnapshot
 
     func syncState() throws -> LocalSyncState
+
+    /// This client's best-known revision for one task -- the latest
+    /// `canonical_shadow` revision if one has been recorded, otherwise `1`
+    /// (the contract minimum for a freshly captured, unacknowledged task;
+    /// mirrors `OutboundCommands.Basis`'s own doc comment). Used to build a
+    /// fresh `OutboundCommands.Basis` for an edit, lifecycle, or conflict
+    /// resolution command (04-09-PLAN.md Task 3).
+    func expectedRevision(forTaskId taskId: String) throws -> Int
+
+    /// The one active conflict recorded against `taskId`, if any. `nil`
+    /// when the task has no open conflict, which is the detail view's
+    /// signal to render no resolver section at all (04-09-PLAN.md Task 3).
+    func activeConflict(forTaskId taskId: String) throws -> ConflictRecord?
+
+    /// Clears a resolved conflict record. Called after a fresh resolution
+    /// command (`Use Mine`/`Use Current`) has been durably accepted --
+    /// resolution never merges locally; it sends a fresh semantic command,
+    /// and this only removes the now-stale conflict presentation.
+    func clearConflict(conflictId: String) throws
+
+    /// Saves the durable capture draft (D-35). Persisted in the store, not
+    /// in view state, so backgrounding, sheet dismissal, or interruption
+    /// never silently discards a nonempty draft.
+    func saveDraft(_ draft: CaptureDraft) throws
+
+    /// Loads the durable capture draft. An empty title means "no draft".
+    func loadDraft() throws -> CaptureDraft
+
+    /// Removes the durable capture draft -- called only after an explicit,
+    /// confirmed `Discard Draft`, or silently after a successful capture
+    /// (the draft became a real task; nothing to keep).
+    func clearDraft() throws
 }

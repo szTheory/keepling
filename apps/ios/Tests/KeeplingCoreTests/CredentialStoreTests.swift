@@ -219,13 +219,14 @@ final class CredentialStoreTests: XCTestCase {
             "schema_migrations", "namespace_metadata", "canonical_shadow", "visible_projection",
             "immutable_commands", "mutation_journal", "mutation_dependencies", "outbox",
             "sync_cursor", "conflicts", "last_local_action",
+            "capture_draft", // 04-09-PLAN.md Task 3 (Migration0003CaptureDraft)
         ]
         var sqliteDump = ""
         for table in tableNames {
             let rows = try offMain { try store.__test_fetchAllRows(table: table) }
             sqliteDump += rows.map { "\($0)" }.joined(separator: "\n")
         }
-        scannedSurfaces["SQLite (11 tables)"] = sqliteDump
+        scannedSurfaces["SQLite (12 tables)"] = sqliteDump
 
         scannedSurfaces["Diagnostics log"] = diagnostics.events.joined(separator: "\n")
 

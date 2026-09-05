@@ -38,7 +38,8 @@ final class MigrationLedgerTests: XCTestCase {
         _ = try GRDBLocalStore(path: path)
 
         let rows = try readSchemaMigrationsRows(atPath: path)
-        XCTAssertEqual(rows.map { $0.version }, [1, 2])
+        // 04-09-PLAN.md Task 3 added Migration0003CaptureDraft.
+        XCTAssertEqual(rows.map { $0.version }, [1, 2, 3])
         for row in rows {
             XCTAssertEqual(row.checksum.count, 64, "checksum must be a 64-character SHA-256 hex digest")
             XCTAssertFalse(row.appliedAt.isEmpty)
@@ -121,8 +122,10 @@ final class MigrationLedgerTests: XCTestCase {
         }
 
         XCTAssertThrowsError(try GRDBLocalStore(path: path)) { error in
-            guard case StoreUnrecoverable.aheadOfLedger(foundVersion: 99, knownVersionCount: 2) = error else {
-                return XCTFail("expected .aheadOfLedger(foundVersion: 99, knownVersionCount: 2), got \(error)")
+            // 04-09-PLAN.md Task 3 added Migration0003CaptureDraft, so
+            // `GRDBLocalStore.migrations` now knows 3 versions, not 2.
+            guard case StoreUnrecoverable.aheadOfLedger(foundVersion: 99, knownVersionCount: 3) = error else {
+                return XCTFail("expected .aheadOfLedger(foundVersion: 99, knownVersionCount: 3), got \(error)")
             }
         }
     }
@@ -171,7 +174,8 @@ final class MigrationLedgerTests: XCTestCase {
 
         _ = try GRDBLocalStore(path: path)
         let rows = try readSchemaMigrationsRows(atPath: path)
-        XCTAssertEqual(rows.map { $0.version }, [1, 2])
+        // 04-09-PLAN.md Task 3 added Migration0003CaptureDraft.
+        XCTAssertEqual(rows.map { $0.version }, [1, 2, 3])
         XCTAssertEqual(rows.first { $0.version == 1 }?.appliedAt, versionOneBefore?.appliedAt)
         XCTAssertEqual(rows.first { $0.version == 1 }?.checksum, versionOneBefore?.checksum)
     }
