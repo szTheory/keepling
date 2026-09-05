@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 04
 current_phase_name: Native iPhone Daily Loop
 status: executing
-stopped_at: Completed 04-01-PLAN.md (contract normalization, apps/ios scaffold, capture tracer)
-last_updated: "2026-09-05T02:15:49.209Z"
+stopped_at: Completed 04-02-PLAN.md (storage durability gates G1-G6)
+last_updated: "2026-09-05T02:49:53.924Z"
 last_activity: 2026-09-04
 last_activity_desc: Phase KPL-04 execution started
-state_head: 17136efb1e1d84198710a489afae178e14f438c1
+state_head: 8e7cd7ef1ef88c81eaea96459507a8d92db521ef
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 82
-  completed_plans: 65
+  completed_plans: 66
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
-Plan: 2 of 17
+Plan: 3 of 17
 Total Plans in Phase: 17
 Status: Executing Phase KPL-04
 Last activity: 2026-09-04 — Phase KPL-04 execution started
@@ -209,6 +209,8 @@ Progress: [██████████] 100%
 - [Phase 04]: iOS carries all 11 desktop STRICT tables (D-35's 'nine tables' enumerates categories, not a literal count); visible_projection.sync_status keeps the desktop's literal 'saved_on_this_mac' stored value.
 - [Phase 04]: Nullable references in the OpenAPI contract use a dedicated Nullable<Base> schema (type: [X,'null']) instead of a oneOf/anyOf-null wrapper, because the wrapper form silently deletes the property from swift-openapi-generator output.
 - [Phase 04]: SyncFeedEnvelope.payload's oneOf is left without a formal discriminator after two real attempts proved broken/corrupting against the pinned swift-openapi-generator; disambiguation relies on disjoint required-field sets instead.
+- [Phase 04]: [Phase 04]: Fence checks moved to a pre-write dbPool.read check so a fenced write is observably zero commits AND zero rollbacks, not a rollback inside an opened transaction.
+- [Phase 04]: [Phase 04]: mutation_dependencies now receives real (often empty) writes inside acceptMutation's transaction as structural provenance only; ordering enforcement stays resource-key-based per the Phase 03 decision.
 
 ### Retained Research
 
@@ -244,8 +246,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-05T02:15:49.047Z
-**Stopped at:** Completed 04-01-PLAN.md (contract normalization, apps/ios scaffold, capture tracer)
+**Last session:** 2026-09-05T02:49:53.772Z
+**Stopped at:** Completed 04-02-PLAN.md (storage durability gates G1-G6)
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -315,6 +317,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-03 P26 | 2h 30min | 3 tasks | 1 files |
 | Phase KPL-03 P27 | 70min | 3 tasks | 2 files |
 | Phase 04 P01 | 300min | 3 tasks | 36 files |
+| Phase KPL-04 P02 | ~2h | 3 tasks | 15 files |
 
 ### Blockers
 
