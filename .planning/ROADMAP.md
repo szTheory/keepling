@@ -254,7 +254,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
-**Plans:** 14/17 plans executed
+**Plans:** 15/17 plans executed
 
 Plans:
 **Wave 1**
@@ -300,7 +300,7 @@ Plans:
 
 - [x] 04-13-PLAN.md — Accessibility as release evidence: audits on every screen, the Dynamic Type matrix, Reduce Motion, and focus safety.
 - [x] 04-14-PLAN.md — Deterministic state injection, the twelve-state matrix, and the held-out overflow and long-text suite.
-- [ ] 04-15-PLAN.md — Diagnostics that reconstruct a bad day without carrying task content, credentials, cursors, or fingerprints.
+- [x] 04-15-PLAN.md — Diagnostics that reconstruct a bad day without carrying task content, credentials, cursors, or fingerprints.
 
 **Wave 11** *(blocked on Wave 10 completion)*
 
