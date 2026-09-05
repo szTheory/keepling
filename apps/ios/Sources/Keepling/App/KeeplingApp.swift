@@ -36,9 +36,11 @@ struct KeeplingApp: App {
         }
         self.probeMode = nil
 
-        let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Keepling", isDirectory: true)
-        let path = directory.appendingPathComponent("keepling.sqlite").path
+        // `IntentStoreAccess.storePath()` (04-12-PLAN.md) is the single
+        // source of truth for this path -- shared with `CaptureTaskIntent`/
+        // `CompleteTaskIntent` so the app and every intent open the SAME
+        // process-wide store handle (D-37), never a second one.
+        let path = IntentStoreAccess.storePath()
         // UI-test-only reset hook: XCUITest launches a fresh app process
         // each run but the simulator's Application Support directory
         // persists across launches, so without this a UI test would
@@ -52,7 +54,7 @@ struct KeeplingApp: App {
         // this tracer -- D-22's "never present a false empty workspace"
         // rule means the app must not silently start with no store at all.
         // swiftlint:disable:next force_try
-        let openedStore = try! GRDBLocalStore(path: path)
+        let openedStore = try! IntentStoreAccess.sharedStore()
         store = openedStore
         let builtFacade = WorkspaceFacade(store: openedStore)
         facade = builtFacade
