@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 04
 current_phase_name: Native iPhone Daily Loop
 status: executing
-stopped_at: Completed KPL-04-11-PLAN.md
-last_updated: "2026-09-05T14:06:18.668Z"
+stopped_at: Completed 04-12-PLAN.md
+last_updated: "2026-09-05T14:28:54.433Z"
 last_activity: 2026-09-05
 last_activity_desc: Plan 04-06 complete; next plan 04-07
-state_head: 1439b5f131f034f50a0269f3a48945ff2d793c4b
+state_head: 4eb6eee475fb54de238d67cda5e52b3a1790124f
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 82
-  completed_plans: 75
+  completed_plans: 76
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
-Plan: 12 of 17
+Plan: 13 of 17
 Total Plans in Phase: 17
 Status: Executing Phase KPL-04
 Last activity: 2026-09-05 — Plan 04-06 complete (6 of 17)
@@ -259,8 +259,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-05T14:06:18.512Z
-**Stopped at:** Completed KPL-04-11-PLAN.md
+**Last session:** 2026-09-05T14:28:54.273Z
+**Stopped at:** Completed 04-12-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -340,6 +340,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-04 P09 | ~5h | 3 tasks | 22 files |
 | Phase KPL-04 P10 | 2h30m | 3 tasks | 17 files |
 | Phase KPL-04 P11 | 46min | 2 tasks | 17 files |
+| Phase KPL-04-native-iphone-daily-loop P12 | 55min | 2 tasks | 10 files |
 
 ### Blockers
 

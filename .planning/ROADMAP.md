@@ -294,7 +294,7 @@ Plans:
 
 **Wave 9** *(blocked on Wave 8 completion)*
 
-- [ ] 04-12-PLAN.md — Capture and Complete App Intents in the main target, sharing one store handle, with deferred surfaces provably absent.
+- [x] 04-12-PLAN.md — Capture and Complete App Intents in the main target, sharing one store handle, with deferred surfaces provably absent.
 
 **Wave 10** *(blocked on Wave 9 completion)*
 
