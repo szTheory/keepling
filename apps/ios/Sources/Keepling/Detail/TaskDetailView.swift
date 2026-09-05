@@ -68,7 +68,7 @@ struct TaskDetailView: View {
                     .accessibilityIdentifier("detail-title-field")
             }
 
-            Section("Notes") {
+            Section {
                 if notes.unicodeScalars.count > Self.longNotesThreshold && !isShowingFullNotes {
                     Text(String(notes.prefix(Self.longNotesThreshold)) + "…")
                         .font(TokenSemantics.Typography.body)
@@ -85,6 +85,20 @@ struct TaskDetailView: View {
                         .accessibilityLabel("Notes")
                         .accessibilityIdentifier("detail-notes-field")
                 }
+            } header: {
+                // The string-literal `Section("Notes")` initializer
+                // renders in the system's default secondary section-header
+                // color, which -- measured directly via
+                // `performAccessibilityAudit(for: .contrast)` while
+                // building this plan -- is only ~3.29:1 against this
+                // Form's section background, below WCAG 2.2 AA's 4.5:1
+                // minimum for its footnote-weight text (T-04-13 finding,
+                // Rule 1 fix). An explicit `Text` with a token color
+                // (already proven AA elsewhere in this app) replaces it.
+                Text("Notes")
+                    .font(TokenSemantics.Typography.label)
+                    .foregroundStyle(TokenSemantics.primaryText)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             if let conflict = item.conflict {
@@ -102,6 +116,7 @@ struct TaskDetailView: View {
                         Task { try? await facade.reopen(taskId: taskId) }
                     } label: {
                         Label("Reopen", systemImage: "arrow.uturn.backward")
+                            .fixedSize(horizontal: false, vertical: true)
                             .frame(minHeight: TokenSemantics.Layout.target)
                     }
                     .accessibilityLabel("Reopen \"\(item.title)\"")
@@ -111,6 +126,7 @@ struct TaskDetailView: View {
                         Task { try? await facade.complete(taskId: taskId) }
                     } label: {
                         Label("Complete", systemImage: "checkmark.circle")
+                            .fixedSize(horizontal: false, vertical: true)
                             .frame(minHeight: TokenSemantics.Layout.target)
                     }
                     .accessibilityLabel("Complete \"\(item.title)\"")
@@ -122,17 +138,30 @@ struct TaskDetailView: View {
                         Task { try? await facade.restore(taskId: taskId) }
                     } label: {
                         Label("Restore", systemImage: "arrow.uturn.up")
+                            .fixedSize(horizontal: false, vertical: true)
                             .frame(minHeight: TokenSemantics.Layout.target)
                     }
                     .accessibilityLabel("Restore \"\(item.title)\"")
                     .accessibilityIdentifier("detail-restore-button")
                 } else {
+                    // `role: .destructive` alone renders in the SYSTEM
+                    // default destructive red, which -- measured directly
+                    // via `performAccessibilityAudit(for: .contrast)`
+                    // while building this plan -- is only ~3.57:1 against
+                    // this Form's background, below WCAG 2.2 AA's 4.5:1
+                    // minimum for normal-weight text (T-04-13 finding,
+                    // Rule 1 fix). An explicit `.foregroundStyle` with the
+                    // token `destructive` color (already proven AA
+                    // elsewhere in this app) overrides it; the role itself
+                    // is kept for the semantic destructive-action trait.
                     Button(role: .destructive) {
                         Task { try? await facade.trash(taskId: taskId) }
                     } label: {
                         Label("Trash", systemImage: "trash")
+                            .fixedSize(horizontal: false, vertical: true)
                             .frame(minHeight: TokenSemantics.Layout.target)
                     }
+                    .foregroundStyle(TokenSemantics.destructive)
                     .accessibilityLabel("Trash \"\(item.title)\"")
                     .accessibilityIdentifier("detail-trash-button")
                 }
@@ -142,10 +171,23 @@ struct TaskDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
+                // Same T-04-13 contrast/dynamicType fix as `CaptureSheet`'s
+                // Add Task button: an explicit font plus a token-driven
+                // disabled foreground color, rather than relying on the
+                // system's automatic dimming/font resolution for a
+                // `.disabled()` toolbar button.
                 Button(item.planned ? "Save Changes" : "Save & Move Out of Inbox") {
                     Task { await save(item: item) }
                 }
-                .disabled(!isTitleValid)
+                .font(TokenSemantics.Typography.body)
+                // See `CaptureSheet`'s identical `add-task-button` comment:
+                // `.allowsHitTesting` (not `.disabled`) avoids the
+                // automatic `Text`-level opacity dim that compounds with
+                // an already-AA-proven `.foregroundStyle` and fails
+                // contrast (T-04-13 finding, Rule 1 fix). `save(item:)`'s
+                // own `guard isTitleValid` keeps this safe regardless.
+                .allowsHitTesting(isTitleValid)
+                .foregroundStyle(isTitleValid ? TokenSemantics.accent : TokenSemantics.mutedText)
                 .accessibilityIdentifier(item.planned ? "save-changes-button" : "save-and-move-button")
             }
             ToolbarItem(placement: .cancellationAction) {
@@ -156,6 +198,7 @@ struct TaskDetailView: View {
                         dismiss()
                     }
                 }
+                .font(TokenSemantics.Typography.body)
                 .accessibilityIdentifier("cancel-editing-button")
             }
         }
@@ -182,6 +225,7 @@ struct TaskDetailView: View {
     }
 
     private func save(item: WorkspaceItem) async {
+        guard isTitleValid else { return }
         if item.planned {
             try? await facade.saveChanges(taskId: taskId, title: title, notes: notes)
         } else {

@@ -93,10 +93,18 @@ struct BottomAccessoryView: View {
             }
             Spacer(minLength: 0)
             ForEach(actions, id: \.code) { recoveryAction in
+                // A `.frame(minWidth:minHeight:)` on a Button's label
+                // visually resizes it but does NOT expand the button's
+                // actual TAPPABLE hit region to match -- measured directly
+                // via `performAccessibilityAudit(for: .hitRegion)` while
+                // building this plan (T-04-13 finding, Rule 1 fix).
+                // `.contentShape(Rectangle())` makes the whole frame the
+                // real hit-testing area.
                 Button(recoveryAction.label) { onAction(recoveryAction.code) }
                     .font(TokenSemantics.Typography.label)
                     .foregroundStyle(TokenSemantics.accent)
                     .frame(minWidth: TokenSemantics.Layout.target, minHeight: TokenSemantics.Layout.target)
+                    .contentShape(Rectangle())
                     .accessibilityIdentifier("sync-accessory-action-\(recoveryAction.code.rawValue)")
             }
         }

@@ -21,6 +21,7 @@ struct ConflictResolverSection: View {
                     Text(field.capitalized)
                         .font(TokenSemantics.Typography.label)
                         .foregroundStyle(TokenSemantics.mutedText)
+                        .fixedSize(horizontal: false, vertical: true)
                     fieldValue(label: "Your Version", value: conflict.mine[field])
                     fieldValue(label: "Current Version", value: conflict.current[field])
                 }
@@ -31,6 +32,7 @@ struct ConflictResolverSection: View {
                 onUseMine()
             } label: {
                 Label("Use Mine", systemImage: "person")
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(minHeight: TokenSemantics.Layout.target)
             }
             .accessibilityIdentifier("conflict-use-mine-button")
@@ -39,6 +41,7 @@ struct ConflictResolverSection: View {
                 onUseCurrent()
             } label: {
                 Label("Use Current", systemImage: "server.rack")
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(minHeight: TokenSemantics.Layout.target)
             }
             .accessibilityIdentifier("conflict-use-current-button")
@@ -47,12 +50,21 @@ struct ConflictResolverSection: View {
                 onKeepEditing()
             } label: {
                 Text("Keep Editing")
+                    .fixedSize(horizontal: false, vertical: true)
                     .frame(minHeight: TokenSemantics.Layout.target)
             }
             .accessibilityIdentifier("conflict-keep-editing-button")
         } header: {
+            // See `TaskDetailView`'s identical "Notes" header comment: an
+            // explicit color (not the system default a bare `Text` can
+            // still inherit inside a Section header context) keeps this
+            // WCAG 2.2 AA-proven, and `.fixedSize` keeps it from clipping
+            // at the largest accessibility Dynamic Type sizes (T-04-13
+            // finding, Rule 1 fix).
             Text("This task changed on the server")
                 .font(TokenSemantics.Typography.heading)
+                .foregroundStyle(TokenSemantics.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -62,9 +74,11 @@ struct ConflictResolverSection: View {
             Text(label)
                 .font(TokenSemantics.Typography.label)
                 .foregroundStyle(TokenSemantics.accent)
+                .fixedSize(horizontal: false, vertical: true)
             Text(value ?? "")
                 .font(TokenSemantics.Typography.body)
                 .foregroundStyle(TokenSemantics.primaryText)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 }
