@@ -254,7 +254,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
-**Plans:** 4/17 plans executed
+**Plans:** 5/17 plans executed
 
 Plans:
 **Wave 1**
@@ -269,7 +269,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 04-05-PLAN.md — Wire transport: decode round-trip over every vector payload, unreachable-versus-refused classification, and hand-written mappers.
+- [x] 04-05-PLAN.md — Wire transport: decode round-trip over every vector payload, unreachable-versus-refused classification, and hand-written mappers.
 - [ ] 04-06-PLAN.md — Terminal settlement (G8), the durable unit and backup exclusion, and the restored-store replay-no-op fixture.
 
 **Wave 4** *(blocked on Wave 3 completion)*
