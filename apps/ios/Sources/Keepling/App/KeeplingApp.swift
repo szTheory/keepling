@@ -12,11 +12,19 @@ struct KeeplingApp: App {
     // resolving it first skips `GRDBLocalStore` entirely for probe runs.
     private let probeMode: AccessoryProbeMode?
     private let store: GRDBLocalStore?
+    // Non-nil only alongside `store` -- the tracer/probe modes above have
+    // nothing to sync, so there is no application/driver to construct
+    // (04-08-PLAN.md Task 3).
+    private let scenePhaseDriver: ScenePhaseDriver?
+    private let backgroundRefresh: BackgroundRefresh?
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         if let probeMode = AccessoryProbeMode(environment: ProcessInfo.processInfo.environment) {
             self.probeMode = probeMode
             self.store = nil
+            self.scenePhaseDriver = nil
+            self.backgroundRefresh = nil
             return
         }
         self.probeMode = nil
@@ -37,7 +45,31 @@ struct KeeplingApp: App {
         // this tracer -- D-22's "never present a false empty workspace"
         // rule means the app must not silently start with no store at all.
         // swiftlint:disable:next force_try
-        store = try! GRDBLocalStore(path: path)
+        let openedStore = try! GRDBLocalStore(path: path)
+        store = openedStore
+
+        // 04-08-PLAN.md Task 3: the scene-phase driver and background
+        // refresh handler both need a `KeeplingApplication`, which needs a
+        // `SyncPort`. Server discovery/sign-in wiring the driver reads a
+        // REAL base URL from is explicitly Plan 04-10's concern
+        // (04-07-SUMMARY.md's own disclosed boundary: `SignInFlow.swift` is
+        // not yet wired into root navigation). Until then, `KEEPLING_SERVER_URL`
+        // is read directly so the driver/handler are fully constructed and
+        // exercised whenever a base URL IS configured (e.g. local
+        // development), and are simply absent (never crash, never present
+        // a false workspace) when it is not.
+        if let urlString = ProcessInfo.processInfo.environment["KEEPLING_SERVER_URL"],
+           let baseURL = URL(string: urlString),
+           let adapter = try? KeeplingSyncAdapter(baseURL: baseURL) {
+            let application = KeeplingApplication(store: openedStore, syncPort: adapter)
+            scenePhaseDriver = ScenePhaseDriver(application: application)
+            let refresh = BackgroundRefresh(application: application)
+            refresh.register()
+            backgroundRefresh = refresh
+        } else {
+            scenePhaseDriver = nil
+            backgroundRefresh = nil
+        }
     }
 
     var body: some Scene {
@@ -47,6 +79,9 @@ struct KeeplingApp: App {
             } else {
                 RootView(store: store!)
             }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            scenePhaseDriver?.scenePhaseChanged(to: newPhase)
         }
     }
 }

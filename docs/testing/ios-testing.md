@@ -21,6 +21,9 @@ adding a file, never by editing the runner.
 | `vector-conformance` | `node tooling/verify-ios-phase.mjs --lane vector-conformance` | `KeeplingCoreTests` (`VectorConformanceTests`) | The Swift `SyncReducer`'s agreement with the Elixir reference model and the TypeScript desktop consumer on `packages/contracts/vectors/sync.json` |
 | `accessory-probe` | `node tooling/verify-ios-phase.mjs --lane accessory-probe` | `KeeplingUITests` (`AccessoryAbsenceProbeTests`) | Whether `tabViewBottomAccessory` can be made genuinely absent on this Mac's pinned SDK — measured on rendered geometry and hit-testability, never on text content, plus a permanent regression on the named achieving configuration |
 | `durability-posture` | `node tooling/verify-ios-phase.mjs --lane durability-posture` | `StorageTests` (`SettlementTests`, `DurableUnitTests`, `BackupReplayTests`, `DataProtectionTests`) | The Plan 04-06 D-04 G7/G8 durability-gate proof: full terminal-acknowledgement settlement (identity + fingerprint, canonical/conflict application, journal terminalization, projection recompute, exact outbox-row delete, all in one transaction), the db/-wal/-shm durable unit's all-or-none move/copy/delete, the D-09 hand-restored-store replay-no-op and account-namespace-fence adversarial fixture, and the G7 at-rest protection-class split between what the simulator proves and what only a physical device can |
+| `auth` | `node tooling/verify-ios-phase.mjs --lane auth` | `KeeplingCoreTests` (`DeviceGrantTests`, `CredentialStoreTests`, `NamespaceFencingTests`), `StorageTests` (`SignOutFenceTests`) | Plan 04-07's native device-grant PKCE identity: exchange/rotation, Keychain-only credential storage with a full-cycle leak scan, server-only namespace activation, account-switch fencing, and safe sign-out ordering |
+| `sync-pass` | `node tooling/verify-ios-phase.mjs --lane sync-pass` | `KeeplingCoreTests` (`SyncPassTests`) | Plan 04-08's bounded pull-before-push orchestrator: the three-state transmission machine (`queued` → `in_flight` → settled/`uncertain`, never back to `queued`), FIFO ordering within a resource key, concurrency-safe claiming (two concurrent passes against one row produce exactly one push), fence refusal before any request is built, and authentication-required handling with zero rows marked rejected |
+| `lifecycle` | `node tooling/verify-ios-phase.mjs --lane lifecycle` | `KeeplingCoreTests` (`BackgroundAccelerationTests`) | Plan 04-08's scene-phase/background-refresh proof: the background handler and the foreground driver call the IDENTICAL `runSyncPass` entry point, every supported behavior is correct with the background path disabled entirely, and a background expiration leaves every outbox row in a legal state |
 
 Run every lane (the phase gate, always comprehensive):
 
@@ -176,3 +179,84 @@ no-op — is what has to hold regardless:
   reappears under `apps/ios/Sources` — D-07's App Group storage hazard
   (RESEARCH.md Pitfall 4), guarded permanently rather than by code-review
   discipline alone.
+
+### D-22 Criterion 3 — background execution is an accelerator, never a correctness dependency (04-08-PLAN.md Task 3)
+
+**What is claimed:** the scene-phase driver (foreground: active/resume/
+reconnect) and the background refresh handler (`BackgroundRefresh`,
+registered against `BGTaskScheduler` under the
+`com.szTheory.keepling.sync-refresh` identifier) both call the IDENTICAL
+`KeeplingApplication.runSyncPass` entry point. There is no second,
+background-only reconciliation code path for the two triggers to drift
+from, and no supported behavior requires a background wake to become
+correct.
+
+**What is proven, and how:**
+
+- `BackgroundAccelerationTests.testBackgroundHandlerAndForegroundDriverCallTheSameRunSyncPassEntryPoint`
+  drives both `ScenePhaseDriver.triggerPass()` and
+  `BackgroundRefresh.handle(task:)` against ONE shared `KeeplingApplication`
+  instance wired to a counting `SyncPort` spy, and asserts the pull count
+  increments by exactly one per call through EITHER entry point — a
+  structural proof that both paths reach the same orchestrator method, not
+  an inference from reading the source.
+- `BackgroundAccelerationTests.testFullForegroundRestorationScenarioSucceedsWithBackgroundPathDisabledEntirely`
+  never constructs a `BackgroundRefresh` at all — launch, resume, and a
+  pre-existing non-empty outbox are all driven purely through
+  `ScenePhaseDriver`, and settle to completion with zero background
+  involvement of any kind. If this test passes with the background path
+  absent, background is genuinely an accelerator for every behavior this
+  phase supports.
+- `BackgroundAccelerationTests.testBackgroundExpirationLeavesEveryOutboxRowInALegalState`
+  suspends a push mid-flight (after the outbox row has already been
+  claimed to `in_flight`), fires the injected task's `expirationHandler`,
+  and asserts the row is never found back in `queued` — only `in_flight`
+  (cancellation is cooperative; the claim itself is the legal state) or,
+  if settlement raced ahead of cancellation, settled and removed. The
+  underlying transactional design (claim, then push, then settle, each its
+  own atomic step) is what makes this true regardless of exactly when the
+  process is killed — not a check made in the expiration handler itself.
+
+**The seam this required, and why:** `BGAppRefreshTask` has no public
+initializer, so `handle(task:)` takes `any BackgroundTaskHandling` (a
+protocol naming only `expirationHandler`/`setTaskCompleted(success:)`)
+rather than the concrete type — the same "protocol over the one
+non-mockable system API, injectable for tests" pattern this codebase
+already established for `KeychainQuerying` (04-07) and `ClientTransport`
+stubbing (04-05). A real `BGAppRefreshTask` conforms via a same-file
+`extension BGAppRefreshTask: BackgroundTaskHandling {}`, so production
+code is unaffected.
+
+**What is NOT asserted, and cannot be:** real `BGTaskScheduler` wake
+scheduling. Apple schedules a submitted `BGAppRefreshTaskRequest`
+opportunistically, based on system heuristics (device usage patterns,
+battery, background app refresh settings) this test target has no control
+over and no visibility into — there is no way to assert "the system woke
+this app in the background" as a repeatable, CI-safe test outcome. The
+documented manual diagnostic for a real device is invoking
+`-[BGTaskScheduler _simulateLaunchForTaskWithIdentifier:]` from an LLDB
+expression command after setting a breakpoint; this is a debugging aid a
+person runs by hand, not a gate any lane in `tooling/verify-ios-phase.mjs`
+exercises.
+
+### D-22 Criterion 2 — termination (04-08-PLAN.md Task 3, disclosed while touching the lifecycle claims)
+
+**What is claimed:** the app's durable state survives OS-terminated
+processes with no notice given beforehand.
+
+**What is proven, and how:** nothing in THIS plan's test suite induces a
+real jetsam (OS-initiated termination under memory pressure) — doing so
+requires either a real memory-pressure device state this test target
+cannot manufacture, or a private/undocumented API to simulate it. Instead,
+Plan 04-16's physical-device lane proves the STRICTER case: a
+signal-based hard kill (`SIGKILL`, which a jetsam termination is itself
+implemented as, from the process's own point of view — no cleanup code
+runs, no notification is delivered) on a real device, followed by a
+relaunch that restores correctly from the durable outbox. A process that
+survives a `SIGKILL` with no notice survives an OS-initiated jetsam with
+no notice too, since jetsam gives the process no more warning than
+`SIGKILL` does.
+
+**What is NOT asserted, and cannot be:** real jetsam under real memory
+pressure specifically (as opposed to the equivalent-or-stricter
+signal-based kill this codebase actually exercises).

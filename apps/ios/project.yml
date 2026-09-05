@@ -55,6 +55,18 @@ targets:
           - CFBundleURLName: com.szTheory.keepling.auth
             CFBundleURLSchemes:
               - keepling
+        # 04-08-PLAN.md Task 3: the background refresh task identifier and
+        # capability the scene-phase driver's background path uses to
+        # accelerate (never require) sync-pass correctness. D-44 keeps
+        # every other background/notification surface out of this phase --
+        # only the `fetch` background mode below is declared; no push
+        # entitlement, no other background mode, no permission-prompting
+        # notification framework, and no push-notification-service
+        # entitlement of any kind.
+        UIBackgroundModes:
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.szTheory.keepling.sync-refresh
 
   KeeplingCoreTests:
     type: bundle.unit-test
@@ -63,11 +75,22 @@ targets:
     sources:
       - path: Tests/KeeplingCoreTests
     dependencies:
-      - package: KeeplingCore
+      # 04-08-PLAN.md Task 3: BackgroundAccelerationTests exercises
+      # ScenePhaseDriver/BackgroundRefresh, which live in the Keepling app
+      # target (they import SwiftUI/BackgroundTasks, outside KeeplingCore's
+      # own "no UIKit, no SwiftUI" package constraint) -- mirrors
+      # AppIntentsTests' own host-app-linked test target below. Depending
+      # on `target: Keepling` ALONE (not also `package: KeeplingCore`
+      # directly) avoids linking KeeplingCore twice -- Keepling already
+      # depends on the package, so KeeplingCoreTests gets it transitively
+      # through the host-app link (`BUNDLE_LOADER`/`TEST_HOST` below).
+      - target: Keepling
     settings:
       base:
         SWIFT_VERSION: "6.3"
         GENERATE_INFOPLIST_FILE: YES
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Keepling.app/Keepling"
 
   StorageTests:
     type: bundle.unit-test
