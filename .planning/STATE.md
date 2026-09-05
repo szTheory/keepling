@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 04
 current_phase_name: Native iPhone Daily Loop
 status: executing
-stopped_at: Completed 04-13-PLAN.md
-last_updated: "2026-09-05T19:37:08.718Z"
+stopped_at: Completed 04-14-PLAN.md
+last_updated: "2026-09-05T23:08:25.061Z"
 last_activity: 2026-09-05
 last_activity_desc: Plan 04-06 complete; next plan 04-07
-state_head: 8e56a62a4f77533291c83c6df880398503a0b42b
+state_head: bccb95e80e263710a5022da512444e05d2e75270
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 82
-  completed_plans: 77
+  completed_plans: 78
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
-Plan: 14 of 17
+Plan: 15 of 17
 Total Plans in Phase: 17
 Status: Executing Phase KPL-04
 Last activity: 2026-09-05 — Plan 04-06 complete (6 of 17)
@@ -227,6 +227,9 @@ Progress: [████░░░░░░] 35%
 - [Phase 04]: hasFocus cannot observe @AccessibilityFocusState in this harness; FocusSafetyTests verifies a plain @State mirror of the app's own focus decision instead, deferring OS-level VoiceOver confirmation to Plan 04-16
 - [Phase 04]: New Task toolbar button's 42.67x36pt footprint at the largest accessibility category is a measured, disclosed system nav-bar layout floor, not a loosened threshold
 - [Phase 04]: Discard changes dialog excluded from DynamicTypeSnapshotTests' largest-accessibility-category full-inventory sweep, a measured single-screen single-extreme gap tied to cumulative Simulator load
+- [Phase 04]: State-injection seam construction-sites all thirteen presentation states, including .opening/.preparing/.offline/.localAcceptance which previously had derived copy but no render site anywhere in the app (Phase-3 O-46/O-47 lesson closed).
+- [Phase 04]: Every UI-test-only fixture hook in KeeplingApp.swift is enclosed in #if DEBUG, compiled out of Release entirely -- not merely gated by an environment-variable check.
+- [Phase 04]: ConflictResolverSection's unbounded .fixedSize(vertical: true) title-diff Text (no lineLimit) was a real overflow bug surfaced by the held-out 512-scalar fixture, fixed with an explicit lineLimit(6).
 
 ### Retained Research
 
@@ -262,8 +265,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-05T19:37:08.562Z
-**Stopped at:** Completed 04-13-PLAN.md
+**Last session:** 2026-09-05T23:08:24.903Z
+**Stopped at:** Completed 04-14-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -345,6 +348,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-04 P11 | 46min | 2 tasks | 17 files |
 | Phase KPL-04-native-iphone-daily-loop P12 | 55min | 2 tasks | 10 files |
 | Phase KPL-04 P13 | 195min | 3 tasks | 15 files |
+| Phase KPL-04 P14 | 5h40m | 2 tasks | 12 files |
 
 ### Blockers
 
