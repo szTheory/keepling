@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 04
 current_phase_name: Native iPhone Daily Loop
 status: executing
-stopped_at: Completed 04-06-PLAN.md
-last_updated: "2026-09-05T06:35:08.469Z"
-last_activity: 2026-09-04
+stopped_at: Completed 04-07-PLAN.md
+last_updated: "2026-09-05T07:09:19.986Z"
+last_activity: 2026-09-05
 last_activity_desc: Plan 04-06 complete; next plan 04-07
-state_head: 573bd0507f851dc24ef64bfc26d8f58400e5c69e
+state_head: 787a9259d62f79ba75af94f388936594491ad82c
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 82
-  completed_plans: 70
+  completed_plans: 71
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
-Plan: 7 of 17
+Plan: 8 of 17
 Total Plans in Phase: 17
 Status: Executing Phase KPL-04
 Last activity: 2026-09-05 — Plan 04-06 complete (6 of 17)
@@ -217,6 +217,8 @@ Progress: [████░░░░░░] 35%
 - [Phase 04]: The real bindNamespace/setSyncFence D-03 account-fencing trigger closes the gap 04-02's __test_setFence comment deferred to this plan; a hand-restored store now fences itself on account mismatch instead of only being simulatable via a test-only seam.
 - [Phase 04]: The acknowledgement validator stays strict at accepted/already_satisfied for a 200 answer; the conflict path enters settlement from the refusal classifier, not a widened success validator, so a 409 problem cannot be silently reclassified as success.
 - [Phase 04]: DurableUnit treats the db/-wal/-shm store files as one value with all-or-none move/copy/delete, preventing a partial filesystem operation from handing a restored store a database file with no matching WAL.
+- [Phase KPL-04]: iOS registers its own ASWebAuthenticationSession callback scheme (keeplingios://auth/callback), distinct from desktop's keepling:// scheme — A private-use scheme is first-come per-OS; sharing one across native client kinds has no benefit and complicates future clients
+- [Phase KPL-04]: GRDBLocalStore.snapshot()/syncState() are fence-gated but readyMutations() deliberately is not — Preserves 04-06's already-verified BackupReplayTests proof that reads ready rows to demonstrate the write path refuses per mutation
 
 ### Retained Research
 
@@ -252,8 +254,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-05T06:34:54.720Z
-**Stopped at:** Completed 04-06-PLAN.md
+**Last session:** 2026-09-05T07:09:10.123Z
+**Stopped at:** Completed 04-07-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -328,6 +330,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-04 P04 | ~2h | 2 tasks | 11 files |
 | Phase KPL-04 P05 | ~3h | 3 tasks | 12 files |
 | Phase KPL-04 P06 | ~2h | 2 tasks | 9 files |
+| Phase KPL-04 P07 | 2h | 3 tasks | 14 files |
 
 ### Blockers
 

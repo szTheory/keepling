@@ -254,7 +254,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
-**Plans:** 6/17 plans executed
+**Plans:** 7/17 plans executed
 
 Plans:
 **Wave 1**
@@ -274,7 +274,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 04-07-PLAN.md — Device-grant PKCE authentication, Keychain credentials, server-only namespace activation, and account fencing.
+- [x] 04-07-PLAN.md — Device-grant PKCE authentication, Keychain credentials, server-only namespace activation, and account fencing.
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
