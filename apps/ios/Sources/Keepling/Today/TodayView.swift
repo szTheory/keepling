@@ -11,8 +11,19 @@ struct TodayView: View {
     @Binding var path: NavigationPath
     @State private var isPresentingCapture = false
     @AccessibilityFocusState private var focusedElement: String?
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private static let headingFocusId = "today-heading"
+    /// Focus-safety-after-sheet-dismissal targets (04-UI-SPEC.md
+    /// Accessibility and Platform Contract, T-04-13-06): focus returns to
+    /// the control that presented the dismissed sheet. `new-task-button`
+    /// presents the capture sheet; `overflow-menu` (the "More" button) is
+    /// the always-present, persistent control a person actually taps to
+    /// reach the `Sync & Recovery` full-screen cover (D-39) -- the
+    /// specific menu ROW selected to open it closes with the menu itself
+    /// and is not a stable return target.
+    private static let newTaskButtonFocusId = "new-task-button-focus"
+    private static let overflowMenuFocusId = "overflow-menu-focus"
 
     private var items: [WorkspaceItem] { facade.todayItems }
 
@@ -52,6 +63,18 @@ struct TodayView: View {
                 .listStyle(.plain)
             }
         }
+        // SwiftUI's `.sheet` does NOT automatically remove the presenting
+        // content from the accessibility tree while the sheet is up --
+        // measured directly via `performAccessibilityAudit(for: [.contrast,
+        // .textClipped])` while building this plan: the audit flagged
+        // Today's own row/button text (visible only as a dimmed backdrop
+        // behind the capture sheet) as insufficient contrast and possibly
+        // clipped, findings that don't apply to genuinely visible,
+        // interactive content (T-04-13 finding, Rule 1 fix). Hiding this
+        // content from the accessibility tree while a sheet is presented
+        // also stops a Switch Control/VoiceOver user from navigating into
+        // a dimmed, non-interactive background.
+        .accessibilityHidden(isPresentingCapture)
         .background(TokenSemantics.canvas)
         .navigationTitle("Today")
         .accessibilityFocused($focusedElement, equals: Self.headingFocusId)
@@ -60,9 +83,27 @@ struct TodayView: View {
                 Button {
                     isPresentingCapture = true
                 } label: {
-                    Label("New Task", systemImage: "plus")
+                    // At an accessibility Dynamic Type size the "New Task"
+                    // text label competing with the overflow-menu button
+                    // for the nav bar's fixed toolbar width measurably
+                    // shrinks this button below the 44pt minimum hit
+                    // target (measured directly while building this plan,
+                    // T-04-13-02: 42.67pt at
+                    // `UICTContentSizeCategoryAccessibilityXXXL`) --
+                    // dropping to an icon-only label frees enough width for
+                    // the requested `.frame` minimum to actually be
+                    // honored. The accessible name is unaffected: `Label`
+                    // and `Image(systemName:)` both expose "New Task" via
+                    // this button's own accessibility label either way.
+                    if dynamicTypeSize.isAccessibilitySize {
+                        Image(systemName: "plus")
+                    } else {
+                        Label("New Task", systemImage: "plus")
+                    }
                 }
+                .accessibilityLabel("New Task")
                 .accessibilityIdentifier("new-task-button")
+                .accessibilityFocused($focusedElement, equals: Self.newTaskButtonFocusId)
                 .frame(minWidth: TokenSemantics.Layout.target, minHeight: TokenSemantics.Layout.target)
             }
             // D-39: a persistent `Sync & Recovery` overflow-menu row on
@@ -77,11 +118,13 @@ struct TodayView: View {
                     Button(SyncCopy.recoveryTitle) {
                         facade.openSyncRecovery()
                     }
+                    .accessibilityLabel("Open Sync & Recovery")
                     .accessibilityIdentifier("overflow-sync-recovery")
                 } label: {
                     Label("More", systemImage: "ellipsis.circle")
                 }
                 .accessibilityIdentifier("overflow-menu")
+                .accessibilityFocused($focusedElement, equals: Self.overflowMenuFocusId)
                 .frame(minWidth: TokenSemantics.Layout.target, minHeight: TokenSemantics.Layout.target)
             }
         }
@@ -90,6 +133,16 @@ struct TodayView: View {
             if let target = RowFocusSafety.focusTarget(old: old, new: new, headingId: Self.headingFocusId) {
                 focusedElement = target
             }
+        }
+        .onChange(of: isPresentingCapture) { wasPresented, isPresented in
+            // T-04-13-06: focus returns to the presenting control after
+            // the capture sheet dismisses (Add Task, Cancel, or a
+            // confirmed Discard Draft all route through this same
+            // `isPresented` flip).
+            if wasPresented, !isPresented { focusedElement = Self.newTaskButtonFocusId }
+        }
+        .onChange(of: facade.isSyncRecoveryPresented) { wasPresented, isPresented in
+            if wasPresented, !isPresented { focusedElement = Self.overflowMenuFocusId }
         }
         .sheet(isPresented: $isPresentingCapture) {
             CaptureSheet(facade: facade)

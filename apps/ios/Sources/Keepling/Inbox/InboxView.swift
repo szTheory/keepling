@@ -8,8 +8,14 @@ struct InboxView: View {
     @Binding var path: NavigationPath
     @State private var isPresentingCapture = false
     @AccessibilityFocusState private var focusedElement: String?
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     private static let headingFocusId = "inbox-heading"
+    /// See `TodayView`'s identical comment: focus safety after sheet
+    /// dismissal (T-04-13-06) returns to the always-present control that
+    /// presented the sheet.
+    private static let newTaskButtonFocusId = "new-task-button-focus"
+    private static let overflowMenuFocusId = "overflow-menu-focus"
 
     private var items: [WorkspaceItem] { facade.inboxItems }
 
@@ -44,6 +50,10 @@ struct InboxView: View {
                 .listStyle(.plain)
             }
         }
+        // See `TodayView`'s identical comment: hides this presenting
+        // content from the accessibility tree while the capture sheet is
+        // up (T-04-13 finding, Rule 1 fix).
+        .accessibilityHidden(isPresentingCapture)
         .background(TokenSemantics.canvas)
         .navigationTitle("Inbox")
         .accessibilityFocused($focusedElement, equals: Self.headingFocusId)
@@ -52,9 +62,19 @@ struct InboxView: View {
                 Button {
                     isPresentingCapture = true
                 } label: {
-                    Label("New Task", systemImage: "plus")
+                    // See `TodayView`'s identical comment: icon-only at an
+                    // accessibility Dynamic Type size keeps this button at
+                    // its full 44pt hit target rather than being squeezed
+                    // below it alongside the overflow-menu button.
+                    if dynamicTypeSize.isAccessibilitySize {
+                        Image(systemName: "plus")
+                    } else {
+                        Label("New Task", systemImage: "plus")
+                    }
                 }
+                .accessibilityLabel("New Task")
                 .accessibilityIdentifier("new-task-button")
+                .accessibilityFocused($focusedElement, equals: Self.newTaskButtonFocusId)
                 .frame(minWidth: TokenSemantics.Layout.target, minHeight: TokenSemantics.Layout.target)
             }
             // D-39: a persistent `Sync & Recovery` overflow-menu row on
@@ -70,11 +90,13 @@ struct InboxView: View {
                     Button(SyncCopy.recoveryTitle) {
                         facade.openSyncRecovery()
                     }
+                    .accessibilityLabel("Open Sync & Recovery")
                     .accessibilityIdentifier("overflow-sync-recovery")
                 } label: {
                     Label("More", systemImage: "ellipsis.circle")
                 }
                 .accessibilityIdentifier("overflow-menu")
+                .accessibilityFocused($focusedElement, equals: Self.overflowMenuFocusId)
                 .frame(minWidth: TokenSemantics.Layout.target, minHeight: TokenSemantics.Layout.target)
             }
         }
@@ -83,6 +105,12 @@ struct InboxView: View {
             if let target = RowFocusSafety.focusTarget(old: old, new: new, headingId: Self.headingFocusId) {
                 focusedElement = target
             }
+        }
+        .onChange(of: isPresentingCapture) { wasPresented, isPresented in
+            if wasPresented, !isPresented { focusedElement = Self.newTaskButtonFocusId }
+        }
+        .onChange(of: facade.isSyncRecoveryPresented) { wasPresented, isPresented in
+            if wasPresented, !isPresented { focusedElement = Self.overflowMenuFocusId }
         }
         .sheet(isPresented: $isPresentingCapture) {
             CaptureSheet(facade: facade)

@@ -52,7 +52,11 @@ final class AccessibilityAuditTests: XCTestCase {
     /// zero findings; each exclusion is scoped to the one screen and the
     /// specific types that screen's own disclosed limitation touches, never
     /// a broad carve-out.
-    private static func auditTypes(for screenName: String) -> XCUIAccessibilityAuditType {
+    /// `internal`, not `private`: `DynamicTypeSnapshotTests` reuses this
+    /// exact exclusion set (intersected with its own narrower type list)
+    /// rather than re-diagnosing the same measured SDK-level limitation a
+    /// second time under a different test file.
+    static func auditTypes(for screenName: String) -> XCUIAccessibilityAuditType {
         var types: XCUIAccessibilityAuditType = [
             .contrast, .dynamicType, .textClipped, .hitRegion,
             .elementDetection, .sufficientElementDescription, .trait,

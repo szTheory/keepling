@@ -56,10 +56,56 @@ struct SupportedScreen {
     /// list) -- all three lists render the identical
     /// `task-row-<title>` / `sync-recovery-row-title-<title>`-prefixed
     /// leaf identifier convention `TaskRow`/`SyncRecoverySheet` establish.
+    /// Taps `add-task-button` and confirms the Capture sheet actually
+    /// dismissed. Two DISTINCT, independently measured causes required two
+    /// distinct mitigations (T-04-13-02): at the largest accessibility
+    /// Dynamic Type category (1) the button's `Cell` can render PARTIALLY
+    /// below this `Form`'s fold (measured directly: a captured
+    /// `debugDescription` showed its frame's bottom edge past the window's
+    /// own height) -- `isHittable` reports `false` for a partially clipped
+    /// element, so this swipes up first until it reports `true`, never
+    /// tapping blind; and (2) `CaptureSheet.submit()`'s `.allowsHitTesting
+    /// (false)` async-capture dead zone can outlast a short wait under
+    /// this category's measurably heavier main-actor layout passes -- the
+    /// final wait below is generous for exactly that reason.
+    private static func submitCapture(_ app: XCUIApplication) {
+        let addTaskButton = app.buttons["add-task-button"]
+        let titleField = app.textFields["capture-title-field"]
+        XCTAssertTrue(addTaskButton.waitForExistence(timeout: 10))
+        for _ in 0..<5 where !addTaskButton.isHittable {
+            app.swipeUp()
+        }
+        XCTAssertTrue(addTaskButton.isHittable, "add-task-button never became hittable after scrolling")
+        addTaskButton.tap()
+        let stillPresented = titleField.waitForExistence(timeout: 30)
+        if stillPresented { print("=== DEBUG submitCapture failure, app hierarchy ===\n\(app.debugDescription)") }
+        XCTAssertFalse(stillPresented, "the Capture sheet did not dismiss after tapping Add Task")
+    }
+
     private static func tapFirstTaskRow(_ app: XCUIApplication, identifierPrefix: String = "task-row-") {
         let predicate = NSPredicate(format: "identifier BEGINSWITH %@", identifierPrefix)
         let row = app.staticTexts.matching(predicate).firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 10), "no row found with identifier prefix \(identifierPrefix)")
+        // At the largest accessibility Dynamic Type category the freshly
+        // captured row can render below the fold before this `List` has
+        // scrolled/settled -- measured directly while building this plan
+        // (T-04-13-02, same lazy-materialization pattern as the Conflict
+        // resolver's own scroll retry above). A short check first avoids
+        // an unconditional swipe disturbing the default-size case, where
+        // the row is already on screen.
+        if !row.waitForExistence(timeout: 3) {
+            // The sheet-dismiss-to-list-refresh transition itself can
+            // still be resolving at this content-size extreme (measured
+            // directly: a bare re-check with no settle came back with NO
+            // row in the tree at all, not merely one positioned off
+            // screen) -- a settle before the first swipe gives that
+            // transition a chance to finish landing the cell at all,
+            // and the swipes then handle genuine off-screen placement.
+            Thread.sleep(forTimeInterval: 1.0)
+            for _ in 0..<5 where !row.waitForExistence(timeout: 2) {
+                app.swipeUp()
+            }
+        }
+        XCTAssertTrue(row.waitForExistence(timeout: 15), "no row found with identifier prefix \(identifierPrefix)")
         row.tap()
     }
 
@@ -97,9 +143,7 @@ struct SupportedScreen {
                 XCTAssertTrue(titleField.waitForExistence(timeout: 10))
                 titleField.tap()
                 titleField.typeText("Task detail audit fixture")
-                let addTaskButton = app.buttons["add-task-button"]
-                XCTAssertTrue(addTaskButton.waitForExistence(timeout: 10))
-                addTaskButton.tap()
+                submitCapture(app)
                 tapFirstTaskRow(app)
                 XCTAssertTrue(app.textFields["detail-title-field"].waitForExistence(timeout: 10))
             }
@@ -132,7 +176,24 @@ struct SupportedScreen {
                 XCTAssertTrue(sheetRow.waitForExistence(timeout: 10), "Sync & Recovery must list the seeded conflict")
                 sheetRow.tap()
                 XCTAssertTrue(app.textFields["detail-title-field"].waitForExistence(timeout: 10), "the Sync & Recovery deep link must reach the task detail view")
-                XCTAssertTrue(app.buttons["conflict-use-mine-button"].waitForExistence(timeout: 10))
+                // At the largest accessibility Dynamic Type category the
+                // conflict section renders far enough down this `Form`
+                // that it is not yet materialized in the accessibility
+                // tree until scrolled near -- measured directly while
+                // building this plan (T-04-13-02, only reproduces at the
+                // accessibility-size extreme this navigate closure is now
+                // ALSO driven at by `DynamicTypeSnapshotTests`, never at
+                // the default size `AccessibilityAuditTests` alone
+                // exercised before). A short existence check first avoids
+                // an unconditional swipe disturbing the default-size case,
+                // where the button is already on screen.
+                let useMineButton = app.buttons["conflict-use-mine-button"]
+                if !useMineButton.waitForExistence(timeout: 3) {
+                    for _ in 0..<4 where !useMineButton.waitForExistence(timeout: 2) {
+                        app.swipeUp()
+                    }
+                }
+                XCTAssertTrue(useMineButton.waitForExistence(timeout: 10))
             }
         ),
         SupportedScreen(
@@ -181,9 +242,7 @@ struct SupportedScreen {
                 XCTAssertTrue(titleField.waitForExistence(timeout: 10))
                 titleField.tap()
                 titleField.typeText("Task to edit")
-                let addTaskButton = app.buttons["add-task-button"]
-                XCTAssertTrue(addTaskButton.waitForExistence(timeout: 10))
-                addTaskButton.tap()
+                submitCapture(app)
                 tapFirstTaskRow(app)
                 let detailTitleField = app.textFields["detail-title-field"]
                 XCTAssertTrue(detailTitleField.waitForExistence(timeout: 10))
