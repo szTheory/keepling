@@ -808,14 +808,21 @@ export interface components {
             /** @enum {string} */
             readonly type: "user" | "agent";
         };
+        /** @description D-13 named discriminated union of the six per-field activity-change shapes carried by ActivityItem.changes. Extracted from an inline `items: oneOf: [...]` into a named schema so the shared `kind` string constant on every variant can serve as a real OpenAPI discriminator (each variant already declares `kind` as a `const`, so this satisfies the specification's "discriminator property MUST be found in the child schema" requirement, unlike SyncFeedEnvelope.payload below). */
+        readonly ActivityChange: components["schemas"]["ActivityDateChange"] | components["schemas"]["ActivityInstantChange"] | components["schemas"]["ActivityOrganizationChange"] | components["schemas"]["ActivityOrganizationsChange"] | components["schemas"]["ActivityStateChange"] | components["schemas"]["ActivityTextChange"];
         /** @description Opaque HMAC-authenticated account/task/revision-bound keyset cursor. */
         readonly ActivityCursor: string;
         readonly ActivityDateChange: {
             /** @enum {string} */
             readonly field: "deadline_on" | "planned_on";
-            /** @constant */
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             readonly kind: "date";
+            /** Format: date */
             readonly new: string | null;
+            /** Format: date */
             readonly old: string | null;
         };
         /** Format: int64 */
@@ -823,9 +830,14 @@ export interface components {
         readonly ActivityInstantChange: {
             /** @enum {string} */
             readonly field: "completed_at" | "trashed_at";
-            /** @constant */
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             readonly kind: "instant";
+            /** Format: date-time */
             readonly new: string | null;
+            /** Format: date-time */
             readonly old: string | null;
         };
         readonly ActivityItem: {
@@ -833,7 +845,7 @@ export interface components {
             readonly accepted_at: string;
             readonly activity_id: components["schemas"]["ActivityIdentity"];
             readonly actor: components["schemas"]["ActivityActor"];
-            readonly changes: readonly (components["schemas"]["ActivityDateChange"] | components["schemas"]["ActivityInstantChange"] | components["schemas"]["ActivityOrganizationChange"] | components["schemas"]["ActivityOrganizationsChange"] | components["schemas"]["ActivityStateChange"] | components["schemas"]["ActivityTextChange"])[];
+            readonly changes: readonly components["schemas"]["ActivityChange"][];
             /** @enum {string} */
             readonly client_kind: "web" | "electron" | "iphone" | "mcp";
             readonly from_revision: components["schemas"]["Revision"] | null;
@@ -852,7 +864,10 @@ export interface components {
         readonly ActivityOrganizationChange: {
             /** @constant */
             readonly field: "project";
-            /** @constant */
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             readonly kind: "organization";
             readonly new: components["schemas"]["TaskOrganizationReference"] | null;
             readonly old: components["schemas"]["TaskOrganizationReference"] | null;
@@ -860,7 +875,10 @@ export interface components {
         readonly ActivityOrganizationsChange: {
             /** @constant */
             readonly field: "tags";
-            /** @constant */
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             readonly kind: "organizations";
             readonly new: readonly components["schemas"]["TaskOrganizationReference"][];
             readonly old: readonly components["schemas"]["TaskOrganizationReference"][];
@@ -874,7 +892,10 @@ export interface components {
         readonly ActivityStateChange: {
             /** @enum {string} */
             readonly field: "inbox_state";
-            /** @constant */
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             readonly kind: "state";
             readonly new: string | null;
             readonly old: string | null;
@@ -882,7 +903,10 @@ export interface components {
         readonly ActivityTextChange: {
             /** @enum {string} */
             readonly field: "notes" | "title";
-            /** @constant */
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
             readonly kind: "text";
             readonly new: string | null;
             readonly old: string | null;
@@ -935,6 +959,7 @@ export interface components {
         readonly CompatibilityRecoveryCode: "continue" | "client_update_available" | "client_upgrade_required" | "server_upgrade_required";
         readonly CompatibilityResponse: {
             readonly compatibility_state: components["schemas"]["CompatibilityTrustState"];
+            /** Format: date-time */
             readonly deprecation_deadline: string | null;
             /** @constant */
             readonly pending_intent: "preserved_locally";
@@ -1122,6 +1147,11 @@ export interface components {
             readonly organizations: readonly components["schemas"]["OrganizationSnapshot"][];
         };
         readonly PersistedConflict: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            readonly entity_type: "conflict";
             readonly fields: readonly components["schemas"]["ConflictField"][];
             readonly id: components["schemas"]["ConflictIdentity"];
             readonly latest_revision: components["schemas"]["Revision"];
@@ -1271,19 +1301,31 @@ export interface components {
         readonly SyncCollectionTombstone: {
             /** @enum {string} */
             readonly collection: "task_project" | "task_tags";
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            readonly entity_type: "collection_membership";
             readonly organization_id: components["schemas"]["OrganizationIdentity"];
             readonly task_id: components["schemas"]["TaskIdentity"];
         };
         readonly SyncCommandOutcomePayload: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            readonly entity_type: "command";
             readonly result: components["schemas"]["MutationResult"];
             readonly status: number;
         };
         /** @description Opaque authenticated feed or bootstrap position bound to the server-derived installation namespace. */
         readonly SyncCursor: string;
         readonly SyncFeedEnvelope: {
+            /** Format: uuid */
             readonly entity_id: string | null;
             readonly entity_revision: components["schemas"]["Revision"] | null;
-            readonly entity_type: ("command" | "task" | "organization" | "conflict" | "collection_membership" | "undo") | null;
+            /** @enum {string|null} */
+            readonly entity_type: "command" | "task" | "organization" | "conflict" | "collection_membership" | "undo" | null;
             /** Format: date-time */
             readonly inserted_at: string;
             /** @enum {string} */
@@ -1302,7 +1344,13 @@ export interface components {
         /** @enum {string} */
         readonly SynchronizationTrustState: "starting" | "catching_up" | "ready" | "stale_last_good" | "retryable_failure";
         readonly SyncOrganizationSnapshot: {
+            /** Format: date-time */
             readonly archived_at: string | null;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            readonly entity_type: "organization";
             readonly id: components["schemas"]["OrganizationIdentity"];
             readonly kind: components["schemas"]["OrganizationKind"];
             readonly name: components["schemas"]["OrganizationName"];
@@ -1316,8 +1364,14 @@ export interface components {
         readonly SyncTaskSnapshot: {
             /** Format: date-time */
             readonly captured_at: string;
+            /** Format: date-time */
             readonly completed_at: string | null;
             readonly deadline_on: components["schemas"]["NullableCivilDate"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            readonly entity_type: "task";
             readonly id: components["schemas"]["TaskIdentity"];
             /** @enum {string} */
             readonly inbox_state: "inbox" | "clarified";
@@ -1327,9 +1381,15 @@ export interface components {
             readonly revision: components["schemas"]["Revision"];
             readonly tag_ids: readonly components["schemas"]["OrganizationIdentity"][];
             readonly title: string;
+            /** Format: date-time */
             readonly trashed_at: string | null;
         };
         readonly SyncUndoMetadata: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            readonly entity_type: "undo";
             /** Format: date-time */
             readonly expires_at: string;
             readonly label: string;
@@ -1360,6 +1420,7 @@ export interface components {
         readonly TaskSnapshot: {
             /** Format: date-time */
             readonly captured_at: string;
+            /** Format: date-time */
             readonly completed_at: string | null;
             readonly deadline_on: components["schemas"]["NullableCivilDate"];
             readonly id: components["schemas"]["TaskIdentity"];
@@ -1371,6 +1432,7 @@ export interface components {
             readonly revision: components["schemas"]["Revision"];
             readonly tags: readonly components["schemas"]["TaskOrganizationReference"][];
             readonly title: string;
+            /** Format: date-time */
             readonly trashed_at: string | null;
         };
         /** @description Opaque HMAC-authenticated account/view/revision-bound complete keyset. */
@@ -1455,7 +1517,8 @@ export interface components {
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             /** @enum {string} */
             readonly outcome: "already_applied" | "expired" | "stale" | "uncertain" | "unknown";
-            readonly recovery_action: ("check_mutation_result" | "review_latest_task") | null;
+            /** @enum {string|null} */
+            readonly recovery_action: "check_mutation_result" | "review_latest_task" | null;
             readonly retryable: boolean;
             readonly title: string;
         };

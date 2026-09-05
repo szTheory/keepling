@@ -1446,7 +1446,7 @@ components:
           items:
             $ref: '#/components/schemas/SyncFeedEnvelope'
         coverage_cursor:
-          anyOf:
+          oneOf:
             - $ref: '#/components/schemas/SyncCursor'
             - type: 'null'
         has_more:
@@ -1466,19 +1466,15 @@ components:
         - sequence
       properties:
         entity_id:
-          anyOf:
-            - type: string
-              format: uuid
-            - type: 'null'
+          type: [string, 'null']
+          format: uuid
         entity_revision:
-          anyOf:
+          oneOf:
             - $ref: '#/components/schemas/Revision'
             - type: 'null'
         entity_type:
-          anyOf:
-            - type: string
-              enum: [command, task, organization, conflict, collection_membership, undo]
-            - type: 'null'
+          type: [string, 'null']
+          enum: [command, task, organization, conflict, collection_membership, undo, null]
         inserted_at:
           type: string
           format: date-time
@@ -1491,6 +1487,34 @@ components:
           type: integer
           minimum: 0
         payload:
+          # D-13: the tag that actually distinguishes these six shapes is a
+          # sibling property on SyncFeedEnvelope itself (not a field inside
+          # each payload variant), so this discriminator is declared against
+          # that envelope-level property rather than a property physically
+          # present in every referenced schema. `entity_type` (not the
+          # sibling `kind` field) is used as propertyName specifically
+          # because `kind` already exists as a REAL, differently-typed field
+          # on SyncOrganizationSnapshot (an OrganizationKind enum, e.g.
+          # "personal"/"team") -- pointing the discriminator mapping at
+          # `kind` was tried first and rejected after regeneration showed
+          # openapi-typescript overwriting that real field's type with the
+          # literal "organization_snapshot", which would have silently
+          # corrupted an unrelated, already-shipped field. `entity_type`
+          # carries the same six-way tag semantics (order-correspondent with
+          # `kind`'s enum) and collides with no existing property name on any
+          # of the six variants, so regeneration only ADDS a new field,
+          # never overwrites one. This still closes T-04-01-01
+          # (SyncTaskSnapshot vs SyncOrganizationSnapshot are structurally
+          # overlapping and would otherwise decode first-match-wins):
+          # swift-openapi-generator's discriminator mapping lets a decoder
+          # that already has `entity_type` in hand route directly to the
+          # correct variant instead of probing each ref in list order.
+          # Recorded explicitly in the SUMMARY, including the residual risk
+          # that the generated TypeScript now types each payload variant as
+          # if it carries its own `entity_type` field, when in the real wire
+          # response that tag lives only on the enclosing envelope --
+          # existing consumers were grepped and none read `payload.entity_type`
+          # today, but a future consumer must not be written as if it can.
           oneOf:
             - $ref: '#/components/schemas/SyncCommandOutcomePayload'
             - $ref: '#/components/schemas/SyncTaskSnapshot'
@@ -1498,6 +1522,15 @@ components:
             - $ref: '#/components/schemas/PersistedConflict'
             - $ref: '#/components/schemas/SyncCollectionTombstone'
             - $ref: '#/components/schemas/SyncUndoMetadata'
+          discriminator:
+            propertyName: entity_type
+            mapping:
+              command: '#/components/schemas/SyncCommandOutcomePayload'
+              task: '#/components/schemas/SyncTaskSnapshot'
+              organization: '#/components/schemas/SyncOrganizationSnapshot'
+              conflict: '#/components/schemas/PersistedConflict'
+              collection_membership: '#/components/schemas/SyncCollectionTombstone'
+              undo: '#/components/schemas/SyncUndoMetadata'
         sequence:
           type: integer
           format: int64
@@ -1520,7 +1553,8 @@ components:
       properties:
         captured_at: {type: string, format: date-time}
         completed_at:
-          anyOf: [{type: string, format: date-time}, {type: 'null'}]
+          type: [string, 'null']
+          format: date-time
         deadline_on:
           $ref: '#/components/schemas/NullableCivilDate'
         id:
@@ -1530,7 +1564,9 @@ components:
         planned_on:
           $ref: '#/components/schemas/NullableCivilDate'
         project_id:
-          anyOf: [{$ref: '#/components/schemas/OrganizationIdentity'}, {type: 'null'}]
+          oneOf:
+            - $ref: '#/components/schemas/OrganizationIdentity'
+            - type: 'null'
         revision:
           $ref: '#/components/schemas/Revision'
         tag_ids:
@@ -1539,14 +1575,16 @@ components:
           items: {$ref: '#/components/schemas/OrganizationIdentity'}
         title: {type: string}
         trashed_at:
-          anyOf: [{type: string, format: date-time}, {type: 'null'}]
+          type: [string, 'null']
+          format: date-time
     SyncOrganizationSnapshot:
       type: object
       additionalProperties: false
       required: [archived_at, id, kind, name, revision]
       properties:
         archived_at:
-          anyOf: [{type: string, format: date-time}, {type: 'null'}]
+          type: [string, 'null']
+          format: date-time
         id: {$ref: '#/components/schemas/OrganizationIdentity'}
         kind: {$ref: '#/components/schemas/OrganizationKind'}
         name: {$ref: '#/components/schemas/OrganizationName'}
@@ -1577,7 +1615,9 @@ components:
           items: {$ref: '#/components/schemas/SyncBootstrapEntity'}
         high_water: {$ref: '#/components/schemas/SyncPosition'}
         next_cursor:
-          anyOf: [{$ref: '#/components/schemas/SyncCursor'}, {type: 'null'}]
+          oneOf:
+            - $ref: '#/components/schemas/SyncCursor'
+            - type: 'null'
     SyncBootstrapEntity:
       type: object
       additionalProperties: false
@@ -1612,10 +1652,8 @@ components:
         compatibility_state:
           $ref: '#/components/schemas/CompatibilityTrustState'
         deprecation_deadline:
-          anyOf:
-            - type: string
-              format: date-time
-            - type: 'null'
+          type: [string, 'null']
+          format: date-time
         pending_intent:
           type: string
           const: preserved_locally
@@ -1641,10 +1679,8 @@ components:
         schema_range:
           $ref: '#/components/schemas/CompatibilityRange'
         selected_protocol_train:
-          anyOf:
-            - type: integer
-              minimum: 0
-            - type: 'null'
+          type: [integer, 'null']
+          minimum: 0
         server_release:
           type: string
           minLength: 1
@@ -1889,6 +1925,31 @@ components:
           enum:
             - user
             - agent
+    ActivityChange:
+      description: >-
+        D-13 named discriminated union of the six per-field activity-change
+        shapes carried by ActivityItem.changes. Extracted from an inline
+        `items: oneOf: [...]` into a named schema so the shared `kind` string
+        constant on every variant can serve as a real OpenAPI discriminator
+        (each variant already declares `kind` as a `const`, so this satisfies
+        the specification's "discriminator property MUST be found in the
+        child schema" requirement, unlike SyncFeedEnvelope.payload below).
+      oneOf:
+        - $ref: '#/components/schemas/ActivityDateChange'
+        - $ref: '#/components/schemas/ActivityInstantChange'
+        - $ref: '#/components/schemas/ActivityOrganizationChange'
+        - $ref: '#/components/schemas/ActivityOrganizationsChange'
+        - $ref: '#/components/schemas/ActivityStateChange'
+        - $ref: '#/components/schemas/ActivityTextChange'
+      discriminator:
+        propertyName: kind
+        mapping:
+          date: '#/components/schemas/ActivityDateChange'
+          instant: '#/components/schemas/ActivityInstantChange'
+          organization: '#/components/schemas/ActivityOrganizationChange'
+          organizations: '#/components/schemas/ActivityOrganizationsChange'
+          state: '#/components/schemas/ActivityStateChange'
+          text: '#/components/schemas/ActivityTextChange'
     ActivityCursor:
       type: string
       minLength: 1
@@ -1912,15 +1973,11 @@ components:
           type: string
           const: date
         new:
-          anyOf:
-            - type: string
-              format: date
-            - type: 'null'
+          type: [string, 'null']
+          format: date
         old:
-          anyOf:
-            - type: string
-              format: date
-            - type: 'null'
+          type: [string, 'null']
+          format: date
     ActivityIdentity:
       type: integer
       format: int64
@@ -1943,15 +2000,11 @@ components:
           type: string
           const: instant
         new:
-          anyOf:
-            - type: string
-              format: date-time
-            - type: 'null'
+          type: [string, 'null']
+          format: date-time
         old:
-          anyOf:
-            - type: string
-              format: date-time
-            - type: 'null'
+          type: [string, 'null']
+          format: date-time
     ActivityItem:
       type: object
       additionalProperties: false
@@ -1981,13 +2034,7 @@ components:
           type: array
           minItems: 1
           items:
-            oneOf:
-              - $ref: '#/components/schemas/ActivityDateChange'
-              - $ref: '#/components/schemas/ActivityInstantChange'
-              - $ref: '#/components/schemas/ActivityOrganizationChange'
-              - $ref: '#/components/schemas/ActivityOrganizationsChange'
-              - $ref: '#/components/schemas/ActivityStateChange'
-              - $ref: '#/components/schemas/ActivityTextChange'
+            $ref: '#/components/schemas/ActivityChange'
         client_kind:
           type: string
           enum:
@@ -1996,7 +2043,7 @@ components:
             - iphone
             - mcp
         from_revision:
-          anyOf:
+          oneOf:
             - $ref: '#/components/schemas/Revision'
             - type: 'null'
         mutation_id:
@@ -2029,7 +2076,7 @@ components:
             - task_restored
             - task_undo_applied
         undone_activity_id:
-          anyOf:
+          oneOf:
             - $ref: '#/components/schemas/ActivityIdentity'
             - type: 'null'
         version:
@@ -2051,11 +2098,11 @@ components:
           type: string
           const: organization
         new:
-          anyOf:
+          oneOf:
             - $ref: '#/components/schemas/TaskOrganizationReference'
             - type: 'null'
         old:
-          anyOf:
+          oneOf:
             - $ref: '#/components/schemas/TaskOrganizationReference'
             - type: 'null'
     ActivityOrganizationsChange:
@@ -2099,7 +2146,7 @@ components:
           items:
             $ref: '#/components/schemas/ActivityItem'
         next_cursor:
-          anyOf:
+          oneOf:
             - $ref: '#/components/schemas/ActivityCursor'
             - type: 'null'
     ActivityStateChange:
@@ -2119,13 +2166,9 @@ components:
           type: string
           const: state
         new:
-          anyOf:
-            - type: string
-            - type: 'null'
+          type: [string, 'null']
         old:
-          anyOf:
-            - type: string
-            - type: 'null'
+          type: [string, 'null']
     ActivityTextChange:
       type: object
       additionalProperties: false
@@ -2144,13 +2187,9 @@ components:
           type: string
           const: text
         new:
-          anyOf:
-            - type: string
-            - type: 'null'
+          type: [string, 'null']
         old:
-          anyOf:
-            - type: string
-            - type: 'null'
+          type: [string, 'null']
     AssignTaskOrganizationsCommand:
       type: object
       additionalProperties: false
@@ -2414,11 +2453,11 @@ components:
           items:
             $ref: '#/components/schemas/TaskViewItem'
         next_cursor:
-          anyOf:
+          oneOf:
             - $ref: '#/components/schemas/TaskViewCursor'
             - type: 'null'
         order_revision:
-          anyOf:
+          oneOf:
             - $ref: '#/components/schemas/Revision'
             - type: 'null'
         view:
@@ -2522,22 +2561,16 @@ components:
         - mine
       properties:
         base:
-          anyOf:
-            - type: string
-            - type: 'null'
+          type: [string, 'null']
         current:
-          anyOf:
-            - type: string
-            - type: 'null'
+          type: [string, 'null']
         field:
           type: string
           enum:
             - notes
             - title
         mine:
-          anyOf:
-            - type: string
-            - type: 'null'
+          type: [string, 'null']
     PersistedConflict:
       type: object
       additionalProperties: false
@@ -2687,12 +2720,11 @@ components:
             - uncertain
             - unknown
         recovery_action:
-          anyOf:
-            - type: string
-              enum:
+          type: [string, 'null']
+          enum:
                 - check_mutation_result
                 - review_latest_task
-            - type: 'null'
+                - null
         retryable:
           type: boolean
         title:
@@ -2782,7 +2814,7 @@ components:
         - tag_ids
       properties:
         project_id:
-          anyOf:
+          oneOf:
             - $ref: '#/components/schemas/OrganizationIdentity'
             - type: 'null'
         tag_ids:
@@ -3123,7 +3155,7 @@ components:
       format: date
       description: Canonical civil date with no time or device-zone interpretation.
     NullableCivilDate:
-      anyOf:
+      oneOf:
         - $ref: '#/components/schemas/CivilDate'
         - type: 'null'
     TaskDateValues:
@@ -3157,10 +3189,8 @@ components:
           type: string
           format: date-time
         completed_at:
-          anyOf:
-            - type: string
-              format: date-time
-            - type: 'null'
+          type: [string, 'null']
+          format: date-time
         deadline_on:
           $ref: '#/components/schemas/NullableCivilDate'
         id:
@@ -3175,7 +3205,7 @@ components:
         planned_on:
           $ref: '#/components/schemas/NullableCivilDate'
         project:
-          anyOf:
+          oneOf:
             - $ref: '#/components/schemas/TaskOrganizationReference'
             - type: 'null'
         revision:
@@ -3187,10 +3217,8 @@ components:
         title:
           type: string
         trashed_at:
-          anyOf:
-            - type: string
-              format: date-time
-            - type: 'null'
+          type: [string, 'null']
+          format: date-time
     TaskOrganizationReference:
       type: object
       additionalProperties: false
