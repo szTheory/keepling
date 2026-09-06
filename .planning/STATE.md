@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 04
 current_phase_name: Native iPhone Daily Loop
 status: executing
-stopped_at: Completed 04-15-PLAN.md
-last_updated: "2026-09-05T23:36:21.438Z"
+stopped_at: Completed 04-17-PLAN.md
+last_updated: "2026-09-06T01:10:26.309Z"
 last_activity: 2026-09-05
 last_activity_desc: Plan 04-06 complete; next plan 04-07
-state_head: 11c7407aac60dedf77cde658a06ce1ff1740e224
+state_head: b3d539953d0dcbedefa820cd711d3e7d260a728a
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 82
-  completed_plans: 79
+  completed_plans: 80
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
-Plan: 16 of 17
+Plan: 17 of 17
 Total Plans in Phase: 17
 Status: Executing Phase KPL-04
 Last activity: 2026-09-05 — Plan 04-06 complete (6 of 17)
@@ -232,6 +232,8 @@ Progress: [████░░░░░░] 35%
 - [Phase 04]: ConflictResolverSection's unbounded .fixedSize(vertical: true) title-diff Text (no lineLimit) was a real overflow bug surfaced by the held-out 512-scalar fixture, fixed with an explicit lineLimit(6).
 - [Phase 04]: 04-15: DiagnosticEvent is closed to UUID/enum fields only (no String), so a bad-day sync log is reconstructable over USB with no task content, credential, cursor, or fingerprint ever representable. — D-23 diagnosability and privacy halves are both satisfied structurally by the type, not by convention.
 - [Phase 04]: 04-15: Diagnostic instrumentation lives at the same KeeplingApplication.runSyncPass/GRDBLocalStore call sites that already decide a transition, reusing IntentPrivacyTests' real-value (never pattern) leak-scan discipline for the log, export bundle, Inspect presentation, and announcements. — Avoids a parallel notion of what is 'sensitive'; keeps the diagnostic vocabulary keyed by real production decisions.
+- [Phase 04]: Device lane reports BLOCKED honestly rather than being special-cased out; the aggregate iOS gate currently exits non-zero on purpose because Plan 04-16's physical-device evidence was never produced.
+- [Phase 04]: IOS-04 unchecked (not 'complete with disclosure') because its own text names a physical iPhone and zero device evidence exists at all; IOS-01..03 checked with disclosure since their claims are comprehensively proven on the Simulator.
 
 ### Retained Research
 
@@ -267,8 +269,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-05T23:36:03.903Z
-**Stopped at:** Completed 04-15-PLAN.md
+**Last session:** 2026-09-06T01:10:18.538Z
+**Stopped at:** Completed 04-17-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -352,6 +354,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-04 P13 | 195min | 3 tasks | 15 files |
 | Phase KPL-04 P14 | 5h40m | 2 tasks | 12 files |
 | Phase KPL-04 P15 | 65min | 2 tasks | 9 files |
+| Phase KPL-04 P17 | ~3h10m | 2 tasks | 7 files |
 
 ### Blockers
 

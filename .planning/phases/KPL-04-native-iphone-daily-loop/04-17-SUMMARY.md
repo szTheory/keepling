@@ -230,3 +230,7 @@ None - no external service configuration required by this plan. (Plan 04-16's us
 ---
 *Phase: KPL-04-native-iphone-daily-loop*
 *Completed: 2026-09-05*
+
+## Self-Check: PASSED
+
+All 8 key files confirmed present on disk (`tooling/verify-ios-phase.mjs`, `tooling/ios-lanes/device.mjs`, `tooling/ios-lanes/README.md`, `tooling/ios-lanes/tracer-e2e.mjs`, `docs/testing/ios-testing.md`, `apps/ios/README.md`, `.planning/REQUIREMENTS.md`, this SUMMARY). All 4 task/deviation/summary commit hashes (`ad6c9be`, `b8b5a78`, `f5eb862`, `b3d5399`) confirmed present in `git log`.
