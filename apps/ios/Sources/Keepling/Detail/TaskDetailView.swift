@@ -101,6 +101,45 @@ struct TaskDetailView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
+            // Today is one of the two locked destinations (D-25), and it
+            // has to be reachable AFTER capture, not only from
+            // `CaptureSheet` -- a task filed into the Inbox yesterday must
+            // be movable onto Today when you open it. Deliberately mirrors
+            // `CaptureSheet`'s control: same `add-to-today-toggle`
+            // identifier, same explicit token colors, same
+            // `buttonStyle(.plain)` over a `Toggle`. The styling is not
+            // incidental -- the system `Toggle` label and the automatic
+            // `.disabled()` dim both render below WCAG 2.2 AA in a Form
+            // row (T-04-13 findings), and this shape is already
+            // contrast-proven in the capture path.
+            //
+            // Trashed tasks are excluded: planning something that is in the
+            // Trash onto Today would put a row on a locked destination that
+            // the Today query does not return, which reads as data loss.
+            if !item.isTrashed {
+                Section {
+                    Button {
+                        Task { try? await facade.planForToday(taskId: taskId, planned: !item.planned) }
+                    } label: {
+                        HStack(spacing: TokenSemantics.Space.sm) {
+                            Text("Add to Today")
+                                .font(TokenSemantics.Typography.body)
+                                .foregroundStyle(TokenSemantics.primaryText)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            Image(systemName: item.planned ? "checkmark.circle.fill" : "circle")
+                                .foregroundStyle(item.planned ? TokenSemantics.accent : TokenSemantics.mutedText)
+                                .accessibilityHidden(true)
+                        }
+                        .frame(minHeight: TokenSemantics.Layout.target)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityValue(item.planned ? "On" : "Off")
+                    .accessibilityIdentifier("add-to-today-toggle")
+                }
+            }
+
             if let conflict = item.conflict {
                 ConflictResolverSection(
                     conflict: conflict,

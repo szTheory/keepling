@@ -157,7 +157,16 @@ final class DeviceCoreLoopTests: XCTestCase {
         XCTAssertTrue(row.waitForExistence(timeout: 15))
         row.tap()
 
-        let todayToggle = app.switches["add-to-today-toggle"].firstMatch
+        // Queried by identifier across ANY element type, not as
+        // `app.switches[...]`. The control is a `Button` carrying an
+        // `accessibilityValue` of On/Off, not a system `Toggle` -- both
+        // here and in `CaptureSheet`, which it deliberately mirrors -- so
+        // it surfaces to XCUITest as `.button`. A system `Toggle`'s label
+        // and its automatic disabled dim both render below WCAG 2.2 AA in
+        // a Form row (T-04-13 findings), which is why the app does not use
+        // one; the original `app.switches` query encoded a control shape
+        // this app had already rejected on accessibility grounds.
+        let todayToggle = app.descendants(matching: .any)["add-to-today-toggle"].firstMatch
         XCTAssertTrue(todayToggle.waitForExistence(timeout: 10), "the detail view offered no Add to Today control")
         todayToggle.tap()
 

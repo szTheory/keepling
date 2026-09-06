@@ -237,6 +237,33 @@ public final class WorkspaceFacade: ObservableObject {
         await refresh()
     }
 
+    /// Move an EXISTING task on or off Today.
+    ///
+    /// A task's destination has to be changeable after capture, not only at
+    /// capture time -- opening a task you filed yesterday and saying "do this
+    /// today" is half the daily loop, and `TaskDetailView` had no control for
+    /// it (found by `DeviceCoreLoopTests
+    /// .testPlanForTodayAndFindItOnTheTodayTabOnPhysicalDevice`, which failed
+    /// on the phone against a detail view that offered no such affordance).
+    ///
+    /// The command layer already expressed both directions --
+    /// `OutboundCommands.planForToday` emits `plan_for_today` or
+    /// `unplan_task` -- so nothing new goes on the wire here; only the
+    /// affordance was missing. The local effect flips optimistically and the
+    /// server resolves the actual account day, exactly as `capture(title:
+    /// addToToday:)` already does for the capture-time case.
+    public func planForToday(taskId: String, planned: Bool) async throws {
+        guard let item = item(forTaskId: taskId) else { return }
+        // A no-op toggle must not burn a revision or enqueue a command.
+        guard item.planned != planned else { return }
+        let basis = try await revisionBasis(forTaskId: taskId, title: item.title, notes: item.notes)
+        let built = try OutboundCommands.planForToday(
+            planned, taskId: taskId, basis: basis, mutationId: UUID().uuidString
+        )
+        try await accept(built, planned: planned)
+        await refresh()
+    }
+
     // MARK: - Lifecycle
 
     public func complete(taskId: String) async throws { try await lifecycle(.complete, taskId: taskId) }
