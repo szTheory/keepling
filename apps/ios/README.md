@@ -106,6 +106,84 @@ from the Swift client.
 test surface (`KeeplingCoreTests`). `Sources/Keepling` is the SwiftUI app
 target that depends on it.
 
+## Generated Swift design tokens (committed, never a build-tool plugin)
+
+`Sources/Keepling/DesignTokens/GeneratedTokens.swift` is produced from
+`packages/design-tokens/tokens.json` by `tooling/emit-swift-tokens.mjs` and
+**committed**, following the same precedent as the wire client above --
+diff-reviewable, deterministic offline output, not a build-time plugin.
+`Sources/Keepling/DesignTokens/TokenSemantics.swift` is the hand-written
+semantic layer built on top of it.
+
+Regenerate after any `packages/design-tokens/tokens.json` change:
+
+```sh
+node tooling/emit-swift-tokens.mjs          # writes the committed output
+node tooling/emit-swift-tokens.mjs --check  # verifies it is current (CI-safe, no writes)
+```
+
+The `design-tokens` lane (`node tooling/verify-ios-phase.mjs --lane design-tokens`)
+runs this same `--check` on every gate invocation, so a stale committed
+token file fails the phase gate rather than silently drifting from
+`tokens.json`.
+
+## Project layout
+
+```
+apps/ios/
+  project.yml                    -- XcodeGen spec (source of truth; .xcodeproj is git-ignored)
+  Package.swift                  -- KeeplingCore Swift Package (pure Swift, no UIKit/SwiftUI)
+  Sources/
+    KeeplingCore/                -- reducer, transport port, GRDB local store, App Intents support
+      Transport/Generated/       -- committed swift-openapi-generator output
+    Keepling/                    -- the SwiftUI app target
+      DesignTokens/              -- committed generated tokens + hand-written semantics
+      App/                       -- KeeplingApp.swift (entry point, #if DEBUG state-injection seam)
+      Capture/ Inbox/ Today/ Detail/ SyncRecovery/ Undo/ Workspace/ -- feature modules
+  Tests/
+    KeeplingCoreTests/           -- headless unit tests, no simulator dependency
+    StorageTests/                -- GRDB durability/migration/data-protection tests
+    AppIntentsTests/             -- App Intents perform()-level tests
+    KeeplingUITests/             -- XCUITest suites (daily loop, accessibility, state matrix, overflow)
+```
+
+## Generate-then-build workflow
+
+1. Edit `project.yml`, `packages/contracts/openapi/keepling.yaml`, or
+   `packages/design-tokens/tokens.json` as needed.
+2. Regenerate whichever committed output changed (`xcodegen generate`,
+   `node tooling/generate-ios-client.mjs`, and/or
+   `node tooling/emit-swift-tokens.mjs`).
+3. Build/test with `xcodebuild` or the phase gate below. Never hand-edit
+   `Keepling.xcodeproj` or any file under `Sources/**/Generated/`.
+
+## Lane inventory (`tooling/verify-ios-phase.mjs`)
+
+The phase gate discovers one lane per file under `tooling/ios-lanes/`.
+`docs/testing/ios-testing.md` documents what each lane proves; the current
+inventory (`node tooling/verify-ios-phase.mjs --requirements` maps each
+phase requirement to its lanes):
+
+`accessibility`, `accessory-probe`, `app-intents`, `auth`, `core-loop`,
+`core-unit`, `decode-roundtrip`, `design-tokens`, `device`,
+`durability-posture`, `lifecycle`, `overflow-longtext`, `privacy`,
+`state-matrix`, `storage`, `storage-gates`, `sync-pass`,
+`sync-presentation`, `tracer-e2e`, `transport`, `undo`,
+`vector-conformance`.
+
+`device` is the one lane bound to physical hardware rather than the
+Simulator. It reports `BLOCKED` (never a silent skip, never a pass) until
+Plan 04-16 completes the device-install checkpoint it currently halts at
+-- see `tooling/ios-lanes/device.mjs` and `tooling/ios-lanes/README.md`.
+
+## Disclosures
+
+Every gap this phase has disclosed -- what a lane proves and what it
+explicitly does not -- is consolidated in one place:
+`docs/testing/ios-testing.md`'s "Consolidated disclosures" section. Read
+it before citing any green checkmark from this app as more coverage than
+it provides.
+
 ## Lane discovery (`tooling/ios-lanes/*.mjs`)
 
 `tooling/verify-ios-phase.mjs` globs `tooling/ios-lanes/*.mjs` and loads one

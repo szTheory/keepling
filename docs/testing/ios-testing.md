@@ -395,3 +395,92 @@ a real installed build on real hardware, with VoiceOver genuinely
 enabled for the focus-safety cases, closing the gap between "the
 Simulator's accessibility tree reports this correctly" and "a real
 assistive-technology user on a real device experiences this correctly."
+
+## Consolidated disclosures (04-17-PLAN.md Task 2)
+
+Every gap disclosed across Plans 04-01 through 04-16 is restated here in
+one table, in the per-dimension evidence form 03-27 established for the
+Mac: what is claimed, what is proven and by which named lane or test, and
+what is explicitly not proven. **A reader should be able to tell, for
+every green checkmark in this phase, exactly what it means — nothing here
+should require assembling seven prior SUMMARYs to understand.**
+
+**Plan 04-16 did not complete.** It halted at a genuine human-action
+checkpoint — no confirmed paid Apple Developer Program membership, no
+`DEVELOPMENT_TEAM` set in `apps/ios/project.yml`, and Jon's iPhone paired
+but offline. `docs/testing/ios-dogfood.md` (the file 04-16 would have
+written) does not exist. Every disclosure below that names "Plan 04-16's
+physical-device lane" as the resolution of a simulator-only gap is
+therefore **still open** — the `device` lane in
+`tooling/verify-ios-phase.mjs` reports `BLOCKED` for exactly this reason,
+and the aggregate gate refuses to report overall success while it does.
+
+| # | Claim | Proven by | Not proven (disclosed) |
+|---|---|---|---|
+| 1 | `tabViewBottomAccessory` can be made genuinely absent (zero reserved layout space, non-hit-testable), not merely emptied of visible content (D-38/D-40) | `AccessoryAbsenceProbeTests` measured absence achievable on SDK 26.5 via Configuration 2 (conditional modifier) and Configuration 3 (`isEnabled: false`); Configuration 1 (conditional content) reproduces the exact reserved-but-empty defect RESEARCH.md warned about. Named capability `AccessoryHostability.absenceAchievable(via: .conditionalModifier, measuredSDKVersion: "26.5")`, regression-guarded by `testNamedAchievedConfigurationStaysAbsent`. | Behavior on a future SDK if Apple changes `tabViewBottomAccessory`'s layout reservation rules — the regression test catches this if it happens, but no test predicts it. |
+| 2 | G7 at-rest data protection: the store's protection class is `.completeUntilFirstUserAuthentication`, and a background write while locked does not fail with an I/O error or `0xdead10cc` (D-04) | The simulator lane (`DataProtectionTests`) proves the requested protection class reads back correctly via `URLResourceValues` (not `FileManager.attributesOfItem`, which reads back `nil` on the Simulator host filesystem — an empirically confirmed false-negative trap) and that the durable unit is fully excluded from device backup. | The iOS Simulator enforces no real Data Protection restriction — no simulator write is ever blocked or delayed by lock state. Whether a real locked-device background write avoids `SQLITE_IOERR`/`0xdead10cc` can only be observed on physical hardware; `DataProtectionTests.testBackgroundWriteWhileLockedDoesNotTakeAnIOErrorOrTerminate` is the device-only case, and Plan 04-16's device lane — the one place this was to be driven for real — never ran. **Still open.** |
+| 3 | D-22 Criterion 2: durable state survives OS-terminated processes with no notice given beforehand | No lane in this codebase induces a real jetsam (OS-initiated termination under memory pressure) — no test target can manufacture real memory pressure or call the private API that simulates it. Plan 04-16 was to prove the STRICTER equivalent case (`SIGKILL`, which a jetsam termination is itself implemented as from the process's own point of view) on a real device, followed by a relaunch that restores correctly from the durable outbox. | Real jetsam under real memory pressure specifically. Plan 04-16 never ran, so even the stricter signal-based-kill proxy has not been exercised on physical hardware — the durability behavior is proven only under the desktop/simulator test harness's own simulated kill-and-relaunch. **Still open.** |
+| 4 | D-22 Criterion 3: background execution (`BGTaskScheduler`) is an accelerator, never a correctness dependency | `BackgroundAccelerationTests` structurally proves the background handler and the foreground `ScenePhaseDriver` call the IDENTICAL `runSyncPass` entry point, that every supported behavior succeeds with the background path disabled entirely, and that a background expiration leaves every outbox row in a legal state. | Real `BGTaskScheduler` wake scheduling — Apple schedules a submitted request opportunistically based on device usage/battery/settings heuristics no test target can control or observe; there is no way to assert "the system woke this app in the background" as a repeatable, CI-safe outcome. The documented manual diagnostic (`_simulateLaunchForTaskWithIdentifier:` under LLDB) is a debugging aid a person runs by hand, never a gate any lane exercises. |
+| 5 | The App Intents surface (`CaptureTaskIntent`, `CompleteTaskIntent`) is driven through the same resolution path Shortcuts and Siri actually take | `CaptureIntentTests`, `CompleteIntentTests`, and `IntentPrivacyTests` (`app-intents` lane) drive `AppIntent.perform()` directly, faithfully exercising store access, `OutboundCommands` production, the fence check, and error surfacing. | `AppIntentsTesting`'s resolve-and-perform harness — searched for directly on this Mac's pinned Xcode 17F113 / iPhoneSimulator26.5.sdk toolchain and confirmed absent (no framework, swiftmodule, or matching filename anywhere). The fallback to direct `perform()` calls does not exercise the framework's own parameter-resolution machinery (the `requestValue`/prompting cycle Siri and Shortcuts drive when a required parameter is missing) — only `IntentPrivacyTests`' invalid-parameter-value case is reachable without it. If `AppIntentsTesting` becomes available on a future SDK, the resolve-and-perform path should replace these direct calls. |
+| 6 | D-22 Criterion 4: `VoiceOver`, Dynamic Type, Reduce Motion, and focus safety meet WCAG 2.2 AA and never strand assistive-technology focus | `performAccessibilityAudit` (all seven types) on every screen in the closed `ScreenInventory`, the accessibility Dynamic Type matrix (five accessibility categories on one representative screen, full inventory at default and largest), Differentiate Without Color, the single `Motion.swift` Reduce Motion gate with a structural no-animation-escapes-it scan, and `FocusSafetyTests`' application-logic proof (`lastRequestedFocusTarget`) that the app decided and requested the correct next-focus target after row removal and sheet dismissal. | **`VoiceOver`'s actual synthesized speech output** — no test plays or transcribes audio. **Real screen-reader gesture navigation** — XCUITest drives the accessibility tree directly, not the two-finger-swipe rotor gestures a real VoiceOver/Switch Control user performs. **Whether the OS actually lands VoiceOver's focus** after row removal or sheet dismissal — measured directly during 04-13: `XCUIElement.hasFocus` never reported `true` for any `@AccessibilityFocusState`-bound element in the Simulator, for either a row or a toolbar button, regardless of correct wiring; `@AccessibilityFocusState` only retains a requested value once a real assistive-technology client confirms the move landed, which this harness cannot drive. One physical-device confirmation run with VoiceOver genuinely enabled was to close this gap — Plan 04-16 never ran. **Still open.** |
+| 7 | D-22 Criterion 5: the supported daily loop stays available on Jon's phone for sustained daily use, without a recurring manual reinstall | Not automatable at all, by design (04-16-PLAN.md's own flagged assumption). The closest automatable proxy Plan 04-16 was to deliver: the loop installed on the physical device under a non-expiring provisioning profile, with every device-lane case passing against that installed build. | Sustained daily adoption is owner dogfood feedback, never a gate — no lane in this codebase asserts it and none ever will. **Additionally still open**: even the automatable proxy (the non-expiring-profile install itself) was never produced, because Plan 04-16 halted before building it — there is currently no non-expiring installed build on any device at all. |
+| 8 | Edge-probe coverage: the deterministic edge-taxonomy probe run in Plan 04-01 classified this phase's requirement rows | All five rows this phase owns — IOS-01, IOS-02, IOS-03, IOS-04 (each `category=unclassified, status=unresolved`), and SRV-02 (`category=concurrency, status=unresolved`) — remained unresolved by the probe. See the "Edge probe rows" table below for exactly where each requirement's edge coverage was actually authored from instead. | The probe taxonomy itself never classified any of these five rows for this phase; they stay flagged in every plan that touched them, never silently marked resolved. |
+
+### Edge probe rows (edge probe): unclassified by the deterministic probe, authored from named sources instead
+
+| Requirement | Probe result | Edge coverage actually authored from |
+|---|---|---|
+| IOS-01 | `category=unclassified, status=unresolved` | 04-UI-SPEC.md's UI Considerations and 04-CONTEXT.md D-25..D-35 (04-01); § UI Considerations elements E1, E2, E3, E4, E8 and D-25 through D-35 (04-09, daily-loop/gesture arm); D-35/D-37 (04-12, App Intents arm); D-30..D-34 and § Undo Contract (04-11, undo arm); § UI Considerations (04-14, state-matrix/overflow arm) |
+| IOS-02 | `category=unclassified, status=unresolved` | 04-CONTEXT.md D-04 gates G1-G8 (04-01, 04-02, durability/crash-recovery arm); D-04 G7/G8 and D-09 (04-06, settlement/replay arm); D-22 Criterion 3 and the Phase 3 transmission-state decisions (04-08, orchestration arm); D-23 and QUAL-05 (04-15, diagnosability arm) |
+| IOS-03 | `category=unclassified, status=unresolved` | 04-UI-SPEC.md § Accessibility and Platform Contract and § Typography (04-04, 04-13, full edge coverage plus § Color and § Motion); touch-target/gesture-mirroring arm (04-09); § UI Considerations (04-14, overflow/Dynamic Type arm) |
+| IOS-04 | `category=unclassified, status=unresolved` | 04-UI-SPEC.md § Synchronization and Recovery Presentation and the inherited 03-UI-SPEC exact-state table (04-04, 04-10, 04-14); D-43's inherited copy vocabulary and the Phase 3 tagged-401 decision (04-07, authentication-expired arm); D-30..D-34 (04-11, undo arm); D-23/QUAL-05 (04-15, diagnosability arm) |
+| SRV-02 | `category=concurrency, status=unresolved` ("If interrupted or run in parallel, what is guaranteed?") | Interrupted local acceptance is all-or-nothing via single `BEGIN IMMEDIATE`; interrupted push is at-most-once via mutation identity + fingerprint idempotency (04-01, verified by `TracerDurabilityTests` and the 04-06 replay-no-op fixture). The reducer itself has no concurrency semantics — it is a pure total function (04-03). Transport-side: an interrupted push is `uncertain`, retransmission carries identical bytes under the same identity/fingerprint so the server answers `already_satisfied` (04-05). Two concurrent sync passes cannot claim the same outbox row, enforced by the `in_flight` transition (04-08). |
+
+Every row above stays flagged — none of these five requirements were ever silently marked resolved by the probe taxonomy; each plan that touched one recorded exactly where its edge coverage came from instead.
+
+### UI-SPEC backstop considerations: the sixteen elements and their discharging tests (04-14-PLAN.md)
+
+04-UI-SPEC.md's § UI Considerations names sixteen backstop overflow/long-text
+considerations across eight elements. `OverflowAndLongTextTests.swift`
+(the `overflow-longtext` lane), driven by a held-out fixture (a 512-scalar
+title, a 50000-scalar note, a non-Latin-script entry, and a decomposed
+base+combining-mark entry, referenced by no other suite), discharges every
+one:
+
+| Element | Clipping/overlap-truth test | Long-text/composition truth |
+|---|---|---|
+| Today | `testTodayRendersTheMaximumLengthTitleWithoutClippingAtTheLargestAccessibilityCategory` | same test — title IS the long-text content |
+| Inbox | `testInboxRendersTheMaximumLengthTitleWithoutClippingAtTheLargestAccessibilityCategory` | same test |
+| Task detail and editor | `testTaskDetailRendersMaximumLengthTitleAndNotesWithAReachableShowFullValueDisclosure` | same test — covers the Show Full Value disclosure |
+| Capture sheet | `testCaptureSheetRendersNonLatinScriptTitleWithoutClippingWhileComposing` | same test — non-Latin + combining-mark composition (grapheme-cluster handling, not byte/scalar truncation) |
+| Bottom accessory | `testBottomAccessoryRendersTheLongestInheritedRecoveryCopyWithoutClipping` | same test — recovery copy, not task content |
+| Sync & Recovery sheet | `testSyncAndRecoverySheetRendersTheMaximumLengthTitleInTheExceptionListWithoutClipping` | same test |
+| Conflict resolver | `testConflictResolverRendersTheMaximumLengthTitleAndNotesWithoutClipping` | same test — this run surfaced and fixed a real unbounded-height overflow bug (`ConflictResolverSection`'s `.fixedSize(vertical: true)` title diff, ~2300pt tall before an explicit `.lineLimit(6)`) |
+| Toolbar and overflow menu | `testToolbarAndOverflowMenuRenderWithoutClippingAndWithoutLeakingTaskContent` | same test — also the system-chrome content-leak check |
+
+This table lists eight elements, each proven for both its clipping/overlap
+truth and its long-text/composition truth — the sixteen considerations
+04-UI-SPEC.md names. Whether each mapped test's passing constitutes full
+discharge of its corresponding UI-SPEC prose (versus a partial proxy) is
+disclosed as a judgment call for a human reviewer (04-14-SUMMARY.md
+coverage entry D9) rather than asserted as fully automated.
+
+### Summary: what this phase's evidence model rests on
+
+- **21 simulator-driven lanes** run against the iOS Simulator (iPhone 17,
+  latest OS) on this Mac's pinned Xcode/SDK, none of them requiring
+  physical hardware, all of them reporting a positive case count with no
+  assume-it-passed fallback.
+- **1 device-bound lane (`device`)**, required by IOS-01, IOS-02, IOS-04,
+  and the SRV-02 iPhone adapter proof, currently and honestly reporting
+  `BLOCKED` — Plan 04-16 has not produced its attestation tooling or its
+  `04-16-SUMMARY.md`. The aggregate gate (`node tooling/verify-ios-phase.mjs`)
+  therefore cannot and does not report overall success today. This is the
+  correct, disclosed state, not a defect in this plan's own tooling — see
+  `tooling/ios-lanes/device.mjs` and `tooling/ios-lanes/README.md`'s
+  `BLOCKED:` convention.
+- **Five edge-probe rows** (IOS-01..04, SRV-02) remained unclassified or
+  unresolved by the deterministic probe taxonomy; every one of them has
+  edge coverage authored from a named source instead, tabulated above.
+- **Sixteen UI-SPEC backstop considerations** are discharged by one
+  held-out adversarial fixture, tabulated above.
