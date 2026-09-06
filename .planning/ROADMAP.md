@@ -254,7 +254,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
-**Plans:** 16/17 plans executed
+**Plans:** 17/17 plans executed
 
 Plans:
 **Wave 1**
@@ -304,7 +304,7 @@ Plans:
 
 **Wave 11** *(blocked on Wave 10 completion)*
 
-- [ ] 04-16-PLAN.md — The physical-device evidence lane: signed build, read-back attestation, and real-stack recovery scenarios.
+- [x] 04-16-PLAN.md — The physical-device evidence lane: signed build, read-back attestation, and real-stack recovery scenarios.
 
 **Wave 12** *(blocked on Wave 11 completion)*
 

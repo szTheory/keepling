@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 04
 current_phase_name: Native iPhone Daily Loop
 status: executing
-stopped_at: Completed 04-17-PLAN.md
-last_updated: "2026-09-06T01:10:26.309Z"
+stopped_at: "Completed 04-16-PLAN.md (device lane BLOCKED: iPhone locked)"
+last_updated: "2026-09-06T04:22:10.456Z"
 last_activity: 2026-09-05
 last_activity_desc: Plan 04-06 complete; next plan 04-07
-state_head: b3d539953d0dcbedefa820cd711d3e7d260a728a
+state_head: 94a3ad0542f59a3023300fd4c4cc2c79c7a3de5e
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 82
-  completed_plans: 80
+  completed_plans: 81
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
-Plan: 16 of 17 complete — 04-16 halted at a human-action checkpoint
+Plan: 17 of 17 complete — 04-16 halted at a human-action checkpoint
 Total Plans in Phase: 17
 Status: Executing Phase KPL-04
 Last activity: 2026-09-05 — Plans 04-01..04-15 and 04-17 complete; 04-16 blocked
@@ -269,8 +269,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-06T01:10:18.538Z
-**Stopped at:** Completed 04-17-PLAN.md
+**Last session:** 2026-09-06T04:21:57.275Z
+**Stopped at:** Completed 04-16-PLAN.md (device lane BLOCKED: iPhone locked)
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -355,9 +355,12 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-04 P14 | 5h40m | 2 tasks | 12 files |
 | Phase KPL-04 P15 | 65min | 2 tasks | 9 files |
 | Phase KPL-04 P17 | ~3h10m | 2 tasks | 7 files |
+| Phase 04 P16 | 165 | 3 tasks | 13 files |
 
 ### Blockers
 
 - O-21: prior-application focus return after Quick Entry is unimplemented in the shipped app -- QuickEntryWindowController calls an optional foregroundApp port that has no implementation and is never passed in main/index.ts#bootstrap(). Found by row A9; a fifth GAP-1 instance. Blocks the macos-integration lane going green.
 - O-22: Cmd-1/Cmd-2 route through facade.setRoute in DesktopShell.tsx and bypass the unsaved-changes guard that mouse navigation goes through.
 - O-51: undo is now unavailable on a Mac with no server configured — a disclosed cost of closing O-45; decide it together with O-43, not separately
+- 04-16: physical-device UI suites BLOCKED -- the iPhone is locked and iOS refuses to launch any app on a locked device. Unlock the phone and re-run 'node tooling/verify-ios-phase.mjs --lane device'.
+- 04-16: the server-driven half of D-22 Criterion 2 is BLOCKED -- KeeplingSyncAdapter refuses non-HTTPS non-loopback base URLs and URLSession rejects the lane's self-signed cert, so the phone cannot reach a Mac-hosted recording proxy. Needs a decision: DEBUG-only lane CA via injected ClientTransport, vs widening the transport guard (refused), vs deferring.
