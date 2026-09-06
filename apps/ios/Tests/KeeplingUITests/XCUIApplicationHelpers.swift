@@ -21,9 +21,21 @@ extension XCUIApplication {
         let overflow = buttons["OverflowBarButtonItem"]
         guard overflow.waitForExistence(timeout: 2) else { return false }
         overflow.tap()
-        let inMenu = buttons[label].firstMatch
-        guard inMenu.waitForExistence(timeout: timeout) else { return false }
-        inMenu.tap()
-        return true
+        // Match the overflow-menu entry by IDENTIFIER first and only then
+        // by display label. A collapsed toolbar item does not reliably
+        // carry its on-screen title as its accessible label once UIKit has
+        // rehosted it inside the `More` menu, so a label-only lookup can
+        // miss a button that is plainly present -- measured on a physical
+        // iPhone, where `Save & Move Out of Inbox` (a long title sharing a
+        // 440pt bar with a Back button and `Cancel Editing`) collapses and
+        // the label lookup then failed. The identifier is set by this app
+        // and does not change with presentation.
+        for candidate in [buttons[identifier].firstMatch, buttons[label].firstMatch] {
+            if candidate.waitForExistence(timeout: timeout) {
+                candidate.tap()
+                return true
+            }
+        }
+        return false
     }
 }

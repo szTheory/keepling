@@ -174,6 +174,14 @@ export default function deviceLane({ repositoryRoot, xcodebuildSummary }) {
       // Plan 04-13 accessibility suites. Confirmation, not replacement:
       // the `accessibility` lane still runs them on the simulator.
       '-only-testing:KeeplingUITests/AccessibilityAuditTests',
+      // ...except its source-tree inventory check, which walks
+      // `apps/ios/Sources/Keepling` on the BUILD MAC's filesystem. That
+      // path does not exist inside the app process on a physical iPhone,
+      // so on device it fails with "path resolution is broken" -- a
+      // property of where the test runs, not of the app. It is a static
+      // repo assertion with no device dimension, and the `accessibility`
+      // lane still runs it on the simulator where the path resolves.
+      '-skip-testing:KeeplingUITests/AccessibilityAuditTests/testEveryTopLevelViewUnderSourcesKeeplingIsInTheInventoryOrExplicitlyExcluded',
       '-only-testing:KeeplingUITests/DynamicTypeSnapshotTests',
     ].join(' '),
   ].join(' && ')
