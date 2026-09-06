@@ -7,6 +7,13 @@ options:
     iOS: "26.0"
   createIntermediateGroups: true
 
+# Signing lives in an xcconfig, never in this file: project.yml is committed and
+# an Apple Team ID would tie the published repo to a specific Apple account.
+# Signing.xcconfig optionally includes gitignored Signing.local.xcconfig.
+configFiles:
+  Debug: Signing.xcconfig
+  Release: Signing.xcconfig
+
 packages:
   KeeplingCore:
     path: .

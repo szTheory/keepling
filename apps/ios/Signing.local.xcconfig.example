@@ -1,0 +1,10 @@
+// Copy to `Signing.local.xcconfig` (gitignored) and fill in your Team ID.
+//
+// Find it with:
+//     security find-identity -v -p codesigning
+// the 10-character code in parentheses, e.g. "Apple Development: you (ABCDE12345)"
+// or at https://developer.apple.com/account under Membership details.
+//
+// Required only for building onto a physical iPhone. Simulator builds and the
+// full simulator test suite work without it.
+DEVELOPMENT_TEAM = YOUR_TEAM_ID_HERE

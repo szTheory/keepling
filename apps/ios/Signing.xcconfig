@@ -1,0 +1,21 @@
+// Signing configuration for the Keepling iOS app.
+//
+// This file is COMMITTED and must never contain an Apple Team ID.
+//
+// The Apple Development Team ID is a stable identifier that links this
+// repository to a specific Apple Developer account. Keeping it out of git
+// means the repo can be published without carrying that link in its history
+// (where scrubbing it later would mean rewriting history).
+//
+// Instead, put it in `Signing.local.xcconfig`, which is gitignored:
+//
+//     cp apps/ios/Signing.local.xcconfig.example apps/ios/Signing.local.xcconfig
+//     # then edit it and set DEVELOPMENT_TEAM to your 10-character Team ID
+//     xcodegen generate --spec apps/ios/project.yml --project apps/ios
+//
+// `#include?` (with the question mark) is an OPTIONAL include: if the local
+// file is absent, this resolves to nothing rather than failing the build.
+// Simulator builds and the whole simulator test suite need no team, so a
+// fresh clone builds and tests green with no signing setup at all. Only
+// physical-device builds require the local file to exist.
+#include? "Signing.local.xcconfig"

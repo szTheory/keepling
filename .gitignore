@@ -29,3 +29,4 @@ log/
 *.tfstate
 *.tfstate.*
 .terraform.tfstate.lock.info
+apps/ios/Signing.local.xcconfig
