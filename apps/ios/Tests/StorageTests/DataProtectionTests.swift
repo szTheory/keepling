@@ -44,25 +44,90 @@ final class DataProtectionTests: XCTestCase {
         XCTAssertTrue(try DurableUnit(databasePath: path).isFullyExcludedFromBackup())
     }
 
-    // MARK: - Device-only half: a locked-device background write must not I/O-error or 0xdead10cc
+    // MARK: - Device-only half (04-16-PLAN.md Task 3)
 
-    /// This assertion can only be genuinely observed on a physical device
-    /// with a passcode set: the simulator has no lock state and enforces
-    /// no Data Protection at all (`FileProtectionType` attributes can be
-    /// set and read back, but iOS never actually restricts file access on
-    /// the simulator the way it does on a locked device). Plan 04-16's
-    /// physical-device lane is the one place this can be driven for real
-    /// (`devicectl device process terminate`-style real lock-state
-    /// control, not available to an XCTest host process here) -- see
-    /// docs/testing/ios-testing.md's G7 disclosure. Recorded as a named
-    /// skip rather than a false green in every lane this plan's own
-    /// verification runs.
+    /// G7 on REAL HARDWARE, where Data Protection is genuinely enforced.
+    ///
+    /// The `testStoreFileRequests...` case above runs everywhere, but on the
+    /// simulator it proves only that an attribute round-trips: iOS never
+    /// actually restricts file access on the simulator the way it does on a
+    /// device, so the value read back there is a bookkeeping fact, not a
+    /// protection fact. On a physical device the same read-back is the real
+    /// class the kernel will enforce -- which is why this case exists
+    /// separately and refuses to run on a simulator rather than being
+    /// folded into the one above.
+    ///
+    /// It also asserts the class is NOT `.complete`: `.complete` would make
+    /// the store unreadable while the phone is locked and would break sync
+    /// on a phone in a pocket, which is exactly why G7 names
+    /// `.completeUntilFirstUserAuthentication` instead.
+    func testStoreProtectionClassOnPhysicalDeviceIsEnforceable() throws {
+        #if targetEnvironment(simulator)
+        throw XCTSkip(
+            "This is the PHYSICAL-DEVICE half of G7. On a simulator the protection class is bookkeeping " +
+            "only -- iOS enforces no Data Protection there -- so passing here would attribute a hardware " +
+            "claim to a simulator. Run it through `node tooling/verify-ios-phase.mjs --lane device`."
+        )
+        #else
+        let path = storePath()
+        let store = try GRDBLocalStore(path: path)
+
+        let values = try URL(fileURLWithPath: path).resourceValues(forKeys: [.fileProtectionKey])
+        XCTAssertEqual(
+            values.fileProtection, .completeUntilFirstUserAuthentication,
+            "on real hardware the store must request .completeUntilFirstUserAuthentication (D-04 G7)"
+        )
+        XCTAssertNotEqual(
+            values.fileProtection, .complete,
+            "G7 rejects .complete on hardware: it would block sync whenever the phone is locked"
+        )
+
+        // A write that genuinely reaches real flash, so the class above is
+        // proved on a file the store actually uses rather than on an empty
+        // one it merely created.
+        XCTAssertNoThrow(try store.currentUndoAvailability())
+        XCTAssertTrue(try DurableUnit(databasePath: path).isFullyExcludedFromBackup())
+
+        // `unlockedSinceBoot` is the precondition that makes
+        // `.completeUntilFirstUserAuthentication` readable at all. It is
+        // recorded by `tooling/ios-device/resolve-devices.mjs` before the
+        // lane runs (`devicectl device info lockState`), because this
+        // process cannot observe the device's lock state from inside its
+        // own sandbox.
+        #endif
+    }
+
+    /// G7's remaining half -- a write performed WHILE THE DEVICE IS LOCKED
+    /// -- is **BLOCKED**, and this is a deliberate, named skip rather than
+    /// a silent omission or a false green.
+    ///
+    /// What is genuinely missing, precisely:
+    ///
+    ///  - a unit-test bundle cannot lock the device. `XCUIDevice`'s lock
+    ///    control lives in the UI-testing framework, which this target does
+    ///    not link, and `devicectl` exposes no lock verb at all (it exposes
+    ///    `info lockState` -- a READ -- plus install, launch, terminate,
+    ///    signal, reboot, and orientation; there is no `lock`);
+    ///  - driving it from the UI-test target instead would need an
+    ///    app-side, launch-env-gated "write on
+    ///    protectedDataWillBecomeUnavailable" hook that does not exist, and
+    ///    inventing one inside a test plan would be new production surface
+    ///    added to make a gate go green.
+    ///
+    /// What IS proven, and recorded in the SUMMARY: the attached phone
+    /// reports `passcodeRequired: true` from `devicectl device info
+    /// lockState` (so the protection class is genuinely enforceable, not
+    /// nominal), and the class itself reads back correctly on hardware in
+    /// the case above.
     func testBackgroundWriteWhileLockedDoesNotTakeAnIOErrorOrTerminate() throws {
         throw XCTSkip(
-            "G7's locked-device write proof requires a physical device with a passcode set and real " +
-            "lock-state control this test target cannot exercise (simulator: no lock state/Data Protection " +
-            "enforcement at all; this build: no devicectl-driven lock harness yet -- Plan 04-16 supplies it). " +
-            "See docs/testing/ios-testing.md."
+            "BLOCKED (not skipped for convenience): G7's locked-device WRITE requires locking a real phone " +
+            "under program control. A unit-test bundle cannot -- XCUIDevice is UI-testing-only -- and " +
+            "`devicectl` has no lock verb (only `info lockState`, a read). Driving it from the UI-test " +
+            "target would require a new app-side protected-data hook, i.e. new production surface added " +
+            "solely to pass a gate. The enforceable-class half runs on hardware in " +
+            "testStoreProtectionClassOnPhysicalDeviceIsEnforceable, and the phone's passcodeRequired=true " +
+            "is recorded by tooling/ios-device/resolve-devices.mjs. See docs/testing/ios-dogfood.md."
         )
     }
 }

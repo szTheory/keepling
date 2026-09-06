@@ -74,7 +74,7 @@ const readManifest = () => {
  * timeout expires). A timeout is a refusal, never a pass: an app that never
  * printed its digest is indistinguishable from one that has none.
  */
-const readDigestFromRunningProcess = (devicectlIdentifier, timeoutMs) => {
+const launchOnce = (devicectlIdentifier, timeoutMs) => {
   const result = spawnSync(
     'xcrun',
     [
@@ -86,8 +86,58 @@ const readDigestFromRunningProcess = (devicectlIdentifier, timeoutMs) => {
     ],
     { encoding: 'utf8', timeout: timeoutMs, killSignal: 'SIGKILL' },
   )
-  const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`
-  const match = output.match(new RegExp(`${CONSOLE_PREFIX} digest=(\\S+) bundle=(\\S+) short_version=(\\S+) build_version=(\\S+)`))
+  return `${result.stdout ?? ''}\n${result.stderr ?? ''}`
+}
+
+/**
+ * A wirelessly-paired iPhone's CoreDevice tunnel drops occasionally --
+ * "The device disconnected immediately after connecting"
+ * (`com.apple.dt.CoreDeviceError error 4000`), observed on this exact
+ * device during this plan's execution. That is a transport flake, not
+ * evidence about the build.
+ *
+ * The retry is deliberately narrow: it fires ONLY when no attestation line
+ * was seen AND the output names a transport failure. A digest that was read
+ * and did not MATCH is never retried -- retrying a mismatch until it
+ * happened to pass would defeat the entire refusal.
+ */
+const TRANSPORT_FLAKE = /disconnected immediately after connecting|CoreDeviceError error 4000|Could not acquire tunnel|connection was interrupted/i
+
+/**
+ * iOS refuses to launch ANY app on a locked device
+ * (`FBSOpenApplicationErrorDomain error 7`, "Unable to launch ... because
+ * the device was not, or could not be, unlocked"). Unlocking needs the
+ * passcode, which no tool can supply.
+ *
+ * Without this check the symptom surfaces as "the running process never
+ * reported a build digest", which reads like a broken build and sends a
+ * reader hunting through `BuildAttestation.swift` for a bug that is not
+ * there. It is named separately because it is the one condition in this
+ * lane whose remedy is "unlock the phone", not "fix something".
+ */
+const DEVICE_LOCKED = /could not be, unlocked|FBSOpenApplicationErrorDomain error 7|BSErrorCodeDescription = Locked/i
+
+const readDigestFromRunningProcess = (devicectlIdentifier, timeoutMs) => {
+  let output = ''
+  let match = null
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    output = launchOnce(devicectlIdentifier, timeoutMs)
+    match = output.match(new RegExp(`${CONSOLE_PREFIX} digest=(\\S+) bundle=(\\S+) short_version=(\\S+) build_version=(\\S+)`))
+    if (match) break
+    if (DEVICE_LOCKED.test(output)) {
+      refuse(
+        'BLOCKED: the iPhone is LOCKED. iOS refuses to launch any app on a locked device, so the running ' +
+          'process cannot be asked what build it is. Unlock the phone (the passcode is the one thing no tool ' +
+          'here can supply) and re-run. This is not a build defect and not an attestation mismatch -- no ' +
+          'digest was read at all. Note that `devicectl device info lockState` reports only ' +
+          '`passcodeRequired`/`unlockedSinceBoot`; it does not report the CURRENT lock state, which is why ' +
+          'this is detected from the launch refusal itself.',
+      )
+    }
+    if (!TRANSPORT_FLAKE.test(output)) break
+    console.error(`attestation: CoreDevice transport flake on attempt ${attempt + 1}, retrying`)
+    spawnSync('sleep', ['5'])
+  }
   if (!match) {
     refuse(
       'the running process never reported a build digest on the console. Either the app is not installed, ' +

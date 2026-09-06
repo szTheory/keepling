@@ -519,7 +519,7 @@ try {
   const launchWith = (serverUrl) => {
     const before = proxy.records.length
     const beforeTls = tlsProbe?.attempts.length ?? 0
-    spawnSync(
+    const launch = spawnSync(
       'xcrun',
       [
         'devicectl', 'device', 'process', 'launch',
@@ -530,6 +530,21 @@ try {
       ],
       { encoding: 'utf8', timeout: 120_000 },
     )
+    const launchOutput = `${launch.stdout ?? ''}\n${launch.stderr ?? ''}`
+    // A LOCKED phone refuses every app launch
+    // (`FBSOpenApplicationErrorDomain error 7`). Without this branch a
+    // locked phone produces zero proxy arrivals and the lane would blame
+    // the transport guard -- attributing a true conclusion to the wrong
+    // evidence, which is its own kind of false claim.
+    if (/could not be, unlocked|FBSOpenApplicationErrorDomain error 7|BSErrorCodeDescription = Locked/i.test(launchOutput)) {
+      blocked(
+        'the iPhone is LOCKED, so the app could not be launched at all and this lane could learn nothing ' +
+          'about whether it can reach the recording proxy. Unlock the phone and re-run. (The passcode is ' +
+          'the one thing no tool here can supply; `devicectl device info lockState` reports only ' +
+          '`passcodeRequired`/`unlockedSinceBoot`, never the current lock state, so this is detected from ' +
+          'the launch refusal itself.)',
+      )
+    }
     // The app syncs on foreground; give the scene-phase driver a real
     // window to reach the Mac before concluding it never did.
     const deadline = Date.now() + 20_000

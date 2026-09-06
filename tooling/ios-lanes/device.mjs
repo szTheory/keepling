@@ -1,80 +1,221 @@
 /**
- * device lane (04-17-PLAN.md): the one lane in this gate bound to a
- * physical iPhone rather than a simulator. Plan 04-16 is the plan that
- * builds this lane's real evidence -- `tooling/ios-device/attestation.mjs`,
- * `tooling/ios-device/resolve-devices.mjs`, and the device-bound
- * `DeviceCoreLoopTests`/`DeviceRecoveryTests` UI-test targets -- gated on a
- * paid Apple Developer Program membership, a `DEVELOPMENT_TEAM` configured
- * in `apps/ios/project.yml`, and a trusted, online physical iPhone.
+ * device lane -- the one lane in this gate bound to a PHYSICAL iPhone
+ * rather than a simulator (04-16-PLAN.md Task 3; supersedes the
+ * always-BLOCKED placeholder 04-17-PLAN.md left here while 04-16 was
+ * unexecuted).
  *
- * As of this plan, 04-16 has NOT completed: it halted at a genuine
- * human-action checkpoint (no confirmed paid membership, no
- * `DEVELOPMENT_TEAM` set, and Jon's iPhone paired but offline). Rather than
- * silently omitting a "device" row from the gate -- which would let every
- * later run of this gate look complete while the physical-device half of
- * IOS-01, IOS-02, IOS-04, and the SRV-02 iPhone adapter proof was never
- * once exercised -- this lane always runs, and always reports BLOCKED
- * (never PASS, never a quiet skip) until 04-16's evidence exists.
+ * ORDER MATTERS: the attestation refusal runs FIRST, before any test.
+ * `tooling/ios-device/attestation.mjs --expect-installed` reads
+ * `KeeplingBuildDigest` back out of the process running on the phone and
+ * exits non-zero on mismatch, and the shell chain below is `&&`-joined so a
+ * refusal short-circuits every later step. A lane that runs its suite and
+ * THEN checks identity has already spent the evidence it was protecting
+ * (D-21, T-04-16-01).
  *
- * BLOCKED is not the ordinary FAIL a broken test produces: `runLane` in
- * tooling/verify-ios-phase.mjs recognizes any thrown message prefixed
- * "BLOCKED:" and labels the LANE line accordingly, so a human reading gate
- * output can tell "this is missing hardware/credentials" apart from "this
- * is a bug" at a glance -- while the run still refuses to report overall
- * success either way (per D-24 and the orchestrator note in
- * 04-17-PLAN.md).
+ * The two identifier spaces are honoured throughout (T-04-16-02,
+ * RESEARCH Pitfall 3): `xcodebuild -destination` gets the HARDWARE UDID and
+ * `devicectl --device` gets the COREDEVICE identifier, each resolved by
+ * `tooling/ios-device/resolve-devices.mjs`, which refuses to run if the two
+ * are equal.
  *
- * Once 04-16 lands: this file should be replaced with a real lane that
- * runs the device-bound UI tests via tooling/build-ios-signed.mjs and
- * tooling/verify-real-stack-ios.mjs, and asserts the attestation's
- * recorded `KeeplingBuildDigest` matches the current build manifest before
- * accepting its evidence as current (T-04-17-02).
+ * ---------------------------------------------------------------------
+ * WHY THIS LANE STILL REPORTS `BLOCKED` AFTER RUNNING REAL DEVICE TESTS
+ * ---------------------------------------------------------------------
+ * D-22 Criterion 2 has two halves. The OFFLINE half -- a mutation made with
+ * no server, a hard kill, a relaunch, exactly-once projection, a durable
+ * capture draft, foreground resume -- runs here for real on Jon's phone and
+ * passes. The SERVER-DRIVEN half -- authentication expiry, account fencing,
+ * duplicate replay, and structured conflict injected server-side through
+ * the recording proxy and asserted against what the proxy recorded -- does
+ * NOT, and cannot yet.
+ *
+ * `tooling/verify-real-stack-ios.mjs` measures why rather than asserting
+ * it: `KeeplingSyncAdapter`'s constructor refuses any non-HTTPS base URL
+ * whose host is not `127.0.0.1`/`localhost` (T-04-01-03/T-04-05-04), and a
+ * physical phone can only reach the build Mac at a LAN address. Over plain
+ * HTTP nothing leaves the phone; over TLS the phone genuinely connects (so
+ * routing works) and URLSession rejects the lane's self-signed certificate.
+ * Closing that needs a decision Plan 04-16 did not make, and widening the
+ * production transport guard to make this lane green is refused.
+ *
+ * So this lane runs everything it genuinely can, reports the case count it
+ * genuinely achieved IN ITS MESSAGE, and then throws `BLOCKED:` -- which
+ * `tooling/verify-ios-phase.mjs` labels distinctly from a bug while still
+ * failing the overall run. The alternative -- returning a positive count
+ * and letting the gate go green -- would let IOS-02's server-driven half
+ * look proven forever on the strength of its offline half. That is the
+ * exact failure this project's BLOCKED convention exists to prevent.
+ *
+ * When the transport-trust decision lands, delete `SERVER_DRIVEN_BLOCKER`
+ * below and return `cases` directly.
  */
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-export default function deviceLane({ repositoryRoot }) {
-  const attestationPath = join(repositoryRoot, 'tooling', 'ios-device', 'attestation.mjs')
-  const resolveDevicesPath = join(repositoryRoot, 'tooling', 'ios-device', 'resolve-devices.mjs')
-  const devicePlanSummaryPath = join(
-    repositoryRoot,
-    '.planning',
-    'phases',
-    'KPL-04-native-iphone-daily-loop',
-    '04-16-SUMMARY.md',
-  )
+/**
+ * The literal `DeviceCoreLoopTests`/`DeviceRecoveryTests` query for. A
+ * UI-test bundle is hosted by the app but does not link its module, so the
+ * identifier cannot be shared as a symbol -- it is mirrored, and mirrored
+ * strings drift. This lane refuses to run on drift rather than letting the
+ * device suites silently stop finding the probe (which would look like "the
+ * app has no attestation" and fail confusingly).
+ */
+const PROBE_IDENTIFIER = 'build-attestation-digest'
 
-  const evidenceReady = existsSync(attestationPath) && existsSync(resolveDevicesPath) && existsSync(devicePlanSummaryPath)
+/**
+ * D-19: the install path is `devicectl` direct install and nothing else.
+ * TestFlight and the App Store are deferred to Phase 6 -- upload plus
+ * processing latency plus a 90-day build expiry buy this phase no
+ * evidentiary value. Asserted here, not merely written in a comment,
+ * because a distribution step added later would silently change what
+ * "installed build" means.
+ */
+const FORBIDDEN_DISTRIBUTION_TOKENS = ['altool', 'notarytool', 'App Store Connect', 'app-store', 'ad-hoc', 'enterprise']
+
+const SERVER_DRIVEN_BLOCKER =
+  'the server-driven half of D-22 Criterion 2 (authentication expiry, account fencing, duplicate replay, ' +
+  'structured conflict -- injected server-side and asserted against the recording proxy) cannot run: the ' +
+  'phone cannot reach a Mac-hosted proxy. `KeeplingSyncAdapter` refuses any non-HTTPS base URL whose host ' +
+  'is not 127.0.0.1/localhost (T-04-01-03/T-04-05-04), and over TLS URLSession rejects the lane\'s ' +
+  'self-signed certificate. `node tooling/verify-real-stack-ios.mjs` measures both halves and prints the ' +
+  'evidence. This is disclosed missing evidence, not a code defect, and it is NOT closed by relaxing the ' +
+  'transport guard.'
+
+export default function deviceLane({ repositoryRoot, xcodebuildSummary }) {
+  const manifestPath = join(repositoryRoot, '.artifacts', 'ios', 'build-manifest.json')
+  const attestationPath = join(repositoryRoot, 'tooling', 'ios-device', 'attestation.mjs')
+  const resolvePath = join(repositoryRoot, 'tooling', 'ios-device', 'resolve-devices.mjs')
+
+  const preflightError = (() => {
+    for (const [label, path] of [['attestation.mjs', attestationPath], ['resolve-devices.mjs', resolvePath]]) {
+      if (!existsSync(path)) return `BLOCKED: tooling/ios-device/${label} is missing -- the device lane has no way to bind evidence to a build.`
+    }
+    if (!existsSync(manifestPath)) {
+      return (
+        'BLOCKED: no .artifacts/ios/build-manifest.json. Run `node tooling/build-ios-signed.mjs` first -- ' +
+        'without a manifest there is no digest to attest against, and an unbound device run is exactly the ' +
+        'stale evidence D-21 refuses.'
+      )
+    }
+
+    // Drift guard on the mirrored probe identifier.
+    const swiftSource = readFileSync(join(repositoryRoot, 'apps/ios/Sources/Keepling/App/BuildAttestation.swift'), 'utf8')
+    if (!swiftSource.includes(`"${PROBE_IDENTIFIER}"`)) {
+      return `BLOCKED: BuildAttestation.swift no longer declares the probe identifier "${PROBE_IDENTIFIER}" this lane and the device suites mirror.`
+    }
+    for (const testFile of ['DeviceCoreLoopTests.swift', 'DeviceRecoveryTests.swift']) {
+      const path = join(repositoryRoot, 'apps/ios/Tests/KeeplingUITests', testFile)
+      if (!existsSync(path)) return `BLOCKED: ${testFile} is missing -- the device suite this lane names does not exist.`
+    }
+
+    // D-19 install-path assertion.
+    for (const script of ['tooling/build-ios-signed.mjs', 'tooling/verify-real-stack-ios.mjs', 'tooling/ios-device/attestation.mjs']) {
+      const source = readFileSync(join(repositoryRoot, script), 'utf8')
+      // Skip prose that explicitly REFUSES these paths: the check is for a
+      // real invocation, and the header comments name the forbidden tools
+      // precisely so a future reader knows not to add them.
+      const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
+      for (const token of FORBIDDEN_DISTRIBUTION_TOKENS) {
+        if (code.includes(token)) {
+          return `BLOCKED: ${script} references ${token}. D-19 defers TestFlight/App Store to Phase 6; the install path is devicectl direct install only.`
+        }
+      }
+    }
+    return null
+  })()
+
+  const manifest = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, 'utf8')) : {}
+  const digest = manifest.keeplingBuildDigest ?? ''
+  // Only the HARDWARE UDID is needed here: `xcodebuild -destination` speaks
+  // that space. The CoreDevice identifier is never interpolated into this
+  // chain -- `hard-kill.mjs` and `attestation.mjs` each resolve their own
+  // from `resolve-devices.mjs`, so neither identifier can be handed to the
+  // wrong tool from here (T-04-16-02).
+  const hardwareUdid = manifest?.device?.hardwareUdid ?? ''
+
+  // `TEST_RUNNER_`-prefixed host variables are how xcodebuild hands an
+  // environment value to the UI-test RUNNER process (the one that reads
+  // `KEEPLING_EXPECTED_BUILD_DIGEST`). Setting the bare name would put it
+  // on xcodebuild's own process and the runner would never see it.
+  const chain = [
+    `node tooling/ios-device/attestation.mjs --expect-installed`,
+    // The out-of-process, signal-based hard kill -- the on-device analogue
+    // of the Phase 3 kill, and stricter than a cooperative quit: SIGKILL
+    // cannot be caught, so the app runs no shutdown path at all. Run BEFORE
+    // the suite so every case starts from a genuinely cold process, and so
+    // the attestation launch immediately above is the process being killed.
+    'node tooling/ios-device/hard-kill.mjs --require-running',
+    [
+      `TEST_RUNNER_KEEPLING_EXPECTED_BUILD_DIGEST=${digest}`,
+      'xcodebuild test',
+      // `xcodebuild test` REBUILDS and REINSTALLS the app. Without this the
+      // reinstalled app would carry project.yml's fallback
+      // `$(MARKETING_VERSION)+$(CURRENT_PROJECT_VERSION)` digest, the
+      // device suites' own binding assertion would fail against the
+      // manifest, and the failure would look like a mismatched build rather
+      // than a missing build setting. Injecting the SAME digest keeps the
+      // installed bytes and the attested value in step.
+      `KEEPLING_BUILD_DIGEST=${digest}`,
+      '-project apps/ios/Keepling.xcodeproj',
+      '-scheme Keepling',
+      `-destination "platform=iOS,id=${hardwareUdid}"`,
+      // A wirelessly-paired iPhone is not instantly "available" to
+      // xcodebuild even while CoreDevice holds a live tunnel to it: the
+      // default destination wait expires and the run dies with "Timed out
+      // waiting for all destinations ... to become available", which reads
+      // like the phone is absent when it is merely waking (measured during
+      // this plan's execution on this exact device).
+      '-destination-timeout 300',
+      '-allowProvisioningUpdates',
+      '-only-testing:KeeplingUITests/DeviceCoreLoopTests',
+      '-only-testing:KeeplingUITests/DeviceRecoveryTests',
+      '-only-testing:StorageTests/DataProtectionTests',
+      // D-22 Criterion 4's ONE physical-device confirmation run of the
+      // Plan 04-13 accessibility suites. Confirmation, not replacement:
+      // the `accessibility` lane still runs them on the simulator.
+      '-only-testing:KeeplingUITests/AccessibilityAuditTests',
+      '-only-testing:KeeplingUITests/DynamicTypeSnapshotTests',
+    ].join(' '),
+  ].join(' && ')
 
   return {
-    // No real work to spawn while blocked -- `true` always exits 0 so the
-    // BLOCKED determination comes entirely from `parse` throwing, never
-    // from a manufactured non-zero exit that would read like a crash.
-    command: 'true',
-    args: [],
+    command: 'sh',
+    args: ['-c', chain],
     cwd: repositoryRoot,
     name: 'device',
-    trackedInputPaths: ['tooling/ios-device', 'tooling/ios-lanes/device.mjs'],
-    parse: () => {
-      if (!evidenceReady) {
-        const missing = [
-          !existsSync(devicePlanSummaryPath) ? '04-16-SUMMARY.md (Plan 04-16 has not completed)' : null,
-          !existsSync(attestationPath) ? 'tooling/ios-device/attestation.mjs' : null,
-          !existsSync(resolveDevicesPath) ? 'tooling/ios-device/resolve-devices.mjs' : null,
-        ].filter(Boolean)
+    trackedInputPaths: [
+      'tooling/ios-device',
+      'tooling/ios-lanes/device.mjs',
+      'tooling/build-ios-signed.mjs',
+      'tooling/verify-real-stack-ios.mjs',
+      'apps/ios/Sources/Keepling/App/BuildAttestation.swift',
+      'apps/ios/Tests/KeeplingUITests/DeviceCoreLoopTests.swift',
+      'apps/ios/Tests/KeeplingUITests/DeviceRecoveryTests.swift',
+      'apps/ios/Tests/StorageTests/DataProtectionTests.swift',
+    ],
+    parse: (stdout, stderr, exitStatus) => {
+      if (preflightError) throw new Error(preflightError)
+      const output = `${stdout}\n${stderr}`
+      if (/ATTESTATION REFUSED: BLOCKED:/.test(output)) {
+        // Propagated verbatim so the gate's own `status=BLOCKED` label
+        // matches the underlying condition (a locked phone) rather than
+        // reporting it as an ordinary FAIL.
+        throw new Error(output.match(/ATTESTATION REFUSED: (BLOCKED:[\s\S]*?)(?:\n\n|$)/)?.[1] ?? 'BLOCKED: the device could not be reached')
+      }
+      if (/ATTESTATION REFUSED/.test(output)) {
         throw new Error(
-          'BLOCKED: physical-device evidence not available -- ' +
-            `missing: ${missing.join(', ')}. Requires an active Apple Developer Program membership, ` +
-            '`DEVELOPMENT_TEAM` configured in apps/ios/project.yml, and a trusted, online physical iPhone ' +
-            'running iOS 26+ (see 04-16-PLAN.md, which halted at a genuine human-action checkpoint). ' +
-            'This is disclosed missing evidence, not a code defect -- re-run this lane after Plan 04-16 ' +
-            'produces its SUMMARY and the attestation tooling.',
+          'the attestation refused this run: the build running on the phone is not the build under test ' +
+            '(D-21). No test result from this run may be attributed to the current build.',
         )
       }
-      // Once 04-16 lands, this branch should invoke the real device-bound
-      // xcodebuild run and its attestation-digest binding check instead of
-      // returning a fixed count.
-      return 0
+      if (exitStatus !== 0 && !/\*\* TEST SUCCEEDED \*\*/.test(output)) {
+        throw new Error(`the device suite exited ${exitStatus ?? 'without status'}`)
+      }
+      const cases = xcodebuildSummary(stdout)
+      throw new Error(
+        `BLOCKED: ${cases} physical-device case(s) passed on the installed build ` +
+          `(KeeplingBuildDigest=${digest}), but ${SERVER_DRIVEN_BLOCKER}`,
+      )
     },
   }
 }
