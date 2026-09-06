@@ -29,12 +29,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
-Plan: 17 of 17
+Plan: 16 of 17 complete — 04-16 halted at a human-action checkpoint
 Total Plans in Phase: 17
 Status: Executing Phase KPL-04
-Last activity: 2026-09-05 — Plan 04-06 complete (6 of 17)
-Last Activity Description: Plan 04-06 complete; next plan 04-07
-Progress: [████░░░░░░] 35%
+Last activity: 2026-09-05 — Plans 04-01..04-15 and 04-17 complete; 04-16 blocked
+Last Activity Description: 16/17 plans complete. Plan 04-16 (device install) halted at a human-action checkpoint: no confirmed paid Apple Developer Program membership, DEVELOPMENT_TEAM unset, iPhone paired but offline. Phase gate correctly reports BLOCKED (device lane), exit 1.
+Progress: [█████████░] 94%
 
 ## Accumulated Context
 
