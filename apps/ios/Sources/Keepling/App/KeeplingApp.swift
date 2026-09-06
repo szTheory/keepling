@@ -386,11 +386,21 @@ struct KeeplingApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if let probeMode {
-                AccessoryProbeRootView(mode: probeMode)
-            } else {
-                RootTabView(facade: facade!)
+            Group {
+                if let probeMode {
+                    AccessoryProbeRootView(mode: probeMode)
+                } else {
+                    RootTabView(facade: facade!)
+                }
             }
+            // D-21 (04-16-PLAN.md Task 2): emits the compiled-in
+            // `KeeplingBuildDigest` out of the RUNNING process on every
+            // launch, and -- only when the device lane asks -- renders the
+            // hidden probe element the device UI suites bind their own
+            // evidence to. Applied here rather than inside `RootTabView` so
+            // the accessory-probe root gets the same binding, and so no
+            // existing view file changes shape.
+            .buildAttestationProbe()
         }
         .onChange(of: scenePhase) { _, newPhase in
             scenePhaseDriver?.scenePhaseChanged(to: newPhase)

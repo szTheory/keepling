@@ -3,6 +3,7 @@
   "private": true,
   "packageManager": "pnpm@10.33.0",
   "scripts": {
+    "build:ios:signed": "node tooling/build-ios-signed.mjs",
     "build:web": "pnpm --filter @keepling/web build",
     "contracts:check": "node tooling/check-contracts.mjs",
     "contracts:generate": "openapi-typescript packages/contracts/openapi/keepling.yaml --output packages/contracts/generated/keepling.ts --alphabetize --immutable",
@@ -24,7 +25,9 @@
     "typecheck:web": "pnpm --filter @keepling/web typecheck",
     "verify:desktop:real-stack": "node tooling/verify-real-stack-desktop.mjs",
     "verify:desktop:reproducible": "node tooling/verify-package-reproducibility.mjs",
-    "verify:ios:phase": "node tooling/verify-ios-phase.mjs"
+    "verify:ios:device": "node tooling/verify-ios-phase.mjs --lane device",
+    "verify:ios:phase": "node tooling/verify-ios-phase.mjs",
+    "verify:ios:real-stack": "node tooling/verify-real-stack-ios.mjs"
   },
   "devDependencies": {
     "openapi-typescript": "7.13.0",
