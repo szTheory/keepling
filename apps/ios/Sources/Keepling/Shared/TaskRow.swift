@@ -26,9 +26,23 @@ struct TaskListEmptyState: View {
                 .foregroundStyle(TokenSemantics.mutedText)
                 .multilineTextAlignment(.center)
             if let action {
+                // `.borderedProminent` picks its own automatic foreground
+                // for the tinted fill rather than pairing it with a token.
+                // Measured on a physical iPhone via
+                // `performAccessibilityAudit(for: .contrast)`, that
+                // automatic pairing fails WCAG 2.2 AA against
+                // `TokenSemantics.accent` -- the simulator's rendering did
+                // not reproduce it, so this only ever surfaced on device
+                // (found by the 04-16 device lane against an empty Inbox,
+                // which is the one state that shows this button).
+                // `accentText` exists precisely as the proven foreground
+                // pairing for an accent-tinted surface; naming it is the
+                // same Rule 1 fix already applied to the section headers
+                // and destructive buttons elsewhere in this app.
                 Button(action.label, action: action.perform)
                     .buttonStyle(.borderedProminent)
                     .tint(TokenSemantics.accent)
+                    .foregroundStyle(TokenSemantics.accentText)
                     .frame(minWidth: TokenSemantics.Layout.target, minHeight: TokenSemantics.Layout.target)
             }
         }

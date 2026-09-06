@@ -38,7 +38,21 @@ final class AccessibilityAuditTests: XCTestCase {
             // evidence.
             var issues: [String] = []
             try app.performAccessibilityAudit(for: Self.auditTypes(for: screen.name)) { issue in
-                issues.append(issue.detailedDescription)
+                // `detailedDescription` alone can come back as a bare
+                // "Contrast failed for element" with the element half
+                // empty -- which is what a device run produced against
+                // Inbox, leaving nothing to act on. The element's own
+                // identifier, label and frame are appended so a failure
+                // names the control rather than merely its screen.
+                let element = issue.element
+                let identity = [
+                    element?.identifier.isEmpty == false ? "identifier=\(element!.identifier)" : nil,
+                    element?.label.isEmpty == false ? "label=\(element!.label)" : nil,
+                    element.map { "type=\($0.elementType.rawValue) frame=\($0.frame)" },
+                ]
+                .compactMap { $0 }
+                .joined(separator: " ")
+                issues.append(identity.isEmpty ? issue.detailedDescription : "\(issue.detailedDescription) [\(identity)]")
                 return true
             }
             XCTAssertTrue(issues.isEmpty, "\(screen.name) failed the accessibility audit:\n\(issues.joined(separator: "\n---\n"))")
