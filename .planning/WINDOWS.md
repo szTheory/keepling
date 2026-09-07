@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 6
+open_count: 8
 waived_count: 49
 fixed_count: 6
-total_count: 61
-last_updated: 2026-09-07T04:02:15.231Z
+total_count: 63
+last_updated: 2026-09-07T04:03:27.539Z
 ---
 
 # Broken Windows Ledger
@@ -76,6 +76,8 @@ last_updated: 2026-09-07T04:02:15.231Z
 | 59 | KPL-03 | unmet-truth | apps/desktop/main/application/DesktopApplication.ts |  | undoLastLocalAction reverses a local change and enqueues NO outbound command, so an undo is invisible to the server -- the same defect class as O-41, needing server-issued undo handles the client does not retain (O-45) | open |  | 2026-09-04T04:12:07.673Z |  |
 | 60 | KPL-03 | unmet-truth | apps/desktop/main/application/presentation.ts |  | { kind: preparing } has authored copy and no production construction site; the real site is a first-run bootstrap branch (KeeplingSyncAdapter.bootstrap() is called from nowhere). Reported for a recorded decision, deliberately not wired speculatively and not deleted (O-46) | open |  | 2026-09-04T04:12:07.673Z |  |
 | 61 | KPL-03 | unmet-truth | apps/desktop/main/application/presentation.ts |  | { kind: uncertain } and its check_again action have authored copy and no production construction site; constructing it honestly needs the transport to distinguish "never left" from "left, answer lost". Reported for a recorded decision, deliberately not wired speculatively and not deleted (O-47) | open |  | 2026-09-04T04:12:07.673Z |  |
+| 62 | KPL-04 | unmet-truth | tooling/verify-real-stack-ios.mjs |  | The server-driven half of D-22 Criterion 2 (auth expiry, account fencing, duplicate replay, structured conflict) cannot run on a physical iPhone: KeeplingSyncAdapter refuses any non-HTTPS base URL whose host is not 127.0.0.1/localhost, and over TLS URLSession rejects the lane's self-signed certificate. Needs a DEBUG-only lane CA via an injected ClientTransport; NOT closed by widening the production transport guard. | open |  | 2026-09-07T04:03:27.449Z |  |
+| 63 | KPL-04 | skipped-test | apps/ios/Tests/StorageTests/DataProtectionTests.swift |  | Gate G7's locked-device write is unverified: no programmatic lock control exists (devicectl has no lock verb, XCUIDevice is UI-testing-only, and DataProtectionTests is a unit bundle). Compounded by the device having no passcode set, without which iOS file data protection does not engage at all. | open |  | 2026-09-07T04:03:27.539Z |  |
 
 ````json
 [
@@ -809,6 +811,30 @@ last_updated: 2026-09-07T04:02:15.231Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-04T04:12:07.673Z",
+    "resolved_at": null
+  },
+  {
+    "id": 62,
+    "kind": "unmet-truth",
+    "phase": "KPL-04",
+    "file": "tooling/verify-real-stack-ios.mjs",
+    "line": null,
+    "description": "The server-driven half of D-22 Criterion 2 (auth expiry, account fencing, duplicate replay, structured conflict) cannot run on a physical iPhone: KeeplingSyncAdapter refuses any non-HTTPS base URL whose host is not 127.0.0.1/localhost, and over TLS URLSession rejects the lane's self-signed certificate. Needs a DEBUG-only lane CA via an injected ClientTransport; NOT closed by widening the production transport guard.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-07T04:03:27.449Z",
+    "resolved_at": null
+  },
+  {
+    "id": 63,
+    "kind": "skipped-test",
+    "phase": "KPL-04",
+    "file": "apps/ios/Tests/StorageTests/DataProtectionTests.swift",
+    "line": null,
+    "description": "Gate G7's locked-device write is unverified: no programmatic lock control exists (devicectl has no lock verb, XCUIDevice is UI-testing-only, and DataProtectionTests is a unit bundle). Compounded by the device having no passcode set, without which iOS file data protection does not engage at all.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-07T04:03:27.539Z",
     "resolved_at": null
   }
 ]
