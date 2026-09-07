@@ -106,11 +106,28 @@ targets:
     sources:
       - path: Tests/StorageTests
     dependencies:
-      - package: KeeplingCore
+      # HOSTED by the app, matching `KeeplingCoreTests` and `AppIntentsTests`
+      # above. iOS refuses tool-hosted (unhosted) test bundles on device
+      # destinations -- "Tool-hosted testing is unavailable on device
+      # destinations" -- so an unhosted StorageTests is silently SKIPPED
+      # there. That is how `DataProtectionTests` came to be cited as
+      # physical-device evidence for gate G7 while never executing on
+      # hardware at all, and file data protection is a property of a real
+      # passcode-bearing device that no simulator run can stand in for.
+      #
+      # `target: Keepling` ALONE, deliberately -- see `KeeplingCoreTests`'
+      # note: the app already depends on the package, so this bundle gets
+      # KeeplingCore transitively through the host-app link. Keeping
+      # `package: KeeplingCore` here as well links it twice and the build
+      # fails on KeeplingCore's transitive SwiftPM products (measured:
+      # "Undefined symbol: type metadata for HTTPTypes.HTTPRequest").
+      - target: Keepling
     settings:
       base:
         SWIFT_VERSION: "6.3"
         GENERATE_INFOPLIST_FILE: YES
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Keepling.app/Keepling"
 
   KeeplingUITests:
     type: bundle.ui-testing
