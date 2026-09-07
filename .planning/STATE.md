@@ -4,7 +4,7 @@ milestone: v1.0
 current_phase: 04
 current_phase_name: Native iPhone Daily Loop
 status: executing
-stopped_at: "Completed 04-16-PLAN.md (device lane BLOCKED: iPhone locked)"
+stopped_at: "Completed 04-16-PLAN.md; device lane since ran GREEN on hardware (22 cases, 0 failures). Still BLOCKED, but only on the server-driven half of D-22 Criterion 2 -- the phone cannot reach a Mac-hosted proxy. Needs a DEBUG-only lane CA, not an unlocked phone."
 last_updated: "2026-09-06T04:22:10.456Z"
 last_activity: 2026-09-05
 last_activity_desc: Plan 04-06 complete; next plan 04-07
