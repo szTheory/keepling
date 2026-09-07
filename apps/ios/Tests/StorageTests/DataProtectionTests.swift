@@ -23,6 +23,17 @@ final class DataProtectionTests: XCTestCase {
     /// `URLResourceValues` accessor reads back the real value. Disclosed
     /// in docs/testing/ios-testing.md so a future test reaching for the
     /// `FileManager` accessor does not reintroduce a false negative.
+    private func offMain<T>(_ work: @escaping () throws -> T) throws -> T {
+        let semaphore = DispatchSemaphore(value: 0)
+        nonisolated(unsafe) var result: Result<T, Error>!
+        DispatchQueue.global().async {
+            do { result = .success(try work()) } catch { result = .failure(error) }
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return try result.get()
+    }
+
     func testStoreFileRequestsCompleteUntilFirstUserAuthenticationProtection() throws {
         let path = storePath()
         _ = try GRDBLocalStore(path: path)
@@ -85,7 +96,17 @@ final class DataProtectionTests: XCTestCase {
         // A write that genuinely reaches real flash, so the class above is
         // proved on a file the store actually uses rather than on an empty
         // one it merely created.
-        XCTAssertNoThrow(try store.currentUndoAvailability())
+        // `offMain`, matching every sibling suite in this target.
+        // `GRDBLocalStore` asserts it is never entered from the main
+        // thread, and XCTest runs test methods ON the main thread. A bare
+        // call survived only because the guard's DEBUG escape hatch
+        // (`mainThreadViolationHandler`) is compiled out of the Release
+        // build installed on a device -- so this line passed on the
+        // Simulator and hard-crashed the host the first time the bundle
+        // was actually allowed to run on hardware:
+        //   Fatal error: GRDBLocalStore.currentUndoAvailability() must
+        //   never be called from the main thread
+        XCTAssertNoThrow(try offMain { try store.currentUndoAvailability() })
         XCTAssertTrue(try DurableUnit(databasePath: path).isFullyExcludedFromBackup())
 
         // `unlockedSinceBoot` is the precondition that makes
