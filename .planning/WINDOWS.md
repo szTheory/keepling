@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 1
+open_count: 6
 waived_count: 49
 fixed_count: 6
-total_count: 56
-last_updated: 2026-09-03T23:50:09.007Z
+total_count: 61
+last_updated: 2026-09-07T04:02:15.231Z
 ---
 
 # Broken Windows Ledger
@@ -71,6 +71,11 @@ last_updated: 2026-09-03T23:50:09.007Z
 | 54 | KPL-03 | deviation | apps/desktop/main/adapters/credentials.ts |  | 03-13: pane-size persistence (D-06) is N/A -- no resizable-pane UI exists in the shared Workspace presentation to size or restore; documented decision, not a stub. | waived | Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate. | 2026-09-03T01:41:18.549Z | 2026-09-03T23:50:09.007Z |
 | 55 | KPL-03 | unrun-verify | tooling/verify-desktop-phase.mjs |  | macos-integration lane cases=0 at 03-17 HEAD: recorded row evidence is bound to the packaged applicationDigestSha256 and 03-17 changed main/index.ts. Re-record with: pnpm package:desktop && node tooling/verify-macos-integration.mjs --all (O-27) | fixed |  | 2026-09-03T20:47:11.732Z | 2026-09-03T23:49:58.264Z |
 | 56 | KPL-03 | unmet-truth | apps/desktop/vitest.config.ts |  | vitest 'worker' project declares include test/worker/** but that directory does not exist; the empty lane is invisible in a full run (O-26) | fixed |  | 2026-09-03T20:47:11.845Z | 2026-09-03T23:49:58.349Z |
+| 57 | KPL-03 | unmet-truth | apps/desktop/store-worker/local-store.ts |  | A locally REFUSED change has no durable home: the refused command is terminal and leaves the outbox, so the next applyPull replays the canonical shadow and the person's version is lost -- while the authored copy says "Your version is still on this Mac." (O-43). Do NOT resolve by keeping refused commands queued. | open |  | 2026-09-04T04:12:07.673Z |  |
+| 58 | KPL-03 | unmet-truth | packages/web-ui/src/tasks/ConflictResolver.tsx |  | The desktop conflict chooser is title-only, so a lifecycle/Trash conflict reaches a person as copy plus a refresh but with no mine/current choice; apps/web already has the multi-field resolver (O-44) | open |  | 2026-09-04T04:12:07.673Z |  |
+| 59 | KPL-03 | unmet-truth | apps/desktop/main/application/DesktopApplication.ts |  | undoLastLocalAction reverses a local change and enqueues NO outbound command, so an undo is invisible to the server -- the same defect class as O-41, needing server-issued undo handles the client does not retain (O-45) | open |  | 2026-09-04T04:12:07.673Z |  |
+| 60 | KPL-03 | unmet-truth | apps/desktop/main/application/presentation.ts |  | { kind: preparing } has authored copy and no production construction site; the real site is a first-run bootstrap branch (KeeplingSyncAdapter.bootstrap() is called from nowhere). Reported for a recorded decision, deliberately not wired speculatively and not deleted (O-46) | open |  | 2026-09-04T04:12:07.673Z |  |
+| 61 | KPL-03 | unmet-truth | apps/desktop/main/application/presentation.ts |  | { kind: uncertain } and its check_again action have authored copy and no production construction site; constructing it honestly needs the transport to distinguish "never left" from "left, answer lost". Reported for a recorded decision, deliberately not wired speculatively and not deleted (O-47) | open |  | 2026-09-04T04:12:07.673Z |  |
 
 ````json
 [
