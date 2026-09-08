@@ -184,13 +184,20 @@ const phase4RequirementIds = () => {
   const text = readFileSync(requirementsPath, 'utf8')
   const row = text.split('\n').find((line) => line.includes('| Phase 4 |') && line.includes('IOS'))
   if (!row) throw new Error('no Phase 4 row found in .planning/REQUIREMENTS.md Traceability table')
+  // Only the row's FIRST cell names requirement ids. The remaining cells are
+  // prose, and this phase's prose cites DECISION ids (`D-22`, `D-04`) that
+  // share the `LETTERS-DIGITS` shape -- harvesting the whole row made the
+  // gate fail with "requirement D-22 has no mapped lane" purely because of
+  // how a status note was worded. Reading the id column is also the correct
+  // authority: it is what the table declares this phase owns.
+  const idCell = row.split('|')[1] ?? ''
   const ids = new Set()
-  for (const match of row.matchAll(/([A-Z]+)-(\d+)\.\.(\d+)/g)) {
+  for (const match of idCell.matchAll(/([A-Z]+)-(\d+)\.\.(\d+)/g)) {
     const [, prefix, start, end] = match
     for (let n = Number(start); n <= Number(end); n += 1) ids.add(`${prefix}-${String(n).padStart(2, '0')}`)
   }
-  for (const match of row.matchAll(/\b([A-Z]+-\d+)\b/g)) {
-    if (!/\.\.$/.test(row.slice(0, match.index))) ids.add(match[1])
+  for (const match of idCell.matchAll(/\b([A-Z]+-\d+)\b/g)) {
+    if (!/\.\.$/.test(idCell.slice(0, match.index))) ids.add(match[1])
   }
   if (ids.size === 0) throw new Error('Phase 4 row named no requirement ids')
   return [...ids].sort()
