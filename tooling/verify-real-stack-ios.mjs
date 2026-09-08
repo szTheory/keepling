@@ -65,7 +65,7 @@ import { createServer as createTlsServer } from 'node:tls'
 import { join, resolve } from 'node:path'
 import { randomBytes, randomUUID } from 'node:crypto'
 import process from 'node:process'
-import { spawnSync } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 
 const repositoryRoot = resolve(import.meta.dirname, '..')
 
@@ -103,6 +103,17 @@ const TLS_PROBE_PORT = Number(process.env.KEEPLING_IOS_E2E_TLS_PORT ?? 4114)
 const fail = (message) => {
   throw new Error(message)
 }
+
+/** Spawns without blocking the event loop the proxy and TLS probe run on. */
+const runAsync = (command, args) =>
+  new Promise((resolvePromise) => {
+    const child = spawn(command, args)
+    let stdout = ''
+    let stderr = ''
+    child.stdout?.on('data', (chunk) => { stdout += chunk })
+    child.stderr?.on('data', (chunk) => { stderr += chunk })
+    child.on('close', () => resolvePromise({ stdout, stderr }))
+  })
 
 const blocked = (message) => {
   const error = new Error(message)
@@ -337,20 +348,38 @@ try {
   if (tlsProbe) await tlsProbe.listen('0.0.0.0', TLS_PROBE_PORT)
 
   const device = resolveDevice()
-  const launchWith = (serverUrl) => {
+
+  /**
+   * MEASURED CORRECTION (04-18-PLAN.md Task 1). This function used
+   * `spawnSync` for the launch AND `spawnSync('sleep', ...)` inside its
+   * poll loop, with no `await` anywhere between them. This process IS the
+   * recording proxy and the TLS probe: both listeners run on THIS event
+   * loop. `spawnSync` blocks that loop completely, so for the entire
+   * measurement window neither listener could accept a connection or
+   * record one, and `proxy.records.length` / `tlsProbe.attempts.length`
+   * were read synchronously before the loop ever ran again.
+   *
+   * Both counts were therefore ZERO BY CONSTRUCTION, whatever the phone
+   * did. Reproduced in isolation: a request that genuinely arrives during
+   * the blocking window reads as 0 synchronously and 1 once the loop runs.
+   *
+   * That means this lane's device half was not measuring reachability at
+   * all -- it was reporting the shape of its own blocked event loop, and
+   * the conclusion drawn from it ("the phone routed here, so the blocker
+   * is certificate trust") was not supported by its own evidence. The
+   * conclusion may still be true; it was simply never measured. Everything
+   * here is asynchronous now so that the listeners can actually listen.
+   */
+  const launchWith = async (serverUrl) => {
     const before = proxy.records.length
     const beforeTls = tlsProbe?.attempts.length ?? 0
-    const launch = spawnSync(
-      'xcrun',
-      [
-        'devicectl', 'device', 'process', 'launch',
-        '--device', device.devicectlIdentifier,
-        '--terminate-existing',
-        '--environment-variables', JSON.stringify({ KEEPLING_SERVER_URL: serverUrl }),
-        BUNDLE_ID,
-      ],
-      { encoding: 'utf8', timeout: 120_000 },
-    )
+    const launch = await runAsync('xcrun', [
+      'devicectl', 'device', 'process', 'launch',
+      '--device', device.devicectlIdentifier,
+      '--terminate-existing',
+      '--environment-variables', JSON.stringify({ KEEPLING_SERVER_URL: serverUrl }),
+      BUNDLE_ID,
+    ])
     const launchOutput = `${launch.stdout ?? ''}\n${launch.stderr ?? ''}`
     // A LOCKED phone refuses every app launch
     // (`FBSOpenApplicationErrorDomain error 7`). Without this branch a
@@ -371,7 +400,10 @@ try {
     const deadline = Date.now() + 20_000
     while (Date.now() < deadline) {
       if (proxy.records.length > before || (tlsProbe?.attempts.length ?? 0) > beforeTls) break
-      spawnSync('sleep', ['0.5'])
+      // `await`, not `spawnSync('sleep')`: yielding to the event loop is the
+      // entire point of the wait. A blocking sleep here would guarantee the
+      // zero it is waiting to disprove.
+      await new Promise((resolvePromise) => setTimeout(resolvePromise, 500))
     }
     return {
       httpArrivals: proxy.records.length - before,
@@ -379,8 +411,8 @@ try {
     }
   }
 
-  const overHttp = launchWith(`http://${lanIp}:${stack.port}`)
-  const overHttps = launchWith(`https://${lanIp}:${TLS_PROBE_PORT}`)
+  const overHttp = await launchWith(`http://${lanIp}:${stack.port}`)
+  const overHttps = await launchWith(`https://${lanIp}:${TLS_PROBE_PORT}`)
 
   console.log(
     `IOS_REAL_STACK_DEVICE lan_ip=${lanIp} http_arrivals=${overHttp.httpArrivals} ` +

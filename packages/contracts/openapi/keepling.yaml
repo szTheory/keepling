@@ -1529,10 +1529,10 @@ components:
           # which the task's "no required-field set...may change" constraint
           # forbids as contract hygiene. T-04-01-01's residual risk instead
           # rests on the union members' own required-field sets, each
-          # combined with `additionalProperties: false`: SyncTaskSnapshot
+          # combined with `additionalProperties: false`: TaskSnapshot
           # requires captured_at/inbox_state/notes/tag_ids/title (absent from
           # every other variant) and SyncOrganizationSnapshot requires
-          # kind/name/archived_at (absent from SyncTaskSnapshot), so the two
+          # kind/name/archived_at (absent from TaskSnapshot), so the two
           # named as "structurally overlapping" in this task's own text do
           # not actually share a required-field subset relationship --
           # swift-openapi-generator's undiscriminated oneOf decode strategy,
@@ -1543,7 +1543,7 @@ components:
           # throws. Because every variant is `additionalProperties: false`
           # with a required-field set no other variant's payload satisfies,
           # a real task_snapshot payload throws out of every earlier variant
-          # (missing THEIR required fields) before reaching SyncTaskSnapshot,
+          # (missing THEIR required fields) before reaching the task variant,
           # and likewise for every other kind -- so first-match-wins is
           # deterministic in practice today, not merely hoped-for. This is a
           # narrower guarantee than a real discriminator (it depends on the
@@ -1553,9 +1553,26 @@ components:
           # documented as a deviation from the literal task instruction
           # rather than silently shipping either broken discriminator
           # attempt above.
+          #
+          # MEASURED CORRECTION (04-18-PLAN.md Task 3). This union used to
+          # name a separate `SyncTaskSnapshot` requiring `project_id` and
+          # `tag_ids`. The server never sent that shape: its sync feed sets
+          # `payload: snapshot` -- the SAME object a command response
+          # carries, described here by `TaskSnapshot`, with `project` and
+          # `tags`. With `additionalProperties: false` no variant could
+          # match, so EVERY sync page containing a task snapshot failed to
+          # decode ENTIRELY and surfaced as `SyncUnreachable`. iOS sync pull
+          # could never have worked against a real server.
+          #
+          # It survived because the only things that ever exercised the old
+          # schema were hand-written fixtures in `DecodeRoundTripTests`,
+          # which spelled `tag_ids` to match the schema rather than the
+          # server. The desktop client reads `change.payload` structurally
+          # and casts, so it never decoded through this union and never
+          # noticed.
           oneOf:
             - $ref: '#/components/schemas/SyncCommandOutcomePayload'
-            - $ref: '#/components/schemas/SyncTaskSnapshot'
+            - $ref: '#/components/schemas/TaskSnapshot'
             - $ref: '#/components/schemas/SyncOrganizationSnapshot'
             - $ref: '#/components/schemas/PersistedConflict'
             - $ref: '#/components/schemas/SyncCollectionTombstone'
@@ -1570,40 +1587,21 @@ components:
       required: [result, status]
       properties:
         result:
-          $ref: '#/components/schemas/MutationResult'
+          # NOT `MutationResult`. The feed's acknowledgement withholds the
+          # undo handle (see `SyncCommandAcknowledgement`), and a refused
+          # command's outcome is recorded here as the server's own `Problem`
+          # body -- verified against a real 409, which carried
+          # `{affected_fields, code, conflict, current_revision, detail,
+          #   recovery_action, retryable, status, title, type}`.
+          oneOf:
+            - $ref: '#/components/schemas/SyncCommandAcknowledgement'
+            - $ref: '#/components/schemas/OrganizationAcknowledgement'
+            - $ref: '#/components/schemas/UndoNoChange'
+            - $ref: '#/components/schemas/Problem'
         status:
           type: integer
           minimum: 200
           maximum: 599
-    SyncTaskSnapshot:
-      type: object
-      additionalProperties: false
-      required: [captured_at, completed_at, deadline_on, id, inbox_state, notes, planned_on, project_id, revision, tag_ids, title, trashed_at]
-      properties:
-        captured_at: {type: string, format: date-time}
-        completed_at:
-          type: [string, 'null']
-          format: date-time
-        deadline_on:
-          $ref: '#/components/schemas/NullableCivilDate'
-        id:
-          $ref: '#/components/schemas/TaskIdentity'
-        inbox_state: {type: string, enum: [inbox, clarified]}
-        notes: {type: string}
-        planned_on:
-          $ref: '#/components/schemas/NullableCivilDate'
-        project_id:
-          $ref: '#/components/schemas/NullableOrganizationIdentity'
-        revision:
-          $ref: '#/components/schemas/Revision'
-        tag_ids:
-          type: array
-          uniqueItems: true
-          items: {$ref: '#/components/schemas/OrganizationIdentity'}
-        title: {type: string}
-        trashed_at:
-          type: [string, 'null']
-          format: date-time
     SyncOrganizationSnapshot:
       type: object
       additionalProperties: false
@@ -1654,7 +1652,7 @@ components:
         snapshot:
           oneOf:
             - $ref: '#/components/schemas/SyncOrganizationSnapshot'
-            - $ref: '#/components/schemas/SyncTaskSnapshot'
+            - $ref: '#/components/schemas/TaskSnapshot'
     CompatibilityResponse:
       type: object
       additionalProperties: false
@@ -2284,6 +2282,58 @@ components:
           const: 1
     ClarifyTaskCommand:
       $ref: '#/components/schemas/EditTaskCommand'
+    SyncCommandAcknowledgement:
+      # The acknowledgement as it appears in the SYNC FEED, which is not the
+      # same shape as the one a direct command response returns.
+      #
+      # MEASURED (04-18-PLAN.md Task 3). A direct response carries
+      # `undo: {expires_at, handle, label}` -- a full `UndoAvailability`.
+      # The feed carries `undo: {expires_at, label}` and deliberately omits
+      # the handle, because the handle is an opaque one-shot CAPABILITY and
+      # the feed is broadcast to every device on the account. Withholding it
+      # there is a security property, not an oversight.
+      #
+      # The contract previously modelled only the direct-response shape, so
+      # every feed acknowledgement carrying an undo failed to decode with
+      # `keyNotFound "handle"` -- and because the payload is an
+      # un-discriminated union, that failure took the WHOLE sync page with
+      # it, including every unrelated change in it.
+      #
+      # Modelled as its own schema rather than by making `handle` optional
+      # on `UndoAvailability`: that would have been a one-line fix which
+      # silently gave up the ability to state that a direct response ALWAYS
+      # carries a usable handle, and that the feed never does.
+      type: object
+      additionalProperties: false
+      required:
+        - mutation_id
+        - outcome
+        - revision
+        - snapshot
+        - task_id
+        - warnings
+      properties:
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        outcome:
+          type: string
+          enum:
+            - accepted
+            - already_satisfied
+        revision:
+          $ref: '#/components/schemas/Revision'
+        resolved_conflict_id:
+          $ref: '#/components/schemas/ConflictIdentity'
+        undo:
+          $ref: '#/components/schemas/SyncUndoMetadata'
+        snapshot:
+          $ref: '#/components/schemas/TaskSnapshot'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Warning'
     CommandAcknowledgement:
       type: object
       additionalProperties: false
@@ -2810,10 +2860,27 @@ components:
       format: uuid
       description: Client-generated identity retained across exact retries.
     MutationResult:
+      # MEASURED CORRECTION (04-18-PLAN.md Task 3). A `command_outcome`
+      # entry in the sync feed carries the outcome of a command the server
+      # PROCESSED, and that outcome is not always an acknowledgement: when
+      # the command was refused -- a stale `expected_revision` answered 409,
+      # for instance -- the server puts its `Problem` body here, with
+      # `status: 409` alongside it in the envelope. Verified against a real
+      # conflict: the result carried
+      # `{affected_fields, code, conflict, current_revision, detail,
+      #   recovery_action, retryable, status, title, type}`.
+      #
+      # Without `Problem` in this union, every sync page containing a
+      # refused command failed to decode IN ITS ENTIRETY, taking every
+      # unrelated change in the same page with it. Disjointness holds: an
+      # acknowledgement requires `mutation_id`/`outcome`, which `Problem`
+      # does not have, and `Problem` requires `type`/`title`/`status`/
+      # `code`, which no acknowledgement has.
       oneOf:
         - $ref: '#/components/schemas/CommandAcknowledgement'
         - $ref: '#/components/schemas/OrganizationAcknowledgement'
         - $ref: '#/components/schemas/UndoNoChange'
+        - $ref: '#/components/schemas/Problem'
     OrganizationAcknowledgement:
       type: object
       additionalProperties: false

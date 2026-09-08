@@ -1067,7 +1067,7 @@ export interface components {
          * @description Client-generated identity retained across exact retries.
          */
         readonly MutationIdentity: string;
-        readonly MutationResult: components["schemas"]["CommandAcknowledgement"] | components["schemas"]["OrganizationAcknowledgement"] | components["schemas"]["UndoNoChange"];
+        readonly MutationResult: components["schemas"]["CommandAcknowledgement"] | components["schemas"]["OrganizationAcknowledgement"] | components["schemas"]["UndoNoChange"] | components["schemas"]["Problem"];
         /** @enum {string} */
         readonly MutationTrustState: "local_saved" | "checking" | "accepted" | "rejected" | "conflict" | "authentication_required" | "quarantined";
         readonly NativeAuthorizationCode: string;
@@ -1307,7 +1307,7 @@ export interface components {
             readonly entity_type: "organization" | "task";
             /** @enum {string} */
             readonly kind: "organization_snapshot" | "task_snapshot";
-            readonly snapshot: components["schemas"]["SyncOrganizationSnapshot"] | components["schemas"]["SyncTaskSnapshot"];
+            readonly snapshot: components["schemas"]["SyncOrganizationSnapshot"] | components["schemas"]["TaskSnapshot"];
         };
         readonly SyncBootstrapPage: {
             readonly entities: readonly components["schemas"]["SyncBootstrapEntity"][];
@@ -1320,8 +1320,19 @@ export interface components {
             readonly organization_id: components["schemas"]["OrganizationIdentity"];
             readonly task_id: components["schemas"]["TaskIdentity"];
         };
+        readonly SyncCommandAcknowledgement: {
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            /** @enum {string} */
+            readonly outcome: "accepted" | "already_satisfied";
+            readonly resolved_conflict_id?: components["schemas"]["ConflictIdentity"];
+            readonly revision: components["schemas"]["Revision"];
+            readonly snapshot: components["schemas"]["TaskSnapshot"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly undo?: components["schemas"]["SyncUndoMetadata"];
+            readonly warnings: readonly components["schemas"]["Warning"][];
+        };
         readonly SyncCommandOutcomePayload: {
-            readonly result: components["schemas"]["MutationResult"];
+            readonly result: components["schemas"]["SyncCommandAcknowledgement"] | components["schemas"]["OrganizationAcknowledgement"] | components["schemas"]["UndoNoChange"] | components["schemas"]["Problem"];
             readonly status: number;
         };
         /** @description Opaque authenticated feed or bootstrap position bound to the server-derived installation namespace. */
@@ -1338,7 +1349,7 @@ export interface components {
             readonly kind: "command_outcome" | "task_snapshot" | "organization_snapshot" | "conflict_snapshot" | "collection_tombstone" | "undo_metadata";
             readonly mutation_id: components["schemas"]["MutationIdentity"];
             readonly ordinal: number;
-            readonly payload: components["schemas"]["SyncCommandOutcomePayload"] | components["schemas"]["SyncTaskSnapshot"] | components["schemas"]["SyncOrganizationSnapshot"] | components["schemas"]["PersistedConflict"] | components["schemas"]["SyncCollectionTombstone"] | components["schemas"]["SyncUndoMetadata"];
+            readonly payload: components["schemas"]["SyncCommandOutcomePayload"] | components["schemas"]["TaskSnapshot"] | components["schemas"]["SyncOrganizationSnapshot"] | components["schemas"]["PersistedConflict"] | components["schemas"]["SyncCollectionTombstone"] | components["schemas"]["SyncUndoMetadata"];
             /** Format: int64 */
             readonly sequence: number;
         };
@@ -1361,24 +1372,6 @@ export interface components {
             readonly ordinal: number;
             /** Format: int64 */
             readonly sequence: number;
-        };
-        readonly SyncTaskSnapshot: {
-            /** Format: date-time */
-            readonly captured_at: string;
-            /** Format: date-time */
-            readonly completed_at: string | null;
-            readonly deadline_on: components["schemas"]["NullableCivilDate"];
-            readonly id: components["schemas"]["TaskIdentity"];
-            /** @enum {string} */
-            readonly inbox_state: "inbox" | "clarified";
-            readonly notes: string;
-            readonly planned_on: components["schemas"]["NullableCivilDate"];
-            readonly project_id: components["schemas"]["NullableOrganizationIdentity"];
-            readonly revision: components["schemas"]["Revision"];
-            readonly tag_ids: readonly components["schemas"]["OrganizationIdentity"][];
-            readonly title: string;
-            /** Format: date-time */
-            readonly trashed_at: string | null;
         };
         readonly SyncUndoMetadata: {
             /** Format: date-time */

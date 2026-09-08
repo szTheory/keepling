@@ -161,7 +161,9 @@ final class WireMapperBoundaryTests: XCTestCase {
             mutation_id: "mutation-1",
             ordinal: 0,
             payload: .SyncCommandOutcomePayload(.init(
-                result: .CommandAcknowledgement(.init(
+                // The FEED's acknowledgement, whose `undo` is metadata with
+                // no capability handle (04-18-PLAN.md Task 3).
+                result: .SyncCommandAcknowledgement(.init(
                     mutation_id: "mutation-1", outcome: .accepted, revision: 1, snapshot: TaskSnapshotFixture.make(), task_id: "task-1", warnings: []
                 )),
                 status: 201
@@ -172,13 +174,16 @@ final class WireMapperBoundaryTests: XCTestCase {
     }
 
     func testMapSyncFeedEnvelopeMapsATaskSnapshot() {
-        let snapshot = Components.Schemas.SyncTaskSnapshot(
-            captured_at: Date(), completed_at: nil, id: "task-9", inbox_state: .inbox,
-            notes: "", planned_on: nil, project_id: nil, revision: 4, tag_ids: [], title: "Buy milk", trashed_at: nil
+        // `TaskSnapshot`, not the `SyncTaskSnapshot` this used to build:
+        // that schema required `project_id`/`tag_ids` and described a shape
+        // the server never sent (04-18-PLAN.md Task 3).
+        let snapshot = Components.Schemas.TaskSnapshot(
+            captured_at: Date(), completed_at: nil, deadline_on: nil, id: "task-9", inbox_state: .inbox,
+            notes: "", planned_on: nil, project: nil, revision: 4, tags: [], title: "Buy milk", trashed_at: nil
         )
         let envelope = Components.Schemas.SyncFeedEnvelope(
             entity_id: "task-9", inserted_at: Date(), kind: .task_snapshot, mutation_id: "mutation-1",
-            ordinal: 0, payload: .SyncTaskSnapshot(snapshot), sequence: 1
+            ordinal: 0, payload: .TaskSnapshot(snapshot), sequence: 1
         )
         let mapped = WireMappers.mapSyncFeedEnvelope(envelope)
         XCTAssertEqual(mapped?.entityId, "task-9")

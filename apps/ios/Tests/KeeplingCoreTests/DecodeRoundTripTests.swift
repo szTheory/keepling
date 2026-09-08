@@ -17,7 +17,7 @@ import XCTest
 /// it) rather than merely asserting it in a comment. Every vector file is
 /// an ABSTRACT domain-reducer fixture -- e.g. `sync.json`'s
 /// `{id, revision, title}` snapshot omits `SyncTaskSnapshot`'s required
-/// `captured_at`/`inbox_state`/`notes`/`tag_ids`/`trashed_at` -- never a
+/// `captured_at`/`inbox_state`/`notes`/`tags`/`trashed_at` -- never a
 /// full contract-conformant object satisfying any generated DTO's
 /// `additionalProperties: false` + `required` set.
 ///
@@ -114,7 +114,6 @@ final class DecodeRoundTripTests: XCTestCase {
         guard let data = try? JSONSerialization.data(withJSONObject: object) else { return false }
         let attempts: [(Data) -> Bool] = [
             { (try? self.decoder().decode(Components.Schemas.TaskSnapshot.self, from: $0)) != nil },
-            { (try? self.decoder().decode(Components.Schemas.SyncTaskSnapshot.self, from: $0)) != nil },
             { (try? self.decoder().decode(Components.Schemas.SyncOrganizationSnapshot.self, from: $0)) != nil },
             { (try? self.decoder().decode(Components.Schemas.CommandAcknowledgement.self, from: $0)) != nil },
             { (try? self.decoder().decode(Components.Schemas.CaptureTaskCommand.self, from: $0)) != nil },
@@ -178,7 +177,9 @@ final class DecodeRoundTripTests: XCTestCase {
     func testSyncFeedEnvelopeRoundTripsForEveryPayloadKind() throws {
         let taskSnapshot: [String: Any] = [
             "captured_at": "2026-09-01T12:00:00Z", "id": "task-1", "inbox_state": "inbox", "notes": "",
-            "revision": 1, "tag_ids": [], "title": "Call dentist",
+            "revision": 1, "tags": [], "title": "Call dentist",
+            "completed_at": NSNull(), "deadline_on": NSNull(), "planned_on": NSNull(),
+            "project": NSNull(), "trashed_at": NSNull(),
         ]
         let organizationSnapshot: [String: Any] = ["id": "org-1", "kind": "project", "name": "Errands", "revision": 1]
         let acknowledgement: [String: Any] = [
@@ -208,12 +209,22 @@ final class DecodeRoundTripTests: XCTestCase {
     }
 
     /// D-13/T-04-05-01: a payload whose tag names `task_snapshot` decodes
-    /// into `.SyncTaskSnapshot` and never falls through to a structurally
+    /// into the task variant and never falls through to a structurally
     /// overlapping sibling.
+    ///
+    /// The fixtures here mirror what the REAL server sends, field for
+    /// field. They used to spell `tag_ids` and omit five required fields,
+    /// which matched a `SyncTaskSnapshot` schema the server never produced
+    /// -- so this test passed while the client could not decode a single
+    /// real sync page (04-18-PLAN.md Task 3). A fixture that matches the
+    /// schema rather than the server proves only that the schema is
+    /// self-consistent.
     func testSyncFeedEnvelopeDiscriminatesTaskSnapshotIntoTheCorrectVariant() throws {
         let taskSnapshot: [String: Any] = [
             "captured_at": "2026-09-01T12:00:00Z", "id": "task-1", "inbox_state": "inbox", "notes": "",
-            "revision": 1, "tag_ids": [], "title": "Call dentist",
+            "revision": 1, "tags": [], "title": "Call dentist",
+            "completed_at": NSNull(), "deadline_on": NSNull(), "planned_on": NSNull(),
+            "project": NSNull(), "trashed_at": NSNull(),
         ]
         let envelope: [String: Any] = [
             "entity_id": "task-1", "entity_revision": 1, "entity_type": "task",
@@ -221,8 +232,8 @@ final class DecodeRoundTripTests: XCTestCase {
             "ordinal": 0, "payload": taskSnapshot, "sequence": 1,
         ]
         let decoded = try decoder().decode(Components.Schemas.SyncFeedEnvelope.self, from: try jsonData(envelope))
-        guard case .SyncTaskSnapshot = decoded.payload else {
-            return XCTFail("expected .SyncTaskSnapshot, got \(decoded.payload)")
+        guard case .TaskSnapshot = decoded.payload else {
+            return XCTFail("expected .TaskSnapshot, got \(decoded.payload)")
         }
     }
 
@@ -245,7 +256,9 @@ final class DecodeRoundTripTests: XCTestCase {
             "entity_id": "task-1", "entity_type": "task", "kind": "task_snapshot",
             "snapshot": [
                 "captured_at": "2026-09-01T12:00:00Z", "id": "task-1", "inbox_state": "inbox", "notes": "",
-                "revision": 1, "tag_ids": [], "title": "Call dentist",
+                "revision": 1, "tags": [], "title": "Call dentist",
+                "completed_at": NSNull(), "deadline_on": NSNull(), "planned_on": NSNull(),
+                "project": NSNull(), "trashed_at": NSNull(),
             ],
         ]
         let page: [String: Any] = ["entities": [entity], "high_water": ["ordinal": 0, "sequence": 1], "next_cursor": "cursor-1"]

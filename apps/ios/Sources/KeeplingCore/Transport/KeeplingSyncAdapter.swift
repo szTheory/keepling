@@ -84,7 +84,16 @@ public final class KeeplingSyncAdapter: SyncPort, @unchecked Sendable {
         }
         let middlewares: [any ClientMiddleware] =
             credentialProvider.map { [BearerCredentialMiddleware(provider: $0)] } ?? []
-        client = Client(serverURL: baseURL, transport: transport, middlewares: middlewares)
+        client = Client(
+            serverURL: baseURL,
+            // The real server sends RFC 3339 with microsecond precision, which
+            // the runtime's default ISO8601 transcoder rejects. See
+            // `RFC3339DateTranscoder` -- without this, every response carrying
+            // a timestamp fails to decode and surfaces as SyncUnreachable.
+            configuration: Configuration(dateTranscoder: RFC3339DateTranscoder()),
+            transport: transport,
+            middlewares: middlewares
+        )
     }
 
     // MARK: - push
@@ -495,6 +504,23 @@ public final class KeeplingSyncAdapter: SyncPort, @unchecked Sendable {
             // Out of this plan's scope -- only `capture_task` mutations are
             // pushed/looked-up today (see `push`'s own doc comment).
             throw SyncPortError.mutationMismatch
+        case .Problem(let problem):
+            // A lookup whose stored outcome was a REFUSAL. The server
+            // recorded what it decided about this mutation, and that
+            // decision is settleable in exactly the cases the shared
+            // classifier already recognises -- so it is classified here by
+            // the same rules a live refusal takes, never by a second
+            // opinion about what a code means.
+            //
+            // `MutationResult` gained this variant when it was measured that
+            // the sync feed carries a `Problem` in `command_outcome.result`
+            // for a refused command (04-18-PLAN.md Task 3). The lookup
+            // endpoint returns the same union, so the same answer can arrive
+            // here.
+            if case .authenticationRequired(let code)? = ServerRefusal.classify(status: Int(problem.status), problem: problem) {
+                throw SyncAuthenticationRequired(code: code)
+            }
+            throw SyncPortRefused(status: Int(problem.status), code: problem.code)
         }
     }
 
@@ -557,8 +583,34 @@ public final class KeeplingSyncAdapter: SyncPort, @unchecked Sendable {
         return SyncAcknowledgement(mutationId: mutationId, fingerprint: fingerprint, outcome: .rejected, snapshotJSON: snapshotJSON)
     }
 
+    /// Classifies a refusal on a READ path (pull, bootstrap, lookup).
+    ///
+    /// MEASURED DEFECT this fixes (04-18-PLAN.md Task 3). This returned a
+    /// bare `SyncPortRefused` for EVERY status, including 401 -- while
+    /// `KeeplingApplication.runSyncPass` catches `SyncAuthenticationRequired`
+    /// around the pull and returns `.authenticationRequired` for it. Since
+    /// the real adapter could never throw that type from a read, that catch
+    /// was UNREACHABLE through the real adapter, and reachable only through
+    /// the test stub -- which is exactly why a test covered it and it looked
+    /// correct.
+    ///
+    /// The consequence with a real server: a sync pass begins with the pull,
+    /// so an expired or revoked credential produces a 401 THERE first. The
+    /// pass then threw an opaque refusal instead of reporting that
+    /// authentication was required, and the app had no way to know it should
+    /// ask the person to sign in again. This is the authentication-expiry
+    /// half of D-22 Criterion 2, unhandled on the leg where it actually
+    /// arrives.
+    ///
+    /// The push path has always classified correctly via `settleOrThrow` ->
+    /// `ServerRefusal.classify`. This makes reads agree with writes, using
+    /// the same classifier rather than a second opinion about what a 401
+    /// means.
     private func refused(status: Int, response: Components.Responses.ProblemResponse) throws -> Error {
         let problem = try self.problem(from: response)
+        if case .authenticationRequired(let code)? = ServerRefusal.classify(status: status, problem: problem) {
+            return SyncAuthenticationRequired(code: code)
+        }
         return SyncPortRefused(status: status, code: problem.code)
     }
 

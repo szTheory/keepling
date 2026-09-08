@@ -115,7 +115,7 @@ public enum WireMappers {
     public static func mapSyncFeedEnvelope(_ envelope: Components.Schemas.SyncFeedEnvelope) -> SyncPullChange? {
         guard let entityId = envelope.entity_id else { return nil }
         switch envelope.payload {
-        case .SyncTaskSnapshot(let snapshot):
+        case .TaskSnapshot(let snapshot):
             return SyncPullChange(entityId: entityId, snapshot: mapSyncTaskSnapshot(snapshot))
         case .SyncOrganizationSnapshot(let snapshot):
             return SyncPullChange(entityId: entityId, snapshot: mapSyncOrganizationSnapshot(snapshot))
@@ -138,7 +138,7 @@ public enum WireMappers {
     /// two members) -- there is no discard case here.
     public static func mapSyncBootstrapEntity(_ entity: Components.Schemas.SyncBootstrapEntity) -> SyncPullChange {
         switch entity.snapshot {
-        case .SyncTaskSnapshot(let snapshot):
+        case .TaskSnapshot(let snapshot):
             return SyncPullChange(entityId: entity.entity_id, snapshot: mapSyncTaskSnapshot(snapshot))
         case .SyncOrganizationSnapshot(let snapshot):
             return SyncPullChange(entityId: entity.entity_id, snapshot: mapSyncOrganizationSnapshot(snapshot))
@@ -149,7 +149,13 @@ public enum WireMappers {
         page.entities.map(mapSyncBootstrapEntity)
     }
 
-    private static func mapSyncTaskSnapshot(_ snapshot: Components.Schemas.SyncTaskSnapshot) -> SyncSnapshot {
+    /// Maps the task-snapshot variant of a sync change.
+    ///
+    /// Takes `TaskSnapshot` -- the schema the server has always sent -- and
+    /// not the `SyncTaskSnapshot` this used to name, which required
+    /// `project_id`/`tag_ids` and matched nothing the server produces
+    /// (04-18-PLAN.md Task 3).
+    private static func mapSyncTaskSnapshot(_ snapshot: Components.Schemas.TaskSnapshot) -> SyncSnapshot {
         SyncSnapshot(id: snapshot.id, revision: Int(snapshot.revision), extra: ["title": .string(snapshot.title)])
     }
 

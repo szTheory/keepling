@@ -318,7 +318,7 @@ extension Components {
                 /// - Remark: Generated from `#/components/schemas/SyncFeedEnvelope/payload/case1`.
                 case SyncCommandOutcomePayload(Components.Schemas.SyncCommandOutcomePayload)
                 /// - Remark: Generated from `#/components/schemas/SyncFeedEnvelope/payload/case2`.
-                case SyncTaskSnapshot(Components.Schemas.SyncTaskSnapshot)
+                case TaskSnapshot(Components.Schemas.TaskSnapshot)
                 /// - Remark: Generated from `#/components/schemas/SyncFeedEnvelope/payload/case3`.
                 case SyncOrganizationSnapshot(Components.Schemas.SyncOrganizationSnapshot)
                 /// - Remark: Generated from `#/components/schemas/SyncFeedEnvelope/payload/case4`.
@@ -336,7 +336,7 @@ extension Components {
                         errors.append(error)
                     }
                     do {
-                        self = .SyncTaskSnapshot(try .init(from: decoder))
+                        self = .TaskSnapshot(try .init(from: decoder))
                         return
                     } catch {
                         errors.append(error)
@@ -375,7 +375,7 @@ extension Components {
                     switch self {
                     case let .SyncCommandOutcomePayload(value):
                         try value.encode(to: encoder)
-                    case let .SyncTaskSnapshot(value):
+                    case let .TaskSnapshot(value):
                         try value.encode(to: encoder)
                     case let .SyncOrganizationSnapshot(value):
                         try value.encode(to: encoder)
@@ -490,7 +490,62 @@ extension Components {
         /// - Remark: Generated from `#/components/schemas/SyncCommandOutcomePayload`.
         public struct SyncCommandOutcomePayload: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/SyncCommandOutcomePayload/result`.
-            public var result: Components.Schemas.MutationResult
+            @frozen public enum resultPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/SyncCommandOutcomePayload/result/case1`.
+                case SyncCommandAcknowledgement(Components.Schemas.SyncCommandAcknowledgement)
+                /// - Remark: Generated from `#/components/schemas/SyncCommandOutcomePayload/result/case2`.
+                case OrganizationAcknowledgement(Components.Schemas.OrganizationAcknowledgement)
+                /// - Remark: Generated from `#/components/schemas/SyncCommandOutcomePayload/result/case3`.
+                case UndoNoChange(Components.Schemas.UndoNoChange)
+                /// - Remark: Generated from `#/components/schemas/SyncCommandOutcomePayload/result/case4`.
+                case Problem(Components.Schemas.Problem)
+                public init(from decoder: any Swift.Decoder) throws {
+                    var errors: [any Swift.Error] = []
+                    do {
+                        self = .SyncCommandAcknowledgement(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .OrganizationAcknowledgement(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .UndoNoChange(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    do {
+                        self = .Problem(try .init(from: decoder))
+                        return
+                    } catch {
+                        errors.append(error)
+                    }
+                    throw Swift.DecodingError.failedToDecodeOneOfSchema(
+                        type: Self.self,
+                        codingPath: decoder.codingPath,
+                        errors: errors
+                    )
+                }
+                public func encode(to encoder: any Swift.Encoder) throws {
+                    switch self {
+                    case let .SyncCommandAcknowledgement(value):
+                        try value.encode(to: encoder)
+                    case let .OrganizationAcknowledgement(value):
+                        try value.encode(to: encoder)
+                    case let .UndoNoChange(value):
+                        try value.encode(to: encoder)
+                    case let .Problem(value):
+                        try value.encode(to: encoder)
+                    }
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/SyncCommandOutcomePayload/result`.
+            public var result: Components.Schemas.SyncCommandOutcomePayload.resultPayload
             /// - Remark: Generated from `#/components/schemas/SyncCommandOutcomePayload/status`.
             public var status: Swift.Int
             /// Creates a new `SyncCommandOutcomePayload`.
@@ -499,7 +554,7 @@ extension Components {
             ///   - result:
             ///   - status:
             public init(
-                result: Components.Schemas.MutationResult,
+                result: Components.Schemas.SyncCommandOutcomePayload.resultPayload,
                 status: Swift.Int
             ) {
                 self.result = result
@@ -512,7 +567,7 @@ extension Components {
             public init(from decoder: any Swift.Decoder) throws {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
                 self.result = try container.decode(
-                    Components.Schemas.MutationResult.self,
+                    Components.Schemas.SyncCommandOutcomePayload.resultPayload.self,
                     forKey: .result
                 )
                 self.status = try container.decode(
@@ -522,159 +577,6 @@ extension Components {
                 try decoder.ensureNoAdditionalProperties(knownKeys: [
                     "result",
                     "status"
-                ])
-            }
-        }
-        /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot`.
-        public struct SyncTaskSnapshot: Codable, Hashable, Sendable {
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/captured_at`.
-            public var captured_at: Foundation.Date
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/completed_at`.
-            public var completed_at: Foundation.Date?
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/deadline_on`.
-            public var deadline_on: Components.Schemas.NullableCivilDate?
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/id`.
-            public var id: Components.Schemas.TaskIdentity
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/inbox_state`.
-            @frozen public enum inbox_statePayload: String, Codable, Hashable, Sendable, CaseIterable {
-                case inbox = "inbox"
-                case clarified = "clarified"
-            }
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/inbox_state`.
-            public var inbox_state: Components.Schemas.SyncTaskSnapshot.inbox_statePayload
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/notes`.
-            public var notes: Swift.String
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/planned_on`.
-            public var planned_on: Components.Schemas.NullableCivilDate?
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/project_id`.
-            public var project_id: Components.Schemas.NullableOrganizationIdentity?
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/revision`.
-            public var revision: Components.Schemas.Revision
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/tag_ids`.
-            public var tag_ids: [Components.Schemas.OrganizationIdentity]
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/title`.
-            public var title: Swift.String
-            /// - Remark: Generated from `#/components/schemas/SyncTaskSnapshot/trashed_at`.
-            public var trashed_at: Foundation.Date?
-            /// Creates a new `SyncTaskSnapshot`.
-            ///
-            /// - Parameters:
-            ///   - captured_at:
-            ///   - completed_at:
-            ///   - deadline_on:
-            ///   - id:
-            ///   - inbox_state:
-            ///   - notes:
-            ///   - planned_on:
-            ///   - project_id:
-            ///   - revision:
-            ///   - tag_ids:
-            ///   - title:
-            ///   - trashed_at:
-            public init(
-                captured_at: Foundation.Date,
-                completed_at: Foundation.Date? = nil,
-                deadline_on: Components.Schemas.NullableCivilDate? = nil,
-                id: Components.Schemas.TaskIdentity,
-                inbox_state: Components.Schemas.SyncTaskSnapshot.inbox_statePayload,
-                notes: Swift.String,
-                planned_on: Components.Schemas.NullableCivilDate? = nil,
-                project_id: Components.Schemas.NullableOrganizationIdentity? = nil,
-                revision: Components.Schemas.Revision,
-                tag_ids: [Components.Schemas.OrganizationIdentity],
-                title: Swift.String,
-                trashed_at: Foundation.Date? = nil
-            ) {
-                self.captured_at = captured_at
-                self.completed_at = completed_at
-                self.deadline_on = deadline_on
-                self.id = id
-                self.inbox_state = inbox_state
-                self.notes = notes
-                self.planned_on = planned_on
-                self.project_id = project_id
-                self.revision = revision
-                self.tag_ids = tag_ids
-                self.title = title
-                self.trashed_at = trashed_at
-            }
-            public enum CodingKeys: String, CodingKey {
-                case captured_at
-                case completed_at
-                case deadline_on
-                case id
-                case inbox_state
-                case notes
-                case planned_on
-                case project_id
-                case revision
-                case tag_ids
-                case title
-                case trashed_at
-            }
-            public init(from decoder: any Swift.Decoder) throws {
-                let container = try decoder.container(keyedBy: CodingKeys.self)
-                self.captured_at = try container.decode(
-                    Foundation.Date.self,
-                    forKey: .captured_at
-                )
-                self.completed_at = try container.decodeIfPresent(
-                    Foundation.Date.self,
-                    forKey: .completed_at
-                )
-                self.deadline_on = try container.decodeIfPresent(
-                    Components.Schemas.NullableCivilDate.self,
-                    forKey: .deadline_on
-                )
-                self.id = try container.decode(
-                    Components.Schemas.TaskIdentity.self,
-                    forKey: .id
-                )
-                self.inbox_state = try container.decode(
-                    Components.Schemas.SyncTaskSnapshot.inbox_statePayload.self,
-                    forKey: .inbox_state
-                )
-                self.notes = try container.decode(
-                    Swift.String.self,
-                    forKey: .notes
-                )
-                self.planned_on = try container.decodeIfPresent(
-                    Components.Schemas.NullableCivilDate.self,
-                    forKey: .planned_on
-                )
-                self.project_id = try container.decodeIfPresent(
-                    Components.Schemas.NullableOrganizationIdentity.self,
-                    forKey: .project_id
-                )
-                self.revision = try container.decode(
-                    Components.Schemas.Revision.self,
-                    forKey: .revision
-                )
-                self.tag_ids = try container.decode(
-                    [Components.Schemas.OrganizationIdentity].self,
-                    forKey: .tag_ids
-                )
-                self.title = try container.decode(
-                    Swift.String.self,
-                    forKey: .title
-                )
-                self.trashed_at = try container.decodeIfPresent(
-                    Foundation.Date.self,
-                    forKey: .trashed_at
-                )
-                try decoder.ensureNoAdditionalProperties(knownKeys: [
-                    "captured_at",
-                    "completed_at",
-                    "deadline_on",
-                    "id",
-                    "inbox_state",
-                    "notes",
-                    "planned_on",
-                    "project_id",
-                    "revision",
-                    "tag_ids",
-                    "title",
-                    "trashed_at"
                 ])
             }
         }
@@ -913,7 +815,7 @@ extension Components {
                 /// - Remark: Generated from `#/components/schemas/SyncBootstrapEntity/snapshot/case1`.
                 case SyncOrganizationSnapshot(Components.Schemas.SyncOrganizationSnapshot)
                 /// - Remark: Generated from `#/components/schemas/SyncBootstrapEntity/snapshot/case2`.
-                case SyncTaskSnapshot(Components.Schemas.SyncTaskSnapshot)
+                case TaskSnapshot(Components.Schemas.TaskSnapshot)
                 public init(from decoder: any Swift.Decoder) throws {
                     var errors: [any Swift.Error] = []
                     do {
@@ -923,7 +825,7 @@ extension Components {
                         errors.append(error)
                     }
                     do {
-                        self = .SyncTaskSnapshot(try .init(from: decoder))
+                        self = .TaskSnapshot(try .init(from: decoder))
                         return
                     } catch {
                         errors.append(error)
@@ -938,7 +840,7 @@ extension Components {
                     switch self {
                     case let .SyncOrganizationSnapshot(value):
                         try value.encode(to: encoder)
-                    case let .SyncTaskSnapshot(value):
+                    case let .TaskSnapshot(value):
                         try value.encode(to: encoder)
                     }
                 }
@@ -2755,6 +2657,115 @@ extension Components {
         }
         /// - Remark: Generated from `#/components/schemas/ClarifyTaskCommand`.
         public typealias ClarifyTaskCommand = Components.Schemas.EditTaskCommand
+        /// - Remark: Generated from `#/components/schemas/SyncCommandAcknowledgement`.
+        public struct SyncCommandAcknowledgement: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/SyncCommandAcknowledgement/mutation_id`.
+            public var mutation_id: Components.Schemas.MutationIdentity
+            /// - Remark: Generated from `#/components/schemas/SyncCommandAcknowledgement/outcome`.
+            @frozen public enum outcomePayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case accepted = "accepted"
+                case already_satisfied = "already_satisfied"
+            }
+            /// - Remark: Generated from `#/components/schemas/SyncCommandAcknowledgement/outcome`.
+            public var outcome: Components.Schemas.SyncCommandAcknowledgement.outcomePayload
+            /// - Remark: Generated from `#/components/schemas/SyncCommandAcknowledgement/revision`.
+            public var revision: Components.Schemas.Revision
+            /// - Remark: Generated from `#/components/schemas/SyncCommandAcknowledgement/resolved_conflict_id`.
+            public var resolved_conflict_id: Components.Schemas.ConflictIdentity?
+            /// - Remark: Generated from `#/components/schemas/SyncCommandAcknowledgement/undo`.
+            public var undo: Components.Schemas.SyncUndoMetadata?
+            /// - Remark: Generated from `#/components/schemas/SyncCommandAcknowledgement/snapshot`.
+            public var snapshot: Components.Schemas.TaskSnapshot
+            /// - Remark: Generated from `#/components/schemas/SyncCommandAcknowledgement/task_id`.
+            public var task_id: Components.Schemas.TaskIdentity
+            /// - Remark: Generated from `#/components/schemas/SyncCommandAcknowledgement/warnings`.
+            public var warnings: [Components.Schemas.Warning]
+            /// Creates a new `SyncCommandAcknowledgement`.
+            ///
+            /// - Parameters:
+            ///   - mutation_id:
+            ///   - outcome:
+            ///   - revision:
+            ///   - resolved_conflict_id:
+            ///   - undo:
+            ///   - snapshot:
+            ///   - task_id:
+            ///   - warnings:
+            public init(
+                mutation_id: Components.Schemas.MutationIdentity,
+                outcome: Components.Schemas.SyncCommandAcknowledgement.outcomePayload,
+                revision: Components.Schemas.Revision,
+                resolved_conflict_id: Components.Schemas.ConflictIdentity? = nil,
+                undo: Components.Schemas.SyncUndoMetadata? = nil,
+                snapshot: Components.Schemas.TaskSnapshot,
+                task_id: Components.Schemas.TaskIdentity,
+                warnings: [Components.Schemas.Warning]
+            ) {
+                self.mutation_id = mutation_id
+                self.outcome = outcome
+                self.revision = revision
+                self.resolved_conflict_id = resolved_conflict_id
+                self.undo = undo
+                self.snapshot = snapshot
+                self.task_id = task_id
+                self.warnings = warnings
+            }
+            public enum CodingKeys: String, CodingKey {
+                case mutation_id
+                case outcome
+                case revision
+                case resolved_conflict_id
+                case undo
+                case snapshot
+                case task_id
+                case warnings
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.mutation_id = try container.decode(
+                    Components.Schemas.MutationIdentity.self,
+                    forKey: .mutation_id
+                )
+                self.outcome = try container.decode(
+                    Components.Schemas.SyncCommandAcknowledgement.outcomePayload.self,
+                    forKey: .outcome
+                )
+                self.revision = try container.decode(
+                    Components.Schemas.Revision.self,
+                    forKey: .revision
+                )
+                self.resolved_conflict_id = try container.decodeIfPresent(
+                    Components.Schemas.ConflictIdentity.self,
+                    forKey: .resolved_conflict_id
+                )
+                self.undo = try container.decodeIfPresent(
+                    Components.Schemas.SyncUndoMetadata.self,
+                    forKey: .undo
+                )
+                self.snapshot = try container.decode(
+                    Components.Schemas.TaskSnapshot.self,
+                    forKey: .snapshot
+                )
+                self.task_id = try container.decode(
+                    Components.Schemas.TaskIdentity.self,
+                    forKey: .task_id
+                )
+                self.warnings = try container.decode(
+                    [Components.Schemas.Warning].self,
+                    forKey: .warnings
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "mutation_id",
+                    "outcome",
+                    "revision",
+                    "resolved_conflict_id",
+                    "undo",
+                    "snapshot",
+                    "task_id",
+                    "warnings"
+                ])
+            }
+        }
         /// - Remark: Generated from `#/components/schemas/CommandAcknowledgement`.
         public struct CommandAcknowledgement: Codable, Hashable, Sendable {
             /// - Remark: Generated from `#/components/schemas/CommandAcknowledgement/mutation_id`.
@@ -4390,6 +4401,8 @@ extension Components {
             case OrganizationAcknowledgement(Components.Schemas.OrganizationAcknowledgement)
             /// - Remark: Generated from `#/components/schemas/MutationResult/case3`.
             case UndoNoChange(Components.Schemas.UndoNoChange)
+            /// - Remark: Generated from `#/components/schemas/MutationResult/case4`.
+            case Problem(Components.Schemas.Problem)
             public init(from decoder: any Swift.Decoder) throws {
                 var errors: [any Swift.Error] = []
                 do {
@@ -4410,6 +4423,12 @@ extension Components {
                 } catch {
                     errors.append(error)
                 }
+                do {
+                    self = .Problem(try .init(from: decoder))
+                    return
+                } catch {
+                    errors.append(error)
+                }
                 throw Swift.DecodingError.failedToDecodeOneOfSchema(
                     type: Self.self,
                     codingPath: decoder.codingPath,
@@ -4423,6 +4442,8 @@ extension Components {
                 case let .OrganizationAcknowledgement(value):
                     try value.encode(to: encoder)
                 case let .UndoNoChange(value):
+                    try value.encode(to: encoder)
+                case let .Problem(value):
                     try value.encode(to: encoder)
                 }
             }

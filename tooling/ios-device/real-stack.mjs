@@ -37,7 +37,7 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { networkInterfaces, tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import process from 'node:process'
 
 const repositoryRoot = resolve(import.meta.dirname, '..', '..')
@@ -132,12 +132,57 @@ export const makeSelfSignedCertificate = (address) => {
  * and stronger claim than "the server received these", and
  * settle-exactly-once needs the stronger one.
  */
-const createRecordingProxy = ({ upstreamPort, tls }) => {
+const createRecordingProxy = ({ upstreamPort, tls, controlToken }) => {
   const records = []
   /** @type {Array<{ match: (path: string) => boolean, header: string, value: string, remaining: number }>} */
   const injections = []
 
   const handler = (incoming, outgoing) => {
+    // ---- Harness control channel, handled BEFORE anything is forwarded.
+    //
+    // The four scenarios each need a DIFFERENT fault armed immediately
+    // before they run, and the test that runs them lives on the phone. Path
+    // matching alone cannot separate them -- every command push hits the
+    // same endpoint -- and body matching is impossible here because the
+    // injection decision is made at request start, before the body has
+    // streamed in.
+    //
+    // So the test arms its own scenario over this channel. That is the test
+    // coordinating the harness, which is categorically different from the
+    // test manufacturing the evidence: nothing here answers on the server's
+    // behalf, and every assertion still reads what the REAL server did with
+    // the REAL bytes. The control paths are reserved under `/__lane/`, are
+    // never forwarded upstream, and are never recorded as arrivals -- so a
+    // control call can never be mistaken for a command the server received.
+    if ((incoming.url ?? '').startsWith('/__lane/')) {
+      const url = new URL(incoming.url, 'http://lane.invalid')
+      if (url.pathname === '/__lane/arm') {
+        const fault = url.searchParams.get('fault')
+        const pathFragment = url.searchParams.get('path') ?? '/api/v1/commands/'
+        const times = Number(url.searchParams.get('times') ?? 1)
+        injections.push({
+          header: 'x-keepling-test-fault',
+          match: (path) => path.includes(pathFragment),
+          remaining: times,
+          token: controlToken,
+          tokenHeader: 'x-keepling-test-fault-token',
+          value: fault,
+        })
+        outgoing.writeHead(200, { 'content-type': 'application/json' })
+        outgoing.end(JSON.stringify({ armed: fault, path: pathFragment, times }))
+        return
+      }
+      if (url.pathname === '/__lane/disarm') {
+        injections.length = 0
+        outgoing.writeHead(200, { 'content-type': 'application/json' })
+        outgoing.end('{"disarmed":true}')
+        return
+      }
+      outgoing.writeHead(404, { 'content-type': 'application/json' })
+      outgoing.end('{"error":"unknown lane control path"}')
+      return
+    }
+
     const chunks = []
     incoming.on('data', (chunk) => chunks.push(chunk))
     const record = {
@@ -252,6 +297,76 @@ export const createClient = (base) => ({
   },
 })
 
+/**
+ * Drives the real RFC 8252 authorization-code-with-PKCE flow against the
+ * real server and returns a genuine device-grant bearer credential.
+ *
+ * Mirrors `DeviceGrantClient.beginAuthorization` exactly -- same client_id,
+ * same closed parameter set, same S256 challenge derivation -- because the
+ * point is to obtain the credential the APP would obtain, not a
+ * test-only token minted down some side path. If this drifts from the
+ * Swift side, the lane stops proving what it claims to prove.
+ *
+ * `client` must already hold an authenticated browser session: the
+ * authorize endpoint is what turns a signed-in human into a device grant,
+ * and it is the only step in the flow a native app delegates to a browser.
+ */
+export const issueDeviceGrant = async (client, { installationId, label = 'Keepling lane' } = {}) => {
+  const verifier = randomBytes(32).toString('base64url')
+  const state = randomBytes(32).toString('base64url')
+  const challenge = createHash('sha256').update(verifier).digest('base64url')
+  // The iPhone's callback is distinguished from the desktop's by HOST, not
+  // by scheme: `keepling://ios/auth/callback`, not `keepling://auth/callback`
+  // (apps/server/config/runtime.exs, :device_grants redirect_uris). The
+  // server allowlists them separately and refuses anything else with a
+  // generic invalid_authorization_request, so getting this wrong reads as
+  // "the flow is broken" rather than "the URI is the desktop's".
+  const redirectURI = 'keepling://ios/auth/callback'
+
+  const query = new URLSearchParams({
+    client_id: 'iphone',
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
+    installation_id: installationId ?? randomUUID(),
+    label,
+    redirect_uri: redirectURI,
+    response_type: 'code',
+    state,
+  })
+  const authorize = await client.request(`/oauth/authorize?${query}`)
+  if (authorize.status !== 302 && authorize.status !== 200) {
+    throw new Error(`the real server refused to authorize a device grant: ${authorize.status} ${await authorize.text()}`)
+  }
+  // The authorization result is a redirect BACK to the native callback URL,
+  // exactly as it would be for the app. Read the code out of it rather than
+  // out of any server-internal structure.
+  const location = authorize.headers.get('location') ?? ''
+  const callback = new URL(location, redirectURI)
+  const code = callback.searchParams.get('code')
+  const returnedState = callback.searchParams.get('state')
+  if (!code) throw new Error(`the authorize redirect carried no code: ${location}`)
+  if (returnedState !== state) throw new Error('the authorize redirect returned a different state than was sent')
+
+  const exchange = await client.request('/oauth/token', {
+    body: JSON.stringify({
+      code,
+      code_verifier: verifier,
+      grant_type: 'authorization_code',
+      redirect_uri: redirectURI,
+      state,
+    }),
+    headers: { 'content-type': 'application/json' },
+    method: 'POST',
+  })
+  if (exchange.status !== 200) {
+    throw new Error(`the real server refused the code exchange: ${exchange.status} ${await exchange.text()}`)
+  }
+  const issued = await exchange.json()
+  const accessToken = issued.access_token ?? issued.accessToken
+  if (!accessToken) throw new Error(`the token response carried no access token: ${JSON.stringify(issued)}`)
+  return { accessToken, raw: issued, refreshToken: issued.refresh_token ?? issued.refreshToken }
+}
+
 export const postCommand = (client, path, command) =>
   client.request(path, { body: JSON.stringify(command), headers: { 'content-type': 'application/json' }, method: 'POST' })
 
@@ -348,7 +463,7 @@ export const startRecordingStack = async ({
   // The proxy binds FIRST, because `startBackend` needs the port the
   // server's own generated URLs will advertise, and that port is now
   // assigned by the OS rather than fixed.
-  const proxy = createRecordingProxy({ tls, upstreamPort: phoenixPort })
+  const proxy = createRecordingProxy({ controlToken: faultToken, tls, upstreamPort: phoenixPort })
   const port = await proxy.listen(bindHost, 0)
   const scheme = tls ? 'https' : 'http'
 
