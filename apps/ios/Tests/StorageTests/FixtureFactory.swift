@@ -98,6 +98,48 @@ enum FixtureFactory {
         try rawPool.writeWithoutTransaction { db in _ = try db.checkpoint(.truncate) }
     }
 
+    /// A private, writable COPY of a committed fixture, plus its `-wal`
+    /// and `-shm` siblings when they exist.
+    ///
+    /// Every consumer must open a copy, never the committed file itself.
+    /// Opening the committed file in place is what made
+    /// `testMigration1FixtureMigratesForwardToVersion2PreservingVersion1Row`
+    /// vacuous: the open MIGRATES the database, so the committed fixture
+    /// arrived at `[1, 2, 3]` and the assertion then compared an
+    /// already-migrated file against the migrated state it expected --
+    /// passing without a migration ever running. The mutated file was
+    /// subsequently committed, which made every fresh checkout tautological
+    /// too, not merely every run after the first. It also dirtied the
+    /// working tree on every test run.
+    static func writableCopy(ofFixtureAtPath path: String) throws -> String {
+        let destinationDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: destinationDirectory, withIntermediateDirectories: true)
+        let name = (path as NSString).lastPathComponent
+        let destination = destinationDirectory.appendingPathComponent(name).path
+        try FileManager.default.copyItem(atPath: path, toPath: destination)
+        // A WAL database is a three-file durable unit. Copying only the main
+        // file would silently discard committed-but-uncheckpointed pages.
+        for suffix in ["-wal", "-shm"] where FileManager.default.fileExists(atPath: path + suffix) {
+            try FileManager.default.copyItem(atPath: path + suffix, toPath: destination + suffix)
+        }
+        return destination
+    }
+
+    /// A writable copy of the migration-1 fixture, generating the committed
+    /// original first if this checkout has never produced it.
+    static func migration1FixtureCopy() throws -> String {
+        try ensureMigration1Fixture()
+        return try writableCopy(ofFixtureAtPath: migration1FixturePath)
+    }
+
+    /// A writable copy of the corrupted-checksum fixture, generating the
+    /// committed original first if this checkout has never produced it.
+    static func corruptedChecksumFixtureCopy() throws -> String {
+        try ensureCorruptedChecksumFixture()
+        return try writableCopy(ofFixtureAtPath: corruptedChecksumFixturePath)
+    }
+
     private static func tempPath() -> String {
         FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString)

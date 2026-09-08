@@ -62,7 +62,7 @@ final class MigrationLedgerTests: XCTestCase {
     // MARK: Behavior 3 -- checksum drift halts and leaves the fixture untouched
 
     func testCorruptedChecksumFixtureThrowsChecksumDriftAndLeavesFileByteIdentical() throws {
-        let path = FixtureFactory.corruptedChecksumFixturePath
+        let path = try FixtureFactory.corruptedChecksumFixtureCopy()
         let sizeBefore = try FileManager.default.attributesOfItem(atPath: path)[.size] as? Int
         let ledgerBefore = try readSchemaMigrationsRows(atPath: path)
         let rowCountsBefore = try tableRowCounts(atPath: path)
@@ -157,7 +157,7 @@ final class MigrationLedgerTests: XCTestCase {
     // MARK: Behavior 6 -- no failure path deletes, recreates, truncates, or repairs the store file
 
     func testFailurePathsNeverDeleteOrTruncateTheStoreFile() throws {
-        let path = FixtureFactory.corruptedChecksumFixturePath
+        let path = try FixtureFactory.corruptedChecksumFixtureCopy()
         let sizeBefore = try FileManager.default.attributesOfItem(atPath: path)[.size] as? Int
         XCTAssertThrowsError(try GRDBLocalStore(path: path))
         XCTAssertTrue(FileManager.default.fileExists(atPath: path), "the store file must still exist after a failed open")
@@ -168,7 +168,7 @@ final class MigrationLedgerTests: XCTestCase {
     // MARK: Migration-1 fixture forward-migrates cleanly, preserving version 1's original row
 
     func testMigration1FixtureMigratesForwardToVersion2PreservingVersion1Row() throws {
-        let path = FixtureFactory.migration1FixturePath
+        let path = try FixtureFactory.migration1FixtureCopy()
         let versionOneBefore = try readSchemaMigrationsRows(atPath: path).first { $0.version == 1 }
         XCTAssertNotNil(versionOneBefore)
 

@@ -93,8 +93,7 @@ final class DurabilityPostureTests: XCTestCase {
     }
 
     func testIntegrityAndForeignKeyChecksAreCleanOnTheForwardMigrationFixture() throws {
-        try FixtureFactory.ensureMigration1Fixture()
-        let store = try GRDBLocalStore(path: FixtureFactory.migration1FixturePath)
+        let store = try GRDBLocalStore(path: try FixtureFactory.migration1FixtureCopy())
         XCTAssertEqual(try store.integrityCheckResults(), ["ok"])
         XCTAssertTrue(try store.foreignKeyCheckViolations().isEmpty)
     }
