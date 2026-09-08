@@ -468,6 +468,10 @@ coverage entry D9) rather than asserted as fully automated.
 
 ### Summary: what this phase's evidence model rests on
 
+- **The full gate passes.** `node tooling/build-ios-signed.mjs && node
+  tooling/verify-ios-phase.mjs` reports `lanes=24 failed=0 blocked=0`
+  across 462 cases, with two of those lanes driven on a physical
+  iPhone. This is the first passing full gate in the phase.
 - **22 simulator-driven lanes** run against the iOS Simulator (iPhone 17,
   latest OS) on this Mac's pinned Xcode/SDK, none of them requiring
   physical hardware, all of them reporting a positive case count with no
