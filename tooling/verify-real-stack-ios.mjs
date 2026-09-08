@@ -61,10 +61,7 @@
  *   node tooling/verify-real-stack-ios.mjs
  *   node tooling/verify-real-stack-ios.mjs --skip-device   # server half only
  */
-import { createServer as createHttpServer, request as httpRequest } from 'node:http'
 import { createServer as createTlsServer } from 'node:tls'
-import { mkdtempSync, rmSync } from 'node:fs'
-import { networkInterfaces, tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { randomBytes, randomUUID } from 'node:crypto'
 import process from 'node:process'
@@ -85,22 +82,23 @@ if (!process.execArgv.includes('--experimental-strip-types')) {
   process.exit(relaunch.status ?? 1)
 }
 
-const { startBackend, stopBackend } = await import(join(repositoryRoot, 'apps/web/e2e/support/backend.ts'))
+// The recording stack now lives in ONE place (04-18-PLAN.md Task 1). This
+// file grew it first and three callers need it now, so it moved rather than
+// being copied -- the same anti-drift rule this file already enforces on
+// itself for `apps/web/e2e/support/backend.ts`.
+const { createClient, defaultRouteAddress, makeSelfSignedCertificate, postCommand, startRecordingStack } =
+  await import(join(repositoryRoot, 'tooling/ios-device/real-stack.mjs'))
 const { resolveDevice } = await import(join(repositoryRoot, 'tooling/ios-device/resolve-devices.mjs'))
 
-const LOOPBACK = '127.0.0.1'
 const BUNDLE_ID = 'com.szTheory.keepling'
-const PHOENIX_PORT = Number(process.env.KEEPLING_IOS_E2E_PHOENIX_PORT ?? 4112)
-const POSTGRES_PORT = Number(process.env.KEEPLING_IOS_E2E_POSTGRES_PORT ?? 55443)
-const PROXY_PORT = Number(process.env.KEEPLING_IOS_E2E_PROXY_PORT ?? 4113)
 const TLS_PROBE_PORT = Number(process.env.KEEPLING_IOS_E2E_TLS_PORT ?? 4114)
 
 /**
  * Both of these THROW rather than `process.exit`. Exiting straight from an
  * assertion leaks the PostgreSQL and Phoenix this lane started, and the
  * NEXT run then fails on a held port with a message about the wrong problem
- * (measured during this plan's execution). Throwing routes every failure
- * through the single `finally`-shaped shutdown at the bottom.
+ * (measured during 04-16's execution). Throwing routes every failure
+ * through the single shutdown at the bottom.
  */
 const fail = (message) => {
   throw new Error(message)
@@ -112,100 +110,6 @@ const blocked = (message) => {
   throw error
 }
 
-/** The address a phone on the same LAN can actually reach this Mac at. */
-const lanAddress = () => {
-  for (const [name, addresses] of Object.entries(networkInterfaces())) {
-    if (name === 'lo0') continue
-    for (const address of addresses ?? []) {
-      if (address.family === 'IPv4' && !address.internal) return address.address
-    }
-  }
-  return null
-}
-
-/**
- * The recording forwarding proxy. Records ARRIVAL ORDER, not just presence:
- * "the server received these two in this order" is a different and stronger
- * claim than "the server received these", and settle-exactly-once needs the
- * stronger one.
- */
-const createRecordingProxy = ({ upstreamPort }) => {
-  const records = []
-  /** @type {Array<{ match: (path: string) => boolean, header: string, value: string, remaining: number }>} */
-  const injections = []
-
-  const server = createHttpServer((incoming, outgoing) => {
-    const chunks = []
-    incoming.on('data', (chunk) => chunks.push(chunk))
-    const record = {
-      arrivalOrder: records.length,
-      body: null,
-      injected: null,
-      method: incoming.method,
-      path: incoming.url ?? '',
-      receivedAt: Date.now(),
-      status: null,
-    }
-    records.push(record)
-
-    // The `Host` header is forwarded UNCHANGED. Rewriting it to the
-    // upstream's own address breaks the server's origin check:
-    // `require_trusted_origin` compares `Origin` against
-    // `scheme://<host header>`, so a rewritten host makes every browser-class
-    // request 403 (measured during this plan's execution). The upstream
-    // address belongs in the connection options below, not in the headers.
-    const headers = { ...incoming.headers }
-    const injection = injections.find((rule) => rule.remaining > 0 && rule.match(record.path))
-    if (injection) {
-      // Server-side injection: the FORWARDED request carries the fault
-      // header, so the real server produces the real refusal. The client
-      // is never told anything the server did not say.
-      headers[injection.header] = injection.value
-      headers[injection.tokenHeader] = injection.token
-      injection.remaining -= 1
-      record.injected = injection.value
-    }
-
-    const upstream = httpRequest(
-      { headers, host: LOOPBACK, method: incoming.method, path: record.path, port: upstreamPort },
-      (response) => {
-        record.status = response.statusCode ?? 502
-        outgoing.writeHead(response.statusCode ?? 502, response.headers)
-        response.pipe(outgoing)
-      },
-    )
-    upstream.once('error', () => outgoing.destroy())
-    incoming.on('end', () => {
-      record.body = Buffer.concat(chunks).toString('utf8')
-    })
-    incoming.pipe(upstream)
-  })
-
-  return {
-    inject: ({ match, value, token, times = 1 }) => {
-      injections.push({
-        header: 'x-keepling-test-fault',
-        match,
-        remaining: times,
-        token,
-        tokenHeader: 'x-keepling-test-fault-token',
-        value,
-      })
-    },
-    listen: (host, port) =>
-      new Promise((resolvePromise, reject) => {
-        server.once('error', reject)
-        server.listen(port, host, () => resolvePromise())
-      }),
-    records,
-    close: () =>
-      new Promise((resolvePromise) => {
-        server.closeAllConnections()
-        server.close(() => resolvePromise())
-      }),
-  }
-}
-
 /**
  * A TLS listener that records CONNECTION attempts. Its only job is to tell
  * "the phone could not route to this Mac" apart from "the phone routed here
@@ -214,18 +118,13 @@ const createRecordingProxy = ({ upstreamPort }) => {
  */
 const createTlsProbe = () => {
   const attempts = []
-  const selfSigned = spawnSync(
-    'openssl',
-    ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-keyout', '-', '-days', '1', '-subj', '/CN=keepling-lane'],
-    { encoding: 'utf8' },
-  )
-  if (selfSigned.status !== 0) return null
-  const pem = selfSigned.stdout
-  const key = pem.match(/-----BEGIN PRIVATE KEY-----[\s\S]+?-----END PRIVATE KEY-----/)?.[0]
-  const cert = pem.match(/-----BEGIN CERTIFICATE-----[\s\S]+?-----END CERTIFICATE-----/)?.[0]
-  if (!key || !cert) return null
-
-  const server = createTlsServer({ cert, key })
+  let material
+  try {
+    material = makeSelfSignedCertificate(defaultRouteAddress() ?? '127.0.0.1')
+  } catch {
+    return null
+  }
+  const server = createTlsServer({ cert: material.cert, key: material.key })
   server.on('connection', (socket) => {
     attempts.push({ at: Date.now(), remoteAddress: socket.remoteAddress })
   })
@@ -241,101 +140,23 @@ const createTlsProbe = () => {
   }
 }
 
-/** A real browser-class client against the real server, through the proxy. */
-const createClient = (base) => ({
-  cookie: '',
-  csrfToken: '',
-  async request(path, init = {}) {
-    const response = await fetch(new URL(path, base), {
-      ...init,
-      headers: {
-        accept: 'application/json',
-        origin: base,
-        ...(this.cookie === '' ? {} : { cookie: this.cookie }),
-        ...(this.csrfToken === '' ? {} : { 'x-csrf-token': this.csrfToken }),
-        ...(init.headers ?? {}),
-      },
-      redirect: 'manual',
-    })
-    const set = response.headers.getSetCookie?.() ?? []
-    if (set.length > 0) this.cookie = set.map((value) => value.split(';')[0]).join('; ')
-    return response
-  },
-  async signIn() {
-    const session = await this.request('/api/v1/test/session', {
-      body: '{}',
-      headers: { 'content-type': 'application/json' },
-      method: 'POST',
-    })
-    if (session.status !== 200) throw new Error(`the real server refused a session: ${session.status}`)
-    this.csrfToken = (await session.json()).csrf_token
-  },
-})
-
-const postCommand = (client, path, command) =>
-  client.request(path, { body: JSON.stringify(command), headers: { 'content-type': 'application/json' }, method: 'POST' })
-
-const ownedChildren = []
-let temporaryRoot
-let proxy
+let stack
 let tlsProbe
 
 const shutdown = async () => {
-  if (proxy) await proxy.close()
   if (tlsProbe) await tlsProbe.close()
-  await stopBackend(ownedChildren)
-  if (temporaryRoot) rmSync(temporaryRoot, { force: true, recursive: true })
-}
-
-/**
- * Refuses to start on top of a port a PREVIOUS aborted run left held.
- * Without this the failure surfaces as `createdb: database "keepling_e2e"
- * already exists` from a stale postmaster -- which reads like a lane bug
- * and, worse, would silently prove things against the wrong server's data
- * if the schema happened to line up. Measured during this plan's execution.
- */
-const refuseHeldPorts = () => {
-  const held = spawnSync('lsof', ['-ti', `tcp:${POSTGRES_PORT}`, '-ti', `tcp:${PHOENIX_PORT}`, '-ti', `tcp:${PROXY_PORT}`], {
-    encoding: 'utf8',
-  })
-  const pids = (held.stdout ?? '').split('\n').filter(Boolean)
-  if (pids.length > 0) {
-    fail(
-      `ports ${POSTGRES_PORT}/${PHOENIX_PORT}/${PROXY_PORT} are already held by pid(s) ${pids.join(', ')} -- ` +
-        'a previous run of this lane did not shut down. Kill them and re-run; this lane will not attach to a ' +
-        'server it did not start.',
-    )
-  }
+  if (stack) await stack.stop()
 }
 
 try {
-  refuseHeldPorts()
-  // Short prefix on purpose: PostgreSQL's Unix-domain socket path has a
-  // 103-byte limit and macOS's per-user temporary directory already spends
-  // most of it (the desktop lane records the same measurement).
-  temporaryRoot = mkdtempSync(join(tmpdir(), 'kios-'))
-  const faultToken = randomBytes(32).toString('hex')
-
-  await startBackend({
-    faultToken,
-    onUnexpectedExit: (reason) => {
-      console.error(`iOS real-stack lane: a backend process exited unexpectedly -- ${reason}`)
-    },
-    ownedChildren,
-    phoenixPort: PHOENIX_PORT,
-    postgresPort: POSTGRES_PORT,
-    secretKeyBase: randomBytes(48).toString('base64'),
-    temporaryRoot,
-    urlPort: PROXY_PORT,
-  })
-
-  proxy = createRecordingProxy({ upstreamPort: PHOENIX_PORT })
   // Binds on every interface deliberately: the point of this lane is that a
   // PHYSICAL device reaches it. The upstream Phoenix and PostgreSQL stay on
   // loopback, exactly as the shared harness requires.
-  await proxy.listen('0.0.0.0', PROXY_PORT)
+  stack = await startRecordingStack({ bindHost: '0.0.0.0' })
+  const proxy = stack.proxy
+  const faultToken = stack.faultToken
 
-  const client = createClient(`http://${LOOPBACK}:${PROXY_PORT}`)
+  const client = createClient(stack.loopbackURL)
   await client.signIn()
 
   // ---- 1. A real capture arrives at the real server, through the proxy.
@@ -473,7 +294,7 @@ try {
   })
   if (logout.status !== 200 && logout.status !== 204) fail(`the real server refused to end the session: ${logout.status}`)
 
-  const fenced = createClient(`http://${LOOPBACK}:${PROXY_PORT}`)
+  const fenced = createClient(stack.loopbackURL)
   fenced.cookie = fencedCookie
   fenced.csrfToken = fencedCsrf
 
@@ -509,7 +330,7 @@ try {
   }
 
   // ---- 5. The device half. Measured, never assumed.
-  const lanIp = lanAddress()
+  const lanIp = defaultRouteAddress()
   if (!lanIp) blocked('this Mac has no non-loopback IPv4 address, so no phone could reach the proxy at all')
 
   tlsProbe = createTlsProbe()
@@ -558,7 +379,7 @@ try {
     }
   }
 
-  const overHttp = launchWith(`http://${lanIp}:${PROXY_PORT}`)
+  const overHttp = launchWith(`http://${lanIp}:${stack.port}`)
   const overHttps = launchWith(`https://${lanIp}:${TLS_PROBE_PORT}`)
 
   console.log(
@@ -574,7 +395,7 @@ try {
 
   blocked(
     'the physical device never reached the recording proxy. ' +
-      `Over plain HTTP to http://${lanIp}:${PROXY_PORT} the app sent nothing: ` +
+      `Over plain HTTP to http://${lanIp}:${stack.port} the app sent nothing: ` +
       "`KeeplingSyncAdapter`'s constructor refuses any non-HTTPS base URL whose host is not 127.0.0.1 or " +
       'localhost (T-04-01-03/T-04-05-04), so no adapter is ever constructed and no request leaves the phone. ' +
       `Over TLS to https://${lanIp}:${TLS_PROBE_PORT} the phone made ${overHttps.tlsAttempts} TCP/TLS ` +
