@@ -1,10 +1,24 @@
 ---
 phase: KPL-04-native-iphone-daily-loop
 verified: 2026-09-08T19:05:00Z
-status: human_needed
-score: 20/23 must-haves verified
+status: passed
+score: 20/23 must-haves verified, 3 accepted as disclosed by the owner
 behavior_unverified: 3
 overrides_applied: 0
+owner_acceptance:
+  decided_by: owner
+  decided_at: 2026-09-08
+  decision: >-
+    Accepted all four remaining human-judgment items AS DISCLOSED, NOT AS PROVEN.
+    This changes the phase's status, not its evidence: nothing below was
+    re-measured or re-classified as verified on the strength of this decision,
+    and every one of the four keeps its disclosure row in
+    docs/testing/ios-testing.md naming exactly what is not proven and why.
+  items:
+    - "SC5 daily adoption -- owner dogfood feedback, never a gate by design; no lane asserts it and none ever will."
+    - "G7's locked-device write -- nothing can lock the phone under program control (devicectl has no lock verb, XCUIDevice is UI-testing-only); closing it would mean adding a production protectedDataWillBecomeUnavailable write hook solely to make a gate pass."
+    - "The Debug-configuration substitution for the device suites -- a Release build strips the XCTest framework they host in. Attested rather than silent: BuildAttestation.configuration is compiled in from a #if and attestation.mjs --expect-configuration refused a run over it during 04-18."
+    - "04-14's D9 discharge judgment -- a pre-existing judgment call recorded in 04-14-SUMMARY.md."
 re_verification:
   previous_status: human_needed
   previous_score: 19/23
