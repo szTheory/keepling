@@ -164,6 +164,8 @@ It also removes a human touchpoint the plan had not accounted for. Apple TN3179 
 - **The gate under-reported every multi-suite lane's case count** — `xcodebuildSummary` took the first "Executed N tests" line rather than the last.
 - **The attested build was not the tested build.** The scheme's `ArchiveAction` is Release and its `TestAction` is Debug; a source-content digest cannot tell them apart. Now attested from a compiled-in `#if` and enforced.
 - **`--requirements` had failed for the whole phase** with "requirement D-22 has no mapped lane." D-22 is a *decision* id appearing in the traceability row's prose, and the parser harvested every `LETTERS-DIGITS` token from the entire row — the gate's own wording could break the gate. It now reads the id column. All five requirements map.
+- **The two server-driven lanes could not run in the same gate.** `server-driven-sim` failed reproducibly inside the full gate while passing standalone, with an error naming nothing about the cause: *"Failed to install or launch the test runner ... Launchd job spawn failed"*. Both destinations shared one derived-data tree, so `Build/Products` accumulated an `.xctestrun` per platform and the runner took the first by name -- `iphoneos` sorts before `iphonesimulator`, so once the device lane had run, the simulator lane launched the **device-built** app on the simulator. Fixed per-platform, and the selection now refuses an ambiguous match rather than picking one. This defect was reachable only by running every lane together; neither lane could ever have found it alone.
+- **A device failure could not be read after the fact.** A `DynamicTypeSnapshotTests` hit-region case failed once in a full gate (and passed on every other device run, before and after). Diagnosing it was impossible: the lane printed only a tail, which showed the *last* suite's log, and the `.xcresult` had already been overwritten by the next run. The device lane now writes the whole log to `.artifacts/ios/device-last-run.log` and names the failing tests inline.
 
 ## Evidence
 
@@ -173,6 +175,7 @@ It also removes a human touchpoint the plan had not accounted for. Apple TN3179 
 | `server-driven-device` | PASS — same four, `transport=https-publicly-trusted`, on the physical iPhone |
 | `device` | PASS, cases=26 (was BLOCKED for the entire phase) |
 | `--requirements` | 5 requirements, all mapped (was FAILED) |
+| full gate | 24 lanes, all PASS |
 
 Recorded command order, identical on both destinations, read from what the proxy received rather than from client belief:
 
