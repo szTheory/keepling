@@ -1,4 +1,5 @@
 import Foundation
+import HTTPTypes
 import OpenAPIRuntime
 import OpenAPIURLSession
 
@@ -26,11 +27,64 @@ public final class KeeplingSyncAdapter: SyncPort, @unchecked Sendable {
         case insecureBaseURL
     }
 
-    public init(baseURL: URL, transport: any ClientTransport = URLSessionTransport()) throws {
+    /// Supplies the bearer credential this adapter authenticates with.
+    ///
+    /// A closure, not a stored string, and `async` on purpose. A device-grant
+    /// credential EXPIRES, and `DeviceGrantClient.refresh()` already exists to
+    /// replace it; a value captured once at construction would authenticate in
+    /// a lane and then fail in the app at the first expiry -- exactly the shape
+    /// of defect that only shows up against a real server, which is the class
+    /// this seam exists to make testable. Returning `nil` means "no credential
+    /// available", and the request goes out unauthenticated rather than with an
+    /// empty header the server would have to interpret.
+    public typealias CredentialProvider = @Sendable () async -> String?
+
+    /// Attaches `Authorization: Bearer` when a credential is available.
+    ///
+    /// The server distinguishes a native client from a browser by this header
+    /// alone (`apps/server/lib/keepling_web/auth.ex`, `authenticate_client`):
+    /// with it, the request takes the device-grant path and is CSRF-exempt
+    /// because no session is involved; without it, the request is treated as a
+    /// browser request and refused for want of a session. So this middleware is
+    /// not a convenience -- it is the only thing that makes this adapter
+    /// addressable as a native client at all.
+    private struct BearerCredentialMiddleware: ClientMiddleware {
+        let provider: CredentialProvider
+
+        func intercept(
+            _ request: HTTPRequest,
+            body: HTTPBody?,
+            baseURL: URL,
+            operationID: String,
+            next: (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
+        ) async throws -> (HTTPResponse, HTTPBody?) {
+            var request = request
+            if let credential = await provider(), !credential.isEmpty {
+                request.headerFields[.authorization] = "Bearer \(credential)"
+            }
+            return try await next(request, body, baseURL)
+        }
+    }
+
+    /// - Parameter credentialProvider: supplies the bearer credential. Defaults
+    ///   to `nil`, so every existing caller and every stubbed test emits a
+    ///   byte-identical request to the one it emitted before this seam existed.
+    public init(
+        baseURL: URL,
+        transport: any ClientTransport = URLSessionTransport(),
+        credentialProvider: CredentialProvider? = nil
+    ) throws {
+        // UNCHANGED, and deliberately evaluated BEFORE anything else: holding a
+        // credential must never buy a relaxation of the transport rule. A
+        // reader reaching for this guard to explain why a lane cannot reach a
+        // LAN host should find exactly the same three conditions as before
+        // (T-04-01-03/T-04-05-04).
         guard baseURL.scheme == "https" || baseURL.host == "127.0.0.1" || baseURL.host == "localhost" else {
             throw ConfigurationError.insecureBaseURL
         }
-        client = Client(serverURL: baseURL, transport: transport)
+        let middlewares: [any ClientMiddleware] =
+            credentialProvider.map { [BearerCredentialMiddleware(provider: $0)] } ?? []
+        client = Client(serverURL: baseURL, transport: transport, middlewares: middlewares)
     }
 
     // MARK: - push

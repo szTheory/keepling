@@ -130,8 +130,22 @@ const xcodebuildSummary = (stdout) => {
   // test is the first lane whose ONLY test class carries a skip, so no
   // earlier non-skipped class summary line was available to accidentally
   // satisfy the old, stricter pattern).
-  const executed = stdout.match(/Executed (\d+) tests?,\s*with(?:\s+\d+\s+tests?\s+skipped\s+and)?\s*(\d+) failures?/)
-  if (!executed) throw new Error('xcodebuild "Executed N tests" summary not found')
+  //
+  // Take the LAST such line, not the first. xcodebuild prints one of these
+  // per test SUITE as each finishes and then the run TOTAL, so `String.match`
+  // -- which returns the first match -- was reporting the first suite's count
+  // as the whole lane's case count. Measured on the `transport` lane: three
+  // suites totalling 13 cases reported `cases=11`, the first suite's number,
+  // both before and after two cases were added to a later suite.
+  //
+  // It never caused a false PASS (a failure anywhere still fails the run), but
+  // the case count is the number this gate publishes as its evidence, and
+  // D-24's anti-vacuity contract rests on that number meaning what it says.
+  // A lane whose later suite silently executed nothing would also have been
+  // masked by an earlier suite's healthy count.
+  const executedLines = [...stdout.matchAll(/Executed (\d+) tests?,\s*with(?:\s+\d+\s+tests?\s+skipped\s+and)?\s*(\d+) failures?/g)]
+  if (executedLines.length === 0) throw new Error('xcodebuild "Executed N tests" summary not found')
+  const executed = executedLines[executedLines.length - 1]
   const total = Number(executed[1])
   const failures = Number(executed[2])
   if (failures > 0) throw new Error(`xcodebuild reported ${failures} failing test(s)`)
