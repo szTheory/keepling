@@ -48,9 +48,56 @@ const argumentValue = (name, fallback) => {
   return index === -1 ? fallback : process.argv[index + 1]
 }
 
-const destination = argumentValue('--destination', 'platform=iOS Simulator,name=iPhone 17,OS=latest')
-const bindHost = argumentValue('--bind-host', '127.0.0.1')
-const advertiseHost = argumentValue('--advertise-host', '127.0.0.1')
+/**
+ * `--device` resolves the attached iPhone's HARDWARE UDID, which is the
+ * identifier space `xcodebuild -destination` speaks. The CoreDevice
+ * identifier is a DIFFERENT space and belongs only to `devicectl`;
+ * `resolve-devices.mjs` refuses to run if the two are ever equal, so
+ * neither can be handed to the wrong tool from here (T-04-16-02).
+ */
+const destination = process.argv.includes('--device')
+  ? `platform=iOS,id=${(await import(`${repositoryRoot}/tooling/ios-device/resolve-devices.mjs`)).resolveDevice().hardwareUdid}`
+  : argumentValue('--destination', 'platform=iOS Simulator,name=iPhone 17,OS=latest')
+
+/**
+ * `--tls-tailnet` is how a PHYSICAL iPhone reaches this proxy.
+ *
+ * Not a LAN address: Apple TN3179 gates every outgoing TCP connection to a
+ * local network address behind a privilege that cannot be granted by MDM or
+ * any tool and resets when the app is deleted -- an irreducible human tap.
+ * A tailnet address rides a VPN interface, which TN3179 excludes from the
+ * definition of a local network, and `tailscale cert` issues a real
+ * Let's Encrypt certificate for it. The phone therefore validates with the
+ * SHIPPING trust path and the app needs no test-only trust code at all.
+ * See `tooling/ios-device/tailnet.mjs` for the full reasoning.
+ */
+const useTailnet = process.argv.includes('--tls-tailnet')
+let bindHost = argumentValue('--bind-host', '127.0.0.1')
+let advertiseHost = argumentValue('--advertise-host', '127.0.0.1')
+let tls = null
+let displayHost = advertiseHost
+
+if (useTailnet) {
+  const { issueTailnetCertificate, redactFQDN, requireOnlineIOSPeer, tailnetFQDN } = await import(
+    `${repositoryRoot}/tooling/ios-device/tailnet.mjs`
+  )
+  // Peer first, certificate second: a phone that is not on the tailnet
+  // produces a connection timeout later that looks exactly like a
+  // certificate problem, and this phase has already lost enough time to
+  // failures that pointed at the wrong layer.
+  requireOnlineIOSPeer()
+  const fqdn = tailnetFQDN()
+  tls = issueTailnetCertificate(fqdn)
+  // Every interface, so the tailnet one is included. Phoenix and PostgreSQL
+  // stay on loopback exactly as the shared harness requires.
+  bindHost = '0.0.0.0'
+  advertiseHost = fqdn
+  // The MagicDNS name embeds the tailnet name, which identifies the
+  // account. This repository may become open source and its lane output is
+  // read into committed evidence, so what gets PRINTED is redacted while
+  // what gets DIALLED is the real name.
+  displayHost = redactFQDN(fqdn)
+}
 
 const fail = (message) => {
   throw new Error(message)
@@ -97,10 +144,23 @@ const runChecked = async (label, args) => {
 let stack
 
 try {
-  stack = await startRecordingStack({ bindHost })
+  stack = await startRecordingStack({ bindHost, tls })
+
+  // The harness dials the SAME URL it will hand the phone, not loopback.
+  //
+  // MEASURED: with TLS on, `stack.loopbackURL` is `https://127.0.0.1:<port>`,
+  // and the tailnet certificate is issued for the MagicDNS NAME -- so Node's
+  // own fetch rejected it on hostname mismatch and the lane died with a bare
+  // "fetch failed" eight seconds in, before the build, pointing at nothing.
+  // Using one URL for both also means the harness proves the phone's route
+  // works before spending several minutes building for it.
+  const harnessURL = stack.baseURL(advertiseHost)
 
   // ---- A real credential, through the real authorization flow.
-  const browser = createClient(stack.loopbackURL)
+  // Declared origin uses the scheme PHOENIX sees, not the one dialled --
+  // the proxy terminates TLS and forwards over plain HTTP. See
+  // `createClient` for why this is a harness-only concern.
+  const browser = createClient(harnessURL, { origin: harnessURL.replace(/^https:/, 'http:') })
   await browser.signIn()
   const active = await issueDeviceGrant(browser, { installationId: `lane-active-${Date.now()}` })
 
@@ -109,7 +169,7 @@ try {
   // signed-out or remotely revoked phone still holds on disk.
   const revokedInstallation = `lane-revoked-${Date.now()}`
   const doomed = await issueDeviceGrant(browser, { installationId: revokedInstallation })
-  const revoke = await fetch(new URL(`/api/v1/device-grants/${revokedInstallation}`, stack.loopbackURL), {
+  const revoke = await fetch(new URL(`/api/v1/device-grants/${revokedInstallation}`, harnessURL), {
     headers: { accept: 'application/json', authorization: `Bearer ${doomed.accessToken}` },
     method: 'DELETE',
   })
@@ -117,7 +177,7 @@ try {
     fail(`the real server refused to revoke the device grant under test: ${revoke.status} ${await revoke.text()}`)
   }
 
-  const baseURL = stack.baseURL(advertiseHost)
+  const baseURL = harnessURL
   const arrivalsBefore = stack.records.length
 
   // HOW THE LANE ENVIRONMENT REACHES THE TESTS
@@ -214,7 +274,7 @@ try {
     // errors -- which is exactly as unreliable as it sounds. Fetching the
     // page the client just choked on turns that guess into a lookup.
     try {
-      const feed = await fetch(new URL('/api/v1/sync?limit=50', stack.loopbackURL), {
+      const feed = await fetch(new URL('/api/v1/sync?limit=50', harnessURL), {
         headers: { accept: 'application/json', authorization: `Bearer ${active.accessToken}` },
       })
       const page = await feed.json()
@@ -255,7 +315,8 @@ try {
 
   const order = commandArrivals.map((record) => `${record.path.split('/').pop()}:${record.status}`)
   console.log(
-    `IOS_SERVER_DRIVEN scenarios=4 destination=${JSON.stringify(destination)} ` +
+    `IOS_SERVER_DRIVEN scenarios=4 destination=${JSON.stringify(destination)} host=${displayHost} ` +
+      `transport=${tls ? 'https-publicly-trusted' : 'http-loopback'} ` +
       `command_arrivals=${commandArrivals.length} injected=${injected.length} refusals=${refusals.length}`,
   )
   console.log(`IOS_SERVER_DRIVEN_ORDER ${order.join(' -> ')}`)

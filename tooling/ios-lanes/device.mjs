@@ -19,35 +19,37 @@
  * are equal.
  *
  * ---------------------------------------------------------------------
- * WHY THIS LANE STILL REPORTS `BLOCKED` AFTER RUNNING REAL DEVICE TESTS
+ * WHY THIS LANE NO LONGER REPORTS `BLOCKED`
  * ---------------------------------------------------------------------
- * D-22 Criterion 2 has two halves. The OFFLINE half -- a mutation made with
- * no server, a hard kill, a relaunch, exactly-once projection, a durable
- * capture draft, foreground resume -- runs here for real on Jon's phone and
- * passes. The SERVER-DRIVEN half -- authentication expiry, account fencing,
- * duplicate replay, and structured conflict injected server-side through
- * the recording proxy and asserted against what the proxy recorded -- does
- * NOT, and cannot yet.
+ * D-22 Criterion 2 has two halves. The OFFLINE half -- a mutation made
+ * with no server, a hard kill, a relaunch, exactly-once projection, a
+ * durable capture draft, foreground resume -- runs here on the physical
+ * phone and always did.
  *
- * `tooling/verify-real-stack-ios.mjs` measures why rather than asserting
- * it: `KeeplingSyncAdapter`'s constructor refuses any non-HTTPS base URL
- * whose host is not `127.0.0.1`/`localhost` (T-04-01-03/T-04-05-04), and a
- * physical phone can only reach the build Mac at a LAN address. Over plain
- * HTTP nothing leaves the phone; over TLS the phone genuinely connects (so
- * routing works) and URLSession rejects the lane's self-signed certificate.
- * Closing that needs a decision Plan 04-16 did not make, and widening the
- * production transport guard to make this lane green is refused.
+ * The SERVER-DRIVEN half -- authentication expiry, account fencing,
+ * duplicate replay, and structured conflict, injected server-side through
+ * the recording proxy and asserted against what the proxy recorded -- now
+ * runs too, in `server-driven-device`, and this lane no longer stands in
+ * for its absence. That half turned out not to be blocked by the phone or
+ * by TLS at all: the Swift client had never spoken to a real server on ANY
+ * destination, could not attach a credential, could not decode the
+ * server's timestamps, and could not decode a sync page. Those were fixed;
+ * the transport was then solved by reaching this Mac over the tailnet with
+ * a real Let's Encrypt certificate, so the phone validates with the
+ * SHIPPING trust path and no test-only trust code exists anywhere.
  *
- * So this lane runs everything it genuinely can, reports the case count it
- * genuinely achieved IN ITS MESSAGE, and then throws `BLOCKED:` -- which
- * `tooling/verify-ios-phase.mjs` labels distinctly from a bug while still
- * failing the overall run. The alternative -- returning a positive count
- * and letting the gate go green -- would let IOS-02's server-driven half
- * look proven forever on the strength of its offline half. That is the
- * exact failure this project's BLOCKED convention exists to prevent.
+ * This lane therefore returns its genuine case count. The BLOCKED
+ * convention remains for conditions that genuinely prevent evidence --
+ * a locked phone, an absent device -- and `lock-probe.mjs` now names the
+ * most frequent of those in seconds rather than after a 300-second
+ * destination timeout.
  *
- * When the transport-trust decision lands, delete `SERVER_DRIVEN_BLOCKER`
- * below and return `cases` directly.
+ * DISCLOSED RESIDUAL: the suites below run in the Debug configuration
+ * (the scheme's TestAction), which `xcodebuild test` rebuilds and
+ * reinstalls over the Release archive this lane attests. That
+ * substitution is now attested rather than silent -- see the
+ * `-configuration` comment below -- but proving the RELEASE binary's
+ * behaviour on hardware remains open and is claimed nowhere.
  */
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -71,15 +73,6 @@ const PROBE_IDENTIFIER = 'build-attestation-digest'
  * "installed build" means.
  */
 const FORBIDDEN_DISTRIBUTION_TOKENS = ['altool', 'notarytool', 'App Store Connect', 'app-store', 'ad-hoc', 'enterprise']
-
-const SERVER_DRIVEN_BLOCKER =
-  'the server-driven half of D-22 Criterion 2 (authentication expiry, account fencing, duplicate replay, ' +
-  'structured conflict -- injected server-side and asserted against the recording proxy) cannot run: the ' +
-  'phone cannot reach a Mac-hosted proxy. `KeeplingSyncAdapter` refuses any non-HTTPS base URL whose host ' +
-  'is not 127.0.0.1/localhost (T-04-01-03/T-04-05-04), and over TLS URLSession rejects the lane\'s ' +
-  'self-signed certificate. `node tooling/verify-real-stack-ios.mjs` measures both halves and prints the ' +
-  'evidence. This is disclosed missing evidence, not a code defect, and it is NOT closed by relaxing the ' +
-  'transport guard.'
 
 export default function deviceLane({ repositoryRoot, xcodebuildSummary }) {
   const manifestPath = join(repositoryRoot, '.artifacts', 'ios', 'build-manifest.json')
@@ -248,11 +241,15 @@ export default function deviceLane({ repositoryRoot, xcodebuildSummary }) {
       if (exitStatus !== 0 && !/\*\* TEST SUCCEEDED \*\*/.test(output)) {
         throw new Error(`the device suite exited ${exitStatus ?? 'without status'}`)
       }
-      const cases = xcodebuildSummary(stdout)
-      throw new Error(
-        `BLOCKED: ${cases} physical-device case(s) passed on the installed build ` +
-          `(KeeplingBuildDigest=${digest}), but ${SERVER_DRIVEN_BLOCKER}`,
-      )
+      // RETIRED (04-18-PLAN.md Task 7). This lane used to report BLOCKED
+      // no matter how many device cases passed, because the server-driven
+      // half of D-22 Criterion 2 could not run at all. It now runs, on this
+      // phone, in the `server-driven-device` lane -- over the tailnet with
+      // a publicly-trusted certificate, through the unmodified shipping
+      // transport. This lane returns its genuine case count, exactly as
+      // this file's own header instructed once the transport decision
+      // landed.
+      return xcodebuildSummary(stdout)
     },
   }
 }

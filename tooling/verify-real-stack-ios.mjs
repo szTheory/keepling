@@ -61,11 +61,10 @@
  *   node tooling/verify-real-stack-ios.mjs
  *   node tooling/verify-real-stack-ios.mjs --skip-device   # server half only
  */
-import { createServer as createTlsServer } from 'node:tls'
 import { join, resolve } from 'node:path'
 import { randomBytes, randomUUID } from 'node:crypto'
 import process from 'node:process'
-import { spawn, spawnSync } from 'node:child_process'
+import { spawnSync } from 'node:child_process'
 
 const repositoryRoot = resolve(import.meta.dirname, '..')
 
@@ -86,12 +85,8 @@ if (!process.execArgv.includes('--experimental-strip-types')) {
 // file grew it first and three callers need it now, so it moved rather than
 // being copied -- the same anti-drift rule this file already enforces on
 // itself for `apps/web/e2e/support/backend.ts`.
-const { createClient, defaultRouteAddress, makeSelfSignedCertificate, postCommand, startRecordingStack } =
+const { createClient, postCommand, startRecordingStack } =
   await import(join(repositoryRoot, 'tooling/ios-device/real-stack.mjs'))
-const { resolveDevice } = await import(join(repositoryRoot, 'tooling/ios-device/resolve-devices.mjs'))
-
-const BUNDLE_ID = 'com.szTheory.keepling'
-const TLS_PROBE_PORT = Number(process.env.KEEPLING_IOS_E2E_TLS_PORT ?? 4114)
 
 /**
  * Both of these THROW rather than `process.exit`. Exiting straight from an
@@ -104,58 +99,12 @@ const fail = (message) => {
   throw new Error(message)
 }
 
-/** Spawns without blocking the event loop the proxy and TLS probe run on. */
-const runAsync = (command, args) =>
-  new Promise((resolvePromise) => {
-    const child = spawn(command, args)
-    let stdout = ''
-    let stderr = ''
-    child.stdout?.on('data', (chunk) => { stdout += chunk })
-    child.stderr?.on('data', (chunk) => { stderr += chunk })
-    child.on('close', () => resolvePromise({ stdout, stderr }))
-  })
 
-const blocked = (message) => {
-  const error = new Error(message)
-  error.isBlocked = true
-  throw error
-}
 
-/**
- * A TLS listener that records CONNECTION attempts. Its only job is to tell
- * "the phone could not route to this Mac" apart from "the phone routed here
- * and rejected the certificate". Without it, a zero-request result would be
- * ambiguous and the BLOCKED verdict below would be a guess.
- */
-const createTlsProbe = () => {
-  const attempts = []
-  let material
-  try {
-    material = makeSelfSignedCertificate(defaultRouteAddress() ?? '127.0.0.1')
-  } catch {
-    return null
-  }
-  const server = createTlsServer({ cert: material.cert, key: material.key })
-  server.on('connection', (socket) => {
-    attempts.push({ at: Date.now(), remoteAddress: socket.remoteAddress })
-  })
-  server.on('tlsClientError', () => undefined)
-  return {
-    attempts,
-    close: () => new Promise((resolvePromise) => server.close(() => resolvePromise())),
-    listen: (host, port) =>
-      new Promise((resolvePromise, reject) => {
-        server.once('error', reject)
-        server.listen(port, host, () => resolvePromise())
-      }),
-  }
-}
 
 let stack
-let tlsProbe
 
 const shutdown = async () => {
-  if (tlsProbe) await tlsProbe.close()
   if (stack) await stack.stop()
 }
 
@@ -334,111 +283,37 @@ try {
   )
   console.log(`IOS_REAL_STACK_ORDER ${arrivalOrder.join(' -> ')}`)
 
-  if (process.argv.includes('--skip-device')) {
-    console.log('IOS_REAL_STACK_DEVICE skipped=true (--skip-device)')
-    await shutdown()
-    process.exit(0)
-  }
-
-  // ---- 5. The device half. Measured, never assumed.
-  const lanIp = defaultRouteAddress()
-  if (!lanIp) blocked('this Mac has no non-loopback IPv4 address, so no phone could reach the proxy at all')
-
-  tlsProbe = createTlsProbe()
-  if (tlsProbe) await tlsProbe.listen('0.0.0.0', TLS_PROBE_PORT)
-
-  const device = resolveDevice()
-
-  /**
-   * MEASURED CORRECTION (04-18-PLAN.md Task 1). This function used
-   * `spawnSync` for the launch AND `spawnSync('sleep', ...)` inside its
-   * poll loop, with no `await` anywhere between them. This process IS the
-   * recording proxy and the TLS probe: both listeners run on THIS event
-   * loop. `spawnSync` blocks that loop completely, so for the entire
-   * measurement window neither listener could accept a connection or
-   * record one, and `proxy.records.length` / `tlsProbe.attempts.length`
-   * were read synchronously before the loop ever ran again.
-   *
-   * Both counts were therefore ZERO BY CONSTRUCTION, whatever the phone
-   * did. Reproduced in isolation: a request that genuinely arrives during
-   * the blocking window reads as 0 synchronously and 1 once the loop runs.
-   *
-   * That means this lane's device half was not measuring reachability at
-   * all -- it was reporting the shape of its own blocked event loop, and
-   * the conclusion drawn from it ("the phone routed here, so the blocker
-   * is certificate trust") was not supported by its own evidence. The
-   * conclusion may still be true; it was simply never measured. Everything
-   * here is asynchronous now so that the listeners can actually listen.
-   */
-  const launchWith = async (serverUrl) => {
-    const before = proxy.records.length
-    const beforeTls = tlsProbe?.attempts.length ?? 0
-    const launch = await runAsync('xcrun', [
-      'devicectl', 'device', 'process', 'launch',
-      '--device', device.devicectlIdentifier,
-      '--terminate-existing',
-      '--environment-variables', JSON.stringify({ KEEPLING_SERVER_URL: serverUrl }),
-      BUNDLE_ID,
-    ])
-    const launchOutput = `${launch.stdout ?? ''}\n${launch.stderr ?? ''}`
-    // A LOCKED phone refuses every app launch
-    // (`FBSOpenApplicationErrorDomain error 7`). Without this branch a
-    // locked phone produces zero proxy arrivals and the lane would blame
-    // the transport guard -- attributing a true conclusion to the wrong
-    // evidence, which is its own kind of false claim.
-    if (/could not be, unlocked|FBSOpenApplicationErrorDomain error 7|BSErrorCodeDescription = Locked/i.test(launchOutput)) {
-      blocked(
-        'the iPhone is LOCKED, so the app could not be launched at all and this lane could learn nothing ' +
-          'about whether it can reach the recording proxy. Unlock the phone and re-run. (The passcode is ' +
-          'the one thing no tool here can supply; `devicectl device info lockState` reports only ' +
-          '`passcodeRequired`/`unlockedSinceBoot`, never the current lock state, so this is detected from ' +
-          'the launch refusal itself.)',
-      )
-    }
-    // The app syncs on foreground; give the scene-phase driver a real
-    // window to reach the Mac before concluding it never did.
-    const deadline = Date.now() + 20_000
-    while (Date.now() < deadline) {
-      if (proxy.records.length > before || (tlsProbe?.attempts.length ?? 0) > beforeTls) break
-      // `await`, not `spawnSync('sleep')`: yielding to the event loop is the
-      // entire point of the wait. A blocking sleep here would guarantee the
-      // zero it is waiting to disprove.
-      await new Promise((resolvePromise) => setTimeout(resolvePromise, 500))
-    }
-    return {
-      httpArrivals: proxy.records.length - before,
-      tlsAttempts: (tlsProbe?.attempts.length ?? 0) - beforeTls,
-    }
-  }
-
-  const overHttp = await launchWith(`http://${lanIp}:${stack.port}`)
-  const overHttps = await launchWith(`https://${lanIp}:${TLS_PROBE_PORT}`)
-
-  console.log(
-    `IOS_REAL_STACK_DEVICE lan_ip=${lanIp} http_arrivals=${overHttp.httpArrivals} ` +
-      `https_tcp_attempts=${overHttps.tlsAttempts} device=${JSON.stringify(device.name)}`,
-  )
-
-  if (overHttp.httpArrivals > 0) {
-    console.log(`IOS_REAL_STACK passed: the device reached the recording proxy (${overHttp.httpArrivals} requests)`)
-    await shutdown()
-    process.exit(0)
-  }
-
-  blocked(
-    'the physical device never reached the recording proxy. ' +
-      `Over plain HTTP to http://${lanIp}:${stack.port} the app sent nothing: ` +
-      "`KeeplingSyncAdapter`'s constructor refuses any non-HTTPS base URL whose host is not 127.0.0.1 or " +
-      'localhost (T-04-01-03/T-04-05-04), so no adapter is ever constructed and no request leaves the phone. ' +
-      `Over TLS to https://${lanIp}:${TLS_PROBE_PORT} the phone made ${overHttps.tlsAttempts} TCP/TLS ` +
-      'connection attempt(s) -- so routing from the phone to this Mac WORKS and the blocker is certificate ' +
-      'trust, not networking: URLSession rejects the lane\'s self-signed certificate. ' +
-      'Closing this needs a decision Plan 04-16 did not make: (a) a DEBUG-only, launch-env-gated lane CA ' +
-      'trusted through an injected ClientTransport, (b) widening the production transport guard to admit ' +
-      'LAN/.local hosts, or (c) deferring the server-driven device scenarios to a later plan. ' +
-      '(b) is refused here -- relaxing a deliberate security guard to make a lane go green is the exact ' +
-      'false-evidence failure this phase exists to prevent.',
-  )
+  // ---- The device half now has lanes of its own.
+  //
+  // RETIRED (04-18-PLAN.md Task 7). This file used to end by launching the
+  // app on the phone against a LAN address and a self-signed TLS probe, and
+  // then reporting BLOCKED with a long argument that the phone could route
+  // here but rejected the certificate. Two things were wrong with it.
+  //
+  // First, the measurement could not have measured anything: the launch and
+  // the poll loop both used `spawnSync`, and this process IS the recording
+  // proxy and the TLS probe. Blocking the event loop for the whole window
+  // meant neither listener could accept a connection or record one, so both
+  // counts were ZERO BY CONSTRUCTION whatever the phone did. Reproduced in
+  // isolation: a request that genuinely arrives during the blocking window
+  // reads as 0 synchronously and 1 once the loop runs.
+  //
+  // Second, the conclusion drawn from it -- that certificate trust was the
+  // blocker -- was true but small. Underneath it the Swift client had never
+  // spoken to a real server on ANY destination, could not attach a
+  // credential at all, could not decode the server's timestamps, and could
+  // not decode a sync page. Those are fixed, and the transport is solved by
+  // reaching this Mac over the tailnet with a real Let's Encrypt
+  // certificate, so the phone validates with the SHIPPING trust path.
+  //
+  // The device half therefore lives in `tooling/ios-lanes/server-driven-device.mjs`
+  // (and the simulator half in `server-driven-sim.mjs`), which drive the
+  // real `KeeplingSyncAdapter` rather than the Node client above. This file
+  // keeps what it is genuinely good at: proving the SERVER behaves, through
+  // the recording proxy, against real Phoenix on real PostgreSQL.
+  console.log('IOS_REAL_STACK_DEVICE moved=server-driven-sim,server-driven-device')
+  await shutdown()
+  process.exit(0)
 } catch (error) {
   await shutdown()
   if (error?.isBlocked) {

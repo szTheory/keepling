@@ -167,10 +167,10 @@ const xcodebuildSummary = (stdout) => {
  */
 const REQUIREMENT_LANES = {
   'IOS-01': ['core-loop', 'undo', 'tracer-e2e', 'device'],
-  'IOS-02': ['storage', 'storage-gates', 'sync-pass', 'durability-posture', 'server-driven-sim', 'device'],
+  'IOS-02': ['storage', 'storage-gates', 'sync-pass', 'durability-posture', 'server-driven-sim', 'server-driven-device', 'device'],
   'IOS-03': ['accessibility', 'state-matrix', 'design-tokens'],
-  'IOS-04': ['sync-presentation', 'auth', 'state-matrix', 'device'],
-  'SRV-02': ['transport', 'vector-conformance', 'sync-pass', 'server-driven-sim', 'device'],
+  'IOS-04': ['sync-presentation', 'auth', 'state-matrix', 'server-driven-device', 'device'],
+  'SRV-02': ['transport', 'vector-conformance', 'sync-pass', 'server-driven-sim', 'server-driven-device', 'device'],
 }
 
 /**

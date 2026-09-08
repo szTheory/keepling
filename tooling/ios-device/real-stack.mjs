@@ -266,8 +266,23 @@ const createRecordingProxy = ({ upstreamPort, tls, controlToken }) => {
   }
 }
 
-/** A real browser-class client against the real server, through the proxy. */
-export const createClient = (base) => ({
+/**
+ * A real browser-class client against the real server, through the proxy.
+ *
+ * `origin` exists because the proxy TERMINATES TLS and forwards to Phoenix
+ * over plain HTTP on loopback. `require_trusted_origin` compares the
+ * `Origin` header against `"#{conn.scheme}://#{host header}"`, and
+ * `conn.scheme` is what PHOENIX sees -- `http` -- not what the client
+ * dialled. So a client connecting over `https://host:port` must still
+ * declare `http://host:port` as its origin, or every browser-class mutation
+ * is answered 403 (measured on the first tailnet run).
+ *
+ * This affects only this harness client. The app under test authenticates
+ * with a bearer credential, which takes the device-grant path and is
+ * CSRF-exempt precisely because no session is involved, so it never reaches
+ * this check.
+ */
+export const createClient = (base, { origin = base } = {}) => ({
   cookie: '',
   csrfToken: '',
   async request(path, init = {}) {
@@ -275,7 +290,7 @@ export const createClient = (base) => ({
       ...init,
       headers: {
         accept: 'application/json',
-        origin: base,
+        origin,
         ...(this.cookie === '' ? {} : { cookie: this.cookie }),
         ...(this.csrfToken === '' ? {} : { 'x-csrf-token': this.csrfToken }),
         ...(init.headers ?? {}),
