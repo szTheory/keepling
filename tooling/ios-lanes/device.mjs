@@ -51,7 +51,7 @@
  * `-configuration` comment below -- but proving the RELEASE binary's
  * behaviour on hardware remains open and is claimed nowhere.
  */
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 /**
@@ -256,7 +256,32 @@ export default function deviceLane({ repositoryRoot, xcodebuildSummary }) {
         )
       }
       if (exitStatus !== 0 && !/\*\* TEST SUCCEEDED \*\*/.test(output)) {
-        throw new Error(`the device suite exited ${exitStatus ?? 'without status'}`)
+        // A device run is expensive (~19 minutes) and its `.xcresult` is
+        // overwritten by the next run in the same DerivedData, so a failure
+        // that is only summarised as a tail is a failure that has to be
+        // REPRODUCED before it can be diagnosed. Measured during 04-18: a
+        // `DynamicTypeSnapshotTests` failure inside the full gate could not
+        // be read afterwards at all, because the tail printed the LAST
+        // suite's log and the `.xcresult` was already gone. Keep the whole
+        // log, the way `tooling/ios-device/server-driven-run.mjs` already
+        // does for its own runs, and name the failing tests inline.
+        const logPath = join(repositoryRoot, '.artifacts', 'ios', 'device-last-run.log')
+        let saved = null
+        try {
+          mkdirSync(join(repositoryRoot, '.artifacts', 'ios'), { recursive: true })
+          writeFileSync(logPath, output)
+          saved = logPath
+        } catch {
+          // Never let a diagnostics write turn a test failure into a
+          // confusing tooling failure -- the thrown message below still
+          // carries the failing test names either way.
+        }
+        const failing = output.match(/Failing tests:\n([\s\S]*?)\n\n/)?.[1]?.trim().split('\n').map((line) => line.trim()).join(', ')
+        throw new Error(
+          `the device suite exited ${exitStatus ?? 'without status'}` +
+            (failing ? `; failing: ${failing}` : '') +
+            (saved ? `; full log: ${saved}` : ''),
+        )
       }
       // RETIRED (04-18-PLAN.md Task 7). This lane used to report BLOCKED
       // no matter how many device cases passed, because the server-driven
