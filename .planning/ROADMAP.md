@@ -313,7 +313,7 @@ Plans:
 
 **Success Criteria**:
 
-1. A physical iPhone supports capture, Inbox, Today, edit, complete/reopen, trash/restore, and undo with native touch and accessibility behavior.
+1. A physical iPhone supports capture, Inbox, Today, edit, complete/reopen, trash/restore, and undo with native touch and accessibility behavior. *(Met, with one disclosed exception: every listed action except UNDO is driven on physical hardware by `DeviceCoreLoopTests`. Undo availability is minted by a server acknowledgement, so it needs the recording-proxy stack in the UI device lane; it is proven on the simulator only. See IOS-01 in REQUIREMENTS.md.)*
 2. Offline mutation, termination, relaunch, expired authentication, account fencing, duplicate replay, and structured conflict scenarios preserve intent and account isolation.
 3. Background execution is only an acceleration; foreground launch/resume/reconnect always restores correctness from the durable outbox.
 4. Dynamic Type, VoiceOver semantics, touch targets, and Reduce Motion alternatives pass the supported user flows.
