@@ -206,7 +206,16 @@ try {
     }
   }
 
-  const derivedData = join(repositoryRoot, '.artifacts/ios/DerivedData-server-driven')
+  // One derived-data tree PER PLATFORM. Sharing one tree between the two
+  // destinations is what made `server-driven-sim` fail reproducibly inside
+  // the full gate while passing standalone: `Build/Products` accumulated an
+  // `.xctestrun` from BOTH platforms, and the selection below took the first
+  // one by name. `iphoneos` sorts before `iphonesimulator`, so once the
+  // device lane had run, the simulator lane launched the DEVICE-built app on
+  // the simulator and died with "Launchd job spawn failed" -- an error that
+  // names nothing about the real cause.
+  const platform = destination.includes('iOS Simulator') ? 'iphonesimulator' : 'iphoneos'
+  const derivedData = join(repositoryRoot, `.artifacts/ios/DerivedData-server-driven-${platform}`)
   await runChecked('build-for-testing', [
     'build-for-testing',
     '-project', 'apps/ios/Keepling.xcodeproj',
@@ -217,10 +226,21 @@ try {
     ...(process.argv.includes('--allow-provisioning-updates') ? ['-allowProvisioningUpdates'] : []),
   ])
 
-  const [xctestrun] = readdirSync(join(derivedData, 'Build/Products'))
-    .filter((name) => name.endsWith('.xctestrun'))
-    .map((name) => join(derivedData, 'Build/Products', name))
-  if (!xctestrun) fail('build-for-testing produced no .xctestrun file')
+  // Belt as well as braces: even inside a per-platform tree, select the
+  // `.xctestrun` whose name carries THIS destination's platform, and refuse
+  // an ambiguous choice rather than silently taking the first. A run that
+  // picks the wrong one does not fail with a wrong-platform message -- it
+  // fails deep inside the simulator with a launchd spawn error.
+  const products = readdirSync(join(derivedData, 'Build/Products')).filter((name) => name.endsWith('.xctestrun'))
+  const matching = products.filter((name) => name.includes(platform))
+  if (matching.length === 0) {
+    fail(
+      `build-for-testing produced no ${platform} .xctestrun file` +
+        (products.length > 0 ? ` (found only: ${products.join(', ')})` : ''),
+    )
+  }
+  if (matching.length > 1) fail(`build-for-testing produced ${matching.length} ${platform} .xctestrun files: ${matching.join(', ')}`)
+  const xctestrun = join(derivedData, 'Build/Products', matching[0])
 
   for (const [key, value] of Object.entries({
     KEEPLING_LANE_BASE_URL: baseURL,
