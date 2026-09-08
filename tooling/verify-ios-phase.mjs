@@ -143,14 +143,23 @@ const xcodebuildSummary = (stdout) => {
   // D-24's anti-vacuity contract rests on that number meaning what it says.
   // A lane whose later suite silently executed nothing would also have been
   // masked by an earlier suite's healthy count.
-  const executedLines = [...stdout.matchAll(/Executed (\d+) tests?,\s*with(?:\s+\d+\s+tests?\s+skipped\s+and)?\s*(\d+) failures?/g)]
+  //
+  // Xcode's "Executed N tests" total COUNTS SKIPPED CASES. Publishing that
+  // number would mean a lane could report cases it never actually ran --
+  // the same vacuity D-24 forbids, one level down. Subtract the skips and
+  // publish only what genuinely executed, so a suite that skipped its way
+  // to a healthy-looking total reports zero and fails here instead.
+  const executedLines = [...stdout.matchAll(/Executed (\d+) tests?,\s*with(?:\s+(\d+)\s+tests?\s+skipped\s+and)?\s*(\d+) failures?/g)]
   if (executedLines.length === 0) throw new Error('xcodebuild "Executed N tests" summary not found')
   const executed = executedLines[executedLines.length - 1]
   const total = Number(executed[1])
-  const failures = Number(executed[2])
+  const skipped = Number(executed[2] ?? 0)
+  const failures = Number(executed[3])
   if (failures > 0) throw new Error(`xcodebuild reported ${failures} failing test(s)`)
   if (total === 0) throw new Error('xcodebuild executed zero tests')
-  return total
+  const ran = total - skipped
+  if (ran <= 0) throw new Error(`xcodebuild skipped every one of its ${total} test(s), so this lane proved nothing`)
+  return ran
 }
 
 /**
