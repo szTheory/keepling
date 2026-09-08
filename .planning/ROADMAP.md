@@ -254,7 +254,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
-**Plans:** 17/17 plans executed
+**Plans:** 18/18 plans executed
 
 Plans:
 **Wave 1**
@@ -309,6 +309,7 @@ Plans:
 **Wave 12** *(blocked on Wave 11 completion)*
 
 - [x] 04-17-PLAN.md — The assembled anti-vacuous iOS phase gate, the requirement-to-lane map, and one consolidated disclosures section.
+- [x] 04-18-PLAN.md — Close the device blocker without weakening anything: the server-driven scenarios on the real phone over a publicly-trusted tailnet host, configuration attestation, and IOS-04.
 
 **Success Criteria**:
 
