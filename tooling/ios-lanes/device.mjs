@@ -205,6 +205,22 @@ export default function deviceLane({ repositoryRoot, xcodebuildSummary }) {
       // lane still runs it on the simulator where the path resolves.
       '-skip-testing:KeeplingUITests/AccessibilityAuditTests/testEveryTopLevelViewUnderSourcesKeeplingIsInTheInventoryOrExplicitlyExcluded',
       '-only-testing:KeeplingUITests/DynamicTypeSnapshotTests',
+      // IOS-04 names FIVE states -- local, syncing, conflict,
+      // authentication-expired, unrecoverable -- and names "a physical
+      // iPhone" explicitly. `server-driven-device` proves those states
+      // ARRIVE and are CLASSIFIED correctly on hardware against a real
+      // server; these four cases prove the user can TELL THEM APART on
+      // hardware, by exact copy and named recovery action. They are
+      // launch-argument driven (`StateInjection`), so they need no server
+      // and no Mac filesystem, and they run unchanged on device.
+      // Method-granular on purpose: the rest of `SyncStateMatrixTests`
+      // (zero/one/many shapes, draft and editor preservation) has no
+      // device dimension this requirement names, and the `state-matrix`
+      // lane still runs the whole suite on the simulator.
+      '-only-testing:KeeplingUITests/SyncStateMatrixTests/testPopulatedRendersTheRealTaskListWithNoVisibleSyncCopy',
+      '-only-testing:KeeplingUITests/SyncStateMatrixTests/testUpdatingOfflineAndLocalAcceptanceRenderTheirExactCopyWithNoRecoveryAction',
+      '-only-testing:KeeplingUITests/SyncStateMatrixTests/testEveryActionableExceptionRendersItsExactCopyAndNamedRecoveryAction',
+      '-only-testing:KeeplingUITests/SyncStateMatrixTests/testUnrecoverableRendersItsExactCopyAndAllThreeNamedRecoveryActions',
     ].join(' '),
   ].join(' && ')
 
@@ -222,6 +238,7 @@ export default function deviceLane({ repositoryRoot, xcodebuildSummary }) {
       'apps/ios/Tests/KeeplingUITests/DeviceCoreLoopTests.swift',
       'apps/ios/Tests/KeeplingUITests/DeviceRecoveryTests.swift',
       'apps/ios/Tests/StorageTests/DataProtectionTests.swift',
+      'apps/ios/Tests/KeeplingUITests/SyncStateMatrixTests.swift',
     ],
     parse: (stdout, stderr, exitStatus) => {
       if (preflightError) throw new Error(preflightError)

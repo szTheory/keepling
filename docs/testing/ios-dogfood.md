@@ -114,36 +114,49 @@ supported loop is installed on the physical device under a **non-expiring** prof
 action in it passes this lane bound to the shipped build. **Sustained daily adoption is owner
 dogfood feedback, not a gate.** Nobody signs off on it and nothing counts it.
 
-## Currently BLOCKED, with the reason measured rather than asserted
+## The server-driven half: how it was blocked, and how it was closed
+
+**Status: closed.** The `device` lane runs the server-driven scenarios on the phone and reports
+`PASS`. This section is kept rather than deleted because the *shape* of the blocker is the
+reusable lesson.
 
 The **server-driven half of Criterion 2** — authentication expiry, account fencing, duplicate
 replay, and structured conflict, injected *server-side* through the recording proxy and asserted
-against what the proxy recorded the server receiving — **does not run.** It is reported `BLOCKED`
-by `tooling/ios-lanes/device.mjs` and by `tooling/verify-real-stack-ios.mjs`, never passed and
-never silently omitted.
-
-Why, measured by `tooling/verify-real-stack-ios.mjs` on each run:
+against what the proxy recorded the server receiving — could not run on hardware. The reason was
+measured on each run, never asserted:
 
 - `KeeplingSyncAdapter`'s constructor refuses any non-HTTPS base URL whose host is not `127.0.0.1`
   or `localhost` (T-04-01-03/T-04-05-04, mirroring `apps/desktop/main/adapters/sync.ts`). On the
   Mac that costs nothing — the desktop app and Phoenix share a loopback. **A physical phone does
-  not**, and can only reach the build Mac at a LAN address.
-- Over `http://<lan-ip>:<port>` the app constructs no adapter at all, so **nothing leaves the
-  phone** — the lane records zero arrivals at the proxy.
-- Over `https://<lan-ip>:<port>` the phone **genuinely connects** — the lane's TLS listener records
-  the connection attempt — and URLSession then rejects the lane's self-signed certificate. That
-  distinction is the point: **routing from the phone to this Mac works; the blocker is certificate
-  trust, not networking.**
+  not**, and could only reach the build Mac at a LAN address.
+- Over `http://<lan-ip>:<port>` the app constructed no adapter at all, so **nothing left the
+  phone** — the lane recorded zero arrivals at the proxy.
+- Over `https://<lan-ip>:<port>` the phone **genuinely connected** — the lane's TLS listener
+  recorded the connection attempt — and URLSession then rejected the lane's self-signed
+  certificate. That distinction was the point: **routing from the phone to this Mac worked; the
+  blocker was certificate trust, not networking.**
 
-Closing it requires a decision Plan 04-16 did not make:
+Three routes were on the table. **Widening the production transport guard to admit LAN or `.local`
+hosts was refused**, then and now: relaxing a deliberate security guard — one with its own tests —
+so that a lane goes green is precisely the false-evidence failure this phase exists to prevent.
+A `#if DEBUG` lane CA trusted through an injected `ClientTransport` was the planned route, and is
+sound; it was superseded by a **strictly better** one:
 
-1. a `#if DEBUG`, launch-environment-gated lane CA trusted through an injected `ClientTransport`
-   (keeps HTTPS, keeps production behaviour unchanged, adds a test-only transport seam);
-2. widening the production transport guard to admit LAN or `.local` hosts;
-3. deferring the server-driven device scenarios to a later plan.
+**The proxy is served from a host the phone already trusts.** `tailscale cert` issues a real Let's
+Encrypt certificate for this Mac's MagicDNS name, so the device validates the proxy with the
+**shipping** trust path — the default `URLSessionTransport`, the production `KeeplingSyncAdapter`
+constructor, the production HTTPS guard, all unmodified. There is no test-only trust code anywhere
+in the app, on any configuration, so there is no test-only trust code to leak into a release.
+Tailscale also sidesteps Apple's TN3179 local-network privilege entirely, because a VPN interface
+is excluded from the definition of a local network — the privilege can be granted by a person
+only, never by MDM or `devicectl`, and would have reintroduced a manual tap on every reinstall.
 
-**Option 2 is refused here.** Relaxing a deliberate security guard — one with its own tests — so
-that a lane goes green is precisely the false-evidence failure this phase exists to prevent.
+`tooling/ios-lanes/server-driven-device.mjs` refuses to report `PASS` unless the run actually used
+`transport=https-publicly-trusted`. A silent fallback to any weaker transport reports `BLOCKED`
+instead of passing (D-24).
+
+The tailnet hostname is treated as PII and never printed in full or committed; `tooling/ios-device/tailnet.mjs`
+redacts it.
 
 ## What the machines cover
 
@@ -157,6 +170,9 @@ that a lane goes green is precisely the false-evidence failure this phase exists
 | Out-of-process SIGKILL | `node tooling/ios-device/hard-kill.mjs --require-running` |
 | Physical-device suites + device accessibility confirmation | `node tooling/verify-ios-phase.mjs --lane device` |
 | Real Phoenix on real PostgreSQL behind the recording proxy | `node tooling/verify-real-stack-ios.mjs` |
+| Server-driven scenarios through the real Swift client, on the simulator | `node tooling/verify-ios-phase.mjs --lane server-driven-sim` |
+| The same scenarios on the physical phone, over a publicly-trusted tailnet host | `node tooling/verify-ios-phase.mjs --lane server-driven-device` |
+| Tailnet FQDN resolution, online-peer check, certificate issue, hostname redaction | `tooling/ios-device/tailnet.mjs` |
 
 ## Gate G7 (D-04), split honestly
 
