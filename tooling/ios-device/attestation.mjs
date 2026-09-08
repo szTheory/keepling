@@ -122,7 +122,7 @@ const readDigestFromRunningProcess = (devicectlIdentifier, timeoutMs) => {
   let match = null
   for (let attempt = 0; attempt < 3; attempt += 1) {
     output = launchOnce(devicectlIdentifier, timeoutMs)
-    match = output.match(new RegExp(`${CONSOLE_PREFIX} digest=(\\S+) bundle=(\\S+) short_version=(\\S+) build_version=(\\S+)`))
+    match = output.match(new RegExp(`${CONSOLE_PREFIX} digest=(\\S+) configuration=(\\S+) bundle=(\\S+) short_version=(\\S+) build_version=(\\S+)`))
     if (match) break
     if (DEVICE_LOCKED.test(output)) {
       refuse(
@@ -148,7 +148,7 @@ const readDigestFromRunningProcess = (devicectlIdentifier, timeoutMs) => {
   if (match[1] === 'absent') {
     refuse('the running process reports KeeplingBuildDigest=absent -- the Info.plist key was never populated')
   }
-  return { buildVersion: match[4], bundleIdentifier: match[2], digest: match[1], shortVersion: match[3] }
+  return { buildVersion: match[5], bundleIdentifier: match[3], configuration: match[2], digest: match[1], shortVersion: match[4] }
 }
 
 /**
@@ -187,10 +187,11 @@ const readReceiptFromDeviceContainer = (devicectlIdentifier) => {
   }
 }
 
-const attest = ({ expectedDigest, timeoutMs = 120_000 } = {}) => {
+const attest = ({ expectedConfiguration, expectedDigest, timeoutMs = 120_000 } = {}) => {
   const device = resolveDevice()
   const manifest = expectedDigest ? null : readManifest()
   const expected = expectedDigest ?? manifest?.keeplingBuildDigest
+  expectedConfiguration = expectedConfiguration ?? manifest?.configuration
   if (!expected) refuse('no expected digest -- the manifest carries no keeplingBuildDigest')
 
   const observed = readDigestFromRunningProcess(device.devicectlIdentifier, timeoutMs)
@@ -208,6 +209,23 @@ const attest = ({ expectedDigest, timeoutMs = 120_000 } = {}) => {
     )
   }
 
+  // The CONFIGURATION the running build was compiled from, checked when a
+  // caller states one (04-18-PLAN.md Task 6). Until this existed the
+  // attestation could not tell a Release archive from a Debug rebuild of
+  // identical source: `KeeplingBuildDigest` hashes source CONTENT, so both
+  // carry the same value, and the device lane's `xcodebuild test` reinstalls
+  // in Debug immediately after this check passes against the Release
+  // install. The attested bytes were not the tested bytes, and D-21 could
+  // not see it.
+  if (expectedConfiguration && observed.configuration !== expectedConfiguration) {
+    refuse(
+      `the build running on ${device.marketingName} was compiled as ${observed.configuration} but ` +
+        `${expectedConfiguration} was expected. The digest cannot distinguish these -- it hashes source ` +
+        'content, not bytes -- so a configuration substitution is invisible to it and is refused here ' +
+        'instead. A Debug build carries every `#if DEBUG` seam a Release build compiles out.',
+    )
+  }
+
   const receipt = readReceiptFromDeviceContainer(device.devicectlIdentifier)
   if (receipt.available && receipt.digest !== expected) {
     refuse(
@@ -217,9 +235,11 @@ const attest = ({ expectedDigest, timeoutMs = 120_000 } = {}) => {
   }
 
   return {
+    consoleConfiguration: observed.configuration,
     consoleDigest: observed.digest,
     devicectlIdentifier: device.devicectlIdentifier,
     deviceName: device.name,
+    expectedConfiguration,
     expectedDigest: expected,
     hardwareUdid: device.hardwareUdid,
     matched: true,
@@ -238,13 +258,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (expectIndex === -1 && !process.argv.includes('--expect-installed') && !process.argv.includes('--json')) {
     refuse('pass --expect-installed (compare against the build manifest) or --expect-digest <value>')
   }
-  const result = attest({ expectedDigest })
+  const configurationIndex = process.argv.indexOf('--expect-configuration')
+  const expectedConfiguration = configurationIndex === -1 ? undefined : process.argv[configurationIndex + 1]
+  if (configurationIndex !== -1 && !expectedConfiguration) refuse('--expect-configuration requires a value')
+  const result = attest({ expectedConfiguration, expectedDigest })
   if (process.argv.includes('--json')) {
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`)
   } else {
     console.log(
-      `ATTESTATION matched=true digest=${result.consoleDigest} device=${JSON.stringify(result.deviceName)} ` +
-        `hardware_udid=${result.hardwareUdid} receipt_channel=${result.receiptAvailable ? 'agreed' : 'unavailable'}`,
+      `ATTESTATION matched=true digest=${result.consoleDigest} configuration=${result.consoleConfiguration} ` +
+        `device=${JSON.stringify(result.deviceName)} hardware_udid=${result.hardwareUdid} ` +
+        `receipt_channel=${result.receiptAvailable ? 'agreed' : 'unavailable'}`,
     )
   }
 }

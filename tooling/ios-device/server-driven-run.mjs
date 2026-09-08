@@ -134,6 +134,18 @@ try {
   // `EnvironmentVariables` dictionary, then run without rebuilding. This
   // also means the credential never appears in a process argument list,
   // which `ps` would expose to every user on the machine.
+  // A locked phone, named in seconds rather than after a 300-second
+  // destination timeout. No-op on the simulator, which cannot be locked.
+  if (!destination.includes('Simulator')) {
+    const { probeLockState, LOCKED_MESSAGE } = await import(`${repositoryRoot}/tooling/ios-device/lock-probe.mjs`)
+    const { resolveDevice } = await import(`${repositoryRoot}/tooling/ios-device/resolve-devices.mjs`)
+    if (probeLockState({ devicectlIdentifier: resolveDevice().devicectlIdentifier }).locked) {
+      const blocked = new Error(LOCKED_MESSAGE)
+      blocked.isBlocked = true
+      throw blocked
+    }
+  }
+
   const derivedData = join(repositoryRoot, '.artifacts/ios/DerivedData-server-driven')
   await runChecked('build-for-testing', [
     'build-for-testing',

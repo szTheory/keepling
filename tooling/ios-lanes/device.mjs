@@ -138,7 +138,12 @@ export default function deviceLane({ repositoryRoot, xcodebuildSummary }) {
   // `KEEPLING_EXPECTED_BUILD_DIGEST`). Setting the bare name would put it
   // on xcodebuild's own process and the runner would never see it.
   const chain = [
-    `node tooling/ios-device/attestation.mjs --expect-installed`,
+    // FIRST, before anything that can take minutes. A locked phone otherwise
+    // surfaces 300 seconds later as "Timed out waiting for all destinations
+    // to become available", which reads like an absent device and sends a
+    // reader debugging the tunnel (04-18-PLAN.md Task 5).
+    `node tooling/ios-device/lock-probe.mjs`,
+    `node tooling/ios-device/attestation.mjs --expect-installed --expect-configuration Release`,
     // The out-of-process, signal-based hard kill -- the on-device analogue
     // of the Phase 3 kill, and stricter than a cooperative quit: SIGKILL
     // cannot be caught, so the app runs no shutdown path at all. Run BEFORE
@@ -158,6 +163,30 @@ export default function deviceLane({ repositoryRoot, xcodebuildSummary }) {
       `KEEPLING_BUILD_DIGEST=${digest}`,
       '-project apps/ios/Keepling.xcodeproj',
       '-scheme Keepling',
+      // EXPLICIT (04-18-PLAN.md Task 6). This was implicit, and therefore
+      // invisible: with no `-configuration`, `xcodebuild test` takes the
+      // scheme's TestAction configuration, which is Debug -- while
+      // `build-ios-signed.mjs` archives Release. Since `xcodebuild test`
+      // REBUILDS AND REINSTALLS (see the digest injection below), the
+      // Release build this lane just attested is replaced by a Debug build
+      // before a single test runs. The attested bytes were not the tested
+      // bytes, and the source-content digest could not tell them apart.
+      //
+      // Debug is KEPT deliberately rather than "fixed" to Release:
+      // `DeviceRecoveryTests` and the whole `KEEPLING_UITEST_*` fixture
+      // family live inside `#if DEBUG`, and release-type configurations set
+      // `ENABLE_TESTABILITY = NO`, which the `@testable import KeeplingCore`
+      // files require. Moving this lane to Release would break the 22 tests
+      // that pass today and is a separate decision.
+      //
+      // What changed is that the substitution is now STATED and attested
+      // rather than silent: `BuildAttestation.configuration` is compiled in
+      // from a `#if`, the console line carries it, and
+      // `attestation.mjs --expect-configuration` refuses a mismatch.
+      // DISCLOSED RESIDUAL: the device suites therefore exercise a Debug
+      // binary. Proving the Release binary's behaviour on hardware remains
+      // open and is not claimed anywhere by this lane.
+      '-configuration Debug',
       `-destination "platform=iOS,id=${hardwareUdid}"`,
       // A wirelessly-paired iPhone is not instantly "available" to
       // xcodebuild even while CoreDevice holds a live tunnel to it: the

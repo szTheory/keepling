@@ -60,6 +60,38 @@ enum BuildAttestation {
         return value
     }
 
+    /// Which build CONFIGURATION this binary was compiled from.
+    ///
+    /// Derived from a compile condition, never from a build setting or an
+    /// Info.plist string. That distinction is the whole point: a plist value
+    /// can be overridden on the command line by the very step whose identity
+    /// is in question, and a `#if` cannot.
+    ///
+    /// MEASURED HOLE this closes (04-18-PLAN.md Task 6). `build-ios-signed.mjs`
+    /// archives Release and installs it, and `attestation.mjs` verifies THAT
+    /// build. The device lane's `xcodebuild test` then rebuilds and
+    /// REINSTALLS in Debug -- the scheme's TestAction configuration, since no
+    /// `-configuration` was ever passed -- and re-injects the same digest so
+    /// the two agree. Because `KeeplingBuildDigest` is a hash of SOURCE
+    /// CONTENT, it cannot tell the two apart: the attested bytes were not the
+    /// tested bytes, and D-21's entire purpose is to refuse exactly that
+    /// substitution.
+    ///
+    /// Reporting the configuration does not by itself make the device suites
+    /// run in Release, and this does not attempt to: `DeviceRecoveryTests`
+    /// and the whole `KEEPLING_UITEST_*` fixture family live inside
+    /// `#if DEBUG`, and release-type configurations also set
+    /// `ENABLE_TESTABILITY = NO`, which the `@testable import KeeplingCore`
+    /// files need. What changes is that the substitution is now VISIBLE and
+    /// refusable rather than silent.
+    static var configuration: String {
+        #if DEBUG
+        return "Debug"
+        #else
+        return "Release"
+        #endif
+    }
+
     static var bundleIdentifier: String { Bundle.main.bundleIdentifier ?? "unknown" }
 
     static var shortVersion: String {
@@ -81,7 +113,7 @@ enum BuildAttestation {
     /// written.
     static func emit() {
         let reportedDigest = digest ?? "absent"
-        print("\(consolePrefix) digest=\(reportedDigest) bundle=\(bundleIdentifier) short_version=\(shortVersion) build_version=\(buildVersion)")
+        print("\(consolePrefix) digest=\(reportedDigest) configuration=\(configuration) bundle=\(bundleIdentifier) short_version=\(shortVersion) build_version=\(buildVersion)")
         fflush(stdout)
         writeReceipt(digest: reportedDigest)
     }

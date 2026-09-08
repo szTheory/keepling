@@ -61,6 +61,13 @@ import { resolveDevice } from './ios-device/resolve-devices.mjs'
 const repositoryRoot = resolve(import.meta.dirname, '..')
 const iosRoot = join(repositoryRoot, 'apps', 'ios')
 const artifactsRoot = join(repositoryRoot, '.artifacts', 'ios')
+/**
+ * The configuration this script archives. Named once, passed explicitly to
+ * `xcodebuild`, and recorded in the manifest so the attestation can refuse
+ * a build compiled from anything else.
+ */
+const ARCHIVE_CONFIGURATION = 'Release'
+
 const archivePath = join(artifactsRoot, 'Keepling.xcarchive')
 const exportPath = join(artifactsRoot, 'export')
 const derivedDataPath = join(artifactsRoot, 'DerivedData')
@@ -260,6 +267,15 @@ const main = () => {
     'archive',
     '-project', 'Keepling.xcodeproj',
     '-scheme', 'Keepling',
+    // EXPLICIT, not inherited from the scheme's ArchiveAction
+    // (04-18-PLAN.md Task 6). Implicit configuration selection is the root
+    // of a whole class of defect here: this step took Release from
+    // ArchiveAction while the device lane's `xcodebuild test` took Debug
+    // from TestAction, and because the digest hashes source content rather
+    // than bytes, nothing could tell the two builds apart. "Which
+    // configuration does this command build?" must never again be a
+    // question answered by reading a scheme file.
+    '-configuration', ARCHIVE_CONFIGURATION,
     '-destination', 'generic/platform=iOS',
     '-archivePath', archivePath,
     '-derivedDataPath', derivedDataPath,
@@ -366,6 +382,9 @@ const main = () => {
     archiveSha256: sha256OfFile(ipaPath),
     builtAt: new Date().toISOString(),
     cfBundleVersion: plistValue(infoPlist, 'CFBundleVersion'),
+    // Recorded so `attestation.mjs --expect-installed` can refuse a running
+    // build compiled from a different configuration than the one archived.
+    configuration: ARCHIVE_CONFIGURATION,
     cfBundleShortVersionString: plistValue(infoPlist, 'CFBundleShortVersionString'),
     device: {
       devicectlIdentifier: device.devicectlIdentifier,
