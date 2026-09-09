@@ -472,13 +472,22 @@ coverage entry D9) rather than asserted as fully automated.
 - **The full gate passes.** `node tooling/build-ios-signed.mjs && node
   tooling/verify-ios-phase.mjs` reports `lanes=24 failed=0 blocked=0`,
   with two of those lanes driven on a physical iPhone. This is the first
-  passing full gate in the phase. The 22 simulator lanes account for 424
-  EXECUTED cases; the published counts deliberately exclude skipped
+  passing full gate in the phase: **454 executed cases** -- 424 across the
+  22 simulator lanes, 26 in `device` and 4 in `server-driven-device` on
+  the phone. The published counts deliberately exclude skipped
   tests, because Xcode's own "Executed N tests" total counts them and a
   lane must never publish as evidence a case it did not run. Correcting
   that removed 8 cases that had been counted without running
   (`core-unit` 130 -> 129, `storage` and `storage-gates` 55 -> 53,
-  `durability-posture` 20 -> 18, `sync-pass` 9 -> 8).
+  `durability-posture` 20 -> 18, `sync-pass` 9 -> 8). The two device
+  lanes were unaffected -- their counts are unchanged at 26 and 4, so
+  nothing they published had been a skip.
+- **Hardware lanes run first.** Lane discovery is alphabetical, which put
+  `device` ninth, behind ~20 minutes of simulator lanes -- long enough for
+  the phone to auto-lock before its own lane started, which cost a full
+  gate run. Ordering fixes that without depending on anyone remembering a
+  Settings toggle, and the lock probe still reports `BLOCKED` if the phone
+  locks anyway.
 - **22 simulator-driven lanes** run against the iOS Simulator (iPhone 17,
   latest OS) on this Mac's pinned Xcode/SDK, none of them requiring
   physical hardware, all of them reporting a positive case count with no
