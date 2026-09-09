@@ -243,6 +243,15 @@ export default function deviceLane({ repositoryRoot, xcodebuildSummary }) {
     parse: (stdout, stderr, exitStatus) => {
       if (preflightError) throw new Error(preflightError)
       const output = `${stdout}\n${stderr}`
+      // The lock probe runs FIRST in the chain and emits a bare `BLOCKED:`
+      // line of its own -- it is not the attestation speaking. Matching only
+      // the attestation-prefixed form let a locked phone come out as an
+      // ordinary FAIL ("the device suite exited 1") while the real reason sat
+      // in stderr, which is exactly the misreporting the probe exists to
+      // prevent. Measured on 2026-09-08: the phone auto-locked during the
+      // ~20 minutes of simulator lanes that precede this one.
+      const bareBlocked = output.match(/^(BLOCKED:[\s\S]*?)(?:\n\n|$)/m)
+      if (bareBlocked && !/ATTESTATION REFUSED/.test(output)) throw new Error(bareBlocked[1].trim())
       if (/ATTESTATION REFUSED: BLOCKED:/.test(output)) {
         // Propagated verbatim so the gate's own `status=BLOCKED` label
         // matches the underlying condition (a locked phone) rather than

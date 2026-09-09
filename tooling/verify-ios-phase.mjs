@@ -221,9 +221,18 @@ const requirementsMode = process.argv.includes('--requirements')
 
 let laneFiles
 try {
+  // Hardware-bound lanes run FIRST, then everything else alphabetically.
+  // Alphabetical order put `device` ninth, behind ~20 minutes of simulator
+  // lanes -- long enough for the phone to auto-lock before its own lane ever
+  // started, which cost a full gate run on 2026-09-08 with the phone sitting
+  // unlocked when the run began. Ordering is the fix that does not depend on
+  // a person remembering a Settings toggle; the lock probe still reports
+  // BLOCKED if the phone locks anyway.
+  const HARDWARE_LANES = ['device.mjs', 'server-driven-device.mjs']
+  const rank = (entry) => (HARDWARE_LANES.includes(entry) ? 0 : 1)
   laneFiles = readdirSync(lanesDir)
     .filter((entry) => entry.endsWith('.mjs'))
-    .sort()
+    .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
 } catch (error) {
   console.error(`iOS phase gate failed: could not read lane directory ${lanesDir}: ${String(error)}`)
   process.exit(1)
