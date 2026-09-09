@@ -264,6 +264,22 @@ export default function deviceLane({ repositoryRoot, xcodebuildSummary }) {
             '(D-21). No test result from this run may be attributed to the current build.',
         )
       }
+      // The phone can auto-lock AFTER the probe cleared it -- measured:
+      // probe reported locked=false, the signed build installed, and the
+      // screen locked during the run. xcodebuild then waited 16 minutes on
+      // "Unlock <device> to Continue" before dying with "Lost pending
+      // connection to the test runner", which names the symptom and not the
+      // cause. That is a locked phone, not a failing test, and it must read
+      // as BLOCKED for the same reason the probe's own result does.
+      if (/deviceprep Code=-3|Unlock .* to Continue|because the device is locked/.test(output)) {
+        throw new Error(
+          'BLOCKED: the iPhone auto-locked DURING this run, after the lock probe had already cleared it. ' +
+            'iOS then refused to launch the test runner, so this lane learned nothing -- not a build defect ' +
+            'and not a test failure. Set Settings > Display & Brightness > Auto-Lock to Never and keep the ' +
+            'phone on power; a device run takes ~29 minutes and no supported API can hold the screen awake ' +
+            'from this side.',
+        )
+      }
       if (exitStatus !== 0 && !/\*\* TEST SUCCEEDED \*\*/.test(output)) {
         // A device run is expensive (~19 minutes) and its `.xcresult` is
         // overwritten by the next run in the same DerivedData, so a failure
