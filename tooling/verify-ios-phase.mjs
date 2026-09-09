@@ -149,14 +149,47 @@ const xcodebuildSummary = (stdout) => {
   // the same vacuity D-24 forbids, one level down. Subtract the skips and
   // publish only what genuinely executed, so a suite that skipped its way
   // to a healthy-looking total reports zero and fails here instead.
-  const executedLines = [...stdout.matchAll(/Executed (\d+) tests?,\s*with(?:\s+(\d+)\s+tests?\s+skipped\s+and)?\s*(\d+) failures?/g)]
-  if (executedLines.length === 0) throw new Error('xcodebuild "Executed N tests" summary not found')
-  const executed = executedLines[executedLines.length - 1]
-  const total = Number(executed[1])
-  const skipped = Number(executed[2] ?? 0)
-  const failures = Number(executed[3])
+  // Anchor on the BUNDLE summary, not on "Executed N tests" alone.
+  // xcodebuild prints that line three times per bundle -- once for each
+  // test suite, once for the `<Bundle>.xctest` total, and once for
+  // "Selected tests" -- so summing every match badly overcounts, while
+  // taking the last match publishes only the LAST BUNDLE's total. Four
+  // lanes span two bundles and every one of them silently undercounted:
+  // `auth` published 4 of 19, `undo` 8 of 18, `sync-presentation` 21 of 35,
+  // `device` 26 of 29. That is the same defect this function already
+  // records fixing at the suite level, reappearing one level up, and it
+  // matters here because `device`'s discarded bundle is `DataProtectionTests`
+  // -- so G7's protection-class hardware evidence was contributing zero to
+  // the number this gate published.
+  //
+  // `Test Suite '<Bundle>.xctest' passed|failed at ...` appears exactly once
+  // per bundle, so summing the totals that follow it counts each bundle once.
+  const bundleSummaries = [
+    ...stdout.matchAll(
+      /Test Suite '[^']+\.xctest' (?:passed|failed) at[^\n]*\n\s*Executed (\d+) tests?,\s*with(?:\s+(\d+)\s+tests?\s+skipped\s+and)?\s*(\d+) failures?/g,
+    ),
+  ]
+  if (bundleSummaries.length === 0) throw new Error('xcodebuild "Executed N tests" bundle summary not found')
+
+  let total = 0
+  let skipped = 0
+  let failures = 0
+  for (const summary of bundleSummaries) {
+    const bundleTotal = Number(summary[1])
+    // A lane spanning two bundles must not let a healthy bundle stand in for
+    // one that executed nothing -- the whole reason this is summed rather
+    // than sampled.
+    if (bundleTotal === 0) throw new Error('one of this lane\'s test bundles executed zero tests')
+    total += bundleTotal
+    skipped += Number(summary[2] ?? 0)
+    failures += Number(summary[3])
+  }
   if (failures > 0) throw new Error(`xcodebuild reported ${failures} failing test(s)`)
   if (total === 0) throw new Error('xcodebuild executed zero tests')
+
+  // Xcode's totals COUNT SKIPPED CASES. Publishing that number would mean a
+  // lane could report cases it never ran -- the same vacuity D-24 forbids,
+  // one level down.
   const ran = total - skipped
   if (ran <= 0) throw new Error(`xcodebuild skipped every one of its ${total} test(s), so this lane proved nothing`)
   return ran
