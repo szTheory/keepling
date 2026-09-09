@@ -44,18 +44,30 @@
  */
 export default function serverDrivenDeviceLane({ repositoryRoot }) {
   return {
-    command: 'node',
+    // The lock probe runs FIRST, exactly as it does in the `device` lane.
+    // Without it this lane answered a locked phone with a bare FAIL and a
+    // buried xcodebuild error, while the `device` lane beside it correctly
+    // said BLOCKED -- two device lanes disagreeing about the same phone in
+    // the same run. A locked phone is not a test failure, and only one of
+    // these two lanes was saying so.
+    command: 'sh',
     args: [
-      'tooling/ios-device/server-driven-run.mjs',
-      '--tls-tailnet',
-      '--device',
-      // `--allow-provisioning-updates` so a profile refresh cannot turn this
-      // lane into a manual step (D-18).
-      '--allow-provisioning-updates',
+      '-c',
+      [
+        'node tooling/ios-device/lock-probe.mjs',
+        // `--allow-provisioning-updates` so a profile refresh cannot turn
+        // this lane into a manual step (D-18).
+        'node tooling/ios-device/server-driven-run.mjs --tls-tailnet --device --allow-provisioning-updates',
+      ].join(' && '),
     ],
     cwd: repositoryRoot,
     name: 'server-driven-device',
-    parse: (stdout) => {
+    parse: (stdout, stderr) => {
+      // Propagated verbatim so the gate's `status=BLOCKED` label matches the
+      // underlying condition rather than reporting a locked phone as a
+      // failing test.
+      const blocked = `${stdout}\n${stderr}`.match(/^(BLOCKED:[\s\S]*?)(?:\n\n|$)/m)
+      if (blocked) throw new Error(blocked[1].trim())
       const marker = stdout.match(
         /IOS_SERVER_DRIVEN scenarios=(\d+) .*transport=(\S+) command_arrivals=(\d+) injected=(\d+) refusals=(\d+)/,
       )
@@ -76,6 +88,7 @@ export default function serverDrivenDeviceLane({ repositoryRoot }) {
       return scenarios
     },
     trackedInputPaths: [
+      'tooling/ios-device/lock-probe.mjs',
       'apps/ios/project.yml',
       'apps/ios/Sources/KeeplingCore/Transport/KeeplingSyncAdapter.swift',
       'apps/ios/Sources/KeeplingCore/Application/KeeplingApplication.swift',
