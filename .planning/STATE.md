@@ -4,15 +4,15 @@ milestone: v1.0
 current_phase: 5
 current_phase_name: Safe Agent Access
 status: planning
-stopped_at: Phase 5 context gathered
-last_updated: "2026-09-10T19:13:32.653Z"
+stopped_at: "Phase 5 planned: 12 plans in 7 waves"
+last_updated: "2026-09-10T20:03:57.763Z"
 last_activity: 2026-09-10
 last_activity_desc: Phase 04 complete, transitioned to Phase 5
-state_head: fdd8d76455dba7ce658c1fac390e9eb4eeca92d1
+state_head: d5af21bc9b0fe90bf0b74103cdac1e89eae6e419
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 83
+  total_plans: 95
   completed_plans: 82
 milestone_name: milestone
 ---
@@ -269,10 +269,10 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-10T19:13:32.500Z
-**Stopped at:** Phase 5 context gathered
+**Last session:** 2026-09-10T20:03:57.589Z
+**Stopped at:** Phase 5 planned: 12 plans in 7 waves
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
-**Resume file:** .planning/phases/KPL-05-safe-agent-access/05-CONTEXT.md
+**Resume file:** .planning/phases/KPL-05-safe-agent-access/05-01-PLAN.md
 
 ## Performance Metrics
 
