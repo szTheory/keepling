@@ -124,6 +124,8 @@ defmodule KeeplingWeb.MCP.ErrorsTest do
   defp render("no_match", _vectors), do: Errors.no_match()
   defp render("too_many_matches", _vectors), do: Errors.too_many_matches()
   defp render("preview_stale", _vectors), do: Errors.preview_stale()
+  defp render("preview_expired", _vectors), do: Errors.preview_expired()
+  defp render("preview_invalid", _vectors), do: Errors.preview_invalid()
   defp render("rate_limited", _vectors), do: Errors.rate_limited()
   defp render("service_unavailable", _vectors), do: Errors.infrastructure_failure()
 

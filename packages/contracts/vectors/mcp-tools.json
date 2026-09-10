@@ -436,6 +436,28 @@
         "recovery_action": "request_new_preview"
       }
     },
+    "preview_expired": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "preview_expired",
+        "title": "Preview has expired",
+        "detail": "The preview's time-to-live has elapsed. Request a new preview.",
+        "retryable": false,
+        "recovery_action": "request_new_preview"
+      }
+    },
+    "preview_invalid": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "preview_invalid",
+        "title": "Preview token is not valid",
+        "detail": "The preview token is malformed, tampered, or was not issued to this account.",
+        "retryable": false,
+        "recovery_action": "request_new_preview"
+      }
+    },
     "rate_limited": {
       "code": -32000,
       "message": "Server error",
