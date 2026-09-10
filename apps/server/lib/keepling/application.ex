@@ -3,7 +3,7 @@ defmodule Keepling.Application do
 
   use Application
 
-  @client_kinds ~w(electron iphone)
+  @client_kinds ~w(electron iphone mcp)
 
   @impl true
   def start(_type, _args) do
@@ -88,16 +88,7 @@ defmodule Keepling.Application do
       end
 
       for uri <- uris do
-        case URI.new(uri) do
-          {:ok, %URI{scheme: "keepling", host: host, path: path}}
-          when is_binary(host) and host != "" and is_binary(path) and path != "" ->
-            :ok
-
-          _ ->
-            raise ArgumentError,
-                  "device grant redirect allowlist entry #{inspect(uri)} for #{client_kind} " <>
-                    "must be an exact private-use keepling://host/path URI"
-        end
+        valid_redirect_uri!(client_kind, uri)
       end
     end
 
@@ -106,6 +97,38 @@ defmodule Keepling.Application do
 
   defp redirect_uris!(_redirect_uris) do
     raise ArgumentError, "device grant redirect allowlist must be a map of client kind to URIs"
+  end
+
+  # `electron`/`iphone` register a private-use custom scheme so the OS can
+  # hand the redirect back to the installed native app. `mcp` hosts are
+  # external processes with no OS-level URI-scheme registration, so they use
+  # an ordinary http(s) absolute URI instead -- still exact-match, still
+  # no wildcard, just a different scheme family (05-CONTEXT.md D-05, D-33).
+  defp valid_redirect_uri!(client_kind, uri) when client_kind in ~w(electron iphone) do
+    case URI.new(uri) do
+      {:ok, %URI{scheme: "keepling", host: host, path: path}}
+      when is_binary(host) and host != "" and is_binary(path) and path != "" ->
+        :ok
+
+      _ ->
+        raise ArgumentError,
+              "device grant redirect allowlist entry #{inspect(uri)} for #{client_kind} " <>
+                "must be an exact private-use keepling://host/path URI"
+    end
+  end
+
+  defp valid_redirect_uri!("mcp", uri) do
+    case URI.new(uri) do
+      {:ok, %URI{scheme: scheme, host: host, path: path}}
+      when scheme in ["http", "https"] and is_binary(host) and host != "" and
+             is_binary(path) and path != "" ->
+        :ok
+
+      _ ->
+        raise ArgumentError,
+              "device grant redirect allowlist entry #{inspect(uri)} for mcp " <>
+                "must be an exact absolute http(s) URI with a non-empty host and path"
+    end
   end
 
   @impl true

@@ -165,7 +165,14 @@ config :keepling, :device_grants,
     # every client. A private-use scheme is first-come per-OS, so desktop
     # and iPhone sharing `keepling` cannot collide -- they never register
     # on the same OS.
-    "iphone" => ["keepling://ios/auth/callback"]
+    "iphone" => ["keepling://ios/auth/callback"],
+    # 05-01-PLAN.md Task 2: an MCP host is an external process with no OS
+    # private-use-scheme registration, so its callback is an ordinary
+    # http(s) absolute URI on this same server's own origin rather than a
+    # `keepling://` scheme (D-05, D-33). `valid_redirect_uri!/2` in
+    # application.ex requires it to be an exact absolute http(s) URI with a
+    # non-empty host and path.
+    "mcp" => ["#{device_grant_origin}/mcp/callback"]
   }
 
 config :keepling, KeeplingWeb.Endpoint,

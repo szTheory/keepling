@@ -20,13 +20,21 @@ defmodule Keepling.Accounts.DeviceGrant do
   @access_ttl_seconds 15 * 60
   @refresh_inactivity_ttl_seconds 30 * 24 * 60 * 60
   @family_absolute_ttl_seconds 90 * 24 * 60 * 60
-  @client_kinds ~w(electron iphone)
+  @client_kinds ~w(electron iphone mcp)
+  # D-06: the closed agent scope vocabulary. Defined locally rather than
+  # delegating to `Keepling.Application.AgentScope` (created alongside the
+  # MCP adapter in the same phase's tracer plan) -- delegating here would
+  # make this module fail to compile before that module exists. Kept as the
+  # single literal spelling; `AgentScope.@agent_scopes` is asserted
+  # byte-identical to this list by test.
+  @agent_scopes ~w(tasks.read tasks.write tasks.bulk)
 
   schema "device_grants" do
     field :installation_id, :string
     field :label, :string
     field :client_kind, :string
     field :redirect_uri, :string
+    field :scope, {:array, :string}, default: []
     field :authorization_code_hash, :binary, redact: true
     field :authorization_code_expires_at, :utc_datetime_usec
     field :authorization_code_consumed_at, :utc_datetime_usec
@@ -67,10 +75,10 @@ defmodule Keepling.Accounts.DeviceGrant do
                INSERT INTO device_grants (
                  id, account_id, installation_id, label, client_kind, redirect_uri,
                  authorization_code_hash, authorization_code_expires_at, state_hash,
-                 pkce_challenge, family_absolute_expires_at, generation,
+                 pkce_challenge, family_absolute_expires_at, generation, scope,
                  inserted_at, updated_at
                )
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 1, $12, $12)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 1, $12, $13, $13)
                """,
                [
                  grant_id,
@@ -84,6 +92,7 @@ defmodule Keepling.Accounts.DeviceGrant do
                  state_hash,
                  request.code_challenge,
                  family_expires_at,
+                 request.scope,
                  now
                ]
              )
@@ -184,7 +193,7 @@ defmodule Keepling.Accounts.DeviceGrant do
            SQL.query(
              Repo,
              """
-             SELECT id, account_id, generation, client_kind
+             SELECT id, account_id, generation, client_kind, label, scope
              FROM device_grants
              WHERE access_token_hash = $1
                AND access_expires_at > $2
@@ -192,20 +201,24 @@ defmodule Keepling.Accounts.DeviceGrant do
              """,
              [hash_token(access_token), now]
            ) do
-      [grant_id, account_id, generation, client_kind] = row
+      [grant_id, account_id, generation, client_kind, label, scope] = row
 
       # `account_id` is returned in its raw dumped form alongside the
       # namespace: D-49 lets a device grant MUTATE, and the command surface
       # needs the account the grant is bound to without re-deriving it from
       # the namespace subject at every call site. `client_kind` travels with
       # it so a Mac capture is recorded as "electron" in the user's own
-      # activity feed rather than as "web".
+      # activity feed rather than as "web". `label` and `scope` travel with
+      # it so the MCP adapter pipeline can assign an agent actor label and
+      # check scope without a second query (D-06).
       {:ok,
        %{
          account_id: account_id,
          client_kind: client_kind,
          grant_id: uuid_string(grant_id),
-         namespace: namespace(config, account_id, generation)
+         label: label,
+         namespace: namespace(config, account_id, generation),
+         scope: scope || []
        }}
     else
       {:ok, %{rows: []}} -> {:error, :authentication_required}
@@ -611,6 +624,11 @@ defmodule Keepling.Accounts.DeviceGrant do
     }
   end
 
+  # `:scope` is OPTIONAL on this map, not a member of `allowed_keys` -- every
+  # pre-existing caller (electron/iphone, and every test that builds this
+  # request map by hand) omits it and must keep validating exactly as before.
+  # `KeeplingWeb.DeviceGrantController` always includes it (empty string for
+  # non-mcp requests), so both shapes are accepted here.
   defp validate_authorization_request(params) do
     allowed_keys = [
       :client_kind,
@@ -622,7 +640,7 @@ defmodule Keepling.Accounts.DeviceGrant do
       :state
     ]
 
-    with :ok <- validate_exact_keys(params, allowed_keys, :invalid_authorization_request),
+    with :ok <- validate_authorization_keys(Map.keys(params), allowed_keys),
          {:ok, client_kind} <- required_binary(params, :client_kind, :invalid_client_kind),
          true <- client_kind in @client_kinds,
          {:ok, installation_id} <- required_bounded_binary(params, :installation_id, 200),
@@ -635,7 +653,8 @@ defmodule Keepling.Accounts.DeviceGrant do
          true <- method == "S256",
          {:ok, code_challenge} <-
            required_binary(params, :code_challenge, :invalid_code_challenge),
-         true <- valid_code_challenge?(code_challenge) do
+         true <- valid_code_challenge?(code_challenge),
+         {:ok, scope} <- valid_scope(client_kind, Map.get(params, :scope, "")) do
       {:ok,
        %{
          client_kind: client_kind,
@@ -643,6 +662,7 @@ defmodule Keepling.Accounts.DeviceGrant do
          installation_id: installation_id,
          label: label,
          redirect_uri: redirect_uri,
+         scope: scope,
          state: state
        }}
     else
@@ -650,6 +670,33 @@ defmodule Keepling.Accounts.DeviceGrant do
       false -> authorization_request_error(params)
     end
   end
+
+  defp validate_authorization_keys(keys, base_keys) do
+    sorted = Enum.sort(keys)
+
+    if sorted == Enum.sort(base_keys) or sorted == Enum.sort(base_keys ++ [:scope]),
+      do: :ok,
+      else: {:error, :invalid_authorization_request}
+  end
+
+  # D-06: absent scope means denied -- there is no wildcard and no implicit
+  # grant. Only `mcp` grants may carry a non-empty scope; `electron`/`iphone`
+  # grants must submit an empty scope string. Every requested token must be a
+  # member of the closed `@agent_scopes` vocabulary.
+  defp valid_scope(_client_kind, scope) when not is_binary(scope), do: {:error, :invalid_scope}
+
+  defp valid_scope("mcp", scope) do
+    tokens = scope |> String.split(" ", trim: true) |> Enum.uniq()
+
+    if tokens != [] and Enum.all?(tokens, &(&1 in @agent_scopes)) do
+      {:ok, tokens}
+    else
+      {:error, :invalid_scope}
+    end
+  end
+
+  defp valid_scope(_client_kind, ""), do: {:ok, []}
+  defp valid_scope(_client_kind, _scope), do: {:error, :invalid_scope}
 
   defp validate_exchange_request(params) do
     with :ok <-

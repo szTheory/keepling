@@ -5,14 +5,19 @@ defmodule KeeplingWeb.DeviceGrantController do
 
   @authorize_keys ~w(client_id code_challenge code_challenge_method installation_id label redirect_uri response_type state)
   @exchange_keys ~w(code code_verifier grant_type redirect_uri state)
+  @mcp_authorize_keys @authorize_keys ++ ~w(resource scope)
+  @mcp_exchange_keys @exchange_keys ++ ~w(resource)
   @refresh_keys ~w(grant_type refresh_token)
-  @client_ids ~w(electron iphone)
+  @client_ids ~w(electron iphone mcp)
   @access_ttl_seconds 15 * 60
 
   def authorize(%{assigns: %{current_account_id: account_id}} = conn, params) do
-    with :ok <- exact_keys(params, @authorize_keys),
+    authorize_keys = if params["client_id"] == "mcp", do: @mcp_authorize_keys, else: @authorize_keys
+
+    with :ok <- exact_keys(params, authorize_keys),
          "code" <- params["response_type"],
          client_id when client_id in @client_ids <- params["client_id"],
+         :ok <- validate_resource(params, client_id),
          {:ok, authorization} <-
            Accounts.issue_device_authorization(account_id, %{
              client_kind: client_id,
@@ -21,6 +26,7 @@ defmodule KeeplingWeb.DeviceGrantController do
              installation_id: params["installation_id"],
              label: params["label"],
              redirect_uri: params["redirect_uri"],
+             scope: params["scope"] || "",
              state: params["state"]
            }) do
       redirect(conn,
@@ -43,7 +49,10 @@ defmodule KeeplingWeb.DeviceGrantController do
   end
 
   def token(conn, %{"grant_type" => "authorization_code"} = params) do
-    with :ok <- exact_keys(params, @exchange_keys),
+    exchange_keys = if Map.has_key?(params, "resource"), do: @mcp_exchange_keys, else: @exchange_keys
+
+    with :ok <- exact_keys(params, exchange_keys),
+         :ok <- validate_exchange_resource(params),
          {:ok, grant} <-
            Accounts.exchange_device_authorization(%{
              code: params["code"],
@@ -142,6 +151,33 @@ defmodule KeeplingWeb.DeviceGrantController do
 
   defp exact_keys(params, keys) do
     if Enum.sort(Map.keys(params)) == Enum.sort(keys), do: :ok, else: {:error, :invalid_shape}
+  end
+
+  # D-33/RFC 8707: an `mcp` request must name this server's own canonical MCP
+  # resource URI, and no other client kind may send `resource` at all --
+  # `exact_keys/2` above already rejects a `resource` param for electron/
+  # iphone before this function ever runs.
+  defp validate_resource(params, "mcp") do
+    if params["resource"] == canonical_mcp_resource(),
+      do: :ok,
+      else: {:error, :invalid_resource}
+  end
+
+  defp validate_resource(_params, _client_id), do: :ok
+
+  defp validate_exchange_resource(%{"resource" => resource}) do
+    if resource == canonical_mcp_resource(), do: :ok, else: {:error, :invalid_resource}
+  end
+
+  defp validate_exchange_resource(_params), do: :ok
+
+  defp canonical_mcp_resource do
+    origin =
+      :keepling
+      |> Application.get_env(:device_grants, [])
+      |> Keyword.get(:origin, "")
+
+    origin <> "/mcp/v1"
   end
 
   defp append_query(uri, values) do
