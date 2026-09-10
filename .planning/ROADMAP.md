@@ -333,10 +333,11 @@ Plans:
 4. User-visible history shows typed actions, affected identities/revisions, result, actor, and recovery without exposing private chain of thought.
 5. Deterministic, protocol, simulated-client, representative-model, and adversarial suites score final state and forbidden side effects.
 
-**Plans:** 12 plans in 7 waves
+**Plans:** 1/12 plans executed in 7 waves
 
 Plans:
-- [ ] 05-01-PLAN.md — Tracer: an agent grant captures one task end to end through the MCP endpoint
+
+- [x] 05-01-PLAN.md — Tracer: an agent grant captures one task end to end through the MCP endpoint
 - [ ] 05-02-PLAN.md — Authorization discovery documents and the session-gated RFC 7591 registration endpoint
 - [ ] 05-03-PLAN.md — Bounded search and project read surfaces, shared by HTTP and MCP
 - [ ] 05-04-PLAN.md — MCP read resources, redaction by construction, and the decided surface coverage
@@ -400,6 +401,7 @@ attempted now.
 **Blocked on:** Live credentials only the owner can supply — `HCLOUD_TOKEN`, `CLOUDFLARE_API_TOKEN_FILE` + zone/record, and the primary/mirror backup credential and cipher files. This is a paid, single-attempt outer acceptance test, not a debugging loop.
 **Standing rule (from `.planning/phases/KPL-02-synchronization-and-replaceable-server/deferred-items.md`):** Plan 02-09 must not gain a SUMMARY.md or a completion claim until fresh outer-boundary evidence exists. Schedules, skips, and missing credentials never count as green evidence.
 **Plans:**
+
 - [ ] 02-09: Provision and credentialedly rehearse full Hetzner host replacement and DNS cutover (planned, never executed — no SUMMARY.md by design)
 
 **Already recorded in:** `.planning/STATE.md` (Accumulated Context), `.planning/REQUIREMENTS.md` (traceability — DATA-03, OPS-02), and the phase-2 `deferred-items.md`.
@@ -412,7 +414,7 @@ attempted now.
 | 2. Synchronization and Replaceable Server | In Progress | 12 | 91% |
 | 3. Mac Daily Loop | Complete    | 7 | 100% (27/27 plans, incl. 3 gap-closure plans 03-25..03-27; verified 2026-09-04 — 03-VERIFICATION.md status: passed, 5/5 must-haves. MAC-01..05 and QUAL-03..04 complete; SRV-02 deferred to Phase 5 cross-adapter proof by design) |
 | 4. Native iPhone Daily Loop | Complete    | 4 | 100% (18/18 plans; verified 2026-09-10 — 04-VERIFICATION.md status: passed, 23/23 must-haves: 20 by evidence, 3 accepted by the owner as disclosed-not-proven. IOS-01..04 all complete. The full gate passes in one invocation: `lanes=24 failed=0 blocked=0`, 496 executed cases, two lanes driven on a physical iPhone. SRV-02's iPhone adapter proof is delivered but deferred to the Phase 5 cross-adapter proof by design. Disclosed residuals: SC5 daily adoption (never a gate), G7's locked-device write, the Debug-configuration substitution for the device suites, and 04-14's D9 judgment) |
-| 5. Safe Agent Access | ○ Pending | 5 | 0% |
+| 5. Safe Agent Access | In Progress| 5 | 0% |
 | 6. Portability and Trust Release | ○ Pending | 1 + cross-cutting verification | 0% |
 
 ---

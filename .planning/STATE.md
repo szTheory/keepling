@@ -1,19 +1,19 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-current_phase: 5
+current_phase: 05
 current_phase_name: Safe Agent Access
-status: planning
-stopped_at: "Phase 5 planned: 12 plans in 7 waves"
-last_updated: "2026-09-10T20:03:57.763Z"
+status: executing
+stopped_at: Completed 05-01-PLAN.md (MCP tracer slice)
+last_updated: "2026-09-10T20:51:17.713Z"
 last_activity: 2026-09-10
-last_activity_desc: Phase 04 complete, transitioned to Phase 5
-state_head: d5af21bc9b0fe90bf0b74103cdac1e89eae6e419
+last_activity_desc: Phase KPL-05 execution started
+state_head: 16f6e41b283aa278c454e286e41d392cca4ed3e7
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 95
-  completed_plans: 82
+  completed_plans: 83
 milestone_name: milestone
 ---
 
@@ -24,16 +24,16 @@ milestone_name: milestone
 See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 **Core value:** Jon can trust Keepling as his daily task system on Mac and iPhone: capture is immediate, accepted changes are never silently lost or overwritten, and both human and agent actions remain inspectable and recoverable.  
-**Current focus:** Phase KPL-04 — Native iPhone Daily Loop
+**Current focus:** Phase KPL-05 — Safe Agent Access
 
 ## Current Position
 
-Phase: 5 — Safe Agent Access
-Plan: Not started
-Total Plans in Phase: 17
-Status: Ready to plan
-Last activity: 2026-09-10 — Phase 04 complete, transitioned to Phase 5
-Last Activity Description: Phase 04 complete, transitioned to Phase 5
+Phase: KPL-05 (Safe Agent Access) — EXECUTING
+Plan: 2 of 12
+Total Plans in Phase: 12
+Status: Executing Phase KPL-05
+Last activity: 2026-09-10 — Phase KPL-05 execution started
+Last Activity Description: Phase KPL-05 execution started
 Progress: [█████████░] 94%
 
 ## Accumulated Context
@@ -234,6 +234,8 @@ Progress: [█████████░] 94%
 - [Phase 04]: 04-15: Diagnostic instrumentation lives at the same KeeplingApplication.runSyncPass/GRDBLocalStore call sites that already decide a transition, reusing IntentPrivacyTests' real-value (never pattern) leak-scan discipline for the log, export bundle, Inspect presentation, and announcements. — Avoids a parallel notion of what is 'sensitive'; keeps the diagnostic vocabulary keyed by real production decisions.
 - [Phase 04]: Device lane reports BLOCKED honestly rather than being special-cased out; the aggregate iOS gate currently exits non-zero on purpose because Plan 04-16's physical-device evidence was never produced.
 - [Phase 04]: IOS-04 unchecked (not 'complete with disclosure') because its own text names a physical iPhone and zero device evidence exists at all; IOS-01..03 checked with disclosure since their claims are comprehensively proven on the Simulator.
+- [Phase KPL-05]: 05-01: Task 1's three one-way authorization doors answered Option A (D-06 three scope strings, D-07 PKCE-only, extend device_grants) exactly as CONTEXT-locked.
+- [Phase KPL-05]: 05-01: D-30 live-host protocol-revision re-check could not be performed -- no MCP host or model credential reachable in this execution sandbox; 2025-06-18 pin implemented but not empirically verified against a live client.
 
 ### Retained Research
 
@@ -269,10 +271,10 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-10T20:03:57.589Z
-**Stopped at:** Phase 5 planned: 12 plans in 7 waves
+**Last session:** 2026-09-10T20:51:10.810Z
+**Stopped at:** Completed 05-01-PLAN.md (MCP tracer slice)
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
-**Resume file:** .planning/phases/KPL-05-safe-agent-access/05-01-PLAN.md
+**Resume file:** None
 
 ## Performance Metrics
 
@@ -356,6 +358,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-04 P15 | 65min | 2 tasks | 9 files |
 | Phase KPL-04 P17 | ~3h10m | 2 tasks | 7 files |
 | Phase 04 P16 | 165 | 3 tasks | 13 files |
+| Phase KPL-05 P01 | ~80min | 3 tasks | 15 files |
 
 ### Blockers
 
@@ -364,3 +367,4 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 - O-51: undo is now unavailable on a Mac with no server configured — a disclosed cost of closing O-45; decide it together with O-43, not separately
 - 04-16: physical-device UI suites BLOCKED -- the iPhone is locked and iOS refuses to launch any app on a locked device. Unlock the phone and re-run 'node tooling/verify-ios-phase.mjs --lane device'.
 - 04-16: the server-driven half of D-22 Criterion 2 is BLOCKED -- KeeplingSyncAdapter refuses non-HTTPS non-loopback base URLs and URLSession rejects the lane's self-signed cert, so the phone cannot reach a Mac-hosted recording proxy. Needs a decision: DEBUG-only lane CA via injected ClientTransport, vs widening the transport guard (refused), vs deferring.
+- 05-01: No MCP host or model credential reachable in this environment -- blocks the phase's representative-model and adversarial evidence lanes (D-26) and the D-30 live-host protocol re-check.
