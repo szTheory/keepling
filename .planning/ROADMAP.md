@@ -333,6 +333,22 @@ Plans:
 4. User-visible history shows typed actions, affected identities/revisions, result, actor, and recovery without exposing private chain of thought.
 5. Deterministic, protocol, simulated-client, representative-model, and adversarial suites score final state and forbidden side effects.
 
+**Plans:** 12 plans in 7 waves
+
+Plans:
+- [ ] 05-01-PLAN.md — Tracer: an agent grant captures one task end to end through the MCP endpoint
+- [ ] 05-02-PLAN.md — Authorization discovery documents and the session-gated RFC 7591 registration endpoint
+- [ ] 05-03-PLAN.md — Bounded search and project read surfaces, shared by HTTP and MCP
+- [ ] 05-04-PLAN.md — MCP read resources, redaction by construction, and the decided surface coverage
+- [ ] 05-05-PLAN.md — Contract-generated closed write tool schemas and the closed error vocabulary
+- [ ] 05-06-PLAN.md — Identity-only write addressing, ambiguity refusal, and content-independent authorization
+- [ ] 05-07-PLAN.md — Preview and commit: bound tokens, atomic commits, zero partial writes
+- [ ] 05-08-PLAN.md — Agent actor in the one history, no storable model reasoning, and the agent undo handle
+- [ ] 05-09-PLAN.md — Agent grant management and agent-aware activity in the existing web app
+- [ ] 05-10-PLAN.md — The anti-vacuity phase gate and a test of the harness itself
+- [ ] 05-11-PLAN.md — Simulated-client, adversarial, and representative-model lanes scored on final state
+- [ ] 05-12-PLAN.md — The five-adapter cross-adapter proof and the restoration of SRV-02
+
 ### Phase 6: Portability and Trust Release
 
 **Goal:** The dogfood product is portable, diagnosable, release-ready, and supported by exact cross-client evidence.
