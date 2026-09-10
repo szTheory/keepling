@@ -422,7 +422,7 @@ const validateVectorManifest = () => {
   const actualFiles = readdirSync(vectorsDirectory)
     .filter((entry) => entry.endsWith('.json') && entry !== 'manifest.json')
     .sort()
-  if (actualFiles.length !== 13) fail(`expected 13 vector files, found ${actualFiles.length}: ${actualFiles.join(', ')}`)
+  if (actualFiles.length !== 14) fail(`expected 14 vector files, found ${actualFiles.length}: ${actualFiles.join(', ')}`)
   for (const file of actualFiles) {
     if (!manifestFiles.includes(file)) fail(`vector file not in manifest: ${file}`)
   }

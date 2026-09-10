@@ -1,0 +1,462 @@
+{
+  "version": 1,
+  "covered_decisions": ["D-11", "D-12", "D-13", "D-14"],
+  "tools": {
+    "keepling.capture_task": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000101",
+        "task_id": "00000000-0000-4000-8000-000000000102",
+        "title": "Buy milk",
+        "version": 1
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000101",
+            "task_id": "00000000-0000-4000-8000-000000000102",
+            "title": "Buy milk",
+            "version": 1,
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000101",
+            "task_id": "00000000-0000-4000-8000-000000000102",
+            "version": 1
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000101",
+            "task_id": "00000000-0000-4000-8000-000000000102",
+            "title": 12345,
+            "version": 1
+          }
+        }
+      ]
+    },
+    "keepling.update_task": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000201",
+        "task_id": "00000000-0000-4000-8000-000000000202",
+        "expected_revision": 1,
+        "version": 1,
+        "title": "Buy oat milk"
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000201",
+            "task_id": "00000000-0000-4000-8000-000000000202",
+            "expected_revision": 1,
+            "version": 1,
+            "title": "Buy oat milk",
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000201",
+            "expected_revision": 1,
+            "version": 1,
+            "title": "Buy oat milk"
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000201",
+            "task_id": "00000000-0000-4000-8000-000000000202",
+            "expected_revision": 1,
+            "version": 1,
+            "title": 12345
+          }
+        },
+        {
+          "reason": "absent_expected_revision",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000201",
+            "task_id": "00000000-0000-4000-8000-000000000202",
+            "version": 1,
+            "title": "Buy oat milk"
+          }
+        }
+      ]
+    },
+    "keepling.complete_task": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000301",
+        "task_id": "00000000-0000-4000-8000-000000000302",
+        "expected_revision": 1,
+        "version": 1
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000301",
+            "task_id": "00000000-0000-4000-8000-000000000302",
+            "expected_revision": 1,
+            "version": 1,
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "task_id": "00000000-0000-4000-8000-000000000302",
+            "expected_revision": 1,
+            "version": 1
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000301",
+            "task_id": "00000000-0000-4000-8000-000000000302",
+            "expected_revision": "one",
+            "version": 1
+          }
+        },
+        {
+          "reason": "absent_expected_revision",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000301",
+            "task_id": "00000000-0000-4000-8000-000000000302",
+            "version": 1
+          }
+        }
+      ]
+    },
+    "keepling.reopen_task": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000401",
+        "task_id": "00000000-0000-4000-8000-000000000402",
+        "expected_revision": 2,
+        "version": 1
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000401",
+            "task_id": "00000000-0000-4000-8000-000000000402",
+            "expected_revision": 2,
+            "version": 1,
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "task_id": "00000000-0000-4000-8000-000000000402",
+            "expected_revision": 2,
+            "version": 1
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000401",
+            "task_id": "00000000-0000-4000-8000-000000000402",
+            "expected_revision": "two",
+            "version": 1
+          }
+        },
+        {
+          "reason": "absent_expected_revision",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000401",
+            "task_id": "00000000-0000-4000-8000-000000000402",
+            "version": 1
+          }
+        }
+      ]
+    },
+    "keepling.preview_bulk_change": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000501",
+        "command": "trash_task",
+        "targets": [
+          {"task_id": "00000000-0000-4000-8000-000000000502", "expected_revision": 1}
+        ]
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000501",
+            "command": "trash_task",
+            "targets": [
+              {"task_id": "00000000-0000-4000-8000-000000000502", "expected_revision": 1}
+            ],
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "command": "trash_task",
+            "targets": [
+              {"task_id": "00000000-0000-4000-8000-000000000502", "expected_revision": 1}
+            ]
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000501",
+            "command": "trash_task",
+            "targets": "00000000-0000-4000-8000-000000000502"
+          }
+        }
+      ]
+    },
+    "keepling.commit_bulk_change": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000601",
+        "preview_token": "opaque-signed-preview-token-fixture"
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000601",
+            "preview_token": "opaque-signed-preview-token-fixture",
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000601"
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000601",
+            "preview_token": 12345
+          }
+        }
+      ]
+    }
+  },
+  "errors": {
+    "insufficient_scope": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "insufficient_scope",
+        "title": "Grant does not carry the required scope",
+        "retryable": false,
+        "recovery_action": "reauthorize_device"
+      }
+    },
+    "invalid_command": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "invalid_command",
+        "title": "Invalid tool arguments",
+        "detail": "Send a closed version 1 semantic tool argument shape.",
+        "retryable": false,
+        "recovery_action": "correct_request"
+      }
+    },
+    "unknown_tool": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "unknown_tool",
+        "title": "Unknown MCP tool",
+        "detail": "Call tools/list for the closed set of available tools.",
+        "retryable": false,
+        "recovery_action": "correct_request"
+      }
+    },
+    "task_not_found": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "task_not_found",
+        "title": "Task not found",
+        "detail": "Refresh the view before trying again.",
+        "retryable": false,
+        "recovery_action": "refresh_view"
+      }
+    },
+    "task_edit_conflict": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "task_edit_conflict",
+        "title": "Task changed elsewhere",
+        "detail": "Review the affected fields before saving again.",
+        "retryable": false,
+        "recovery_action": "review_task_conflict",
+        "affected_fields": ["title"],
+        "current_revision": 2
+      },
+      "http_problem_fixture": {
+        "code": "task_edit_conflict",
+        "detail": "Review the affected fields before saving again.",
+        "recovery_action": "review_task_conflict",
+        "retryable": false,
+        "status": 409,
+        "title": "Task changed elsewhere",
+        "type": "/problems/task_edit_conflict",
+        "affected_fields": ["title"],
+        "current_revision": 2
+      }
+    },
+    "task_assignment_conflict": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "task_assignment_conflict",
+        "title": "Task assignments changed elsewhere",
+        "detail": "Review the project and tags before saving again.",
+        "retryable": false,
+        "recovery_action": "review_task_conflict",
+        "affected_fields": ["project_id", "tag_ids"],
+        "current_revision": 2
+      },
+      "http_problem_fixture": {
+        "code": "task_assignment_conflict",
+        "detail": "Review the project and tags before saving again.",
+        "recovery_action": "review_task_conflict",
+        "retryable": false,
+        "status": 409,
+        "title": "Task assignments changed elsewhere",
+        "type": "/problems/task_assignment_conflict",
+        "affected_fields": ["project_id", "tag_ids"],
+        "current_revision": 2
+      }
+    },
+    "task_lifecycle_conflict": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "task_lifecycle_conflict",
+        "title": "Task lifecycle changed elsewhere",
+        "detail": "Refresh the task before completing or reopening it.",
+        "retryable": false,
+        "recovery_action": "refresh_task",
+        "affected_fields": ["completed_at"],
+        "current_revision": 2
+      },
+      "http_problem_fixture": {
+        "code": "task_lifecycle_conflict",
+        "detail": "Refresh the task before completing or reopening it.",
+        "recovery_action": "refresh_task",
+        "retryable": false,
+        "status": 409,
+        "title": "Task lifecycle changed elsewhere",
+        "type": "/problems/task_lifecycle_conflict",
+        "affected_fields": ["completed_at"],
+        "current_revision": 2
+      }
+    },
+    "task_trash_conflict": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "task_trash_conflict",
+        "title": "Task Trash state changed elsewhere",
+        "detail": "Refresh the task before moving it to Trash or restoring it.",
+        "retryable": false,
+        "recovery_action": "refresh_task",
+        "affected_fields": ["trashed_at"],
+        "current_revision": 2
+      },
+      "http_problem_fixture": {
+        "code": "task_trash_conflict",
+        "detail": "Refresh the task before moving it to Trash or restoring it.",
+        "recovery_action": "refresh_task",
+        "retryable": false,
+        "status": 409,
+        "title": "Task Trash state changed elsewhere",
+        "type": "/problems/task_trash_conflict",
+        "affected_fields": ["trashed_at"],
+        "current_revision": 2
+      }
+    },
+    "ambiguous_match": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "ambiguous_match",
+        "title": "Multiple tasks match this request",
+        "detail": "Narrow the request to exactly one task using its stable identity.",
+        "retryable": false,
+        "recovery_action": "disambiguate_request",
+        "candidates": [
+          {"id": "00000000-0000-4000-8000-000000000701", "title": "Buy milk"},
+          {"id": "00000000-0000-4000-8000-000000000702", "title": "Buy milk substitute"}
+        ]
+      }
+    },
+    "no_match": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "no_match",
+        "title": "No task matches this request",
+        "detail": "Confirm the task exists and is visible to this grant.",
+        "retryable": false,
+        "recovery_action": "correct_request"
+      }
+    },
+    "too_many_matches": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "too_many_matches",
+        "title": "Too many tasks match this request",
+        "detail": "Narrow the request -- the candidate set exceeds the bounded limit.",
+        "retryable": false,
+        "recovery_action": "narrow_request"
+      }
+    },
+    "preview_stale": {
+      "code": -32602,
+      "message": "Invalid params",
+      "data": {
+        "keepling_code": "preview_stale",
+        "title": "Preview is no longer valid",
+        "detail": "The previewed targets changed or expired. Request a new preview.",
+        "retryable": false,
+        "recovery_action": "request_new_preview"
+      }
+    },
+    "rate_limited": {
+      "code": -32000,
+      "message": "Server error",
+      "data": {
+        "keepling_code": "rate_limited",
+        "title": "Too many requests",
+        "detail": "Wait before retrying this request.",
+        "retryable": true,
+        "recovery_action": "retry_after_backoff"
+      }
+    },
+    "service_unavailable": {
+      "code": -32000,
+      "message": "Server error",
+      "data": {
+        "keepling_code": "service_unavailable",
+        "title": "Keepling is temporarily unavailable",
+        "detail": "Your request was not confirmed. Check again with the same mutation identity.",
+        "retryable": true,
+        "recovery_action": "check_mutation_result"
+      }
+    }
+  }
+}

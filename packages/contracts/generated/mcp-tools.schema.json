@@ -1,0 +1,231 @@
+{
+  "keepling.capture_task": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mutation_id",
+      "task_id",
+      "title",
+      "version"
+    ],
+    "properties": {
+      "mutation_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Client-generated identity retained across exact retries."
+      },
+      "task_id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "title": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "version": {
+        "type": "integer",
+        "const": 1
+      }
+    }
+  },
+  "keepling.update_task": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "expected_revision",
+      "mutation_id",
+      "task_id",
+      "version"
+    ],
+    "properties": {
+      "expected_revision": {
+        "type": "integer",
+        "format": "int64",
+        "minimum": 1
+      },
+      "mutation_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Client-generated identity retained across exact retries."
+      },
+      "task_id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "version": {
+        "type": "integer",
+        "const": 1
+      },
+      "title": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512
+      },
+      "notes": {
+        "type": "string",
+        "maxLength": 50000
+      },
+      "project_id": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "uuid"
+      },
+      "tag_ids": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "deadline_on": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date",
+        "description": "Canonical civil date with no time or device-zone interpretation, or absent."
+      },
+      "planned_on": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date",
+        "description": "Canonical civil date with no time or device-zone interpretation, or absent."
+      }
+    }
+  },
+  "keepling.complete_task": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "expected_revision",
+      "mutation_id",
+      "task_id",
+      "version"
+    ],
+    "properties": {
+      "expected_revision": {
+        "type": "integer",
+        "format": "int64",
+        "minimum": 1
+      },
+      "mutation_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Client-generated identity retained across exact retries."
+      },
+      "task_id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "version": {
+        "type": "integer",
+        "const": 1
+      }
+    }
+  },
+  "keepling.reopen_task": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "expected_revision",
+      "mutation_id",
+      "task_id",
+      "version"
+    ],
+    "properties": {
+      "expected_revision": {
+        "type": "integer",
+        "format": "int64",
+        "minimum": 1
+      },
+      "mutation_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Client-generated identity retained across exact retries."
+      },
+      "task_id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "version": {
+        "type": "integer",
+        "const": 1
+      }
+    }
+  },
+  "keepling.preview_bulk_change": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "command",
+      "mutation_id",
+      "targets"
+    ],
+    "properties": {
+      "command": {
+        "type": "string",
+        "enum": [
+          "trash_task",
+          "restore_task",
+          "undo_task"
+        ]
+      },
+      "mutation_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Client-generated identity retained across exact retries."
+      },
+      "targets": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 50,
+        "uniqueItems": true,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "expected_revision",
+            "task_id"
+          ],
+          "properties": {
+            "expected_revision": {
+              "type": "integer",
+              "format": "int64",
+              "minimum": 1
+            },
+            "task_id": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      }
+    }
+  },
+  "keepling.commit_bulk_change": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mutation_id",
+      "preview_token"
+    ],
+    "properties": {
+      "mutation_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Client-generated identity retained across exact retries."
+      },
+      "preview_token": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096
+      }
+    }
+  }
+}

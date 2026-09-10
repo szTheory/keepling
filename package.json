@@ -5,8 +5,10 @@
   "scripts": {
     "build:ios:signed": "node tooling/build-ios-signed.mjs",
     "build:web": "pnpm --filter @keepling/web build",
-    "contracts:check": "node tooling/check-contracts.mjs",
+    "contracts:check": "node tooling/check-contracts.mjs && pnpm run contracts:check:mcp",
+    "contracts:check:mcp": "node tooling/generate-mcp-tool-schemas.mjs --check",
     "contracts:generate": "openapi-typescript packages/contracts/openapi/keepling.yaml --output packages/contracts/generated/keepling.ts --alphabetize --immutable",
+    "contracts:generate:mcp": "node tooling/generate-mcp-tool-schemas.mjs",
     "dev:desktop": "pnpm --dir apps/desktop dev",
     "dev:web": "pnpm --filter @keepling/web dev",
     "generate:ios:client": "node tooling/generate-ios-client.mjs",

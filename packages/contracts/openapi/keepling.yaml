@@ -3428,3 +3428,156 @@ components:
             - planned_after_deadline
         message:
           type: string
+    # KPL-05 MCP-02 tool input schemas (05-05-PLAN.md Task 1). Each is a
+    # component schema generated into packages/contracts/generated/
+    # mcp-tools.schema.json by tooling/generate-mcp-tool-schemas.mjs, with
+    # additionalProperties: false and an explicit required list -- D-12's
+    # closed-schema requirement. Field shapes reuse the existing task
+    # component schemas (MutationIdentity, TaskIdentity, Revision,
+    # NullableOrganizationIdentity, OrganizationIdentity, NullableCivilDate)
+    # rather than restating them. Deliberately NOT the full durable-command
+    # shape: no `type` discriminator property is exposed here (D-11 -- the
+    # tool surface is task-shaped, not a mirror of the durable outbox
+    # command bytes native clients retry).
+    McpCaptureTaskParams:
+      type: object
+      additionalProperties: false
+      required:
+        - mutation_id
+        - task_id
+        - title
+        - version
+      properties:
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        title:
+          type: string
+          minLength: 1
+          maxLength: 512
+        version:
+          type: integer
+          const: 1
+    McpUpdateTaskParams:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_revision
+        - mutation_id
+        - task_id
+        - version
+      properties:
+        expected_revision:
+          $ref: '#/components/schemas/Revision'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        version:
+          type: integer
+          const: 1
+        title:
+          type: string
+          minLength: 1
+          maxLength: 512
+        notes:
+          type: string
+          maxLength: 50000
+        project_id:
+          $ref: '#/components/schemas/NullableOrganizationIdentity'
+        tag_ids:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/OrganizationIdentity'
+        deadline_on:
+          $ref: '#/components/schemas/NullableCivilDate'
+        planned_on:
+          $ref: '#/components/schemas/NullableCivilDate'
+    McpCompleteTaskParams:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_revision
+        - mutation_id
+        - task_id
+        - version
+      properties:
+        expected_revision:
+          $ref: '#/components/schemas/Revision'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        version:
+          type: integer
+          const: 1
+    McpReopenTaskParams:
+      type: object
+      additionalProperties: false
+      required:
+        - expected_revision
+        - mutation_id
+        - task_id
+        - version
+      properties:
+        expected_revision:
+          $ref: '#/components/schemas/Revision'
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        task_id:
+          $ref: '#/components/schemas/TaskIdentity'
+        version:
+          type: integer
+          const: 1
+    # Declared here (plan 05-05) for MCP-02's closed six-tool surface;
+    # implemented by plan 05-07 (D-17/D-18 preview/commit). A target set
+    # bounded at 50 mirrors the existing sync-feed bulk bound
+    # (.planning/STATE.md "[Phase 02]: Ready pushes are bounded to 25 and
+    # pulls to 50 changes").
+    McpPreviewBulkChangeParams:
+      type: object
+      additionalProperties: false
+      required:
+        - command
+        - mutation_id
+        - targets
+      properties:
+        command:
+          type: string
+          enum:
+            - trash_task
+            - restore_task
+            - undo_task
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        targets:
+          type: array
+          minItems: 1
+          maxItems: 50
+          uniqueItems: true
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - expected_revision
+              - task_id
+            properties:
+              expected_revision:
+                $ref: '#/components/schemas/Revision'
+              task_id:
+                $ref: '#/components/schemas/TaskIdentity'
+    McpCommitBulkChangeParams:
+      type: object
+      additionalProperties: false
+      required:
+        - mutation_id
+        - preview_token
+      properties:
+        mutation_id:
+          $ref: '#/components/schemas/MutationIdentity'
+        preview_token:
+          type: string
+          minLength: 1
+          maxLength: 4096
