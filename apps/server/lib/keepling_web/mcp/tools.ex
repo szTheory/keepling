@@ -4,21 +4,25 @@ defmodule KeeplingWeb.MCP.Tools do
   `keepling.capture_task`, `keepling.update_task`, `keepling.complete_task`,
   `keepling.reopen_task` -- dispatch through the same
   `Keepling.Application.Commands.dispatch/3` every other adapter calls
-  (D-01/D-02). `keepling.preview_bulk_change`/`keepling.commit_bulk_change`
-  are declared in the generated schema (05-05-PLAN.md Task 1) but are
-  intentionally absent from `tools/list` and `call/2` until plan 05-07
-  implements them -- a tool listed but not executable is worse than one
-  that is absent.
+  (D-01/D-02). MCP-05's two-step pair, `keepling.preview_bulk_change` and
+  `keepling.commit_bulk_change`, mint and consume an opaque, account-bound
+  preview token through `Keepling.Application.Preview` -- commit accepts
+  only the token and a mutation identity, never a target list, so the
+  committed set cannot differ from the previewed one (D-17/D-18). Trash,
+  restore, and undo are reachable ONLY through this pair -- there is no
+  one-step tool naming any of them (D-19).
   """
 
   alias Keepling.Adapters.Postgres.CommandStore
-  alias Keepling.Application.Commands
+  alias Keepling.Adapters.Postgres.Preview, as: PreviewStore
+  alias Keepling.Application.{Commands, Preview}
   alias KeeplingWeb.MCP.{Errors, Scope, ToolSchemas}
 
   @capture_task_keys ~w(mutation_id task_id title version)
   @lifecycle_keys ~w(expected_revision mutation_id task_id version)
   @update_task_required_keys ~w(expected_revision mutation_id task_id version)
   @update_task_optional_keys ~w(title notes project_id tag_ids deadline_on planned_on)
+  @preview_commands ~w(trash_task restore_task undo_task)
 
   @implemented_tools [
     %{
@@ -37,6 +41,16 @@ defmodule KeeplingWeb.MCP.Tools do
     %{
       name: "keepling.reopen_task",
       description: "Reopen exactly one previously-completed task by stable opaque identity."
+    },
+    %{
+      name: "keepling.preview_bulk_change",
+      description:
+        "Preview a bulk or destructive change (trash/restore/undo) and receive an opaque, expiring commit token."
+    },
+    %{
+      name: "keepling.commit_bulk_change",
+      description:
+        "Atomically commit a previewed bulk or destructive change by token; refuses with zero writes if anything drifted."
     }
   ]
 
@@ -88,6 +102,16 @@ defmodule KeeplingWeb.MCP.Tools do
       "tasks.write",
       &decode_lifecycle(&1, :reopen_task)
     )
+  end
+
+  def call(%{"name" => "keepling.preview_bulk_change", "arguments" => arguments}, context)
+      when is_map(arguments) do
+    preview_bulk_change(arguments, context)
+  end
+
+  def call(%{"name" => "keepling.commit_bulk_change", "arguments" => arguments}, context)
+      when is_map(arguments) do
+    commit_bulk_change(arguments, context)
   end
 
   def call(%{"name" => _unknown_tool}, _context), do: {:error, Errors.unknown_tool()}
@@ -443,6 +467,115 @@ defmodule KeeplingWeb.MCP.Tools do
     }
   end
 
+  # MCP-05/D-17: preview requires tasks.bulk at BOTH the adapter fast-fail
+  # (Scope) and the application boundary (AgentScope) -- the same
+  # two-layer gate every write tool uses. `command` is restricted to the
+  # closed D-19 destructive vocabulary; there is no way to reach any other
+  # command through this tool. The mint itself has no side effects (no
+  # write, no lock) -- it is a pure, signed claim about live state the
+  # caller supplied, re-verified atomically at commit time.
+  defp preview_bulk_change(arguments, context) do
+    with :ok <- Scope.require(context, "tasks.bulk"),
+         :ok <- Keepling.Application.AgentScope.require(context, "tasks.bulk"),
+         :ok <- ToolSchemas.validate("keepling.preview_bulk_change", arguments),
+         {:ok, command, targets} <- decode_preview_targets(arguments) do
+      case Preview.mint(
+             %{command: command, targets: targets},
+             preview_context(context),
+             PreviewStore
+           ) do
+        {:ok, %{token: token, expires_at: expires_at, summary: summary}} ->
+          structured = %{
+            preview_token: token,
+            expires_at: DateTime.to_iso8601(expires_at),
+            summary: summary
+          }
+
+          {:ok, %{content: [%{type: "text", text: summary}], structuredContent: structured}}
+
+        {:error, :invalid_preview} ->
+          {:error, Errors.invalid_params()}
+      end
+    else
+      {:error, :insufficient_scope} -> {:error, Errors.insufficient_scope()}
+      {:error, :unknown_tool} -> {:error, Errors.unknown_tool()}
+      {:error, :invalid_command} -> {:error, Errors.invalid_params()}
+    end
+  end
+
+  defp decode_preview_targets(%{"command" => command_str, "targets" => targets} = params)
+       when command_str in @preview_commands and is_list(targets) and targets != [] do
+    with true <- Enum.sort(Map.keys(params)) == ~w(command mutation_id targets),
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(Map.get(params, "mutation_id")),
+         {:ok, decoded_targets} <- decode_targets(targets) do
+      {:ok, String.to_existing_atom(command_str), decoded_targets}
+    else
+      _ -> {:error, :invalid_command}
+    end
+  end
+
+  defp decode_preview_targets(_params), do: {:error, :invalid_command}
+
+  defp decode_targets(targets) do
+    targets
+    |> Enum.reduce_while({:ok, []}, fn
+      %{"task_id" => task_id, "expected_revision" => revision}, {:ok, acc}
+      when is_binary(task_id) and is_integer(revision) and revision >= 1 ->
+        case Ecto.UUID.cast(task_id) do
+          {:ok, _uuid} -> {:cont, {:ok, [%{task_id: task_id, expected_revision: revision} | acc]}}
+          :error -> {:halt, {:error, :invalid_command}}
+        end
+
+      _target, _acc ->
+        {:halt, {:error, :invalid_command}}
+    end)
+    |> case do
+      {:ok, acc} -> {:ok, Enum.reverse(acc)}
+      error -> error
+    end
+  end
+
+  # Commit accepts EXACTLY the token and a mutation identity -- no target
+  # list -- so the committed set is structurally the previewed set (D-17,
+  # T-05-34; enforced by the generated schema's closed two-property
+  # shape). Atomicity, drift detection, and idempotent replay all live in
+  # Preview.commit/4 and its adapter.
+  defp commit_bulk_change(
+         %{"mutation_id" => mutation_id, "preview_token" => token} = arguments,
+         context
+       )
+       when is_map(arguments) do
+    with :ok <- Scope.require(context, "tasks.bulk"),
+         :ok <- Keepling.Application.AgentScope.require(context, "tasks.bulk"),
+         :ok <- ToolSchemas.validate("keepling.commit_bulk_change", arguments),
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id) do
+      case Preview.commit(token, mutation_id, preview_context(context), PreviewStore) do
+        {:ok, result} ->
+          {:ok,
+           %{content: [%{type: "text", text: Jason.encode!(result)}], structuredContent: result}}
+
+        {:error, :preview_stale} ->
+          {:error, Errors.preview_stale()}
+
+        {:error, :preview_expired} ->
+          {:error, Errors.preview_expired()}
+
+        {:error, :preview_invalid} ->
+          {:error, Errors.preview_invalid()}
+
+        {:error, :infrastructure_failure} ->
+          {:error, Errors.infrastructure_failure()}
+      end
+    else
+      {:error, :insufficient_scope} -> {:error, Errors.insufficient_scope()}
+      {:error, :unknown_tool} -> {:error, Errors.unknown_tool()}
+      {:error, :invalid_command} -> {:error, Errors.invalid_params()}
+      :error -> {:error, Errors.invalid_params()}
+    end
+  end
+
+  defp commit_bulk_change(_arguments, _context), do: {:error, Errors.invalid_params()}
+
   # D-24/T-05-01: identity, scope, and client kind are read only from
   # `context` -- assigned by `KeeplingWeb.MCP.Pipeline` from the loaded
   # device grant -- never from the JSON-RPC request body.
@@ -455,5 +588,24 @@ defmodule KeeplingWeb.MCP.Tools do
       actor_type: context.actor_type,
       client_kind: context.client_kind
     }
+  end
+
+  # Same shape as dispatch_context/1 (Preview.commit's adapter dispatches
+  # every target's command through the identical Commands.dispatch/3 /
+  # Undo.dispatch/3 path), plus `preview_secret` -- derived from
+  # KeeplingWeb.Endpoint's secret_key_base exactly as
+  # TaskViewController/ActivityController derive `cursor_secret` -- so
+  # `Keepling.Application.Preview` (architecture_test.exs: domain/
+  # application sources have no outward dependencies) never touches
+  # KeeplingWeb.Endpoint itself.
+  defp preview_context(context) do
+    endpoint_config = Application.fetch_env!(:keepling, KeeplingWeb.Endpoint)
+    secret_key_base = Keyword.fetch!(endpoint_config, :secret_key_base)
+
+    Map.put(
+      dispatch_context(context),
+      :preview_secret,
+      :crypto.mac(:hmac, :sha256, secret_key_base, "keepling-preview-token-v1")
+    )
   end
 end
