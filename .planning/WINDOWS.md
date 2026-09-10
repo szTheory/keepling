@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 7
+open_count: 9
 waived_count: 49
 fixed_count: 9
-total_count: 65
-last_updated: 2026-09-10T00:00:00.000Z
+total_count: 67
+last_updated: 2026-09-10T23:42:13.957Z
 ---
 
 # Broken Windows Ledger
@@ -80,6 +80,8 @@ last_updated: 2026-09-10T00:00:00.000Z
 | 63 | KPL-04 | skipped-test | apps/ios/Tests/StorageTests/DataProtectionTests.swift |  | Gate G7's locked-device write is unverified: no programmatic lock control exists (devicectl has no lock verb, XCUIDevice is UI-testing-only, and DataProtectionTests is a unit bundle). UPDATED 2026-09-08 (04-18): the compounding half is GONE -- the device now has a passcode set (`devicectl device info lockState` reports passcodeRequired: true, recorded by resolve-devices.mjs), and the protection class is proven enforceable on hardware. Only the lock-control half remains open, and closing it would mean adding a production protectedDataWillBecomeUnavailable write hook solely to make a gate pass. | open |  | 2026-09-07T04:03:27.539Z |  |
 | 64 | KPL-04 | unmet-truth | apps/ios/Tests/StorageTests/Fixtures/migration-1.sqlite |  | The storage lane opened its committed SQLite fixtures IN PLACE and mutated them. SEVERITY WAS UNDERSTATED: the note said only the FIRST run on a fresh checkout tested a pre-migration database, but the mutated migration-1.sqlite was itself COMMITTED (at [1,2] in ada909e, then at [1,2,3] in 624f9f3), and FixtureFactory.ensureMigration1Fixture() returns early when the file exists -- so testMigration1FixtureMigratesForwardToVersion2PreservingVersion1Row asserted [1,2,3] against an already-migrated file on EVERY checkout, migrating nothing. FIXED 2026-09-08 (04-18): every consumer now opens a writable per-run COPY (FixtureFactory.writableCopy, carrying the -wal/-shm siblings), and migration-1.sqlite was regenerated at version 1 only. Verified: the fixture is byte-identical after a full storage-lane run, the working tree stays clean, and storage/storage-gates/durability-posture all pass. | fixed |  | 2026-09-07T04:33:11.054Z | 2026-09-08T22:30:00.000Z |
 | 65 | KPL-04 | unmet-truth | tooling/verify-ios-phase.mjs |  | The gate published fewer cases than it ran: `xcodebuildSummary` took the LAST "Executed N tests" line, which for a lane spanning two test bundles is the last BUNDLE's total, not the run's. auth published 4 of 19, undo 8 of 18, sync-presentation 21 of 35, device 26 of 29 -- the published 424/454 totals understated by ~42. Never a false PASS (a failure in any bundle fails the lane however the line is parsed), but D-24's anti-vacuity contract rests on that number meaning what it says, and on `device` the discarded bundle was `DataProtectionTests`, so G7's protection-class hardware evidence contributed ZERO to the published count. FIXED 2026-09-09 (04-18): anchor on the `<Bundle>.xctest` summary line (exactly one per bundle), sum per-bundle totals, subtract skips, and fail when any single bundle executed zero. Verified: auth 19, undo 18, sync-presentation 35, device 29; corrected totals 463 simulator and 496 overall. Found by phase verification, not by a lane. | fixed |  | 2026-09-09T02:00:00.000Z | 2026-09-09T02:30:00.000Z |
+| 66 | KPL-05 | unmet-truth | apps/server/lib/keepling_web/router.ex | 121 | Browser cannot list or revoke agent grants: GET/DELETE /api/v1/device-grants sit behind the bearer-only :device_grant_authenticated pipeline, so a session-cookie request 401s. apps/web/e2e/agent-access.spec.ts step 5 fails against the real stack (05-09 SUMMARY documents it with file/line). Moving the routes to :client_authenticated would fix the browser but would also let any device grant -- including an MCP agent -- enumerate and revoke the owner's grants, a privilege escalation. Needs a deliberate authorization decision, not a pipeline swap. | open |  | 2026-09-10T23:42:06.351Z |  |
+| 67 | KPL-05 | unmet-truth | .planning/phases/KPL-05-safe-agent-access |  | Phase KPL-05 has ROADMAP 'UI hint: yes' and shipped frontend in 05-09 (AgentGrantList.tsx, ActivityList.tsx, /settings/agents route) with no UI-SPEC.md. The ui.safety-gate blocks on this (block = frontend && hasUiFiles && !hasUiSpec); it intermittently reads false only because hasUiFiles is computed from git diff HEAD~1..HEAD, a documented single-commit limitation. Resolve with /gsd-ui-review before phase completion. | open |  | 2026-09-10T23:42:13.957Z |  |
 
 ````json
 [
@@ -821,7 +823,7 @@ last_updated: 2026-09-10T00:00:00.000Z
     "phase": "KPL-04",
     "file": "tooling/verify-real-stack-ios.mjs",
     "line": null,
-    "description": "The server-driven half of D-22 Criterion 2 (auth expiry, account fencing, duplicate replay, structured conflict) cannot run on a physical iPhone: KeeplingSyncAdapter refuses any non-HTTPS base URL whose host is not 127.0.0.1/localhost, and over TLS URLSession rejects the lane's self-signed certificate. Needs a DEBUG-only lane CA via an injected ClientTransport; NOT closed by widening the production transport guard.",
+    "description": "The server-driven half of D-22 Criterion 2 (auth expiry, account fencing, duplicate replay, structured conflict) could not run on a physical iPhone: KeeplingSyncAdapter refuses any non-HTTPS base URL whose host is not 127.0.0.1/localhost, and over TLS URLSession rejected the lane's self-signed certificate. CLOSED 2026-09-08 (04-18) WITHOUT widening the production transport guard and WITHOUT the planned DEBUG-only lane CA: `tailscale cert` serves the proxy from a MagicDNS name under a real Let's Encrypt certificate, so the phone validates it through the shipping transport and no test-only trust code exists on any configuration. Lane `server-driven-device` PASS cases=4.",
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-07T04:03:27.449Z",
@@ -833,7 +835,7 @@ last_updated: 2026-09-10T00:00:00.000Z
     "phase": "KPL-04",
     "file": "apps/ios/Tests/StorageTests/DataProtectionTests.swift",
     "line": null,
-    "description": "Gate G7's locked-device write is unverified: no programmatic lock control exists (devicectl has no lock verb, XCUIDevice is UI-testing-only, and DataProtectionTests is a unit bundle). Compounded by the device having no passcode set, without which iOS file data protection does not engage at all.",
+    "description": "Gate G7's locked-device write is unverified: no programmatic lock control exists (devicectl has no lock verb, XCUIDevice is UI-testing-only, and DataProtectionTests is a unit bundle). UPDATED 2026-09-08 (04-18): the compounding half is GONE -- the device now has a passcode set (`devicectl device info lockState` reports passcodeRequired: true, recorded by resolve-devices.mjs), and the protection class is proven enforceable on hardware. Only the lock-control half remains open, and closing it would mean adding a production protectedDataWillBecomeUnavailable write hook solely to make a gate pass.",
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-07T04:03:27.539Z",
@@ -845,7 +847,7 @@ last_updated: 2026-09-10T00:00:00.000Z
     "phase": "KPL-04",
     "file": "apps/ios/Tests/StorageTests/Fixtures/migration-1.sqlite",
     "line": null,
-    "description": "The storage lane opened its committed SQLite fixtures IN PLACE and mutated them. SEVERITY WAS UNDERSTATED: the mutated migration-1.sqlite was itself COMMITTED (at [1,2] in ada909e, then at [1,2,3] in 624f9f3), and FixtureFactory.ensureMigration1Fixture() returns early when the file exists -- so the migration test asserted [1,2,3] against an already-migrated file on EVERY checkout, migrating nothing. FIXED 2026-09-08 (04-18): every consumer now opens a writable per-run COPY (FixtureFactory.writableCopy, carrying the -wal/-shm siblings), and migration-1.sqlite was regenerated at version 1 only. Verified: the fixture is byte-identical after a full storage-lane run, the working tree stays clean, and storage/storage-gates/durability-posture all pass.",
+    "description": "The storage lane opened its committed SQLite fixtures IN PLACE and mutated them. SEVERITY WAS UNDERSTATED: the note said only the FIRST run on a fresh checkout tested a pre-migration database, but the mutated migration-1.sqlite was itself COMMITTED (at [1,2] in ada909e, then at [1,2,3] in 624f9f3), and FixtureFactory.ensureMigration1Fixture() returns early when the file exists -- so testMigration1FixtureMigratesForwardToVersion2PreservingVersion1Row asserted [1,2,3] against an already-migrated file on EVERY checkout, migrating nothing. FIXED 2026-09-08 (04-18): every consumer now opens a writable per-run COPY (FixtureFactory.writableCopy, carrying the -wal/-shm siblings), and migration-1.sqlite was regenerated at version 1 only. Verified: the fixture is byte-identical after a full storage-lane run, the working tree stays clean, and storage/storage-gates/durability-posture all pass.",
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-07T04:33:11.054Z",
@@ -857,11 +859,35 @@ last_updated: 2026-09-10T00:00:00.000Z
     "phase": "KPL-04",
     "file": "tooling/verify-ios-phase.mjs",
     "line": null,
-    "description": "The gate published fewer cases than it ran: xcodebuildSummary took the LAST \"Executed N tests\" line, which for a lane spanning two test bundles is only the final bundle's total -- auth published 4 of 19, undo 8 of 18, sync-presentation 21 of 35, and on the device lane the DISCARDED bundle was DataProtectionTests, so gate G7's hardware evidence contributed ZERO to the published count. FIXED 2026-09-09 (04-18): the parser anchors on each <Bundle>.xctest summary and sums across bundles, subtracts skipped cases, and throws when any bundle reports zero.",
+    "description": "The gate published fewer cases than it ran: `xcodebuildSummary` took the LAST \"Executed N tests\" line, which for a lane spanning two test bundles is the last BUNDLE's total, not the run's. auth published 4 of 19, undo 8 of 18, sync-presentation 21 of 35, device 26 of 29 -- the published 424/454 totals understated by ~42. Never a false PASS (a failure in any bundle fails the lane however the line is parsed), but D-24's anti-vacuity contract rests on that number meaning what it says, and on `device` the discarded bundle was `DataProtectionTests`, so G7's protection-class hardware evidence contributed ZERO to the published count. FIXED 2026-09-09 (04-18): anchor on the `<Bundle>.xctest` summary line (exactly one per bundle), sum per-bundle totals, subtract skips, and fail when any single bundle executed zero. Verified: auth 19, undo 18, sync-presentation 35, device 29; corrected totals 463 simulator and 496 overall. Found by phase verification, not by a lane.",
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-09T02:00:00.000Z",
     "resolved_at": "2026-09-09T02:30:00.000Z"
+  },
+  {
+    "id": 66,
+    "kind": "unmet-truth",
+    "phase": "KPL-05",
+    "file": "apps/server/lib/keepling_web/router.ex",
+    "line": 121,
+    "description": "Browser cannot list or revoke agent grants: GET/DELETE /api/v1/device-grants sit behind the bearer-only :device_grant_authenticated pipeline, so a session-cookie request 401s. apps/web/e2e/agent-access.spec.ts step 5 fails against the real stack (05-09 SUMMARY documents it with file/line). Moving the routes to :client_authenticated would fix the browser but would also let any device grant -- including an MCP agent -- enumerate and revoke the owner's grants, a privilege escalation. Needs a deliberate authorization decision, not a pipeline swap.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-10T23:42:06.351Z",
+    "resolved_at": null
+  },
+  {
+    "id": 67,
+    "kind": "unmet-truth",
+    "phase": "KPL-05",
+    "file": ".planning/phases/KPL-05-safe-agent-access",
+    "line": null,
+    "description": "Phase KPL-05 has ROADMAP 'UI hint: yes' and shipped frontend in 05-09 (AgentGrantList.tsx, ActivityList.tsx, /settings/agents route) with no UI-SPEC.md. The ui.safety-gate blocks on this (block = frontend && hasUiFiles && !hasUiSpec); it intermittently reads false only because hasUiFiles is computed from git diff HEAD~1..HEAD, a documented single-commit limitation. Resolve with /gsd-ui-review before phase completion.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-10T23:42:13.957Z",
+    "resolved_at": null
   }
 ]
 ````
