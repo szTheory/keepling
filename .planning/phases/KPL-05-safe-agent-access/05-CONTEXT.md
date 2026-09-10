@@ -63,7 +63,7 @@ invariant for an agent's convenience.
   a stdio bridge needs a separately distributed and signed binary and would sit outside
   server-side rate limiting and audit.
 - **D-04:** Pin one MCP protocol revision explicitly and treat it exactly like Phase 2's
-  protocol trains (D-26/D-29): declared, tested, and changed deliberately. The protocol
+  protocol trains (Phase 2 D-26/D-29): declared, tested, and changed deliberately. The protocol
   conformance lane (D-25) tests against the pinned revision, not against "whatever the
   client sent".
 
@@ -209,6 +209,57 @@ invariant for an agent's convenience.
   it completes only at this phase's cross-adapter proof. Uncheck it as the first act of the
   phase and restore it only when D-27's lane passes.
 
+### Research-driven corrections (added 2026-09-10, after `05-RESEARCH.md`)
+
+- **D-29 — Dynamic Client Registration is REQUIRED, correcting D-07's discretion note.** The
+  discretion item assumed pre-registered clients would suffice for dogfood. Research falsified
+  that: the two named representative hosts **disagree**. Claude Code works with a
+  pre-registered `client_id`; Claude Desktop performs DCR unconditionally with **no fallback**,
+  so a pre-registration-only server simply cannot be connected from it. Settling this either
+  way silently drops a host. **Build a scoped DCR endpoint** — RFC 7591 registration gated
+  behind the existing authenticated session, so registration only succeeds for a caller who has
+  already proven ownership of the single Keepling account. That keeps both hosts working while
+  refusing the open-registration abuse an unauthenticated DCR endpoint invites, and it stays
+  consistent with D-003's single-account exclusivity. **This does not weaken D-07:** the
+  authorization grant itself is still external-user-agent + authorization code + S256 PKCE with
+  explicit scope-naming consent, and there is still no static API key and no client-credentials
+  grant. — **Reversibility:** one-way — a registration endpoint, once reachable by a host, is
+  part of the published authorization surface.
+- **D-30 — Pin MCP revision `2025-06-18`, and re-check before implementation, not just now.**
+  The specification moved twice during this phase's own discussion (`2025-11-25`, then a
+  structurally different stateless `2026-07-28`). `2025-06-18` is mature, carries the full
+  OAuth/PRM requirement set, and predates the newest churn while remaining reachable through the
+  spec's backward-compatibility guarantee. Research explicitly flags that representative hosts
+  may have moved by execution time — **verify against live host behaviour before writing the
+  transport, not against this document.**
+- **D-31 — Reject `hermes_mcp`; hand-roll the framing.** Last hex.pm release `0.14.1`
+  (2025-08-14), documented example targets `2025-03-26` — a revision behind even the
+  conservative pin. D-02 already required that any adopted layer own framing only; a library
+  that is behind on the protocol buys nothing and costs a dependency.
+- **D-32 — Three closed client-kind lists must change together.** `device_grants`' migration
+  CHECK constraint, `DeviceGrant.@client_kinds`, and `DeviceGrantController.@client_ids` are each
+  closed to `('electron','iphone')`. Note the landmine: `Keepling.Accounts.@client_kinds`
+  *already* contains `"mcp"`, but that is the browser-session labelling vocabulary, a different
+  module — it is **not** evidence that device-grant support exists. Treat it as a trap, not a
+  shortcut.
+- **D-33 — The MCP authorization path needs its own key allow-list.** `exact_keys/2` rejects any
+  request carrying a key outside a fixed list, and RFC 8707 requires MCP clients to send
+  `resource` on both the authorization and token requests — so a real client is rejected before
+  authorization begins. Give the MCP path its own allow-list including `resource`, and enforce
+  that its value matches this server's canonical MCP resource URI. **Do not loosen the existing
+  `@authorize_keys`/`@exchange_keys`**, which would weaken validation for the two client classes
+  that have no resource-indicator requirement.
+- **D-34 — Preview token as a signed opaque HMAC value**, mirroring the existing cursor
+  construction and `SyncFeed.authorize_namespace/2`, rather than a durable row. Research flags
+  this as an assumption open to override **if an operational kill-switch for pending previews is
+  wanted** — with a 15-minute-class expiry and single-account scope, the kill switch has little
+  to act on, so the simpler construction wins unless the planner finds otherwise.
+- **D-35 — `search` gets its own module, not a fifth `TaskViews` entry.** `TaskViews` is closed
+  to `~w(inbox today upcoming completed)a` and its cursor shape assumes a named unfiltered view.
+  Use native PostgreSQL `tsvector`/GIN ordered by `(accepted_at DESC, task_id)`, reusing the
+  proven HMAC-signed cursor pattern — **not** rank-based pagination, which is not stable under
+  a keyset cursor.
+
 ### Claude's Discretion
 
 Auto-selected here, but genuinely open for research to settle on evidence — none of these
@@ -220,8 +271,8 @@ change the shape of the phase:
 - Resource URI scheme and naming.
 - Default and maximum page sizes for bounded reads.
 - Preview token expiry duration and storage (durable row versus signed opaque value).
-- Whether Dynamic Client Registration (RFC 7591) is needed for the representative hosts, or
-  whether pre-registered clients suffice for dogfood.
+- ~~Whether Dynamic Client Registration (RFC 7591) is needed for the representative hosts.~~
+  **Closed by research 2026-09-10 — see D-29. Not an open question any more.**
 
 </decisions>
 
@@ -252,7 +303,7 @@ change the shape of the phase:
   reuse semantics), D-33/D-34 (narrow semantic three-way merge; which commands may rebase).
 - `.planning/phases/KPL-02-synchronization-and-replaceable-server/02-CONTEXT.md` D-10 (opaque
   values bound to server instance, account subject, epoch, protocol version — the model for
-  the preview token), D-22 (external user agent + authorization code + PKCE seam), D-26/D-29
+  the preview token), D-22 (external user agent + authorization code + PKCE seam), Phase 2 D-26/D-29
   (protocol trains and what constitutes a breaking change), D-15 (golden vector discipline).
 - `.planning/phases/KPL-03-mac-daily-loop/03-CONTEXT.md` D-31 (Phoenix controllers stay thin
   over existing application commands — the MCP adapter is held to the same rule).

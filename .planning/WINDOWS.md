@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 9
+open_count: 7
 waived_count: 49
-fixed_count: 6
-total_count: 64
-last_updated: 2026-09-07T04:33:11.054Z
+fixed_count: 9
+total_count: 65
+last_updated: 2026-09-10T00:00:00.000Z
 ---
 
 # Broken Windows Ledger
@@ -822,10 +822,10 @@ last_updated: 2026-09-07T04:33:11.054Z
     "file": "tooling/verify-real-stack-ios.mjs",
     "line": null,
     "description": "The server-driven half of D-22 Criterion 2 (auth expiry, account fencing, duplicate replay, structured conflict) cannot run on a physical iPhone: KeeplingSyncAdapter refuses any non-HTTPS base URL whose host is not 127.0.0.1/localhost, and over TLS URLSession rejects the lane's self-signed certificate. Needs a DEBUG-only lane CA via an injected ClientTransport; NOT closed by widening the production transport guard.",
-    "status": "open",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-07T04:03:27.449Z",
-    "resolved_at": null
+    "resolved_at": "2026-09-08T21:00:00.000Z"
   },
   {
     "id": 63,
@@ -845,11 +845,23 @@ last_updated: 2026-09-07T04:33:11.054Z
     "phase": "KPL-04",
     "file": "apps/ios/Tests/StorageTests/Fixtures/migration-1.sqlite",
     "line": null,
-    "description": "The storage lane opens its committed SQLite fixtures IN PLACE and mutates them: migration-1.sqlite grows 90112 -> 94208 bytes (a page is added, so the migration ran against the committed file) and corrupted-checksum.sqlite has 3 header bytes rewritten. Consequence: only the FIRST run on a fresh checkout tests a pre-migration database; every later local run tests an already-migrated one while still reporting PASS, and a test run dirties the working tree. Fixtures should be copied to a temp directory per run.",
-    "status": "open",
+    "description": "The storage lane opened its committed SQLite fixtures IN PLACE and mutated them. SEVERITY WAS UNDERSTATED: the mutated migration-1.sqlite was itself COMMITTED (at [1,2] in ada909e, then at [1,2,3] in 624f9f3), and FixtureFactory.ensureMigration1Fixture() returns early when the file exists -- so the migration test asserted [1,2,3] against an already-migrated file on EVERY checkout, migrating nothing. FIXED 2026-09-08 (04-18): every consumer now opens a writable per-run COPY (FixtureFactory.writableCopy, carrying the -wal/-shm siblings), and migration-1.sqlite was regenerated at version 1 only. Verified: the fixture is byte-identical after a full storage-lane run, the working tree stays clean, and storage/storage-gates/durability-posture all pass.",
+    "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-07T04:33:11.054Z",
-    "resolved_at": null
+    "resolved_at": "2026-09-08T22:30:00.000Z"
+  },
+  {
+    "id": 65,
+    "kind": "unmet-truth",
+    "phase": "KPL-04",
+    "file": "tooling/verify-ios-phase.mjs",
+    "line": null,
+    "description": "The gate published fewer cases than it ran: xcodebuildSummary took the LAST \"Executed N tests\" line, which for a lane spanning two test bundles is only the final bundle's total -- auth published 4 of 19, undo 8 of 18, sync-presentation 21 of 35, and on the device lane the DISCARDED bundle was DataProtectionTests, so gate G7's hardware evidence contributed ZERO to the published count. FIXED 2026-09-09 (04-18): the parser anchors on each <Bundle>.xctest summary and sums across bundles, subtracts skipped cases, and throws when any bundle reports zero.",
+    "status": "fixed",
+    "reason": "",
+    "recorded_at": "2026-09-09T02:00:00.000Z",
+    "resolved_at": "2026-09-09T02:30:00.000Z"
   }
 ]
 ````
