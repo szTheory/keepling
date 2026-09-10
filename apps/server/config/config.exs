@@ -3,7 +3,16 @@ import Config
 config :keepling,
   ecto_repos: [Keepling.Repo],
   generators: [timestamp_type: :utc_datetime_usec, binary_id: true],
-  task_view_query_timeout_ms: 10_000
+  task_view_query_timeout_ms: 10_000,
+  # 05-04-PLAN.md Task 2: KeeplingWeb.MCP.Resources reads its Postgres
+  # ports from config rather than aliasing Keepling.Adapters.Postgres.*
+  # directly, so the module itself never names a concrete adapter --
+  # every read still goes through the shared Keepling.Application.*
+  # query, only the port implementation is config-injected.
+  mcp_task_views_port: Keepling.Adapters.Postgres.TaskViews,
+  mcp_projects_port: Keepling.Adapters.Postgres.Projects,
+  mcp_command_store_port: Keepling.Adapters.Postgres.CommandStore,
+  mcp_search_port: Keepling.Adapters.Postgres.Search
 
 config :keepling, :compatibility, %{
   "server_release" => "0.1.0-dev",

@@ -9,14 +9,20 @@ defmodule KeeplingWeb.MCP.Dispatch do
 
   use KeeplingWeb, :controller
 
-  alias KeeplingWeb.MCP.{Errors, Handshake, Tools}
+  alias KeeplingWeb.MCP.{Errors, Handshake, Resources, Tools}
 
   @methods %{
     "initialize" => &Handshake.initialize/2,
     "ping" => &Handshake.ping/2,
     "tools/list" => &Tools.list/2,
-    "tools/call" => &Tools.call/2
+    "tools/call" => &Tools.call/2,
+    "resources/list" => &Resources.list/2,
+    "resources/read" => &Resources.read/2
   }
+
+  @doc "The closed set of dispatchable JSON-RPC method names (05-04-PLAN.md Task 3: bound to docs/architecture/MCP-SURFACE.md by surface_test.exs)."
+  @spec implemented_methods() :: [String.t()]
+  def implemented_methods, do: Map.keys(@methods)
 
   def handle(conn, %{"jsonrpc" => "2.0", "method" => method} = params) when is_binary(method) do
     id = Map.get(params, "id")
