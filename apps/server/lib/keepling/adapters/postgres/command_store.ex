@@ -1624,11 +1624,22 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     activity_id
   end
 
+  # T-05-45: the actor CHECK constraint bounds actor_label to
+  # `char_length BETWEEN 1 AND 200`. A grant's stored label is already
+  # bounded at issuance (`DeviceGrant.required_bounded_binary/3`), but this
+  # truncation is the write-time backstop -- an oversized label is cut here
+  # rather than raising and losing the whole activity fact.
+  @actor_label_max_chars 200
+
   defp activity_actor(%{actor_type: "user"}),
     do: %{label: "You", principal: "account_owner", type: "user"}
 
   defp activity_actor(%{actor_type: "agent", actor_label: label, actor_principal: principal}),
-    do: %{label: label, principal: principal, type: "agent"}
+    do: %{
+      label: String.slice(label, 0, @actor_label_max_chars),
+      principal: principal,
+      type: "agent"
+    }
 
   defp bump_activity_view_revision(repo, context) do
     %{num_rows: 1} =

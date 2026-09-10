@@ -49,6 +49,16 @@ defmodule Keepling.Application.ActivityTest do
     assert vectors["types"] == Activity.activity_types()
     assert vectors["cursor"]["maximum_page_size"] == 50
     assert vectors["retention"] == "account_lifetime"
+
+    assert vectors["actors"]["user"] == %{
+             "label" => "You",
+             "principal" => "account_owner",
+             "type" => "user"
+           }
+
+    assert vectors["actors"]["agent"]["principal"] == "authorized_grant"
+    assert vectors["actors"]["agent"]["type"] == "agent"
+    assert vectors["actors"]["agent"]["label_max_chars"] == 200
   end
 end
 
@@ -416,6 +426,71 @@ defmodule KeeplingWeb.ActivityBoundaryTest do
              )
   end
 
+  test "the activity feed interleaves agent and human facts in one ordered stream", %{
+    account_id: account_id,
+    conn: conn
+  } do
+    task_id = Ecto.UUID.generate()
+
+    {:ok, %{status: 201}} =
+      dispatch(
+        account_id,
+        %{
+          mutation_id: Ecto.UUID.generate(),
+          task_id: task_id,
+          title: "Captured by a human",
+          type: :capture_task,
+          version: 1
+        },
+        @accepted_at
+      )
+
+    {:ok, %{status: 200}} =
+      dispatch_agent(
+        account_id,
+        %{
+          base_values: %{notes: "", title: "Captured by a human"},
+          expected_revision: 1,
+          fields: %{notes: "", title: "Edited by an agent"},
+          mutation_id: Ecto.UUID.generate(),
+          task_id: task_id,
+          type: :edit_task,
+          version: 1
+        },
+        DateTime.add(@accepted_at, 1, :second)
+      )
+
+    {:ok, %{status: 200}} =
+      dispatch(
+        account_id,
+        %{
+          expected_revision: 1,
+          mutation_id: Ecto.UUID.generate(),
+          task_id: task_id,
+          type: :complete_task,
+          version: 1
+        },
+        DateTime.add(@accepted_at, 2, :second)
+      )
+
+    page =
+      conn
+      |> recycle()
+      |> get("/api/v1/tasks/#{task_id}/activity?limit=10")
+      |> json_response(200)
+
+    actors = Enum.map(page["items"], & &1["actor"])
+
+    assert actors == [
+             %{"label" => "You", "principal" => "account_owner", "type" => "user"},
+             %{"label" => "Test Agent Grant", "principal" => "authorized_grant", "type" => "agent"},
+             %{"label" => "You", "principal" => "account_owner", "type" => "user"}
+           ]
+
+    client_kinds = Enum.map(page["items"], & &1["client_kind"])
+    assert client_kinds == ["web", "mcp", "web"]
+  end
+
   defp dispatch(account_id, command, accepted_at) do
     Commands.dispatch(
       command,
@@ -424,6 +499,21 @@ defmodule KeeplingWeb.ActivityBoundaryTest do
         account_id: account_id,
         actor_type: "user",
         client_kind: "web"
+      },
+      CommandStore
+    )
+  end
+
+  defp dispatch_agent(account_id, command, accepted_at) do
+    Commands.dispatch(
+      command,
+      %{
+        accepted_at: accepted_at,
+        account_id: account_id,
+        actor_label: "Test Agent Grant",
+        actor_principal: "authorized_grant",
+        actor_type: "agent",
+        client_kind: "mcp"
       },
       CommandStore
     )

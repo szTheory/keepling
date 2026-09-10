@@ -43,6 +43,19 @@
     "input": "<img src=x onerror=alert(1)>",
     "expected_text": "<img src=x onerror=alert(1)>"
   },
+  "actors": {
+    "user": {
+      "label": "You",
+      "principal": "account_owner",
+      "type": "user"
+    },
+    "agent": {
+      "principal": "authorized_grant",
+      "type": "agent",
+      "label_source": "the authenticated device grant's stored label, truncated to 200 characters at write time",
+      "label_max_chars": 200
+    }
+  },
   "retention": "account_lifetime",
   "separate_from": [
     "command_receipts",
