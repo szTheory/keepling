@@ -43,6 +43,69 @@ const item = {
   version: 1,
 } as const
 
+const agentSnapshot = {
+  captured_at: '2026-08-31T01:16:00.000000Z',
+  completed_at: null,
+  deadline_on: null,
+  id: taskId,
+  inbox_state: 'clarified',
+  notes: '',
+  planned_on: null,
+  project: null,
+  revision: 3,
+  tags: [],
+  title: 'Book the ferry',
+  trashed_at: null,
+} as const
+
+const agentAvailableItem = {
+  accepted_at: '2026-08-31T02:00:00.000000Z',
+  activity_id: 3,
+  actor: { label: 'Claude Code', principal: 'authorized_grant', type: 'agent' },
+  changes: [{ field: 'completed_at', kind: 'instant', new: '2026-08-31T02:00:00Z', old: null }],
+  client_kind: 'mcp',
+  from_revision: 2,
+  mutation_id: '018d8b40-2f10-7b1a-9d71-263f4af77005',
+  outcome: 'accepted',
+  recovery_state: 'available',
+  to_revision: 3,
+  type: 'task_completed',
+  undone_activity_id: null,
+  version: 1,
+} as const
+
+const agentExpiredItem = {
+  accepted_at: '2026-08-30T02:00:00.000000Z',
+  activity_id: 4,
+  actor: { label: 'Cowork', principal: 'authorized_grant', type: 'agent' },
+  changes: [{ field: 'completed_at', kind: 'instant', new: '2026-08-30T02:00:00Z', old: null }],
+  client_kind: 'mcp',
+  from_revision: 3,
+  mutation_id: '018d8b40-2f10-7b1a-9d71-263f4af77006',
+  outcome: 'accepted',
+  recovery_state: 'expired',
+  to_revision: 4,
+  type: 'task_completed',
+  undone_activity_id: null,
+  version: 1,
+} as const
+
+const acknowledgement = (overrides: Record<string, unknown> = {}) => ({
+  mutation_id: agentAvailableItem.mutation_id,
+  outcome: 'accepted',
+  resolved_conflict_id: null,
+  revision: 3,
+  snapshot: agentSnapshot,
+  task_id: taskId,
+  undo: {
+    expires_at: '2026-09-01T02:00:00Z',
+    handle: 'undo-handle-agent-completion',
+    label: 'Undo completing Book the ferry',
+  },
+  warnings: [],
+  ...overrides,
+})
+
 const captured = {
   accepted_at: '2026-08-31T01:15:00.000000Z',
   activity_id: 1,
@@ -75,6 +138,11 @@ const page = (items: readonly unknown[], nextCursor: string | null) => ({
 
 const activitySentence = (sentence: string) =>
   screen.getByText((_, element) => element?.tagName === 'P' && element.textContent === sentence)
+
+const activitySentenceContaining = (fragment: string) =>
+  screen.getByText(
+    (_, element) => element?.tagName === 'P' && Boolean(element.textContent?.includes(fragment)),
+  )
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -299,5 +367,80 @@ describe('task activity', () => {
     expect(await screen.findByRole('heading', { name: 'Edit task' })).toBeVisible()
     expect(await screen.findByRole('heading', { name: 'Activity' })).toBeVisible()
     expect(activitySentence('You updated task details.')).toBeVisible()
+  })
+
+  it('interleaves agent and user facts in one ordered list, with no separate agent-only view', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(jsonResponse(page([agentAvailableItem, item], null))),
+    )
+
+    render(<ActivityList csrfToken="csrf" taskId={taskId} />)
+
+    const rows = await screen.findAllByRole('listitem')
+    expect(rows).toHaveLength(2)
+    expect(rows[0]).toHaveTextContent('Claude Code')
+    expect(rows[1]).toHaveTextContent('You updated task details.')
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument()
+  })
+
+  it('renders an agent fact with a queryable, non-colour-only actor distinction', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(page([agentAvailableItem], null))))
+
+    render(<ActivityList csrfToken="csrf" taskId={taskId} />)
+
+    expect(await screen.findByLabelText('AI agent')).toHaveTextContent('AI agent')
+    expect(activitySentenceContaining('Claude Code')).toHaveTextContent('completed this task.')
+  })
+
+  it('exposes the undo control for an agent fact with an available recovery state', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(page([agentAvailableItem], null))))
+
+    render(<ActivityList csrfToken="csrf" taskId={taskId} />)
+
+    expect(
+      await screen.findByRole('button', { name: 'Undo: completed this task' }),
+    ).toBeVisible()
+  })
+
+  it('shows no undo control and says why for an expired agent fact', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(page([agentExpiredItem], null))))
+
+    render(<ActivityList csrfToken="csrf" taskId={taskId} />)
+
+    expect(
+      await screen.findByText('This action can no longer be undone: the undo window expired.'),
+    ).toBeVisible()
+    expect(screen.queryByRole('button', { name: /^Undo/ })).not.toBeInTheDocument()
+  })
+
+  it('activates the undo control on an agent fact and reverses the action through the shared undo path', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(jsonResponse(page([agentAvailableItem], null)))
+      .mockResolvedValueOnce(jsonResponse(acknowledgement()))
+      .mockResolvedValueOnce(jsonResponse(acknowledgement({ outcome: 'accepted', revision: 4 })))
+      .mockResolvedValueOnce(jsonResponse(page([agentAvailableItem], null)))
+    vi.stubGlobal('fetch', fetchMock)
+    const user = userEvent.setup()
+
+    render(<ActivityList csrfToken="csrf" taskId={taskId} />)
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Undo: completed this task' }),
+    )
+
+    expect(await screen.findByText('Change undone.')).toBeVisible()
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      `/api/v1/mutations/${agentAvailableItem.mutation_id}`,
+      expect.objectContaining({ credentials: 'same-origin' }),
+    )
+    const undoCall = fetchMock.mock.calls[2] as [string, RequestInit]
+    expect(undoCall[0]).toBe('/api/v1/commands/undo-task')
+    expect(undoCall[1].method).toBe('POST')
+    expect(JSON.parse(String(undoCall[1].body))).toMatchObject({
+      handle: 'undo-handle-agent-completion',
+    })
   })
 })
