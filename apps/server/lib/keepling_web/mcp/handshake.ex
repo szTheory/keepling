@@ -18,7 +18,7 @@ defmodule KeeplingWeb.MCP.Handshake do
        protocolVersion: @protocol_revision,
        capabilities: %{
          tools: %{},
-         resources: %{}
+         resources: %{subscribe: false, listChanged: false}
        },
        serverInfo: %{
          name: "keepling",

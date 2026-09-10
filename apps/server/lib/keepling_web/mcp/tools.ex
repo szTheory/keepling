@@ -16,13 +16,35 @@ defmodule KeeplingWeb.MCP.Tools do
   alias Keepling.Adapters.Postgres.CommandStore
   alias Keepling.Adapters.Postgres.Preview, as: PreviewStore
   alias Keepling.Application.{Commands, Preview}
-  alias KeeplingWeb.MCP.{Errors, Scope, ToolSchemas}
+  alias KeeplingWeb.MCP.{Errors, Resources, Scope, ToolSchemas}
 
   @capture_task_keys ~w(mutation_id task_id title version)
   @lifecycle_keys ~w(expected_revision mutation_id task_id version)
   @update_task_required_keys ~w(expected_revision mutation_id task_id version)
   @update_task_optional_keys ~w(title notes project_id tag_ids deadline_on planned_on)
   @preview_commands ~w(trash_task restore_task undo_task)
+  @search_tasks_keys ~w(query)
+  @search_tasks_optional_keys ~w(limit cursor)
+  @search_default_limit 20
+  @search_maximum_limit 50
+
+  # D-08's parameterized read tool. Not contract-generated (D-12 covers the
+  # four write tools plus preview/commit; search_tasks is a read, and this
+  # plan does not touch packages/contracts/openapi/keepling.yaml or the
+  # generator) -- its closed schema is declared here directly, following
+  # the SAME `additionalProperties: false` shape every generated tool
+  # schema uses, and enforced by the same exact-key decode idiom every
+  # other tool in this module already uses.
+  @search_tasks_schema %{
+    "type" => "object",
+    "additionalProperties" => false,
+    "required" => ["query"],
+    "properties" => %{
+      "query" => %{"type" => "string"},
+      "limit" => %{"type" => "integer", "minimum" => 1, "maximum" => @search_maximum_limit},
+      "cursor" => %{"type" => "string"}
+    }
+  }
 
   @implemented_tools [
     %{
@@ -51,6 +73,11 @@ defmodule KeeplingWeb.MCP.Tools do
       name: "keepling.commit_bulk_change",
       description:
         "Atomically commit a previewed bulk or destructive change by token; refuses with zero writes if anything drifted."
+    },
+    %{
+      name: "keepling.search_tasks",
+      description:
+        "Search tasks by words in the title or notes; returns a bounded, paginated page."
     }
   ]
 
@@ -58,11 +85,17 @@ defmodule KeeplingWeb.MCP.Tools do
   def list(_params, _context) do
     tools =
       Enum.map(@implemented_tools, fn %{name: name, description: description} ->
-        {:ok, tool_schema} = ToolSchemas.schema(name)
-        %{name: name, description: description, inputSchema: tool_schema}
+        %{name: name, description: description, inputSchema: tool_input_schema(name)}
       end)
 
     {:ok, %{tools: tools}}
+  end
+
+  defp tool_input_schema("keepling.search_tasks"), do: @search_tasks_schema
+
+  defp tool_input_schema(name) do
+    {:ok, tool_schema} = ToolSchemas.schema(name)
+    tool_schema
   end
 
   @spec call(map(), map()) :: {:ok, map()} | {:error, map()}
@@ -112,6 +145,11 @@ defmodule KeeplingWeb.MCP.Tools do
   def call(%{"name" => "keepling.commit_bulk_change", "arguments" => arguments}, context)
       when is_map(arguments) do
     commit_bulk_change(arguments, context)
+  end
+
+  def call(%{"name" => "keepling.search_tasks", "arguments" => arguments}, context)
+      when is_map(arguments) do
+    search_tasks(arguments, context)
   end
 
   def call(%{"name" => _unknown_tool}, _context), do: {:error, Errors.unknown_tool()}
@@ -575,6 +613,53 @@ defmodule KeeplingWeb.MCP.Tools do
   end
 
   defp commit_bulk_change(_arguments, _context), do: {:error, Errors.invalid_params()}
+
+  # D-08's parameterized search tool. Argument decode/clamp lives here
+  # (matching every other tool's own closed-key decode idiom); the actual
+  # read -- including both scope checks and the call into the shared
+  # `Keepling.Application.Search` query HTTP's `GET /api/v1/search` uses
+  # (D-09) -- is `KeeplingWeb.MCP.Resources.search/3`, the same module
+  # every other MCP read routes through.
+  defp search_tasks(arguments, context) do
+    with :ok <- validate_search_tasks(arguments),
+         {:ok, term, limit, cursor} <- decode_search_tasks(arguments),
+         {:ok, result} <- Resources.search(context, term, %{cursor: cursor, limit: limit}) do
+      {:ok, %{content: [%{type: "text", text: Jason.encode!(result)}], structuredContent: result}}
+    else
+      {:error, :invalid_command} -> {:error, Errors.invalid_params()}
+      {:error, %{} = error} -> {:error, error}
+    end
+  end
+
+  defp validate_search_tasks(params) do
+    allowed = @search_tasks_keys ++ @search_tasks_optional_keys
+
+    if Enum.all?(Map.keys(params), &(&1 in allowed)) and
+         Enum.all?(@search_tasks_keys, &Map.has_key?(params, &1)),
+       do: :ok,
+       else: {:error, :invalid_command}
+  end
+
+  defp decode_search_tasks(%{"query" => query} = params) when is_binary(query) do
+    with {:ok, limit} <- decode_search_limit(Map.get(params, "limit")),
+         {:ok, cursor} <- decode_search_cursor(Map.get(params, "cursor")) do
+      {:ok, query, limit, cursor}
+    end
+  end
+
+  defp decode_search_tasks(_params), do: {:error, :invalid_command}
+
+  defp decode_search_limit(nil), do: {:ok, @search_default_limit}
+
+  defp decode_search_limit(limit) when is_integer(limit) and limit >= 1 do
+    {:ok, min(limit, @search_maximum_limit)}
+  end
+
+  defp decode_search_limit(_limit), do: {:error, :invalid_command}
+
+  defp decode_search_cursor(nil), do: {:ok, nil}
+  defp decode_search_cursor(cursor) when is_binary(cursor), do: {:ok, cursor}
+  defp decode_search_cursor(_cursor), do: {:error, :invalid_command}
 
   # D-24/T-05-01: identity, scope, and client kind are read only from
   # `context` -- assigned by `KeeplingWeb.MCP.Pipeline` from the loaded
