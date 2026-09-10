@@ -90,7 +90,7 @@ defmodule KeeplingWeb.MCP.Tools do
     )
   end
 
-  def call(%{"name" => _unknown_tool}, _context), do: {:error, Errors.invalid_params()}
+  def call(%{"name" => _unknown_tool}, _context), do: {:error, Errors.unknown_tool()}
   def call(_params, _context), do: {:error, Errors.invalid_params()}
 
   # Shared shape for capture/complete/reopen: adapter-layer scope fast-fail
@@ -112,7 +112,7 @@ defmodule KeeplingWeb.MCP.Tools do
       render(status, body)
     else
       {:error, :insufficient_scope} -> {:error, Errors.insufficient_scope()}
-      {:error, :unknown_tool} -> {:error, Errors.invalid_params()}
+      {:error, :unknown_tool} -> {:error, Errors.unknown_tool()}
       {:error, :invalid_command} -> {:error, Errors.invalid_params()}
       {:error, :infrastructure_failure} -> {:error, Errors.infrastructure_failure()}
     end
@@ -216,7 +216,7 @@ defmodule KeeplingWeb.MCP.Tools do
       end
     else
       {:error, :insufficient_scope} -> {:error, Errors.insufficient_scope()}
-      {:error, :unknown_tool} -> {:error, Errors.invalid_params()}
+      {:error, :unknown_tool} -> {:error, Errors.unknown_tool()}
       {:error, :invalid_command} -> {:error, Errors.invalid_params()}
       {:error, :infrastructure_failure} -> {:error, Errors.infrastructure_failure()}
     end
@@ -239,7 +239,7 @@ defmodule KeeplingWeb.MCP.Tools do
         end
 
       {:error, :not_found} ->
-        {:error, Errors.from_problem(404, task_not_found_body())}
+        {:error, Errors.task_not_found()}
 
       {:error, :infrastructure_failure} ->
         {:error, Errors.infrastructure_failure()}
@@ -440,18 +440,6 @@ defmodule KeeplingWeb.MCP.Tools do
       "type" => "/problems/task_assignment_conflict",
       "affected_fields" => ["project_id", "tag_ids"],
       "current_revision" => current_revision
-    }
-  end
-
-  defp task_not_found_body do
-    %{
-      "code" => "task_not_found",
-      "detail" => "Refresh the view before trying again.",
-      "recovery_action" => "refresh_view",
-      "retryable" => false,
-      "status" => 404,
-      "title" => "Task not found",
-      "type" => "/problems/task_not_found"
     }
   end
 
