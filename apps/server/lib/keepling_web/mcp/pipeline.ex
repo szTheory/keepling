@@ -2,16 +2,24 @@ defmodule KeeplingWeb.MCP.Pipeline do
   @moduledoc """
   Authenticates an MCP bearer through the same device-grant credential every
   native adapter uses (D-05, `:device_grant_authenticated`), refuses a grant
-  whose `client_kind` is not `mcp`, and assigns identity and scope from the
-  loaded grant only -- never from the JSON-RPC body (D-24, T-05-01).
+  whose `client_kind` is not `mcp`, refuses a grant whose stored resource
+  audience does not equal this server's canonical MCP resource URI (D-33,
+  RFC 8707, T-05-10), and assigns identity and scope from the loaded grant
+  only -- never from the JSON-RPC body (D-24, T-05-01).
 
-  On a missing or invalid bearer, responds 401 with a `WWW-Authenticate`
-  header. Its `resource_metadata` parameter is filled in by plan 05-02.
+  On a missing, invalid, or audience-mismatched bearer, responds 401 with a
+  `WWW-Authenticate` header whose `resource_metadata` parameter is the
+  absolute URL of the RFC 9728 protected-resource metadata document, so a
+  spec-conformant client can discover the authorization server from the 401
+  alone.
   """
 
   import Plug.Conn
 
   alias Keepling.Accounts
+  alias Keepling.Accounts.SecurityAudit
+  alias Keepling.Repo
+  alias KeeplingWeb.MCP.Metadata
 
   @behaviour Plug
 
@@ -23,7 +31,8 @@ defmodule KeeplingWeb.MCP.Pipeline do
     with ["Bearer " <> credential] when credential != "" <-
            get_req_header(conn, "authorization"),
          {:ok, authenticated} <- Accounts.authenticate_device_access(credential),
-         true <- authenticated.client_kind == "mcp" do
+         true <- authenticated.client_kind == "mcp",
+         :ok <- check_audience(authenticated) do
       conn
       |> assign(:current_account_id, authenticated.account_id)
       |> assign(:current_client_kind, authenticated.client_kind)
@@ -34,14 +43,33 @@ defmodule KeeplingWeb.MCP.Pipeline do
       {:error, :infrastructure_failure} ->
         unauthorized(conn, "device_authentication_unavailable", "Device authentication unavailable")
 
+      {:error, :audience_rejected} ->
+        record_audience_rejected()
+        unauthorized(conn, "device_authentication_required", "Device authentication required")
+
       _reason ->
         unauthorized(conn, "device_authentication_required", "Device authentication required")
     end
   end
 
+  defp check_audience(%{resource: resource}) do
+    if resource == Metadata.resource_uri(), do: :ok, else: {:error, :audience_rejected}
+  end
+
+  defp record_audience_rejected do
+    SecurityAudit.record_best_effort(
+      Repo,
+      "mcp_audience_rejected",
+      DateTime.utc_now() |> DateTime.truncate(:microsecond)
+    )
+  end
+
   defp unauthorized(conn, code, title) do
     conn
-    |> put_resp_header("www-authenticate", "Bearer")
+    |> put_resp_header(
+      "www-authenticate",
+      ~s(Bearer resource_metadata="#{Metadata.protected_resource_metadata_url()}")
+    )
     |> put_resp_content_type("application/problem+json")
     |> send_resp(
       401,

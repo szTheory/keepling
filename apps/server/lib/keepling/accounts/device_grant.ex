@@ -35,6 +35,7 @@ defmodule Keepling.Accounts.DeviceGrant do
     field :client_kind, :string
     field :redirect_uri, :string
     field :scope, {:array, :string}, default: []
+    field :resource, :string
     field :authorization_code_hash, :binary, redact: true
     field :authorization_code_expires_at, :utc_datetime_usec
     field :authorization_code_consumed_at, :utc_datetime_usec
@@ -75,10 +76,10 @@ defmodule Keepling.Accounts.DeviceGrant do
                INSERT INTO device_grants (
                  id, account_id, installation_id, label, client_kind, redirect_uri,
                  authorization_code_hash, authorization_code_expires_at, state_hash,
-                 pkce_challenge, family_absolute_expires_at, generation, scope,
+                 pkce_challenge, family_absolute_expires_at, generation, scope, resource,
                  inserted_at, updated_at
                )
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 1, $12, $13, $13)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 1, $12, $13, $14, $14)
                """,
                [
                  grant_id,
@@ -93,6 +94,7 @@ defmodule Keepling.Accounts.DeviceGrant do
                  request.code_challenge,
                  family_expires_at,
                  request.scope,
+                 request.resource,
                  now
                ]
              )
@@ -193,7 +195,7 @@ defmodule Keepling.Accounts.DeviceGrant do
            SQL.query(
              Repo,
              """
-             SELECT id, account_id, generation, client_kind, label, scope
+             SELECT id, account_id, generation, client_kind, label, scope, resource
              FROM device_grants
              WHERE access_token_hash = $1
                AND access_expires_at > $2
@@ -201,7 +203,7 @@ defmodule Keepling.Accounts.DeviceGrant do
              """,
              [hash_token(access_token), now]
            ) do
-      [grant_id, account_id, generation, client_kind, label, scope] = row
+      [grant_id, account_id, generation, client_kind, label, scope, resource] = row
 
       # `account_id` is returned in its raw dumped form alongside the
       # namespace: D-49 lets a device grant MUTATE, and the command surface
@@ -218,6 +220,7 @@ defmodule Keepling.Accounts.DeviceGrant do
          grant_id: uuid_string(grant_id),
          label: label,
          namespace: namespace(config, account_id, generation),
+         resource: resource,
          scope: scope || []
        }}
     else
@@ -654,7 +657,8 @@ defmodule Keepling.Accounts.DeviceGrant do
          {:ok, code_challenge} <-
            required_binary(params, :code_challenge, :invalid_code_challenge),
          true <- valid_code_challenge?(code_challenge),
-         {:ok, scope} <- valid_scope(client_kind, Map.get(params, :scope, "")) do
+         {:ok, scope} <- valid_scope(client_kind, Map.get(params, :scope, "")),
+         {:ok, resource} <- valid_resource(client_kind, Map.get(params, :resource)) do
       {:ok,
        %{
          client_kind: client_kind,
@@ -662,6 +666,7 @@ defmodule Keepling.Accounts.DeviceGrant do
          installation_id: installation_id,
          label: label,
          redirect_uri: redirect_uri,
+         resource: resource,
          scope: scope,
          state: state
        }}
@@ -671,10 +676,23 @@ defmodule Keepling.Accounts.DeviceGrant do
     end
   end
 
+  # `:scope` and `:resource` are each OPTIONAL, independently, at this
+  # boundary -- see the module comment above `@agent_scopes` for why `:scope`
+  # cannot be required here. `:resource` follows the identical shape: only an
+  # `mcp` request ever carries it (D-33/RFC 8707), and every pre-existing
+  # electron/iphone caller (including every test that builds this request map
+  # by hand) omits it.
   defp validate_authorization_keys(keys, base_keys) do
     sorted = Enum.sort(keys)
 
-    if sorted == Enum.sort(base_keys) or sorted == Enum.sort(base_keys ++ [:scope]),
+    variants = [
+      base_keys,
+      base_keys ++ [:scope],
+      base_keys ++ [:resource],
+      base_keys ++ [:resource, :scope]
+    ]
+
+    if Enum.any?(variants, &(Enum.sort(&1) == sorted)),
       do: :ok,
       else: {:error, :invalid_authorization_request}
   end
@@ -697,6 +715,22 @@ defmodule Keepling.Accounts.DeviceGrant do
 
   defp valid_scope(_client_kind, ""), do: {:ok, []}
   defp valid_scope(_client_kind, _scope), do: {:error, :invalid_scope}
+
+  # D-33/RFC 8707: `KeeplingWeb.DeviceGrantController` already checked a real
+  # `mcp` request's `resource` equals this server's canonical MCP resource
+  # URI before this ever runs (its `@mcp_authorize_keys`/`@mcp_exchange_keys`
+  # require the key present at all); this module persists whatever was
+  # validated so `KeeplingWeb.MCP.Pipeline` can re-check it at request time
+  # without trusting request input a second time. `:resource` stays OPTIONAL
+  # at THIS boundary (not required-for-`mcp`) for the same reason `:scope`
+  # is optional above: a pre-existing direct module-level caller that
+  # bypasses the controller may omit it entirely.
+  defp valid_resource(_client_kind, nil), do: {:ok, nil}
+
+  defp valid_resource(_client_kind, resource) when is_binary(resource) and byte_size(resource) > 0,
+    do: {:ok, resource}
+
+  defp valid_resource(_client_kind, _resource), do: {:error, :invalid_resource}
 
   defp validate_exchange_request(params) do
     with :ok <-

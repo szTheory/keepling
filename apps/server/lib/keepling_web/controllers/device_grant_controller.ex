@@ -2,6 +2,7 @@ defmodule KeeplingWeb.DeviceGrantController do
   use KeeplingWeb, :controller
 
   alias Keepling.Accounts
+  alias KeeplingWeb.MCP.Metadata
 
   @authorize_keys ~w(client_id code_challenge code_challenge_method installation_id label redirect_uri response_type state)
   @exchange_keys ~w(code code_verifier grant_type redirect_uri state)
@@ -19,16 +20,20 @@ defmodule KeeplingWeb.DeviceGrantController do
          client_id when client_id in @client_ids <- params["client_id"],
          :ok <- validate_resource(params, client_id),
          {:ok, authorization} <-
-           Accounts.issue_device_authorization(account_id, %{
-             client_kind: client_id,
-             code_challenge: params["code_challenge"],
-             code_challenge_method: params["code_challenge_method"],
-             installation_id: params["installation_id"],
-             label: params["label"],
-             redirect_uri: params["redirect_uri"],
-             scope: params["scope"] || "",
-             state: params["state"]
-           }) do
+           Accounts.issue_device_authorization(
+             account_id,
+             %{
+               client_kind: client_id,
+               code_challenge: params["code_challenge"],
+               code_challenge_method: params["code_challenge_method"],
+               installation_id: params["installation_id"],
+               label: params["label"],
+               redirect_uri: params["redirect_uri"],
+               scope: params["scope"] || "",
+               state: params["state"]
+             }
+             |> maybe_put_resource(client_id, params["resource"])
+           ) do
       redirect(conn,
         external:
           append_query(params["redirect_uri"], %{
@@ -149,6 +154,14 @@ defmodule KeeplingWeb.DeviceGrantController do
     }
   end
 
+  # `resource` is only ever an `mcp` request key -- omitting it entirely for
+  # electron/iphone (rather than including it as `nil`) matters because
+  # `DeviceGrant.validate_authorization_request/1` checks the exact KEY SET
+  # it receives, and a present-but-nil key is a different shape than an
+  # absent one.
+  defp maybe_put_resource(params, "mcp", resource), do: Map.put(params, :resource, resource)
+  defp maybe_put_resource(params, _client_id, _resource), do: params
+
   defp exact_keys(params, keys) do
     if Enum.sort(Map.keys(params)) == Enum.sort(keys), do: :ok, else: {:error, :invalid_shape}
   end
@@ -171,14 +184,7 @@ defmodule KeeplingWeb.DeviceGrantController do
 
   defp validate_exchange_resource(_params), do: :ok
 
-  defp canonical_mcp_resource do
-    origin =
-      :keepling
-      |> Application.get_env(:device_grants, [])
-      |> Keyword.get(:origin, "")
-
-    origin <> "/mcp/v1"
-  end
+  defp canonical_mcp_resource, do: Metadata.resource_uri()
 
   defp append_query(uri, values) do
     parsed = URI.parse(uri)

@@ -123,6 +123,14 @@ defmodule KeeplingWeb.Router do
     post "/v1", Dispatch, :handle
   end
 
+  # RFC 9728 / RFC 8414 discovery -- unauthenticated by specification (T-05-12).
+  scope "/.well-known", KeeplingWeb.MCP do
+    pipe_through [:api]
+
+    get "/oauth-protected-resource", Metadata, :protected_resource
+    get "/oauth-authorization-server", Metadata, :authorization_server
+  end
+
   scope "/api/v1", KeeplingWeb do
     pipe_through [:api, :mutation]
 

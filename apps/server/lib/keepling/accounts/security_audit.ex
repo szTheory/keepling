@@ -27,6 +27,7 @@ defmodule Keepling.Accounts.SecurityAudit do
     device_grant_refreshed
     device_grant_replay_revoked
     device_grant_revoked
+    mcp_audience_rejected
   )
 
   @type health :: %{
