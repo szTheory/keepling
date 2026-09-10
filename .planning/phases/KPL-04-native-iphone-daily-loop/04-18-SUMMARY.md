@@ -175,7 +175,7 @@ It also removes a human touchpoint the plan had not accounted for. Apple TN3179 
 | `server-driven-device` | PASS — same four, `transport=https-publicly-trusted`, on the physical iPhone |
 | `device` | PASS, cases=26 (was BLOCKED for the entire phase) |
 | `--requirements` | 5 requirements, all mapped (was FAILED) |
-| full gate | **24 lanes, 454 executed cases, 0 failed, 0 blocked -- PASSED** (424 simulator, 26 `device`, 4 `server-driven-device`), with skipped tests no longer counted as evidence |
+| full gate | **24 lanes, 496 executed cases, 0 failed, 0 blocked -- PASSED** (463 simulator, 29 `device`, 4 `server-driven-device`), after two separate defects in how cases were counted were found and fixed |
 
 Recorded command order, identical on both destinations, read from what the proxy received rather than from client belief:
 

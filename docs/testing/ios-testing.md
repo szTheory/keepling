@@ -472,16 +472,25 @@ coverage entry D9) rather than asserted as fully automated.
 - **The full gate passes.** `node tooling/build-ios-signed.mjs && node
   tooling/verify-ios-phase.mjs` reports `lanes=24 failed=0 blocked=0`,
   with two of those lanes driven on a physical iPhone. This is the first
-  passing full gate in the phase: **454 executed cases** -- 424 across the
-  22 simulator lanes, 26 in `device` and 4 in `server-driven-device` on
-  the phone. The published counts deliberately exclude skipped
-  tests, because Xcode's own "Executed N tests" total counts them and a
-  lane must never publish as evidence a case it did not run. Correcting
-  that removed 8 cases that had been counted without running
-  (`core-unit` 130 -> 129, `storage` and `storage-gates` 55 -> 53,
-  `durability-posture` 20 -> 18, `sync-pass` 9 -> 8). The two device
-  lanes were unaffected -- their counts are unchanged at 26 and 4, so
-  nothing they published had been a skip.
+  passing full gate in the phase: **496 executed cases** -- 463 across the
+  22 simulator lanes, 29 in `device` and 4 in `server-driven-device` on
+  the phone.
+- **The published counts are what actually ran.** Two separate defects
+  made them wrong, both found late and both corrected. Xcode's
+  "Executed N tests" total COUNTS SKIPPED CASES, so a lane could publish a
+  case it never ran (`core-unit` 130 -> 129, `storage` and `storage-gates`
+  55 -> 53, `durability-posture` 20 -> 18, `sync-pass` 9 -> 8). And the
+  parser took the LAST such line, which for a lane spanning two test
+  bundles is the last BUNDLE's total rather than the run's, so four lanes
+  undercounted badly (`auth` 4 -> 19, `undo` 8 -> 18, `sync-presentation`
+  21 -> 35, `device` 26 -> 29). The second one mattered most on `device`,
+  whose discarded bundle is `DataProtectionTests` -- G7's protection-class
+  hardware evidence was contributing ZERO to the number this gate
+  published. No PASS was ever false (a failure in any bundle fails the
+  lane however the line is parsed); the numbers were. The parser now
+  anchors on the `<Bundle>.xctest` summary, which appears exactly once per
+  bundle, sums them, subtracts skips, and fails when any single bundle
+  executed nothing.
 - **Hardware lanes run first.** Lane discovery is alphabetical, which put
   `device` ninth, behind ~20 minutes of simulator lanes -- long enough for
   the phone to auto-lock before its own lane started, which cost a full
