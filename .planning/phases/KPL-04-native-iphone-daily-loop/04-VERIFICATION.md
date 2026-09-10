@@ -47,7 +47,13 @@ re_verification:
 findings:
   - id: published-case-count-undercounts-multi-bundle-lanes
     severity: warning
-    status: open
+    status: fixed
+    fixed_in: "214bcf8 -- xcodebuildSummary now anchors on the `<Bundle>.xctest` summary (exactly one per bundle), sums per-bundle totals, subtracts skips, and fails when any single bundle executed zero. Measured after the fix: auth 19, undo 18, sync-presentation 35, device 29; corrected totals 463 simulator and 496 overall. Tracked as WINDOWS.md row 65."
+    status_note: >-
+      Also corrected a claim this verification had accepted earlier: the device
+      lane's count did not stay at 26 because nothing it published had been a
+      skip, but because `DataProtectionTests` -- the bundle carrying G7's
+      protection-class hardware evidence -- was being discarded entirely.
     file: tooling/verify-ios-phase.mjs
     summary: >-
       xcodebuildSummary takes the LAST "Executed N tests" line, which for a lane
