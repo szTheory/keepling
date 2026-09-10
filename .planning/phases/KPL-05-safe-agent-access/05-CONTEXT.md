@@ -225,6 +225,14 @@ invariant for an agent's convenience.
   explicit scope-naming consent, and there is still no static API key and no client-credentials
   grant. — **Reversibility:** one-way — a registration endpoint, once reachable by a host, is
   part of the published authorization surface.
+
+  **Owner answer, 2026-09-10:** Jon uses **both Claude Code and Cowork**. Claude Code needs no
+  DCR; Cowork's connector-registration flow is **not reliably known** to this planning session,
+  but it is app-side rather than local-config-side, so it almost certainly takes the
+  Desktop-style path. **DCR stays.** The cost of keeping it is one session-gated endpoint; the
+  cost of dropping it is a host Jon actually uses failing at the connector step with an
+  unexplanatory error. 05-02's checkpoint verifies this empirically against the live host rather
+  than against this document.
 - **D-30 — Pin MCP revision `2025-06-18`, and re-check before implementation, not just now.**
   The specification moved twice during this phase's own discussion (`2025-11-25`, then a
   structurally different stateless `2026-07-28`). `2025-06-18` is mature, carries the full
