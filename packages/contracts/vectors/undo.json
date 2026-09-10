@@ -23,5 +23,9 @@
     "unarchive_organization",
     "resolve_task_conflict",
     "undo_task"
-  ]
+  ],
+  "agent_case": {
+    "command": "edit_task",
+    "note": "An agent-authored activity fact of a supported command type is recorded available and reversible exactly like a human-authored one -- Undo carries no actor-specific clause. The undo of an agent action is itself an activity fact, attributed to whoever performed the undo."
+  }
 }
