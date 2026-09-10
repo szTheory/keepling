@@ -56,6 +56,13 @@ defmodule Keepling.Accounts do
   @doc "Lists separately visible installation grants without exposing credential material."
   defdelegate list_device_grants(account_id), to: DeviceGrant, as: :list
 
+  @doc """
+  Resolves a `client_id` to `{:ok, client_kind, registered_client_id}` --
+  covering both the three pre-registered kinds and an RFC 7591-registered
+  MCP client (05-02-PLAN.md Task 3) -- or `:error` for anything else.
+  """
+  defdelegate resolve_device_client(client_id), to: DeviceGrant, as: :resolve_client
+
   @spec issue_setup_token(keyword()) ::
           {:ok, %{token: String.t(), expires_at: DateTime.t()}}
           | {:error,

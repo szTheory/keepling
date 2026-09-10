@@ -41,7 +41,11 @@ defmodule KeeplingWeb.MCP.Pipeline do
       |> assign(:current_scope, authenticated.scope)
     else
       {:error, :infrastructure_failure} ->
-        unauthorized(conn, "device_authentication_unavailable", "Device authentication unavailable")
+        unauthorized(
+          conn,
+          "device_authentication_unavailable",
+          "Device authentication unavailable"
+        )
 
       {:error, :audience_rejected} ->
         record_audience_rejected()

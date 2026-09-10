@@ -14,7 +14,7 @@ defmodule Keepling.Accounts.RateLimit do
   alias Keepling.Repo
 
   @clean_period_ms :timer.minutes(5)
-  @flows [:setup, :login, :recovery, :reauthentication]
+  @flows [:setup, :login, :recovery, :reauthentication, :mcp_registration]
 
   @default_policies %{
     setup: %{
@@ -36,20 +36,28 @@ defmodule Keepling.Accounts.RateLimit do
       account: {:timer.minutes(5), 5},
       source: {:timer.minutes(5), 25},
       max_backoff_ms: :timer.minutes(5)
+    },
+    mcp_registration: %{
+      account: {:timer.minutes(15), 5},
+      source: {:timer.minutes(15), 20},
+      max_backoff_ms: :timer.minutes(15)
     }
   }
 
   @spec clean_period_ms() :: pos_integer()
   def clean_period_ms, do: @clean_period_ms
 
-  @spec admit(:setup | :login | :recovery | :reauthentication, :inet.ip_address(), keyword()) ::
-          :ok | {:error, :rate_limited, pos_integer()}
+  @spec admit(
+          :setup | :login | :recovery | :reauthentication | :mcp_registration,
+          :inet.ip_address(),
+          keyword()
+        ) :: :ok | {:error, :rate_limited, pos_integer()}
   def admit(flow, source, opts \\ []) when flow in @flows do
     admit(flow, :closed_personal_account, source, opts)
   end
 
   @spec admit(
-          :setup | :login | :recovery | :reauthentication,
+          :setup | :login | :recovery | :reauthentication | :mcp_registration,
           binary() | atom(),
           :inet.ip_address(),
           keyword()
@@ -71,7 +79,7 @@ defmodule Keepling.Accounts.RateLimit do
   end
 
   @spec emit_decision(
-          :setup | :login | :recovery | :reauthentication,
+          :setup | :login | :recovery | :reauthentication | :mcp_registration,
           :accepted | :invalid | :limited
         ) :: :ok
   def emit_decision(flow, outcome)

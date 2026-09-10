@@ -57,8 +57,10 @@ defmodule KeeplingWeb.MCP.MetadataTest do
 
     assert response["resource"] == @mcp_resource
     assert response["authorization_servers"] == ["https://server.keepling.invalid"]
+
     assert Enum.sort(response["scopes_supported"]) ==
              Enum.sort(["tasks.read", "tasks.write", "tasks.bulk"])
+
     assert response["bearer_methods_supported"] == ["header"]
   end
 
@@ -87,17 +89,25 @@ defmodule KeeplingWeb.MCP.MetadataTest do
 
   test "both discovery documents are reachable without authentication", %{conn: conn} do
     assert conn |> get("/.well-known/oauth-protected-resource") |> then(& &1.status) == 200
-    assert build_conn() |> get("/.well-known/oauth-authorization-server") |> then(& &1.status) == 200
+
+    assert build_conn() |> get("/.well-known/oauth-authorization-server") |> then(& &1.status) ==
+             200
   end
 
   test "an unauthenticated POST /mcp/v1 returns 401 with a WWW-Authenticate resource_metadata challenge",
        %{conn: conn} do
     response =
       conn
-      |> post("/mcp/v1", %{"jsonrpc" => "2.0", "id" => 1, "method" => "initialize", "params" => %{}})
+      |> post("/mcp/v1", %{
+        "jsonrpc" => "2.0",
+        "id" => 1,
+        "method" => "initialize",
+        "params" => %{}
+      })
 
     assert response.status == 401
     [challenge] = get_resp_header(response, "www-authenticate")
+
     assert challenge ==
              ~s(Bearer resource_metadata="https://server.keepling.invalid/.well-known/oauth-protected-resource")
   end
@@ -124,7 +134,12 @@ defmodule KeeplingWeb.MCP.MetadataTest do
     response =
       build_conn()
       |> bearer(credential)
-      |> post("/mcp/v1", %{"jsonrpc" => "2.0", "id" => 2, "method" => "initialize", "params" => %{}})
+      |> post("/mcp/v1", %{
+        "jsonrpc" => "2.0",
+        "id" => 2,
+        "method" => "initialize",
+        "params" => %{}
+      })
 
     assert response.status == 401
     [challenge] = get_resp_header(response, "www-authenticate")
@@ -148,7 +163,12 @@ defmodule KeeplingWeb.MCP.MetadataTest do
     response =
       build_conn()
       |> bearer(credential)
-      |> post("/mcp/v1", %{"jsonrpc" => "2.0", "id" => 3, "method" => "initialize", "params" => %{}})
+      |> post("/mcp/v1", %{
+        "jsonrpc" => "2.0",
+        "id" => 3,
+        "method" => "initialize",
+        "params" => %{}
+      })
       |> json_response(200)
 
     assert response["result"]["protocolVersion"] == "2025-06-18"

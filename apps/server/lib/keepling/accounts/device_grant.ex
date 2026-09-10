@@ -643,13 +643,15 @@ defmodule Keepling.Accounts.DeviceGrant do
       :state
     ]
 
+    registered_client_id = Map.get(params, :registered_client_id)
+
     with :ok <- validate_authorization_keys(Map.keys(params), allowed_keys),
          {:ok, client_kind} <- required_binary(params, :client_kind, :invalid_client_kind),
          true <- client_kind in @client_kinds,
          {:ok, installation_id} <- required_bounded_binary(params, :installation_id, 200),
          {:ok, label} <- required_bounded_binary(params, :label, 200),
          {:ok, redirect_uri} <- required_binary(params, :redirect_uri, :invalid_redirect_uri),
-         true <- allowed_redirect?(client_kind, redirect_uri),
+         true <- validate_redirect(client_kind, redirect_uri, registered_client_id),
          {:ok, state} <- required_binary(params, :state, :invalid_state),
          true <- unpredictable_state?(state),
          {:ok, method} <- required_binary(params, :code_challenge_method, :invalid_code_challenge),
@@ -676,23 +678,24 @@ defmodule Keepling.Accounts.DeviceGrant do
     end
   end
 
-  # `:scope` and `:resource` are each OPTIONAL, independently, at this
-  # boundary -- see the module comment above `@agent_scopes` for why `:scope`
-  # cannot be required here. `:resource` follows the identical shape: only an
-  # `mcp` request ever carries it (D-33/RFC 8707), and every pre-existing
-  # electron/iphone caller (including every test that builds this request map
-  # by hand) omits it.
+  # `:scope`, `:resource`, and `:registered_client_id` are each OPTIONAL,
+  # independently, at this boundary -- see the module comment above
+  # `@agent_scopes` for why `:scope` cannot be required here. `:resource`
+  # follows the identical shape: only an `mcp` request ever carries it
+  # (D-33/RFC 8707), and every pre-existing electron/iphone caller (including
+  # every test that builds this request map by hand) omits it.
+  # `:registered_client_id` is set by `KeeplingWeb.DeviceGrantController`
+  # only when `params["client_id"]` resolved to an RFC 7591-registered
+  # client (05-02-PLAN.md Task 3) -- every pre-registered electron/iphone/
+  # literal-`mcp` caller omits it too.
+  @optional_authorization_keys [:scope, :resource, :registered_client_id]
+
   defp validate_authorization_keys(keys, base_keys) do
-    sorted = Enum.sort(keys)
+    key_set = MapSet.new(keys)
+    base_set = MapSet.new(base_keys)
+    allowed_set = MapSet.new(base_keys ++ @optional_authorization_keys)
 
-    variants = [
-      base_keys,
-      base_keys ++ [:scope],
-      base_keys ++ [:resource],
-      base_keys ++ [:resource, :scope]
-    ]
-
-    if Enum.any?(variants, &(Enum.sort(&1) == sorted)),
+    if MapSet.subset?(base_set, key_set) and MapSet.subset?(key_set, allowed_set),
       do: :ok,
       else: {:error, :invalid_authorization_request}
   end
@@ -727,8 +730,9 @@ defmodule Keepling.Accounts.DeviceGrant do
   # bypasses the controller may omit it entirely.
   defp valid_resource(_client_kind, nil), do: {:ok, nil}
 
-  defp valid_resource(_client_kind, resource) when is_binary(resource) and byte_size(resource) > 0,
-    do: {:ok, resource}
+  defp valid_resource(_client_kind, resource)
+       when is_binary(resource) and byte_size(resource) > 0,
+       do: {:ok, resource}
 
   defp valid_resource(_client_kind, _resource), do: {:error, :invalid_resource}
 
@@ -756,7 +760,11 @@ defmodule Keepling.Accounts.DeviceGrant do
       Map.get(params, :client_kind) not in @client_kinds ->
         {:error, :invalid_client_kind}
 
-      not allowed_redirect?(Map.get(params, :client_kind), Map.get(params, :redirect_uri)) ->
+      not validate_redirect(
+        Map.get(params, :client_kind),
+        Map.get(params, :redirect_uri),
+        Map.get(params, :registered_client_id)
+      ) ->
         {:error, :invalid_redirect_uri}
 
       not unpredictable_state?(Map.get(params, :state)) ->
@@ -800,17 +808,63 @@ defmodule Keepling.Accounts.DeviceGrant do
     end
   end
 
-  defp allowed_redirect?(client_kind, redirect_uri)
-       when client_kind in @client_kinds and is_binary(redirect_uri) do
-    redirects =
-      :keepling
-      |> Application.get_env(:device_grants, [])
-      |> Keyword.get(:redirect_uris, %{})
-
-    redirect_uri in Map.get(redirects, client_kind, [])
+  # 05-02-PLAN.md Task 3: ONE function validates a redirect URI for both a
+  # pre-registered client (electron, iphone, the literal `mcp` client_id) and
+  # an RFC 7591-registered client -- they differ only in WHERE the allowed
+  # set comes from, never in how membership is checked. Configured and
+  # registered redirects never get two independent code paths.
+  defp validate_redirect(client_kind, redirect_uri, registered_client_id) do
+    is_binary(redirect_uri) and
+      redirect_uri in allowed_redirect_uris(client_kind, registered_client_id)
   end
 
-  defp allowed_redirect?(_client_kind, _redirect_uri), do: false
+  defp allowed_redirect_uris(_client_kind, registered_client_id)
+       when is_binary(registered_client_id) do
+    registered_redirect_uris(registered_client_id)
+  end
+
+  defp allowed_redirect_uris(client_kind, nil) when client_kind in @client_kinds do
+    :keepling
+    |> Application.get_env(:device_grants, [])
+    |> Keyword.get(:redirect_uris, %{})
+    |> Map.get(client_kind, [])
+  end
+
+  defp allowed_redirect_uris(_client_kind, _registered_client_id), do: []
+
+  defp registered_redirect_uris(client_id) do
+    case SQL.query(
+           Repo,
+           """
+           SELECT redirect_uris FROM mcp_client_registrations
+           WHERE client_id = $1 AND revoked_at IS NULL
+           """,
+           [client_id]
+         ) do
+      {:ok, %{rows: [[uris]]}} -> uris
+      _ -> []
+    end
+  end
+
+  @doc """
+  Resolves an incoming `client_id` to `{:ok, client_kind, registered_client_id}`.
+  A pre-registered kind (`electron`, `iphone`, the literal `mcp`) resolves to
+  itself with no registered identity. Any other value is looked up against
+  RFC 7591-registered, non-revoked clients (05-02-PLAN.md Task 3) -- a match
+  always resolves to `client_kind: "mcp"`, since registration only ever
+  serves MCP hosts. An unknown identifier resolves to `:error`.
+  """
+  @spec resolve_client(term()) :: {:ok, String.t(), String.t() | nil} | :error
+  def resolve_client(client_id) when client_id in @client_kinds, do: {:ok, client_id, nil}
+
+  def resolve_client(client_id) when is_binary(client_id) do
+    case registered_redirect_uris(client_id) do
+      [] -> :error
+      _uris -> {:ok, "mcp", client_id}
+    end
+  end
+
+  def resolve_client(_client_id), do: :error
 
   defp unpredictable_state?(state) when is_binary(state) do
     case Base.url_decode64(state, padding: false) do

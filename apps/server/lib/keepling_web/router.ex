@@ -108,6 +108,15 @@ defmodule KeeplingWeb.Router do
     get "/authorize", DeviceGrantController, :authorize
   end
 
+  # D-29: RFC 7591 Dynamic Client Registration, scoped behind the owner's
+  # authenticated browser session -- never reachable by an unauthenticated
+  # caller (T-05-08/T-05-09).
+  scope "/oauth", KeeplingWeb.MCP do
+    pipe_through [:api, :authenticated, :mutation]
+
+    post "/register", Registration, :create
+  end
+
   scope "/api/v1", KeeplingWeb do
     pipe_through [:api, :device_grant_authenticated]
 
@@ -190,7 +199,6 @@ defmodule KeeplingWeb.Router do
     post "/commands/assign-task-organizations",
          CommandController,
          :assign_task_organizations
-
   end
 
   # Session management is NOT part of the shared command surface. A device

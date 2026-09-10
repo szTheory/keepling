@@ -9,21 +9,20 @@ defmodule KeeplingWeb.DeviceGrantController do
   @mcp_authorize_keys @authorize_keys ++ ~w(resource scope)
   @mcp_exchange_keys @exchange_keys ++ ~w(resource)
   @refresh_keys ~w(grant_type refresh_token)
-  @client_ids ~w(electron iphone mcp)
   @access_ttl_seconds 15 * 60
 
   def authorize(%{assigns: %{current_account_id: account_id}} = conn, params) do
-    authorize_keys = if params["client_id"] == "mcp", do: @mcp_authorize_keys, else: @authorize_keys
-
-    with :ok <- exact_keys(params, authorize_keys),
+    with {:ok, client_kind, registered_client_id} <-
+           Accounts.resolve_device_client(params["client_id"]),
+         authorize_keys = if(client_kind == "mcp", do: @mcp_authorize_keys, else: @authorize_keys),
+         :ok <- exact_keys(params, authorize_keys),
          "code" <- params["response_type"],
-         client_id when client_id in @client_ids <- params["client_id"],
-         :ok <- validate_resource(params, client_id),
+         :ok <- validate_resource(params, client_kind),
          {:ok, authorization} <-
            Accounts.issue_device_authorization(
              account_id,
              %{
-               client_kind: client_id,
+               client_kind: client_kind,
                code_challenge: params["code_challenge"],
                code_challenge_method: params["code_challenge_method"],
                installation_id: params["installation_id"],
@@ -32,7 +31,8 @@ defmodule KeeplingWeb.DeviceGrantController do
                scope: params["scope"] || "",
                state: params["state"]
              }
-             |> maybe_put_resource(client_id, params["resource"])
+             |> maybe_put_resource(client_kind, params["resource"])
+             |> maybe_put_registered_client_id(registered_client_id)
            ) do
       redirect(conn,
         external:
@@ -54,7 +54,8 @@ defmodule KeeplingWeb.DeviceGrantController do
   end
 
   def token(conn, %{"grant_type" => "authorization_code"} = params) do
-    exchange_keys = if Map.has_key?(params, "resource"), do: @mcp_exchange_keys, else: @exchange_keys
+    exchange_keys =
+      if Map.has_key?(params, "resource"), do: @mcp_exchange_keys, else: @exchange_keys
 
     with :ok <- exact_keys(params, exchange_keys),
          :ok <- validate_exchange_resource(params),
@@ -161,6 +162,16 @@ defmodule KeeplingWeb.DeviceGrantController do
   # absent one.
   defp maybe_put_resource(params, "mcp", resource), do: Map.put(params, :resource, resource)
   defp maybe_put_resource(params, _client_id, _resource), do: params
+
+  # Only present when `params["client_id"]` resolved to an RFC 7591-
+  # registered client (05-02-PLAN.md Task 3); every pre-registered kind
+  # (electron, iphone, the literal `mcp` client_id) omits it entirely.
+  defp maybe_put_registered_client_id(params, nil), do: params
+
+  defp maybe_put_registered_client_id(params, registered_client_id)
+       when is_binary(registered_client_id) do
+    Map.put(params, :registered_client_id, registered_client_id)
+  end
 
   defp exact_keys(params, keys) do
     if Enum.sort(Map.keys(params)) == Enum.sort(keys), do: :ok, else: {:error, :invalid_shape}
