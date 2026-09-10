@@ -333,7 +333,7 @@ Plans:
 4. User-visible history shows typed actions, affected identities/revisions, result, actor, and recovery without exposing private chain of thought.
 5. Deterministic, protocol, simulated-client, representative-model, and adversarial suites score final state and forbidden side effects.
 
-**Plans:** 4/12 plans executed in 7 waves
+**Plans:** 5/12 plans executed in 7 waves
 
 Plans:
 
@@ -346,7 +346,7 @@ Plans:
 - [ ] 05-07-PLAN.md — Preview and commit: bound tokens, atomic commits, zero partial writes
 - [x] 05-08-PLAN.md — Agent actor in the one history, no storable model reasoning, and the agent undo handle
 - [ ] 05-09-PLAN.md — Agent grant management and agent-aware activity in the existing web app
-- [ ] 05-10-PLAN.md — The anti-vacuity phase gate and a test of the harness itself
+- [x] 05-10-PLAN.md — The anti-vacuity phase gate and a test of the harness itself
 - [ ] 05-11-PLAN.md — Simulated-client, adversarial, and representative-model lanes scored on final state
 - [ ] 05-12-PLAN.md — The five-adapter cross-adapter proof and the restoration of SRV-02
 
