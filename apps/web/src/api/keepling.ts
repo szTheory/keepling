@@ -41,6 +41,33 @@ type SetupRequest = components['schemas']['SetupRequest']
 type SetupResponse = components['schemas']['SetupResponse']
 type TrackedSession = components['schemas']['TrackedSession']
 type VersionedAuthRequest = components['schemas']['VersionedAuthRequest']
+type DeviceGrantSummary = components['schemas']['DeviceGrantSummary']
+type DeviceGrantRevocationResponse = components['schemas']['DeviceGrantRevocationResponse']
+
+// The wire `DeviceGrantSummary` schema (packages/contracts/openapi/keepling.yaml)
+// closes `client_kind` to `electron | iphone` (`NativeClientIdentity`) and does
+// not yet publish `scope`, `last_used_at`, or `authorized_at` -- even though the
+// server's own `device_grants.client_kind` CHECK constraint has admitted `mcp`
+// since 05-01, and `GET /api/v1/device-grants` (KeeplingWeb.DeviceGrantController)
+// genuinely returns `client_kind: "mcp"` rows at runtime. The generated TS type
+// is stale relative to the runtime contract; `client_kind` is widened to `string`
+// here (rather than trusting the closed union) so a real "mcp" value type-checks,
+// and `scope`/`last_used_at`/`authorized_at` are read DEFENSIVELY (optional,
+// absent from every response today) rather than fabricated. The UI is correct
+// today (renders "no scopes" / no timestamp) and picks up real values
+// automatically once a follow-up server-side plan closes both gaps in
+// `packages/contracts/openapi/keepling.yaml` and
+// `KeeplingWeb.DeviceGrantController.grant_response/1`. See 05-09-SUMMARY.md.
+type WireAgentGrantSummary = Omit<DeviceGrantSummary, 'client_kind'> & {
+  authorized_at?: string
+  client_kind: string
+  last_used_at?: string | null
+  scope?: readonly string[]
+}
+
+type WireAgentGrantsResponse = {
+  device_grants: readonly WireAgentGrantSummary[]
+}
 
 type BrowserTask = {
   capturedAt: string
@@ -362,6 +389,17 @@ type BrowserSession = {
   label: string
 }
 
+type AgentGrant = {
+  authorizedAt: string | null
+  clientKind: 'mcp'
+  id: string
+  installationId: string
+  label: string
+  lastUsedAt: string | null
+  revoked: boolean
+  scope: readonly string[]
+}
+
 class KeeplingApiError extends Error {
   readonly problem: Problem
   readonly conflict: TaskConflict | null
@@ -541,6 +579,41 @@ const revokeSession = async (
 ): Promise<SessionMutationResponse> =>
   jsonRequest<undefined, SessionMutationResponse>(
     `/api/v1/sessions/${encodeURIComponent(sessionId)}`,
+    'DELETE',
+    undefined,
+    csrfToken,
+  )
+
+const mapAgentGrant = (grant: WireAgentGrantSummary): AgentGrant => ({
+  authorizedAt: grant.authorized_at ?? null,
+  clientKind: 'mcp',
+  id: grant.id,
+  installationId: grant.installation_id,
+  label: grant.label,
+  lastUsedAt: grant.last_used_at ?? null,
+  revoked: grant.revoked,
+  scope: grant.scope ?? [],
+})
+
+const listDeviceGrants = async (): Promise<readonly AgentGrant[]> => {
+  const response = await readJson<WireAgentGrantsResponse>(
+    await fetch('/api/v1/device-grants', {
+      credentials: 'same-origin',
+      headers: { accept: 'application/json' },
+    }),
+  )
+
+  return response.device_grants
+    .filter((grant) => grant.client_kind === 'mcp')
+    .map(mapAgentGrant)
+}
+
+const revokeDeviceGrant = async (
+  installationId: string,
+  csrfToken: string,
+): Promise<DeviceGrantRevocationResponse> =>
+  jsonRequest<undefined, DeviceGrantRevocationResponse>(
+    `/api/v1/device-grants/${encodeURIComponent(installationId)}`,
     'DELETE',
     undefined,
     csrfToken,
@@ -1367,6 +1440,7 @@ export {
   getTaskView,
   getTodayMoveMutation,
   editTask,
+  listDeviceGrants,
   listSessions,
   login,
   logout,
@@ -1377,6 +1451,7 @@ export {
   reopenTask,
   restoreTask,
   returnToInbox,
+  revokeDeviceGrant,
   revokeSession,
   updateSession,
   unarchiveOrganization,
@@ -1400,6 +1475,7 @@ export {
   submitPreparedRestoreTask,
   type AssignTaskOrganizationsSubmission,
   type ActivityChange,
+  type AgentGrant,
   type AuthenticationTransition,
   type BrowserOrganization,
   type BrowserSession,
