@@ -53,7 +53,12 @@ defmodule KeeplingWeb.MCP.TracerCaptureTest do
     response =
       build_conn()
       |> bearer(credential)
-      |> post("/mcp/v1", %{"jsonrpc" => "2.0", "id" => 1, "method" => "initialize", "params" => %{}})
+      |> post("/mcp/v1", %{
+        "jsonrpc" => "2.0",
+        "id" => 1,
+        "method" => "initialize",
+        "params" => %{}
+      })
       |> json_response(200)
 
     assert response["jsonrpc"] == "2.0"
@@ -71,13 +76,27 @@ defmodule KeeplingWeb.MCP.TracerCaptureTest do
     response =
       build_conn()
       |> bearer(credential)
-      |> post("/mcp/v1", %{"jsonrpc" => "2.0", "id" => 2, "method" => "tools/list", "params" => %{}})
+      |> post("/mcp/v1", %{
+        "jsonrpc" => "2.0",
+        "id" => 2,
+        "method" => "tools/list",
+        "params" => %{}
+      })
       |> json_response(200)
 
-    [tool] = response["result"]["tools"]
-    assert tool["name"] == "keepling.capture_task"
+    # 05-05-PLAN.md Task 2 added update_task/complete_task/reopen_task
+    # alongside capture_task -- this tracer test now asserts capture_task's
+    # own closed schema is still present and correct, not that it is the
+    # only tool listed.
+    tool = Enum.find(response["result"]["tools"], &(&1["name"] == "keepling.capture_task"))
     assert tool["inputSchema"]["additionalProperties"] == false
-    assert Enum.sort(tool["inputSchema"]["required"]) == ["mutation_id", "task_id", "title", "version"]
+
+    assert Enum.sort(tool["inputSchema"]["required"]) == [
+             "mutation_id",
+             "task_id",
+             "title",
+             "version"
+           ]
   end
 
   test "tools/call captures exactly one task and is idempotent on mutation_id replay", %{
@@ -191,7 +210,12 @@ defmodule KeeplingWeb.MCP.TracerCaptureTest do
   test "a request with no bearer returns 401 with a WWW-Authenticate header" do
     response =
       build_conn()
-      |> post("/mcp/v1", %{"jsonrpc" => "2.0", "id" => 5, "method" => "initialize", "params" => %{}})
+      |> post("/mcp/v1", %{
+        "jsonrpc" => "2.0",
+        "id" => 5,
+        "method" => "initialize",
+        "params" => %{}
+      })
 
     assert response.status == 401
     assert get_resp_header(response, "www-authenticate") != []
@@ -203,7 +227,12 @@ defmodule KeeplingWeb.MCP.TracerCaptureTest do
     response =
       build_conn()
       |> bearer(credential)
-      |> post("/mcp/v1", %{"jsonrpc" => "2.0", "id" => 6, "method" => "tools/unsubscribe", "params" => %{}})
+      |> post("/mcp/v1", %{
+        "jsonrpc" => "2.0",
+        "id" => 6,
+        "method" => "tools/unsubscribe",
+        "params" => %{}
+      })
       |> json_response(200)
 
     assert response["error"]["code"] == -32_601

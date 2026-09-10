@@ -75,6 +75,32 @@ defmodule KeeplingWeb.MCP.Errors do
     })
   end
 
+  # 05-05-PLAN.md Task 2: `Keepling.Adapters.Postgres.CommandStore.execute/3`
+  # returns EVERY domain refusal (task not found, a stale-expected-revision
+  # conflict, invalid task details, ...) as `{:ok, %{status:, body:}}` --
+  # the identical shape the HTTP command endpoints render as an
+  # `application/problem+json` body -- rather than an `{:error, reason}`
+  # tuple. `from_problem/2` maps that same body into the JSON-RPC error
+  # envelope so an MCP client sees the same code/title/detail/retryable/
+  # recovery_action, plus any structured extension fields (affected_fields,
+  # current_revision) a model needs to correct itself (D-14), that the HTTP
+  # path returns for the identical setup. `status`/`type` are HTTP-transport
+  # fields with no JSON-RPC equivalent and are dropped.
+  @spec from_problem(integer(), map()) :: map()
+  def from_problem(status, %{"code" => code} = body) do
+    data =
+      body
+      |> Map.drop(["code", "status", "type"])
+      |> Map.new(fn {key, value} -> {String.to_atom(key), value} end)
+      |> Map.put(:keepling_code, code)
+
+    if status >= 500 do
+      envelope(-32_000, "Server error", data)
+    else
+      envelope(-32_602, "Invalid params", data)
+    end
+  end
+
   defp envelope(code, message, data) do
     %{code: code, message: message, data: compact(data)}
   end
