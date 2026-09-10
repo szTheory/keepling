@@ -1,23 +1,34 @@
 import { useEffect, useRef, useState } from 'react'
 
 import {
+  getMutation,
   getTaskActivity,
+  undoTask,
   KeeplingApiError,
   type ActivityChange,
   type TaskActivity,
   type TaskActivityPage,
   type TaskOrganizationReference,
+  type UndoAvailability,
 } from '@/api/keepling'
 import { Button } from '@/components/ui/button'
 import type { InterruptedIntent } from '@/features/auth/Reauthenticate'
 
 type ActivityListProps = {
+  csrfToken?: string
   onAuthenticationRequired?: (
     intent: InterruptedIntent,
     resume: (csrfToken: string) => Promise<void>,
   ) => void
   taskId: string
 }
+
+type ActivityUndoState =
+  | { kind: 'idle' }
+  | { kind: 'checking' }
+  | { kind: 'submitting' }
+  | { kind: 'uncertain' }
+  | { copy: string; kind: 'settled' }
 
 type ViewState =
   | 'earlier-error'
@@ -154,12 +165,148 @@ const copyText = (value: string) => {
   if (navigator.clipboard) void navigator.clipboard.writeText(value)
 }
 
+const AgentActorIcon = () => (
+  <svg
+    aria-hidden="true"
+    className="size-4"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    viewBox="0 0 24 24"
+  >
+    <rect height="12" rx="2" width="16" x="4" y="8" />
+    <path d="M12 8V4M9 12h.01M15 12h.01" strokeLinecap="round" />
+  </svg>
+)
+
+const ActorLabel = ({ actor }: { actor: TaskActivity['actor'] }) => (
+  <span className="inline-flex items-center gap-2">
+    {actor.type === 'agent' ? <AgentActorIcon /> : null}
+    <span className="font-semibold">{actor.label}</span>
+    {actor.type === 'agent' ? (
+      <span
+        aria-label="AI agent"
+        className="rounded-full border border-border px-2 py-1 text-sm font-semibold"
+      >
+        AI agent
+      </span>
+    ) : null}
+  </span>
+)
+
+const ActivityUndoControl = ({
+  activity,
+  csrfToken,
+  onAuthenticationRequired,
+  onUndone,
+}: {
+  activity: TaskActivity
+  csrfToken?: string
+  onAuthenticationRequired?: ActivityListProps['onAuthenticationRequired']
+  onUndone: () => void
+}) => {
+  const [state, setState] = useState<ActivityUndoState>({ kind: 'idle' })
+
+  if (activity.recoveryState !== 'available') {
+    return (
+      <p className="text-sm text-muted-foreground">
+        {activity.recoveryState === 'expired'
+          ? 'This action can no longer be undone: the undo window expired.'
+          : activity.recoveryState === 'undone'
+            ? 'This action was already undone.'
+            : activity.recoveryState === 'stale'
+              ? 'This action can no longer be undone: a later change replaced it.'
+              : 'This action cannot be undone.'}
+      </p>
+    )
+  }
+
+  const submit = async (activeCsrfToken?: string) => {
+    if (!activeCsrfToken) return
+    setState({ kind: 'checking' })
+    let availability: UndoAvailability
+    try {
+      const acknowledgement = await getMutation(activity.mutationId)
+      if (!acknowledgement.undo) {
+        setState({ copy: 'This action can no longer be undone.', kind: 'settled' })
+        return
+      }
+      availability = acknowledgement.undo
+    } catch {
+      setState({ kind: 'uncertain' })
+      return
+    }
+
+    setState({ kind: 'submitting' })
+    try {
+      const result = await undoTask(
+        { availability, mutationId: crypto.randomUUID() },
+        activeCsrfToken,
+      )
+      if (result.kind === 'acknowledged') {
+        setState({ copy: 'Change undone.', kind: 'settled' })
+        onUndone()
+      } else {
+        setState({ copy: 'This action can no longer be undone.', kind: 'settled' })
+      }
+    } catch (error) {
+      const authentication =
+        error instanceof KeeplingApiError && error.problem.code === 'authentication_required'
+          ? 'sign_in'
+          : error instanceof KeeplingApiError &&
+              error.problem.code === 'recent_authentication_required'
+            ? 'reauthenticate'
+            : null
+      if (authentication && onAuthenticationRequired) {
+        onAuthenticationRequired(
+          { authentication, kind: 'action', mutationId: `activity-undo:${activity.activityId}` },
+          async (nextCsrfToken) => submit(nextCsrfToken),
+        )
+        return
+      }
+      setState({ kind: 'uncertain' })
+    }
+  }
+
+  if (state.kind === 'settled') return <p className="text-sm">{state.copy}</p>
+
+  return (
+    <div className="flex items-center gap-2">
+      <Button
+        aria-label={`Undo: ${actionCopy[activity.type]}`}
+        disabled={state.kind === 'checking' || state.kind === 'submitting'}
+        onClick={() => void submit(csrfToken)}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        {state.kind === 'checking'
+          ? 'Checking…'
+          : state.kind === 'submitting'
+            ? 'Undoing…'
+            : 'Undo'}
+      </Button>
+      {state.kind === 'uncertain' ? (
+        <span className="text-sm text-muted-foreground">
+          Couldn’t confirm whether that undid. Try again.
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 const ActivityItem = ({
   accountTimezone,
   activity,
+  csrfToken,
+  onAuthenticationRequired,
+  onUndone,
 }: {
   accountTimezone: string
   activity: TaskActivity
+  csrfToken?: string
+  onAuthenticationRequired?: ActivityListProps['onAuthenticationRequired']
+  onUndone: () => void
 }) => (
   <li
     className="space-y-4 border-b border-border py-4 [content-visibility:auto] [contain-intrinsic-size:auto_180px]"
@@ -168,8 +315,7 @@ const ActivityItem = ({
   >
     <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
       <p>
-        <span className="font-semibold">{activity.actor.label}</span>{' '}
-        {actionCopy[activity.type]}.
+        <ActorLabel actor={activity.actor} /> {actionCopy[activity.type]}.
       </p>
       <time
         className="text-sm tabular-nums text-muted-foreground"
@@ -183,6 +329,13 @@ const ActivityItem = ({
       <span className="font-semibold">Accepted</span>
       <span className="text-muted-foreground"> · {recoveryCopy[activity.recoveryState]}</span>
     </p>
+
+    <ActivityUndoControl
+      activity={activity}
+      csrfToken={csrfToken}
+      onAuthenticationRequired={onAuthenticationRequired}
+      onUndone={onUndone}
+    />
 
     <ChangeDetails changes={activity.changes} />
 
@@ -245,7 +398,7 @@ const authenticationFor = (error: unknown) => {
   return null
 }
 
-function ActivityListForTask({ onAuthenticationRequired, taskId }: ActivityListProps) {
+function ActivityListForTask({ csrfToken, onAuthenticationRequired, taskId }: ActivityListProps) {
   const [page, setPage] = useState<TaskActivityPage | null>(null)
   const [viewState, setViewState] = useState<ViewState>('loading')
   const appendedFocusId = useRef<number | null>(null)
@@ -422,7 +575,10 @@ function ActivityListForTask({ onAuthenticationRequired, taskId }: ActivityListP
             <ActivityItem
               accountTimezone={page.accountTimezone}
               activity={activity}
+              csrfToken={csrfToken}
               key={activity.activityId}
+              onAuthenticationRequired={onAuthenticationRequired}
+              onUndone={() => void refresh()}
             />
           ))}
         </ul>
@@ -467,9 +623,10 @@ function ActivityListForTask({ onAuthenticationRequired, taskId }: ActivityListP
   )
 }
 
-function ActivityList({ onAuthenticationRequired, taskId }: ActivityListProps) {
+function ActivityList({ csrfToken, onAuthenticationRequired, taskId }: ActivityListProps) {
   return (
     <ActivityListForTask
+      csrfToken={csrfToken}
       key={taskId}
       onAuthenticationRequired={onAuthenticationRequired}
       taskId={taskId}

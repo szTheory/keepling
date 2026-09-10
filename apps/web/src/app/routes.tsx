@@ -7,6 +7,7 @@ import Reauthenticate, { type InterruptedIntent } from '@/features/auth/Reauthen
 import RecoveryReset from '@/features/auth/RecoveryReset'
 import SetupForm from '@/features/auth/SetupForm'
 import ActivityList from '@/features/activity/ActivityList'
+import AgentGrantList from '@/features/agents/AgentGrantList'
 import OrganizationFields, {
   OrganizationManager,
 } from '@/features/organizations/OrganizationFields'
@@ -360,6 +361,26 @@ function AppRoutes({
     )
   }
 
+  if (pathname === '/settings/agents' && csrfToken) {
+    return withInterruption(
+      renderAuthenticatedContent({
+        mainContent: (
+          <section aria-labelledby="agents-heading" className="mx-auto max-w-3xl p-6 lg:px-8">
+            <h1 className="text-[1.75rem] font-semibold" id="agents-heading">
+              AI agents
+            </h1>
+            <div className="mt-6">
+              <AgentGrantList
+                csrfToken={csrfToken}
+                onAuthenticationRequired={scopedAuthenticationRequired}
+              />
+            </div>
+          </section>
+        ),
+      }),
+    )
+  }
+
   const assignmentMatch = pathname.match(/^\/tasks\/([^/]+)\/organizations$/)
   const assignmentTaskId = decodeRoutePart(assignmentMatch?.[1])
   if (assignmentTaskId && csrfToken) {
@@ -394,6 +415,7 @@ function AppRoutes({
             taskId={taskId}
           />
           <ActivityList
+            csrfToken={csrfToken}
             onAuthenticationRequired={scopedAuthenticationRequired}
             taskId={taskId}
           />
