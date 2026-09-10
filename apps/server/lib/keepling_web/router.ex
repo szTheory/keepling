@@ -172,6 +172,17 @@ defmodule KeeplingWeb.Router do
     pipe_through [:api, :client_authenticated]
 
     get "/mutations/:mutation_id", CommandController, :mutation
+    get "/projects", ProjectController, :index
+    get "/projects/:organization_id/tasks", ProjectController, :tasks
+  end
+
+  # D-09: the one genuinely missing read capability, shared by every
+  # `:client_authenticated` credential class (browser session, Electron,
+  # iPhone, and `mcp` device grants alike) -- not an MCP-only code path.
+  scope "/", KeeplingWeb do
+    pipe_through [:api, :client_authenticated]
+
+    get "/api/v1/search", SearchController, :index
   end
 
   scope "/api/v1", KeeplingWeb do
