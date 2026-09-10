@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 05
 current_phase_name: Safe Agent Access
 status: executing
-stopped_at: Completed 05-01-PLAN.md (MCP tracer slice)
-last_updated: "2026-09-10T20:51:17.713Z"
+stopped_at: Completed 05-02-PLAN.md (MCP discovery/audience/DCR)
+last_updated: "2026-09-10T21:20:02.646Z"
 last_activity: 2026-09-10
 last_activity_desc: Phase KPL-05 execution started
-state_head: 16f6e41b283aa278c454e286e41d392cca4ed3e7
+state_head: a1e804f7d2e8d50b06a5e3e443b335b728320763
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 95
-  completed_plans: 83
+  completed_plans: 84
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-05 (Safe Agent Access) — EXECUTING
-Plan: 2 of 12
+Plan: 3 of 12
 Total Plans in Phase: 12
 Status: Executing Phase KPL-05
 Last activity: 2026-09-10 — Phase KPL-05 execution started
@@ -236,6 +236,8 @@ Progress: [█████████░] 94%
 - [Phase 04]: IOS-04 unchecked (not 'complete with disclosure') because its own text names a physical iPhone and zero device evidence exists at all; IOS-01..03 checked with disclosure since their claims are comprehensively proven on the Simulator.
 - [Phase KPL-05]: 05-01: Task 1's three one-way authorization doors answered Option A (D-06 three scope strings, D-07 PKCE-only, extend device_grants) exactly as CONTEXT-locked.
 - [Phase KPL-05]: 05-01: D-30 live-host protocol-revision re-check could not be performed -- no MCP host or model credential reachable in this execution sandbox; 2025-06-18 pin implemented but not empirically verified against a live client.
+- [Phase KPL-05]: 05-02: Task 1's scoped-DCR checkpoint confirmed Option A exactly as CONTEXT.md's D-29 locked it; day-one dogfood hosts are Claude Code and Cowork.
+- [Phase KPL-05]: 05-02: mcp_token_audience_rejected renamed to mcp_audience_rejected -- the literal substring "token" is forbidden in security_audit.ex by the pre-existing telemetry_redaction_test.exs privacy invariant.
 
 ### Retained Research
 
@@ -271,8 +273,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-10T20:51:10.810Z
-**Stopped at:** Completed 05-01-PLAN.md (MCP tracer slice)
+**Last session:** 2026-09-10T21:20:02.293Z
+**Stopped at:** Completed 05-02-PLAN.md (MCP discovery/audience/DCR)
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -359,6 +361,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-04 P17 | ~3h10m | 2 tasks | 7 files |
 | Phase 04 P16 | 165 | 3 tasks | 13 files |
 | Phase KPL-05 P01 | ~80min | 3 tasks | 15 files |
+| Phase KPL-05 P02 | 40min | 3 tasks | 13 files |
 
 ### Blockers
 
