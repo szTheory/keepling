@@ -1,0 +1,251 @@
+{
+  "version": 1,
+  "covered_decisions": ["D-11", "D-12", "D-13", "D-14"],
+  "tools": {
+    "keepling.capture_task": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000101",
+        "task_id": "00000000-0000-4000-8000-000000000102",
+        "title": "Buy milk",
+        "version": 1
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000101",
+            "task_id": "00000000-0000-4000-8000-000000000102",
+            "title": "Buy milk",
+            "version": 1,
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000101",
+            "task_id": "00000000-0000-4000-8000-000000000102",
+            "version": 1
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000101",
+            "task_id": "00000000-0000-4000-8000-000000000102",
+            "title": 12345,
+            "version": 1
+          }
+        }
+      ]
+    },
+    "keepling.update_task": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000201",
+        "task_id": "00000000-0000-4000-8000-000000000202",
+        "expected_revision": 1,
+        "version": 1,
+        "title": "Buy oat milk"
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000201",
+            "task_id": "00000000-0000-4000-8000-000000000202",
+            "expected_revision": 1,
+            "version": 1,
+            "title": "Buy oat milk",
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000201",
+            "expected_revision": 1,
+            "version": 1,
+            "title": "Buy oat milk"
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000201",
+            "task_id": "00000000-0000-4000-8000-000000000202",
+            "expected_revision": 1,
+            "version": 1,
+            "title": 12345
+          }
+        },
+        {
+          "reason": "absent_expected_revision",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000201",
+            "task_id": "00000000-0000-4000-8000-000000000202",
+            "version": 1,
+            "title": "Buy oat milk"
+          }
+        }
+      ]
+    },
+    "keepling.complete_task": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000301",
+        "task_id": "00000000-0000-4000-8000-000000000302",
+        "expected_revision": 1,
+        "version": 1
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000301",
+            "task_id": "00000000-0000-4000-8000-000000000302",
+            "expected_revision": 1,
+            "version": 1,
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "task_id": "00000000-0000-4000-8000-000000000302",
+            "expected_revision": 1,
+            "version": 1
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000301",
+            "task_id": "00000000-0000-4000-8000-000000000302",
+            "expected_revision": "one",
+            "version": 1
+          }
+        },
+        {
+          "reason": "absent_expected_revision",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000301",
+            "task_id": "00000000-0000-4000-8000-000000000302",
+            "version": 1
+          }
+        }
+      ]
+    },
+    "keepling.reopen_task": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000401",
+        "task_id": "00000000-0000-4000-8000-000000000402",
+        "expected_revision": 2,
+        "version": 1
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000401",
+            "task_id": "00000000-0000-4000-8000-000000000402",
+            "expected_revision": 2,
+            "version": 1,
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "task_id": "00000000-0000-4000-8000-000000000402",
+            "expected_revision": 2,
+            "version": 1
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000401",
+            "task_id": "00000000-0000-4000-8000-000000000402",
+            "expected_revision": "two",
+            "version": 1
+          }
+        },
+        {
+          "reason": "absent_expected_revision",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000401",
+            "task_id": "00000000-0000-4000-8000-000000000402",
+            "version": 1
+          }
+        }
+      ]
+    },
+    "keepling.preview_bulk_change": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000501",
+        "command": "trash_task",
+        "targets": [
+          {"task_id": "00000000-0000-4000-8000-000000000502", "expected_revision": 1}
+        ]
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000501",
+            "command": "trash_task",
+            "targets": [
+              {"task_id": "00000000-0000-4000-8000-000000000502", "expected_revision": 1}
+            ],
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "command": "trash_task",
+            "targets": [
+              {"task_id": "00000000-0000-4000-8000-000000000502", "expected_revision": 1}
+            ]
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000501",
+            "command": "trash_task",
+            "targets": "00000000-0000-4000-8000-000000000502"
+          }
+        }
+      ]
+    },
+    "keepling.commit_bulk_change": {
+      "accepted": {
+        "mutation_id": "00000000-0000-4000-8000-000000000601",
+        "preview_token": "opaque-signed-preview-token-fixture"
+      },
+      "rejected": [
+        {
+          "reason": "unknown_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000601",
+            "preview_token": "opaque-signed-preview-token-fixture",
+            "priority": "high"
+          }
+        },
+        {
+          "reason": "missing_required_property",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000601"
+          }
+        },
+        {
+          "reason": "wrong_type",
+          "payload": {
+            "mutation_id": "00000000-0000-4000-8000-000000000601",
+            "preview_token": 12345
+          }
+        }
+      ]
+    }
+  }
+}

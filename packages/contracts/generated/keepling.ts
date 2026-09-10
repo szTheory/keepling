@@ -1062,6 +1062,53 @@ export interface components {
             /** @constant */
             readonly version: 1;
         };
+        readonly McpCaptureTaskParams: {
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly title: string;
+            /** @constant */
+            readonly version: 1;
+        };
+        readonly McpCommitBulkChangeParams: {
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly preview_token: string;
+        };
+        readonly McpCompleteTaskParams: {
+            readonly expected_revision: components["schemas"]["Revision"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            /** @constant */
+            readonly version: 1;
+        };
+        readonly McpPreviewBulkChangeParams: {
+            /** @enum {string} */
+            readonly command: "trash_task" | "restore_task" | "undo_task";
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly targets: readonly {
+                readonly expected_revision: components["schemas"]["Revision"];
+                readonly task_id: components["schemas"]["TaskIdentity"];
+            }[];
+        };
+        readonly McpReopenTaskParams: {
+            readonly expected_revision: components["schemas"]["Revision"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            /** @constant */
+            readonly version: 1;
+        };
+        readonly McpUpdateTaskParams: {
+            readonly deadline_on?: components["schemas"]["NullableCivilDate"];
+            readonly expected_revision: components["schemas"]["Revision"];
+            readonly mutation_id: components["schemas"]["MutationIdentity"];
+            readonly notes?: string;
+            readonly planned_on?: components["schemas"]["NullableCivilDate"];
+            readonly project_id?: components["schemas"]["NullableOrganizationIdentity"];
+            readonly tag_ids?: readonly components["schemas"]["OrganizationIdentity"][];
+            readonly task_id: components["schemas"]["TaskIdentity"];
+            readonly title?: string;
+            /** @constant */
+            readonly version: 1;
+        };
         /**
          * Format: uuid
          * @description Client-generated identity retained across exact retries.

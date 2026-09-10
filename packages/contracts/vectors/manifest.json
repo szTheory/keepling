@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_comment": "Per-file required consumers for the 13 golden vector files in this directory. Consumers are harnesses that execute a file's cases against real reducer/domain logic and assert the file's own expectations -- not merely parse or structurally validate it. Membership was determined by inspecting every consuming test file directly (04-03-PLAN.md Task 3; full evidence trail in 04-03-SUMMARY.md), never hand-guessed: only sync.json binds packages/contracts/schemas/sync-state-machine.schema.json among these 13 files, so it is the only file with more than one consumer. The other 12 bind their own domain-specific shapes (task lifecycle, conflicts, organizations, undo, activity, task dates, trash/restore, compatibility, redaction, recovery, account-lifecycle) and are exercised only by their owning Elixir test module. Enforced by tooling/check-contracts.mjs's cross-consumer gate.",
+  "_comment": "Per-file required consumers for the 14 golden vector files in this directory. Consumers are harnesses that execute a file's cases against real reducer/domain logic and assert the file's own expectations -- not merely parse or structurally validate it. Membership was determined by inspecting every consuming test file directly (04-03-PLAN.md Task 3; full evidence trail in 04-03-SUMMARY.md), never hand-guessed: only sync.json binds packages/contracts/schemas/sync-state-machine.schema.json among these 14 files, so it is the only file with more than one consumer. The other 13 bind their own domain-specific shapes (task lifecycle, conflicts, organizations, undo, activity, task dates, trash/restore, compatibility, redaction, recovery, account-lifecycle, MCP tool schemas/errors -- 05-05-PLAN.md) and are exercised only by their owning Elixir test module. Enforced by tooling/check-contracts.mjs's cross-consumer gate.",
   "files": {
     "account-lifecycle.json": {
       "consumers": ["elixir"]
@@ -18,6 +18,9 @@
       "consumers": ["elixir"]
     },
     "lifecycle.json": {
+      "consumers": ["elixir"]
+    },
+    "mcp-tools.json": {
       "consumers": ["elixir"]
     },
     "organizations.json": {
