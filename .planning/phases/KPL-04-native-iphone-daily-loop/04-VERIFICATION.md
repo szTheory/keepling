@@ -1,7 +1,7 @@
 ---
 phase: KPL-04-native-iphone-daily-loop
-verified: 2026-09-08T21:20:00Z
-status: passed
+verified: 2026-09-08T21:20:00Z  # NOT advanced this pass -- see gaps
+status: gaps_found
 score: 23/23 must-haves verified (20 by evidence, 3 accepted by owner override)
 behavior_unverified: 0
 overrides_applied: 3
@@ -75,6 +75,24 @@ findings:
       instead of taking the last match. Does not require re-running the gate to
       make the fix; re-running to republish corrected numbers is at the owner's
       convenience.
+gaps:
+  - truth: "04-17 -- the phase's evidence surface states, for every green checkmark, exactly what it means"
+    status: failed
+    reason: >-
+      docs/testing/ios-testing.md claims "**The full gate passes.** `node
+      tooling/build-ios-signed.mjs && node tooling/verify-ios-phase.mjs` reports
+      `lanes=24 failed=0 blocked=0` ... This is the first passing full gate in the
+      phase: **496 executed cases**". No invocation ever produced that. The 496
+      figure is assembled from three separate runs, one of which the gate itself
+      declared FAILED.
+    artifacts:
+      - path: "docs/testing/ios-testing.md"
+        issue: "Presents a composite of three runs as the output of one command"
+      - path: ".planning/phases/KPL-04-native-iphone-daily-loop/04-18-SUMMARY.md"
+        issue: "Carries the same 496 figure under the same framing"
+    missing:
+      - "Either one unified gate invocation that genuinely reports lanes=24 failed=0 blocked=0 at 496 cases"
+      - "Or wording that describes what actually happened: 22 simulator lanes green inside a run the gate reported FAILED, plus device and server-driven-device each green in their own later single-lane invocations"
 deferred:
   - truth: "SRV-02 — the iPhone adapter proof completes the cross-adapter SRV-02 requirement"
     addressed_in: "Phase 5"
@@ -85,11 +103,65 @@ deferred:
 
 **Phase Goal:** Jon can dogfood the same trustworthy core loop through a native, platform-integrated SwiftUI iPhone client.
 **Verified:** 2026-09-08T21:20:00Z (third pass — after owner acceptance and two tooling fixes)
-**Status:** passed
+**Status:** gaps_found (one documentation gap; all 24 lanes are green, but not in one run)
 **Re-verification:** Yes — verified against commits `6496323`, `f13e5ca`, `48a39e9`
 **Mode note:** ROADMAP marks this phase `mode: mvp`, but its goal is not in the required User Story form. MVP-mode User Flow Coverage was not applied; standard goal-backward verification was used. Process warning, not a code defect.
 
-## What I Checked This Pass
+## Fourth Pass (2026-09-09): count fix verified, one claim does not hold
+
+**The parser fix is correct.** `xcodebuildSummary` now anchors on
+`Test Suite '<Bundle>.xctest' passed|failed at ...` followed by its `Executed`
+line — exactly one per bundle, so summing counts each bundle once without
+triple-counting the per-suite and "Selected tests" lines. It sums, subtracts
+skips, and throws when any single bundle executed zero, so a healthy bundle
+cannot stand in for one that ran nothing. The measured results match this
+report's derivation exactly: `auth` 19 (which I had measured myself last pass),
+`undo` 18, `sync-presentation` 35, `device` 29 — the +3 being
+`DataProtectionTests`, the discarded bundle. WINDOWS.md row 65 records it as
+fixed with the G7 consequence stated. Finding closed.
+
+**The two lane fixes are real.** `server-driven-device.mjs:57,69` chains the lock
+probe and propagates a bare `BLOCKED:` verbatim; `device.mjs:274` matches
+`deviceprep Code=-3` / "Unlock … to Continue" / "because the device is locked"
+and reports BLOCKED instead of publishing a lost-connection message as a test
+failure.
+
+**What does not hold: "the full gate passes … 496 executed cases."** No
+invocation ever produced that. Reading the logs rather than the summary:
+
+| Invocation | Result | Contribution |
+|---|---|---|
+| `final-gate-3.log` | **`iOS phase gate: FAILED`** — `device` BLOCKED, `server-driven-device` FAIL (the phone locked) | the 22 simulator lanes, 463 cases |
+| `hw-lanes-3.log` run A | `lanes=1 failed=0 blocked=0`, PASS | `device` 29 |
+| `hw-lanes-3.log` run B | `lanes=1 failed=0 blocked=0`, PASS | `server-driven-device` 4 |
+
+463 + 29 + 4 = 496, and I verified that arithmetic against the LANE lines. Every
+one of the 24 lanes does have a PASS with a positive case count at current lane
+sources — the substance is fine. But `docs/testing/ios-testing.md` presents this
+as the output of one command reporting `lanes=24 failed=0 blocked=0`, and the
+only invocation that ever reported that was `final-gate-2` at 454 cases under the
+buggy parser and superseded lane code. This is the same species of composite-
+presented-as-single-run claim as the undo overclaim I flagged in pass one, on the
+surface whose stated purpose is that a reader "should be able to tell, for every
+green checkmark, exactly what it means".
+
+**So I have not advanced `verified:`.** You asked me to tell you rather than
+re-stamp, and re-stamping is exactly the act that would certify these records.
+Two closures are equally acceptable to me:
+
+1. **Run one unified gate.** You offered, the phone is available, and
+   hardware-first ordering plus the new mid-run lock detection exist precisely to
+   make that survivable. Then the sentence becomes literally true and I re-stamp
+   on the log.
+2. **Correct the wording** to describe the composite — 22 simulator lanes green
+   inside a run the gate reported FAILED, plus two single-lane hardware runs. This
+   phase has good precedent for correcting a claim rather than manufacturing
+   evidence, and it costs minutes rather than an hour.
+
+I have no preference between them. What I will not do is stamp a claim the logs
+contradict.
+
+## What I Checked In Earlier Passes
 
 **1. Owner acceptance — the block is accurate, and no evidence moved.** I read all
 four descriptions against the tree. Each is correct: SC5 keeps disclosure row 7; G7's
@@ -228,21 +300,20 @@ I confirmed each by reading the tree or running something.
 |---|---|---|---|
 | 1 | SRV-02's iPhone adapter proof completing the cross-adapter requirement | Phase 5 | The iPhone-side transport/reducer/orchestration proof IS delivered here; REQUIREMENTS.md completes SRV-02 at the Phase 5 cross-adapter proof. |
 
-### Gate Evidence (read from the log, not re-run)
+### Gate Evidence (read from the logs, not re-run)
 
-`/Users/jon/.claude/jobs/b44440bd/tmp/final-gate-2.log` — `lanes=24 failed=0 blocked=0`,
-`iOS phase gate: PASSED`. Hardware lanes first, as intended:
+Current evidence, at the fixed parser and current lane sources:
 
-| Lane | Status | Published cases |
-|---|---|---|
-| `device` | PASS | 26 (29 actually run — see Findings) |
-| `server-driven-device` | PASS | 4 |
-| 22 simulator lanes | all PASS | 424 published |
+| Lane group | Status | Executed cases | Source |
+|---|---|---|---|
+| 22 simulator lanes | all PASS | 463 | `final-gate-3.log` (whose overall verdict was FAILED, on the two hardware lanes) |
+| `device` | PASS | 29 | `hw-lanes-3.log` run A, build digest `4bc0be13…`, attestation-bound |
+| `server-driven-device` | PASS | 4 | `hw-lanes-3.log` run B |
+| **Total** | | **496** | three invocations, not one |
 
-Published total 454; actual executed closer to 496 once the multi-bundle undercount is
-accounted for. Per instruction the gate was not re-run; the only things I executed this
-pass were the `auth` lane's `-only-testing` set (≈6s, to measure the undercount) and the
-three host-only `--check` commands.
+The superseded `final-gate-2.log` remains the only invocation that ever reported
+`lanes=24 failed=0 blocked=0`, at 454 cases under the buggy parser. Per
+instruction no gate was re-run this pass; I only read logs and source.
 
 ### Requirements Coverage
 
