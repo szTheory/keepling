@@ -28,6 +28,13 @@ defmodule Keepling.Application.UndoTest do
     for unsupported <- vectors["unsupported"] do
       refute Undo.supported_command?(String.to_atom(unsupported)), unsupported
     end
+
+    # D-22/T-05-44: the agent case names a supported command and carries no
+    # actor-specific clause -- `Undo.compensation/2` takes no actor argument
+    # at all, so there is nothing in this module's own signature that could
+    # discriminate on who performed the original action.
+    agent_command = String.to_existing_atom(vectors["agent_case"]["command"])
+    assert Undo.supported_command?(agent_command)
   end
 
   test "typed compensation restores only the closed original values and appends an inverse fact" do
