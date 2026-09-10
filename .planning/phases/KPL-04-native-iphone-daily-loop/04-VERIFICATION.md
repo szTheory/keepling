@@ -1,7 +1,7 @@
 ---
 phase: KPL-04-native-iphone-daily-loop
-verified: 2026-09-08T21:20:00Z  # NOT advanced this pass -- see gaps
-status: gaps_found
+verified: 2026-09-10T00:05:00Z
+status: passed
 score: 23/23 must-haves verified (20 by evidence, 3 accepted by owner override)
 behavior_unverified: 0
 overrides_applied: 3
@@ -42,6 +42,7 @@ re_verification:
     - "Skipped tests counted as executed cases — parser subtracts skips and fails an all-skipped lane (commit 594d243)"
     - "Four human-judgment items — reviewed and accepted by the owner as disclosed, not as proven (commit 6496323); re-encoded here through the documented overrides mechanism"
     - "Hardware lanes ran behind ~20 minutes of simulator lanes and a bare BLOCKED: from the lock probe surfaced as an ordinary FAIL — both fixed and verified in tooling/verify-ios-phase.mjs:231-235 and tooling/ios-lanes/device.mjs:253-254 (commit f13e5ca)"
+    - "The 496-case figure was presented as one gate invocation while being a composite of three; closed by running one unified gate (unified-gate-2.log) rather than by rewording alone"
   gaps_remaining: []
   regressions: []
 findings:
@@ -75,24 +76,6 @@ findings:
       instead of taking the last match. Does not require re-running the gate to
       make the fix; re-running to republish corrected numbers is at the owner's
       convenience.
-gaps:
-  - truth: "04-17 -- the phase's evidence surface states, for every green checkmark, exactly what it means"
-    status: failed
-    reason: >-
-      docs/testing/ios-testing.md claims "**The full gate passes.** `node
-      tooling/build-ios-signed.mjs && node tooling/verify-ios-phase.mjs` reports
-      `lanes=24 failed=0 blocked=0` ... This is the first passing full gate in the
-      phase: **496 executed cases**". No invocation ever produced that. The 496
-      figure is assembled from three separate runs, one of which the gate itself
-      declared FAILED.
-    artifacts:
-      - path: "docs/testing/ios-testing.md"
-        issue: "Presents a composite of three runs as the output of one command"
-      - path: ".planning/phases/KPL-04-native-iphone-daily-loop/04-18-SUMMARY.md"
-        issue: "Carries the same 496 figure under the same framing"
-    missing:
-      - "Either one unified gate invocation that genuinely reports lanes=24 failed=0 blocked=0 at 496 cases"
-      - "Or wording that describes what actually happened: 22 simulator lanes green inside a run the gate reported FAILED, plus device and server-driven-device each green in their own later single-lane invocations"
 deferred:
   - truth: "SRV-02 — the iPhone adapter proof completes the cross-adapter SRV-02 requirement"
     addressed_in: "Phase 5"
@@ -102,12 +85,43 @@ deferred:
 # Phase 4: Native iPhone Daily Loop — Verification Report
 
 **Phase Goal:** Jon can dogfood the same trustworthy core loop through a native, platform-integrated SwiftUI iPhone client.
-**Verified:** 2026-09-08T21:20:00Z (third pass — after owner acceptance and two tooling fixes)
-**Status:** gaps_found (one documentation gap; all 24 lanes are green, but not in one run)
-**Re-verification:** Yes — verified against commits `6496323`, `f13e5ca`, `48a39e9`
+**Verified:** 2026-09-10T00:05:00Z (fifth pass — one unified gate run verified end to end)
+**Status:** passed
+**Re-verification:** Yes — five passes; final evidence is `unified-gate-2.log` at commit `fe38e05`
 **Mode note:** ROADMAP marks this phase `mode: mvp`, but its goal is not in the required User Story form. MVP-mode User Flow Coverage was not applied; standard goal-backward verification was used. Process warning, not a code defect.
 
-## Fourth Pass (2026-09-09): count fix verified, one claim does not hold
+## Fifth Pass (2026-09-10): the unified run holds — gap closed
+
+I read `unified-gate-2.log` rather than the summary of it. It is one
+invocation, and it says what it is claimed to say:
+
+- **24 LANE lines, zero non-PASS.** Checked by filtering for anything that is
+  not `status=PASS` — nothing matched.
+- **Hardware first, in the same log:** `device` PASS cases=29 (1123s),
+  `server-driven-device` PASS cases=4.
+- **Counts sum correctly from the log itself:** all 24 lanes → **496**;
+  excluding the two hardware lanes → **463**. Both figures reproduce from the
+  LANE lines, not from a narrative.
+- **The build is in the same run:** `IOS_BUILD` / `IOS_BUILD_MANIFEST` lines head
+  the log with digest `4bc0be13…`, the digest the device lane's attestation binds
+  to, so the phone-side evidence belongs to the build this invocation installed.
+- **`iOS phase gate summary: lanes=24 failed=0 blocked=0`** and
+  **`iOS phase gate: PASSED`**.
+
+The docs sentence now claims one invocation and rests on that log. **Keep the
+history note** — a surface whose purpose is that a reader can tell what each
+green check means is exactly where a corrected claim should show its work; it
+reads as rigour, not clutter.
+
+Worth recording: the run before this one reported `lanes=24 failed=2 blocked=2`
+with **both** hardware lanes saying BLOCKED on a real lock. That is the
+`server-driven-device` lock probe I reviewed last pass doing its job on a genuine
+auto-lock rather than a synthetic one — the fix is now proven by use, not just by
+inspection.
+
+**Gap closed. Status: passed.**
+
+## Fourth Pass (2026-09-09): count fix verified, one claim did not hold
 
 **The parser fix is correct.** `xcodebuildSummary` now anchors on
 `Test Suite '<Bundle>.xctest' passed|failed at ...` followed by its `Executed`
@@ -306,14 +320,16 @@ Current evidence, at the fixed parser and current lane sources:
 
 | Lane group | Status | Executed cases | Source |
 |---|---|---|---|
-| 22 simulator lanes | all PASS | 463 | `final-gate-3.log` (whose overall verdict was FAILED, on the two hardware lanes) |
-| `device` | PASS | 29 | `hw-lanes-3.log` run A, build digest `4bc0be13…`, attestation-bound |
-| `server-driven-device` | PASS | 4 | `hw-lanes-3.log` run B |
-| **Total** | | **496** | three invocations, not one |
+| `device` | PASS | 29 | hardware, first lane in the run |
+| `server-driven-device` | PASS | 4 | hardware |
+| 22 simulator lanes | all PASS | 463 | same run |
+| **Total** | | **496** | `lanes=24 failed=0 blocked=0`, `iOS phase gate: PASSED` |
 
-The superseded `final-gate-2.log` remains the only invocation that ever reported
-`lanes=24 failed=0 blocked=0`, at 454 cases under the buggy parser. Per
-instruction no gate was re-run this pass; I only read logs and source.
+All of it from `unified-gate-2.log`, one invocation of
+`node tooling/build-ios-signed.mjs && node tooling/verify-ios-phase.mjs`, with the
+build and install recorded in the same log (digest `4bc0be13…`). The earlier
+`final-gate-2` (454 cases, buggy parser) and the three-run composite it briefly
+rested on are both superseded.
 
 ### Requirements Coverage
 
