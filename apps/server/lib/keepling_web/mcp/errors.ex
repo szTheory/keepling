@@ -16,11 +16,15 @@ defmodule KeeplingWeb.MCP.Errors do
   rather than collapsed into a single generic code, so a stale write
   renders the exact body the HTTP path renders for the identical
   situation, byte for byte, per 05-05-PLAN.md Task 2), the not-yet-wired
-  ambiguity and preview/commit members later plans in this phase reach
-  (`ambiguous_match`, `no_match`, `too_many_matches`, `preview_stale`),
-  `rate_limited`, and `service_unavailable`. Every member has a fixed
-  literal title and a fixed literal recovery action selected by code --
-  never interpolated, never formatted, never carrying a per-run value.
+  ambiguity members later plans in this phase reach (`ambiguous_match`,
+  `no_match`, `too_many_matches`), the closed preview/commit vocabulary
+  05-07-PLAN.md wires in (`preview_stale` -- live target drift between
+  preview and commit; `preview_expired` -- the token's TTL elapsed;
+  `preview_invalid` -- a tampered, cross-account, cross-instance, or
+  cross-epoch token, or a malformed one), `rate_limited`, and
+  `service_unavailable`. Every member has a fixed literal title and a
+  fixed literal recovery action selected by code -- never interpolated,
+  never formatted, never carrying a per-run value.
   Structured detail a model genuinely needs to correct itself (a candidate
   set, a current revision number) lives in a separate structured field of
   `data`, never inside the human string.
@@ -44,6 +48,8 @@ defmodule KeeplingWeb.MCP.Errors do
     no_match
     too_many_matches
     preview_stale
+    preview_expired
+    preview_invalid
     rate_limited
     service_unavailable
   )
@@ -164,6 +170,28 @@ defmodule KeeplingWeb.MCP.Errors do
       keepling_code: "preview_stale",
       title: "Preview is no longer valid",
       detail: "The previewed targets changed or expired. Request a new preview.",
+      retryable: false,
+      recovery_action: "request_new_preview"
+    })
+  end
+
+  @spec preview_expired() :: map()
+  def preview_expired do
+    envelope(-32_602, "Invalid params", %{
+      keepling_code: "preview_expired",
+      title: "Preview has expired",
+      detail: "The preview's time-to-live has elapsed. Request a new preview.",
+      retryable: false,
+      recovery_action: "request_new_preview"
+    })
+  end
+
+  @spec preview_invalid() :: map()
+  def preview_invalid do
+    envelope(-32_602, "Invalid params", %{
+      keepling_code: "preview_invalid",
+      title: "Preview token is not valid",
+      detail: "The preview token is malformed, tampered, or was not issued to this account.",
       retryable: false,
       recovery_action: "request_new_preview"
     })
