@@ -44,7 +44,7 @@ const PINNED_PROTOCOL_REVISION = '2025-06-18'
 // removed there without updating this constant is exactly the drift this
 // lane exists to catch -- see `extractDispatchMethods` below, which reads
 // the module's real source rather than trusting this list alone.
-const EXPECTED_METHODS = ['initialize', 'ping', 'tools/call', 'tools/list']
+const EXPECTED_METHODS = ['initialize', 'ping', 'resources/list', 'resources/read', 'tools/call', 'tools/list']
 
 const LOOPBACK = '127.0.0.1'
 const laneDirectory = dirname(fileURLToPath(import.meta.url))
