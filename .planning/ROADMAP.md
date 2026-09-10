@@ -254,7 +254,7 @@ Plans:
 **Mode:** mvp
 **Requirements:** IOS-01..04, SRV-02 (iPhone adapter proof)
 **UI hint:** yes
-**Plans:** 18/18 plans executed
+**Plans:** 18/18 plans complete
 
 Plans:
 **Wave 1**
@@ -381,7 +381,7 @@ attempted now.
 | 1. One Trustworthy Task | Complete    | 13 | 74% |
 | 2. Synchronization and Replaceable Server | In Progress | 12 | 91% |
 | 3. Mac Daily Loop | Complete    | 7 | 100% (27/27 plans, incl. 3 gap-closure plans 03-25..03-27; verified 2026-09-04 — 03-VERIFICATION.md status: passed, 5/5 must-haves. MAC-01..05 and QUAL-03..04 complete; SRV-02 deferred to Phase 5 cross-adapter proof by design) |
-| 4. Native iPhone Daily Loop | In Progress| 4 | 0% |
+| 4. Native iPhone Daily Loop | Complete    | 4 | 100% (18/18 plans; verified 2026-09-10 — 04-VERIFICATION.md status: passed, 23/23 must-haves: 20 by evidence, 3 accepted by the owner as disclosed-not-proven. IOS-01..04 all complete. The full gate passes in one invocation: `lanes=24 failed=0 blocked=0`, 496 executed cases, two lanes driven on a physical iPhone. SRV-02's iPhone adapter proof is delivered but deferred to the Phase 5 cross-adapter proof by design. Disclosed residuals: SC5 daily adoption (never a gate), G7's locked-device write, the Debug-configuration substitution for the device suites, and 04-14's D9 judgment) |
 | 5. Safe Agent Access | ○ Pending | 5 | 0% |
 | 6. Portability and Trust Release | ○ Pending | 1 + cross-cutting verification | 0% |
 

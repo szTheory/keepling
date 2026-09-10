@@ -1,19 +1,19 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-current_phase: 04
-current_phase_name: Native iPhone Daily Loop
-status: executing
-stopped_at: "Completed 04-16-PLAN.md; device lane since ran GREEN on hardware (22 cases, 0 failures). Still BLOCKED, but only on the server-driven half of D-22 Criterion 2 -- the phone cannot reach a Mac-hosted proxy. Needs a DEBUG-only lane CA, not an unlocked phone."
-last_updated: "2026-09-06T04:22:10.456Z"
-last_activity: 2026-09-05
-last_activity_desc: Plan 04-06 complete; next plan 04-07
-state_head: 94a3ad0542f59a3023300fd4c4cc2c79c7a3de5e
+current_phase: 5
+current_phase_name: Safe Agent Access
+status: planning
+stopped_at: Phase 04 complete, ready to plan Phase 5
+last_updated: "2026-09-10T04:01:43.048Z"
+last_activity: 2026-09-10
+last_activity_desc: Phase 04 complete, transitioned to Phase 5
+state_head: d946736d5b18330118025612fa517b2ad72051d6
 progress:
   total_phases: 6
-  completed_phases: 2
-  total_plans: 82
-  completed_plans: 81
+  completed_phases: 3
+  total_plans: 83
+  completed_plans: 82
 milestone_name: milestone
 ---
 
@@ -28,12 +28,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 ## Current Position
 
-Phase: KPL-04 (Native iPhone Daily Loop) — EXECUTING
-Plan: 17 of 17 complete — 04-16 halted at a human-action checkpoint
+Phase: 5 — Safe Agent Access
+Plan: Not started
 Total Plans in Phase: 17
-Status: Executing Phase KPL-04
-Last activity: 2026-09-05 — Plans 04-01..04-15 and 04-17 complete; 04-16 blocked
-Last Activity Description: 16/17 plans complete. Plan 04-16 (device install) halted at a human-action checkpoint: no confirmed paid Apple Developer Program membership, DEVELOPMENT_TEAM unset, iPhone paired but offline. Phase gate correctly reports BLOCKED (device lane), exit 1.
+Status: Ready to plan
+Last activity: 2026-09-10 — Phase 04 complete, transitioned to Phase 5
+Last Activity Description: Phase 04 complete, transitioned to Phase 5
 Progress: [█████████░] 94%
 
 ## Accumulated Context
@@ -270,7 +270,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 ## Session
 
 **Last session:** 2026-09-06T04:21:57.275Z
-**Stopped at:** Completed 04-16-PLAN.md (device lane BLOCKED: iPhone locked)
+**Stopped at:** Phase 04 complete, ready to plan Phase 5
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
