@@ -18,7 +18,7 @@
 ### Identity and server authority
 
 - [x] **SRV-01**: User can authenticate a personal account and authorize multiple owned devices without exposing server credentials to clients or agents.
-- [x] **SRV-02**: User receives the same domain invariants through web, desktop, iPhone, API, and MCP entry points.
+- [ ] **SRV-02**: User receives the same domain invariants through web, desktop, iPhone, API, and MCP entry points. <!-- Unchecked 2026-09-10 (Phase 5 D-28): this box was checked while all four of its traceability rows state it completes only at the Phase 5 cross-adapter proof, and the MCP entry point named in its own text does not exist yet. Restore the check only when that lane passes. -->
 - [x] **SRV-03**: User-visible mutations are idempotent by mutation identity and return stable result or error contracts.
 - [x] **SRV-04**: User can synchronize through an ordered, account-scoped change feed with opaque durable cursors and tombstones.
 - [x] **SRV-05**: User sees a structured conflict instead of a silent overwrite when concurrent edits cannot be safely merged.
