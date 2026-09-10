@@ -31,7 +31,8 @@
     "verify:ios:phase": "node tooling/verify-ios-phase.mjs",
     "verify:ios:real-stack": "node tooling/verify-real-stack-ios.mjs",
     "verify:ios:server-driven": "node tooling/verify-ios-phase.mjs --lane server-driven-sim",
-    "verify:ios:server-driven:device": "node tooling/verify-ios-phase.mjs --lane server-driven-device"
+    "verify:ios:server-driven:device": "node tooling/verify-ios-phase.mjs --lane server-driven-device",
+    "verify:mcp:phase": "node tooling/verify-mcp-phase.mjs"
   },
   "devDependencies": {
     "openapi-typescript": "7.13.0",
