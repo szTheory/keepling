@@ -24,6 +24,15 @@ defmodule KeeplingWeb.Router do
     plug KeeplingWeb.Auth, :authenticate_device_grant
   end
 
+  # D-03: agent traffic mounts through its own pipeline on the existing
+  # Phoenix router rather than a sidecar, so it is subject to the same
+  # request-level posture (JSON body parsing, session-free bearer auth) as
+  # every other native-client pipeline. `KeeplingWeb.MCP.Pipeline` performs
+  # the device-grant authentication and the `client_kind == "mcp"` refusal.
+  pipeline :mcp do
+    plug KeeplingWeb.MCP.Pipeline
+  end
+
   # D-49. Either credential class, each judged by its own rules.
   pipeline :client_authenticated do
     plug KeeplingWeb.Auth, :authenticate_client
@@ -106,6 +115,12 @@ defmodule KeeplingWeb.Router do
     delete "/device-grants/:installation_id", DeviceGrantController, :revoke
     get "/sync", SyncController, :pull
     get "/sync/bootstrap", SyncController, :bootstrap
+  end
+
+  scope "/mcp", KeeplingWeb.MCP do
+    pipe_through [:api, :mcp]
+
+    post "/v1", Dispatch, :handle
   end
 
   scope "/api/v1", KeeplingWeb do
