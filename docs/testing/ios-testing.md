@@ -469,18 +469,15 @@ coverage entry D9) rather than asserted as fully automated.
 
 ### Summary: what this phase's evidence model rests on
 
-- **Every lane has a PASS with a positive executed-case count at current
-  lane sources: 496 cases** -- 463 across the 22 simulator lanes, 29 in
-  `device` and 4 in `server-driven-device` on the phone. Stated precisely,
-  because it is a COMPOSITE and not one invocation: the simulator figures
-  come from a full-gate run whose own verdict was `FAILED` (the phone
-  auto-locked, so `device` reported BLOCKED and `server-driven-device`
-  FAILED -- both lanes behaving correctly), and the two hardware figures
-  come from two separate single-lane runs afterwards. The last invocation
-  that itself reported `lanes=24 failed=0 blocked=0` did so at 454 cases,
-  under the case-counting bug described below and superseded lane code.
-  A reader should not have to reconstruct that from three logs, so it is
-  written here rather than rounded up into "the full gate passes".
+- **The full gate passes, in ONE invocation.** `node
+  tooling/build-ios-signed.mjs && node tooling/verify-ios-phase.mjs`
+  reports `lanes=24 failed=0 blocked=0` and `iOS phase gate: PASSED`
+  across **496 executed cases** -- 463 over the 22 simulator lanes, 29 in
+  `device` and 4 in `server-driven-device` on a physical iPhone, all in
+  the same run. This sentence was first written on the strength of a
+  COMPOSITE (one gate run's simulator lanes plus two later single-lane
+  hardware runs) and was corrected to say so; it now rests on a single
+  run's own log, which is what it claimed in the first place.
 - **The published counts are what actually ran.** Two separate defects
   made them wrong, both found late and both corrected. Xcode's
   "Executed N tests" total COUNTS SKIPPED CASES, so a lane could publish a
