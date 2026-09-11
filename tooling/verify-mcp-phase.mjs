@@ -224,28 +224,33 @@ const exUnitSummary = (stdout) => {
 }
 
 /**
- * The requirement-to-lane map (05-10-PLAN.md Task 1). Every requirement
- * this phase's `.planning/REQUIREMENTS.md` Phase 5 row names -- MCP-01..05
- * and SRV-02 -- must map to at least one EXISTING lane file, checked below
- * by `--requirements`.
+ * The requirement-to-lane map (05-10-PLAN.md Task 1, extended by
+ * 05-11-PLAN.md Task 3 exactly as 05-10-SUMMARY.md's own Next Phase
+ * Readiness section named this plan as the one that would). Every
+ * requirement this phase's `.planning/REQUIREMENTS.md` Phase 5 row names
+ * -- MCP-01..05 and SRV-02 -- must map to at least one EXISTING lane file,
+ * checked below by `--requirements`.
  *
- * This plan (05-10, Wave 3) ships only the `deterministic` and `protocol`
- * lanes, so every requirement maps only to those two here -- not because
- * two lanes fully prove six requirements, but because `--requirements`
- * fails on a lane name with no file, and the other three D-25 lanes
- * (`simulated-client`, `representative-model`, `adversarial`) plus the
- * `cross-adapter` proof do not exist as files until later waves.
- * 05-11-PLAN.md (Wave 6) is the plan that extends this map to the full
- * five-lane-plus-cross-adapter shape as it adds those lane files; treat
- * the map below as this phase's INCREMENTAL, honestly-scoped evidence
- * inventory at Wave 3, not its final claim.
+ * This plan (05-11, Wave 6) adds `simulated-client`, `adversarial`, and
+ * `representative-model` to every MCP-0N requirement's map -- the D-25
+ * evidence lanes that genuinely exercise a live client, real authorization,
+ * and (credential permitting) a real model against each requirement's
+ * surface. `SRV-02` is deliberately left mapped to the SAME two lanes
+ * 05-10 gave it (`deterministic`, `protocol`): D-27 requires SRV-02's
+ * completion proof to be the CROSS-ADAPTER lane specifically -- driving
+ * web/API, Electron, iPhone, and MCP together against one server revision
+ * -- which does not exist as a file until 05-12-PLAN.md (Wave 7) lands it.
+ * Mapping SRV-02 to this plan's single-adapter lanes would let
+ * `--requirements` claim evidence this plan does not provide; 05-12 is the
+ * plan that extends SRV-02's row here, exactly as this plan extended
+ * MCP-01..05's rows for 05-10.
  */
 const REQUIREMENT_LANES = {
-  'MCP-01': ['deterministic', 'protocol'],
-  'MCP-02': ['deterministic', 'protocol'],
-  'MCP-03': ['deterministic', 'protocol'],
-  'MCP-04': ['deterministic', 'protocol'],
-  'MCP-05': ['deterministic', 'protocol'],
+  'MCP-01': ['deterministic', 'protocol', 'simulated-client', 'adversarial', 'representative-model'],
+  'MCP-02': ['deterministic', 'protocol', 'simulated-client', 'adversarial', 'representative-model'],
+  'MCP-03': ['deterministic', 'protocol', 'simulated-client', 'adversarial', 'representative-model'],
+  'MCP-04': ['deterministic', 'protocol', 'simulated-client', 'adversarial', 'representative-model'],
+  'MCP-05': ['deterministic', 'protocol', 'simulated-client', 'adversarial', 'representative-model'],
   'SRV-02': ['deterministic', 'protocol'],
 }
 
