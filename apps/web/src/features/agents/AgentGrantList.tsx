@@ -312,7 +312,12 @@ function AgentGrantList({ csrfToken, onAuthenticationRequired }: AgentGrantListP
                             {exactAuthorizedTime(grant.lastUsedAt)}
                           </time>
                         ) : (
-                          'Not yet used'
+                          // A null last-used value means the server did not
+                          // report one -- not that it measured zero activity.
+                          // "Not yet used" is reserved for a proven-zero
+                          // state this row cannot yet claim; collapsing the
+                          // two would assert a fact nobody measured.
+                          'Not yet reported'
                         )}
                       </dd>
                     </div>

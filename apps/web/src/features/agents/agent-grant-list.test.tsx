@@ -124,6 +124,54 @@ describe('agent grant management', () => {
     expect(row).not.toHaveTextContent('tasks.')
   })
 
+  it('renders the unknown copy for a null last-used value, never the zero-activity copy', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(grantsResponse())
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<AgentGrantList csrfToken="csrf" />)
+
+    // `zeroScopeAgent` carries `last_used_at: null` and an empty `scope`
+    // array -- a genuinely-empty scope and an unreported last-used value are
+    // DIFFERENT claims on the SAME row, and the row must state both
+    // correctly at once.
+    const cowork = await screen.findByText('Cowork')
+    const row = cowork.closest('li')
+    expect(row).not.toBeNull()
+    expect(row).toHaveTextContent('No scopes granted')
+    expect(row).toHaveTextContent('Not yet reported')
+    expect(row).not.toHaveTextContent('Not yet used')
+  })
+
+  it('renders one unknown field alone without making the rest of the row unknown', async () => {
+    const partiallyKnownAgent = {
+      authorized_at: '2026-09-03T10:00:00Z',
+      client_kind: 'mcp',
+      generation: 1,
+      id: 'grant-partial',
+      installation_id: 'installation-partial',
+      label: 'Partially known agent',
+      last_used_at: null,
+      revoked: false,
+      scope: ['tasks.read'],
+    }
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(grantsResponse([partiallyKnownAgent]))
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<AgentGrantList csrfToken="csrf" />)
+
+    const agent = await screen.findByText('Partially known agent')
+    const row = agent.closest('li')
+    expect(row).not.toBeNull()
+    // The known fields render normally...
+    expect(row).toHaveTextContent('tasks.read')
+    expect(row).toHaveTextContent('Sep 3, 2026')
+    // ...while only the unknown field renders the unknown copy.
+    expect(row).toHaveTextContent('Not yet reported')
+    expect(row).not.toHaveTextContent('No scopes granted')
+  })
+
   it('shows the no-agents empty state without rendering an empty table', async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(grantsResponse([nonAgentGrant]))
     vi.stubGlobal('fetch', fetchMock)

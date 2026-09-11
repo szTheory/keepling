@@ -45,19 +45,20 @@ type DeviceGrantSummary = components['schemas']['DeviceGrantSummary']
 type DeviceGrantRevocationResponse = components['schemas']['DeviceGrantRevocationResponse']
 
 // The wire `DeviceGrantSummary` schema (packages/contracts/openapi/keepling.yaml)
-// closes `client_kind` to `electron | iphone` (`NativeClientIdentity`) and does
-// not yet publish `scope`, `last_used_at`, or `authorized_at` -- even though the
-// server's own `device_grants.client_kind` CHECK constraint has admitted `mcp`
-// since 05-01, and `GET /api/v1/account/device-grants` (KeeplingWeb.DeviceGrantController)
-// genuinely returns `client_kind: "mcp"` rows at runtime. The generated TS type
-// is stale relative to the runtime contract; `client_kind` is widened to `string`
-// here (rather than trusting the closed union) so a real "mcp" value type-checks,
-// and `scope`/`last_used_at`/`authorized_at` are read DEFENSIVELY (optional,
-// absent from every response today) rather than fabricated. The UI is correct
-// today (renders "no scopes" / no timestamp) and picks up real values
-// automatically once a follow-up server-side plan closes both gaps in
-// `packages/contracts/openapi/keepling.yaml` and
-// `KeeplingWeb.DeviceGrantController.grant_response/1`. See 05-09-SUMMARY.md.
+// still closes `client_kind` to `electron | iphone` (`NativeClientIdentity`) --
+// even though the server's own `device_grants.client_kind` CHECK constraint has
+// admitted `mcp` since 05-01, and `GET /api/v1/account/device-grants`
+// (KeeplingWeb.DeviceGrantController) genuinely returns `client_kind: "mcp"`
+// rows at runtime. The generated TS type is stale relative to that one field;
+// `client_kind` is widened to `string` here (rather than trusting the closed
+// union) so a real "mcp" value type-checks.
+//
+// `scope`, `authorized_at`, and `last_used_at` are no longer part of that
+// staleness (06-07): the schema now publishes all three (`scope` a
+// non-nullable array, `authorized_at` non-nullable, `last_used_at` nullable),
+// and `grant_response/1` genuinely returns real persisted values. The `?:`
+// markers below are kept only as defensive belt-and-suspenders against a
+// malformed response body, not because the server may omit these keys.
 type WireAgentGrantSummary = Omit<DeviceGrantSummary, 'client_kind'> & {
   authorized_at?: string
   client_kind: string
