@@ -246,9 +246,20 @@ jobs:
   desktop-promote:
     needs: [desktop-units, desktop-package, desktop-packaged, desktop-e2e, desktop-macos-integration]
     runs-on: macos-15
-    timeout-minutes: 10
+    timeout-minutes: 20
+    # D-22/T-06-10-03: id-token/attestations are granted at JOB level only,
+    # never at the top-level workflow permissions block -- a workflow-wide
+    # grant would hand the OIDC token to every pull-request-triggered job in
+    # this file, not only the one that actually attests a release.
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: ${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
@@ -257,3 +268,68 @@ jobs:
         run: |
           node tooling/package-desktop.mjs --promote "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/package-manifest.json"
           echo "Promoted digest ${{ needs.desktop-package.outputs.application-digest }}"
+      # D-22: SLSA Build Level 2 provenance, naming the exact packaged
+      # archive as its subject. This project claims exactly Level 2 and
+      # never Level 3 -- Level 3 needs a reusable workflow with isolated
+      # signing, which this single-job build+attest pipeline does not have.
+      - name: Attest build provenance for the packaged archive (SLSA Build Level 2)
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: ${{ runner.temp }}/${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}/*.ditto.zip
+      # D-20 (06-10 Task 4): both CycloneDX documents are generated FROM
+      # SOURCE at this revision, never by scanning the built .app -- see
+      # tooling/generate-sbom.mjs's own header for why a binary scan would
+      # be near-empty and misleading. Provisioning the Elixir/OTP toolchain
+      # here (this job otherwise never needs it) is the cost of generating
+      # the Hex half from source rather than skipping it.
+      - name: Provision the Elixir/OTP toolchain for source-based SBOM generation
+        run: |
+          brew list asdf >/dev/null 2>&1 || brew install asdf
+          ./tooling/runtime-preflight.sh --provision
+          corepack enable
+          pnpm install --frozen-lockfile
+      - name: Generate the Hex and npm bills of materials from source
+        run: node tooling/generate-sbom.mjs --out "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/sbom"
+      # D-21: SHA-256 checksums for the archive and the stapled application,
+      # worded as a TEMPLATE for the GitHub Release body -- this repository
+      # has no git remote and has never cut a GitHub Release, so no
+      # `gh release create` step exists to consume it yet (adding that
+      # publish pipeline is a separate, undecided piece of infrastructure,
+      # not this task's declared scope). A checksum served from the same
+      # origin as the artifact is worthless; GitHub Releases is a different
+      # trust domain from the self-hosted server, which is the only thing
+      # that gives a checksum here any value.
+      - name: Generate the release body checksum template
+        run: |
+          manifest="$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/package-manifest.json"
+          out="$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/RELEASE-BODY.md"
+          node -e "
+            const fs = require('node:fs');
+            const m = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'));
+            const lines = [
+              '## Checksums',
+              '',
+              '| Artifact | SHA-256 |',
+              '|---|---|',
+              \`| Archive (\${require('node:path').basename(m.archivePath)}) | \\\`\${m.archiveDigestSha256}\\\` |\`,
+              m.codeDirectoryHash
+                ? \`| Stapled application (code directory hash) | \\\`\${m.codeDirectoryHash}\\\` |\`
+                : \`| Application digest (pre-signing; signing not yet wired) | \\\`\${m.applicationDigestSha256}\\\` |\`,
+              '',
+              'The load-bearing controls for this release are the packaging',
+              'reproducibility lane and the SLSA Build Level 2 provenance',
+              'attestation above, not these checksums -- almost nobody will',
+              'manually verify a hash. See docs/security/SUPPLY-CHAIN.md for',
+              'the full, separated signing/provenance/SBOM posture.',
+            ];
+            fs.writeFileSync(process.argv[2], lines.join('\n') + '\n');
+          " "$manifest" "$out"
+          cat "$out"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: keepling-release-evidence
+          path: |
+            ${{ runner.temp }}/${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}/sbom
+            ${{ runner.temp }}/${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}/RELEASE-BODY.md
+          if-no-files-found: error
+          retention-days: 14
