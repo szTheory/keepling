@@ -3,7 +3,7 @@
 import { createHash } from 'node:crypto'
 import { existsSync, lstatSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
-import { isAbsolute, join, relative, resolve, sep } from 'node:path'
+import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
 import { spawnSync } from 'node:child_process'
 
@@ -50,16 +50,8 @@ const assertOutsideRepository = (path, label) => {
   return candidate
 }
 
-const copiedApplicationPath = assertOutsideRepository(manifest.copiedApplicationPath, 'copied application')
-const executablePath = assertOutsideRepository(manifest.executablePath, 'packaged executable')
-if (!copiedApplicationPath.endsWith('.app') || !existsSync(copiedApplicationPath)) fail('manifest does not select an existing copied .app')
-if (!existsSync(executablePath)) fail('manifest-selected executable does not exist')
-const executableFromApplication = relative(copiedApplicationPath, executablePath)
-if (executableFromApplication.startsWith(`..${sep}`) || isAbsolute(executableFromApplication)) {
-  fail('manifest-selected executable is outside the copied application')
-}
-
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
+const hashFile = (path) => sha256(readFileSync(path))
 const hashDirectory = (root) => {
   const digest = createHash('sha256')
   const visit = (directory) => {
@@ -77,7 +69,48 @@ const hashDirectory = (root) => {
   return digest.digest('hex')
 }
 
-if (hashDirectory(copiedApplicationPath) !== manifest.applicationDigestSha256) fail('copied application digest does not match the package manifest')
+let copiedApplicationPath = assertOutsideRepository(manifest.copiedApplicationPath, 'copied application')
+let executablePath = assertOutsideRepository(manifest.executablePath, 'packaged executable')
+
+// T-06-02-01: when this manifest crossed a CI artifact boundary, the raw
+// `.app` directory this job's own build produced never travels -- only the
+// `ditto` archive does, because `actions/upload-artifact`'s own zip of a
+// directory tree is where mode bits and symlinks were previously lost.
+// `copiedApplicationPath` will not exist on THIS runner in that case; fall
+// back to the archive, verify ITS digest first (proving nothing was lost
+// in transit), expand it with the matching `ditto -x -k`, and re-verify the
+// expanded tree against `applicationDigestSha256` before using it.
+if (!existsSync(copiedApplicationPath)) {
+  const archivePath = resolve(manifest.archivePath ?? '')
+  if (!manifest.archivePath || !existsSync(archivePath)) {
+    fail(`neither the copied application nor its transport archive exist: ${manifest.copiedApplicationPath}`)
+  }
+  if (hashFile(archivePath) !== manifest.archiveDigestSha256) {
+    fail('transport archive digest does not match the package manifest -- the artifact transport lost or altered bytes')
+  }
+  const expandRoot = mkdtempSync(join(tmpdir(), 'keepling-desktop-packaged-expand-'))
+  const dittoExpand = spawnSync('ditto', ['-x', '-k', archivePath, expandRoot], { encoding: 'utf8' })
+  if (dittoExpand.error || dittoExpand.status !== 0) {
+    fail(`ditto -x -k failed to expand the transport archive: ${dittoExpand.stderr ?? dittoExpand.error}`)
+  }
+  // `ditto -c -k --keepParent` keeps the .app's own basename as the
+  // archive's sole top-level entry, so expanding it reproduces that same
+  // basename directly under expandRoot.
+  copiedApplicationPath = join(expandRoot, basename(manifest.copiedApplicationPath))
+  const executableRelativeToApplication = relative(manifest.copiedApplicationPath, manifest.executablePath)
+  executablePath = join(copiedApplicationPath, executableRelativeToApplication)
+}
+
+if (!copiedApplicationPath.endsWith('.app') || !existsSync(copiedApplicationPath)) fail('manifest does not select an existing copied .app')
+if (!existsSync(executablePath)) fail('manifest-selected executable does not exist')
+const executableFromApplication = relative(copiedApplicationPath, executablePath)
+if (executableFromApplication.startsWith(`..${sep}`) || isAbsolute(executableFromApplication)) {
+  fail('manifest-selected executable is outside the copied application')
+}
+
+if (hashDirectory(copiedApplicationPath) !== manifest.applicationDigestSha256) {
+  fail('copied application digest does not match the package manifest -- the transported bytes were altered')
+}
 if (sha256(readFileSync(executablePath)) !== manifest.executableDigestSha256) fail('executable digest does not match the package manifest')
 
 // Anti-vacuous discipline applies to EVERY packaged spec, not just one: each

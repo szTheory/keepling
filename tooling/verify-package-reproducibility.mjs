@@ -1,9 +1,16 @@
 #!/usr/bin/env node
 
 /**
- * O-40 / QUAL-03 / MAC-05: proves (or disproves) that packaging the desktop
- * app produces byte-identical output across SEPARATE `pnpm package:desktop`
- * invocations at one clean revision.
+ * O-40 / QUAL-03 / MAC-05 (06-02 Task 3 wording correction): proves (or
+ * disproves) that packaging the desktop app produces byte-identical output
+ * across SEPARATE `pnpm package:desktop` invocations, ON ONE MACHINE, AT
+ * ONE REVISION. That is the entire scope of the claim this lane measures --
+ * it is a single-machine, single-revision nondeterminism canary, NOT a
+ * cross-machine or cross-revision reproducibility guarantee. Describing the
+ * property as machine-independent would be the same over-broad claim O-40
+ * itself corrected once already (a digest computed on one machine
+ * legitimately need not match one computed on a different machine or
+ * runner image, and this lane says nothing about that case).
  *
  * This tool is deliberately NOT allowed to declare a pass by comparing
  * nothing, comparing a tree to itself, or silently downgrading an

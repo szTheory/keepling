@@ -27,6 +27,21 @@
  * Task 3) re-measures reproducibility on every gate invocation, so any
  * future non-determinism this revision does not exhibit is caught the next
  * time the gate runs, not assumed away.
+ *
+ * O-40 / T-06-02-01 (06-02 Task 3): `applicationDigestSha256` is correct and
+ * caught a real transport defect -- `actions/upload-artifact`'s own zip of
+ * a raw `.app` directory tree does not reliably preserve POSIX mode bits
+ * and symlinks across the upload/download round trip, so a digest computed
+ * before upload can legitimately disagree with the same digest computed
+ * after download even though nothing about the *application* changed. The
+ * fix is the pipe, never the binding: this script also produces a `ditto
+ * -c -k --sequesterRsrc --keepParent` archive of the copied application and
+ * records its own `archiveDigestSha256` alongside `applicationDigestSha256`.
+ * `ditto` is Apple's own archiver and is mode/resource-fork-aware by
+ * design; `tooling/smoke-desktop-packaged.mjs` expands that archive with
+ * `ditto -x -k` and re-verifies the expanded tree against
+ * `applicationDigestSha256` in addition to the archive's own digest, so a
+ * transport that still loses bytes is caught at the consuming end.
  */
 
 import { createHash } from 'node:crypto'
@@ -327,6 +342,14 @@ const applicationDigestSha256 = hashDirectory(applicationPath)
 if (hashDirectory(copiedApplicationPath) !== applicationDigestSha256) fail('the copied application digest differs from the built application')
 if (hashFile(builtExecutablePath) !== hashFile(executablePath)) fail('the copied executable differs from the built executable')
 
+// T-06-02-01: produce the lossless transport archive from the SAME copied
+// application whose directory digest was just verified, so
+// `archiveDigestSha256` is bound to bytes already known to match
+// `applicationDigestSha256` before it ever leaves this machine.
+const archivePath = join(artifactRoot, `${executableName}.ditto.zip`)
+run('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', copiedApplicationPath, archivePath])
+const archiveDigestSha256 = hashFile(archivePath)
+
 const versionsJson = run(
   executablePath,
   ['-p', 'JSON.stringify(process.versions)'],
@@ -352,6 +375,8 @@ if (Object.values(embeddedVersions).some((value) => typeof value !== 'string' ||
 const manifest = {
   applicationDigestSha256,
   applicationPath,
+  archiveDigestSha256,
+  archivePath,
   architecture,
   copiedApplicationPath,
   createdAt: new Date().toISOString(),

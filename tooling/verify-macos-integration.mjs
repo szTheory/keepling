@@ -35,7 +35,7 @@ import { createHash } from 'node:crypto'
 import { spawn, spawnSync } from 'node:child_process'
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
 
 const repositoryRoot = resolve(import.meta.dirname, '..')
@@ -340,8 +340,36 @@ const loadManifest = () => {
     }
     return candidate
   }
-  const copiedApplicationPath = assertOutsideRepository(manifest.copiedApplicationPath, 'copied application')
-  const executablePath = assertOutsideRepository(manifest.executablePath, 'packaged executable')
+  let copiedApplicationPath = assertOutsideRepository(manifest.copiedApplicationPath, 'copied application')
+  let executablePath = assertOutsideRepository(manifest.executablePath, 'packaged executable')
+
+  // T-06-02-01: this manifest may have crossed a CI artifact boundary where
+  // only the `ditto` transport archive travels (the raw `.app` directory
+  // tree is what previously lost mode bits/symlinks in
+  // `actions/upload-artifact`'s own zip). Fall back to expanding the
+  // archive -- verifying ITS digest first -- exactly as
+  // `smoke-desktop-packaged.mjs` does.
+  if (!existsSync(copiedApplicationPath)) {
+    const archivePath = manifest.archivePath ? resolve(manifest.archivePath) : null
+    if (!archivePath || !existsSync(archivePath)) {
+      console.error(`macOS integration lane failed: neither the copied application nor its transport archive exist: ${manifest.copiedApplicationPath}`)
+      process.exit(1)
+    }
+    const archiveDigest = createHash('sha256').update(readFileSync(archivePath)).digest('hex')
+    if (archiveDigest !== manifest.archiveDigestSha256) {
+      console.error('macOS integration lane failed: transport archive digest does not match the package manifest')
+      process.exit(1)
+    }
+    const expandRoot = mkdtempSync(join(tmpdir(), 'keepling-macos-integration-expand-'))
+    const dittoExpand = spawnSync('ditto', ['-x', '-k', archivePath, expandRoot], { encoding: 'utf8' })
+    if (dittoExpand.error || dittoExpand.status !== 0) {
+      console.error(`macOS integration lane failed: ditto -x -k failed to expand the transport archive: ${dittoExpand.stderr ?? dittoExpand.error}`)
+      process.exit(1)
+    }
+    copiedApplicationPath = join(expandRoot, basename(manifest.copiedApplicationPath))
+    executablePath = join(copiedApplicationPath, relative(manifest.copiedApplicationPath, manifest.executablePath))
+  }
+
   if (!copiedApplicationPath.endsWith('.app') || !existsSync(copiedApplicationPath)) {
     console.error('macOS integration lane failed: manifest does not select an existing copied .app')
     process.exit(1)

@@ -59,11 +59,17 @@ jobs:
           echo "artifact-root=$artifact_root" >> "$GITHUB_OUTPUT"
           digest=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync(process.argv[1],'utf8')).applicationDigestSha256)" "$manifest_path")
           echo "application-digest=$digest" >> "$GITHUB_OUTPUT"
-          # Stage the artifact under a fixed, relative-from-workspace path so
-          # actions/upload-artifact preserves a predictable layout for every
-          # downstream download.
+          archive_path=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync(process.argv[1],'utf8')).archivePath)" "$manifest_path")
+          # T-06-02-01: stage ONLY the manifest and the `ditto` transport
+          # archive -- a single regular file -- rather than the raw `.app`
+          # directory tree `actions/upload-artifact`'s own zip previously
+          # lost mode bits and symlinks from. Every downstream job expands
+          # this archive itself and re-verifies against
+          # `applicationDigestSha256` (see `smoke-desktop-packaged.mjs` and
+          # `verify-macos-integration.mjs`).
           mkdir -p "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}"
-          cp -R "$artifact_root"/. "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/"
+          cp "$manifest_path" "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/"
+          cp "$archive_path" "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
@@ -103,11 +109,16 @@ jobs:
             const root = process.argv[1];
             const manifestPath = path.join(root, 'package-manifest.json');
             const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-            const appName = path.basename(manifest.copiedApplicationPath);
-            const rebasedAppPath = path.join(root, appName);
-            const executableName = path.basename(manifest.executablePath);
-            manifest.copiedApplicationPath = rebasedAppPath;
-            manifest.executablePath = path.join(rebasedAppPath, 'Contents', 'MacOS', executableName);
+            // T-06-02-01: only the transport archive -- a single regular
+            // file -- was actually staged and downloaded onto this runner.
+            // The raw .app directory this manifest's copiedApplicationPath
+            // names was the BUILD job's ephemeral tree and does not exist
+            // here; the consuming scripts (smoke-desktop-packaged.mjs,
+            // verify-macos-integration.mjs) expand archivePath themselves
+            // and re-verify against applicationDigestSha256, so
+            // copiedApplicationPath/executablePath are left as recorded.
+            const archiveName = path.basename(manifest.archivePath);
+            manifest.archivePath = path.join(root, archiveName);
             fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
             console.log(manifestPath);
           " "$artifact_root" | tee "$RUNNER_TEMP/rebase.txt"
@@ -203,11 +214,12 @@ jobs:
             const root = process.argv[1];
             const manifestPath = path.join(root, 'package-manifest.json');
             const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-            const appName = path.basename(manifest.copiedApplicationPath);
-            const rebasedAppPath = path.join(root, appName);
-            const executableName = path.basename(manifest.executablePath);
-            manifest.copiedApplicationPath = rebasedAppPath;
-            manifest.executablePath = path.join(rebasedAppPath, 'Contents', 'MacOS', executableName);
+            // T-06-02-01: see the identical comment in desktop-packaged --
+            // only the archive travels; copiedApplicationPath/executablePath
+            // are left as recorded and verify-macos-integration.mjs expands
+            // archivePath itself.
+            const archiveName = path.basename(manifest.archivePath);
+            manifest.archivePath = path.join(root, archiveName);
             fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
             console.log(manifestPath);
           " "$artifact_root"
