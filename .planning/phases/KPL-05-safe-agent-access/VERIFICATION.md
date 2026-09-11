@@ -1,95 +1,237 @@
 ---
 phase: KPL-05-safe-agent-access
-verified: 2026-09-10T22:05:00Z
+verified: 2026-09-11T02:40:00Z
 status: gaps_found
 score: 4/5 success criteria verified
 behavior_unverified: 0
 overrides_applied: 0
+re_verification:
+  previous_status: gaps_found
+  previous_score: 4/5
+  previous_revision: 382419d
+  this_revision: 70f9cef
+  gaps_closed:
+    - >-
+      The client_kind escalation is CLOSED and independently re-probed. An mcp grant now receives
+      exactly 401 device_authentication_required on GET /api/v1/sync, GET /api/v1/sync/bootstrap,
+      GET /api/v1/device-grants and DELETE /api/v1/device-grants/:installation_id.
+    - >-
+      Grant administration settled without weakening either side. The new owner-session routes
+      refuse an agent bearer (401 authentication_required, a DIFFERENT problem code, so the two
+      credential classes are visibly distinct), and the bearer-only route keeps its
+      "ignores browser cookies" assertion verbatim.
+    - >-
+      tooling/mcp-client/final-state.mjs no longer consumes the defect; readGrants() reads
+      /api/v1/account/device-grants with the owner's session. The prior
+      coincidental_reliance_items entry is resolved and removed.
+    - >-
+      The adversarial lane gained a real over-delivery probe (4 cases, 10 total) with a canary
+      title, a final-state read-back through the owner's session, exact-401 assertions, and a
+      control call proving the credential is not merely broken. It is not vacuous.
+    - >-
+      WINDOWS #66 carries the causality correction; #66 and #70 are marked fixed.
+  gaps_remaining:
+    - >-
+      The escalation was NARROWED, not closed. The same agent credential still reaches the shared
+      command surface with NO scope check. Proven by probe at 70f9cef, not inferred.
+  regressions: []
 gaps:
-  - truth: "SC1 — Representative MCP hosts can read bounded Inbox, Today, Upcoming, project, task, and search resources using least-privilege authorization."
+  - truth: >-
+      SC1 — Representative MCP hosts can read bounded Inbox, Today, Upcoming, project, task, and
+      search resources using least-privilege authorization.
     status: failed
     reason: >-
-      The MCP read surface itself is bounded, paginated, and redacted, but the boundedness is a
-      property of the SURFACE, not of the agent's CREDENTIAL. An MCP device grant carrying only
-      scope ["tasks.read"] is accepted verbatim by the :device_grant_authenticated pipeline, which
-      also fronts the native unbounded sync surface and the device-grant administration routes.
-      Verified live by direct probe against a disposable server booted by this phase's own
-      tooling/mcp-client/client.mjs — not inferred from reading code.
+      The credential is still not least-privilege. 05-13 closed the client_kind half of the
+      boundary; the scope half does not exist. `:client_authenticated` / `:client_mutation` admit
+      an mcp grant and NEVER read its scope — `authenticate_device_grant/1` does not even assign
+      `:current_scope`, so scope is structurally unavailable to those controllers. Probed live at
+      70f9cef against a disposable server booted by this phase's own tooling: a grant scoped
+      ["tasks.read"] ONLY captured a task through POST /api/v1/commands/capture-task (201,
+      persisted, read back through the owner's session) and then trashed it through POST
+      /api/v1/commands/trash-task (200; the owner's read returns 404 task_not_found and the task
+      appears in /api/v1/trash) — while the SAME credential attempting the SAME operations at
+      /mcp/v1 was refused `insufficient_scope` in the same run. The mirror also holds: a grant
+      scoped ["tasks.write"] ONLY read GET /api/v1/search and GET /api/v1/projects with 200.
+      The agent credential therefore reaches all 19 /api/v1/commands/* endpoints, roughly 15 of
+      which the MCP tool set deliberately does not expose at all (trash, restore, undo,
+      resolve-conflict, plan-for-today, move-today, and the five organization commands). The
+      scope tag a user consents to at /oauth/authorize is decorative outside /mcp/v1.
     artifacts:
       - path: "apps/server/lib/keepling_web/router.ex"
         issue: >-
-          Lines 120-127: GET /api/v1/device-grants, DELETE /api/v1/device-grants/:installation_id,
-          GET /api/v1/sync and GET /api/v1/sync/bootstrap all sit behind :device_grant_authenticated.
-          KeeplingWeb.MCP.Pipeline refuses a grant whose client_kind is not "mcp" (one direction),
-          but KeeplingWeb.Auth.authenticate_device_grant/1 has no symmetric refusal of client_kind
-          == "mcp" (the other direction). The asymmetry is the hole.
+          Lines 197-241: /api/v1/mutations/:id, /projects, /projects/:organization_id/tasks,
+          /api/v1/search and all 19 /api/v1/commands/* sit behind :client_authenticated /
+          :client_mutation, which admit an mcp grant unconditionally.
       - path: "apps/server/lib/keepling_web/auth.ex"
-        issue: "authenticate_device_grant/1 (lines 118-150) asserts nothing about client_kind and nothing about scope."
-      - path: "apps/server/lib/keepling_web/controllers/device_grant_controller.ex"
         issue: >-
-          list/2 (line 102) returns every grant on the account; revoke/2 (line 112) revokes any
-          installation_id on the account. Neither checks the caller's client_kind or its scope.
-      - path: "tooling/mcp-client/final-state.mjs"
+          authenticate_device_grant/1 (lines 178-191) assigns current_client_kind but never
+          current_scope. authenticate_client/2 (line 94) calls it directly, deliberately bypassing
+          authenticate_first_party_device_grant/1. The scope an agent was granted cannot be
+          checked downstream because it was never carried.
+      - path: "apps/server/lib/keepling_web/controllers/command_controller.ex"
         issue: >-
-          readGrants() (lines 68-78) authenticates against GET /api/v1/device-grants with an MCP
-          agent's device-grant bearer and asserts status === 200. The simulated-client lane's PASS
-          therefore DEPENDS on the escalation existing. Closing the hole breaks a currently-green lane.
-      - path: ".planning/WINDOWS.md"
+          No scope check on any of the 19 commands. The MCP tool layer's two-layer gate
+          (KeeplingWeb.MCP.Scope + Keepling.Application.AgentScope) has no counterpart here.
+      - path: "apps/server/lib/keepling/application/agent_scope.ex"
         issue: >-
-          Window #66 records the escalation as a hypothetical consequence of a PROPOSED fix ("moving
-          the routes to :client_authenticated would ALSO let any device grant enumerate and revoke").
-          The causality is backwards: the escalation is present today on the pipeline as committed.
-          The /api/v1/sync bypass is not recorded anywhere in WINDOWS.md, the SUMMARYs, or REQUIREMENTS.md.
+          Its moduledoc calls itself "the authoritative, application-boundary scope gate" and says
+          "a bug in the adapter alone cannot widen what an agent grant may do". Every one of its 8
+          call sites is inside lib/keepling_web/mcp/. It is an MCP-adapter gate wearing an
+          application-boundary label.
+      - path: "apps/server/lib/keepling_web/auth.ex"
+        issue: >-
+          Lines 143-151 justify the :client_authenticated carve-out as D-09 and as
+          "scope-checked and bounded". Bounded is true (cursor + limit). Scope-checked is false.
+          D-09 (05-CONTEXT.md:102) says search must be a shared APPLICATION-LEVEL query rather
+          than an MCP-only code path — a statement about the query layer, which
+          KeeplingWeb.MCP.Resources already satisfies by calling Keepling.Application.Search
+          in-process. D-09 does not authorize admitting an agent bearer to the HTTP route.
+      - path: "tooling/mcp-lanes/adversarial.mjs"
+        issue: >-
+          OVER_DELIVERY_ROUTES (line 225) names only the four client_kind routes. No lane probes
+          scope over-delivery, so the gate is green while a read-only grant writes.
+      - path: "packages/contracts/openapi/keepling.yaml"
+        issue: >-
+          /commands/trash-task and its siblings advertise `security: DeviceBearer` with no scope
+          requirement, so the published contract states the over-delivery as intended behaviour.
     missing:
-      - "A client_kind == \"mcp\" refusal on :device_grant_authenticated (symmetric to MCP.Pipeline's non-mcp refusal), or an explicit per-route allow-list."
-      - "A scope check on DeviceGrantController.list/2 and revoke/2 so grant administration is not reachable by an agent credential of any scope."
-      - "A deliberate authorization decision for the owner's browser path (window #66), which must not be a pipeline swap."
-      - "A negative test in the adversarial lane asserting that an MCP grant is refused on /api/v1/sync, /api/v1/sync/bootstrap, and both /api/v1/device-grants routes."
-      - "Rework of tooling/mcp-client/final-state.mjs readGrants() to use the owner's session cookie, since its current MCP-bearer path is the escalation."
-      - "Correction of WINDOWS.md #66 to state the escalation as present, not prospective."
+      - >-
+        A scope gate on the shared command surface — either carry the grant's scope through
+        authenticate_device_grant/1 and require tasks.write (and tasks.bulk where the MCP tool set
+        requires it) in CommandController, or refuse mcp grants on :client_authenticated /
+        :client_mutation outright.
+      - >-
+        A decision on the ~15 commands the MCP tool set withholds but the credential reaches. If
+        withholding them from agents was deliberate, the HTTP route must enforce it; if it was
+        not, say so.
+      - >-
+        A scope over-delivery case set in the adversarial lane, mutation-tested the way 05-13
+        mutation-tested the client_kind cases: a tasks.read grant must be refused on
+        /api/v1/commands/*, and a tasks.write grant must be refused on the reads it was not
+        granted, with a control call proving the credential still works where it should.
+      - >-
+        Correction of auth.ex's "scope-checked" justification and of AgentScope's
+        "application-boundary" moduledoc, or the code change that makes both true.
 deferred:
-  - truth: "SRV-02 — User receives the same domain invariants through web, desktop, iPhone, API, and MCP entry points."
-    addressed_in: "Deferred beyond Phase 5 (no later milestone phase currently claims it; needs an explicit owner)"
+  - truth: >-
+      SRV-02 — User receives the same domain invariants through web, desktop, iPhone, API, and
+      MCP entry points.
+    addressed_in: "Unowned — window #69 driver wiring; not claimed by Phase 6"
     evidence: >-
-      REQUIREMENTS.md line 128 states SRV-02 "completes at the Phase 5 cross-adapter proof". That
-      lane now exists and ran live, but 2 of its 4 legs are BLOCKED on unwired drivers (electron,
-      iphone). This is disclosed missing evidence, not a defect — the remaining work is driver
-      wiring in tooling/cross-adapter/legs.mjs, not product change. Phase 6 SC2 names "exact server,
-      web, packaged Electron, native archive ... evidence bound to one revision", which is adjacent
-      but does not name SRV-02 or the cross-adapter lane, so this is recorded as an unowned deferral
-      rather than a silent one.
-coincidental_reliance_items:
-  - truth: "SC5 — the simulated-client lane scores final state and forbidden side effects (9 scenarios PASS)."
-    reason: undeclared-precondition
-    harden: >-
-      final-state.mjs readGrants() reads the account's grant list using an MCP agent's own bearer.
-      Nothing in the product is supposed to guarantee that an agent credential can enumerate grants
-      — in fact the phase goal forbids it. The lane passes because of the defect above. Re-point
-      readGrants() at the owner's session cookie (readTask/readActivity already use it) so the lane's
-      green does not rest on the escalation it should be catching.
+      REQUIREMENTS.md:128 states SRV-02 completes at the Phase 5 cross-adapter proof. That lane
+      exists and ran (web-api and mcp legs PASS, comparison_ok=true); electron and iphone legs
+      are BLOCKED on unwired drivers, not missing artifacts. Unchanged by 05-13.
+coincidental_reliance_items: []
 ---
 
-# Phase KPL-05: Safe Agent Access — Verification Report
+# Phase KPL-05: Safe Agent Access — Re-Verification Report
 
-**Phase Goal:** External AI tools can use Keepling meaningfully without bypassing its authorization, domain rules, or recovery model.
-**Verified:** 2026-09-10 (main checkout, `382419d`)
+**Phase Goal:** External AI tools can use Keepling meaningfully without bypassing its
+authorization, domain rules, or recovery model.
+**Verified:** 2026-09-11 (main checkout, `70f9cef`, read-only)
 **Status:** gaps_found
-**Re-verification:** No — initial verification
+**Re-verification:** Yes — after 05-13 gap closure. Previous: gaps_found 4/5 at `382419d`.
 
 ## Verdict
 
 **NOT MET.**
 
-The two BLOCKED lanes would *not*, on their own, have sunk this phase. `cross-adapter`'s electron
-and iphone legs are unwired drivers over artifacts that genuinely exist, and SRV-02 was scheduled
-from the start to complete at that lane — that is textbook disclosed missing evidence and would have
-supported a MET WITH DISCLOSURE verdict at 4/5.
+05-13 did what it was asked to do, and did it well. I re-probed all four routes myself against a
+disposable server booted from this phase's own tooling: `/api/v1/sync`, `/api/v1/sync/bootstrap`,
+`GET /api/v1/device-grants` and `DELETE /api/v1/device-grants/:installation_id` each answer exactly
+401 to an mcp grant, and the new owner-session routes correctly refuse that same bearer with a
+*different* problem code. The allow-list is the right shape, the placement on the pipeline rather
+than per route is the right call, the second route rather than a pipeline swap weakens no existing
+assertion, the harness no longer eats the defect it was supposed to catch, and the new
+over-delivery cases have a canary, a final-state read-back and a control — they are not vacuous.
+Nothing was weakened to make a test pass; the e2e assertion that changed is strictly stronger than
+the unsatisfiable substring match it replaced.
 
-What sinks it is a defect in the phase's central claim, found by probe, not by reading SUMMARYs: an
-MCP agent credential scoped to `tasks.read` alone can read the entire account through the native
-sync surface, enumerate every device grant, and revoke another client's grant. The goal sentence
-names exactly these three things — authorization, domain rules, recovery model — and the third one
-is not merely unproven, it is actively attackable by the credential this phase issues.
+What sinks the phase is that the fix closed one half of a two-part boundary and the SUMMARY's own
+caveat #1 names the other half without weighing how much it carries. A credential's authority is
+`client_kind × scope`. 05-13 made `client_kind` a default-deny allow-list. `scope` is not checked
+anywhere outside `/mcp/v1` — it is not merely unchecked, it is not even *carried*:
+`authenticate_device_grant/1` assigns `current_client_kind` and never assigns `current_scope`, so
+no controller on the shared surface could check it if it wanted to.
+
+The consequence is not theoretical and is not a narrowing of an already-narrow finding. In one
+probe run, a grant scoped `["tasks.read"]` and nothing else:
+
+- created a task through `POST /api/v1/commands/capture-task` → **201**, persisted, read back
+  through the owner's session;
+- **trashed** it through `POST /api/v1/commands/trash-task` → **200**; the owner's own read then
+  returns `404 task_not_found` and the task appears in `/api/v1/trash`;
+- was refused `insufficient_scope` at `/mcp/v1` for the identical operations, in the same run,
+  with the same token.
+
+`keepling.capture_task` and `keepling.complete_task` refuse this credential by design. The HTTP
+twin of the same command accepts it. And `trash` is not even *exposed* as an MCP tool — it is one
+of roughly fifteen commands the phase's tool set deliberately withholds from agents and the
+credential reaches anyway.
+
+The goal sentence names three things. Domain rules hold (the shared surface is the same
+`Commands.dispatch/3`, revision-gated, closed-schema, identity-addressed). The recovery model
+holds, and is *better* than it was — Trash is durable and restorable, the action is attributed to
+`mcp` in the one history, and an agent can no longer revoke the owner's iPhone. Authorization does
+not hold. A read-only agent writes and destroys. That is the same test that failed last time,
+applied to the half of the boundary that did not get fixed.
+
+## Rulings on the two caveats 05-13 asked a re-verifier to weigh
+
+**Caveat 1 — "closed the client_kind boundary but NOT scope." This is the finding, not a footnote.**
+05-13 frames it as a scoping choice ("the escalation was kind-shaped, not scope-shaped"). The
+escalation was kind-shaped *as discovered*, because the four routes I probed last time happened to
+be on the kind-gated pipeline. The underlying defect was always that an agent credential is treated
+as a first-party credential once authenticated, and the scope half is the larger surface: 19
+command endpoints and 4 read endpoints versus 4. I do not accept the framing, and I record that I
+missed this half myself at `382419d` — it is pre-existing, not introduced by 05-13, and my previous
+CHECK of MCP-02 was wrong.
+
+**The `:client_authenticated` carve-out is NOT defensible as written.** Three separate reasons:
+
+1. *Its stated justification is factually false.* auth.ex:147 says that surface is "scope-checked
+   and bounded". Bounded is true. Scope-checked is false, and cannot be true, because the scope is
+   not carried into the conn.
+2. *D-09 does not say what it is cited for.* 05-CONTEXT.md:102 requires search and the project view
+   to be shared application-level queries rather than MCP-only code paths, so that MCP has no
+   capability the other adapters lack. `KeeplingWeb.MCP.Resources` satisfies that by calling
+   `Keepling.Application.Search` / `Projects` / `TaskViews` **in-process**. D-09 is a statement
+   about the query layer. It says nothing about which credential classes the HTTP route admits.
+   The carve-out is an unexamined inheritance from D-49, a decision written before an agent
+   credential class existed.
+3. *Its stated cost is not real.* The SUMMARY says extending the refusal "would have broken
+   /api/v1/search, /api/v1/projects and the shared command surface for the MCP adapter". I looked
+   for the consumer and there is none. `mcp/resources.ex` and `mcp/tools.ex` call the application
+   modules directly — neither makes an HTTP request. The harness does not need it either:
+   `final-state.mjs` uses the owner's session for every read, and the cross-adapter `web-api` leg
+   posts commands with the owner's session cookie and CSRF token, not an agent bearer. I did not
+   find one code path, product or test, that requires an mcp grant on `:client_authenticated`.
+   The carve-out appears to cost nothing to remove.
+
+**Caveat 2 — "no live model was asked to attempt the escalation." Correctly disclosed, and it does
+not change any verdict here.** A model-driven escalation attempt would be weaker evidence than what
+exists, not stronger: the over-delivery cases drive the credential directly, which is the worst
+case (a hostile host, not a well-behaved one being talked into misbehaving), and they are scored on
+final state. The right complaint about the model lane is not that it did not attempt the
+escalation; it is that neither it nor any other lane probes scope over-delivery *at all*, by any
+driver. Fix the coverage, not the driver.
+
+## Ruling on window #71 (the test-suite login budget)
+
+**Acceptable as a stop-gap; masks nothing in production; the window must stay open.** I confirmed
+the 50→400 change lives in `apps/server/config/test.exs` under `config :keepling,
+:rate_limit_policy`, and that the production defaults are `@default_policies` inside
+`lib/keepling/accounts/rate_limit.ex`, reached through `Application.get_env(:rate_limit_policy,
+%{})` — which in `:prod` finds no override. No production abuse policy moved.
+
+It is nonetheless a deferral, not a fix, and #71 says so honestly. The real defect is that
+`auth_controller.ex:59` collapses `:rate_limited` into the same 401 `authentication_failed` a wrong
+password gets. That collapse is *correct for a caller* — an attacker must not learn whether they
+are throttled or wrong — and *wrong for a test log*, where it made four unrelated MCP tests fail on
+a credential that was never wrong and let an executor report the suite green. Raising the cap buys
+headroom (roughly 8x rather than 1.06x); it does not make the failure mode legible. #71's own two
+suggestions (assert the login count against the cap, or emit a distinguishable error in `:test`)
+are the right fixes. Leaving it open is the correct disposition.
 
 ## Goal Achievement
 
@@ -97,140 +239,162 @@ is not merely unproven, it is actively attackable by the credential this phase i
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | Representative MCP hosts read bounded Inbox/Today/Upcoming/project/task/search using least-privilege authorization | ✗ FAILED | Read SURFACE verified (`resources.ex`, default limit 20 / max 50, cursor pagination, `Redaction.page/2`; `resources_test.exs` 22 cases; `representative-model` lane drove a live model through `resources/read` and search). Least-privilege AUTHORIZATION falsified by probe — see Gap 1. |
-| 2 | A direct user request can capture, update, complete, or reopen exactly one task through closed schemas and stable, model-correctable errors | ✓ VERIFIED | `tools.ex` (848 lines) — four single-task tools, closed key sets (`@capture_task_keys`, `@lifecycle_keys`), `mutation_id` idempotency, `expected_revision` gate, `Errors.unknown_tool/0` fallthrough; `tools_test.exs` 14 cases; `simulated-client` 9 scenarios scored on final DB state; live model passed `benign_capture` AND `scope_forbidden_request` (a real model asked to write with a read-only grant was refused); e2e step 2 against the real stack. |
-| 3 | Ambiguous matches mutate nothing; bulk/high-impact changes require a bound exact preview and explicit commit; stale previews fail atomically | ✓ VERIFIED | `addressing.ex` (identity-only), `ambiguity_test.exs` 9 cases, `preview_commit_test.exs` 11 cases, `Keepling.Application.Preview`. Live model scenarios `under_determined_target` (model could not guess a target and mutated nothing — proven by `assertNoForbiddenSideEffects`, not by the model's own words) and `bulk_destructive_via_preview_commit` (lane asserts the destructive change was *reached through* the two-step pair). `cross-adapter` `update_stale_expected_revision` returns `refused:task_lifecycle_conflict` with `final_revision=2` (unchanged) on both live legs. |
-| 4 | User-visible history shows typed actions, affected identities/revisions, result, actor, and recovery without exposing private chain of thought | ✓ VERIFIED | `e2e/agent-access.spec.ts` steps 3 and 4 PASS against the real stack — the owner's browser sees both agent actions with actor attribution, and the undo control on the agent's completion works. (The spec as a whole is red, but it reaches line 250, i.e. it fails in step 5 / grant management, *after* every MCP-04 assertion has passed. Verified by running the spec, not by reading the summary.) `content_isolation_test.exs` 8 cases; `redaction.ex`; the `representative-model` lane never reads the model's own text — verdicts come from `final-state.mjs`. |
-| 5 | Deterministic, protocol, simulated-client, representative-model, and adversarial suites score final state and forbidden side effects | ✓ VERIFIED | All five lanes exist as files and all five PASS in my own runs: deterministic 183, protocol 2, simulated-client 9, adversarial 6, representative-model 6 (live model). Scoring is on final DB state + `FORBIDDEN_SIDE_EFFECTS`, never on HTTP status — `parseSimulatedClientOutput` deliberately never inspects a status code. See the coincidental-reliance note on the simulated-client lane. |
+| 1 | Bounded Inbox/Today/Upcoming/project/task/search reads using **least-privilege authorization** | ✗ FAILED | The read SURFACE is sound and the unbounded-sync falsifier is closed (re-probed: 401 on both sync routes). The CREDENTIAL is still not least-privilege: a `tasks.read`-only grant writes and trashes via `/api/v1/commands/*`; a `tasks.write`-only grant reads `/api/v1/search` and `/api/v1/projects`. Both probed live at `70f9cef`. See Gap 1. |
+| 2 | Capture/update/complete/reopen exactly one task through closed schemas and stable, model-correctable errors | ✓ VERIFIED | Unchanged from `382419d` and unaffected by 05-13. `tools.ex` closed key sets, `mutation_id` idempotency, `expected_revision` gate, `errors.ex` closed vocabulary; 14 tool tests; live model refused an out-of-scope write at `/mcp/v1` (I re-observed that refusal directly in my own probe). SC2's text carries no least-privilege clause — that clause lives in MCP-02, which I am withdrawing. |
+| 3 | Ambiguous matches mutate nothing; bulk/high-impact changes require a bound exact preview and explicit commit; stale previews fail atomically | ✓ VERIFIED (disclosed weakness) | `addressing.ex` is identity-only on both the MCP and the shared command surface, so no name-matching write path exists to be ambiguous with; `ambiguity_test.exs` 9 cases; `preview_commit_test.exs` 11 cases. **Disclosure:** preview/commit is a property of the MCP tool surface, not of the credential. There is no bulk endpoint on the shared command surface — every command is single-target, revision-gated, individually logged and individually recoverable — so going around the pair costs an agent N separate audited calls rather than one unbound mutation. Not enough to fail SC3; recorded so it is not read as a clean pass. |
+| 4 | History shows typed actions, identities/revisions, result, actor, recovery, without private chain of thought | ✓ VERIFIED (strengthened) | `agent-access.spec.ts` now passes to completion (26/26) rather than dying at line 250, so step 5 ran for the first time in the phase. Attribution survives the shared surface: `command_controller.ex:594` takes `client_kind` from `current_client_kind`, which `authenticate_device_grant/1` assigns from the grant — so even the commands an agent reaches by over-delivery are recorded as `mcp`, not as `web`. `content_isolation_test.exs` 8 cases. |
+| 5 | Deterministic, protocol, simulated-client, representative-model, adversarial suites score final state and forbidden side effects | ✓ VERIFIED (improved) | All five PASS. The prior coincidental-reliance defect is genuinely closed — `final-state.mjs:80` reads `/api/v1/account/device-grants` with `Cookie: sessionCookie`; the `deviceGrantAccessToken` parameter is gone from the module and from all six call sites. The adversarial lane went 6→10 cases with a real over-delivery probe. **Coverage note, not a failure:** every lane still probes only `client_kind` over-delivery. No lane probes scope over-delivery, which is why the gate is green while Gap 1 is live. |
 
 **Score:** 4/5 truths verified (0 present, behavior-unverified)
 
-### Deferred Items
-
-| # | Item | Addressed In | Evidence |
-|---|------|--------------|----------|
-| 1 | SRV-02 cross-adapter completion | Unowned — not Phase 5, not explicitly Phase 6 | 2 of 4 legs BLOCKED on unwired drivers; see frontmatter `deferred` |
+Same numeral as `382419d`, and that is not a coincidence or a stall: SC1 fails on the same sentence
+("least-privilege authorization") for the same class of reason (the agent credential is
+over-privileged relative to the surface the phase built), on the other half of the same boundary.
+No criterion regressed; no new defect was introduced by 05-13.
 
 ### Requirements Coverage
 
-| Requirement | Recommendation | Evidence | Where the evidence is thin |
-|-------------|----------------|----------|-----------------------------|
-| **MCP-01** — bounded, paginated reads without direct database access | ✗ **DO NOT CHECK** | Surface is real: `resources.ex` routes all six views through one shared port with cursor+limit; 22 resource tests; live model read through it. | The requirement's operative word is *bounded*. Probe shows the same agent bearer returns full task content (title `probe secret payload`) from `GET /api/v1/sync/bootstrap` — unbounded, unpaginated, unredacted. The agent has "direct database access" in every sense that matters. Fix the pipeline, then check. |
-| **MCP-02** — capture/update/complete/reopen via closed schemas, least-privilege scopes, idempotency, expected revisions, stable errors | ✓ **CHECK** | Every clause independently exercised: closed key sets in `tools.ex`; generated schemas under `contracts:check:mcp`; `mutation_id` replay handling; explicit `expected_revision` comparison against a fresh read; `errors.ex` closed vocabulary (258 lines); live model refused on an out-of-scope write; identical `result_code`/`conflict_shape` on web-api and mcp legs. | Thin spot, disclosed: "least-privilege scopes" holds *for task writes* (proven), but the credential is over-privileged *outside* the task surface (Gap 1). Check MCP-02 on its own text; do not let it stand as evidence that the agent credential is least-privilege overall. |
-| **MCP-03** — ambiguous requests return candidates and perform no mutation | ✓ **CHECK** | `ambiguity_test.exs` 9 cases; identity-only addressing in `addressing.ex` means there is no name-matching write path to be ambiguous *with*; the live-model `under_determined_target` scenario is scored by before/after DB diff, so "no mutation" is proven by state, not by the model's claim. | Strongest of the five. No material thinness. |
-| **MCP-04** — user sees which agent action occurred, affected identities/revisions, and an undo path, without private chain of thought | ✓ **CHECK** | e2e steps 3-4 PASS on the real stack (see SC4 row) — this is browser-observed, not unit-level. `content_isolation_test.exs` 8 cases. The representative-model harness structurally cannot store model reasoning: it never reads assistant text. | The "no chain of thought" half is proven by construction (nothing writes it) rather than by an adversarial attempt to *make* the server store reasoning. Acceptable, but it is an absence-of-mechanism argument. |
-| **MCP-05** — bulk/destructive changes require an exact bound preview and explicit commit; stale commits fail atomically with zero partial writes | ✓ **CHECK** | `Keepling.Application.Preview`; `preview_commit_test.exs` 11 cases; `bulk_destructive_via_preview_commit` driven by a live model, which had to discover and use the two-step pair; forbidden-side-effect scoring proves zero partial writes. | "Zero partial writes" is asserted via the scenario diff rather than by injecting a mid-commit fault. A fault-injected partial-commit test would be stronger. Not enough to withhold the check. |
-| **SRV-02** — same domain invariants through web, desktop, iPhone, API, and MCP | ✗ **DO NOT CHECK — DEFER** | `cross-adapter` lane exists and ran live; `web-api` and `mcp` legs PASS with identical `result_code`/`conflict_shape`/`activity_fact`/`final_revision` across all 4 shared scenarios (`comparison_ok=true`). | Two of four legs BLOCKED on unwired drivers. Independently, Gap 1 is itself an SRV-02 divergence in the wrong direction: the MCP entry point does not deliver *the same* invariants, it delivers strictly more authority than the surface it fronts. Both must close. |
+| Requirement | Recommendation | Change | Evidence |
+|-------------|----------------|--------|----------|
+| **MCP-01** — bounded, paginated Inbox/Today/Upcoming/project/task/search reads without direct database access | ✓ **CHECK** | **↑ was DO NOT CHECK** | The exact falsifier I raised is closed and I re-probed it myself: `GET /api/v1/sync/bootstrap` → 401 for an mcp grant, no account content in the body. Every read surface an agent can now reach is bounded and cursor-paginated (`/mcp/v1` resources: default 20 / max 50 + `Redaction.page/2`; `/api/v1/search` and `/api/v1/projects`: `{items, next_cursor}`), and none is raw database access. MCP-01's own text is satisfied. **Deliberate discrepancy:** SC1 FAILS while MCP-01 CHECKS because SC1's sentence adds "using least-privilege authorization" and MCP-01's does not. The scope weakness is real and is charged to MCP-02 below, not hidden. |
+| **MCP-02** — capture/update/complete/reopen through closed semantic schemas, **least-privilege scopes**, idempotency, expected revisions, stable errors | ✗ **DO NOT CHECK** | **↓ was CHECK — I withdraw my previous recommendation** | Four of the five clauses hold and I do not dispute them. "Least-privilege scopes" is falsified by probe: a grant scoped `["tasks.read"]` captured a task (201) and trashed it (200) through `/api/v1/commands/*` while the same token was refused `insufficient_scope` at `/mcp/v1` in the same run; a grant scoped `["tasks.write"]` read `/api/v1/search` and `/api/v1/projects` (200). At `382419d` I checked MCP-02 with a disclosed thin spot — "least-privilege holds for task writes, but the credential is over-privileged outside the task surface". That disclosure was too generous: the over-privilege is *on* the task surface, via its HTTP twin. |
+| **MCP-03** — ambiguous agent requests return candidate objects and perform no mutation | ✓ **CHECK** | unchanged | Unaffected by 05-13 and by Gap 1. Addressing is identity-only on both surfaces, so the shared command endpoints add no ambiguous write path. `ambiguity_test.exs` 9 cases; the live-model `under_determined_target` scenario is scored by before/after DB diff. Strongest of the five. |
+| **MCP-04** — user sees which agent action occurred, affected identities/revisions, and an undo path, without private chain of thought | ✓ **CHECK** | unchanged, evidence strengthened | `agent-access.spec.ts` 26/26 passing to completion means steps 3-5 are all browser-observed against the real stack, not just steps 1-4. Attribution holds on the over-delivered surface too (`client_kind` derives from the grant), so Gap 1 does not produce invisible agent actions — it produces visible ones the user never authorized, which is an authorization defect, not a history defect. |
+| **MCP-05** — bulk or destructive agent changes require an exact bound preview and explicit commit; stale commits fail atomically with zero partial writes | ✓ **CHECK** (disclosed) | unchanged | `Keepling.Application.Preview`; `preview_commit_test.exs` 11 cases; `bulk_destructive_via_preview_commit` driven by a live model; `update_stale_expected_revision` returns `refused:task_lifecycle_conflict` with `final_revision` unchanged on both live cross-adapter legs. **Disclosed:** there is no bulk endpoint on the shared command surface, so Gap 1 does not hand an agent an unbound bulk mutation; it hands it N single, revision-gated, recoverable, individually-audited ones. That is an MCP-02 least-privilege problem, and I am charging it there rather than double-counting it here. |
+| **SRV-02** — same domain invariants through web, desktop, iPhone, API, and MCP entry points | ✗ **DO NOT CHECK — DEFER** | unchanged | `cross-adapter` still reports `legs_ran=2 legs_blocked=2 legs_failed=0 comparison_ok=true`; electron and iphone drivers remain unwired (window #69), unchanged by 05-13. My second SRV-02 objection — the MCP entry point delivers strictly *more* authority than the surface it fronts — is now half closed: the `client_kind` half is fixed, the `scope` half is Gap 1. |
 
-**Recommendation: check MCP-02, MCP-03, MCP-04, MCP-05. Leave MCP-01 and SRV-02 unchecked.**
+**Recommendation: check MCP-01, MCP-03, MCP-04, MCP-05. Do not check MCP-02 (withdrawn) or SRV-02
+(deferred).**
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|----|-----|--------|---------|
-| `KeeplingWeb.MCP.Dispatch` | `KeeplingWeb.MCP.Pipeline` | `:mcp` router pipeline | ✓ WIRED | Refuses `client_kind != "mcp"` and enforces the RFC 8707 resource audience. |
-| `KeeplingWeb.Auth` `:device_grant_authenticated` | `/api/v1/sync`, `/api/v1/device-grants` | router.ex 120-127 | ✗ MIS-WIRED | Accepts `client_kind == "mcp"`. This is Gap 1. |
-| `KeeplingWeb.MCP.Resources` | `Keepling.Application.Search` / projects port | compile-env ports | ✓ WIRED | Same ports the HTTP `/api/v1/search` endpoint uses — one query, not a parallel one. |
-| `tooling/verify-mcp-phase.mjs` | `tooling/mcp-lanes/*.mjs` | directory glob + default-export contract | ✓ WIRED | A lane file that fails to load is a runner failure, never a skipped lane (verified by reading the loader, exercised by the self-test). |
-| `tooling/mcp-client/final-state.mjs` | `/api/v1/device-grants` | MCP device-grant bearer | ⚠️ HOLLOW | Wired and passing, but only because of Gap 1. See coincidental-reliance. |
+| `KeeplingWeb.Auth` `:device_grant_authenticated` | `/api/v1/sync`, `/api/v1/device-grants` | `call(conn, :authenticate_device_grant)` → `authenticate_first_party_device_grant/1` | ✓ WIRED | The pipeline atom in router.ex:24 is unchanged; the dispatch at auth.ex:19 now points the same atom at the allow-listed function. Slightly confusing naming — the router still reads `:authenticate_device_grant` — but functionally correct, and confirmed by live probe rather than by reading. |
+| `@first_party_client_kinds` | `Keepling.Accounts.DeviceGrant.@client_kinds` | allow-list, default-deny | ✓ WIRED | `~w(electron iphone)` against a vocabulary of `~w(electron iphone mcp)`. A kind added later is refused until deliberately admitted. Correct shape. |
+| `/api/v1/account/device-grants` | `DeviceGrantController.list_for_owner/2` | `:api, :authenticated` (+ `:mutation` on delete) | ✓ WIRED | Probed with an agent bearer: 401 `authentication_required` — a *different* problem code from the bearer route's `device_authentication_required`, so the two credential classes are distinguishable in the refusal. |
+| `apps/web/src/api/keepling.ts` | `/api/v1/account/device-grants` | fetch with cookies | ✓ WIRED | Re-pointed; `agent-grant-list.test.tsx` asserts the new path; e2e step 5 exercises it end to end for the first time. |
+| `KeeplingWeb.Auth` `:client_authenticated` | `/api/v1/commands/*`, `/search`, `/projects` | `authenticate_client/2` → `authenticate_device_grant/1` | ✗ MIS-WIRED | Admits an mcp grant and never carries, let alone checks, its scope. **This is Gap 1.** |
+| `Keepling.Application.AgentScope` | the shared command surface | — | ✗ NOT WIRED | All 8 call sites are inside `lib/keepling_web/mcp/`. The "application-boundary gate" does not front the application boundary. |
+| `KeeplingWeb.MCP.Resources` / `Tools` | `Keepling.Application.*` | in-process calls | ✓ WIRED | Relevant because it falsifies the carve-out's stated cost: the MCP adapter makes no HTTP call to `/api/v1/search`, `/api/v1/projects` or `/api/v1/commands/*`. |
+| `tooling/mcp-client/final-state.mjs` | `/api/v1/account/device-grants` | owner session cookie | ✓ WIRED | The prior ⚠️ HOLLOW entry is resolved. `deviceGrantAccessToken` is gone from the module and all six call sites. |
 
-### Behavioral Spot-Checks
+### Behavioral Spot-Checks (my own runs, this revision)
 
-| Behavior | Command | Result | Status |
-|----------|---------|--------|--------|
-| Full phase gate reproduces published lane counts | `node tooling/verify-mcp-phase.mjs` | deterministic 183, protocol 2, simulated-client 9, adversarial 6 PASS; cross-adapter + representative-model BLOCKED; exit 1 | ✓ PASS (matches claim) |
-| Representative-model lane with credential loaded | `pnpm run verify:mcp:model` | `PASS cases=6 duration_ms=54929`; `.env.local` present and loaded, `.env` absent; model id = lane default (`KEEPLING_MCP_MODEL` unset) | ✓ PASS |
-| Harness self-test (05-10's test-of-the-harness) | `node --test tooling/mcp-gate-selftest.mjs` | 10 pass, 0 fail, 0 skipped | ✓ PASS |
-| The named failing e2e spec | `KEEPLING_E2E_POSTGRES_PORT=55442 pnpm --filter @keepling/web test:e2e -- agent-access.spec.ts` | 25 passed, 1 failed at `agent-access.spec.ts:250` (step 5, grant listing) — steps 1-4 all passed | ✓ PASS (localizes the failure away from MCP-01..05) |
-| Read-only MCP grant reaches native sync | probe via `tooling/mcp-client/client.mjs`, disposable server | `GET /api/v1/sync/bootstrap` → **200**, body contains the task title captured through MCP | ✗ FAIL (escalation) |
-| Read-only MCP grant enumerates grants | same probe | `GET /api/v1/device-grants` → **200**, both installations listed | ✗ FAIL (escalation) |
-| Read-only MCP grant revokes another client | same probe | `DELETE /api/v1/device-grants/verifier-probe-writer` → **200** `{"status":"device_grant_revoked"}`; the victim grant then **401**s on `/mcp/v1` | ✗ FAIL (escalation, recovery-model impact) |
+All probes ran against a disposable PostgreSQL + Phoenix stack booted by
+`tooling/mcp-client/client.mjs`'s own `bootDisposableServer`, on non-default ports (55471-55473 /
+4231-4233) so the Docker container on 55432 was neither touched nor needed. Grants were obtained
+through the real `/oauth/authorize` + PKCE + `/oauth/token` exchange — no hand-injected bearers.
 
-Credential handling: `.env.local` was loaded only by Node's own `--env-file-if-exists` inside the
-`pnpm` script. The credential value was never read, echoed, copied, or written to any artifact; only
-its presence and the lane's verdict are recorded here.
+| Behavior | Result | Status |
+|----------|--------|--------|
+| mcp grant → `GET /api/v1/sync` | 401 `device_authentication_required` | ✓ PASS (gap closed) |
+| mcp grant → `GET /api/v1/sync/bootstrap` | 401, no account content in body | ✓ PASS (gap closed) |
+| mcp grant → `GET /api/v1/device-grants` | 401 | ✓ PASS (gap closed) |
+| mcp grant → `DELETE /api/v1/device-grants/<other installation>` | 401 | ✓ PASS (gap closed) |
+| mcp grant → `GET /api/v1/account/device-grants` (the new owner route) | 401 `authentication_required` | ✓ PASS (no new agent path to grants) |
+| mcp grant → `DELETE /api/v1/account/device-grants/<other>` | 401 `authentication_required` | ✓ PASS |
+| **`tasks.read`-only grant → `POST /api/v1/commands/capture-task`** | **201 accepted, revision 1, task persisted** | ✗ **FAIL (escalation)** |
+| Owner reads that task back (`GET /api/v1/tasks/:id`, session cookie) | 200, the agent-written task is really there | ✗ FAIL (confirms the write landed) |
+| **`tasks.read`-only grant → `POST /api/v1/commands/trash-task`** | **200 accepted, revision 2** | ✗ **FAIL (destructive)** |
+| Owner reads the trashed task back | 404 `task_not_found` — "This task is unavailable or is in Trash" | ✗ FAIL (confirms destruction; recoverable) |
+| Owner `GET /api/v1/trash` | the task is present in Trash | ℹ️ recovery model intact |
+| Control: same `tasks.read` grant → `keepling.capture_task` at `/mcp/v1` | refused `insufficient_scope` | ✓ the boundary exists — one surface away |
+| Control: same grant → `keepling.complete_task` at `/mcp/v1` | refused `insufficient_scope` | ✓ same |
+| `tasks.write`-only grant → `GET /api/v1/search` | 200 `{items, next_cursor}` | ✗ FAIL (mirror direction) |
+| `tasks.write`-only grant → `GET /api/v1/projects` | 200 `{items, next_cursor}` | ✗ FAIL (mirror direction) |
+
+The two controls matter: they rule out "the credential is simply broken/revoked" and they prove the
+product knows how to refuse this exact credential for this exact operation — it just does not do it
+on the HTTP twin.
+
+**Credential handling:** I did not run the representative-model lane and did not read, echo, copy
+or record `.env.local` in any form. The requester independently ran `pnpm run verify:mcp:model`
+(PASS, cases=6) and `pnpm run verify:mcp:phase` (lanes=6 failed=0 blocked=1) at this revision; I
+accepted those runs rather than repeating them, because my probes test the boundary more directly
+than any lane currently does.
 
 ### Probe Execution
 
 | Probe | Command | Result | Status |
 |-------|---------|--------|--------|
-| MCP phase gate | `node tooling/verify-mcp-phase.mjs` | exit 1, `blocked=2 failed=0` | BLOCKED (by design) |
-| Cross-adapter lane | (within gate) | `legs_ran=2 legs_blocked=2 legs_failed=0 comparison_ok=true` | BLOCKED (disclosed) |
-| Gate self-test | `node --test tooling/mcp-gate-selftest.mjs` | 10/10 | PASS |
-
-### Anti-Vacuity Audit (05-10's own claim, checked adversarially)
-
-05-10's reasoning **holds**, and I tried to break it:
-
-- `exUnitSummary` subtracts skipped/excluded from the declared count and **throws** on a bundle that
-  reduces to zero — the exact Phase 4 defect (WINDOWS #65) is asserted against with the real bundle
-  counts (19+18→37, not 18).
-- `laneVerdict` is factored out as a pure function so BLOCKED-vs-FAIL-vs-PASS is testable without
-  spawning anything; a lane returning zero cases without throwing is FAILED, not passed.
-- `RUN_ID` is minted per module load and the self-test asserts two loads differ — the mechanical
-  answer to "three runs written up as one gate".
-- Lanes are discovered by glob; a lane file that fails to load exits the runner, so a lane cannot
-  vanish silently.
-- `guardAgainstShortcuts` greps each lane's own source for `KEEPLING_TEST_SYNC_MODE`, `.invalid`
-  hosts, injected `fetch`, and hand-injected bearers before booting a server.
-- `parseSimulatedClientOutput` never inspects an HTTP status code.
-- `--requirements` reads the requirement ids live from REQUIREMENTS.md rather than hardcoding them.
-
-One genuine weakness: the `protocol` lane hardcodes `cases=2` in its own evidence line, so its case
-count is a constant rather than a count of assertions executed. The lane does perform real handshake
-assertions over the real transport against a pinned protocol revision, so it is not vacuous — but
-its number is decorative, and the anti-vacuity contract elsewhere in this phase is about numbers
-meaning something. Minor; recorded, not gating.
-
-And one weakness the harness could not catch by construction: every lane is built to detect
-*under*-delivery (a surface that refuses what it should allow, a mutation that did not happen).
-Nothing in the six lanes probes *over*-delivery — whether the credential the harness itself mints
-reaches surfaces the MCP adapter does not front. Gap 1 lived in exactly that blind spot, and
-`final-state.mjs` quietly consumed the hole as a convenience.
+| Full MCP phase gate | `KEEPLING_E2E_POSTGRES_PORT=55442 pnpm run verify:mcp:phase` | `lanes=6 failed=0 blocked=1`; deterministic 183, protocol 2, simulated-client 9, adversarial 10, representative-model 6 PASS; cross-adapter BLOCKED | PASS with disclosed BLOCK (requester's run, accepted) |
+| Adversarial over-delivery mutation test | re-admit `mcp` to `@first_party_client_kinds`, re-run lane | FAIL: `over_delivery case "sync_pull": GET /api/v1/sync answered 200 for an mcp grant; expected 401`; file restored | PASS — the new cases have teeth |
+| Phase-1 gate | `KEEPLING_E2E_POSTGRES_PORT=55442 pnpm test:phase-1` | 319 Elixir, 169 web unit, 26/26 Playwright | PASS (requester's run, accepted) |
+| Independent escalation probe | `node /tmp/kplprobe/probe*.mjs` (3 disposable stacks, real PKCE grants) | see the spot-check table | ✗ FAILED on scope |
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |------|------|---------|----------|--------|
-| `apps/server/lib/keepling_web/auth.ex` | 118-150 | Missing symmetric authorization check | 🛑 Blocker | An `mcp` grant is accepted on the native device pipeline. |
-| `apps/server/lib/keepling_web/controllers/device_grant_controller.ex` | 102, 112 | Grant administration with no scope or client_kind gate | 🛑 Blocker | Any agent credential enumerates and revokes the owner's clients. |
-| `tooling/mcp-client/final-state.mjs` | 68-78 | Test harness depends on the defect it should catch | ⚠️ Warning | A green lane rests on the escalation. |
-| `.planning/WINDOWS.md` | 83 (#66) | Present defect recorded as a prospective one | ⚠️ Warning | Understates an existing privilege escalation as a future risk. |
-| `tooling/mcp-lanes/representative-model.mjs` | 355 | `void errorVectors // reserved for a future ...` | ℹ️ Info | Loaded-but-unused vector set; no debt marker (`TODO`/`FIXME`/`XXX`) present, so not gating. |
+| `apps/server/lib/keepling_web/auth.ex` | 94, 178-191 | Authorization input silently dropped — `current_scope` is never assigned on the shared-surface path | 🛑 Blocker | Scope cannot be enforced downstream because it is not carried. This is Gap 1's mechanism. |
+| `apps/server/lib/keepling_web/controllers/command_controller.ex` | all 19 actions | Missing scope gate on a surface reachable by an agent credential | 🛑 Blocker | A read-only agent writes and destroys. |
+| `apps/server/lib/keepling_web/auth.ex` | 143-151 | Comment asserts a property the code does not have ("scope-checked") and cites a decision that does not say it (D-09) | ⚠️ Warning | A reader auditing this boundary is told it is closed. It is the load-bearing justification for the carve-out. |
+| `apps/server/lib/keepling/application/agent_scope.ex` | 1-14 | Module documents itself as "the authoritative, application-boundary scope gate"; every call site is in the MCP adapter | ⚠️ Warning | The moduledoc's own promise ("a bug in the adapter alone cannot widen what an agent grant may do") is false — there is only the adapter layer. |
+| `packages/contracts/openapi/keepling.yaml` | `/commands/*` | `security: DeviceBearer` with no scope requirement on 19 command paths | ⚠️ Warning | The published contract documents the over-delivery as intended. |
+| `apps/server/lib/keepling_web/router.ex` | 24 | Pipeline plugs `:authenticate_device_grant` but the dispatch resolves to `authenticate_first_party_device_grant/1` | ℹ️ Info | Correct, but the router no longer reads as what it does. Renaming the atom would make the allow-list visible at the mount point. |
+| `tooling/mcp-lanes/protocol.mjs` | evidence line | `cases=2` hardcoded rather than counted | ℹ️ Info | Pre-existing, recorded at `382419d`, non-gating, unaddressed (correctly out of 05-13's scope). |
 
-No unreferenced `TBD`/`FIXME`/`XXX` debt markers were found in the phase's modified files.
+No unreferenced `TBD`/`FIXME`/`XXX` debt markers in the files 05-13 modified.
+
+### What 05-13 Got Right
+
+Recorded deliberately, because the gap above should not read as a dismissal of the work:
+
+- **The allow-list is the right primitive.** `~w(electron iphone)` against a three-value vocabulary
+  defaults to DENY for anything added later. A `!= "mcp"` denial would have defaulted to ALLOW.
+- **Pipeline placement over per-route checks** is correct for the same reason, and the reasoning is
+  written into the code where the next person will find it.
+- **Two routes instead of a widened pipeline** settled window #66 without weakening the
+  "ignores browser cookies" assertion or opening a new agent path to the owner's grants. I probed
+  both directions and both refusals hold, with distinguishable problem codes.
+- **The harness was taken off the defect** rather than the defect being left to keep the lane green
+  — the outcome I was least confident would happen.
+- **The over-delivery cases are genuinely non-vacuous**: exact 401 (not `!= 200`, so a deleted
+  route fails), a canary title written through the real MCP surface, a final-state read-back
+  through the owner's session, and a control call proving the credential is not merely broken.
+- **`auth.ex` and `router.ex` were added to `trackedInputPaths`** unprompted, closing a stale-digest
+  hole in the gate's own evidence.
+- **The e2e fix is strictly stronger than what it replaced** (an unsatisfiable `getByText`
+  substring match), and I confirmed no assertion anywhere in the diff was deleted or loosened.
+- **The SUMMARY disclosed the scope gap itself** and explicitly asked a re-verifier to rule on it.
+  That disclosure is why this report could go straight to the probe.
 
 ### Gaps Summary
 
-The phase built a great deal that genuinely works. The MCP adapter is real, the write tools are
-closed and revision-gated, ambiguity refuses by construction because addressing is identity-only,
-preview/commit is bound and atomic, the owner really does see and undo an agent's action in a
-browser against a live stack, and a real language model really does drive the real server and get
-refused when it reaches past its scope. Four of five success criteria are met on evidence I
-reproduced myself, and 05-10's anti-vacuity machinery survived my attempts to find a way for a lane
-to pass without exercising the product.
+One gap, one decision, and it is the other half of the decision 05-13 made.
 
-The failure is narrow and severe. The MCP pipeline carefully refuses non-`mcp` grants, but nothing
-performs the mirror-image refusal, so the credential this phase mints for an external AI tool is
-simultaneously a full native device credential. A grant scoped `tasks.read` reads the whole account
-through `/api/v1/sync/bootstrap` — around the bounded, paginated, redacted surface the phase spent
-four plans building — lists every device grant on the account, and revokes any of them. In
-production that is an agent switching off the owner's iPhone.
+An agent credential's authority is `client_kind × scope`. 05-13 turned `client_kind` into a
+default-deny allow-list and proved it four ways. `scope` remains unenforced and, worse, uncarried:
+`authenticate_device_grant/1` assigns the client kind and drops the scope on the floor, so the
+nineteen shared command endpoints and four shared read endpoints could not check it even if they
+tried. `Keepling.Application.AgentScope` — the module whose own docstring claims to be the
+authoritative application-boundary gate so that "a bug in the adapter alone cannot widen what an
+agent grant may do" — is called from eight places, all of them inside the MCP adapter.
 
-Two further things make this worse than a single missing check. First, the phase's own test harness
-*uses* the hole: `final-state.mjs` reads the grant list with an agent bearer and asserts 200, so the
-`simulated-client` lane is green partly because the escalation exists. Second, WINDOWS #66 has the
-causality inverted — it describes the escalation as something a future fix would introduce, when it
-is present in the committed pipeline today, and it never mentions the sync surface at all. Both
-would have carried the defect past a reader who trusted the record.
+So a grant the user consented to as read-only captures tasks, edits them, completes them, reopens
+them and trashes them, plus roughly fifteen commands the phase's tool set deliberately never
+exposed to agents at all. The same token, one route over, is told `insufficient_scope`.
 
-Recommended sequencing: close the pipeline asymmetry and the grant-administration authorization
-together (they are one decision, and window #66's browser-side question is the third face of it),
-re-point `final-state.mjs` at the session cookie, add adversarial-lane negative cases for all four
-routes, correct #66, and only then revisit MCP-01. SRV-02's driver wiring is independent and can
-proceed in parallel or defer.
+The carve-out that permits this is documented as deliberate. I do not think it survives contact
+with its own justification: the comment claims the surface is scope-checked (it is not), cites D-09
+(which is a statement about sharing the *query*, not about admitting an agent *bearer*, and which
+`MCP.Resources` already satisfies by calling the application modules in-process), and asserts a
+cost — breaking search, projects and the command surface for the MCP adapter — that I could not
+find a single consumer for, in the product or in the harness.
+
+The fix is plausibly small: either carry `current_scope` through `authenticate_device_grant/1` and
+require `tasks.write` (and `tasks.bulk` where the tool set requires it) in `CommandController`, or
+refuse `mcp` on `:client_authenticated` / `:client_mutation` the same way `:device_grant_authenticated`
+now refuses it. The second is one line and, on the evidence I gathered, breaks nothing. Either way,
+the gate needs scope over-delivery cases built and mutation-tested exactly the way 05-13 built and
+mutation-tested the kind ones — because that lane is currently green while a read-only credential
+destroys tasks, which is the same blind spot in a new coordinate.
+
+SRV-02 is unchanged and still defers on window #69's driver wiring. Window #71 is an acceptable
+stop-gap that masks nothing in production and should stay open.
 
 ---
 
-_Verified: 2026-09-10_
-_Verifier: Claude (gsd-verifier)_
+_Verified: 2026-09-11 at `70f9cef`_
+_Verifier: Claude (gsd-verifier), re-verification after 05-13_
