@@ -263,6 +263,49 @@ defmodule KeeplingWeb.AgentAuthorizationTest do
              |> json_response(200)
   end
 
+  # T-06-07-01/D-39. The receipt-scope inversion: before this fix, ANY grant
+  # holding `tasks.write` could read ANY account mutation's receipt --
+  # nothing but the non-enumerability of mutation ids stood in the way. Two
+  # distinct grants sharing the exact same scope is the sharpest proof: scope
+  # alone cannot be what decides this read.
+  test "a mutation receipt is readable only by the grant that issued it, even across grants sharing the same scope",
+       %{account_id: account_id, session: session, write: issuing_write} do
+    other_write = create_grant(account_id, "mcp", "mcp-write-other", scope: ["tasks.write"])
+
+    body = capture_body("owned receipt")
+    mutation_id = body["mutation_id"]
+
+    assert %{"outcome" => "accepted"} =
+             build_conn()
+             |> bearer(issuing_write)
+             |> post("/api/v1/commands/capture-task", body)
+             |> json_response(201)
+
+    # The issuing grant reads its own receipt back without incident.
+    assert %{"mutation_id" => ^mutation_id} =
+             build_conn()
+             |> bearer(issuing_write)
+             |> get("/api/v1/mutations/#{mutation_id}")
+             |> json_response(201)
+
+    # A DIFFERENT grant, holding the exact same `tasks.write` scope, is
+    # refused -- exactly the constant insufficient-scope body, naming
+    # neither the scope nor whether the mutation exists.
+    assert @refusal ==
+             build_conn()
+             |> bearer(other_write)
+             |> get("/api/v1/mutations/#{mutation_id}")
+             |> json_response(403)
+
+    # CONTROL: the owner's browser session is a session-authenticated,
+    # non-agent read and is unaffected by this gate.
+    assert %{"mutation_id" => ^mutation_id} =
+             build_conn()
+             |> browser_session(session)
+             |> get("/api/v1/mutations/#{mutation_id}")
+             |> json_response(201)
+  end
+
   defp owner_capture(session, title) do
     task_id = Ecto.UUID.generate()
 

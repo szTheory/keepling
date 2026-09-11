@@ -803,7 +803,8 @@ defmodule KeeplingWeb.MCP.Tools do
       actor_label: context.actor_label,
       actor_principal: context.actor_principal,
       actor_type: context.actor_type,
-      client_kind: context.client_kind
+      client_kind: context.client_kind,
+      device_grant_id: Map.get(context, :device_grant_id)
     }
   end
 

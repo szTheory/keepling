@@ -5,6 +5,7 @@ defmodule KeeplingWeb.Auth do
 
   alias Ecto.Adapters.SQL
   alias Keepling.Accounts
+  alias Keepling.Adapters.Postgres.CommandStore
   alias Keepling.Application.AgentScope
   alias Keepling.Repo
 
@@ -150,12 +151,46 @@ defmodule KeeplingWeb.Auth do
 
   defp require_agent_authority(conn) do
     with {:ok, scope} <- agent_authority(conn.method, conn.path_info),
-         :ok <- AgentScope.require(%{scope: conn.assigns[:current_scope]}, scope) do
+         :ok <- AgentScope.require(%{scope: conn.assigns[:current_scope]}, scope),
+         :ok <- authorize_receipt_read(conn) do
       conn
     else
       _refused -> conn |> insufficient_scope() |> halt()
     end
   end
+
+  # T-06-07-01/D-39. Closes the receipt-scope inversion the comment above
+  # `agent_authority/2`'s mutations clause already names: that clause grants
+  # the ROUTE to any `tasks.write`-scoped agent, but the receipt itself
+  # belongs to whichever grant issued the mutation. Extends the existing
+  # match-and-dispatch shape (no new middleware layer, `agent_authority/2`
+  # itself unchanged) by checking, for this one route only, whether the
+  # stored mutation's issuing grant -- `CommandStore.receipt_issuer/2`, a
+  # narrow companion to `Commands.lookup_result/3` that answers only "who
+  # issued this" -- differs from the CURRENT grant.
+  #
+  # A stored issuing grant of `nil` (a receipt written by a browser session,
+  # by a first-party grant, or before this column existed) refuses nothing:
+  # only a proven MISMATCH does. A malformed or genuinely nonexistent
+  # mutation id is also let through here unrefused, so the controller's own
+  # `Ecto.UUID.cast/1` and `Commands.lookup_result/3` calls produce their
+  # ordinary 400/404 -- this plug exists to add a 403 for a mismatched
+  # OWNER, not to duplicate that handling.
+  defp authorize_receipt_read(%{path_info: ["api", "v1", "mutations", mutation_id]} = conn) do
+    current_grant_id = conn.assigns[:current_device_grant_id]
+
+    with {:ok, _uuid} <- Ecto.UUID.cast(mutation_id),
+         {:ok, issuing_grant_id} <-
+           CommandStore.receipt_issuer(conn.assigns[:current_account_id], mutation_id) do
+      if is_binary(issuing_grant_id) and issuing_grant_id != current_grant_id,
+        do: :error,
+        else: :ok
+    else
+      _otherwise -> :ok
+    end
+  end
+
+  defp authorize_receipt_read(_conn), do: :ok
 
   # DEFAULT-DENY, by the same reasoning 05-13 used for the client-kind
   # allow-list: anything not named here is refused, so a route added to

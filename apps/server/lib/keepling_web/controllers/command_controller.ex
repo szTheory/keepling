@@ -591,7 +591,13 @@ defmodule KeeplingWeb.CommandController do
       accepted_at: DateTime.utc_now() |> DateTime.truncate(:microsecond),
       account_id: conn.assigns.current_account_id,
       actor_type: "user",
-      client_kind: Map.get(conn.assigns, :current_client_kind, "web")
+      client_kind: Map.get(conn.assigns, :current_client_kind, "web"),
+      # T-06-07-01/D-38: absent (nil) for a browser session, present for any
+      # device-grant-authenticated request (first-party or agent). Recorded
+      # on the receipt so a later read can be bound to its issuing grant, and
+      # used to advance `device_grants.last_used_at` on a first-delivered
+      # mutation (Task 1's checkpoint decision).
+      device_grant_id: Map.get(conn.assigns, :current_device_grant_id)
     }
   end
 

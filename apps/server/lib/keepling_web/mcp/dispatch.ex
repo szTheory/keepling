@@ -65,6 +65,10 @@ defmodule KeeplingWeb.MCP.Dispatch do
       actor_principal: "authorized_grant",
       actor_type: "agent",
       client_kind: conn.assigns.current_client_kind,
+      # T-06-07-01/D-38: this grant's own identity, carried through to
+      # Commands.lookup_result/3 (mutation-receipt read binding) and to the
+      # command store's write path (device_grants.last_used_at advance).
+      device_grant_id: conn.assigns.current_device_grant_id,
       scope: conn.assigns.current_scope
     }
   end

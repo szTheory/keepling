@@ -208,6 +208,33 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
     end
   end
 
+  # T-06-07-01/D-39. A deliberately narrow companion to `lookup_result/2`,
+  # not part of `Commands.Port` -- it answers only "who issued this
+  # mutation", never the mutation's own status/body, so it cannot be
+  # confused for (and does not widen) the general lookup contract every
+  # other caller of `lookup_result/2` already relies on byte-for-byte.
+  # `KeeplingWeb.Auth` is the sole caller: binding a receipt READ to its
+  # issuing grant. Returns `{:ok, nil}` for a receipt with no recorded
+  # issuer (a session write, a first-party write, or any receipt written
+  # before this column existed) -- an absent issuer refuses nothing.
+  @spec receipt_issuer(binary(), String.t()) ::
+          {:ok, String.t() | nil} | {:error, :not_found | :infrastructure_failure}
+  def receipt_issuer(account_id, mutation_id) do
+    case SQL.query(
+           Repo,
+           """
+           SELECT issuing_grant_id
+           FROM command_receipts
+           WHERE account_id = $1 AND mutation_id = $2 AND terminal = TRUE
+           """,
+           [account_id, dump_uuid(mutation_id)]
+         ) do
+      {:ok, %{rows: [[issuing_grant_id]]}} -> {:ok, load_optional_uuid(issuing_grant_id)}
+      {:ok, %{rows: []}} -> {:error, :not_found}
+      {:error, _reason} -> {:error, :infrastructure_failure}
+    end
+  end
+
   defp activity_scope(repo, account_id, task_id) do
     case SQL.query(
            repo,
@@ -377,19 +404,27 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         repo,
         """
         INSERT INTO command_receipts (
-          account_id, mutation_id, fingerprint, terminal, inserted_at, updated_at
+          account_id, mutation_id, fingerprint, terminal, issuing_grant_id, inserted_at, updated_at
         )
-        VALUES ($1, $2, $3, FALSE, $4, $4)
+        VALUES ($1, $2, $3, FALSE, $5, $4, $4)
         ON CONFLICT (account_id, mutation_id) DO NOTHING
         RETURNING mutation_id
         """,
-        [context.account_id, dump_uuid(command.mutation_id), fingerprint, context.accepted_at]
+        [
+          context.account_id,
+          dump_uuid(command.mutation_id),
+          fingerprint,
+          context.accepted_at,
+          issuing_grant_param(context)
+        ]
       )
 
     case inserted.rows do
       [[_mutation_id]] ->
         {:ok, sequence} = SyncFeed.reserve_sequence(repo, context.account_id, context.accepted_at)
-        execute_first_delivery(repo, command, context, decide, sequence)
+        result = execute_first_delivery(repo, command, context, decide, sequence)
+        advance_last_used(repo, context)
+        result
 
       [] ->
         replay(repo, command, context, fingerprint)
@@ -402,13 +437,19 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         repo,
         """
         INSERT INTO command_receipts (
-          account_id, mutation_id, fingerprint, terminal, inserted_at, updated_at
+          account_id, mutation_id, fingerprint, terminal, issuing_grant_id, inserted_at, updated_at
         )
-        VALUES ($1, $2, $3, FALSE, $4, $4)
+        VALUES ($1, $2, $3, FALSE, $5, $4, $4)
         ON CONFLICT (account_id, mutation_id) DO NOTHING
         RETURNING mutation_id
         """,
-        [context.account_id, dump_uuid(command.mutation_id), fingerprint, context.accepted_at]
+        [
+          context.account_id,
+          dump_uuid(command.mutation_id),
+          fingerprint,
+          context.accepted_at,
+          issuing_grant_param(context)
+        ]
       )
 
     case inserted.rows do
@@ -427,6 +468,7 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
           )
 
         finalize_receipt(repo, context.account_id, command.mutation_id, result)
+        advance_last_used(repo, context)
         {:ok, public_result(result)}
 
       [] ->
@@ -1762,6 +1804,33 @@ defmodule Keepling.Adapters.Postgres.CommandStore do
         "snapshot" => organization_body(organization)
       }
     }
+  end
+
+  # T-06-07-01/D-39: the writer's own device-grant identity, dumped for
+  # storage, or nil for a browser session (which has no device grant) or for
+  # any caller whose context omits `:device_grant_id` entirely.
+  defp issuing_grant_param(context),
+    do: context |> Map.get(:device_grant_id) |> dump_optional_uuid()
+
+  # T-06-07-03/D-38: only mutations (Task 1's checkpoint decision) advance
+  # `last_used_at`. A pure read never reaches this function. Runs inside the
+  # same transaction as the mutation it accompanies but is deliberately
+  # tolerant of its own failure -- a bookkeeping write must never fail the
+  # user's request -- so a non-2xx/raised outcome here is swallowed rather
+  # than propagated.
+  defp advance_last_used(_repo, %{device_grant_id: nil}), do: :ok
+  defp advance_last_used(_repo, context) when not is_map_key(context, :device_grant_id), do: :ok
+
+  defp advance_last_used(repo, context) do
+    SQL.query(
+      repo,
+      "UPDATE device_grants SET last_used_at = $2 WHERE id = $1",
+      [dump_uuid(context.device_grant_id), context.accepted_at]
+    )
+
+    :ok
+  rescue
+    _error in [ArgumentError, DBConnection.ConnectionError, Postgrex.Error] -> :ok
   end
 
   defp finalize_receipt(repo, account_id, mutation_id, result) do
