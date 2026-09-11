@@ -251,7 +251,12 @@ const REQUIREMENT_LANES = {
   'MCP-03': ['deterministic', 'protocol', 'simulated-client', 'adversarial', 'representative-model'],
   'MCP-04': ['deterministic', 'protocol', 'simulated-client', 'adversarial', 'representative-model'],
   'MCP-05': ['deterministic', 'protocol', 'simulated-client', 'adversarial', 'representative-model'],
-  'SRV-02': ['deterministic', 'protocol'],
+  // 05-12-PLAN.md (Wave 7) adds `cross-adapter` -- D-27's cross-adapter
+  // proof, the lane that actually completes SRV-02. `deterministic` and
+  // `protocol` stay in this row: they remain genuine evidence for the
+  // shared application-layer invariants SRV-02 also names, and dropping
+  // them would narrow coverage without narrowing the claim SRV-02 makes.
+  'SRV-02': ['deterministic', 'protocol', 'cross-adapter'],
 }
 
 /**
