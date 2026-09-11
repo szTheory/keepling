@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 06
 current_phase_name: Portability and Trust Release
 status: executing
-stopped_at: Completed 06-05-PLAN.md
-last_updated: "2026-09-11T20:13:33.260Z"
+stopped_at: Completed 06-08-PLAN.md
+last_updated: "2026-09-11T20:38:15.000Z"
 last_activity: 2026-09-11
 last_activity_desc: Phase KPL-06 execution started
-state_head: 8b52892e36d76ce06c54e6fd84cebeec0844b912
+state_head: e8adcf8c7c1214b14e85569606b8e7ede4c6045e
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 110
-  completed_plans: 103
+  completed_plans: 104
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-06 (Portability and Trust Release) — EXECUTING
-Plan: 8 of 13
+Plan: 9 of 13
 Total Plans in Phase: 13
 Status: Executing Phase KPL-06
 Last activity: 2026-09-11 — Phase KPL-06 execution started
@@ -251,6 +251,11 @@ Progress: [█████████░] 94%
 - [Phase 06]: 06-07: only a first-delivered mutation advances last_used_at; a null value means not-yet-measured, never proven-zero.
 - [Phase 06]: 06-07: Commands.lookup_result/3's public return shape stays byte-for-byte unchanged; a narrow CommandStore.receipt_issuer/2 companion carries the issuing-grant identity instead, so the widening does not break exact-equality callers.
 - [Phase KPL-06]: 06-05: SRV-02 closed -- all four cross-adapter legs (web, MCP, Electron, iPhone) now PASS identically; a real cross-client ConflictField.field OpenAPI enum gap (missing completed_at/trashed_at) was found and fixed en route, since no lane had ever driven a genuine lifecycle conflict through a real Swift decode path before.
+- [Phase 06]: [Phase KPL-06]: 06-08: classification.json had drifted against 5 columns/tables already landed earlier in this phase (device_grants.last_used_at, task_activities.actor_principal/actor_label/recovery_state/undone_activity_id, schema_migrations); the new completeness test found this on first run and closed it.
+- [Phase 06]: [Phase KPL-06]: 06-08: the independent export reader shells to the system unzip binary and hand-rolls a narrow JSON Schema validator rather than adding any npm dependency.
+- [Phase 06]: [Phase KPL-06]: 06-08: the golden vector is generated via a direct Export.write_bundle/4 call with hand-fixed entities and manifest_extra (never a live DB read), removing restore_epoch/feed_high_water_sequence as sources of environmental variance.
+- [Phase 06]: [Phase KPL-06]: 06-08: closed 06-04's disclosed CLI wiring gap for the export verb only (release.ex + ops_store.ex), since Task 2's own verify required a real mix keepling.ops export bundle; backup/restore/deploy/upgrade/replace-host remain unwired.
+- [Phase 06]: [Phase KPL-06]: 06-08: registering export-elixir/export-reader in release-lanes.json correctly makes verify-release.mjs fail against the pre-existing candidate-0 manifest -- the intended proof the exact-set detection works, disclosed as open CI-wiring follow-up.
 
 ### Retained Research
 
@@ -286,8 +291,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-11T20:13:26.189Z
-**Stopped at:** Completed 06-05-PLAN.md
+**Last session:** 2026-09-11T20:38:14.817Z
+**Stopped at:** Completed 06-08-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -382,6 +387,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-06 P06 | 70min | 2 tasks | 7 files |
 | Phase KPL-06 P07 | ~70min | 4 tasks | 16 files |
 | Phase KPL-06 P05 | 65min | 3 tasks | 13 files |
+| Phase KPL-06 P08 | ~110min | 3 tasks | 10 files |
 
 ### Blockers
 
