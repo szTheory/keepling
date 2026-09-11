@@ -397,7 +397,11 @@ type AgentGrant = {
   label: string
   lastUsedAt: string | null
   revoked: boolean
-  scope: readonly string[]
+  // `null` means the server did not report a scope list for this grant, which
+  // is a DIFFERENT claim from `[]` ("this grant holds no scopes"). On a consent
+  // screen those are opposite statements, so the absence is preserved here
+  // rather than collapsed, exactly as `authorizedAt`/`lastUsedAt` preserve it.
+  scope: readonly string[] | null
 }
 
 class KeeplingApiError extends Error {
@@ -592,7 +596,7 @@ const mapAgentGrant = (grant: WireAgentGrantSummary): AgentGrant => ({
   label: grant.label,
   lastUsedAt: grant.last_used_at ?? null,
   revoked: grant.revoked,
-  scope: grant.scope ?? [],
+  scope: grant.scope ?? null,
 })
 
 const listDeviceGrants = async (): Promise<readonly AgentGrant[]> => {

@@ -274,7 +274,9 @@ function AgentGrantList({ csrfToken, onAuthenticationRequired }: AgentGrantListP
                     <div className="flex gap-2">
                       <dt className="font-semibold text-foreground">Scopes</dt>
                       <dd>
-                        {grant.scope.length === 0 ? (
+                        {grant.scope === null ? (
+                          'Not yet reported'
+                        ) : grant.scope.length === 0 ? (
                           'No scopes granted'
                         ) : (
                           <span className="flex flex-wrap gap-2">

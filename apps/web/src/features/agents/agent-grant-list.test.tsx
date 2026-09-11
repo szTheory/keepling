@@ -43,6 +43,18 @@ const zeroScopeAgent = {
   scope: [],
 }
 
+// The shape `GET /api/v1/account/device-grants` actually returns TODAY:
+// `KeeplingWeb.DeviceGrantController.grant_response/1` publishes no `scope`
+// key at all. That is not the same claim as `scope: []`.
+const unreportedScopeAgent = {
+  client_kind: 'mcp',
+  generation: 1,
+  id: 'grant-unreported-scope',
+  installation_id: 'installation-unreported-scope',
+  label: 'Codex',
+  revoked: false,
+}
+
 const nonAgentGrant = {
   client_kind: 'electron',
   generation: 1,
@@ -52,7 +64,9 @@ const nonAgentGrant = {
   revoked: false,
 }
 
-const grantsResponse = (deviceGrants = [scopedAgent, zeroScopeAgent, nonAgentGrant]) =>
+const grantsResponse = (
+  deviceGrants = [scopedAgent, zeroScopeAgent, unreportedScopeAgent, nonAgentGrant],
+) =>
   jsonResponse({ device_grants: deviceGrants })
 
 const deferred = <Value,>() => {
@@ -89,6 +103,24 @@ describe('agent grant management', () => {
     const row = cowork.closest('li')
     expect(row).not.toBeNull()
     expect(row).toHaveTextContent('No scopes granted')
+    expect(row).not.toHaveTextContent('tasks.')
+  })
+
+  it('reports an omitted scope list as unreported, never as holding no scopes', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValueOnce(grantsResponse())
+    vi.stubGlobal('fetch', fetchMock)
+
+    render(<AgentGrantList csrfToken="csrf" />)
+
+    const codex = await screen.findByText('Codex')
+    const row = codex.closest('li')
+    expect(row).not.toBeNull()
+    // The distinction this asserts is the point: the server publishing no
+    // scope key means we do not know what this agent may do. Rendering that
+    // as "No scopes granted" would state, on the screen where the user
+    // decides whether to revoke, that the agent can do nothing.
+    expect(row).not.toHaveTextContent('No scopes granted')
+    expect(row).toHaveTextContent('Not yet reported')
     expect(row).not.toHaveTextContent('tasks.')
   })
 
