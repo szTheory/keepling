@@ -1832,13 +1832,19 @@ components:
       type: object
       additionalProperties: false
       required:
+        - authorized_at
         - client_kind
         - generation
         - id
         - installation_id
         - label
+        - last_used_at
         - revoked
+        - scope
       properties:
+        authorized_at:
+          type: string
+          format: date-time
         client_kind:
           $ref: '#/components/schemas/NativeClientIdentity'
         generation:
@@ -1853,8 +1859,22 @@ components:
           type: string
           minLength: 1
           maxLength: 200
+        # T-06-07-03: nullable until the write path (Task 1's checkpoint
+        # decision) can prove a grant has recorded activity -- `null` means
+        # "not yet reported", never "genuinely zero". See 06-UI-SPEC.md.
+        last_used_at:
+          type: [string, 'null']
+          format: date-time
         revoked:
           type: boolean
+        # Non-nullable array, may be empty -- the wire nullability (or its
+        # absence) is what carries the absent-vs-empty distinction into the
+        # UI (05-UI-REVIEW). A lazily-nullable scope here would silently
+        # undo that fix.
+        scope:
+          type: array
+          items:
+            type: string
     DeviceGrantsResponse:
       type: object
       additionalProperties: false

@@ -294,6 +294,52 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
            |> response(401)
   end
 
+  # D-38/T-06-07-03. A newly created grant publishes a non-null
+  # `authorized_at`, an empty `scope` array (never `null`, per D-38's
+  # widened `grant_response/1`), and a null `last_used_at`. A pure read is a
+  # NON-qualifying event and must not advance `last_used_at`; a mutation is
+  # the qualifying event Task 1's checkpoint decided.
+  test "the response publishes real scope/authorized_at/last_used_at, and last_used_at advances only on a mutation",
+       %{account_id: account_id, conn: conn} do
+    browser = login(conn)
+    grant = browser |> authorize("last-used-installation", "electron") |> exchange()
+
+    assert %{"device_grants" => [summary]} =
+             bearer(build_conn(), grant["access_token"])
+             |> get("/api/v1/device-grants")
+             |> json_response(200)
+
+    assert summary["scope"] == []
+    assert is_binary(summary["authorized_at"])
+    assert summary["last_used_at"] == nil
+
+    # A pure read -- the non-qualifying event -- leaves last_used_at unchanged.
+    assert %{"device_grants" => [after_read]} =
+             bearer(build_conn(), grant["access_token"])
+             |> get("/api/v1/device-grants")
+             |> json_response(200)
+
+    assert after_read["last_used_at"] == nil
+
+    # A mutation -- the qualifying event -- advances it.
+    assert %{"outcome" => "accepted"} =
+             bearer(build_conn(), grant["access_token"])
+             |> post("/api/v1/commands/capture-task", %{
+               "mutation_id" => Ecto.UUID.generate(),
+               "task_id" => Ecto.UUID.generate(),
+               "title" => "Advance last_used_at",
+               "version" => 1
+             })
+             |> json_response(201)
+
+    assert %{"device_grants" => [after_mutation]} =
+             bearer(build_conn(), grant["access_token"])
+             |> get("/api/v1/device-grants")
+             |> json_response(200)
+
+    assert is_binary(after_mutation["last_used_at"])
+  end
+
   test "bearer pipeline assigns only the server-authenticated grant namespace", %{
     conn: conn,
     account_id: account_id

@@ -164,14 +164,24 @@ defmodule KeeplingWeb.DeviceGrantController do
     }
   end
 
+  # D-38/T-06-07-03: `scope` and `authorized_at` publish real persisted
+  # values -- `scope` is the grant's own array (empty when it genuinely
+  # holds none, never null once wired here) and `authorized_at` is the
+  # grant's insertion instant. `last_used_at` stays nullable: it is null
+  # for a grant the write path has not yet advanced (Task 1's checkpoint
+  # decision), and the consent screen renders that as "not yet reported",
+  # never as a proven zero-activity claim.
   defp grant_response(grant) do
     %{
+      authorized_at: grant.authorized_at,
       client_kind: grant.client_kind,
       generation: grant.generation,
       id: grant.id,
       installation_id: grant.installation_id,
       label: grant.label,
-      revoked: grant.revoked?
+      last_used_at: grant.last_used_at,
+      revoked: grant.revoked?,
+      scope: grant.scope
     }
   end
 

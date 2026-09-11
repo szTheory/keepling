@@ -1054,13 +1054,18 @@ export interface components {
             readonly device_grants: readonly components["schemas"]["DeviceGrantSummary"][];
         };
         readonly DeviceGrantSummary: {
+            /** Format: date-time */
+            readonly authorized_at: string;
             readonly client_kind: components["schemas"]["NativeClientIdentity"];
             /** Format: int64 */
             readonly generation: number;
             readonly id: components["schemas"]["DeviceGrantIdentity"];
             readonly installation_id: components["schemas"]["InstallationIdentity"];
             readonly label: string;
+            /** Format: date-time */
+            readonly last_used_at: string | null;
             readonly revoked: boolean;
+            readonly scope: readonly string[];
         };
         /**
          * @description Optional self-description carried inside a command by an OFFLINE client. Such a client commits the serialized bytes to a durable outbox before reporting success and retries those exact bytes, never re-serialized, so after a relaunch the bytes are all that survives and must say which command they are. An online client posts to a typed endpoint and forgets, so it neither sends nor needs this.

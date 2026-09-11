@@ -47,6 +47,7 @@ defmodule Keepling.Accounts.DeviceGrant do
     field :family_absolute_expires_at, :utc_datetime_usec
     field :generation, :integer
     field :last_refreshed_at, :utc_datetime_usec
+    field :last_used_at, :utc_datetime_usec
     field :revoked_at, :utc_datetime_usec
 
     belongs_to :account, Keepling.Accounts.Account
@@ -335,7 +336,8 @@ defmodule Keepling.Accounts.DeviceGrant do
       SQL.query!(
         Repo,
         """
-        SELECT id, installation_id, label, client_kind, generation, revoked_at
+        SELECT id, installation_id, label, client_kind, generation, revoked_at,
+               scope, inserted_at, last_used_at
         FROM device_grants
         WHERE account_id = $1
         ORDER BY installation_id, inserted_at, id
@@ -343,14 +345,27 @@ defmodule Keepling.Accounts.DeviceGrant do
         [account_id]
       )
 
-    Enum.map(rows, fn [id, installation_id, label, client_kind, generation, revoked_at] ->
+    Enum.map(rows, fn [
+                        id,
+                        installation_id,
+                        label,
+                        client_kind,
+                        generation,
+                        revoked_at,
+                        scope,
+                        inserted_at,
+                        last_used_at
+                      ] ->
       %{
+        authorized_at: as_utc(inserted_at),
         client_kind: client_kind,
         generation: generation,
         id: uuid_string(id),
         installation_id: installation_id,
         label: label,
-        revoked?: revoked_at != nil
+        last_used_at: last_used_at && as_utc(last_used_at),
+        revoked?: revoked_at != nil,
+        scope: scope || []
       }
     end)
   end
