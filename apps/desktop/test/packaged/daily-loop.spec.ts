@@ -103,14 +103,14 @@ test('the packaged app opens a retained (already-migrated) database from a prior
 
   // The migration ledger records EXACTLY ONE row PER version -- opening a
   // retained database never re-inserts a duplicate migration record. Since
-  // 03-24 the lineage has two versions, so this is a real multi-version
+  // 06-06 the lineage has three versions, so this is a real multi-version
   // check rather than a single-row one.
   const databasePath = join(profilePath, 'namespace.sqlite3')
   const ledgerDb = new DatabaseSync(databasePath, { defensive: true, timeout: 2_500 })
   const ledger = ledgerDb.prepare('SELECT version FROM schema_migrations ORDER BY version').all() as Array<{ version: number }>
   const taskRows = ledgerDb.prepare('SELECT title FROM visible_projection ORDER BY title').all() as Array<{ title: string }>
   ledgerDb.close()
-  expect(ledger.map((row) => row.version)).toEqual([1, 2])
+  expect(ledger.map((row) => row.version)).toEqual([1, 2, 3])
   expect(taskRows.map((row) => row.title)).toEqual(['Book the dentist', 'Renew the passport before the trip'])
 })
 
@@ -173,7 +173,7 @@ test('the packaged app migrates a database written before the outbox state colum
     .all() as Array<{ bytes: string; state: string }>
   afterDb.close()
 
-  expect(ledger.map((row) => row.version)).toEqual([1, 2])
+  expect(ledger.map((row) => row.version)).toEqual([1, 2, 3])
   // The queued command survived with its EXACT bytes -- never re-serialized,
   // never dropped and recreated -- and it is `uncertain` rather than
   // `queued`: the client that enqueued it recorded no transmission state,
