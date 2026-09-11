@@ -4,6 +4,11 @@ config :keepling, Keepling.Repo,
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 
+# 06-04-PLAN.md Task 3: a small, finite test-environment export timeout and
+# chunk size, so a runaway export test fails fast instead of hanging the
+# suite; production keeps the unbounded `:infinity` default in config.exs.
+config :keepling, export_query_timeout_ms: 5_000, export_max_rows: 50
+
 config :keepling, KeeplingWeb.Endpoint, server: false
 
 config :logger, level: :warning

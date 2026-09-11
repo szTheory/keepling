@@ -4,6 +4,14 @@ config :keepling,
   ecto_repos: [Keepling.Repo],
   generators: [timestamp_type: :utc_datetime_usec, binary_id: true],
   task_view_query_timeout_ms: 10_000,
+  # 06-04-PLAN.md Task 3: a distinct export timeout, never reused from
+  # task_view_query_timeout_ms -- that helper raises unless the value is a
+  # positive integer, so it structurally cannot express an unbounded
+  # timeout and would silently truncate a large-account export. `:infinity`
+  # is permitted here because an export streams the whole account inside
+  # one coherent transaction and must not be cut off by an arbitrary clock.
+  export_query_timeout_ms: :infinity,
+  export_max_rows: 500,
   # 05-04-PLAN.md Task 2: KeeplingWeb.MCP.Resources reads its Postgres
   # ports from config rather than aliasing Keepling.Adapters.Postgres.*
   # directly, so the module itself never names a concrete adapter --

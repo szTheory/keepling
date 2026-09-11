@@ -7,7 +7,7 @@ defmodule Keepling.Application.Ops do
   recovery, compatibility, deployment, or target-safety policy themselves.
   """
 
-  @verbs ~w(preflight status doctor backup restore restore-verify deploy upgrade replace-host)
+  @verbs ~w(preflight status doctor backup restore restore-verify deploy upgrade replace-host export)
   @destructive ~w(restore restore-verify deploy upgrade replace-host)
   @exit_codes %{
     ok: 0,
@@ -122,6 +122,36 @@ defmodule Keepling.Application.Ops do
     case execute(port, operation, input, options) do
       :ok -> success(operation, "backup_completed", bounded_facts(inspection))
       {:error, reason} -> execution_failure(operation, reason)
+    end
+  end
+
+  # Non-destructive and synchronous (D-05 in 06-04-PLAN.md): export is never
+  # added to @destructive. Backup freshness is irrelevant to reading a
+  # coherent snapshot, so this checks the same non-backup blocking
+  # conditions restore/restore-verify use. Unlike the shared `execute/4`
+  # helper (which collapses `{:ok, result}` into a bare `:ok`), the bundle
+  # path and file count are surfaced back to the operator -- that is the
+  # entire point of running the command.
+  defp decide("export" = operation, input, inspection, port, options) do
+    case blocking_condition(inspection, include_backup?: false) do
+      nil ->
+        case port.execute(operation, input, options) do
+          {:ok, result} when is_map(result) ->
+            success(
+              operation,
+              "export_completed",
+              Map.merge(bounded_facts(inspection), export_facts(result))
+            )
+
+          {:error, reason} when is_atom(reason) ->
+            execution_failure(operation, reason)
+
+          _unexpected ->
+            failure(operation, "export_failed", :execution, false, [], bounded_facts(inspection))
+        end
+
+      condition ->
+        condition_result(operation, condition, inspection)
     end
   end
 
@@ -344,6 +374,12 @@ defmodule Keepling.Application.Ops do
       "remediation" => remediation
     }
   end
+
+  defp export_facts(%{bundle_path: bundle_path, files: files}) do
+    %{"bundle_path" => bundle_path, "file_count" => length(files)}
+  end
+
+  defp export_facts(_result), do: %{}
 
   defp bounded_facts(inspection) do
     Map.take(inspection, [
