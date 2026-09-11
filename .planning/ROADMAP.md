@@ -388,7 +388,7 @@ recovery-severity. Evidence is `.artifacts/trust-soak/trust-soak-evidence.json`,
 stating its own detection floor and disclosed blind spot. Owner dogfood feedback stays informal,
 unstructured, non-evidentiary and non-gating.
 
-**Plans:** 3/13 plans executed
+**Plans:** 4/13 plans executed
 
 Plans:
 
@@ -403,7 +403,7 @@ Plans:
 **Wave 3** *(blocked on Wave 2 completion)*
 
 - [x] 06-03-PLAN.md — Grant the rights the README claims: Apache-2.0, NOTICE, and licence metadata everywhere.
-- [ ] 06-04-PLAN.md — Publish the neutral export format and the non-destructive export verb (DATA-01, producing half).
+- [x] 06-04-PLAN.md — Publish the neutral export format and the non-destructive export verb (DATA-01, producing half).
 - [ ] 06-05-PLAN.md — Wire the Electron and iPhone cross-adapter legs, or disclose them with a named owner (SRV-02).
 - [ ] 06-06-PLAN.md — Give every refused change a durable home and stop the pull path overwriting it (O-43).
 - [ ] 06-07-PLAN.md — Publish real agent-consent values and bind a mutation receipt to its issuing grant (window 76, O-73).
