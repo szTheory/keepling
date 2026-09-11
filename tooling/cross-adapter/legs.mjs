@@ -61,30 +61,46 @@ const mostRecentActivityType = (state, taskId) => {
 }
 
 /**
- * Advances a task's lifecycle revision OUT OF BAND, through the server's
- * own `/commands/complete-task` API, using a session entirely independent
- * of the adapter under test -- a second writer, exactly like the real
- * conflict case in `apps/desktop/test/real-stack/real-stack-sync.spec.ts`.
+ * Advances a task's lifecycle revision OUT OF BAND -- through two real
+ * server API calls (`complete-task` then `reopen-task`), using a session
+ * entirely independent of the adapter under test, a second writer exactly
+ * like the real conflict case in
+ * `apps/desktop/test/real-stack/real-stack-sync.spec.ts` -- while leaving
+ * the task's VISIBLE lifecycle state (`completed_at: nil`, open) exactly
+ * where the adapter's own capture left it.
  *
- * This exists so `update_stale_expected_revision` can genuinely stale a
- * client that owns its own local state (an Electron or iPhone client that
- * tracks its own expected_revision and cannot be told to submit a
- * deliberately wrong one): the harness advances the entity behind the
- * client's back, between the client's own read (its capture) and its own
- * write (its `staleUpdate` call), so the client's write is stale because
- * the world moved, not because it was instructed to lie about a revision
- * it never held.
+ * Net effect: `lifecycle_revision` moves from 1 to 3; `completed_at` ends
+ * where it started, at `nil`. That is deliberate, and is what makes this
+ * usable by a client that owns its own local state (an Electron or iPhone
+ * client that tracks its own expected_revision and cannot be told to
+ * submit a deliberately wrong one, and whose UI only ever offers the
+ * action matching what it believes the task's state to be): such a client,
+ * still believing the task open because it has not synced since its own
+ * capture, takes the SAME action a person would naturally take next --
+ * completing it -- with the SAME `expected_revision` it observed at
+ * capture. That action is now genuinely stale, because the world moved
+ * out of band, not because the client was instructed to lie about a
+ * revision it never held.
  */
 async function advanceRevisionOutOfBand(origin, sessionCookie, taskId, expectedRevision) {
   const csrfToken = await fetchCsrfToken(origin, sessionCookie)
-  const result = await postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/complete-task', {
+  const complete = await postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/complete-task', {
     expected_revision: expectedRevision,
     mutation_id: randomUUID(),
     task_id: taskId,
     version: 1,
   })
-  if (!result.ok) {
-    throw new Error(`advanceRevisionOutOfBand: out-of-band complete-task for ${taskId} was refused instead of accepted: ${JSON.stringify(result)}`)
+  if (!complete.ok) {
+    throw new Error(`advanceRevisionOutOfBand: out-of-band complete-task for ${taskId} was refused instead of accepted: ${JSON.stringify(complete)}`)
+  }
+  const reopen = await postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/reopen-task', {
+    expected_revision: expectedRevision + 1,
+    mutation_id: randomUUID(),
+    task_id: taskId,
+    version: 1,
+  })
+  if (!reopen.ok) {
+    throw new Error(`advanceRevisionOutOfBand: out-of-band reopen-task for ${taskId} was refused instead of accepted: ${JSON.stringify(reopen)}`)
   }
 }
 
@@ -169,22 +185,20 @@ async function runSharedScenarioSet(legName, adapter, { inputDigest, origin, run
     )
   }
 
-  // update_stale_expected_revision -- `reopen` rather than `complete`,
-  // deliberately: `Keepling.Domain.Task.reopen/2` short-circuits to
-  // `already_satisfied` ONLY when `completed_at` is already nil (an
-  // idempotent no-op), so it reaches the revision-staleness check
-  // (`lifecycle_revision > expected_revision`) whenever the task IS
-  // completed -- regardless of who completed it. `complete/2` short-
-  // circuits the opposite way (already-completed is always
-  // `already_satisfied`, bypassing the revision check entirely), which is
-  // why the out-of-band advance below uses `complete-task` and the
-  // adapter's own probed action is `staleUpdate` (reopen): a freshly
-  // captured task starts at lifecycle_revision=1; the harness advances it
-  // to 2 out of band; the adapter's own reopen, still holding
-  // expected_revision=1 from its own capture, is now genuinely stale
-  // (2 > 1) and is refused -- uniformly, on every one of the four shared
-  // command verbs, without requiring the adapter to ever be told a
-  // revision it did not itself observe.
+  // update_stale_expected_revision -- `staleUpdate` (a `complete`) rather
+  // than `reopen`, deliberately: `Keepling.Domain.Task.complete/2` short-
+  // circuits to `already_satisfied` ONLY when `completed_at` is already
+  // set (an idempotent no-op), and the out-of-band advance above returns
+  // the task to `completed_at: nil` after moving `lifecycle_revision`
+  // from 1 to 3 -- so a `complete` from a client that still believes the
+  // task open (and still holds `expected_revision=1` from its own
+  // capture) reaches the revision-staleness check
+  // (`lifecycle_revision > expected_revision`, i.e. 3 > 1) and is
+  // genuinely refused, uniformly, on every one of the four shared adapters
+  // -- including a UI-driven client whose own view of the task never
+  // stopped showing it as open, and which would naturally reach for the
+  // SAME action (`Complete`) a person unaware of the out-of-band churn
+  // would reach for next.
   {
     const captured = await adapter.capture(`cross-adapter ${legName} stale ${randomUUID()}`)
     const taskId = captured.taskId
@@ -208,7 +222,7 @@ async function runSharedScenarioSet(legName, adapter, { inputDigest, origin, run
     )
     if (result.ok) {
       throw new Error(
-        `${legName}: update_stale_expected_revision scenario was accepted instead of refused -- the adapter's own reopen still held expected_revision=1 from its capture, which the out-of-band advance already moved past`,
+        `${legName}: update_stale_expected_revision scenario was accepted instead of refused -- the adapter's own complete still held expected_revision=1 from its capture, which the out-of-band advance already moved past`,
       )
     }
   }
@@ -246,8 +260,8 @@ const postCommand = async (origin, sessionCookie, csrfToken, path, body) => {
 }
 
 const webApiAdapter = (origin, sessionCookie, csrfToken) => {
-  const reopenAction = async (taskId, expectedRevision) =>
-    postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/reopen-task', {
+  const completeAction = async (taskId, expectedRevision) =>
+    postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/complete-task', {
       expected_revision: expectedRevision,
       mutation_id: randomUUID(),
       task_id: taskId,
@@ -264,20 +278,20 @@ const webApiAdapter = (origin, sessionCookie, csrfToken) => {
       })
       return { ...result, taskId }
     },
-    async complete(taskId, expectedRevision) {
-      return postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/complete-task', {
+    complete: completeAction,
+    async reopen(taskId, expectedRevision) {
+      return postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/reopen-task', {
         expected_revision: expectedRevision,
         mutation_id: randomUUID(),
         task_id: taskId,
         version: 1,
       })
     },
-    reopen: reopenAction,
-    // The stale-expected-revision scenario probes `reopen` with the
+    // The stale-expected-revision scenario probes `complete` with the
     // adapter's own originally-observed revision -- see the comment on
     // `runSharedScenarioSet`'s `update_stale_expected_revision` block for
-    // why `reopen`, not `complete`, is the verb that reaches the check.
-    staleUpdate: reopenAction,
+    // why `complete`, not `reopen`, is the verb that reaches the check.
+    staleUpdate: completeAction,
   }
 }
 
@@ -296,9 +310,9 @@ const classifyMcp = (response) => {
 }
 
 const mcpAdapter = (origin, accessToken) => {
-  const reopenAction = async (taskId, expectedRevision) =>
+  const completeAction = async (taskId, expectedRevision) =>
     classifyMcp(
-      await toolsCall(origin, accessToken, 'keepling.reopen_task', {
+      await toolsCall(origin, accessToken, 'keepling.complete_task', {
         expected_revision: expectedRevision,
         mutation_id: randomUUID(),
         task_id: taskId,
@@ -313,9 +327,10 @@ const mcpAdapter = (origin, accessToken) => {
       )
       return { ...result, taskId }
     },
-    async complete(taskId, expectedRevision) {
+    complete: completeAction,
+    async reopen(taskId, expectedRevision) {
       return classifyMcp(
-        await toolsCall(origin, accessToken, 'keepling.complete_task', {
+        await toolsCall(origin, accessToken, 'keepling.reopen_task', {
           expected_revision: expectedRevision,
           mutation_id: randomUUID(),
           task_id: taskId,
@@ -323,8 +338,7 @@ const mcpAdapter = (origin, accessToken) => {
         }),
       )
     },
-    reopen: reopenAction,
-    staleUpdate: reopenAction,
+    staleUpdate: completeAction,
   }
 }
 
