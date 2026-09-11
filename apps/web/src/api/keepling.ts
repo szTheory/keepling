@@ -48,7 +48,7 @@ type DeviceGrantRevocationResponse = components['schemas']['DeviceGrantRevocatio
 // closes `client_kind` to `electron | iphone` (`NativeClientIdentity`) and does
 // not yet publish `scope`, `last_used_at`, or `authorized_at` -- even though the
 // server's own `device_grants.client_kind` CHECK constraint has admitted `mcp`
-// since 05-01, and `GET /api/v1/device-grants` (KeeplingWeb.DeviceGrantController)
+// since 05-01, and `GET /api/v1/account/device-grants` (KeeplingWeb.DeviceGrantController)
 // genuinely returns `client_kind: "mcp"` rows at runtime. The generated TS type
 // is stale relative to the runtime contract; `client_kind` is widened to `string`
 // here (rather than trusting the closed union) so a real "mcp" value type-checks,
@@ -597,7 +597,7 @@ const mapAgentGrant = (grant: WireAgentGrantSummary): AgentGrant => ({
 
 const listDeviceGrants = async (): Promise<readonly AgentGrant[]> => {
   const response = await readJson<WireAgentGrantsResponse>(
-    await fetch('/api/v1/device-grants', {
+    await fetch('/api/v1/account/device-grants', {
       credentials: 'same-origin',
       headers: { accept: 'application/json' },
     }),
@@ -613,7 +613,7 @@ const revokeDeviceGrant = async (
   csrfToken: string,
 ): Promise<DeviceGrantRevocationResponse> =>
   jsonRequest<undefined, DeviceGrantRevocationResponse>(
-    `/api/v1/device-grants/${encodeURIComponent(installationId)}`,
+    `/api/v1/account/device-grants/${encodeURIComponent(installationId)}`,
     'DELETE',
     undefined,
     csrfToken,

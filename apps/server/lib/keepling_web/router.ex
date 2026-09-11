@@ -126,6 +126,32 @@ defmodule KeeplingWeb.Router do
     get "/sync/bootstrap", SyncController, :bootstrap
   end
 
+  # T-05-13. Grant administration for the OWNER'S BROWSER, which has no
+  # device grant and therefore no way to reach the bearer-only routes above.
+  #
+  # This is a SEPARATE route rather than a pipeline swap on `/device-grants`.
+  # Moving those routes to `:client_authenticated` would admit every device
+  # grant -- including an agent's -- to grant administration, which is the
+  # escalation T-05-13 exists to close; and it would contradict
+  # `device_grant_controller_test.exs`'s deliberate "bearer boundary ...
+  # ignores browser cookies" assertion. Two routes, each with exactly one
+  # credential class, weakens neither.
+  #
+  # The delete carries `:mutation` for the same reason every other
+  # browser-only mutation does: a session is ambient credential, so the
+  # trusted-origin check is what stands between it and a cross-site caller.
+  scope "/api/v1", KeeplingWeb do
+    pipe_through [:api, :authenticated]
+
+    get "/account/device-grants", DeviceGrantController, :list_for_owner
+  end
+
+  scope "/api/v1", KeeplingWeb do
+    pipe_through [:api, :authenticated, :mutation]
+
+    delete "/account/device-grants/:installation_id", DeviceGrantController, :revoke_for_owner
+  end
+
   scope "/mcp", KeeplingWeb.MCP do
     pipe_through [:api, :mcp]
 

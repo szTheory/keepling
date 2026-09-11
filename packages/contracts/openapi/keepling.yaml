@@ -196,6 +196,57 @@ paths:
           $ref: '#/components/responses/ProblemResponse'
         '503':
           $ref: '#/components/responses/ProblemResponse'
+  /account/device-grants:
+    get:
+      operationId: listAccountDeviceGrants
+      summary: List installation grants for the signed-in owner's browser
+      description: >-
+        T-05-13. The owner's browser has no device grant, so it cannot reach
+        the bearer-only `/device-grants` routes. This is the same inventory
+        read through the session credential instead. It is a separate route
+        rather than a widened pipeline on `/device-grants`, because widening
+        that pipeline would admit EVERY device grant -- including an agent's
+        -- to grant administration.
+      security:
+        - BrowserSession: []
+      responses:
+        '200':
+          description: Installation grant inventory without credential material
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceGrantsResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
+  /account/device-grants/{installation_id}:
+    parameters:
+      - in: path
+        name: installation_id
+        required: true
+        schema:
+          $ref: '#/components/schemas/InstallationIdentity'
+    delete:
+      operationId: revokeAccountDeviceGrant
+      summary: Idempotently revoke one installation grant from the owner's browser
+      security:
+        - BrowserSession: []
+      responses:
+        '200':
+          description: Installation grant is revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceGrantRevocationResponse'
+        '401':
+          $ref: '#/components/responses/ProblemResponse'
+        '403':
+          $ref: '#/components/responses/ProblemResponse'
+        '404':
+          $ref: '#/components/responses/ProblemResponse'
+        '503':
+          $ref: '#/components/responses/ProblemResponse'
   /sync:
     get:
       operationId: pullSyncPage

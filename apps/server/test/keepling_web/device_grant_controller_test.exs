@@ -456,6 +456,68 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
              |> json_response(200)
   end
 
+  test "the owner's browser session administers grants through its own route", %{conn: conn} do
+    browser = login(conn)
+    browser |> authorize("session-managed-iphone", "iphone") |> exchange()
+    mcp_grant_credential(browser, "session-managed-agent", "tasks.read")
+
+    assert %{"device_grants" => grants} =
+             browser
+             |> recycle()
+             |> get("/api/v1/account/device-grants")
+             |> json_response(200)
+
+    assert Enum.sort(Enum.map(grants, & &1["installation_id"])) ==
+             ["session-managed-agent", "session-managed-iphone"]
+
+    assert Enum.any?(grants, &(&1["client_kind"] == "mcp"))
+
+    refute Enum.any?(
+             grants,
+             &(Map.has_key?(&1, "access_token") or Map.has_key?(&1, "refresh_token"))
+           )
+
+    assert %{
+             "installation_id" => "session-managed-agent",
+             "status" => "device_grant_revoked"
+           } =
+             browser
+             |> recycle()
+             |> trusted_request()
+             |> delete("/api/v1/account/device-grants/session-managed-agent")
+             |> json_response(200)
+
+    assert %{"device_grants" => after_revocation} =
+             browser |> recycle() |> get("/api/v1/account/device-grants") |> json_response(200)
+
+    assert Enum.find(after_revocation, &(&1["installation_id"] == "session-managed-agent"))[
+             "revoked"
+           ] == true
+  end
+
+  test "the owner-session grant routes are session-only and origin-guarded", %{conn: conn} do
+    browser = login(conn)
+    grant = browser |> authorize("owner-route-boundary", "electron") |> exchange()
+
+    # No session at all.
+    assert get(build_conn(), "/api/v1/account/device-grants") |> response(401)
+
+    # A device-grant BEARER must not reach the owner-session route either --
+    # this route is the browser's, and admitting a bearer here would just
+    # rebuild the hole on a different path.
+    assert build_conn()
+           |> bearer(grant["access_token"])
+           |> get("/api/v1/account/device-grants")
+           |> response(401)
+
+    # The delete carries `:mutation`, so a cross-origin browser request is
+    # refused even with a valid session.
+    assert browser
+           |> recycle()
+           |> delete("/api/v1/account/device-grants/owner-route-boundary")
+           |> response(403)
+  end
+
   defp mcp_grant_credential(conn, installation_id, scope) do
     response =
       conn
