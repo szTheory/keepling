@@ -388,7 +388,7 @@ recovery-severity. Evidence is `.artifacts/trust-soak/trust-soak-evidence.json`,
 stating its own detection floor and disclosed blind spot. Owner dogfood feedback stays informal,
 unstructured, non-evidentiary and non-gating.
 
-**Plans:** 1/13 plans executed
+**Plans:** 2/13 plans executed
 
 Plans:
 
@@ -398,7 +398,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 06-02-PLAN.md — TRACER: green CI, lossless artifact transport, and a release manifest verified end to end for one revision.
+- [x] 06-02-PLAN.md — TRACER: green CI, lossless artifact transport, and a release manifest verified end to end for one revision.
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
