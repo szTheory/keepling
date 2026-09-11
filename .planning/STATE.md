@@ -1,19 +1,19 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.0
-current_phase: 05
-current_phase_name: Safe Agent Access
-status: verifying
-stopped_at: All 12 plans executed; phase verification returned gaps_found (see 05 VERIFICATION.md)
-last_updated: "2026-09-10T21:20:02.646Z"
+current_phase: 6
+current_phase_name: Portability and Trust Release
+status: planning
+stopped_at: Phase 05 complete, ready to plan Phase 6
+last_updated: "2026-09-11T03:17:22.126Z"
 last_activity: 2026-09-10
-last_activity_desc: Phase KPL-05 verification found an agent privilege escalation
-state_head: a1e804f7d2e8d50b06a5e3e443b335b728320763
+last_activity_desc: Phase 05 complete, transitioned to Phase 6
+state_head: d4df562eafe4a63d7b9da8663b09e9d44852b29a
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 95
-  completed_plans: 84
+  completed_phases: 4
+  total_plans: 97
+  completed_plans: 96
 milestone_name: milestone
 ---
 
@@ -28,12 +28,12 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 ## Current Position
 
-Phase: KPL-05 (Safe Agent Access) — EXECUTING
-Plan: 12 of 12 (all executed)
+Phase: 6 — Portability and Trust Release
+Plan: Not started
 Total Plans in Phase: 12
-Status: Phase KPL-05 verified — GAPS FOUND, phase NOT complete (privilege escalation, window #70)
-Last activity: 2026-09-10 — Phase KPL-05 execution started
-Last Activity Description: Phase KPL-05 verification found an agent privilege escalation (window #70)
+Status: Ready to plan
+Last activity: 2026-09-10 — Phase 05 complete, transitioned to Phase 6
+Last Activity Description: Phase 05 complete, transitioned to Phase 6
 Progress: [█████████░] 94%
 
 ## Accumulated Context
@@ -274,7 +274,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 ## Session
 
 **Last session:** 2026-09-10T21:20:02.293Z
-**Stopped at:** Completed 05-02-PLAN.md (MCP discovery/audience/DCR)
+**Stopped at:** Phase 05 complete, ready to plan Phase 6
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 

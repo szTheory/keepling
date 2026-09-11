@@ -333,7 +333,7 @@ Plans:
 4. User-visible history shows typed actions, affected identities/revisions, result, actor, and recovery without exposing private chain of thought.
 5. Deterministic, protocol, simulated-client, representative-model, and adversarial suites score final state and forbidden side effects.
 
-**Plans:** 14/14 plans executed in 9 waves
+**Plans:** 14/14 plans complete
 **Verification:** GAPS FOUND 2026-09-10 — phase NOT complete. 4/5 success criteria met. MCP-02..05 have sufficient evidence; MCP-01 does not, and SRV-02 defers. Blocking defect: an MCP agent credential reaches `/api/v1/sync`, `/api/v1/sync/bootstrap` and the grant list/revoke routes, bypassing the bounded read surface and letting an agent revoke the owner's other clients (window #70). See `.planning/phases/KPL-05-safe-agent-access/VERIFICATION.md`.
 
 Plans:
@@ -417,7 +417,7 @@ attempted now.
 | 2. Synchronization and Replaceable Server | In Progress | 12 | 91% |
 | 3. Mac Daily Loop | Complete    | 7 | 100% (27/27 plans, incl. 3 gap-closure plans 03-25..03-27; verified 2026-09-04 — 03-VERIFICATION.md status: passed, 5/5 must-haves. MAC-01..05 and QUAL-03..04 complete; SRV-02 deferred to Phase 5 cross-adapter proof by design) |
 | 4. Native iPhone Daily Loop | Complete    | 4 | 100% (18/18 plans; verified 2026-09-10 — 04-VERIFICATION.md status: passed, 23/23 must-haves: 20 by evidence, 3 accepted by the owner as disclosed-not-proven. IOS-01..04 all complete. The full gate passes in one invocation: `lanes=24 failed=0 blocked=0`, 496 executed cases, two lanes driven on a physical iPhone. SRV-02's iPhone adapter proof is delivered but deferred to the Phase 5 cross-adapter proof by design. Disclosed residuals: SC5 daily adoption (never a gate), G7's locked-device write, the Debug-configuration substitution for the device suites, and 04-14's D9 judgment) |
-| 5. Safe Agent Access | In Progress| 5 | 0% |
+| 5. Safe Agent Access | Complete    | 5 | 0% |
 | 6. Portability and Trust Release | ○ Pending | 1 + cross-cutting verification | 0% |
 
 ---
