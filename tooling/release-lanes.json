@@ -1,0 +1,9 @@
+[
+  {
+    "lane": "ci-contract",
+    "workflow": "repository-integrity.yml",
+    "job": "ci-contract",
+    "authority": "ci",
+    "physicalBlocker": null
+  }
+]

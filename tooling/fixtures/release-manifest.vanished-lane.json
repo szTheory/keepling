@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "revision": {
+    "sha": "f7b7c902cd13c8b0ca6a1c78467b3f67e30b5213",
+    "ref": "refs/heads/main",
+    "runId": "candidate-0-tracer"
+  },
+  "artifacts": [
+    {
+      "artifactPath": ".planning/releases/candidate-0/artifact",
+      "digestSha256": "069096c18a47250c5e22eb663d0234fae15ea05fb22152330ef8e9daeb10f44a",
+      "builtByRunId": "candidate-0-tracer",
+      "builtByJob": "ci-contract",
+      "runnerImage": "ubuntu-24.04"
+    }
+  ],
+  "lanes": []
+}
