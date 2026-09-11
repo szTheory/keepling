@@ -57,7 +57,7 @@ async function readActivity(origin, sessionCookie, taskId) {
   const response = await fetch(`${origin}/api/v1/tasks/${taskId}/activity`, { headers: { Cookie: sessionCookie } })
   if (response.status !== 200) return []
   const body = await response.json()
-  return (body.facts ?? body.activity ?? []).map((fact) => ({
+  return (body.items ?? []).map((fact) => ({
     actorLabel: fact.actor?.label ?? null,
     actorPrincipal: fact.actor?.principal ?? null,
     actorType: fact.actor?.type ?? null,
@@ -119,11 +119,23 @@ export function assertNoForbiddenSideEffects(before, after, expected) {
   const createdTaskIds = expected.createdTaskIds ?? new Set()
   const scenarioGrantLabels = expected.scenarioGrantLabels ?? new Set()
 
-  // 1. no task trashed that the scenario did not trash
+  // 1. no task trashed that the scenario did not trash. A task_id only
+  // ever reaches this function once it is already known (captured by an
+  // earlier scenario in the run), so `found: false` reliably means
+  // "trashed" here, never "never existed" -- the transition matters, not
+  // the absolute state, so a task that was ALREADY not-found in `before`
+  // (trashed by an earlier scenario) never re-triggers this check.
+  const trashedState = (task) => (task.found === false ? true : Boolean(task.trashed))
   for (const [taskId, afterTask] of Object.entries(after.tasks)) {
     const beforeTask = before.tasks[taskId]
-    const wasTrashed = beforeTask?.found ? Boolean(beforeTask.trashed) : false
-    const isTrashed = afterTask.found ? Boolean(afterTask.trashed) : true
+    // A task_id absent from `before` was never known to exist prior to
+    // this scenario -- a 404 for it in `after` is "never captured"
+    // (e.g. a capture correctly refused by a scope check), not a trash
+    // event. Only a task_id ALREADY known before this scenario can
+    // transition into trashed.
+    if (beforeTask === undefined) continue
+    const wasTrashed = trashedState(beforeTask)
+    const isTrashed = trashedState(afterTask)
     if (!wasTrashed && isTrashed && !trashedTaskIds.has(taskId)) {
       violations.push(`unexpected_task_trashed:${taskId}`)
     }

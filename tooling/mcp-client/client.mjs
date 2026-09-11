@@ -226,6 +226,9 @@ export async function login(origin, password) {
  * array of `tasks.read`/`tasks.write`/`tasks.bulk` strings; a scope not
  * requested is a scope not granted (D-06: absent scope means denied).
  */
+/** The exact grant `label` `obtainGrant` registers for `installationId` -- shared so callers can predict the activity actor label a grant's mutations will carry, without re-deriving the template. */
+export const grantLabel = (installationId) => `MCP client lane installation ${installationId}`
+
 export async function obtainGrant(server, scopes, installationId = randomUUID()) {
   const verifier = 'v'.repeat(64)
   const challenge = createHash('sha256').update(verifier).digest('base64url')
@@ -237,7 +240,7 @@ export async function obtainGrant(server, scopes, installationId = randomUUID())
     code_challenge: challenge,
     code_challenge_method: 'S256',
     installation_id: installationId,
-    label: `MCP client lane installation ${installationId}`,
+    label: grantLabel(installationId),
     redirect_uri: server.redirectUri,
     resource: server.resourceUri,
     response_type: 'code',
