@@ -388,7 +388,7 @@ recovery-severity. Evidence is `.artifacts/trust-soak/trust-soak-evidence.json`,
 stating its own detection floor and disclosed blind spot. Owner dogfood feedback stays informal,
 unstructured, non-evidentiary and non-gating.
 
-**Plans:** 9/13 plans executed
+**Plans:** 10/13 plans executed
 
 Plans:
 
@@ -413,7 +413,7 @@ Plans:
 - [x] 06-08-PLAN.md — Prove the export with a completeness check, a golden vector, an independent reader, and a no-secrets assertion.
 - [x] 06-09-PLAN.md — Per-field lifecycle-aware conflict resolution and guarded keyboard navigation (O-44, O-22).
 - [ ] 06-10-PLAN.md — Sign, notarize, staple, attest, and inventory the distributed artifacts.
-- [ ] 06-11-PLAN.md — Publish the trust posture and the governance lane that makes it fail when it rots.
+- [x] 06-11-PLAN.md — Publish the trust posture and the governance lane that makes it fail when it rots.
 - [ ] 06-12-PLAN.md — Build the read-only reconciliation oracle, the chaos corpus, the census, and the soak gate.
 
 **Wave 5** *(blocked on Wave 4 completion)*

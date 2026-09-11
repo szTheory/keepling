@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 06
 current_phase_name: Portability and Trust Release
 status: executing
-stopped_at: Completed 06-09-PLAN.md
-last_updated: "2026-09-11T21:03:53.511Z"
+stopped_at: Completed 06-11-PLAN.md
+last_updated: "2026-09-11T21:37:45.087Z"
 last_activity: 2026-09-11
 last_activity_desc: Phase KPL-06 execution started
-state_head: 1e76ab4b7a37728da66daa57c618a932f6e55798
+state_head: eb536d046063d6d6af2a2cc12b51cb2e6adbb701
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 110
-  completed_plans: 105
+  completed_plans: 106
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-06 (Portability and Trust Release) — EXECUTING
-Plan: 10 of 13
+Plan: 11 of 13
 Total Plans in Phase: 13
 Status: Executing Phase KPL-06
 Last activity: 2026-09-11 — Phase KPL-06 execution started
@@ -256,6 +256,8 @@ Progress: [█████████░] 94%
 - [Phase 06]: [Phase KPL-06]: 06-08: the golden vector is generated via a direct Export.write_bundle/4 call with hand-fixed entities and manifest_extra (never a live DB read), removing restore_epoch/feed_high_water_sequence as sources of environmental variance.
 - [Phase 06]: [Phase KPL-06]: 06-08: closed 06-04's disclosed CLI wiring gap for the export verb only (release.ex + ops_store.ex), since Task 2's own verify required a real mix keepling.ops export bundle; backup/restore/deploy/upgrade/replace-host remain unwired.
 - [Phase 06]: [Phase KPL-06]: 06-08: registering export-elixir/export-reader in release-lanes.json correctly makes verify-release.mjs fail against the pre-existing candidate-0 manifest -- the intended proof the exact-set detection works, disclosed as open CI-wiring follow-up.
+- [Phase 06]: D-013 (06-11): recorded, not implemented, an RFC 8707 audience check at :client_authenticated -- it would buy no reduction in actual authority given this repo's single origin/authorization-server/account, and would invert the deliberate D-09 byte-identity assertion.
+- [Phase 06]: 06-11: SECURITY.md's supported-version table renders from apps/server/config/config.exs's live :compatibility map, not the compatibility_test.exs fixture named in the plan's read_first -- the live config is what actually matches D-29's pre-release honesty line.
 
 ### Retained Research
 
@@ -291,8 +293,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-11T21:03:53.262Z
-**Stopped at:** Completed 06-09-PLAN.md
+**Last session:** 2026-09-11T21:37:44.819Z
+**Stopped at:** Completed 06-11-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -389,6 +391,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-06 P05 | 65min | 3 tasks | 13 files |
 | Phase KPL-06 P08 | ~110min | 3 tasks | 10 files |
 | Phase KPL-06 P09 | ~95min | 3 tasks | 16 files |
+| Phase KPL-06 P11 | 50min | 4 tasks | 13 files |
 
 ### Blockers
 
