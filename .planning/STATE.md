@@ -4,16 +4,16 @@ milestone: v1.0
 current_phase: 06
 current_phase_name: Portability and Trust Release
 status: executing
-stopped_at: Completed 06-11-PLAN.md
-last_updated: "2026-09-11T21:37:45.087Z"
+stopped_at: Completed 06-12-PLAN.md
+last_updated: "2026-09-11T21:57:05.985Z"
 last_activity: 2026-09-11
 last_activity_desc: Phase KPL-06 execution started
-state_head: eb536d046063d6d6af2a2cc12b51cb2e6adbb701
+state_head: 50827fc7c939ea25a51effb379b123629fb0146b
 progress:
   total_phases: 6
   completed_phases: 4
   total_plans: 110
-  completed_plans: 106
+  completed_plans: 107
 milestone_name: milestone
 ---
 
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-06 (Portability and Trust Release) — EXECUTING
-Plan: 11 of 13
+Plan: 12 of 13
 Total Plans in Phase: 13
 Status: Executing Phase KPL-06
 Last activity: 2026-09-11 — Phase KPL-06 execution started
@@ -258,6 +258,8 @@ Progress: [█████████░] 94%
 - [Phase 06]: [Phase KPL-06]: 06-08: registering export-elixir/export-reader in release-lanes.json correctly makes verify-release.mjs fail against the pre-existing candidate-0 manifest -- the intended proof the exact-set detection works, disclosed as open CI-wiring follow-up.
 - [Phase 06]: D-013 (06-11): recorded, not implemented, an RFC 8707 audience check at :client_authenticated -- it would buy no reduction in actual authority given this repo's single origin/authorization-server/account, and would invert the deliberate D-09 byte-identity assertion.
 - [Phase 06]: 06-11: SECURITY.md's supported-version table renders from apps/server/config/config.exs's live :compatibility map, not the compatibility_test.exs fixture named in the plan's read_first -- the live config is what actually matches D-29's pre-release honesty line.
+- [Phase 06]: 06-12: the trust oracle's server-side entity digest is computed inside Postgres via sha256(), never letting plaintext task content leave the database for that source
+- [Phase 06]: 06-12: the chaos corpus's ten operators are fully wired (list/seed/digest/dry-run) but real two-client harness composition is disclosed as open follow-on integration, mirroring the project's existing physical-device-lane precedent
 
 ### Retained Research
 
@@ -293,8 +295,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-11T21:37:44.819Z
-**Stopped at:** Completed 06-11-PLAN.md
+**Last session:** 2026-09-11T21:57:05.772Z
+**Stopped at:** Completed 06-12-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -392,6 +394,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-06 P08 | ~110min | 3 tasks | 10 files |
 | Phase KPL-06 P09 | ~95min | 3 tasks | 16 files |
 | Phase KPL-06 P11 | 50min | 4 tasks | 13 files |
+| Phase KPL-06 P12 | ~140min | 3 tasks | 19 files |
 
 ### Blockers
 
