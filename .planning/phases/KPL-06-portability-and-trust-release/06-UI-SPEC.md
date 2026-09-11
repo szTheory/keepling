@@ -321,11 +321,12 @@ considerations is unchanged from `01-UI-SPEC.md`/`03-UI-SPEC.md` and is not re-p
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PENDING
-- [ ] Dimension 2 Visuals: PENDING
-- [ ] Dimension 3 Color: PENDING
-- [ ] Dimension 4 Typography: PENDING
-- [ ] Dimension 5 Spacing: PENDING
-- [ ] Dimension 6 Registry Safety: PENDING
+- [x] Dimension 1 Copywriting: PASS — specific, state-describing labels; no generic CTAs
+- [x] Dimension 2 Visuals: PASS — focal points inherited from `01/03-UI-SPEC.md`; no new visual design
+- [x] Dimension 3 Color: PASS — no new colors; accent constrained by the explicit "never color alone" rule
+- [x] Dimension 4 Typography: PASS — four sizes, two weights, all inherited; no new rules
+- [x] Dimension 5 Spacing: PASS — zero new values; 4-multiple grid maintained
+- [x] Dimension 6 Registry Safety: PASS — official registry re-verified 2026-09-11; no third-party registries
+- [x] Dimension 7 Inventory Provenance: PASS — complete enumeration line with command, count, `shadcn@4.19.0`, date
 
-**Approval:** draft — awaiting `gsd-ui-checker` review.
+**Approval:** approved 2026-09-11 — `gsd-ui-checker` returned `## UI-SPEC VERIFIED`, 7/7 dimensions, no recommendations.
