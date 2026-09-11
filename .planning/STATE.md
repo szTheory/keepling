@@ -4,11 +4,11 @@ milestone: v1.0
 current_phase: 06
 current_phase_name: Portability and Trust Release
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-09-11T17:22:19.512Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-09-11T17:49:46.969Z"
 last_activity: 2026-09-11
 last_activity_desc: Phase KPL-06 execution started
-state_head: b65ff97f65ca8dc7eb32ee3d4b3d5edc99dab43b
+state_head: 149e3a605d21151bcd54cf1679fdac34cb7f24a6
 progress:
   total_phases: 6
   completed_phases: 4
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-06 (Portability and Trust Release) — EXECUTING
-Plan: 2 of 13
+Plan: 3 of 13
 Total Plans in Phase: 13
 Status: Executing Phase KPL-06
 Last activity: 2026-09-11 — Phase KPL-06 execution started
@@ -240,6 +240,8 @@ Progress: [█████████░] 94%
 - [Phase KPL-05]: 05-02: mcp_token_audience_rejected renamed to mcp_audience_rejected -- the literal substring "token" is forbidden in security_audit.ex by the pre-existing telemetry_redaction_test.exs privacy invariant.
 - [Phase 06]: WINDOWS.md gained a trailing owner column (all rows) instead of repurposing the phase column, so historical phase-of-record and current accountable owner stay independently readable — Rows 43/63/69/78 needed an owner different from their originating phase (BACKLOG or Phase 6), which the existing phase column could not express without losing history.
 - [Phase 06]: QUAL-02 unchecked rather than re-disclosed in place, because CI now runs and fails 17/17, which is strictly worse than the prior never-ran state — Leaving the box checked would misstate the direction of the change; the plan's own prohibition forbids softening a disclosure.
+- [Phase 06]: 06-02: T-06-02-01 fixed via ditto archive transport (mode-aware) instead of loosening the applicationDigestSha256 binding; smoke-desktop-packaged.mjs and verify-macos-integration.mjs expand and re-verify the archive rather than trusting the raw directory transport.
+- [Phase 06]: 06-02: server/sync-property/backup-restore Phase 2 lanes moved to a new ubuntu-24.04 job (apt/PGDG PostgreSQL) rather than a GitHub Actions services: container, because backup-restore drives pg_ctl/WAL/PITR directly and a service container does not expose that.
 
 ### Retained Research
 
@@ -275,8 +277,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-11T17:22:19.322Z
-**Stopped at:** Completed 06-01-PLAN.md
+**Last session:** 2026-09-11T17:49:46.791Z
+**Stopped at:** Completed 06-02-PLAN.md
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -365,6 +367,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-05 P01 | ~80min | 3 tasks | 15 files |
 | Phase KPL-05 P02 | 40min | 3 tasks | 13 files |
 | Phase 06 P01 | 24min | 3 tasks | 5 files |
+| Phase KPL-06 P02 | unknown | 3 tasks | 13 files |
 
 ### Blockers
 
