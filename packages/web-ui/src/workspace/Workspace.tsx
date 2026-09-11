@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 
 import type { ClientFacade, WorkspaceLayoutState, WorkspaceRoute, WorkspaceSnapshotView } from '../ClientFacade'
 import CaptureForm from '../capture/CaptureForm'
@@ -73,9 +73,27 @@ const emptyCopy: Record<WorkspaceRoute, { body: string; title: string }> = {
   trash: { body: 'Tasks you move to Trash appear here until restored.', title: 'Trash Is Empty' },
 }
 
-type PendingNavigation = { kind: 'route'; route: WorkspaceRoute } | { kind: 'select'; taskId: string | null }
+type PendingNavigation =
+  | { kind: 'route'; onComplete?: () => void; route: WorkspaceRoute }
+  | { kind: 'select'; onComplete?: () => void; taskId: string | null }
 
-function Workspace({ facade, onSidebarVisibleRestored, sidebarVisible = true }: WorkspaceProps) {
+/**
+ * Imperative seam (Task 3, O-22) letting a host outside this component --
+ * today only `DesktopShell.tsx`'s keyboard-command dispatch -- request a
+ * route change that goes through the SAME dirty-state guard the mouse nav
+ * links already use, instead of calling `facade.setRoute` directly and
+ * walking past it. `onComplete` runs only once the navigation actually
+ * takes effect (immediately when clean, or after Save/Discard resolves the
+ * dialog when dirty) -- never when the person chooses Keep Editing.
+ */
+type WorkspaceHandle = {
+  guardedSetRoute: (route: WorkspaceRoute, onComplete?: () => void) => void
+}
+
+const Workspace = forwardRef<WorkspaceHandle, WorkspaceProps>(function Workspace(
+  { facade, onSidebarVisibleRestored, sidebarVisible = true },
+  ref,
+) {
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshotView>(() => facade.getSnapshot())
   const [dirty, setDirty] = useState(false)
   const [pendingNavigation, setPendingNavigation] = useState<PendingNavigation | null>(null)
@@ -262,7 +280,19 @@ function Workspace({ facade, onSidebarVisibleRestored, sidebarVisible = true }: 
   const commitNavigation = (navigation: PendingNavigation) => {
     if (navigation.kind === 'route') facade.setRoute(navigation.route)
     else facade.selectTask(navigation.taskId)
+    navigation.onComplete?.()
   }
+
+  useImperativeHandle(
+    ref,
+    (): WorkspaceHandle => ({
+      guardedSetRoute: (route, onComplete) => {
+        void attemptNavigation({ kind: 'route', onComplete, route })
+      },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dirty, facade],
+  )
 
   const resolvePendingSave = async () => {
     const saved = (await editorRef.current?.save()) ?? true
@@ -395,8 +425,8 @@ function Workspace({ facade, onSidebarVisibleRestored, sidebarVisible = true }: 
       ) : null}
     </main>
   )
-}
+})
 
 export default Workspace
 export { resolveBreakpoint }
-export type { Breakpoint }
+export type { Breakpoint, WorkspaceHandle }

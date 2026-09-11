@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import type { ClientFacade } from '../../../packages/web-ui/src/ClientFacade.ts'
-import Workspace from '../../../packages/web-ui/src/workspace/Workspace.tsx'
+import Workspace, { type WorkspaceHandle } from '../../../packages/web-ui/src/workspace/Workspace.tsx'
 import SyncStatusRow from './SyncStatusRow.tsx'
 import { matchSemanticCommand, shouldDispatchCommand, type SemanticCommand } from './keyboardCommands.ts'
 
@@ -36,6 +36,11 @@ const destinationTitle = (route: 'inbox' | 'today' | 'trash'): string => {
  */
 function DesktopShell({ facade }: DesktopShellProps) {
   const [sidebarVisible, setSidebarVisible] = useState(true)
+  // Task 3 (O-22): the keyboard-command dispatch below must route every
+  // route/selection-changing command through Workspace's own dirty-state
+  // guard instead of calling `facade.setRoute`/`facade.selectTask` directly
+  // -- this ref is the reachable seam `Workspace` exposes for that.
+  const workspaceRef = useRef<WorkspaceHandle>(null)
 
   useEffect(() => {
     const applyTitle = () => {
@@ -51,17 +56,18 @@ function DesktopShell({ facade }: DesktopShellProps) {
       const selected = snapshot.tasks.find((task) => task.id === snapshot.selectedTaskId) ?? null
       switch (command) {
         case 'new-task': {
-          facade.setRoute('inbox')
-          queueMicrotask(() => {
-            document.getElementById('workspace-capture-title')?.focus()
+          workspaceRef.current?.guardedSetRoute('inbox', () => {
+            queueMicrotask(() => {
+              document.getElementById('workspace-capture-title')?.focus()
+            })
           })
           break
         }
         case 'go-inbox':
-          facade.setRoute('inbox')
+          workspaceRef.current?.guardedSetRoute('inbox')
           break
         case 'go-today':
-          facade.setRoute('today')
+          workspaceRef.current?.guardedSetRoute('today')
           break
         case 'toggle-complete-reopen': {
           if (selected === null) break
@@ -119,6 +125,7 @@ function DesktopShell({ facade }: DesktopShellProps) {
       <Workspace
         facade={facade}
         onSidebarVisibleRestored={setSidebarVisible}
+        ref={workspaceRef}
         sidebarVisible={sidebarVisible}
       />
     </>
