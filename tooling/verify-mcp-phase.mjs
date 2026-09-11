@@ -382,7 +382,12 @@ const runAsCli = async () => {
 
   const blockedCount = results.filter((r) => r.blocked).length
   console.log('')
-  console.log(`MCP phase gate summary: lanes=${results.length} failed=${results.filter((r) => !r.passed).length} blocked=${blockedCount} run_id=${RUN_ID}`)
+  // A blocked lane is not a failed lane. The per-lane lines below already
+  // keep PASS/BLOCKED/FAIL distinct, and D-25/D-26 rest on that distinction:
+  // BLOCKED is disclosed missing evidence, FAIL is a defect. Counting
+  // `!passed` here reported a failure that had not occurred.
+  const failedCount = results.filter((r) => !r.passed && !r.blocked).length
+  console.log(`MCP phase gate summary: lanes=${results.length} failed=${failedCount} blocked=${blockedCount} run_id=${RUN_ID}`)
   for (const result of results) {
     const word = result.passed ? 'PASS' : result.blocked ? 'BLOCKED' : 'FAIL'
     console.log(`  ${word} ${result.name} cases=${result.cases} duration_ms=${result.durationMs} input_digest=${result.inputDigest}`)
