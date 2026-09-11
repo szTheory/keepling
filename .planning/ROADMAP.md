@@ -388,13 +388,13 @@ recovery-severity. Evidence is `.artifacts/trust-soak/trust-soak-evidence.json`,
 stating its own detection floor and disclosed blind spot. Owner dogfood feedback stays informal,
 unstructured, non-evidentiary and non-gating.
 
-**Plans:** 13 plans
+**Plans:** 1/13 plans executed
 
 Plans:
 
 **Wave 1**
 
-- [ ] 06-01-PLAN.md — Correct the overclaims, the stale ledger rows, and the grouped traceability table before any new work runs.
+- [x] 06-01-PLAN.md — Correct the overclaims, the stale ledger rows, and the grouped traceability table before any new work runs.
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -471,7 +471,7 @@ attempted now.
 | 3. Mac Daily Loop | Complete    | 7 | 100% (27/27 plans, incl. 3 gap-closure plans 03-25..03-27; verified 2026-09-04 — 03-VERIFICATION.md status: passed, 5/5 must-haves. MAC-01..05 and QUAL-03..04 complete; SRV-02 deferred to Phase 5 cross-adapter proof by design) |
 | 4. Native iPhone Daily Loop | Complete    | 4 | 100% (18/18 plans; verified 2026-09-10 — 04-VERIFICATION.md status: passed, 23/23 must-haves: 20 by evidence, 3 accepted by the owner as disclosed-not-proven. IOS-01..04 all complete. The full gate passes in one invocation: `lanes=24 failed=0 blocked=0`, 496 executed cases, two lanes driven on a physical iPhone. SRV-02's iPhone adapter proof is delivered but deferred to the Phase 5 cross-adapter proof by design. Disclosed residuals: SC5 daily adoption (never a gate), G7's locked-device write, the Debug-configuration substitution for the device suites, and 04-14's D9 judgment) |
 | 5. Safe Agent Access | Complete    | 5 | 0% |
-| 6. Portability and Trust Release | ○ Pending | 1 + cross-cutting verification | 0% |
+| 6. Portability and Trust Release | In Progress| 1 + cross-cutting verification | 0% |
 
 ---
 *Roadmap created: 2026-08-28 after project initialization*
