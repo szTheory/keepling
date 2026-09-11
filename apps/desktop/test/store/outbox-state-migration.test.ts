@@ -127,11 +127,12 @@ describe('outbox transmission state migration (O-51 / D-52)', () => {
       after.close()
     }
 
-    // Both versions are recorded, each bound to the checksum of the file
-    // that was actually applied.
+    // Every version is recorded, each bound to the checksum of the file that
+    // was actually applied. Since 06-06 the lineage has a third version.
     expect(readLedger(databasePath)).toEqual([
       { checksum: checksumOf(join(migrationsDirectory, '0001_initial.sql')), version: 1 },
       { checksum: checksumOf(join(migrationsDirectory, '0002_outbox_state.sql')), version: 2 },
+      { checksum: checksumOf(join(migrationsDirectory, '0003_refusal_durability.sql')), version: 3 },
     ])
   })
 

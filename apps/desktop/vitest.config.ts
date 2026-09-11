@@ -37,7 +37,7 @@ export default defineConfig({
         test: {
           ...projectDefaults,
           environment: 'node',
-          include: ['test/store/**/*.{test,spec}.ts'],
+          include: ['test/store/**/*.{test,spec}.ts', 'test/store-worker/**/*.{test,spec}.ts'],
           name: 'store',
         },
       }),

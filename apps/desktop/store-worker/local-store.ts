@@ -684,16 +684,14 @@ class NodeSqliteLocalStore {
         this.#retainUndoAvailability(acknowledgement.mutationId, acknowledgement.undo)
       }
       this.#pruneUndoAvailability(new Date().toISOString())
-      this.#database.prepare(`
-        UPDATE mutation_journal SET outcome = ?, terminal_snapshot_json = ? WHERE mutation_id = ?
-      `).run(acknowledgement.outcome, snapshotJson, acknowledgement.mutationId)
-      // Terminal for every outcome: the server has decided, and retrying the
-      // same immutable bytes cannot change its mind. Leaving a refused
-      // command queued is how an outbox fills with commands nothing can ever
-      // settle. Note this is ALSO what keeps the ordering rule free of a
-      // stuck state -- a later mutation on the same task becomes ready as
-      // soon as this one leaves the outbox, whatever the outcome was.
-      this.#database.prepare('DELETE FROM outbox WHERE mutation_id = ?').run(acknowledgement.mutationId)
+      // D-37: every refusal outcome gets a durable local home in
+      // `refusal_records` BEFORE the outbox entry below becomes terminal.
+      // This whole method commits atomically, so an "interruption between
+      // the two" can only ever land on one side of COMMIT -- either both
+      // this write and the terminal transition below took effect, or
+      // neither did (the mutation is retried and refused again, producing
+      // the same record). There is no reachable state with a terminal
+      // outbox entry and no record.
       if (acknowledgement.outcome === 'conflict') {
         const command = this.#database.prepare(`
           SELECT effect_snapshot_json FROM immutable_commands WHERE mutation_id = ?
@@ -701,18 +699,49 @@ class NodeSqliteLocalStore {
         const mineSnapshot: SyncSnapshot = command
           ? (JSON.parse(command.effect_snapshot_json) as SyncSnapshot)
           : { id: '' }
+        const affectedFields = Array.isArray(acknowledgement.snapshot.affected_fields)
+          ? (acknowledgement.snapshot.affected_fields as unknown[]).filter(
+              (field): field is string => typeof field === 'string',
+            )
+          : []
+        // One entry per diverging field the server named -- a lifecycle or
+        // Trash divergence names `completed_at`/`trashed_at` here instead of
+        // recording nothing, which is what the OLD both-non-null guard did.
+        // An absent side (this acknowledgement shape only ever plumbs a
+        // current VALUE through for `title`; see `readConflict` in
+        // `main/adapters/server-refusal.ts`) is stored as an explicit JSON
+        // `null`, never by omitting the field's entry.
+        const fields = affectedFields.map((field) => ({
+          current: field === 'title' && typeof acknowledgement.snapshot.title === 'string'
+            ? acknowledgement.snapshot.title
+            : null,
+          field,
+          mine: typeof mineSnapshot[field] === 'undefined' ? null : mineSnapshot[field],
+        }))
+        this.#database.prepare(`
+          INSERT INTO refusal_records(mutation_id, entity_id, outcome, fields_json, unresolved, recorded_at)
+          VALUES (?, ?, ?, ?, 1, ?)
+          ON CONFLICT(mutation_id) DO UPDATE SET
+            entity_id = excluded.entity_id,
+            outcome = excluded.outcome,
+            fields_json = excluded.fields_json,
+            recorded_at = excluded.recorded_at
+        `).run(
+          acknowledgement.mutationId,
+          pending.task_id,
+          acknowledgement.outcome,
+          JSON.stringify(fields),
+          new Date().toISOString(),
+        )
         const current = typeof acknowledgement.snapshot.title === 'string' ? acknowledgement.snapshot.title : null
         const mine = typeof mineSnapshot.title === 'string' ? mineSnapshot.title : null
-        // A mine/current record is only recorded when the SERVER named a
-        // divergent `title`, because that is the only thing the desktop's
-        // chooser can honestly present (`ConflictResolver` asks which TITLE
-        // to keep). A lifecycle or Trash conflict diverges on
-        // `completed_at`/`trashed_at`, and offering those two timestamps
-        // under "choose which title" would be a lie in the UI. Those still
-        // reach a person as the `conflict` row and its Review Conflict
-        // action, which falls back to refreshing from the server -- exactly
-        // the `refresh_task` recovery the server itself names. Recorded as a
-        // known limit in 03-22-SUMMARY.md.
+        // A mine/current record is only recorded HERE, in the pre-existing
+        // title-only `conflicts` table, when the SERVER named a divergent
+        // `title` -- that is the only thing the desktop's current chooser
+        // can honestly present (`ConflictResolver` asks which TITLE to
+        // keep). This table is unchanged by this plan; `refusal_records`
+        // above is the durable record for every outcome, including the
+        // lifecycle/Trash divergences this table still cannot represent.
         if (current !== null && mine !== null) {
           this.#database.prepare(`
             INSERT INTO conflicts(conflict_id, mutation_id, details_json) VALUES (?, ?, ?)
@@ -724,20 +753,30 @@ class NodeSqliteLocalStore {
           )
         }
       }
+      this.#database.prepare(`
+        UPDATE mutation_journal SET outcome = ?, terminal_snapshot_json = ? WHERE mutation_id = ?
+      `).run(acknowledgement.outcome, snapshotJson, acknowledgement.mutationId)
+      // Terminal for every outcome: the server has decided, and retrying the
+      // same immutable bytes cannot change its mind. Leaving a refused
+      // command queued is how an outbox fills with commands nothing can ever
+      // settle. Note this is ALSO what keeps the ordering rule free of a
+      // stuck state -- a later mutation on the same task becomes ready as
+      // soon as this one leaves the outbox, whatever the outcome was.
+      this.#database.prepare('DELETE FROM outbox WHERE mutation_id = ?').run(acknowledgement.mutationId)
       // The visible projection is a replay of (canonical shadow + outbox).
       // Replaying it after a REFUSAL would reassert the shadow over a change
       // the refused command had already applied locally -- so the person
       // would watch their edit vanish while being told "Your version is
       // still on this Mac", and a diverged row would be relabelled "Synced"
       // on the strength of an answer that settled nothing. The local row
-      // stands, still reading "Saved on this Mac", and the conflict record
-      // (when the server named a title) holds both versions for the choice.
+      // stands, still reading "Saved on this Mac".
       //
-      // KNOWN LIMIT, recorded in 03-22-SUMMARY.md rather than papered over:
-      // the refused command is terminal and is gone from the outbox, so the
-      // NEXT pull replays the shadow and the local value is lost. Giving a
-      // refused local change a durable home is a product decision this plan
-      // did not carry authority to make.
+      // D-37 CLOSED: the durable record written above (not only for title
+      // divergence) is what keeps this true across the NEXT pull, too.
+      // `#replayVisible()` consults `refusal_records.unresolved` for every
+      // entity it is about to touch and skips exactly the ones this
+      // acknowledgement just recorded, so a later pull can no longer
+      // silently revert a change the server refused.
       if (acknowledgement.outcome === 'accepted' || acknowledgement.outcome === 'already_satisfied') {
         this.#replayVisible()
       }
