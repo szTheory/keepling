@@ -3,11 +3,11 @@ gsd_state_version: 1.0
 milestone: v1.0
 current_phase: 05
 current_phase_name: Safe Agent Access
-status: executing
-stopped_at: Completed 05-02-PLAN.md (MCP discovery/audience/DCR)
+status: verifying
+stopped_at: All 12 plans executed; phase verification returned gaps_found (see 05 VERIFICATION.md)
 last_updated: "2026-09-10T21:20:02.646Z"
 last_activity: 2026-09-10
-last_activity_desc: Phase KPL-05 execution started
+last_activity_desc: Phase KPL-05 verification found an agent privilege escalation
 state_head: a1e804f7d2e8d50b06a5e3e443b335b728320763
 progress:
   total_phases: 6
@@ -29,11 +29,11 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: KPL-05 (Safe Agent Access) — EXECUTING
-Plan: 3 of 12
+Plan: 12 of 12 (all executed)
 Total Plans in Phase: 12
-Status: Executing Phase KPL-05
+Status: Phase KPL-05 verified — GAPS FOUND, phase NOT complete (privilege escalation, window #70)
 Last activity: 2026-09-10 — Phase KPL-05 execution started
-Last Activity Description: Phase KPL-05 execution started
+Last Activity Description: Phase KPL-05 verification found an agent privilege escalation (window #70)
 Progress: [█████████░] 94%
 
 ## Accumulated Context
