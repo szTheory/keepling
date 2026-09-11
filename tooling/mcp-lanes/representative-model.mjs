@@ -67,13 +67,69 @@ const requireModelCredential = () => {
 
 const modelId = () => process.env.KEEPLING_MCP_MODEL || DEFAULT_MODEL_ID
 
-/** Converts the server's own `tools/list` result into the Anthropic Messages API's `tools` shape -- no re-declared schema, the server's published schema is the single source. */
-const toAnthropicTools = (mcpTools) =>
-  mcpTools.map((tool) => ({
-    description: tool.description,
-    input_schema: tool.inputSchema,
-    name: tool.name,
-  }))
+/**
+ * Renders what the model actually did, for failure messages. A scenario failure
+ * that does not say which tools the model chose, and how each answered, cannot be
+ * acted on -- the reader cannot tell a model that refused from a server that
+ * errored. Tool NAMES and error codes only: never arguments, which carry task
+ * content, and never anything derived from the credential.
+ */
+const describeCalls = (outcome) => {
+  const calls = outcome.calls ?? []
+  if (calls.length === 0) return `none (stop_reason=${String(outcome.stopReason)})`
+  return calls
+    .map((call) => {
+      // The JSON-RPC `code` is NOT discriminating: invalid_command,
+      // insufficient_scope and unknown_tool all answer -32602. The closed
+      // vocabulary lives in `data.keepling_code`, so prefer it.
+      const error = call.result?.error
+      const code = error?.data?.keepling_code ?? error?.code ?? error?.message
+      // Argument KEYS only -- names are schema vocabulary, values are task content.
+      const keys = Object.keys(call.input ?? {}).sort().join('+') || 'no-args'
+      return call.result?.result
+        ? `${call.name}(${keys})=ok`
+        : `${call.name}(${keys})=error(${String(code ?? 'unknown')})`
+    })
+    .join(', ')
+}
+
+/** The Anthropic Messages API constrains tool names to this pattern; MCP does not. */
+const ANTHROPIC_TOOL_NAME_RE = /^[a-zA-Z0-9_-]{1,128}$/
+
+/**
+ * Converts the server's own `tools/list` result into the Anthropic Messages API's
+ * `tools` shape -- no re-declared schema, the server's published schema is the single
+ * source.
+ *
+ * Keepling's MCP tools are named `keepling.capture_task`, and the DOT is legal in MCP
+ * but rejected by the Messages API, whose tool-name pattern admits only letters,
+ * digits, underscore and hyphen. A real MCP host must perform exactly this rename
+ * when it bridges MCP tools into the API, so the lane performs it too rather than
+ * reporting a surface that real hosts drive fine as unusable.
+ *
+ * The mapping is returned alongside the tools so every `tool_use` the model emits is
+ * translated BACK to its MCP name before dispatch -- the server only ever sees its own
+ * vocabulary, and scenario assertions keep matching on MCP names.
+ *
+ * A collision is a hard error, never a silent shadow.
+ */
+const toAnthropicTools = (mcpTools) => {
+  const byApiName = new Map()
+  const tools = mcpTools.map((tool) => {
+    const apiName = ANTHROPIC_TOOL_NAME_RE.test(tool.name)
+      ? tool.name
+      : tool.name.replace(/[^a-zA-Z0-9_-]/g, '_')
+    if (!ANTHROPIC_TOOL_NAME_RE.test(apiName)) {
+      throw new Error(`MCP tool "${tool.name}" cannot be expressed as an Anthropic tool name`)
+    }
+    if (byApiName.has(apiName)) {
+      throw new Error(`MCP tools "${byApiName.get(apiName)}" and "${tool.name}" both map to API tool name "${apiName}"`)
+    }
+    byApiName.set(apiName, tool.name)
+    return { description: tool.description, input_schema: tool.inputSchema, name: apiName }
+  })
+  return { byApiName, tools }
+}
 
 /**
  * One real call to the Anthropic Messages API. `credential` is passed as
@@ -107,7 +163,7 @@ const callModel = async (credential, { maxTokens, messages, model, tools }) => {
  * (BLOCKED), never a silent truncation.
  */
 const driveModelScenario = async ({ credential, instruction, origin, systemPrompt, token, tools }) => {
-  const anthropicTools = toAnthropicTools(tools)
+  const { byApiName, tools: anthropicTools } = toAnthropicTools(tools)
   const messages = [{ content: instruction, role: 'user' }]
   const calls = []
 
@@ -129,8 +185,10 @@ const driveModelScenario = async ({ credential, instruction, origin, systemPromp
     const toolResults = []
     for (const block of toolUseBlocks) {
       // eslint-disable-next-line no-await-in-loop
-      const result = await toolsCall(origin, token, block.name, block.input)
-      calls.push({ input: block.input, name: block.name, result: result.body })
+      // Translate the API tool name back to the MCP name the server published.
+      const mcpToolName = byApiName.get(block.name) ?? block.name
+      const result = await toolsCall(origin, token, mcpToolName, block.input)
+      calls.push({ input: block.input, name: mcpToolName, result: result.body })
       toolResults.push({
         content: JSON.stringify(result.body.result ?? result.body.error ?? {}),
         tool_use_id: block.id,
@@ -238,7 +296,10 @@ const buildScenarios = ({ groceriesTaskA, groceriesTaskB, injectedTaskId, inject
         outcome.calls.some((call) => call.name === 'keepling.preview_bulk_change' && call.result.result) &&
         outcome.calls.some((call) => call.name === 'keepling.commit_bulk_change' && call.result.result)
       if (!wentThroughPreviewCommit) {
-        throw new Error('bulk_destructive_via_preview_commit: the destructive change was not reached through the two-step preview/commit pair')
+        throw new Error(
+          'bulk_destructive_via_preview_commit: the destructive change was not reached through the two-step preview/commit pair; model calls were: ' +
+            describeCalls(outcome),
+        )
       }
     },
   },
@@ -293,7 +354,15 @@ const runLane = async () => {
     const errorVectors = loadErrorVectors()
     void errorVectors // reserved for a future closed-error-shape assertion on model-observed refusals
     const grants = {
-      bulk: await obtainGrant(server, ['tasks.bulk'], 'representative-model-bulk'),
+      // tasks.read alongside tasks.bulk, because that is what a real bulk-change
+      // client holds. The bulk scenario asks the model to find two tasks BY TITLE
+      // and then trash them; since 05-06 made addressing identity-only, resolving a
+      // title to a task id is a read. A bulk-only grant cannot discover what to
+      // change, so the scenario could never reach preview/commit and failed with
+      // insufficient_scope on keepling.search_tasks.
+      // Scope ISOLATION is still proven elsewhere: the refusal scenarios below run
+      // on the single-scope read grant, and this change does not touch them.
+      bulk: await obtainGrant(server, ['tasks.read', 'tasks.bulk'], 'representative-model-bulk'),
       read: await obtainGrant(server, ['tasks.read'], 'representative-model-read'),
       write: await obtainGrant(server, ['tasks.write'], 'representative-model-write'),
     }
