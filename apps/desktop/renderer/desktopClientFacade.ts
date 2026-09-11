@@ -33,10 +33,8 @@ const mapTask = (task: PreloadTask): WorkspaceTaskView => ({
 })
 
 const mapConflict = (conflict: PreloadConflict): WorkspaceConflictView => ({
-  current: conflict.current,
-  field: 'title',
+  fields: [{ current: conflict.current, field: 'title', mine: conflict.mine }],
   id: conflict.conflictId,
-  mine: conflict.mine,
   taskId: conflict.taskId,
 })
 
@@ -159,8 +157,15 @@ const createDesktopClientFacade = (): ClientFacade => {
       runResult(window.keepling.moveToday({ planned, taskId }), planned ? 'Undo Add to Today' : 'Undo Remove from Today'),
     reopenTask: (taskId: string) =>
       runResult(window.keepling.lifecycleTask({ kind: 'reopen', taskId }), 'Undo Reopen'),
-    resolveConflict: async (choice: 'current' | 'mine') => {
+    resolveConflict: async (choices) => {
       if (conflict === null) return { kind: 'rejected', message: 'No conflict to resolve.' }
+      // The pre-existing preload bridge only carries the title field
+      // (`listConflicts` still reads the narrower, title-only `conflicts`
+      // table -- see 06-06-SUMMARY.md); take the title choice, or the first
+      // supplied choice as a fallback so a caller resolving a single-field
+      // conflict by any field name still resolves it.
+      const choice = choices.title ?? Object.values(choices)[0]
+      if (choice === undefined) return { kind: 'rejected', message: 'No conflict to resolve.' }
       return runResult(window.keepling.resolveConflict({ choice, conflictId: conflict.id }))
     },
     restoreTask: (taskId: string) =>

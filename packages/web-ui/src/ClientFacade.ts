@@ -26,12 +26,38 @@ type WorkspaceTaskView = {
   readonly trashedAt: string | null
 }
 
+/**
+ * The closed set of fields a conflict can name (O-44/D-37). `completion` and
+ * `trashStatus` are the lifecycle/Trash divergence classes -- their `mine`/
+ * `current` values are plain lifecycle words (`Completed`, `Active`,
+ * `Trashed`, `Restored`), never raw enum values, and are produced by the
+ * adapter that constructs the view, not by presentation.
+ */
+type ConflictFieldName =
+  | 'completion'
+  | 'deadline'
+  | 'notes'
+  | 'plannedDate'
+  | 'project'
+  | 'tags'
+  | 'title'
+  | 'trashStatus'
+
 /** A single conflicting field: what this Mac holds versus what the server holds. */
+type WorkspaceConflictFieldView = {
+  readonly current: string | null
+  readonly field: ConflictFieldName
+  readonly mine: string | null
+}
+
+/**
+ * A conflict always names at least one affected field (O-44); the resolver
+ * renders one labelled row per entry in `fields` and no row for a field this
+ * payload does not name.
+ */
 type WorkspaceConflictView = {
-  readonly current: string
-  readonly field: 'title'
+  readonly fields: readonly WorkspaceConflictFieldView[]
   readonly id: string
-  readonly mine: string
   readonly taskId: string
 }
 
@@ -113,8 +139,12 @@ interface ClientFacade {
   moveToday(taskId: string, planned: boolean): Promise<TaskOutcome>
   /** Named lifecycle operation: reopens a completed task through the durable path. */
   reopenTask(taskId: string): Promise<TaskOutcome>
-  /** Named conflict operation: commits the chosen field value (mine or current). */
-  resolveConflict(choice: 'current' | 'mine'): Promise<TaskOutcome>
+  /**
+   * Named conflict operation: commits one mine/current choice per affected
+   * field as a single staged set (O-44). Every field the active conflict
+   * names must have an entry; nothing mutates until this call is made.
+   */
+  resolveConflict(choices: Readonly<Partial<Record<ConflictFieldName, 'current' | 'mine'>>>): Promise<TaskOutcome>
   /** Named lifecycle operation: restores a trashed task through the durable path. */
   restoreTask(taskId: string): Promise<TaskOutcome>
   /** Named navigation operation: moves stable selection by task identity, not DOM position (D-05). */
@@ -151,9 +181,11 @@ export type {
   CaptureInput,
   CaptureOutcome,
   ClientFacade,
+  ConflictFieldName,
   EditInput,
   RecoveryAvailabilityView,
   TaskOutcome,
+  WorkspaceConflictFieldView,
   WorkspaceConflictView,
   WorkspaceLayoutState,
   WorkspaceRoute,

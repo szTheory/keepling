@@ -72,13 +72,14 @@ const createBrowserClientFacade = (csrfToken: string): ClientFacade => {
 
   const conflictView = (): WorkspaceConflictView | null => {
     if (activeConflict === null || activeConflictTaskId === null) return null
-    const titleField = activeConflict.fields.find((field) => field.field === 'title')
-    if (titleField === undefined) return null
+    if (activeConflict.fields.length === 0) return null
     return {
-      current: titleField.current ?? '',
-      field: 'title',
+      fields: activeConflict.fields.map((field) => ({
+        current: field.current,
+        field: field.field,
+        mine: field.mine,
+      })),
       id: activeConflict.id,
-      mine: titleField.mine ?? '',
       taskId: activeConflictTaskId,
     }
   }
@@ -240,7 +241,7 @@ const createBrowserClientFacade = (csrfToken: string): ClientFacade => {
         taskId,
       )
     },
-    resolveConflict: (choice: 'current' | 'mine') => {
+    resolveConflict: (choices) => {
       const conflict = activeConflict
       const taskId = conflictView()?.taskId
       if (conflict === null || taskId === undefined) {
@@ -253,7 +254,7 @@ const createBrowserClientFacade = (csrfToken: string): ClientFacade => {
               conflictId: conflict.id,
               latestRevision: conflict.latestRevision,
               mutationId: crypto.randomUUID(),
-              selections: { title: choice },
+              selections: choices,
               taskId,
             },
             csrfToken,
