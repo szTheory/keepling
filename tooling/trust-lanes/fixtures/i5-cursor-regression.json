@@ -1,0 +1,16 @@
+{
+  "invariant": "I5",
+  "dataset": {
+    "server": null,
+    "desktop": {
+      "outbox": [],
+      "commands": [],
+      "entities": [],
+      "refusals": [],
+      "conflicts": [],
+      "cursor": "3",
+      "priorCursor": "5"
+    },
+    "ios": null
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "invariant": "I6",
+  "dataset": {
+    "server": null,
+    "desktop": {
+      "outbox": [],
+      "commands": [],
+      "entities": [{ "entityId": "t6", "revision": 1, "priorRevision": 5, "digest": "d" }],
+      "refusals": [],
+      "conflicts": [],
+      "cursor": null,
+      "priorCursor": null
+    },
+    "ios": null
+  }
+}

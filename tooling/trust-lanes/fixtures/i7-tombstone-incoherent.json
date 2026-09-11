@@ -1,0 +1,24 @@
+{
+  "invariant": "I7",
+  "dataset": {
+    "server": null,
+    "desktop": {
+      "outbox": [],
+      "commands": [],
+      "entities": [
+        {
+          "entityId": "t7",
+          "revision": 1,
+          "digest": "d",
+          "trashedAt": "2026-01-05T00:00:00Z",
+          "restoredAt": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "refusals": [],
+      "conflicts": [],
+      "cursor": null,
+      "priorCursor": null
+    },
+    "ios": null
+  }
+}

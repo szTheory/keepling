@@ -1,0 +1,13 @@
+{
+  "invariant": "I6",
+  "dataset": {
+    "server": {
+      "receipts": [],
+      "entities": [{ "entityId": "t6b", "revision": 1, "priorRevision": 4, "digest": "d" }],
+      "feed": { "highSequence": 0, "lowWaterSequence": 0, "entries": [] },
+      "activities": []
+    },
+    "desktop": null,
+    "ios": null
+  }
+}

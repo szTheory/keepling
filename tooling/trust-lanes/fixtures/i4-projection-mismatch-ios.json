@@ -1,0 +1,21 @@
+{
+  "invariant": "I4",
+  "dataset": {
+    "server": {
+      "receipts": [],
+      "entities": [{ "entityId": "t4b", "revision": 3, "digest": "server-digest-t4b" }],
+      "feed": { "highSequence": 0, "lowWaterSequence": 0, "entries": [] },
+      "activities": []
+    },
+    "desktop": null,
+    "ios": {
+      "outbox": [],
+      "commands": [],
+      "entities": [{ "entityId": "t4b", "revision": 3, "digest": "ios-digest-t4b-DIFFERENT" }],
+      "refusals": [],
+      "conflicts": [],
+      "cursor": null,
+      "priorCursor": null
+    }
+  }
+}

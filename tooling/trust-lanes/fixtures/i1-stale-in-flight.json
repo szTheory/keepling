@@ -1,0 +1,16 @@
+{
+  "invariant": "I1",
+  "dataset": {
+    "server": null,
+    "desktop": {
+      "outbox": [{ "mutationId": "m1", "state": "in_flight", "ageMs": 600000 }],
+      "commands": [],
+      "entities": [],
+      "refusals": [],
+      "conflicts": [],
+      "cursor": null,
+      "priorCursor": null
+    },
+    "ios": null
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "invariant": "I3",
+  "dataset": {
+    "server": {
+      "receipts": [{ "mutationId": "m3", "outcome": "conflict" }],
+      "entities": [],
+      "feed": { "highSequence": 0, "lowWaterSequence": 0, "entries": [] },
+      "activities": []
+    },
+    "desktop": {
+      "outbox": [],
+      "commands": [{ "mutationId": "m3", "entityId": "t3" }],
+      "entities": [],
+      "refusals": [],
+      "conflicts": [],
+      "cursor": null,
+      "priorCursor": null
+    },
+    "ios": null
+  }
+}

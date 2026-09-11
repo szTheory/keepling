@@ -1,0 +1,20 @@
+{
+  "invariant": "I5",
+  "dataset": {
+    "server": {
+      "receipts": [],
+      "entities": [],
+      "feed": {
+        "highSequence": 3,
+        "lowWaterSequence": 1,
+        "entries": [
+          { "sequence": 1, "ordinal": 0 },
+          { "sequence": 3, "ordinal": 0 }
+        ]
+      },
+      "activities": []
+    },
+    "desktop": null,
+    "ios": null
+  }
+}

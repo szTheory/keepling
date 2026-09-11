@@ -1,0 +1,13 @@
+{
+  "invariant": "I8",
+  "dataset": {
+    "server": {
+      "receipts": [{ "mutationId": "m8", "outcome": "accepted" }],
+      "entities": [],
+      "feed": { "highSequence": 0, "lowWaterSequence": 0, "entries": [] },
+      "activities": []
+    },
+    "desktop": null,
+    "ios": null
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "invariant": "I2",
+  "dataset": {
+    "server": {
+      "receipts": [],
+      "entities": [],
+      "feed": { "highSequence": 0, "lowWaterSequence": 0, "entries": [] },
+      "activities": []
+    },
+    "desktop": null,
+    "ios": {
+      "outbox": [],
+      "commands": [{ "mutationId": "m2b", "entityId": "t2b" }],
+      "entities": [],
+      "refusals": [],
+      "conflicts": [],
+      "cursor": null,
+      "priorCursor": null
+    }
+  }
+}
