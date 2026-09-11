@@ -29,7 +29,14 @@ defmodule Keepling.Adapters.Postgres.OpsStore do
     _error in [DBConnection.ConnectionError, Postgrex.Error] -> {:error, :database_unavailable}
   end
 
+  # "export" is the one non-destructive verb this store already has a real,
+  # transactionally-coherent port for (Keepling.Adapters.Postgres.Export,
+  # 06-04-PLAN.md Task 3). Delegating here closes the `mix keepling.ops
+  # export --destination-dir <dir>` CLI path without changing this store's
+  # pre-existing, disclosed no-op behavior for backup/restore/deploy/
+  # upgrade/replace-host, none of which this plan is scoped to wire.
   @impl true
+  def execute("export", input, options), do: Keepling.Adapters.Postgres.Export.execute("export", input, options)
   def execute(_operation, _input, _options), do: {:error, :operation_adapter_unavailable}
 
   @spec record_restore_verification(map()) ::

@@ -17,7 +17,8 @@ defmodule Keepling.Release do
     confirmed: :boolean,
     source_digest: :string,
     target_class: :string,
-    tested_oci_digest: :string
+    tested_oci_digest: :string,
+    destination_dir: :string
   ]
   @common ~w(color json timeout_ms)a
   @operation_switches %{
@@ -29,7 +30,8 @@ defmodule Keepling.Release do
     "restore-verify" => ~w(confirmed source_digest target_class)a,
     "deploy" => ~w(confirmed target_class tested_oci_digest)a,
     "upgrade" => ~w(confirmed target_class tested_oci_digest)a,
-    "replace-host" => ~w(confirmed target_class tested_oci_digest)a
+    "replace-host" => ~w(confirmed target_class tested_oci_digest)a,
+    "export" => ~w(destination_dir)a
   }
 
   @spec invoke([String.t()]) :: {String.t(), non_neg_integer()}
