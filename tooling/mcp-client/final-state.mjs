@@ -38,12 +38,23 @@ export const FORBIDDEN_SIDE_EFFECT_CHECKS = [
 
 /**
  * Reads a task, its activity feed, and every device grant on the account
- * back from the server's own APIs -- `readTask`/`readActivity` use the
- * account's real browser session cookie (full account access, independent
- * of any single grant's scope); `readGrants` uses a real device-grant
- * bearer against `GET /api/v1/device-grants`, which authenticates the
- * caller's own installation and returns every grant on that account
- * (Electron/iPhone/MCP alike).
+ * back from the server's own APIs, all three through the account's real
+ * browser session cookie -- full account access, independent of any single
+ * grant's scope.
+ *
+ * T-05-13: `readGrants` previously authenticated against
+ * `GET /api/v1/device-grants` with the SCENARIO'S OWN MCP device-grant
+ * bearer and asserted 200. Nothing in the product is supposed to guarantee
+ * that an agent credential can enumerate the owner's grants -- the phase
+ * goal forbids it -- so this lane's green rested on the privilege
+ * escalation it should have been catching (WINDOWS #70). It now reads the
+ * same inventory from `GET /api/v1/account/device-grants` with the owner's
+ * session, exactly as `readTask`/`readActivity` already did.
+ *
+ * The evidence is unchanged in content: same rows, same
+ * `grant_response/1` payload, same account. Only the credential that
+ * fetches it changed -- from one the product must refuse to one the owner
+ * genuinely holds.
  */
 async function readTask(origin, sessionCookie, taskId) {
   const response = await fetch(`${origin}/api/v1/tasks/${taskId}`, { headers: { Cookie: sessionCookie } })
@@ -65,11 +76,11 @@ async function readActivity(origin, sessionCookie, taskId) {
   }))
 }
 
-async function readGrants(origin, deviceGrantAccessToken) {
-  const response = await fetch(`${origin}/api/v1/device-grants`, {
-    headers: { Authorization: 'Bearer ' + deviceGrantAccessToken },
+async function readGrants(origin, sessionCookie) {
+  const response = await fetch(`${origin}/api/v1/account/device-grants`, {
+    headers: { Cookie: sessionCookie },
   })
-  if (response.status !== 200) throw new Error(`GET /api/v1/device-grants returned ${String(response.status)}`)
+  if (response.status !== 200) throw new Error(`GET /api/v1/account/device-grants returned ${String(response.status)}`)
   const body = await response.json()
   return (body.device_grants ?? []).map((grant) => ({
     clientKind: grant.client_kind ?? null,
@@ -84,7 +95,7 @@ async function readGrants(origin, deviceGrantAccessToken) {
  * "bounded and paginated" discipline even for this evidence-gathering
  * read.
  */
-export async function readFinalState(origin, { deviceGrantAccessToken, sessionCookie, taskIds }) {
+export async function readFinalState(origin, { includeGrants = false, sessionCookie, taskIds }) {
   const tasks = {}
   const activity = {}
   for (const taskId of taskIds) {
@@ -93,7 +104,12 @@ export async function readFinalState(origin, { deviceGrantAccessToken, sessionCo
     // eslint-disable-next-line no-await-in-loop
     activity[taskId] = await readActivity(origin, sessionCookie, taskId)
   }
-  const grants = deviceGrantAccessToken ? await readGrants(origin, deviceGrantAccessToken) : []
+  // `includeGrants` replaces the old `deviceGrantAccessToken` opt-in. The
+  // caller no longer supplies a credential here at all: the grant read uses
+  // the same session cookie the task and activity reads use, so a lane
+  // cannot accidentally re-introduce the agent-bearer path by passing a
+  // token.
+  const grants = includeGrants ? await readGrants(origin, sessionCookie) : []
   return { activity, grants, tasks }
 }
 

@@ -143,7 +143,7 @@ describe('agent grant management', () => {
     expect(screen.queryByText('Claude Code')).not.toBeInTheDocument()
     const deleteCalls = fetchMock.mock.calls.filter(([, init]) => init?.method === 'DELETE')
     expect(deleteCalls).toHaveLength(1)
-    expect(String(deleteCalls[0]![0])).toBe('/api/v1/device-grants/installation-scoped')
+    expect(String(deleteCalls[0]![0])).toBe('/api/v1/account/device-grants/installation-scoped')
   })
 
   it('reports an uncertain revocation as still authorized only after inventory proves presence', async () => {

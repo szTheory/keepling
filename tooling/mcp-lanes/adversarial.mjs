@@ -202,6 +202,114 @@ const assertResolvedIntoTarget = (injectionCase, target, outcome) => {
   }
 }
 
+/**
+ * T-05-13 / WINDOWS #70: the OVER-delivery cases.
+ *
+ * Every lane in this phase, this one included, was built to detect
+ * UNDER-delivery -- a surface that refuses what it should allow, a mutation
+ * that did not happen. None probed whether the credential the harness
+ * itself mints reaches surfaces the MCP adapter does not front. The phase's
+ * privilege escalation lived in exactly that blind spot, and it went
+ * further than merely being missed: `final-state.mjs` CONSUMED the hole as
+ * a convenience, so a green lane depended on it.
+ *
+ * These four cases aim the lane's own agent credential at the four routes
+ * behind `:device_grant_authenticated` and require a refusal from each. If
+ * any route stops refusing, the gate fails.
+ *
+ * Each route is asserted to answer exactly 401 -- never merely "not 200".
+ * A deleted route answers 404 and a broken server answers 500; accepting
+ * either as evidence of a refusal would make this whole block vacuous the
+ * day someone removes a route.
+ */
+const OVER_DELIVERY_ROUTES = [
+  { method: 'GET', name: 'sync_pull', path: '/api/v1/sync' },
+  { method: 'GET', name: 'sync_bootstrap', path: '/api/v1/sync/bootstrap' },
+  { method: 'GET', name: 'device_grants_list', path: '/api/v1/device-grants' },
+  { method: 'DELETE', name: 'device_grants_revoke', path: null },
+]
+
+const readOwnerGrants = async (server) => {
+  const response = await fetch(`${server.origin}/api/v1/account/device-grants`, {
+    headers: { Cookie: server.sessionCookie },
+  })
+  if (response.status !== 200) {
+    throw new Error(`over_delivery setup: the owner's own grant list returned ${String(response.status)}`)
+  }
+  return (await response.json()).device_grants ?? []
+}
+
+const runOverDeliveryCases = async (ctx, server) => {
+  // A real secret written through the MCP surface. If a route leaks the
+  // account back to the agent, this string is what comes out -- so each
+  // assertion is "the body does not contain it", not merely "the status
+  // was not 200".
+  const secretTitle = `over-delivery canary ${randomUUID()}`
+  await captureTask(ctx, secretTitle)
+
+  const grantsBefore = await readOwnerGrants(server)
+  if (grantsBefore.length !== 3) {
+    throw new Error(`over_delivery setup: expected the 3 grants this lane issued, found ${String(grantsBefore.length)}`)
+  }
+  // The revoke case aims at a DIFFERENT installation than the agent's own
+  // -- the escalation's sharpest edge was an agent switching off another
+  // client, not itself.
+  const victim = grantsBefore.find((grant) => grant.installation_id !== ctx.grants.write.installationId)
+    ?? grantsBefore[0]
+
+  let casesRun = 0
+  for (const route of OVER_DELIVERY_ROUTES) {
+    const path = route.path ?? `/api/v1/device-grants/${encodeURIComponent(victim.installation_id)}`
+
+    // eslint-disable-next-line no-await-in-loop
+    const response = await fetch(`${server.origin}${path}`, {
+      headers: { Authorization: 'Bearer ' + ctx.grants.write.accessToken },
+      method: route.method,
+    })
+    // eslint-disable-next-line no-await-in-loop
+    const body = await response.text()
+
+    if (response.status !== 401) {
+      throw new Error(`over_delivery case "${route.name}": ${route.method} ${path} answered ${String(response.status)} for an mcp grant; expected 401`)
+    }
+    if (body.includes(secretTitle)) {
+      throw new Error(`over_delivery case "${route.name}": the refusal body leaked account content to an agent credential`)
+    }
+    if (body.includes(victim.installation_id)) {
+      throw new Error(`over_delivery case "${route.name}": the refusal body disclosed another installation to an agent credential`)
+    }
+    casesRun += 1
+  }
+
+  // Scored on final state, like every other case in this lane: the refused
+  // DELETE must have changed nothing. Read back through the OWNER's
+  // session, never through the credential under test.
+  const grantsAfter = await readOwnerGrants(server)
+  if (grantsAfter.length !== grantsBefore.length) {
+    throw new Error(`over_delivery: the grant inventory changed across the refused requests (${String(grantsBefore.length)} -> ${String(grantsAfter.length)})`)
+  }
+  const nowRevoked = grantsAfter.filter((grant) => grant.revoked).map((grant) => grant.installation_id)
+  if (nowRevoked.length > 0) {
+    throw new Error(`over_delivery: a refused request still revoked ${nowRevoked.join(', ')}`)
+  }
+
+  // The boundary must be a BOUNDARY, not a broken credential: the same
+  // token still works on the surface the MCP adapter does front. Without
+  // this control, every assertion above would pass just as well against a
+  // credential that had simply been revoked.
+  const control = await toolsCall(ctx.origin, ctx.grants.write.accessToken, 'keepling.capture_task', {
+    mutation_id: randomUUID(),
+    task_id: randomUUID(),
+    title: 'over-delivery control capture',
+    version: 1,
+  })
+  if (control.body.error) {
+    throw new Error(`over_delivery control: the credential refused on all four native routes is also refused on /mcp/v1 -- that is credential breakage, not a boundary: ${JSON.stringify(control.body.error)}`)
+  }
+
+  return casesRun
+}
+
 const runLane = async () => {
   guardAgainstShortcuts(thisFile)
 
@@ -236,7 +344,7 @@ const runLane = async () => {
     for (const injectionCase of corpus.cases) {
       // eslint-disable-next-line no-await-in-loop
       const before = await readFinalState(server.origin, {
-        deviceGrantAccessToken: grants.write.accessToken,
+        includeGrants: true,
         sessionCookie: server.sessionCookie,
         taskIds: knownTaskIds,
       })
@@ -249,7 +357,7 @@ const runLane = async () => {
 
       // eslint-disable-next-line no-await-in-loop
       const after = await readFinalState(server.origin, {
-        deviceGrantAccessToken: grants.write.accessToken,
+        includeGrants: true,
         sessionCookie: server.sessionCookie,
         taskIds: knownTaskIds,
       })
@@ -272,10 +380,15 @@ const runLane = async () => {
     }
 
     if (casesRun !== corpus.cases.length) {
-      throw new Error(`ran ${casesRun} case(s) but the corpus declares ${corpus.cases.length}`)
+      throw new Error(`ran ${casesRun} injection case(s) but the corpus declares ${corpus.cases.length}`)
     }
 
-    console.log(`ADVERSARIAL cases=${casesRun} run_id=${randomUUID()}`)
+    const overDeliveryCasesRun = await runOverDeliveryCases(ctx, server)
+    if (overDeliveryCasesRun !== OVER_DELIVERY_ROUTES.length) {
+      throw new Error(`ran ${overDeliveryCasesRun} over-delivery case(s) but ${OVER_DELIVERY_ROUTES.length} routes are declared`)
+    }
+
+    console.log(`ADVERSARIAL cases=${casesRun + overDeliveryCasesRun} injection_cases=${casesRun} over_delivery_cases=${overDeliveryCasesRun} run_id=${randomUUID()}`)
   } finally {
     await server.stop()
   }
@@ -312,6 +425,12 @@ export default function adversarialLane() {
       'tooling/mcp-lanes/adversarial.mjs',
       'packages/contracts/vectors/mcp-injection.json',
       'apps/server/lib/keepling_web/mcp',
+      // T-05-13: the over-delivery cases are assertions ABOUT these two
+      // files. A change to either must change this lane's input digest,
+      // or the gate would report a stale verdict for the boundary they
+      // define.
+      'apps/server/lib/keepling_web/auth.ex',
+      'apps/server/lib/keepling_web/router.ex',
       'apps/server/lib/keepling/application/task_addressing.ex',
       'apps/server/lib/keepling/application/preview.ex',
     ],

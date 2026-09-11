@@ -253,7 +253,20 @@ test('@agent-access @uat-accessibility an agent acts, the owner sees it, undoes 
   await revokeButton.click()
   await page.getByRole('button', { name: 'Revoke agent' }).click()
   await expect(page.getByText('Agent access e2e host revoked.')).toBeVisible()
-  await expect(page.getByText('Agent access e2e host')).not.toBeVisible()
+  // The grant is gone from the LIST. Asserted against the list's own
+  // heading and control rather than `getByText`, because `getByText` is a
+  // substring match and the aria-live confirmation asserted on the line
+  // above ("Agent access e2e host revoked.") contains the label -- so a
+  // bare text assertion here can never pass, no matter what the product
+  // does. Naming the row's heading and its revoke control is also the
+  // stronger claim: a row stripped of its revoke button would still be a
+  // row the owner cannot act on.
+  await expect(
+    page
+      .getByRole('list', { name: 'Authorized AI agents' })
+      .getByRole('heading', { name: 'Agent access e2e host' }),
+  ).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Revoke Agent access e2e host' })).toHaveCount(0)
 
   const revokedTaskId = randomUUID()
   const revokedCallResponse = await mcpCall(

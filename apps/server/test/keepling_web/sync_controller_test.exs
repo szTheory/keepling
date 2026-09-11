@@ -151,6 +151,68 @@ defmodule KeeplingWeb.SyncControllerTest do
     assert get(build_conn(), "/api/v1/sync/bootstrap") |> response(401)
   end
 
+  # T-05-13 / WINDOWS #70. `KeeplingWeb.MCP.Pipeline` refuses a grant whose
+  # `client_kind` is not `mcp`; `:device_grant_authenticated` must perform
+  # the mirror-image refusal, or an agent credential reads the entire
+  # account through the raw device feed -- unbounded, unpaginated and
+  # unredacted -- around the MCP read surface it is supposed to be confined
+  # to. This was verified live by probe before it was fixed: a grant scoped
+  # `tasks.read` alone got 200 from `/api/v1/sync/bootstrap` with full task
+  # titles in the body. The second half of the test is the half that keeps
+  # the fix honest: a refusal that also locks out the Mac and the iPhone is
+  # not a fix.
+  test "an mcp agent grant is refused on both sync routes while first-party grants still pull",
+       %{account_id: account_id} do
+    secret_title = "Private title an agent must not read"
+
+    assert {:ok, %{status: 201}} =
+             Commands.dispatch(
+               %{
+                 mutation_id: Ecto.UUID.generate(),
+                 task_id: Ecto.UUID.generate(),
+                 title: secret_title,
+                 type: :capture_task,
+                 version: 1
+               },
+               %{
+                 account_id: account_id,
+                 accepted_at: @now,
+                 actor_type: "user",
+                 client_kind: "electron"
+               },
+               CommandStore
+             )
+
+    agent_credential = create_grant(account_id, 1, "mcp")
+
+    for path <- ["/api/v1/sync", "/api/v1/sync/bootstrap"] do
+      response = bearer(build_conn(), agent_credential) |> get(path)
+
+      assert %{
+               "code" => "device_authentication_required",
+               "recovery_action" => "reauthorize_device"
+             } = json_response(response, 401)
+
+      refute response.resp_body =~ secret_title
+    end
+
+    for client_kind <- ["electron", "iphone"] do
+      credential = create_grant(account_id, 1, client_kind)
+
+      assert %{"changes" => _changes} =
+               bearer(build_conn(), credential)
+               |> get("/api/v1/sync", %{"limit" => "2"})
+               |> json_response(200)
+
+      assert %{"entities" => entities} =
+               bearer(build_conn(), credential)
+               |> get("/api/v1/sync/bootstrap", %{"limit" => "1"})
+               |> json_response(200)
+
+      assert Enum.any?(entities, &(&1["kind"] == "task_snapshot"))
+    end
+  end
+
   defp create_account do
     account_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
 
@@ -179,7 +241,9 @@ defmodule KeeplingWeb.SyncControllerTest do
     )
   end
 
-  defp create_grant(account_id, generation) do
+  defp create_grant(account_id, generation), do: create_grant(account_id, generation, "electron")
+
+  defp create_grant(account_id, generation, client_kind) do
     credential = :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
     grant_id = Ecto.UUID.generate() |> Ecto.UUID.dump!()
     authorization_hash = :crypto.strong_rand_bytes(32)
@@ -194,19 +258,20 @@ defmodule KeeplingWeb.SyncControllerTest do
         state_hash, pkce_challenge, access_token_hash, access_expires_at,
         family_absolute_expires_at, generation, inserted_at, updated_at
       )
-      VALUES ($1, $2, $3, 'Sync fixture', 'electron', 'keepling://authorization/callback',
+      VALUES ($1, $2, $3, 'Sync fixture', $10, 'keepling://authorization/callback',
               $4, $5, $6, $7, 'fixture-challenge', $8, $5, $5, $9, $6, $6)
       """,
       [
         grant_id,
         account_id,
-        "sync-installation-#{generation}",
+        "sync-installation-#{client_kind}-#{generation}",
         authorization_hash,
         expires_at,
         @now,
         :crypto.strong_rand_bytes(32),
         :crypto.hash(:sha256, credential),
-        generation
+        generation,
+        client_kind
       ]
     )
 

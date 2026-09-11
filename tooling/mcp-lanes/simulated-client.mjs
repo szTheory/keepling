@@ -43,7 +43,6 @@ const runLane = async () => {
       read: await obtainGrant(server, ['tasks.read'], 'simulated-client-read'),
       write: await obtainGrant(server, ['tasks.write'], 'simulated-client-write'),
     }
-    const deviceGrantAccessToken = grants.write.accessToken
 
     const ctx = { errorVectors, grants, origin: server.origin }
     const scenarioGrantLabels = new Set([
@@ -62,7 +61,7 @@ const runLane = async () => {
       // that mutates a PRIOR scenario's task, not just its own.
       // eslint-disable-next-line no-await-in-loop
       const before = await readFinalState(server.origin, {
-        deviceGrantAccessToken,
+        includeGrants: true,
         sessionCookie: server.sessionCookie,
         taskIds: knownTaskIds,
       })
@@ -75,7 +74,7 @@ const runLane = async () => {
 
       // eslint-disable-next-line no-await-in-loop
       const after = await readFinalState(server.origin, {
-        deviceGrantAccessToken,
+        includeGrants: true,
         sessionCookie: server.sessionCookie,
         taskIds: knownTaskIds,
       })

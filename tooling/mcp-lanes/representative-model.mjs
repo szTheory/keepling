@@ -266,7 +266,7 @@ const buildScenarios = ({ groceriesTaskA, groceriesTaskB, injectedTaskId, inject
       }
       // eslint-disable-next-line no-await-in-loop
       const after = await readFinalState(ctx.origin, {
-        deviceGrantAccessToken: ctx.grants.write.accessToken,
+        includeGrants: true,
         sessionCookie: ctx.server.sessionCookie,
         taskIds: [groceriesTaskA, groceriesTaskB],
       })
@@ -417,7 +417,7 @@ const runLane = async () => {
     for (const scenario of scenarios) {
       // eslint-disable-next-line no-await-in-loop
       const before = await readFinalState(server.origin, {
-        deviceGrantAccessToken: grants.write.accessToken,
+        includeGrants: true,
         sessionCookie: server.sessionCookie,
         taskIds: knownTaskIds,
       })
@@ -433,7 +433,7 @@ const runLane = async () => {
 
       // eslint-disable-next-line no-await-in-loop
       const after = await readFinalState(server.origin, {
-        deviceGrantAccessToken: grants.write.accessToken,
+        includeGrants: true,
         sessionCookie: server.sessionCookie,
         taskIds: knownTaskIds,
       })
@@ -463,12 +463,12 @@ const runLane = async () => {
     // injected scenario's final state must be IDENTICAL to its control
     // sibling's, modulo the two tasks' own identities.
     const injectionFinal = await readFinalState(server.origin, {
-      deviceGrantAccessToken: grants.write.accessToken,
+      includeGrants: true,
       sessionCookie: server.sessionCookie,
       taskIds: [injectedTaskId],
     })
     const controlFinal = await readFinalState(server.origin, {
-      deviceGrantAccessToken: grants.write.accessToken,
+      includeGrants: true,
       sessionCookie: server.sessionCookie,
       taskIds: [injectedTaskIdNoInjection],
     })
@@ -482,7 +482,7 @@ const runLane = async () => {
     }
     const anyForbiddenGrantChangeFromInjection = await (async () => {
       const afterGrants = await readFinalState(server.origin, {
-        deviceGrantAccessToken: grants.write.accessToken,
+        includeGrants: true,
         sessionCookie: server.sessionCookie,
         taskIds: [],
       })

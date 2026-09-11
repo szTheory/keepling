@@ -4,6 +4,45 @@
  */
 
 export interface paths {
+    readonly "/account/device-grants": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        /**
+         * List installation grants for the signed-in owner's browser
+         * @description T-05-13. The owner's browser has no device grant, so it cannot reach the bearer-only `/device-grants` routes. This is the same inventory read through the session credential instead. It is a separate route rather than a widened pipeline on `/device-grants`, because widening that pipeline would admit EVERY device grant -- including an agent's -- to grant administration.
+         */
+        readonly get: operations["listAccountDeviceGrants"];
+        readonly put?: never;
+        readonly post?: never;
+        readonly delete?: never;
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
+    readonly "/account/device-grants/{installation_id}": {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly installation_id: components["schemas"]["InstallationIdentity"];
+            };
+            readonly cookie?: never;
+        };
+        readonly get?: never;
+        readonly put?: never;
+        readonly post?: never;
+        /** Idempotently revoke one installation grant from the owner's browser */
+        readonly delete: operations["revokeAccountDeviceGrant"];
+        readonly options?: never;
+        readonly head?: never;
+        readonly patch?: never;
+        readonly trace?: never;
+    };
     readonly "/commands/archive-organization": {
         readonly parameters: {
             readonly query?: never;
@@ -1596,6 +1635,54 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    readonly listAccountDeviceGrants: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path?: never;
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Installation grant inventory without credential material */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["DeviceGrantsResponse"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
+    readonly revokeAccountDeviceGrant: {
+        readonly parameters: {
+            readonly query?: never;
+            readonly header?: never;
+            readonly path: {
+                readonly installation_id: components["schemas"]["InstallationIdentity"];
+            };
+            readonly cookie?: never;
+        };
+        readonly requestBody?: never;
+        readonly responses: {
+            /** @description Installation grant is revoked */
+            readonly 200: {
+                headers: {
+                    readonly [name: string]: unknown;
+                };
+                content: {
+                    readonly "application/json": components["schemas"]["DeviceGrantRevocationResponse"];
+                };
+            };
+            readonly 401: components["responses"]["ProblemResponse"];
+            readonly 403: components["responses"]["ProblemResponse"];
+            readonly 404: components["responses"]["ProblemResponse"];
+            readonly 503: components["responses"]["ProblemResponse"];
+        };
+    };
     readonly archiveOrganization: {
         readonly parameters: {
             readonly query?: never;

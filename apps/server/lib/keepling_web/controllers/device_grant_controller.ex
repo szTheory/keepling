@@ -100,24 +100,44 @@ defmodule KeeplingWeb.DeviceGrantController do
       )
 
   def list(%{assigns: %{device_grant_namespace: namespace}} = conn, _params) do
-    grants =
-      namespace.subject
-      |> account_id!()
-      |> Accounts.list_device_grants()
-      |> Enum.map(&grant_response/1)
-
-    json(conn, %{device_grants: grants})
+    json(conn, %{device_grants: namespace.subject |> account_id!() |> account_grants()})
   end
 
   def revoke(
         %{assigns: %{device_grant_namespace: namespace}} = conn,
         %{"installation_id" => installation_id}
       ) do
-    with {:ok, result} <-
-           Accounts.revoke_device_installation(
-             account_id!(namespace.subject),
-             installation_id
-           ) do
+    revoke_installation(conn, account_id!(namespace.subject), installation_id)
+  end
+
+  # T-05-13. The same two operations, reached by the owner's BROWSER SESSION
+  # instead of a device-grant bearer. `current_account_id` is assigned by
+  # `KeeplingWeb.Auth`'s session path and, exactly like `device_grant_namespace`
+  # above, comes from the server-authenticated credential and from nowhere in
+  # the request -- so these actions are the same authorization decision made
+  # against a different credential class, not a wider one.
+  #
+  # `list/2` and `revoke/2` are deliberately NOT reused as-is: they read the
+  # account out of the grant namespace, which a session does not have.
+  def list_for_owner(%{assigns: %{current_account_id: account_id}} = conn, _params) do
+    json(conn, %{device_grants: account_grants(account_id)})
+  end
+
+  def revoke_for_owner(
+        %{assigns: %{current_account_id: account_id}} = conn,
+        %{"installation_id" => installation_id}
+      ) do
+    revoke_installation(conn, account_id, installation_id)
+  end
+
+  defp account_grants(account_id) do
+    account_id
+    |> Accounts.list_device_grants()
+    |> Enum.map(&grant_response/1)
+  end
+
+  defp revoke_installation(conn, account_id, installation_id) do
+    with {:ok, result} <- Accounts.revoke_device_installation(account_id, installation_id) do
       json(conn, Map.put(result, :installation_id, installation_id))
     else
       {:error, :device_grant_not_found} ->

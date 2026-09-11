@@ -6,6 +6,8 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
 
   @password String.duplicate("native-grant-password-", 12)
   @redirect_uri "keepling://authorization/callback"
+  @mcp_redirect_uri "https://server.keepling.invalid/mcp/callback"
+  @mcp_resource "https://server.keepling.invalid/mcp/v1"
   @verifier String.duplicate("v", 64)
   @challenge :crypto.hash(:sha256, @verifier) |> Base.url_encode64(padding: false)
   @state :crypto.hash(:sha256, "transport-state") |> Base.url_encode64(padding: false)
@@ -17,7 +19,11 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
       issuer: "https://issuer.keepling.invalid",
       origin: "https://server.keepling.invalid",
       server_instance: "server-instance-transport",
-      redirect_uris: %{"electron" => [@redirect_uri], "iphone" => [@redirect_uri]}
+      redirect_uris: %{
+        "electron" => [@redirect_uri],
+        "iphone" => [@redirect_uri],
+        "mcp" => [@mcp_redirect_uri]
+      }
     )
 
     reset_account_state()
@@ -386,6 +392,164 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
            |> bearer(rotated["access_token"])
            |> get("/api/v1/device-grants")
            |> response(401)
+  end
+
+  # T-05-13 / WINDOWS #70. Grant administration is the escalation's sharpest
+  # edge: the probe that found this revoked another installation with an
+  # agent credential scoped `tasks.read`, after which the victim grant 401'd
+  # on `/mcp/v1`. In production that is an agent switching off the owner's
+  # iPhone -- the phase goal's "recovery model" clause, attacked by the very
+  # credential the phase issues.
+  #
+  # This test does NOT relax the bearer boundary asserted above; it adds the
+  # kind boundary inside it. `/api/v1/device-grants` stays bearer-only and
+  # still ignores browser cookies; the owner's browser reaches grant
+  # administration through `/api/v1/account/device-grants` instead (see the
+  # owner-session test below).
+  test "an mcp agent grant can neither enumerate nor revoke device grants, while first-party grants still can",
+       %{conn: conn} do
+    browser = login(conn)
+
+    victim = browser |> authorize("victim-iphone", "iphone") |> exchange()
+    agent = mcp_grant_credential(browser, "agent-installation", "tasks.read")
+
+    assert %{
+             "code" => "device_authentication_required",
+             "recovery_action" => "reauthorize_device"
+           } =
+             build_conn() |> bearer(agent) |> get("/api/v1/device-grants") |> json_response(401)
+
+    assert %{
+             "code" => "device_authentication_required",
+             "recovery_action" => "reauthorize_device"
+           } =
+             build_conn()
+             |> bearer(agent)
+             |> delete("/api/v1/device-grants/victim-iphone")
+             |> json_response(401)
+
+    # Proof the refused revocation did nothing, read back from the server:
+    # the victim credential still authenticates and both installations are
+    # still present and unrevoked.
+    assert %{"device_grants" => grants} =
+             build_conn()
+             |> bearer(victim["access_token"])
+             |> get("/api/v1/device-grants")
+             |> json_response(200)
+
+    assert Enum.sort(Enum.map(grants, & &1["installation_id"])) ==
+             ["agent-installation", "victim-iphone"]
+
+    refute Enum.any?(grants, & &1["revoked"])
+
+    # ... and the first-party clients still administer grants, including
+    # revoking the agent -- the direction that must keep working.
+    owner_mac = browser |> authorize("owner-mac", "electron") |> exchange()
+
+    assert %{
+             "installation_id" => "agent-installation",
+             "status" => "device_grant_revoked"
+           } =
+             build_conn()
+             |> bearer(owner_mac["access_token"])
+             |> delete("/api/v1/device-grants/agent-installation")
+             |> json_response(200)
+  end
+
+  test "the owner's browser session administers grants through its own route", %{conn: conn} do
+    browser = login(conn)
+    browser |> authorize("session-managed-iphone", "iphone") |> exchange()
+    mcp_grant_credential(browser, "session-managed-agent", "tasks.read")
+
+    assert %{"device_grants" => grants} =
+             browser
+             |> recycle()
+             |> get("/api/v1/account/device-grants")
+             |> json_response(200)
+
+    assert Enum.sort(Enum.map(grants, & &1["installation_id"])) ==
+             ["session-managed-agent", "session-managed-iphone"]
+
+    assert Enum.any?(grants, &(&1["client_kind"] == "mcp"))
+
+    refute Enum.any?(
+             grants,
+             &(Map.has_key?(&1, "access_token") or Map.has_key?(&1, "refresh_token"))
+           )
+
+    assert %{
+             "installation_id" => "session-managed-agent",
+             "status" => "device_grant_revoked"
+           } =
+             browser
+             |> recycle()
+             |> trusted_request()
+             |> delete("/api/v1/account/device-grants/session-managed-agent")
+             |> json_response(200)
+
+    assert %{"device_grants" => after_revocation} =
+             browser |> recycle() |> get("/api/v1/account/device-grants") |> json_response(200)
+
+    assert Enum.find(after_revocation, &(&1["installation_id"] == "session-managed-agent"))[
+             "revoked"
+           ] == true
+  end
+
+  test "the owner-session grant routes are session-only and origin-guarded", %{conn: conn} do
+    browser = login(conn)
+    grant = browser |> authorize("owner-route-boundary", "electron") |> exchange()
+
+    # No session at all.
+    assert get(build_conn(), "/api/v1/account/device-grants") |> response(401)
+
+    # A device-grant BEARER must not reach the owner-session route either --
+    # this route is the browser's, and admitting a bearer here would just
+    # rebuild the hole on a different path.
+    assert build_conn()
+           |> bearer(grant["access_token"])
+           |> get("/api/v1/account/device-grants")
+           |> response(401)
+
+    # The delete carries `:mutation`, so a cross-origin browser request is
+    # refused even with a valid session.
+    assert browser
+           |> recycle()
+           |> delete("/api/v1/account/device-grants/owner-route-boundary")
+           |> response(403)
+  end
+
+  defp mcp_grant_credential(conn, installation_id, scope) do
+    response =
+      conn
+      |> recycle()
+      |> get("/oauth/authorize", %{
+        "client_id" => "mcp",
+        "code_challenge" => @challenge,
+        "code_challenge_method" => "S256",
+        "installation_id" => installation_id,
+        "label" => "Synthetic mcp installation #{installation_id}",
+        "redirect_uri" => @mcp_redirect_uri,
+        "resource" => @mcp_resource,
+        "response_type" => "code",
+        "scope" => scope,
+        "state" => @state
+      })
+
+    assert response.status == 302
+    query = response |> get_resp_header("location") |> List.first() |> URI.parse()
+    code = query.query |> URI.decode_query() |> Map.fetch!("code")
+
+    build_conn()
+    |> post("/oauth/token", %{
+      "code" => code,
+      "code_verifier" => @verifier,
+      "grant_type" => "authorization_code",
+      "redirect_uri" => @mcp_redirect_uri,
+      "resource" => @mcp_resource,
+      "state" => @state
+    })
+    |> json_response(200)
+    |> Map.fetch!("access_token")
   end
 
   defp authorize(conn, installation_id, client_id) do
