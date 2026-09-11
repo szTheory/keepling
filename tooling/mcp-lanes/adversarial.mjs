@@ -236,7 +236,7 @@ const runLane = async () => {
     for (const injectionCase of corpus.cases) {
       // eslint-disable-next-line no-await-in-loop
       const before = await readFinalState(server.origin, {
-        deviceGrantAccessToken: grants.write.accessToken,
+        includeGrants: true,
         sessionCookie: server.sessionCookie,
         taskIds: knownTaskIds,
       })
@@ -249,7 +249,7 @@ const runLane = async () => {
 
       // eslint-disable-next-line no-await-in-loop
       const after = await readFinalState(server.origin, {
-        deviceGrantAccessToken: grants.write.accessToken,
+        includeGrants: true,
         sessionCookie: server.sessionCookie,
         taskIds: knownTaskIds,
       })
