@@ -81,6 +81,10 @@
         { "column": "changed_fields", "disposition": "in", "reason": "user-authored diff content" },
         { "column": "accepted_at", "disposition": "in", "reason": "user-visible timestamp" },
         { "column": "mutation_id", "disposition": "out", "reason": "internal command-identity linkage, not user-facing" },
+        { "column": "actor_principal", "disposition": "out", "reason": "internal provenance discriminator (account_owner/authorized_grant) already summarized by the exported actor_type; not wired into the exported schema this plan" },
+        { "column": "actor_label", "disposition": "out", "reason": "internal display label paired with actor_principal, not wired into the exported schema this plan" },
+        { "column": "recovery_state", "disposition": "out", "reason": "internal undo-machinery bookkeeping, not user-authored data" },
+        { "column": "undone_activity_id", "disposition": "out", "reason": "internal undo-machinery linkage, not user-authored data" },
         { "column": "inserted_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" }
       ]
     },
@@ -125,6 +129,7 @@
         { "column": "scope", "disposition": "in", "reason": "access-inventory metadata, closed vocabulary, no secret" },
         { "column": "inserted_at", "disposition": "in", "reason": "access-inventory metadata (grant issued time)" },
         { "column": "revoked_at", "disposition": "in", "reason": "access-inventory metadata" },
+        { "column": "last_used_at", "disposition": "out", "reason": "internal command-freshness marker (D-38/T-06-07-03), not user-authored data" },
         { "column": "installation_id", "disposition": "out", "reason": "device-correlatable identifier, not needed for the access inventory's grant-level view" },
         { "column": "redirect_uri", "disposition": "out", "reason": "OAuth client configuration detail, not user data" },
         { "column": "authorization_code_hash", "disposition": "out", "reason": "credential material" },
@@ -222,6 +227,11 @@
       "table": "task_search_index",
       "disposition": "out",
       "reason": "D-01: the generated tsvector search index (tasks.search_document + its GIN index) is a derived query accelerator, not durable user data -- it is fully re-derivable from title and notes, both of which are already exported"
+    },
+    {
+      "table": "schema_migrations",
+      "disposition": "out",
+      "reason": "internal Ecto migration bookkeeping, not user data"
     }
   ]
 }
