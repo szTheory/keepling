@@ -333,7 +333,7 @@ Plans:
 4. User-visible history shows typed actions, affected identities/revisions, result, actor, and recovery without exposing private chain of thought.
 5. Deterministic, protocol, simulated-client, representative-model, and adversarial suites score final state and forbidden side effects.
 
-**Plans:** 13/13 plans executed in 8 waves
+**Plans:** 14/14 plans executed in 9 waves
 **Verification:** GAPS FOUND 2026-09-10 — phase NOT complete. 4/5 success criteria met. MCP-02..05 have sufficient evidence; MCP-01 does not, and SRV-02 defers. Blocking defect: an MCP agent credential reaches `/api/v1/sync`, `/api/v1/sync/bootstrap` and the grant list/revoke routes, bypassing the bounded read surface and letting an agent revoke the owner's other clients (window #70). See `.planning/phases/KPL-05-safe-agent-access/VERIFICATION.md`.
 
 Plans:
@@ -351,7 +351,7 @@ Plans:
 - [x] 05-11-PLAN.md — Simulated-client, adversarial, and representative-model lanes scored on final state
 - [x] 05-12-PLAN.md — The five-adapter cross-adapter proof and the restoration of SRV-02
 - [x] 05-13-PLAN.md — GAP CLOSURE: close the agent privilege escalation and settle grant administration (windows #66, #70)
-- [ ] 05-14-PLAN.md — GAP CLOSURE: close the scope half of the agent authorization boundary (window #72)
+- [x] 05-14-PLAN.md — GAP CLOSURE: close the scope half of the agent authorization boundary (window #72)
 
 ### Phase 6: Portability and Trust Release
 
