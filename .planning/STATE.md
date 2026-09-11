@@ -5,10 +5,10 @@ current_phase: 06
 current_phase_name: Portability and Trust Release
 status: executing
 stopped_at: "Phase 6 planned — 13 plans; decision-coverage gate reported could-not-parse (parser cannot read 17 multi-line D-NN bullets in 06-CONTEXT.md); coverage verified directly instead: all 54 decisions D-01..D-54 are cited across the plans"
-last_updated: "2026-09-11T15:56:54.656Z"
-last_activity: 2026-09-10
-last_activity_desc: Phase KPL-06 planning complete — 13 plans ready
-state_head: 532d69f07f3a8d6d545211a2ae0cc321bdec82a2
+last_updated: "2026-09-11T17:07:26.521Z"
+last_activity: 2026-09-11
+last_activity_desc: Phase KPL-06 execution started
+state_head: b901cc37d7800d27608e83b982870ec2a356927b
 progress:
   total_phases: 6
   completed_phases: 4
@@ -24,16 +24,16 @@ milestone_name: milestone
 See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 **Core value:** Jon can trust Keepling as his daily task system on Mac and iPhone: capture is immediate, accepted changes are never silently lost or overwritten, and both human and agent actions remain inspectable and recoverable.  
-**Current focus:** Phase KPL-05 — Safe Agent Access
+**Current focus:** Phase KPL-06 — Portability and Trust Release
 
 ## Current Position
 
-Phase: KPL-06 (Portability and Trust Release) — READY TO EXECUTE
-Plan: Not started
+Phase: KPL-06 (Portability and Trust Release) — EXECUTING
+Plan: 1 of 13
 Total Plans in Phase: 13
-Status: Ready to execute
-Last activity: 2026-09-10 — Phase 05 complete, transitioned to Phase 6
-Last Activity Description: Phase KPL-06 planning complete — 13 plans ready
+Status: Executing Phase KPL-06
+Last activity: 2026-09-11 — Phase KPL-06 execution started
+Last Activity Description: Phase KPL-06 execution started
 Progress: [█████████░] 94%
 
 ## Accumulated Context
@@ -365,9 +365,9 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ### Blockers
 
-- O-21: prior-application focus return after Quick Entry is unimplemented in the shipped app -- QuickEntryWindowController calls an optional foregroundApp port that has no implementation and is never passed in main/index.ts#bootstrap(). Found by row A9; a fifth GAP-1 instance. Blocks the macos-integration lane going green.
-- O-22: Cmd-1/Cmd-2 route through facade.setRoute in DesktopShell.tsx and bypass the unsaved-changes guard that mouse navigation goes through.
-- O-51: undo is now unavailable on a Mac with no server configured — a disclosed cost of closing O-45; decide it together with O-43, not separately
+- O-21: VERIFIED CLOSED 2026-09-11 (06-01) against source — `apps/desktop/main/index.ts:911-918` now constructs a real `ElectronForegroundApp` and wires it into `QuickEntryWindowController`, closing the prior-application focus-return gap.
+- O-22: Cmd-1/Cmd-2 route through facade.setRoute in DesktopShell.tsx and bypass the unsaved-changes guard that mouse navigation goes through. Tracked as WINDOWS.md #78, owner Phase 6.
+- O-51: VERIFIED CLOSED 2026-09-11 (06-01) against source — `DesktopApplication.ts` lines 465-511's own comment documents the decision made together with O-43: an undo with no server-issued handle is REFUSED loudly at the point of action rather than silently accepted or deferred; the disclosed cost (undo unavailable until the underlying change has synced) is the recorded decision, not an open blocker.
 - 04-16: physical-device UI suites BLOCKED -- the iPhone is locked and iOS refuses to launch any app on a locked device. Unlock the phone and re-run 'node tooling/verify-ios-phase.mjs --lane device'.
 - 04-16: the server-driven half of D-22 Criterion 2 is BLOCKED -- KeeplingSyncAdapter refuses non-HTTPS non-loopback base URLs and URLSession rejects the lane's self-signed cert, so the phone cannot reach a Mac-hosted recording proxy. Needs a decision: DEBUG-only lane CA via injected ClientTransport, vs widening the transport guard (refused), vs deferring.
 - 05-01: No MCP host or model credential reachable in this environment -- blocks the phase's representative-model and adversarial evidence lanes (D-26) and the D-30 live-host protocol re-check.
