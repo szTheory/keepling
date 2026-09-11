@@ -350,6 +350,7 @@ Plans:
 - [x] 05-10-PLAN.md — The anti-vacuity phase gate and a test of the harness itself
 - [x] 05-11-PLAN.md — Simulated-client, adversarial, and representative-model lanes scored on final state
 - [x] 05-12-PLAN.md — The five-adapter cross-adapter proof and the restoration of SRV-02
+- [ ] 05-13-PLAN.md — GAP CLOSURE: close the agent privilege escalation and settle grant administration (windows #66, #70)
 
 ### Phase 6: Portability and Trust Release
 
