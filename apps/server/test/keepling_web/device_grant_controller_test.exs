@@ -6,6 +6,8 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
 
   @password String.duplicate("native-grant-password-", 12)
   @redirect_uri "keepling://authorization/callback"
+  @mcp_redirect_uri "https://server.keepling.invalid/mcp/callback"
+  @mcp_resource "https://server.keepling.invalid/mcp/v1"
   @verifier String.duplicate("v", 64)
   @challenge :crypto.hash(:sha256, @verifier) |> Base.url_encode64(padding: false)
   @state :crypto.hash(:sha256, "transport-state") |> Base.url_encode64(padding: false)
@@ -17,7 +19,11 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
       issuer: "https://issuer.keepling.invalid",
       origin: "https://server.keepling.invalid",
       server_instance: "server-instance-transport",
-      redirect_uris: %{"electron" => [@redirect_uri], "iphone" => [@redirect_uri]}
+      redirect_uris: %{
+        "electron" => [@redirect_uri],
+        "iphone" => [@redirect_uri],
+        "mcp" => [@mcp_redirect_uri]
+      }
     )
 
     reset_account_state()
@@ -386,6 +392,102 @@ defmodule KeeplingWeb.DeviceGrantControllerTest do
            |> bearer(rotated["access_token"])
            |> get("/api/v1/device-grants")
            |> response(401)
+  end
+
+  # T-05-13 / WINDOWS #70. Grant administration is the escalation's sharpest
+  # edge: the probe that found this revoked another installation with an
+  # agent credential scoped `tasks.read`, after which the victim grant 401'd
+  # on `/mcp/v1`. In production that is an agent switching off the owner's
+  # iPhone -- the phase goal's "recovery model" clause, attacked by the very
+  # credential the phase issues.
+  #
+  # This test does NOT relax the bearer boundary asserted above; it adds the
+  # kind boundary inside it. `/api/v1/device-grants` stays bearer-only and
+  # still ignores browser cookies; the owner's browser reaches grant
+  # administration through `/api/v1/account/device-grants` instead (see the
+  # owner-session test below).
+  test "an mcp agent grant can neither enumerate nor revoke device grants, while first-party grants still can",
+       %{conn: conn} do
+    browser = login(conn)
+
+    victim = browser |> authorize("victim-iphone", "iphone") |> exchange()
+    agent = mcp_grant_credential(browser, "agent-installation", "tasks.read")
+
+    assert %{
+             "code" => "device_authentication_required",
+             "recovery_action" => "reauthorize_device"
+           } =
+             build_conn() |> bearer(agent) |> get("/api/v1/device-grants") |> json_response(401)
+
+    assert %{
+             "code" => "device_authentication_required",
+             "recovery_action" => "reauthorize_device"
+           } =
+             build_conn()
+             |> bearer(agent)
+             |> delete("/api/v1/device-grants/victim-iphone")
+             |> json_response(401)
+
+    # Proof the refused revocation did nothing, read back from the server:
+    # the victim credential still authenticates and both installations are
+    # still present and unrevoked.
+    assert %{"device_grants" => grants} =
+             build_conn()
+             |> bearer(victim["access_token"])
+             |> get("/api/v1/device-grants")
+             |> json_response(200)
+
+    assert Enum.sort(Enum.map(grants, & &1["installation_id"])) ==
+             ["agent-installation", "victim-iphone"]
+
+    refute Enum.any?(grants, & &1["revoked"])
+
+    # ... and the first-party clients still administer grants, including
+    # revoking the agent -- the direction that must keep working.
+    owner_mac = browser |> authorize("owner-mac", "electron") |> exchange()
+
+    assert %{
+             "installation_id" => "agent-installation",
+             "status" => "device_grant_revoked"
+           } =
+             build_conn()
+             |> bearer(owner_mac["access_token"])
+             |> delete("/api/v1/device-grants/agent-installation")
+             |> json_response(200)
+  end
+
+  defp mcp_grant_credential(conn, installation_id, scope) do
+    response =
+      conn
+      |> recycle()
+      |> get("/oauth/authorize", %{
+        "client_id" => "mcp",
+        "code_challenge" => @challenge,
+        "code_challenge_method" => "S256",
+        "installation_id" => installation_id,
+        "label" => "Synthetic mcp installation #{installation_id}",
+        "redirect_uri" => @mcp_redirect_uri,
+        "resource" => @mcp_resource,
+        "response_type" => "code",
+        "scope" => scope,
+        "state" => @state
+      })
+
+    assert response.status == 302
+    query = response |> get_resp_header("location") |> List.first() |> URI.parse()
+    code = query.query |> URI.decode_query() |> Map.fetch!("code")
+
+    build_conn()
+    |> post("/oauth/token", %{
+      "code" => code,
+      "code_verifier" => @verifier,
+      "grant_type" => "authorization_code",
+      "redirect_uri" => @mcp_redirect_uri,
+      "resource" => @mcp_resource,
+      "state" => @state
+    })
+    |> json_response(200)
+    |> Map.fetch!("access_token")
   end
 
   defp authorize(conn, installation_id, client_id) do

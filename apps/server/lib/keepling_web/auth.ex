@@ -16,7 +16,7 @@ defmodule KeeplingWeb.Auth do
   def call(conn, :require_recent_auth), do: require_recent_auth(conn)
   def call(conn, :require_trusted_origin), do: require_trusted_origin(conn)
   def call(conn, :require_test_fixture), do: require_test_fixture(conn)
-  def call(conn, :authenticate_device_grant), do: authenticate_device_grant(conn)
+  def call(conn, :authenticate_device_grant), do: authenticate_first_party_device_grant(conn)
   def call(conn, :authenticate_client), do: authenticate_client(conn, false)
   def call(conn, :authenticate_client_mutation), do: authenticate_client(conn, true)
 
@@ -113,6 +113,66 @@ defmodule KeeplingWeb.Auth do
   defp browser_guards(conn, mutation?) do
     conn = Phoenix.Controller.protect_from_forgery(conn, [])
     if mutation?, do: require_trusted_origin(conn), else: conn
+  end
+
+  # T-05-13. The MIRROR IMAGE of `KeeplingWeb.MCP.Pipeline`'s
+  # `client_kind == "mcp"` requirement (mcp/pipeline.ex). That pipeline
+  # refuses a native grant on the agent surface; this one refuses an agent
+  # grant on the native surface. Without both halves the refusal is not a
+  # boundary, it is a one-way door: an `mcp` grant scoped `tasks.read`
+  # authenticated here and reached `/api/v1/sync/bootstrap` (the whole
+  # account, unbounded and unredacted, around the paginated MCP read
+  # surface), enumerated every device grant, and revoked another
+  # installation -- in production, an agent switching off the owner's
+  # iPhone. Recorded as WINDOWS #70, found by live probe in
+  # KPL-05's VERIFICATION.md.
+  #
+  # The check lives on the PIPELINE, not per route, for two reasons. First,
+  # `:device_grant_authenticated` fronts only first-party native client
+  # surfaces (router.ex: `/api/v1/sync`, `/api/v1/sync/bootstrap`, and both
+  # `/api/v1/device-grants` routes), so there is no route behind it that an
+  # agent should reach and therefore no per-route judgement to make.
+  # Second, a per-route check defaults to ALLOW for any route added later,
+  # which is exactly the failure mode being closed here; an allow-list on
+  # the pipeline defaults to DENY.
+  #
+  # It is an ALLOW-LIST of first-party kinds rather than a `!= "mcp"`
+  # denial for the same reason: a future agent-ish `client_kind` added to
+  # `Keepling.Accounts.DeviceGrant`'s `@client_kinds` is refused here until
+  # someone deliberately admits it.
+  #
+  # This deliberately does NOT apply to `:client_authenticated`
+  # (`authenticate_client/2` below), which calls `authenticate_device_grant/1`
+  # directly. D-09 admits `mcp` grants to the SHARED read/command surface on
+  # purpose -- that surface is scope-checked and bounded, and it is the one
+  # query, not a parallel one. The asymmetry between the two entry points is
+  # the point: one fronts bounded shared reads, the other fronts the raw
+  # device feed and grant administration.
+  @first_party_client_kinds ~w(electron iphone)
+
+  defp authenticate_first_party_device_grant(conn) do
+    conn = authenticate_device_grant(conn)
+
+    cond do
+      conn.halted ->
+        conn
+
+      conn.assigns[:current_client_kind] in @first_party_client_kinds ->
+        conn
+
+      true ->
+        # The same problem shape `KeeplingWeb.MCP.Pipeline` returns for the
+        # opposite refusal: an authenticated-but-wrong-kind credential is
+        # told only that this surface requires a different device
+        # authorization. Nothing here discloses which kinds are admitted.
+        conn
+        |> authentication_problem(
+          "device_authentication_required",
+          "Device authentication required",
+          "reauthorize_device"
+        )
+        |> halt()
+    end
   end
 
   defp authenticate_device_grant(conn) do
