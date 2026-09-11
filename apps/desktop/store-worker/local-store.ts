@@ -1377,9 +1377,49 @@ class NodeSqliteLocalStore {
       entity_id: string
       snapshot_json: string
     }>
-    for (const row of shadowRows) this.#upsertProjection(row.entity_id, JSON.parse(row.snapshot_json) as SyncSnapshot, 'synced')
+    for (const row of shadowRows) {
+      // D-37: an entity with an unresolved refusal keeps its current local
+      // value untouched by this replay -- that value is the thing the
+      // record above exists to protect. The check is read-only, so this
+      // produces the identical skip on every subsequent call until the
+      // refusal is resolved.
+      if (this.#hasUnresolvedRefusal(row.entity_id)) continue
+      this.#upsertProjection(row.entity_id, JSON.parse(row.snapshot_json) as SyncSnapshot, 'synced')
+    }
     const pending = this.readyOutboxInOrder()
-    for (const mutation of pending) this.#upsertProjection(mutation.effect.entityId, mutation.effect.snapshot, 'saved_on_this_mac')
+    for (const mutation of pending) {
+      if (this.#hasUnresolvedRefusal(mutation.effect.entityId)) continue
+      this.#upsertProjection(mutation.effect.entityId, mutation.effect.snapshot, 'saved_on_this_mac')
+    }
+  }
+
+  /** D-37: point lookup against the index `0003_refusal_durability.sql` creates. */
+  #hasUnresolvedRefusal(entityId: string): boolean {
+    const row = this.#database.prepare(`
+      SELECT 1 AS present FROM refusal_records WHERE entity_id = ? AND unresolved = 1 LIMIT 1
+    `).get(entityId) as { present: number } | undefined
+    return row !== undefined
+  }
+
+  /**
+   * D-37 / plan 06-09's seam: clears the unresolved flag for every refusal
+   * record naming this mutation, so the next replay stops skipping that
+   * entity. This does not choose a value, touch `visible_projection`, or
+   * build any chooser UI -- plan 06-09 owns the resolver interaction. What
+   * this owns is only that the guard releases once a person has acted.
+   */
+  resolveRefusal(mutationId: string): WorkspaceSnapshot {
+    this.#assertNotFenced()
+    this.#database.exec('BEGIN IMMEDIATE')
+    try {
+      this.#database.prepare(`UPDATE refusal_records SET unresolved = 0 WHERE mutation_id = ?`).run(mutationId)
+      this.#replayVisible()
+      this.#database.exec('COMMIT')
+    } catch (error) {
+      this.#database.exec('ROLLBACK')
+      throw error
+    }
+    return this.snapshot()
   }
 
   private readyOutboxInOrder(): SyncMutation[] {
