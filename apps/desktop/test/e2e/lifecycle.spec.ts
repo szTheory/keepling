@@ -257,7 +257,22 @@ test('D-06: window bounds are restored (clamped to the current display) after cl
   const profilePath = allocateDisposableProfile('lifecycle-bounds-restore')
   const { application } = await launch(profilePath)
   try {
-    const target = { height: 700, width: 900, x: 40, y: 40 }
+    // The property under test is that a persisted, on-screen bounds
+    // snapshot round-trips exactly through close/reactivate -- not that the
+    // window lands at a specific pixel. A fixed literal (e.g. 900x700 at
+    // 40,40) silently assumed the maintainer's own display geometry and
+    // could itself be clamped by the OS on a smaller runner display, making
+    // the round-trip assertion fail for a reason unrelated to D-06. Derive
+    // a target proportional to the runner's OWN work area instead, queried
+    // at runtime, so the target is always a valid on-screen rectangle no
+    // matter what display the test happens to run against.
+    const workArea = await application.evaluate(({ screen }) => screen.getPrimaryDisplay().workArea)
+    const target = {
+      height: Math.max(520, Math.round(workArea.height * 0.6)),
+      width: Math.max(680, Math.round(workArea.width * 0.6)),
+      x: workArea.x + Math.round(workArea.width * 0.1),
+      y: workArea.y + Math.round(workArea.height * 0.1),
+    }
     await application.evaluate(({ BrowserWindow }, bounds) => {
       BrowserWindow.getAllWindows()[0]?.setBounds(bounds)
     }, target)

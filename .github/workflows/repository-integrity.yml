@@ -102,6 +102,50 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  phase2-linux:
+    name: phase2-${{ matrix.lane }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        lane: [server, sync-property, backup-restore]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: |
+            ~/.asdf/installs
+            apps/server/deps
+            apps/server/_build
+            node_modules
+          key: phase2-${{ runner.os }}-${{ matrix.lane }}-${{ hashFiles('tooling/runtime-versions.env', 'apps/server/mix.lock', 'pnpm-lock.yaml') }}
+      - name: Install asdf
+        run: |
+          git clone https://github.com/asdf-vm/asdf.git "$HOME/.asdf" --branch v0.14.1
+          echo "$HOME/.asdf/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.asdf/shims" >> "$GITHUB_PATH"
+      - name: Provision exact repository runtimes
+        run: |
+          ./tooling/runtime-preflight.sh --provision
+          corepack enable
+          pnpm install --frozen-lockfile
+          ./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'
+      - name: Run exact Phase 2 lane
+        run: |
+          set -o pipefail
+          ./tooling/test-phase-2.sh --lane "${{ matrix.lane }}" | tee "$RUNNER_TEMP/${{ matrix.lane }}.txt"
+          ./tooling/verify-privacy.sh "$RUNNER_TEMP/${{ matrix.lane }}.txt"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: phase2-${{ matrix.lane }}-timing
+          path: ${{ runner.temp }}/${{ matrix.lane }}.txt
+          if-no-files-found: error
+          retention-days: 14
+
   phase2-runtime:
     name: phase2-${{ matrix.lane }}
     runs-on: macos-15
@@ -109,7 +153,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        lane: [server, sync-property, contracts-compatibility, backup-restore, privacy]
+        lane: [contracts-compatibility, privacy]
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -182,3 +226,36 @@ jobs:
           path: ${{ runner.temp }}/opentofu-host-fixtures.txt
           if-no-files-found: error
           retention-days: 14
+
+  # D-15(a)/(b): this is the ONLY job branch protection should require.
+  # `if: always()` is the sole exception to the job-level `if:` ban --
+  # without it, this job itself would be skipped the moment any dependency
+  # fails, and a skipped required check reads to GitHub as satisfied. A
+  # dependency reporting anything other than `success` (including
+  # `skipped`, which `check-ci-contract.mjs` bans on every OTHER required
+  # job) fails this job explicitly.
+  all-required-passed:
+    name: All required checks passed
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    needs:
+      [ci-contract, repository-integrity, phase2-linux, phase2-runtime, image-compose-deploy, opentofu-host-fixtures]
+    if: always()
+    steps:
+      - name: Assert every required dependency succeeded
+        env:
+          NEEDS_CONTEXT: ${{ toJSON(needs) }}
+        run: |
+          node -e '
+            const needs = JSON.parse(process.env.NEEDS_CONTEXT);
+            let failed = false;
+            for (const [job, info] of Object.entries(needs)) {
+              const result = info.result;
+              console.log("needs job=" + job + " result=" + result);
+              if (result !== "success") {
+                console.error("required job " + job + " did not succeed (result=" + result + ")");
+                failed = true;
+              }
+            }
+            if (failed) process.exit(1);
+          '

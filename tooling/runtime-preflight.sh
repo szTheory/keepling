@@ -42,7 +42,6 @@ require_command() {
 
 select_runtime() {
   require_command asdf
-  require_command brew
 
   export ASDF_ERLANG_VERSION="$OTP_VERSION"
   export ASDF_ELIXIR_VERSION="$ELIXIR_ASDF_VERSION"
@@ -51,8 +50,25 @@ select_runtime() {
     die "Erlang/OTP selection mismatch: expected $OTP_VERSION, actual not installed; run '$0 --provision'"
   elixir_root=$(asdf where elixir "$ELIXIR_ASDF_VERSION" 2>/dev/null) ||
     die "Elixir selection mismatch: expected $ELIXIR_ASDF_VERSION, actual not installed; run '$0 --provision'"
-  postgresql_root=$(brew --prefix postgresql@18 2>/dev/null) ||
-    die "PostgreSQL selection mismatch: expected $POSTGRESQL_VERSION, actual not installed; run '$0 --provision'"
+
+  # D-10: five Phase 2 jobs and both recovery-drill legs ran only on
+  # macos-15 for no reason but historical runner choice. server,
+  # sync-property, and backup-restore genuinely need direct pg_ctl/initdb
+  # access (backup-restore drives WAL archiving and PITR directly against
+  # the data directory), which a GitHub Actions `services:` container does
+  # not expose -- so the Linux path installs a real local PostgreSQL server
+  # via apt/PGDG rather than brew, and is selected the same way brew's keg
+  # is selected on Darwin.
+  if [ "$(uname -s)" = "Darwin" ]; then
+    require_command brew
+    postgresql_root=$(brew --prefix postgresql@18 2>/dev/null) ||
+      die "PostgreSQL selection mismatch: expected $POSTGRESQL_VERSION, actual not installed; run '$0 --provision'"
+  else
+    postgres_major=${POSTGRESQL_VERSION%%.*}
+    postgresql_root="/usr/lib/postgresql/$postgres_major"
+    [ -d "$postgresql_root" ] ||
+      die "PostgreSQL selection mismatch: expected $POSTGRESQL_VERSION, actual not installed; run '$0 --provision'"
+  fi
 
   for executable in postgres psql pg_config; do
     [ -x "$postgresql_root/bin/$executable" ] ||
@@ -98,14 +114,40 @@ check_runtime() {
 
 provision_runtime() {
   require_command asdf
-  require_command brew
 
   export ASDF_ERLANG_VERSION="$OTP_VERSION"
   export ASDF_ELIXIR_VERSION="$ELIXIR_ASDF_VERSION"
 
+  # D-10: a fresh CI runner has no asdf plugins registered, so `asdf install`
+  # fails before it ever reaches a version-resolution problem. Register each
+  # plugin idempotently first -- tolerating an already-registered plugin --
+  # so this preflight is safe to re-run and safe on a runner that has never
+  # seen asdf before.
+  asdf plugin add erlang || true
+  asdf plugin add elixir || true
+  asdf plugin add postgres || true
+
   asdf install erlang "$OTP_VERSION"
   asdf install elixir "$ELIXIR_ASDF_VERSION"
-  brew install postgresql@18
+
+  if [ "$(uname -s)" = "Darwin" ]; then
+    require_command brew
+    brew install postgresql@18
+  else
+    postgres_major=${POSTGRESQL_VERSION%%.*}
+    if ! [ -x "/usr/lib/postgresql/$postgres_major/bin/postgres" ]; then
+      require_command sudo
+      require_command curl
+      sudo install -d /usr/share/postgresql-common/pgdg
+      sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+        https://www.postgresql.org/media/keys/ACCC4CF8.asc
+      codename=$(. /etc/os-release && echo "$VERSION_CODENAME")
+      echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${codename}-pgdg main" |
+        sudo tee /etc/apt/sources.list.d/pgdg.list >/dev/null
+      sudo apt-get update
+      sudo apt-get install -y "postgresql-$postgres_major"
+    fi
+  fi
 
   check_runtime
 }

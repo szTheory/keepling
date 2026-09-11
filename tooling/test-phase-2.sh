@@ -106,7 +106,7 @@ run_lane() {
 }
 
 count_tests() {
-  rg -n '^[[:space:]]*(test|property) "' "$@" | wc -l | tr -d '[:space:]'
+  grep -rnE '^[[:space:]]*(test|property) "' "$@" | wc -l | tr -d '[:space:]'
 }
 
 lane_repository_integrity() { ./tooling/check-repository-integrity.sh; }

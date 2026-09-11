@@ -107,6 +107,48 @@ if (requiredWorkflow.includes("paths-ignore:") || requiredWorkflow.includes("pat
   fail("shared-input fan-out is narrowed by a path filter");
 }
 
+// D-15(a)/(b): a skipped required job reads to GitHub branch protection as
+// satisfied, indistinguishable from a passing one. The only required check
+// must be a single aggregator (`all-required-passed`) that explicitly
+// asserts every dependency's result -- so an `if:` on any OTHER required
+// job (which can make that job report "skipped" instead of "success" or
+// "failure") is banned outright. The aggregator itself is the sole
+// exception: it MUST carry `if: always()` so it still runs -- and can still
+// fail the check -- when an upstream job fails.
+const AGGREGATOR_JOB_NAME = "all-required-passed";
+const jobsBlockStart = requiredWorkflow.indexOf("\njobs:");
+if (jobsBlockStart === -1) fail("required workflow has no jobs: block");
+const jobsSource = requiredWorkflow.slice(jobsBlockStart);
+const jobBlocks = jobsSource.split(/\n(?=  [A-Za-z0-9_-]+:\n)/).filter((block) => /^\n {2}[A-Za-z0-9_-]+:\n/.test(block) || /^ {2}[A-Za-z0-9_-]+:\n/.test(block));
+let foundAggregator = false;
+for (const block of jobBlocks) {
+  const jobNameMatch = block.match(/^\n? {2}([A-Za-z0-9_-]+):/);
+  const jobName = jobNameMatch ? jobNameMatch[1] : "unknown";
+  if (jobName === AGGREGATOR_JOB_NAME) {
+    foundAggregator = true;
+    if (!/\n {4}if:\s*always\(\)/.test(block)) {
+      fail(`${AGGREGATOR_JOB_NAME} must carry an if: always() job-level key`);
+    }
+    if (!block.includes("needs")) fail(`${AGGREGATOR_JOB_NAME} must reference the needs context`);
+    continue;
+  }
+  if (/\n {4}if:\s*/.test(block)) {
+    fail(`required job ${jobName} carries a job-level if: key -- a skipped required job must never read as satisfied`);
+  }
+}
+if (!foundAggregator) fail(`required workflow is missing the ${AGGREGATOR_JOB_NAME} aggregator job`);
+
+// Caching stays available to test-only lanes; an artifact-producing job
+// restoring a cache could serve stale bytes as if they were freshly built.
+const ARTIFACT_PRODUCING_JOB_NAMES = ["ci-contract", "image-compose-deploy"];
+for (const block of jobBlocks) {
+  const jobNameMatch = block.match(/^\n? {2}([A-Za-z0-9_-]+):/);
+  const jobName = jobNameMatch ? jobNameMatch[1] : "unknown";
+  if (ARTIFACT_PRODUCING_JOB_NAMES.includes(jobName) && block.includes("actions/cache")) {
+    fail(`artifact-producing job ${jobName} must not restore a cache`);
+  }
+}
+
 for (const [name, source] of [
   ["required", requiredWorkflow],
   ["recovery", recoveryWorkflow],
