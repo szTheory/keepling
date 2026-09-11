@@ -367,6 +367,27 @@ Plans:
 4. Security policy, supported-version policy, SBOM/checksum/signing posture appropriate to distributed artifacts, privacy disclosures, and bounded support contract are public.
 5. Jon has completed a sustained Mac+iPhone dogfood period with no unresolved data-loss, silent-overwrite, or recovery-severity defects in the supported loop.
 
+**Amendments:**
+
+**SC3 narrowing (2026-09-11), per D-40:** the gate for host replacement is the hermetic
+rehearsal produced by `tooling/verify-host-replacement.sh` and
+`tooling/test-host-replacement-sequence.sh`. The credentialed live Hetzner/DNS cutover remains
+a protected outer lane that keeps exiting non-zero, so a skip is never counted as evidence;
+DATA-03 and OPS-02 stay unchecked, which is the honest outcome, and `WINDOWS.md` row 43 carries
+owner `BACKLOG/999.2`.
+
+**SC5 replacement (2026-09-11), per D-53:** replace success criterion 5's text verbatim with the
+D-53 wording — the three defect classes are measured rather than assumed, via (a) the read-only
+reconciliation oracle against the real Mac+iPhone install for at least 14 calendar days, at
+least 300 samples, at least 10 non-thin usage days, zero unexplained violations of invariants I1
+through I8, and a published per-day usage census; (b) the same oracle as the assertion layer
+over at least 72 accumulated machine-hours across at least 200 seeds of adversarial two-client
+soak against the real stack with every chaos operator exercised at least 50 times; and (c) an
+open-defect register listing no open item classed data-loss, silent-overwrite, or
+recovery-severity. Evidence is `.artifacts/trust-soak/trust-soak-evidence.json`, digest-bound,
+stating its own detection floor and disclosed blind spot. Owner dogfood feedback stays informal,
+unstructured, non-evidentiary and non-gating.
+
 **Plans:** 13 plans
 
 Plans:
