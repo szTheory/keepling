@@ -46,7 +46,12 @@ deferred:
   - truth: >-
       SRV-02 -- User receives the same domain invariants through web, desktop, iPhone, API, and
       MCP entry points.
-    addressed_in: "Unowned -- window #69 driver wiring; not claimed by Phase 6"
+    addressed_in: "Phase 6 -- window #69 driver wiring; not claimed complete by Phase 6, but Phase 6 owns closing it (06-05)"
+    # CORRECTED 2026-09-11 (06-01, per D-35/D-41): "Unowned" is an invalid disposition value.
+    # A dispositionless owner leaves an open cross-adapter gap with no phase accountable for
+    # closing it. This correction assigns Phase 6 as owner and is what makes this record legal
+    # under D-35, not a re-opening of Phase 5's own verification outcome (which remains
+    # unchanged: SRV-02 stays deferred pending both blocked legs).
     evidence: >-
       REQUIREMENTS.md:128 states SRV-02 completes at the Phase 5 cross-adapter proof. That lane
       exists and runs (web-api and mcp legs PASS, comparison_ok=true); electron and iphone legs
