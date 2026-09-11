@@ -356,7 +356,7 @@ export async function runMcpLeg({ accessToken, inputDigest, origin, runId, sessi
 // precondition, its absence BLOCKS this leg rather than being papered
 // over with a fixture or a fake.
 
-export async function runElectronLeg() {
+export async function runElectronLeg({ inputDigest, origin, runId, sessionCookie }) {
   const repositoryRoot = join(import.meta.dirname, '..', '..')
   const outRoot = join(repositoryRoot, 'apps', 'desktop', 'out')
   if (!existsSync(outRoot)) {
@@ -366,17 +366,13 @@ export async function runElectronLeg() {
         'and is not produced by this plan (05-12-PLAN.md Task 1 precondition).',
     )
   }
-  // A packaged build exists, but this lane has not yet been given a live
-  // IPC driver against it -- driving the packaged .app's real command
-  // surface (main/preload IPC -> outbox -> real sync, mirroring
-  // apps/desktop/test/packaged/real-stack-sync.spec.ts's discipline) is
-  // the next increment once the packaged artifact is reliably available in
-  // this lane's environment. Reported BLOCKED, not silently skipped or
-  // faked, per D-25/D-26.
-  throw blocked(
-    'a packaged Electron build exists at apps/desktop/out, but this leg has no live IPC driver wired to it yet -- ' +
-      'see tooling/cross-adapter/legs.mjs runElectronLeg() and docs/testing/cross-adapter-testing.md for the disclosed gap',
-  )
+  const { createElectronAdapter } = await import('./electron-driver.mjs')
+  const adapter = await createElectronAdapter({ origin, sessionCookie })
+  try {
+    return await runSharedScenarioSet('electron', adapter, { inputDigest, origin, runId, sessionCookie })
+  } finally {
+    await adapter.teardown()
+  }
 }
 
 // --- iphone leg ---
