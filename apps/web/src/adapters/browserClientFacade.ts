@@ -89,6 +89,9 @@ const createBrowserClientFacade = (csrfToken: string): ClientFacade => {
     route,
     selectedTaskId,
     tasks: [...records.values()].map(mapTask),
+    // Browser access is online-first (no local durable refusal ledger) --
+    // there is no unattended refusal class for this adapter to surface.
+    unresolvedRefusals: [],
   })
 
   const publishSnapshot = () => {

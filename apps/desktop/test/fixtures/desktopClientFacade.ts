@@ -5,6 +5,7 @@ import type {
   EditInput,
   RecoveryAvailabilityView,
   TaskOutcome,
+  UnresolvedRefusalView,
   WorkspaceConflictView,
   WorkspaceRoute,
   WorkspaceSnapshotView,
@@ -28,6 +29,7 @@ type DesktopClientFacadeOptions = {
   seedConflict?: WorkspaceConflictView
   seedRoute?: WorkspaceRoute
   seedTasks?: readonly WorkspaceTaskView[]
+  seedUnresolvedRefusals?: readonly UnresolvedRefusalView[]
 }
 
 type UndoEntry =
@@ -47,7 +49,13 @@ const createDesktopClientFacade = (options: DesktopClientFacadeOptions = {}): Cl
   const snapshotListeners = new Set<(snapshot: WorkspaceSnapshotView) => void>()
   const recoveryListeners = new Set<(availability: RecoveryAvailabilityView) => void>()
 
-  const currentSnapshot = (): WorkspaceSnapshotView => ({ conflict, route, selectedTaskId, tasks })
+  const currentSnapshot = (): WorkspaceSnapshotView => ({
+    conflict,
+    route,
+    selectedTaskId,
+    tasks,
+    unresolvedRefusals: options.seedUnresolvedRefusals ?? [],
+  })
 
   const publishSnapshot = () => {
     const snapshot = currentSnapshot()
@@ -133,10 +141,14 @@ const createDesktopClientFacade = (options: DesktopClientFacadeOptions = {}): Cl
       publishRecovery('Undo Reopen', `undo-reopen-${taskId}`)
       return Promise.resolve({ kind: 'accepted' })
     },
-    resolveConflict: (choice: 'current' | 'mine'): Promise<TaskOutcome> => {
+    resolveConflict: (choices): Promise<TaskOutcome> => {
       if (conflict === null) return Promise.resolve({ kind: 'rejected', message: 'No conflict to resolve.' })
-      const resolvedTitle = choice === 'mine' ? conflict.mine : conflict.current
-      patchTask(conflict.taskId, { syncStatus: 'synced', title: resolvedTitle })
+      const titleField = conflict.fields.find((field) => field.field === 'title')
+      const choice = choices.title
+      if (titleField !== undefined && choice !== undefined) {
+        const resolvedTitle = choice === 'mine' ? titleField.mine : titleField.current
+        patchTask(conflict.taskId, { syncStatus: 'synced', title: resolvedTitle ?? '' })
+      }
       conflict = null
       publishSnapshot()
       return Promise.resolve({ kind: 'accepted' })

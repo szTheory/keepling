@@ -61,11 +61,24 @@ type WorkspaceConflictView = {
   readonly taskId: string
 }
 
+/**
+ * An unresolved refusal (06-06's durable `refusal_records`) for a task the
+ * person is not currently viewing. Surfaces in the existing recovery strip
+ * (Task 2, O-44) the same way an eligible undo already does -- reviewing it
+ * navigates to the task and opens its conflict resolver; no new UI surface.
+ */
+type UnresolvedRefusalView = {
+  readonly route: WorkspaceRoute
+  readonly taskId: string
+  readonly taskTitle: string
+}
+
 type WorkspaceSnapshotView = {
   readonly conflict: WorkspaceConflictView | null
   readonly route: WorkspaceRoute
   readonly selectedTaskId: string | null
   readonly tasks: readonly WorkspaceTaskView[]
+  readonly unresolvedRefusals: readonly UnresolvedRefusalView[]
 }
 
 type CaptureInput = {
@@ -185,6 +198,7 @@ export type {
   EditInput,
   RecoveryAvailabilityView,
   TaskOutcome,
+  UnresolvedRefusalView,
   WorkspaceConflictFieldView,
   WorkspaceConflictView,
   WorkspaceLayoutState,

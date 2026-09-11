@@ -235,7 +235,8 @@ test('surfaces a sync conflict inline and requires an explicit mine/current choi
     await expect(window.getByText('Your version:')).toBeVisible()
     await expect(window.getByText('Current version:')).toBeVisible()
 
-    await window.getByRole('button', { name: 'Use mine' }).click()
+    await window.getByRole('radio', { name: 'Use mine' }).click()
+    await window.getByRole('button', { name: 'Save resolution' }).click()
     await expect(window.getByText('This task changed somewhere else.')).toHaveCount(0)
     await expect(window.getByText('Buy milk', { exact: true })).toBeVisible()
   } finally {

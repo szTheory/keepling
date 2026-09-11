@@ -168,7 +168,11 @@ describe('state matrix: Error / recovery', () => {
 describe('state matrix: Conflict', () => {
   it('presents mine/current inline and never overwrites without an explicit choice', () => {
     const facade = seedTask({
-      seedConflict: { current: 'Buy oat milk', field: 'title', id: 'conflict-1', mine: 'Buy milk', taskId: 'task-1' },
+      seedConflict: {
+        fields: [{ current: 'Buy oat milk', field: 'title', mine: 'Buy milk' }],
+        id: 'conflict-1',
+        taskId: 'task-1',
+      },
       seedTasks: [
         { completedAt: null, id: 'task-1', notes: '', planned: false, syncStatus: 'saved_on_this_mac', title: 'Buy milk', trashedAt: null },
       ],
@@ -183,15 +187,24 @@ describe('state matrix: Conflict', () => {
 
   it('commits the chosen field and clears the conflict on resolution', async () => {
     const facade = seedTask({
-      seedConflict: { current: 'Buy oat milk', field: 'title', id: 'conflict-1', mine: 'Buy milk', taskId: 'task-1' },
+      seedConflict: {
+        fields: [{ current: 'Buy oat milk', field: 'title', mine: 'Buy milk' }],
+        id: 'conflict-1',
+        taskId: 'task-1',
+      },
       seedTasks: [
         { completedAt: null, id: 'task-1', notes: '', planned: false, syncStatus: 'saved_on_this_mac', title: 'Buy milk', trashedAt: null },
       ],
     })
     const { container } = mount(facade)
-    const useCurrent = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === 'Use current')!
+    const useCurrent = container.querySelector('input[type="radio"][value="current"]') as HTMLInputElement
     await act(async () => {
-      useCurrent.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      useCurrent.click()
+      await Promise.resolve()
+    })
+    const save = Array.from(container.querySelectorAll('button')).find((b) => b.textContent === 'Save resolution')!
+    await act(async () => {
+      save.dispatchEvent(new MouseEvent('click', { bubbles: true }))
       await Promise.resolve()
     })
     expect(container.textContent).not.toContain('This task changed somewhere else.')

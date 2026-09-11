@@ -48,7 +48,18 @@ const createDesktopClientFacade = (): ClientFacade => {
   const snapshotListeners = new Set<(snapshot: WorkspaceSnapshotView) => void>()
   const recoveryListeners = new Set<(availability: RecoveryAvailabilityView) => void>()
 
-  const currentSnapshot = (): WorkspaceSnapshotView => ({ conflict, route, selectedTaskId, tasks })
+  // KNOWN LIMIT, recorded rather than papered over (Task 2, O-44): the
+  // preload bridge has no operation yet that lists refusal_records rows
+  // (06-06's durable table); wiring that through main/preload/local-store
+  // is out of this plan's authorized file scope. The renderer contract is
+  // real and tested; the desktop adapter always reports none for now.
+  const currentSnapshot = (): WorkspaceSnapshotView => ({
+    conflict,
+    route,
+    selectedTaskId,
+    tasks,
+    unresolvedRefusals: [],
+  })
 
   const publishSnapshot = () => {
     const snapshot = currentSnapshot()

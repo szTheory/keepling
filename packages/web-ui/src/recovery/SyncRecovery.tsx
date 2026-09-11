@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import type { ClientFacade, RecoveryAvailabilityView } from '../ClientFacade'
+import type { ClientFacade, RecoveryAvailabilityView, UnresolvedRefusalView } from '../ClientFacade'
 
 /**
  * Latest supported undo recovery strip (D-14/D-41). Names what is durable
@@ -8,12 +8,19 @@ import type { ClientFacade, RecoveryAvailabilityView } from '../ClientFacade'
  * next safe action through the named `undoLastChange` operation. When
  * nothing is recoverable the healthy copy says so explicitly rather than
  * showing nothing (UI-SPEC empty-state contract).
+ *
+ * Widened (Task 2, O-44) to also surface every unresolved refusal for a task
+ * the person is not currently viewing -- the same strip, no new UI surface.
+ * `onReviewRefusal` navigates to the task and opens its conflict resolver;
+ * the eligible-undo entry is preserved unchanged alongside any refusals.
  */
 type SyncRecoveryProps = {
   facade: ClientFacade
+  onReviewRefusal?: (taskId: string) => void
+  unresolvedRefusals?: readonly UnresolvedRefusalView[]
 }
 
-function SyncRecovery({ facade }: SyncRecoveryProps) {
+function SyncRecovery({ facade, onReviewRefusal, unresolvedRefusals = [] }: SyncRecoveryProps) {
   const [availability, setAvailability] = useState<RecoveryAvailabilityView>(() =>
     facade.getRecoveryAvailability(),
   )
@@ -58,6 +65,14 @@ function SyncRecovery({ facade }: SyncRecoveryProps) {
           {busy ? 'Undoing…' : availability.label}
         </button>
       ) : null}
+      {unresolvedRefusals.map((refusal) => (
+        <p key={refusal.taskId}>
+          {refusal.taskTitle} changed while you were away. Review the conflict.{' '}
+          <button onClick={() => onReviewRefusal?.(refusal.taskId)} type="button">
+            Review conflict
+          </button>
+        </p>
+      ))}
     </aside>
   )
 }

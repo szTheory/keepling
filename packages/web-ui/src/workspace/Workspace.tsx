@@ -367,7 +367,16 @@ function Workspace({ facade, onSidebarVisibleRestored, sidebarVisible = true }: 
         </section>
       ) : null}
 
-      <SyncRecovery facade={facade} />
+      <SyncRecovery
+        facade={facade}
+        onReviewRefusal={(taskId) => {
+          const refusal = snapshot.unresolvedRefusals.find((entry) => entry.taskId === taskId)
+          if (refusal === undefined) return
+          facade.setRoute(refusal.route)
+          facade.selectTask(taskId)
+        }}
+        unresolvedRefusals={snapshot.unresolvedRefusals}
+      />
 
       {pendingNavigation !== null ? (
         <div aria-label="Discard unsaved changes?" data-workspace-dirty-dialog="true" role="alertdialog">
