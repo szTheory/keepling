@@ -1,0 +1,10 @@
+# Routes security reports to GitHub's private vulnerability reporting channel instead of a
+# public issue form. No "blank issues" security template is offered here on purpose.
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/szTheory/keepling/security/advisories/new
+    about: >-
+      Do not open a public issue for a security vulnerability. Use GitHub's private
+      vulnerability reporting instead. See SECURITY.md for the full policy and disclosure
+      bound.
