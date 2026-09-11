@@ -352,6 +352,12 @@ export function loadErrorVectors() {
  * stubbed/non-resolving host.
  */
 export function guardAgainstShortcuts(sourceFilePath) {
+  // A guarded path that does not exist yet is not a shortcut -- it is a
+  // driver a later task in the same plan has not written yet. The caller's
+  // own leg (`legs.mjs`) reports BLOCKED for a missing driver separately;
+  // this guard exists to catch a shortcut INSIDE a file that exists, not to
+  // demand the file exist (06-05-PLAN.md Task 1).
+  if (!existsSync(sourceFilePath)) return true
   const source = readFileSync(sourceFilePath, 'utf8')
   const relative = sourceFilePath.replace(`${repositoryRoot}/`, '')
   if (/KEEPLING_TEST_SYNC_MODE\s*[:=]/.test(source)) {

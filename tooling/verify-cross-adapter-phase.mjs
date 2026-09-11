@@ -40,12 +40,16 @@ const repositoryRoot = resolve(laneDirectory, '..')
 const GUARDED_FILES = [
   join(repositoryRoot, 'tooling', 'cross-adapter', 'legs.mjs'),
   join(repositoryRoot, 'tooling', 'verify-cross-adapter-phase.mjs'),
+  join(repositoryRoot, 'tooling', 'cross-adapter', 'electron-driver.mjs'),
+  join(repositoryRoot, 'tooling', 'cross-adapter', 'iphone-driver.mjs'),
 ]
 
 const TRACKED_INPUT_PATHS = [
   'tooling/verify-cross-adapter-phase.mjs',
   'tooling/cross-adapter/legs.mjs',
   'tooling/cross-adapter/scenario-report.mjs',
+  'tooling/cross-adapter/electron-driver.mjs',
+  'tooling/cross-adapter/iphone-driver.mjs',
   'tooling/mcp-client/client.mjs',
   'tooling/mcp-client/final-state.mjs',
   'apps/server/lib/keepling/application/commands.ex',

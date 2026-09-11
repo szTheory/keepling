@@ -61,22 +61,58 @@ const mostRecentActivityType = (state, taskId) => {
 }
 
 /**
+ * Advances a task's lifecycle revision OUT OF BAND, through the server's
+ * own `/commands/complete-task` API, using a session entirely independent
+ * of the adapter under test -- a second writer, exactly like the real
+ * conflict case in `apps/desktop/test/real-stack/real-stack-sync.spec.ts`.
+ *
+ * This exists so `update_stale_expected_revision` can genuinely stale a
+ * client that owns its own local state (an Electron or iPhone client that
+ * tracks its own expected_revision and cannot be told to submit a
+ * deliberately wrong one): the harness advances the entity behind the
+ * client's back, between the client's own read (its capture) and its own
+ * write (its `staleUpdate` call), so the client's write is stale because
+ * the world moved, not because it was instructed to lie about a revision
+ * it never held.
+ */
+async function advanceRevisionOutOfBand(origin, sessionCookie, taskId, expectedRevision) {
+  const csrfToken = await fetchCsrfToken(origin, sessionCookie)
+  const result = await postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/complete-task', {
+    expected_revision: expectedRevision,
+    mutation_id: randomUUID(),
+    task_id: taskId,
+    version: 1,
+  })
+  if (!result.ok) {
+    throw new Error(`advanceRevisionOutOfBand: out-of-band complete-task for ${taskId} was refused instead of accepted: ${JSON.stringify(result)}`)
+  }
+}
+
+/**
  * Drives `SHARED_SCENARIOS` uniformly against any adapter exposing
- * `capture`/`complete`/`reopen`, each returning
+ * `capture`, `complete`, `reopen`, and `staleUpdate`, each returning
  * `{ ok: boolean, code: string|null }` from the adapter's OWN response --
  * then reads final state back from the server's APIs (never the
  * adapter's self-report) to populate `activity_fact` and
  * `final_revision`. This is the single implementation every leg below
  * calls, so "the same scenario set" is enforced by code sharing, not by
  * four independently-written copies that could quietly diverge.
+ *
+ * `capture` takes only a title and returns `{ ok, code, taskId }` -- the
+ * ADAPTER mints the task id, never the harness. A web/MCP adapter mints it
+ * with `randomUUID()` immediately before the request; an Electron or
+ * iPhone client mints it locally in its own outbox before the server ever
+ * sees it, so a harness-minted id could never be honoured by those two
+ * legs. Every other call in this function threads that same adapter-minted
+ * id back in.
  */
 async function runSharedScenarioSet(legName, adapter, { inputDigest, origin, runId, sessionCookie }) {
   const lines = []
 
   // capture_one_task
   {
-    const taskId = randomUUID()
-    const result = await adapter.capture(taskId, `cross-adapter ${legName} capture ${randomUUID()}`)
+    const result = await adapter.capture(`cross-adapter ${legName} capture ${randomUUID()}`)
+    const taskId = result.taskId
     const state = await readFinalState(origin, { sessionCookie, taskIds: [taskId] })
     lines.push(
       formatScenarioLine({
@@ -94,8 +130,8 @@ async function runSharedScenarioSet(legName, adapter, { inputDigest, origin, run
 
   // complete_task
   {
-    const taskId = randomUUID()
-    await adapter.capture(taskId, `cross-adapter ${legName} complete ${randomUUID()}`)
+    const captured = await adapter.capture(`cross-adapter ${legName} complete ${randomUUID()}`)
+    const taskId = captured.taskId
     const result = await adapter.complete(taskId, 1)
     const state = await readFinalState(origin, { sessionCookie, taskIds: [taskId] })
     lines.push(
@@ -114,8 +150,8 @@ async function runSharedScenarioSet(legName, adapter, { inputDigest, origin, run
 
   // reopen_task
   {
-    const taskId = randomUUID()
-    await adapter.capture(taskId, `cross-adapter ${legName} reopen ${randomUUID()}`)
+    const captured = await adapter.capture(`cross-adapter ${legName} reopen ${randomUUID()}`)
+    const taskId = captured.taskId
     await adapter.complete(taskId, 1)
     const result = await adapter.reopen(taskId, 2)
     const state = await readFinalState(origin, { sessionCookie, taskIds: [taskId] })
@@ -133,28 +169,30 @@ async function runSharedScenarioSet(legName, adapter, { inputDigest, origin, run
     )
   }
 
-  // update_stale_expected_revision -- two lifecycle commands (complete,
-  // then reopen) rather than an edit/clarify command, deliberately:
-  // `Keepling.Domain.Task.lifecycle_transition/4` refuses a lifecycle
-  // command only when `task.lifecycle_revision > command.expected_revision`
-  // (a STALENESS check, not an equality check), and `edit_task`'s own
-  // conflict detection is a separate base_values three-way merge that
-  // does not consult `expected_revision` at all -- both measured directly
-  // against the live server while writing this lane, and neither produces
-  // a genuine stale-revision refusal from a single freshly captured task.
-  // A freshly captured task's lifecycle_revision starts at 1.
-  // complete(expected_revision=1) matches it exactly and is accepted,
-  // advancing lifecycle_revision to 2. A second attempt REUSING the same
-  // expected_revision=1 is now genuinely stale (2 > 1) and is refused --
-  // uniformly, on every one of the four shared command verbs.
+  // update_stale_expected_revision -- `reopen` rather than `complete`,
+  // deliberately: `Keepling.Domain.Task.reopen/2` short-circuits to
+  // `already_satisfied` ONLY when `completed_at` is already nil (an
+  // idempotent no-op), so it reaches the revision-staleness check
+  // (`lifecycle_revision > expected_revision`) whenever the task IS
+  // completed -- regardless of who completed it. `complete/2` short-
+  // circuits the opposite way (already-completed is always
+  // `already_satisfied`, bypassing the revision check entirely), which is
+  // why the out-of-band advance below uses `complete-task` and the
+  // adapter's own probed action is `staleUpdate` (reopen): a freshly
+  // captured task starts at lifecycle_revision=1; the harness advances it
+  // to 2 out of band; the adapter's own reopen, still holding
+  // expected_revision=1 from its own capture, is now genuinely stale
+  // (2 > 1) and is refused -- uniformly, on every one of the four shared
+  // command verbs, without requiring the adapter to ever be told a
+  // revision it did not itself observe.
   {
-    const taskId = randomUUID()
-    await adapter.capture(taskId, `cross-adapter ${legName} stale ${randomUUID()}`)
-    const setup = await adapter.complete(taskId, 1)
-    if (!setup.ok) {
-      throw new Error(`${legName}: update_stale_expected_revision setup (complete with expected_revision=1) was refused instead of accepted: ${JSON.stringify(setup)}`)
+    const captured = await adapter.capture(`cross-adapter ${legName} stale ${randomUUID()}`)
+    const taskId = captured.taskId
+    if (!captured.ok) {
+      throw new Error(`${legName}: update_stale_expected_revision setup capture was refused instead of accepted: ${JSON.stringify(captured)}`)
     }
-    const result = await adapter.reopen(taskId, 1)
+    await advanceRevisionOutOfBand(origin, sessionCookie, taskId, 1)
+    const result = await adapter.staleUpdate(taskId, 1)
     const state = await readFinalState(origin, { sessionCookie, taskIds: [taskId] })
     lines.push(
       formatScenarioLine({
@@ -170,7 +208,7 @@ async function runSharedScenarioSet(legName, adapter, { inputDigest, origin, run
     )
     if (result.ok) {
       throw new Error(
-        `${legName}: update_stale_expected_revision scenario was accepted instead of refused -- the reopen's expected_revision=1 should be behind the lifecycle_revision the prior complete already advanced past`,
+        `${legName}: update_stale_expected_revision scenario was accepted instead of refused -- the adapter's own reopen still held expected_revision=1 from its capture, which the out-of-band advance already moved past`,
       )
     }
   }
@@ -207,32 +245,41 @@ const postCommand = async (origin, sessionCookie, csrfToken, path, body) => {
   return { code: json.code ?? `http_${String(response.status)}`, ok: false }
 }
 
-const webApiAdapter = (origin, sessionCookie, csrfToken) => ({
-  async capture(taskId, title) {
-    return postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/capture-task', {
-      mutation_id: randomUUID(),
-      task_id: taskId,
-      title,
-      version: 1,
-    })
-  },
-  async complete(taskId, expectedRevision) {
-    return postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/complete-task', {
+const webApiAdapter = (origin, sessionCookie, csrfToken) => {
+  const reopenAction = async (taskId, expectedRevision) =>
+    postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/reopen-task', {
       expected_revision: expectedRevision,
       mutation_id: randomUUID(),
       task_id: taskId,
       version: 1,
     })
-  },
-  async reopen(taskId, expectedRevision) {
-    return postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/reopen-task', {
-      expected_revision: expectedRevision,
-      mutation_id: randomUUID(),
-      task_id: taskId,
-      version: 1,
-    })
-  },
-})
+  return {
+    async capture(title) {
+      const taskId = randomUUID()
+      const result = await postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/capture-task', {
+        mutation_id: randomUUID(),
+        task_id: taskId,
+        title,
+        version: 1,
+      })
+      return { ...result, taskId }
+    },
+    async complete(taskId, expectedRevision) {
+      return postCommand(origin, sessionCookie, csrfToken, '/api/v1/commands/complete-task', {
+        expected_revision: expectedRevision,
+        mutation_id: randomUUID(),
+        task_id: taskId,
+        version: 1,
+      })
+    },
+    reopen: reopenAction,
+    // The stale-expected-revision scenario probes `reopen` with the
+    // adapter's own originally-observed revision -- see the comment on
+    // `runSharedScenarioSet`'s `update_stale_expected_revision` block for
+    // why `reopen`, not `complete`, is the verb that reaches the check.
+    staleUpdate: reopenAction,
+  }
+}
 
 export async function runWebApiLeg({ inputDigest, origin, runId, sessionCookie }) {
   const csrfToken = await fetchCsrfToken(origin, sessionCookie)
@@ -248,22 +295,9 @@ const classifyMcp = (response) => {
   return { code: null, ok: true }
 }
 
-const mcpAdapter = (origin, accessToken) => ({
-  async capture(taskId, title) {
-    return classifyMcp(await toolsCall(origin, accessToken, 'keepling.capture_task', { mutation_id: randomUUID(), task_id: taskId, title, version: 1 }))
-  },
-  async complete(taskId, expectedRevision) {
-    return classifyMcp(
-      await toolsCall(origin, accessToken, 'keepling.complete_task', {
-        expected_revision: expectedRevision,
-        mutation_id: randomUUID(),
-        task_id: taskId,
-        version: 1,
-      }),
-    )
-  },
-  async reopen(taskId, expectedRevision) {
-    return classifyMcp(
+const mcpAdapter = (origin, accessToken) => {
+  const reopenAction = async (taskId, expectedRevision) =>
+    classifyMcp(
       await toolsCall(origin, accessToken, 'keepling.reopen_task', {
         expected_revision: expectedRevision,
         mutation_id: randomUUID(),
@@ -271,8 +305,28 @@ const mcpAdapter = (origin, accessToken) => ({
         version: 1,
       }),
     )
-  },
-})
+  return {
+    async capture(title) {
+      const taskId = randomUUID()
+      const result = classifyMcp(
+        await toolsCall(origin, accessToken, 'keepling.capture_task', { mutation_id: randomUUID(), task_id: taskId, title, version: 1 }),
+      )
+      return { ...result, taskId }
+    },
+    async complete(taskId, expectedRevision) {
+      return classifyMcp(
+        await toolsCall(origin, accessToken, 'keepling.complete_task', {
+          expected_revision: expectedRevision,
+          mutation_id: randomUUID(),
+          task_id: taskId,
+          version: 1,
+        }),
+      )
+    },
+    reopen: reopenAction,
+    staleUpdate: reopenAction,
+  }
+}
 
 export async function runMcpLeg({ accessToken, inputDigest, origin, runId, sessionCookie }) {
   return runSharedScenarioSet('mcp', mcpAdapter(origin, accessToken), { inputDigest, origin, runId, sessionCookie })
