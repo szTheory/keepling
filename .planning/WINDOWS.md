@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 9
+open_count: 10
 waived_count: 49
 fixed_count: 9
-total_count: 67
-last_updated: 2026-09-10T23:42:13.957Z
+total_count: 68
+last_updated: 2026-09-11T00:17:48.787Z
 ---
 
 # Broken Windows Ledger
@@ -82,6 +82,7 @@ last_updated: 2026-09-10T23:42:13.957Z
 | 65 | KPL-04 | unmet-truth | tooling/verify-ios-phase.mjs |  | The gate published fewer cases than it ran: `xcodebuildSummary` took the LAST "Executed N tests" line, which for a lane spanning two test bundles is the last BUNDLE's total, not the run's. auth published 4 of 19, undo 8 of 18, sync-presentation 21 of 35, device 26 of 29 -- the published 424/454 totals understated by ~42. Never a false PASS (a failure in any bundle fails the lane however the line is parsed), but D-24's anti-vacuity contract rests on that number meaning what it says, and on `device` the discarded bundle was `DataProtectionTests`, so G7's protection-class hardware evidence contributed ZERO to the published count. FIXED 2026-09-09 (04-18): anchor on the `<Bundle>.xctest` summary line (exactly one per bundle), sum per-bundle totals, subtract skips, and fail when any single bundle executed zero. Verified: auth 19, undo 18, sync-presentation 35, device 29; corrected totals 463 simulator and 496 overall. Found by phase verification, not by a lane. | fixed |  | 2026-09-09T02:00:00.000Z | 2026-09-09T02:30:00.000Z |
 | 66 | KPL-05 | unmet-truth | apps/server/lib/keepling_web/router.ex | 121 | Browser cannot list or revoke agent grants: GET/DELETE /api/v1/device-grants sit behind the bearer-only :device_grant_authenticated pipeline, so a session-cookie request 401s. apps/web/e2e/agent-access.spec.ts step 5 fails against the real stack (05-09 SUMMARY documents it with file/line). Moving the routes to :client_authenticated would fix the browser but would also let any device grant -- including an MCP agent -- enumerate and revoke the owner's grants, a privilege escalation. Needs a deliberate authorization decision, not a pipeline swap. | open |  | 2026-09-10T23:42:06.351Z |  |
 | 67 | KPL-05 | unmet-truth | .planning/phases/KPL-05-safe-agent-access |  | Phase KPL-05 has ROADMAP 'UI hint: yes' and shipped frontend in 05-09 (AgentGrantList.tsx, ActivityList.tsx, /settings/agents route) with no UI-SPEC.md. The ui.safety-gate blocks on this (block = frontend && hasUiFiles && !hasUiSpec); it intermittently reads false only because hasUiFiles is computed from git diff HEAD~1..HEAD, a documented single-commit limitation. Resolve with /gsd-ui-review before phase completion. | open |  | 2026-09-10T23:42:13.957Z |  |
+| 68 | KPL-05 | skipped-test | apps/web/e2e/authenticated-read-recovery.spec.ts | 154 | Flaky under the full 26-test Playwright run: '@authenticated-read-organizations restores assignment, Projects, and Tags routes' intermittently times out at 30s waiting for getByLabel('New project name'), with the page still showing Inbox -- the pushState+popstate navigation to /projects does not take. Observed failing in 2 of 4 full-suite runs during KPL-05; passes every time in isolation (1.3s) and passes when run immediately after the failing agent-access spec, so it is neither a code regression nor simple ordering interference. Route matching in routes.tsx is correctly ordered (/projects at line 340 precedes /settings/agents at 364). Suspect a race between the popstate dispatch and the app's location read under full-suite load. | open |  | 2026-09-11T00:17:48.787Z |  |
 
 ````json
 [
@@ -887,6 +888,18 @@ last_updated: 2026-09-10T23:42:13.957Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-10T23:42:13.957Z",
+    "resolved_at": null
+  },
+  {
+    "id": 68,
+    "kind": "skipped-test",
+    "phase": "KPL-05",
+    "file": "apps/web/e2e/authenticated-read-recovery.spec.ts",
+    "line": 154,
+    "description": "Flaky under the full 26-test Playwright run: '@authenticated-read-organizations restores assignment, Projects, and Tags routes' intermittently times out at 30s waiting for getByLabel('New project name'), with the page still showing Inbox -- the pushState+popstate navigation to /projects does not take. Observed failing in 2 of 4 full-suite runs during KPL-05; passes every time in isolation (1.3s) and passes when run immediately after the failing agent-access spec, so it is neither a code regression nor simple ordering interference. Route matching in routes.tsx is correctly ordered (/projects at line 340 precedes /settings/agents at 364). Suspect a race between the popstate dispatch and the app's location read under full-suite load.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-11T00:17:48.787Z",
     "resolved_at": null
   }
 ]

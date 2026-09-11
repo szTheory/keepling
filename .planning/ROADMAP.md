@@ -333,7 +333,7 @@ Plans:
 4. User-visible history shows typed actions, affected identities/revisions, result, actor, and recovery without exposing private chain of thought.
 5. Deterministic, protocol, simulated-client, representative-model, and adversarial suites score final state and forbidden side effects.
 
-**Plans:** 9/12 plans executed in 7 waves
+**Plans:** 10/12 plans executed in 7 waves
 
 Plans:
 
@@ -342,7 +342,7 @@ Plans:
 - [x] 05-03-PLAN.md — Bounded search and project read surfaces, shared by HTTP and MCP
 - [x] 05-04-PLAN.md — MCP read resources, redaction by construction, and the decided surface coverage
 - [x] 05-05-PLAN.md — Contract-generated closed write tool schemas and the closed error vocabulary
-- [ ] 05-06-PLAN.md — Identity-only write addressing, ambiguity refusal, and content-independent authorization
+- [x] 05-06-PLAN.md — Identity-only write addressing, ambiguity refusal, and content-independent authorization
 - [x] 05-07-PLAN.md — Preview and commit: bound tokens, atomic commits, zero partial writes
 - [x] 05-08-PLAN.md — Agent actor in the one history, no storable model reasoning, and the agent undo handle
 - [x] 05-09-PLAN.md — Agent grant management and agent-aware activity in the existing web app
