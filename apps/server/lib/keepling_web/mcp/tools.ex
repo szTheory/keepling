@@ -15,8 +15,9 @@ defmodule KeeplingWeb.MCP.Tools do
 
   alias Keepling.Adapters.Postgres.CommandStore
   alias Keepling.Adapters.Postgres.Preview, as: PreviewStore
-  alias Keepling.Application.{Commands, Preview}
-  alias KeeplingWeb.MCP.{Errors, Resources, Scope, ToolSchemas}
+  alias Keepling.Adapters.Postgres.Search, as: SearchStore
+  alias Keepling.Application.{Commands, Preview, TaskAddressing}
+  alias KeeplingWeb.MCP.{Addressing, Errors, Resources, Scope, ToolSchemas}
 
   @capture_task_keys ~w(mutation_id task_id title version)
   @lifecycle_keys ~w(expected_revision mutation_id task_id version)
@@ -117,23 +118,23 @@ defmodule KeeplingWeb.MCP.Tools do
 
   def call(%{"name" => "keepling.complete_task", "arguments" => arguments}, context)
       when is_map(arguments) do
-    dispatch_write(
+    dispatch_lifecycle_write(
       "keepling.complete_task",
       arguments,
       context,
-      "tasks.write",
-      &decode_lifecycle(&1, :complete_task)
+      :complete_task,
+      &resolve_complete_target/2
     )
   end
 
   def call(%{"name" => "keepling.reopen_task", "arguments" => arguments}, context)
       when is_map(arguments) do
-    dispatch_write(
+    dispatch_lifecycle_write(
       "keepling.reopen_task",
       arguments,
       context,
-      "tasks.write",
-      &decode_lifecycle(&1, :reopen_task)
+      :reopen_task,
+      &resolve_reopen_target/2
     )
   end
 
@@ -180,6 +181,88 @@ defmodule KeeplingWeb.MCP.Tools do
     end
   end
 
+  # keepling.complete_task/keepling.reopen_task both address exactly one
+  # EXISTING task by identity (D-11). Unlike dispatch_write/5, this
+  # resolves the target through TaskAddressing.resolve/3 FIRST (D-15) --
+  # every write tool that addresses an existing task routes through the
+  # resolver (a distinct call site per tool, below), and a phrase where
+  # an identity belongs refuses with a bounded candidate set (D-16)
+  # rather than a blunt argument error, with zero mutation performed
+  # either way.
+  defp dispatch_lifecycle_write(tool_name, arguments, context, type, resolve_target) do
+    with :ok <- Scope.require(context, "tasks.write"),
+         :ok <- Keepling.Application.AgentScope.require(context, "tasks.write"),
+         :ok <- ToolSchemas.validate(tool_name, arguments),
+         {:ok, command} <- decode_lifecycle(arguments, type),
+         {:ok, _task} <- resolve_target.(context, command.task_id) do
+      case Commands.dispatch(command, dispatch_context(context), CommandStore) do
+        {:ok, %{status: status, body: body}} -> render(status, body)
+        {:error, :infrastructure_failure} -> {:error, Errors.infrastructure_failure()}
+      end
+    else
+      {:error, :insufficient_scope} -> {:error, Errors.insufficient_scope()}
+      {:error, :unknown_tool} -> {:error, Errors.unknown_tool()}
+      {:error, :invalid_command} -> {:error, Errors.invalid_params()}
+      {:error, :task_not_found} -> {:error, Errors.task_not_found()}
+      {:error, :no_match} -> {:error, Errors.no_match()}
+      {:error, :too_many_matches} -> {:error, Errors.too_many_matches()}
+      {:error, {:ambiguous_match, candidates}} ->
+        {:error, Addressing.ambiguous_match_response(candidates)}
+
+      {:error, :infrastructure_failure} ->
+        {:error, Errors.infrastructure_failure()}
+    end
+  end
+
+  # D-15/D-16: keepling.complete_task's own choke point. A UUID-shaped
+  # task_id resolves through TaskAddressing.resolve/3 -- identity-only,
+  # no other addressing key accepted. A non-UUID-shaped value is a
+  # phrase, refused via disambiguation_outcome/2 rather than a blunt
+  # argument error -- neither branch ever performs a write.
+  defp resolve_complete_target(context, task_id) do
+    if TaskAddressing.uuid_shaped?(task_id) do
+      to_resolved_target(TaskAddressing.resolve(context, %{task_id: task_id}, CommandStore))
+    else
+      {:error, disambiguation_outcome(context, task_id)}
+    end
+  end
+
+  # D-15/D-16: keepling.reopen_task's own choke point -- identical
+  # structure to resolve_complete_target/2 above, kept as its own named
+  # call site rather than shared, one per identity-addressing write tool.
+  defp resolve_reopen_target(context, task_id) do
+    if TaskAddressing.uuid_shaped?(task_id) do
+      to_resolved_target(TaskAddressing.resolve(context, %{task_id: task_id}, CommandStore))
+    else
+      {:error, disambiguation_outcome(context, task_id)}
+    end
+  end
+
+  defp to_resolved_target({:ok, task}), do: {:ok, task}
+  defp to_resolved_target({:error, :not_found}), do: {:error, :task_not_found}
+  defp to_resolved_target({:error, :infrastructure_failure}), do: {:error, :infrastructure_failure}
+
+  # T-05-28/D-24: the outcome is decided by
+  # TaskAddressing.classify_match_count/2, which receives only an
+  # integer COUNT -- never the candidate list, never any task content --
+  # so this decision cannot be influenced by what a task's title or notes
+  # say.
+  defp disambiguation_outcome(context, term) do
+    limit = TaskAddressing.candidate_limit()
+
+    case TaskAddressing.candidates(search_context(context), term, limit, SearchStore) do
+      {:ok, candidates} ->
+        case TaskAddressing.classify_match_count(length(candidates), limit) do
+          :no_match -> :no_match
+          :too_many_matches -> :too_many_matches
+          :ambiguous_match -> {:ambiguous_match, Enum.take(candidates, limit)}
+        end
+
+      {:error, _reason} ->
+        :infrastructure_failure
+    end
+  end
+
   defp render(status, body) when status in 200..299 do
     {:ok, %{content: [%{type: "text", text: Jason.encode!(body)}], structuredContent: body}}
   end
@@ -210,6 +293,12 @@ defmodule KeeplingWeb.MCP.Tools do
     end
   end
 
+  # task_id is NOT Ecto.UUID.cast here (unlike mutation_id, always a
+  # generated identity): D-15/D-16 requires a non-identity-shaped task_id
+  # to reach TaskAddressing (via resolve_complete_target/2 or
+  # resolve_reopen_target/2 in the caller) so a phrase refuses with a
+  # bounded candidate set rather than a blunt argument error, with zero
+  # mutation performed either way.
   defp decode_lifecycle(params, type) do
     with true <- Enum.sort(Map.keys(params)) == Enum.sort(@lifecycle_keys),
          %{
@@ -219,8 +308,8 @@ defmodule KeeplingWeb.MCP.Tools do
            "version" => 1
          } <- params,
          true <- is_integer(expected_revision) and expected_revision >= 1,
-         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
-         {:ok, _task_uuid} <- Ecto.UUID.cast(task_id) do
+         true <- is_binary(task_id) and task_id != "",
+         {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id) do
       {:ok,
        %{
          expected_revision: expected_revision,
@@ -284,8 +373,21 @@ defmodule KeeplingWeb.MCP.Tools do
     end
   end
 
+  # D-15/D-16: keepling.update_task's own choke point (its own call site,
+  # matching complete/reopen's resolve_complete_target/2 and
+  # resolve_reopen_target/2 above) -- a phrase where an identity belongs
+  # refuses with a bounded candidate set rather than a blunt argument
+  # error, with zero mutation performed either way.
+  defp resolve_update_target(context, task_id) do
+    if TaskAddressing.uuid_shaped?(task_id) do
+      to_resolved_target(TaskAddressing.resolve(context, %{task_id: task_id}, CommandStore))
+    else
+      {:error, disambiguation_outcome(context, task_id)}
+    end
+  end
+
   defp dispatch_update(task_id, expected_revision, mutation_id, group, fields, context) do
-    case Commands.get_task(context, task_id, CommandStore) do
+    case resolve_update_target(context, task_id) do
       {:ok, current} ->
         if current["revision"] == expected_revision do
           command =
@@ -300,14 +402,27 @@ defmodule KeeplingWeb.MCP.Tools do
            Errors.from_problem(409, revision_conflict_body(group, fields, current["revision"]))}
         end
 
-      {:error, :not_found} ->
+      {:error, :task_not_found} ->
         {:error, Errors.task_not_found()}
+
+      {:error, :no_match} ->
+        {:error, Errors.no_match()}
+
+      {:error, :too_many_matches} ->
+        {:error, Errors.too_many_matches()}
+
+      {:error, {:ambiguous_match, candidates}} ->
+        {:error, Addressing.ambiguous_match_response(candidates)}
 
       {:error, :infrastructure_failure} ->
         {:error, Errors.infrastructure_failure()}
     end
   end
 
+  # task_id is NOT Ecto.UUID.cast here for the same reason as
+  # decode_lifecycle/2 above (D-15/D-16): a non-identity-shaped task_id
+  # must reach TaskAddressing (via dispatch_update/6's own resolution
+  # step) rather than fail this decode outright.
   defp decode_update_task(params) do
     with true <-
            Enum.all?(
@@ -322,8 +437,8 @@ defmodule KeeplingWeb.MCP.Tools do
            "version" => 1
          } <- params,
          true <- is_integer(expected_revision) and expected_revision >= 1,
+         true <- is_binary(task_id) and task_id != "",
          {:ok, _mutation_uuid} <- Ecto.UUID.cast(mutation_id),
-         {:ok, _task_uuid} <- Ecto.UUID.cast(task_id),
          {:ok, group, fields} <- decode_update_group(params) do
       {:ok, task_id, expected_revision, mutation_id, group, fields}
     else
@@ -516,7 +631,7 @@ defmodule KeeplingWeb.MCP.Tools do
     with :ok <- Scope.require(context, "tasks.bulk"),
          :ok <- Keepling.Application.AgentScope.require(context, "tasks.bulk"),
          :ok <- ToolSchemas.validate("keepling.preview_bulk_change", arguments),
-         {:ok, command, targets} <- decode_preview_targets(arguments) do
+         {:ok, command, targets} <- decode_preview_targets(arguments, context) do
       case Preview.mint(
              %{command: command, targets: targets},
              preview_context(context),
@@ -538,30 +653,47 @@ defmodule KeeplingWeb.MCP.Tools do
       {:error, :insufficient_scope} -> {:error, Errors.insufficient_scope()}
       {:error, :unknown_tool} -> {:error, Errors.unknown_tool()}
       {:error, :invalid_command} -> {:error, Errors.invalid_params()}
+      {:error, :task_not_found} -> {:error, Errors.task_not_found()}
+      {:error, :infrastructure_failure} -> {:error, Errors.infrastructure_failure()}
     end
   end
 
-  defp decode_preview_targets(%{"command" => command_str, "targets" => targets} = params)
+  defp decode_preview_targets(%{"command" => command_str, "targets" => targets} = params, context)
        when command_str in @preview_commands and is_list(targets) and targets != [] do
     with true <- Enum.sort(Map.keys(params)) == ~w(command mutation_id targets),
          {:ok, _mutation_uuid} <- Ecto.UUID.cast(Map.get(params, "mutation_id")),
-         {:ok, decoded_targets} <- decode_targets(targets) do
+         {:ok, decoded_targets} <- decode_targets(targets, context) do
       {:ok, String.to_existing_atom(command_str), decoded_targets}
     else
+      {:error, :infrastructure_failure} -> {:error, :infrastructure_failure}
+      {:error, :task_not_found} -> {:error, :task_not_found}
       _ -> {:error, :invalid_command}
     end
   end
 
-  defp decode_preview_targets(_params), do: {:error, :invalid_command}
+  defp decode_preview_targets(_params, _context), do: {:error, :invalid_command}
 
-  defp decode_targets(targets) do
+  # D-15/D-16: keepling.preview_bulk_change's own choke point -- every
+  # target's identity is resolved through TaskAddressing.resolve/3 before
+  # a preview token is ever minted, verifying existence up front rather
+  # than deferring entirely to commit-time drift detection. Bulk targets
+  # stay strictly identity-addressed (never a phrase); an under-determined
+  # target here is a closed argument error, matching the existing schema's
+  # own `task_id` addressing contract for this tool.
+  defp decode_targets(targets, context) do
     targets
     |> Enum.reduce_while({:ok, []}, fn
       %{"task_id" => task_id, "expected_revision" => revision}, {:ok, acc}
       when is_binary(task_id) and is_integer(revision) and revision >= 1 ->
-        case Ecto.UUID.cast(task_id) do
-          {:ok, _uuid} -> {:cont, {:ok, [%{task_id: task_id, expected_revision: revision} | acc]}}
-          :error -> {:halt, {:error, :invalid_command}}
+        case TaskAddressing.resolve(context, %{task_id: task_id}, CommandStore) do
+          {:ok, _task} ->
+            {:cont, {:ok, [%{task_id: task_id, expected_revision: revision} | acc]}}
+
+          {:error, :not_found} ->
+            {:halt, {:error, :task_not_found}}
+
+          {:error, :infrastructure_failure} ->
+            {:halt, {:error, :infrastructure_failure}}
         end
 
       _target, _acc ->
@@ -672,6 +804,26 @@ defmodule KeeplingWeb.MCP.Tools do
       actor_principal: context.actor_principal,
       actor_type: context.actor_type,
       client_kind: context.client_kind
+    }
+  end
+
+  # Keepling.Application.Search requires account_id (the scoping bound)
+  # and cursor_secret (present_page/3 may encode a next-page cursor even
+  # when candidates/4 never exposes it to a caller -- Search.query/4
+  # always runs the same present_page/3 path). Same
+  # KeeplingWeb.Endpoint-derived construction as
+  # KeeplingWeb.MCP.Resources's own search_context/1, with a distinct
+  # salt so a disambiguation-lookup cursor secret is never the SAME HMAC
+  # key as a resources/read search cursor secret (D-24: no shared secret
+  # surface between an authorization-adjacent lookup and a paginated read
+  # a model directly controls).
+  defp search_context(context) do
+    endpoint_config = Application.fetch_env!(:keepling, KeeplingWeb.Endpoint)
+    secret_key_base = Keyword.fetch!(endpoint_config, :secret_key_base)
+
+    %{
+      account_id: context.account_id,
+      cursor_secret: :crypto.mac(:hmac, :sha256, secret_key_base, "keepling-addressing-cursor-v1")
     }
   end
 
