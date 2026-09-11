@@ -16,10 +16,18 @@ config :argon2_elixir,
 # Browser lifecycle tests intentionally exercise many successful sign-ins against
 # one seeded personal account. Keep the production abuse policy unchanged while
 # preventing test order from exhausting the shared account bucket.
+#
+# Raised from 50 in KPL-05-13. That plan added server tests that each sign in,
+# which pushed the suite past 50 logins inside the window; the bucket then
+# refused the next login and `auth_controller.ex` maps `:rate_limited` to the
+# same 401 `authentication_failed` a wrong password gets -- correct for a
+# caller, indistinguishable in a test failure. Four MCP tests failed on a
+# credential that was never wrong. This is the test bucket only; the production
+# abuse policy is untouched.
 config :keepling, :rate_limit_policy, %{
   login: %{
-    account: {:timer.minutes(5), 50},
-    source: {:timer.minutes(5), 50},
+    account: {:timer.minutes(5), 400},
+    source: {:timer.minutes(5), 400},
     max_backoff_ms: :timer.minutes(5)
   }
 }

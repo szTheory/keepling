@@ -1,10 +1,10 @@
 ---
 schema_version: 1
-open_count: 10
+open_count: 11
 waived_count: 49
 fixed_count: 11
-total_count: 70
-last_updated: 2026-09-11T02:13:45.161Z
+total_count: 71
+last_updated: 2026-09-11T02:22:01.221Z
 ---
 
 # Broken Windows Ledger
@@ -85,6 +85,7 @@ last_updated: 2026-09-11T02:13:45.161Z
 | 68 | KPL-05 | skipped-test | apps/web/e2e/authenticated-read-recovery.spec.ts | 154 | Flaky under the full 26-test Playwright run: '@authenticated-read-organizations restores assignment, Projects, and Tags routes' intermittently times out at 30s waiting for getByLabel('New project name'), with the page still showing Inbox -- the pushState+popstate navigation to /projects does not take. Observed failing in 2 of 4 full-suite runs during KPL-05; passes every time in isolation (1.3s) and passes when run immediately after the failing agent-access spec, so it is neither a code regression nor simple ordering interference. Route matching in routes.tsx is correctly ordered (/projects at line 340 precedes /settings/agents at 364). Suspect a race between the popstate dispatch and the app's location read under full-suite load. | open |  | 2026-09-11T00:17:48.787Z |  |
 | 69 | 05 | unrun-verify | tooling/cross-adapter/legs.mjs |  | Cross-adapter lane (05-12): electron and iphone legs BLOCKED because neither has a live DRIVER wired yet -- not because their artifacts are missing. The packaged Electron build does exist at apps/desktop/out (that path is gitignored, so it is invisible from an isolated worktree, which is why 05-12 reported it absent); the Keepling app is installed on the booted simulator. runElectronLeg() needs a live IPC driver against the packaged .app (mirror apps/desktop/test/packaged/real-stack-sync.spec.ts); runIphoneLeg() needs a live UI/recording-proxy driver against the installed app (mirror tooling/verify-real-stack-ios.mjs). web-api and mcp legs PASS with identical result_code/conflict_shape/activity_fact/final_revision across all 4 shared scenarios. SRV-02 stays unchecked pending both legs. | open |  | 2026-09-11T01:31:52.629Z |  |
 | 70 | 05 | unmet-truth | apps/server/lib/keepling_web/auth.ex | 117 | PRIVILEGE ESCALATION, confirmed by live probe and by reading: an MCP agent credential reaches surfaces the MCP adapter does not front. KeeplingWeb.MCP.Pipeline (mcp/pipeline.ex:34) refuses a grant whose client_kind != "mcp"; KeeplingWeb.Auth.authenticate_device_grant/1 (auth.ex:117-149) performs no mirror-image refusal -- it assigns current_client_kind and never checks it. That pipeline fronts GET /api/v1/sync, GET /api/v1/sync/bootstrap, and GET+DELETE /api/v1/device-grants (router.ex:120-127). SyncController has no client_kind check; DeviceGrantController.list/2 and revoke/2 check neither client_kind nor scope. Probed with a grant scoped ["tasks.read"] only: GET /api/v1/sync/bootstrap -> 200 with full account content, GET /api/v1/device-grants -> 200 listing all installations, DELETE /api/v1/device-grants/<other> -> 200 device_grant_revoked, after which the victim grant 401s on /mcp/v1. So an agent reads the entire account around the bounded/paginated/redacted read surface that 05-03/05-04 built, and can revoke the owner's iPhone or desktop. AGGRAVATOR: the harness depends on the hole -- tooling/mcp-client/final-state.mjs:68-78 reads the grant list with a device-grant bearer and asserts 200, so the green simulated-client lane rests on the escalation it should catch; closing the hole breaks that lane and it must be re-pointed at the owner session. ROOT BLIND SPOT: every lane tests for under-delivery (agent denied something it should get); none tests over-delivery (agent reaching a surface the adapter does not front). Needs adversarial negative cases on all four routes. Found by gsd-verifier during KPL-05 phase verification; see VERIFICATION.md. | fixed |  | 2026-09-11T01:52:56.106Z | 2026-09-11T02:13:45.033Z |
+| 71 | 05 | unmet-truth | apps/server/config/test.exs | 18 | The Elixir suite has an implicit LOGIN BUDGET and no guard on it. config/test.exs caps the login rate-limit bucket per 5-minute window; every test that calls a login helper spends from one shared seeded-account bucket. 05-13 added server tests that each sign in, which pushed the suite past the old cap of 50 and emptied the bucket mid-run. auth_controller.ex:59 maps {:error, :rate_limited, _} to the same 401 authentication_failed a wrong password returns -- correct for a caller, who must not learn whether they are throttled or wrong, but it means an exhausted bucket is INDISTINGUISHABLE from a credential failure in a test log. The four tests that failed (KeeplingWeb.MCP.ToolsTest x3, KeeplingWeb.MCP.ErrorsTest x1) had nothing to do with the change that caused it; they were simply the ones that ran after the bucket emptied, and the executor that added the tests reported the suite green. Raised 50 -> 400 in KPL-05-13 follow-up (test config only; the production abuse policy in that block is deliberately untouched), so headroom is now roughly 8x rather than 1.06x. The failure mode is not closed, only deferred: the next plan that adds sign-ins hits the same wall and it will again surface as an authentication failure in an unrelated test. Worth either asserting the login count against the cap in the suite, or making the test-env rate limiter emit a distinguishable error so a throttled login cannot be mistaken for a bad credential. | open |  | 2026-09-11T02:22:01.221Z |  |
 
 ````json
 [
@@ -927,6 +928,18 @@ last_updated: 2026-09-11T02:13:45.161Z
     "reason": "",
     "recorded_at": "2026-09-11T01:52:56.106Z",
     "resolved_at": "2026-09-11T02:13:45.033Z"
+  },
+  {
+    "id": 71,
+    "kind": "unmet-truth",
+    "phase": "05",
+    "file": "apps/server/config/test.exs",
+    "line": 18,
+    "description": "The Elixir suite has an implicit LOGIN BUDGET and no guard on it. config/test.exs caps the login rate-limit bucket per 5-minute window; every test that calls a login helper spends from one shared seeded-account bucket. 05-13 added server tests that each sign in, which pushed the suite past the old cap of 50 and emptied the bucket mid-run. auth_controller.ex:59 maps {:error, :rate_limited, _} to the same 401 authentication_failed a wrong password returns -- correct for a caller, who must not learn whether they are throttled or wrong, but it means an exhausted bucket is INDISTINGUISHABLE from a credential failure in a test log. The four tests that failed (KeeplingWeb.MCP.ToolsTest x3, KeeplingWeb.MCP.ErrorsTest x1) had nothing to do with the change that caused it; they were simply the ones that ran after the bucket emptied, and the executor that added the tests reported the suite green. Raised 50 -> 400 in KPL-05-13 follow-up (test config only; the production abuse policy in that block is deliberately untouched), so headroom is now roughly 8x rather than 1.06x. The failure mode is not closed, only deferred: the next plan that adds sign-ins hits the same wall and it will again surface as an authentication failure in an unrelated test. Worth either asserting the login count against the cap in the suite, or making the test-env rate limiter emit a distinguishable error so a throttled login cannot be mistaken for a bad credential.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-11T02:22:01.221Z",
+    "resolved_at": null
   }
 ]
 ````
