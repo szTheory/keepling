@@ -367,6 +367,38 @@ Plans:
 4. Security policy, supported-version policy, SBOM/checksum/signing posture appropriate to distributed artifacts, privacy disclosures, and bounded support contract are public.
 5. Jon has completed a sustained Mac+iPhone dogfood period with no unresolved data-loss, silent-overwrite, or recovery-severity defects in the supported loop.
 
+**Plans:** 13 plans
+
+Plans:
+
+**Wave 1**
+
+- [ ] 06-01-PLAN.md — Correct the overclaims, the stale ledger rows, and the grouped traceability table before any new work runs.
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 06-02-PLAN.md — TRACER: green CI, lossless artifact transport, and a release manifest verified end to end for one revision.
+
+**Wave 3** *(blocked on Wave 2 completion)*
+
+- [ ] 06-03-PLAN.md — Grant the rights the README claims: Apache-2.0, NOTICE, and licence metadata everywhere.
+- [ ] 06-04-PLAN.md — Publish the neutral export format and the non-destructive export verb (DATA-01, producing half).
+- [ ] 06-05-PLAN.md — Wire the Electron and iPhone cross-adapter legs, or disclose them with a named owner (SRV-02).
+- [ ] 06-06-PLAN.md — Give every refused change a durable home and stop the pull path overwriting it (O-43).
+- [ ] 06-07-PLAN.md — Publish real agent-consent values and bind a mutation receipt to its issuing grant (window 76, O-73).
+
+**Wave 4** *(blocked on Wave 3 completion)*
+
+- [ ] 06-08-PLAN.md — Prove the export with a completeness check, a golden vector, an independent reader, and a no-secrets assertion.
+- [ ] 06-09-PLAN.md — Per-field lifecycle-aware conflict resolution and guarded keyboard navigation (O-44, O-22).
+- [ ] 06-10-PLAN.md — Sign, notarize, staple, attest, and inventory the distributed artifacts.
+- [ ] 06-11-PLAN.md — Publish the trust posture and the governance lane that makes it fail when it rots.
+- [ ] 06-12-PLAN.md — Build the read-only reconciliation oracle, the chaos corpus, the census, and the soak gate.
+
+**Wave 5** *(blocked on Wave 4 completion)*
+
+- [ ] 06-13-PLAN.md — Close the lane inventory, verify and retain the release evidence, and dispose every claim with an owner.
+
 ## Candidate future milestone: Sigra identity migration
 
 Not part of milestone v1.0. Recorded 2026-09-02 so the decision is not re-litigated.
