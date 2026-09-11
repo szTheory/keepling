@@ -5,6 +5,7 @@ defmodule KeeplingWeb.Auth do
 
   alias Ecto.Adapters.SQL
   alias Keepling.Accounts
+  alias Keepling.Application.AgentScope
   alias Keepling.Repo
 
   @session_key :session_credential
@@ -17,8 +18,12 @@ defmodule KeeplingWeb.Auth do
   def call(conn, :require_trusted_origin), do: require_trusted_origin(conn)
   def call(conn, :require_test_fixture), do: require_test_fixture(conn)
   def call(conn, :authenticate_device_grant), do: authenticate_first_party_device_grant(conn)
-  def call(conn, :authenticate_client), do: authenticate_client(conn, false)
-  def call(conn, :authenticate_client_mutation), do: authenticate_client(conn, true)
+
+  def call(conn, :authenticate_client),
+    do: conn |> authenticate_client(false) |> authorize_agent()
+
+  def call(conn, :authenticate_client_mutation),
+    do: conn |> authenticate_client(true) |> authorize_agent()
 
   def establish_session(conn, session) do
     Plug.CSRFProtection.delete_csrf_token()
@@ -115,6 +120,114 @@ defmodule KeeplingWeb.Auth do
     if mutation?, do: require_trusted_origin(conn), else: conn
   end
 
+  # T-05-14 / WINDOWS #72. The SCOPE half of the agent boundary. 05-13 made
+  # `client_kind` default-deny on `:device_grant_authenticated`; this makes
+  # `scope` default-deny on the shared surface. A credential's authority is
+  # `client_kind` x `scope`, and half a product is not a boundary.
+  #
+  # `Keepling.Application.AgentScope` calls itself "the authoritative,
+  # application-boundary scope gate", so that "a bug in the adapter alone
+  # cannot widen what an agent grant may do". Every one of its call sites was
+  # inside `lib/keepling_web/mcp/`, which made it adapter-local -- the exact
+  # property its own moduledoc denies. This is its first call site outside
+  # that adapter, so the claim is now true of the application rather than
+  # only of `/mcp/v1`.
+  #
+  # It applies ONLY to agent client kinds. A browser session has no
+  # `current_client_kind` at all, and an `electron`/`iphone` grant is not an
+  # agent, so both leave here as exactly the conn they arrived as: the owner
+  # keeps every shared command and query it had before, unchanged. That is
+  # pinned by tests rather than asserted here in prose.
+  @agent_client_kinds ~w(mcp)
+
+  defp authorize_agent(%{halted: true} = conn), do: conn
+
+  defp authorize_agent(conn) do
+    if conn.assigns[:current_client_kind] in @agent_client_kinds,
+      do: require_agent_authority(conn),
+      else: conn
+  end
+
+  defp require_agent_authority(conn) do
+    with {:ok, scope} <- agent_authority(conn.method, conn.path_info),
+         :ok <- AgentScope.require(%{scope: conn.assigns[:current_scope]}, scope) do
+      conn
+    else
+      _refused -> conn |> insufficient_scope() |> halt()
+    end
+  end
+
+  # DEFAULT-DENY, by the same reasoning 05-13 used for the client-kind
+  # allow-list: anything not named here is refused, so a route added to
+  # `:client_authenticated` or to the command surface later does not silently
+  # inherit agent reach.
+  #
+  # The named set is EXACTLY what the closed MCP tool set (`mcp/tools.ex`,
+  # D-11) already reaches, under the scope that tool requires:
+  # `keepling.search_tasks` and the resource reads require `tasks.read`;
+  # `keepling.capture_task`, `keepling.update_task` (which decodes into
+  # `:edit_task`, `:edit_task_dates` or `:assign_task_organizations`),
+  # `keepling.complete_task` and `keepling.reopen_task` require `tasks.write`.
+  #
+  # The thirteen command routes left out are NOT an oversight, and they are
+  # not merely "unexposed". `trash-task`, `restore-task` and `undo-task` are
+  # the closed D-19 destructive vocabulary, which an agent may reach only
+  # through `preview_bulk_change` + `commit_bulk_change` -- a two-step gated
+  # by `tasks.bulk` AND by a signed token binding exact targets and their
+  # expected revisions (D-17, D-18). Admitting them here would hand a
+  # `tasks.bulk` grant a ONE-STEP, unpreviewed, drift-unchecked trash: a
+  # route around the safeguard the bulk path exists to impose. The remaining
+  # ten (clarify, return-to-inbox, resolve-conflict, plan-for-today, unplan,
+  # move-today and the four organization commands) are outside the tool set
+  # the phase deliberately published, and an authority an agent cannot
+  # express through its own surface is not one its credential should carry.
+  #
+  # `GET /api/v1/mutations/:id` requires `tasks.write`, not `tasks.read`,
+  # because D-49 moves the receipt WITH the write: it is the stored result of
+  # a mutation, readable by the authority that could have issued it.
+  @agent_writable_commands ~w(
+    capture-task
+    edit-task
+    edit-task-dates
+    assign-task-organizations
+    complete-task
+    reopen-task
+  )
+
+  defp agent_authority("GET", ["api", "v1", "search"]), do: {:ok, "tasks.read"}
+  defp agent_authority("GET", ["api", "v1", "projects"]), do: {:ok, "tasks.read"}
+  defp agent_authority("GET", ["api", "v1", "projects", _id, "tasks"]), do: {:ok, "tasks.read"}
+  defp agent_authority("GET", ["api", "v1", "mutations", _id]), do: {:ok, "tasks.write"}
+
+  defp agent_authority("POST", ["api", "v1", "commands", command])
+       when command in @agent_writable_commands,
+       do: {:ok, "tasks.write"}
+
+  defp agent_authority(_method, _path_info), do: :no_agent_authority
+
+  # 403, not 401: the credential authenticated. What it lacks is authority,
+  # and telling an agent to reauthenticate for a scope its grant was never
+  # issued would send it round a loop it cannot exit. The body is constant --
+  # it names neither the scope required nor whether the route exists for some
+  # other authority, so it discloses nothing an agent could enumerate with.
+  # `insufficient_scope` is the same code `KeeplingWeb.MCP.Errors` returns for
+  # the same refusal on `/mcp/v1`: one refusal, one name, on both surfaces.
+  defp insufficient_scope(conn) do
+    conn
+    |> put_resp_content_type("application/problem+json")
+    |> send_resp(
+      403,
+      Jason.encode!(%{
+        code: "insufficient_scope",
+        recovery_action: "reauthorize_device",
+        retryable: false,
+        status: 403,
+        title: "Insufficient scope",
+        type: "/problems/insufficient_scope"
+      })
+    )
+  end
+
   # T-05-13. The MIRROR IMAGE of `KeeplingWeb.MCP.Pipeline`'s
   # `client_kind == "mcp"` requirement (mcp/pipeline.ex). That pipeline
   # refuses a native grant on the agent surface; this one refuses an agent
@@ -142,12 +255,25 @@ defmodule KeeplingWeb.Auth do
   # someone deliberately admits it.
   #
   # This deliberately does NOT apply to `:client_authenticated`
-  # (`authenticate_client/2` below), which calls `authenticate_device_grant/1`
+  # (`authenticate_client/2` above), which calls `authenticate_device_grant/1`
   # directly. D-09 admits `mcp` grants to the SHARED read/command surface on
-  # purpose -- that surface is scope-checked and bounded, and it is the one
-  # query, not a parallel one. The asymmetry between the two entry points is
-  # the point: one fronts bounded shared reads, the other fronts the raw
-  # device feed and grant administration.
+  # purpose: it is the one query, not a parallel one. The asymmetry between
+  # the two entry points is the point -- one fronts the raw device feed and
+  # grant administration, the other fronts a surface an agent reaches only
+  # within the authority its own grant carries, which `authorize_agent/1`
+  # above enforces.
+  #
+  # T-05-14 CORRECTION. Until `authorize_agent/1` existed, this paragraph
+  # read "that surface is scope-checked and bounded". Bounded was true.
+  # SCOPE-CHECKED WAS NOT, and could not be: `authenticate_device_grant/1`
+  # did not assign `current_scope` at all outside `KeeplingWeb.MCP.Pipeline`,
+  # so no route behind `:client_authenticated` or `:client_mutation` could
+  # have checked a scope if it had tried, and none did. A `tasks.read` grant
+  # captured and trashed tasks through `/api/v1/commands/*` while the same
+  # token was refused `insufficient_scope` at `/mcp/v1` (WINDOWS #72). The
+  # sentence is recorded here rather than quietly deleted, because an
+  # inherited, plausible, unverified claim is exactly how the next reader
+  # concludes a boundary is already covered.
   @first_party_client_kinds ~w(electron iphone)
 
   defp authenticate_first_party_device_grant(conn) do
@@ -188,6 +314,12 @@ defmodule KeeplingWeb.Auth do
       # bound to.
       |> assign(:current_account_id, authenticated.account_id)
       |> assign(:current_client_kind, authenticated.client_kind)
+      # T-05-14. The scope travels with the credential on EVERY surface it
+      # authenticates, not only under `KeeplingWeb.MCP.Pipeline`. A
+      # credential's authority is `client_kind` x `scope`; while the scope
+      # was assigned only inside the MCP pipeline, no route outside
+      # `/mcp/v1` could check it even if it tried, and none did.
+      |> assign(:current_scope, authenticated.scope)
     else
       {:error, :infrastructure_failure} ->
         conn

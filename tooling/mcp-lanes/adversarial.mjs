@@ -310,6 +310,146 @@ const runOverDeliveryCases = async (ctx, server) => {
   return casesRun
 }
 
+/**
+ * T-05-14 / WINDOWS #72: the SCOPE over-delivery cases.
+ *
+ * 05-13's cases above probe the `client_kind` half of the boundary. A
+ * credential's authority is `client_kind` x `scope`, and the scope half was
+ * the larger hole: outside `/mcp/v1` the scope was not merely unchecked, it
+ * was NOT CARRIED -- `authenticate_device_grant/1` assigned
+ * `current_client_kind` and never `current_scope`, so the nineteen shared
+ * `/api/v1/commands/*` routes could not have checked it if they had tried.
+ *
+ * Probed live before the fix: this lane's own `tasks.read` grant POSTed
+ * `/api/v1/commands/capture-task` and got 201 persisted, and
+ * `/api/v1/commands/trash-task` and got 200 with the owner's next read
+ * returning 404 -- while the same token at `/mcp/v1` was refused
+ * `insufficient_scope`. The mirror held: the `tasks.write` grant read
+ * `/api/v1/search` and `/api/v1/projects` and got 200.
+ *
+ * Each case aims a grant at a shared route its scope does not cover and
+ * requires exactly 403 -- never merely "not 200", for the same reason the
+ * kind cases require exactly 401: a deleted route answers 404 and would
+ * silently hollow the block out. Each is then scored on final state read
+ * back through the OWNER's session, never through the credential under test.
+ */
+const SCOPE_OVER_DELIVERY_CASES = [
+  { grant: 'read', method: 'POST', name: 'read_grant_captures', path: '/api/v1/commands/capture-task' },
+  { grant: 'read', method: 'POST', name: 'read_grant_trashes', path: '/api/v1/commands/trash-task' },
+  // These two are refused by the route ALLOW-LIST rather than by the scope
+  // comparison, and they are the only cases here that are: `write` carries
+  // tasks.write and `bulk` carries tasks.bulk, so if `trash-task` were ever
+  // admitted to the agent command set, the scope check alone would wave both
+  // of them through. An agent reaches the D-19 destructive vocabulary only
+  // through the previewed, revision-bound two-step (D-17, D-18); a one-step
+  // HTTP trash routes around the safeguard that two-step exists to impose.
+  { grant: 'write', method: 'POST', name: 'write_grant_trashes_unpreviewed', path: '/api/v1/commands/trash-task' },
+  { grant: 'bulk', method: 'POST', name: 'bulk_grant_trashes_unpreviewed', path: '/api/v1/commands/trash-task' },
+  { grant: 'write', method: 'GET', name: 'write_grant_searches', path: '/api/v1/search?q=canary' },
+  { grant: 'write', method: 'GET', name: 'write_grant_lists_projects', path: '/api/v1/projects' },
+]
+
+const apiCall = (server, accessToken, method, path, body) =>
+  fetch(`${server.origin}${path}`, {
+    body: body === undefined ? undefined : JSON.stringify(body),
+    headers:
+      body === undefined
+        ? { Authorization: 'Bearer ' + accessToken }
+        : { Authorization: 'Bearer ' + accessToken, 'Content-Type': 'application/json' },
+    method,
+  })
+
+const runScopeOverDeliveryCases = async (ctx, server) => {
+  // A real task written through the MCP surface, by a grant that IS allowed
+  // to write it. Every refusal below is scored against this task's surviving
+  // state, and every refusal body is checked for its title.
+  const secretTitle = `scope over-delivery canary ${randomUUID()}`
+  const victimTaskId = await captureTask(ctx, secretTitle)
+
+  const snapshot = async () =>
+    readFinalState(server.origin, { sessionCookie: server.sessionCookie, taskIds: [victimTaskId] })
+
+  const before = await snapshot()
+  if (before.tasks[victimTaskId]?.found !== true) {
+    throw new Error('scope_over_delivery setup: the canary task was not readable by its owner before the probes')
+  }
+
+  // The capture case must prove NOTHING WAS PERSISTED, not merely that a
+  // status was returned, so it carries its own task id the owner reads back.
+  const refusedCaptureTaskId = randomUUID()
+  const refusedCaptureTitle = `scope over-delivery must-not-persist ${randomUUID()}`
+
+  const bodyFor = (path) => {
+    if (path.endsWith('/commands/capture-task')) {
+      return { mutation_id: randomUUID(), task_id: refusedCaptureTaskId, title: refusedCaptureTitle, version: 1 }
+    }
+    if (path.endsWith('/commands/trash-task')) {
+      return { expected_revision: 1, mutation_id: randomUUID(), task_id: victimTaskId, version: 1 }
+    }
+    return undefined
+  }
+
+  let casesRun = 0
+  for (const probe of SCOPE_OVER_DELIVERY_CASES) {
+    // eslint-disable-next-line no-await-in-loop
+    const response = await apiCall(server, ctx.grants[probe.grant].accessToken, probe.method, probe.path, bodyFor(probe.path))
+    // eslint-disable-next-line no-await-in-loop
+    const body = await response.text()
+
+    if (response.status !== 403) {
+      throw new Error(`scope_over_delivery case "${probe.name}": ${probe.method} ${probe.path} answered ${String(response.status)} for an mcp grant scoped ${ctx.grants[probe.grant].scopes.join(' ')}; expected 403`)
+    }
+    if (!body.includes('insufficient_scope')) {
+      throw new Error(`scope_over_delivery case "${probe.name}": the refusal was not an insufficient_scope problem: ${body.slice(0, 200)}`)
+    }
+    if (body.includes(secretTitle)) {
+      throw new Error(`scope_over_delivery case "${probe.name}": the refusal body leaked account content to an agent credential`)
+    }
+    casesRun += 1
+  }
+
+  // Scored on final state: the refused trashes changed nothing, and the
+  // refused capture persisted nothing.
+  const after = await snapshot()
+  const survivor = after.tasks[victimTaskId]
+  if (survivor?.found !== true || survivor.trashed) {
+    throw new Error(`scope_over_delivery: a refused trash still removed the canary task (${JSON.stringify(survivor)})`)
+  }
+  if (survivor.title !== before.tasks[victimTaskId].title || survivor.revision !== before.tasks[victimTaskId].revision) {
+    throw new Error('scope_over_delivery: a refused request still advanced the canary task')
+  }
+
+  const persisted = await readFinalState(server.origin, {
+    sessionCookie: server.sessionCookie,
+    taskIds: [refusedCaptureTaskId],
+  })
+  if (persisted.tasks[refusedCaptureTaskId]?.found !== false) {
+    throw new Error('scope_over_delivery: a refused capture still persisted a task')
+  }
+
+  // The boundary must be a BOUNDARY, not a blanket denial: each grant still
+  // reaches the shared route its own scope DOES cover. Without this, every
+  // assertion above would pass equally well against a server that refused
+  // every agent everywhere -- which would close the hole by breaking D-09's
+  // one shared query instead of by bounding the credential.
+  const readControl = await apiCall(server, ctx.grants.read.accessToken, 'GET', '/api/v1/search?q=canary')
+  if (readControl.status !== 200) {
+    throw new Error(`scope_over_delivery control: the tasks.read grant was refused on /api/v1/search (${String(readControl.status)}) -- that is a blanket denial, not a scope boundary`)
+  }
+
+  const writeControl = await apiCall(server, ctx.grants.write.accessToken, 'POST', '/api/v1/commands/capture-task', {
+    mutation_id: randomUUID(),
+    task_id: randomUUID(),
+    title: 'scope over-delivery control capture',
+    version: 1,
+  })
+  if (writeControl.status !== 201) {
+    throw new Error(`scope_over_delivery control: the tasks.write grant was refused on /api/v1/commands/capture-task (${String(writeControl.status)}) -- that is a blanket denial, not a scope boundary`)
+  }
+
+  return casesRun
+}
+
 const runLane = async () => {
   guardAgainstShortcuts(thisFile)
 
@@ -388,7 +528,12 @@ const runLane = async () => {
       throw new Error(`ran ${overDeliveryCasesRun} over-delivery case(s) but ${OVER_DELIVERY_ROUTES.length} routes are declared`)
     }
 
-    console.log(`ADVERSARIAL cases=${casesRun + overDeliveryCasesRun} injection_cases=${casesRun} over_delivery_cases=${overDeliveryCasesRun} run_id=${randomUUID()}`)
+    const scopeCasesRun = await runScopeOverDeliveryCases(ctx, server)
+    if (scopeCasesRun !== SCOPE_OVER_DELIVERY_CASES.length) {
+      throw new Error(`ran ${scopeCasesRun} scope over-delivery case(s) but ${SCOPE_OVER_DELIVERY_CASES.length} are declared`)
+    }
+
+    console.log(`ADVERSARIAL cases=${casesRun + overDeliveryCasesRun + scopeCasesRun} injection_cases=${casesRun} over_delivery_cases=${overDeliveryCasesRun} scope_over_delivery_cases=${scopeCasesRun} run_id=${randomUUID()}`)
   } finally {
     await server.stop()
   }
