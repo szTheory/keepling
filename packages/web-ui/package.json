@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "description": "Platform-free React presentation shared between Keepling Web and Keepling for Mac through ClientFacade only.",
+  "license": "Apache-2.0",
   "type": "module",
   "sideEffects": false
 }

@@ -10,6 +10,7 @@ defmodule Keepling.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
+      package: package(),
       listeners: [Phoenix.CodeReloader]
     ]
   end
@@ -52,7 +53,17 @@ defmodule Keepling.MixProject do
       {:argon2_elixir, "== 4.1.3"},
       {:tzdata, "== 1.1.4"},
       {:hammer, "== 7.4.1"},
-      {:stream_data, "== 1.4.0", only: :test}
+      {:stream_data, "== 1.4.0", only: :test},
+      {:sbom, "~> 0.10.0", only: :dev, runtime: false}
+    ]
+  end
+
+  # Not published to Hex — declared so CycloneDX and other tooling reading
+  # Mix.Project.config()[:package] resolve a licence instead of an unknown
+  # placeholder (see 06-03-PLAN.md).
+  defp package do
+    [
+      licenses: ["Apache-2.0"]
     ]
   end
 
