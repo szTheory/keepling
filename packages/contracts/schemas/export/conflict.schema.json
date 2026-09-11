@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keepling.dev/contracts/export/conflict.schema.json",
+  "title": "Keepling exported open conflict record",
+  "description": "One line of data/conflict.ndjson per OPEN (unresolved) conflict. Resolved conflicts are excluded per D-01 -- see classification.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "task_id",
+    "original_mutation_id",
+    "command_type",
+    "expected_revision",
+    "latest_revision",
+    "affected_fields",
+    "base_values",
+    "requested_values",
+    "current_values",
+    "inserted_at"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "task_id": { "type": "string", "minLength": 1 },
+    "original_mutation_id": { "type": "string", "minLength": 1 },
+    "command_type": {
+      "enum": ["edit_task", "clarify_task", "complete_task", "reopen_task", "trash_task", "restore_task"]
+    },
+    "expected_revision": { "type": "integer", "minimum": 1 },
+    "latest_revision": { "type": "integer", "minimum": 1 },
+    "affected_fields": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "enum": ["completed_at", "notes", "title", "trashed_at"] }
+    },
+    "base_values": { "type": "object" },
+    "requested_values": { "type": "object" },
+    "current_values": { "type": "object" },
+    "inserted_at": { "type": "string", "format": "date-time" }
+  }
+}

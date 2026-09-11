@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keepling.dev/contracts/export/tag.schema.json",
+  "title": "Keepling exported tag record",
+  "description": "One line of data/tag.ndjson per tag, including archived tags. Membership is carried by each task's tag_ids field, not duplicated here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "display_name", "archived_at"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "kind": { "const": "tag" },
+    "display_name": { "type": "string", "minLength": 1 },
+    "archived_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

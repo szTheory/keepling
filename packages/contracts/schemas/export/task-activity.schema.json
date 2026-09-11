@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keepling.dev/contracts/export/task-activity.schema.json",
+  "title": "Keepling exported task activity record",
+  "description": "One line of data/task-activity.ndjson per accepted task activity entry -- canonical account-lifetime user history.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "task_id",
+    "activity_type",
+    "activity_version",
+    "actor_type",
+    "client_kind",
+    "from_revision",
+    "to_revision",
+    "changed_fields",
+    "accepted_at"
+  ],
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "task_id": { "type": "string", "minLength": 1 },
+    "activity_type": { "type": "string", "minLength": 1 },
+    "activity_version": { "type": "integer", "minimum": 1 },
+    "actor_type": { "type": "string", "minLength": 1 },
+    "client_kind": { "type": "string", "minLength": 1 },
+    "from_revision": { "type": ["integer", "null"], "minimum": 1 },
+    "to_revision": { "type": "integer", "minimum": 1 },
+    "changed_fields": { "type": "object" },
+    "accepted_at": { "type": "string", "format": "date-time" }
+  }
+}

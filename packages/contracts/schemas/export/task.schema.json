@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keepling.dev/contracts/export/task.schema.json",
+  "title": "Keepling exported task record",
+  "description": "One line of data/task.ndjson per task, including completed and trashed tasks. Two records identical on every human-visible field remain two distinct lines, each keyed by its own stable id -- the export never merges, dedupes, or collides them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "title",
+    "notes",
+    "inbox_state",
+    "project_id",
+    "tag_ids",
+    "planned_on",
+    "deadline_on",
+    "completed_at",
+    "trashed_at",
+    "captured_at",
+    "revision"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "title": { "type": "string" },
+    "notes": { "type": "string" },
+    "inbox_state": { "enum": ["inbox", "clarified"] },
+    "project_id": { "type": ["string", "null"] },
+    "tag_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "planned_on": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "deadline_on": { "type": ["string", "null"], "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "completed_at": { "type": ["string", "null"], "format": "date-time" },
+    "trashed_at": { "type": ["string", "null"], "format": "date-time" },
+    "captured_at": { "type": "string", "format": "date-time" },
+    "revision": { "type": "integer", "minimum": 1 }
+  }
+}

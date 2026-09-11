@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keepling.dev/contracts/export/today-order.schema.json",
+  "title": "Keepling exported Today ordering record",
+  "description": "One line of data/today-order.ndjson per (section, position) slot in the account's dense, section-scoped Today ordering.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["task_id", "section", "position"],
+  "properties": {
+    "task_id": { "type": "string", "minLength": 1 },
+    "section": { "enum": ["overdue", "today"] },
+    "position": { "type": "integer", "minimum": 1 }
+  }
+}

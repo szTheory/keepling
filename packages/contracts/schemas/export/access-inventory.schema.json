@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keepling.dev/contracts/export/access-inventory.schema.json",
+  "title": "Keepling exported access inventory record",
+  "description": "One line of data/access-inventory.ndjson per device grant or MCP client registration. Metadata only -- never a credential, hash, token, or secret. See classification.json for the columns excluded from this projection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "id", "client_kind", "label", "scope", "inserted_at", "revoked_at"],
+  "properties": {
+    "kind": { "enum": ["device_grant", "mcp_registration"] },
+    "id": { "type": "string", "minLength": 1 },
+    "client_kind": { "enum": ["electron", "iphone", "mcp"] },
+    "label": { "type": "string", "minLength": 1 },
+    "scope": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "enum": ["tasks.read", "tasks.write", "tasks.bulk"] }
+    },
+    "inserted_at": { "type": "string", "format": "date-time" },
+    "revoked_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}

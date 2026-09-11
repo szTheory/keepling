@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "description": "Per-database-table, per-column IN/OUT classification for Keepling's export bundle (D-01). This is the input to the schema-driven completeness lane (plan 06-08): a future migration that adds a column with no disposition recorded here is a hard failure, never a silent omission.",
+  "tables": [
+    {
+      "table": "accounts",
+      "columns": [
+        { "column": "id", "disposition": "in", "reason": "account_id is carried on every exported record and in manifest.json" },
+        { "column": "timezone", "disposition": "in", "reason": "user-facing account setting, exported via account-settings" },
+        { "column": "singleton_key", "disposition": "out", "reason": "internal single-account marker, not user data" },
+        { "column": "password_hash", "disposition": "out", "reason": "credential material" },
+        { "column": "inbox_view_revision", "disposition": "out", "reason": "internal cache-invalidation counter" },
+        { "column": "completed_view_revision", "disposition": "out", "reason": "internal cache-invalidation counter" },
+        { "column": "today_order_revision", "disposition": "out", "reason": "internal cache-invalidation counter" },
+        { "column": "trash_view_revision", "disposition": "out", "reason": "internal cache-invalidation counter" },
+        { "column": "today_view_revision", "disposition": "out", "reason": "internal cache-invalidation counter" },
+        { "column": "upcoming_view_revision", "disposition": "out", "reason": "internal cache-invalidation counter" },
+        { "column": "activity_view_revision", "disposition": "out", "reason": "internal cache-invalidation counter" },
+        { "column": "inserted_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" },
+        { "column": "updated_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" }
+      ]
+    },
+    {
+      "table": "tasks",
+      "columns": [
+        { "column": "account_id", "disposition": "in", "reason": "scoping key, implicit in export account_id" },
+        { "column": "id", "disposition": "in", "reason": "stable opaque id, exported verbatim" },
+        { "column": "title", "disposition": "in", "reason": "user-authored data" },
+        { "column": "notes", "disposition": "in", "reason": "user-authored data" },
+        { "column": "inbox_state", "disposition": "in", "reason": "user-visible lifecycle state" },
+        { "column": "revision", "disposition": "in", "reason": "provenance for the exported snapshot" },
+        { "column": "captured_at", "disposition": "in", "reason": "user-visible timestamp" },
+        { "column": "planned_on", "disposition": "in", "reason": "user-visible civil date" },
+        { "column": "deadline_on", "disposition": "in", "reason": "user-visible civil date" },
+        { "column": "completed_at", "disposition": "in", "reason": "user-visible timestamp" },
+        { "column": "trashed_at", "disposition": "in", "reason": "user-visible timestamp; trashed tasks are IN per D-01" },
+        { "column": "project_id", "disposition": "in", "reason": "organization membership, exported on the task record" },
+        { "column": "project_kind", "disposition": "out", "reason": "always the literal 'project', carries no information" },
+        { "column": "search_document", "disposition": "out", "reason": "generated tsvector search index (task_search_index), not user-authored data" },
+        { "column": "inserted_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" },
+        { "column": "updated_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" }
+      ]
+    },
+    {
+      "table": "organizations",
+      "columns": [
+        { "column": "account_id", "disposition": "in", "reason": "scoping key, implicit in export account_id" },
+        { "column": "id", "disposition": "in", "reason": "stable opaque id" },
+        { "column": "kind", "disposition": "in", "reason": "distinguishes project vs tag entity files" },
+        { "column": "display_name", "disposition": "in", "reason": "user-authored data" },
+        { "column": "archived_at", "disposition": "in", "reason": "archived projects/tags are IN per D-01" },
+        { "column": "name_key", "disposition": "out", "reason": "internal normalized uniqueness key, derivable from display_name" },
+        { "column": "name_key_version", "disposition": "out", "reason": "internal normalization version marker" },
+        { "column": "revision", "disposition": "out", "reason": "internal optimistic-concurrency counter, not user-facing" },
+        { "column": "inserted_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" },
+        { "column": "updated_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" }
+      ]
+    },
+    {
+      "table": "task_tags",
+      "columns": [
+        { "column": "account_id", "disposition": "in", "reason": "scoping key" },
+        { "column": "task_id", "disposition": "in", "reason": "membership, folded into task.tag_ids" },
+        { "column": "tag_id", "disposition": "in", "reason": "membership, folded into task.tag_ids" },
+        { "column": "tag_kind", "disposition": "out", "reason": "always the literal 'tag', carries no information" },
+        { "column": "inserted_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" }
+      ]
+    },
+    {
+      "table": "task_activities",
+      "columns": [
+        { "column": "id", "disposition": "in", "reason": "stable ordering key" },
+        { "column": "account_id", "disposition": "in", "reason": "scoping key" },
+        { "column": "task_id", "disposition": "in", "reason": "links activity to its task" },
+        { "column": "activity_type", "disposition": "in", "reason": "user-visible history entry type" },
+        { "column": "activity_version", "disposition": "in", "reason": "provenance for how changed_fields is shaped" },
+        { "column": "actor_type", "disposition": "in", "reason": "user-visible provenance (human vs agent)" },
+        { "column": "client_kind", "disposition": "in", "reason": "user-visible provenance" },
+        { "column": "from_revision", "disposition": "in", "reason": "user-visible history detail" },
+        { "column": "to_revision", "disposition": "in", "reason": "user-visible history detail" },
+        { "column": "changed_fields", "disposition": "in", "reason": "user-authored diff content" },
+        { "column": "accepted_at", "disposition": "in", "reason": "user-visible timestamp" },
+        { "column": "mutation_id", "disposition": "out", "reason": "internal command-identity linkage, not user-facing" },
+        { "column": "inserted_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" }
+      ]
+    },
+    {
+      "table": "persisted_conflicts",
+      "columns": [
+        { "column": "account_id", "disposition": "in", "reason": "scoping key" },
+        { "column": "id", "disposition": "in", "reason": "stable opaque id" },
+        { "column": "task_id", "disposition": "in", "reason": "links conflict to its task" },
+        { "column": "original_mutation_id", "disposition": "in", "reason": "user-visible provenance of the conflicting change" },
+        { "column": "command_type", "disposition": "in", "reason": "user-visible conflict detail" },
+        { "column": "expected_revision", "disposition": "in", "reason": "user-visible conflict detail" },
+        { "column": "latest_revision", "disposition": "in", "reason": "user-visible conflict detail" },
+        { "column": "affected_fields", "disposition": "in", "reason": "user-visible conflict detail" },
+        { "column": "base_values", "disposition": "in", "reason": "user-visible conflict detail" },
+        { "column": "requested_values", "disposition": "in", "reason": "user-visible conflict detail" },
+        { "column": "current_values", "disposition": "in", "reason": "user-visible conflict detail" },
+        { "column": "inserted_at", "disposition": "in", "reason": "user-visible timestamp for the conflict" },
+        { "column": "resolved_by_mutation_id", "disposition": "out", "reason": "D-01: resolved conflicts are excluded from export entirely; rows where this is non-null are filtered out of the query itself" },
+        { "column": "resolved_at", "disposition": "out", "reason": "D-01: resolved conflicts are excluded from export entirely; rows where this is non-null are filtered out of the query itself" },
+        { "column": "updated_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" }
+      ]
+    },
+    {
+      "table": "today_task_order",
+      "columns": [
+        { "column": "account_id", "disposition": "in", "reason": "scoping key" },
+        { "column": "task_id", "disposition": "in", "reason": "user-visible ordering detail" },
+        { "column": "section", "disposition": "in", "reason": "user-visible ordering detail" },
+        { "column": "position", "disposition": "in", "reason": "user-visible ordering detail" },
+        { "column": "inserted_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" },
+        { "column": "updated_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" }
+      ]
+    },
+    {
+      "table": "device_grants",
+      "columns": [
+        { "column": "id", "disposition": "in", "reason": "access-inventory metadata, no credential" },
+        { "column": "account_id", "disposition": "in", "reason": "scoping key" },
+        { "column": "client_kind", "disposition": "in", "reason": "access-inventory metadata" },
+        { "column": "label", "disposition": "in", "reason": "access-inventory metadata" },
+        { "column": "scope", "disposition": "in", "reason": "access-inventory metadata, closed vocabulary, no secret" },
+        { "column": "inserted_at", "disposition": "in", "reason": "access-inventory metadata (grant issued time)" },
+        { "column": "revoked_at", "disposition": "in", "reason": "access-inventory metadata" },
+        { "column": "installation_id", "disposition": "out", "reason": "device-correlatable identifier, not needed for the access inventory's grant-level view" },
+        { "column": "redirect_uri", "disposition": "out", "reason": "OAuth client configuration detail, not user data" },
+        { "column": "authorization_code_hash", "disposition": "out", "reason": "credential material" },
+        { "column": "authorization_code_expires_at", "disposition": "out", "reason": "credential lifecycle detail" },
+        { "column": "authorization_code_consumed_at", "disposition": "out", "reason": "credential lifecycle detail" },
+        { "column": "state_hash", "disposition": "out", "reason": "credential material" },
+        { "column": "pkce_challenge", "disposition": "out", "reason": "credential material" },
+        { "column": "access_token_hash", "disposition": "out", "reason": "credential material" },
+        { "column": "access_expires_at", "disposition": "out", "reason": "credential lifecycle detail" },
+        { "column": "refresh_inactivity_expires_at", "disposition": "out", "reason": "credential lifecycle detail" },
+        { "column": "family_absolute_expires_at", "disposition": "out", "reason": "credential lifecycle detail" },
+        { "column": "generation", "disposition": "out", "reason": "internal replay-fencing counter" },
+        { "column": "last_refreshed_at", "disposition": "out", "reason": "credential lifecycle detail" },
+        { "column": "resource", "disposition": "out", "reason": "OAuth resource-indicator configuration detail, not user data" },
+        { "column": "updated_at", "disposition": "out", "reason": "row bookkeeping, not user-authored data" }
+      ]
+    },
+    {
+      "table": "device_grant_refresh_tokens",
+      "disposition": "out",
+      "reason": "credential material end to end (refresh token hashes and lifecycle); the parent device_grants row already provides access-inventory metadata"
+    },
+    {
+      "table": "mcp_client_registrations",
+      "columns": [
+        { "column": "client_id", "disposition": "in", "reason": "access-inventory metadata, no credential" },
+        { "column": "account_id", "disposition": "in", "reason": "scoping key" },
+        { "column": "client_name", "disposition": "in", "reason": "access-inventory metadata" },
+        { "column": "created_at", "disposition": "in", "reason": "access-inventory metadata" },
+        { "column": "revoked_at", "disposition": "in", "reason": "access-inventory metadata" },
+        { "column": "redirect_uris", "disposition": "out", "reason": "OAuth client configuration detail, not user data" }
+      ]
+    },
+    {
+      "table": "command_receipts",
+      "disposition": "out",
+      "reason": "D-01: command receipts are internal idempotency bookkeeping, not durable user data"
+    },
+    {
+      "table": "today_order_receipts",
+      "disposition": "out",
+      "reason": "D-01: Today-order receipts are internal idempotency bookkeeping, not durable user data"
+    },
+    {
+      "table": "sync_changes",
+      "disposition": "out",
+      "reason": "D-01: the internal sync feed log is a delivery mechanism, not durable user data -- its content is already exported via the entity tables themselves"
+    },
+    {
+      "table": "sync_accounts",
+      "disposition": "out",
+      "reason": "internal sync feed cursor bookkeeping; feed_high_water_sequence is surfaced in manifest.json, not as an exported table"
+    },
+    {
+      "table": "sync_epochs",
+      "disposition": "out",
+      "reason": "D-01: internal restore-fencing bookkeeping; the current epoch is surfaced in manifest.json, not as an exported table"
+    },
+    {
+      "table": "undo_handles",
+      "disposition": "out",
+      "reason": "D-01: undo handles are internal, time-bounded, single-use compensating-action bookkeeping, not durable user data"
+    },
+    {
+      "table": "sessions",
+      "disposition": "out",
+      "reason": "D-01: browser session credential material"
+    },
+    {
+      "table": "operations_state",
+      "disposition": "out",
+      "reason": "D-01: internal operator/infrastructure state, not user data"
+    },
+    {
+      "table": "restore_verifications",
+      "disposition": "out",
+      "reason": "D-01: internal operator/infrastructure recovery-proof bookkeeping, not user data"
+    },
+    {
+      "table": "account_recovery",
+      "disposition": "out",
+      "reason": "D-01: recovery credential material"
+    },
+    {
+      "table": "account_setup",
+      "disposition": "out",
+      "reason": "internal one-time setup token bookkeeping, not user data"
+    },
+    {
+      "table": "account_security_audits",
+      "disposition": "out",
+      "reason": "internal security audit log, not user-authored data; distinct from the user-facing task_activities history"
+    },
+    {
+      "table": "task_search_index",
+      "disposition": "out",
+      "reason": "D-01: the generated tsvector search index (tasks.search_document + its GIN index) is a derived query accelerator, not durable user data -- it is fully re-derivable from title and notes, both of which are already exported"
+    }
+  ]
+}

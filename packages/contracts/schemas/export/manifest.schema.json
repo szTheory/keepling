@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keepling.dev/contracts/export/manifest.schema.json",
+  "title": "Keepling export bundle manifest",
+  "description": "manifest.json is written LAST inside the bundle, after every entity file, tasks.md, and FORMAT.md already exist on disk. A truncated or partially-written bundle therefore has no manifest.json and fails validation before any per-file digest is even checked. Readers key compatibility off export_format_version alone -- keepling_version and generated_at are provenance only, never a compatibility signal.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "export_format_version",
+    "keepling_version",
+    "generated_at",
+    "account_id",
+    "feed_high_water_sequence",
+    "restore_epoch",
+    "files"
+  ],
+  "properties": {
+    "export_format_version": {
+      "const": 1,
+      "description": "Standalone integer version of the archive format itself, decoupled from OpenAPI and protocol trains. Additive-only within a version; a version never ages out because it binds files already on a user's disk."
+    },
+    "keepling_version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Provenance only -- readers must never use this for compatibility decisions."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO-8601 instant the export was generated. Provenance only, like keepling_version."
+    },
+    "account_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "feed_high_water_sequence": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The sync feed high-water sequence observed inside the export's own read transaction, making this bundle a citable point in the existing ordered sync feed."
+    },
+    "restore_epoch": {
+      "type": ["string", "null"],
+      "description": "The restore epoch observed inside the export transaction, or null if no epoch has ever been finalized. Explicit null rather than omission, since absent and empty must stay distinguishable."
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "rowCount"],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Path relative to the bundle root, e.g. data/task.ndjson, FORMAT.md, tasks.md."
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$",
+            "description": "Lowercase hex SHA-256 of the exact file bytes."
+          },
+          "rowCount": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of NDJSON lines for a data/*.ndjson file. For FORMAT.md and tasks.md this records the line count of the rendered document, never null or omitted -- absent and empty must remain distinguishable throughout the bundle."
+          }
+        }
+      }
+    }
+  }
+}

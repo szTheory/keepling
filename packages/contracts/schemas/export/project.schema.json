@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://keepling.dev/contracts/export/project.schema.json",
+  "title": "Keepling exported project record",
+  "description": "One line of data/project.ndjson per project, including archived projects. Membership is carried by each task's project_id field, not duplicated here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "display_name", "archived_at"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "kind": { "const": "project" },
+    "display_name": { "type": "string", "minLength": 1 },
+    "archived_at": { "type": ["string", "null"], "format": "date-time" }
+  }
+}
