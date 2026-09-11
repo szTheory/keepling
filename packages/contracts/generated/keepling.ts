@@ -1023,7 +1023,7 @@ export interface components {
             readonly base: string | null;
             readonly current: string | null;
             /** @enum {string} */
-            readonly field: "notes" | "title";
+            readonly field: "notes" | "title" | "completed_at" | "trashed_at";
             readonly mine: string | null;
         };
         /** Format: uuid */

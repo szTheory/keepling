@@ -41,6 +41,18 @@ public protocol APIProtocol: Sendable {
     /// - Remark: HTTP `DELETE /device-grants/{installation_id}`.
     /// - Remark: Generated from `#/paths//device-grants/{installation_id}/delete(revokeDeviceGrant)`.
     func revokeDeviceGrant(_ input: Operations.revokeDeviceGrant.Input) async throws -> Operations.revokeDeviceGrant.Output
+    /// List installation grants for the signed-in owner's browser
+    ///
+    /// T-05-13. The owner's browser has no device grant, so it cannot reach the bearer-only `/device-grants` routes. This is the same inventory read through the session credential instead. It is a separate route rather than a widened pipeline on `/device-grants`, because widening that pipeline would admit EVERY device grant -- including an agent's -- to grant administration.
+    ///
+    /// - Remark: HTTP `GET /account/device-grants`.
+    /// - Remark: Generated from `#/paths//account/device-grants/get(listAccountDeviceGrants)`.
+    func listAccountDeviceGrants(_ input: Operations.listAccountDeviceGrants.Input) async throws -> Operations.listAccountDeviceGrants.Output
+    /// Idempotently revoke one installation grant from the owner's browser
+    ///
+    /// - Remark: HTTP `DELETE /account/device-grants/{installation_id}`.
+    /// - Remark: Generated from `#/paths//account/device-grants/{installation_id}/delete(revokeAccountDeviceGrant)`.
+    func revokeAccountDeviceGrant(_ input: Operations.revokeAccountDeviceGrant.Input) async throws -> Operations.revokeAccountDeviceGrant.Output
     /// Pull one bounded account-scoped synchronization page
     ///
     /// - Remark: HTTP `GET /sync`.
@@ -320,6 +332,28 @@ extension APIProtocol {
         headers: Operations.revokeDeviceGrant.Input.Headers = .init()
     ) async throws -> Operations.revokeDeviceGrant.Output {
         try await revokeDeviceGrant(Operations.revokeDeviceGrant.Input(
+            path: path,
+            headers: headers
+        ))
+    }
+    /// List installation grants for the signed-in owner's browser
+    ///
+    /// T-05-13. The owner's browser has no device grant, so it cannot reach the bearer-only `/device-grants` routes. This is the same inventory read through the session credential instead. It is a separate route rather than a widened pipeline on `/device-grants`, because widening that pipeline would admit EVERY device grant -- including an agent's -- to grant administration.
+    ///
+    /// - Remark: HTTP `GET /account/device-grants`.
+    /// - Remark: Generated from `#/paths//account/device-grants/get(listAccountDeviceGrants)`.
+    public func listAccountDeviceGrants(headers: Operations.listAccountDeviceGrants.Input.Headers = .init()) async throws -> Operations.listAccountDeviceGrants.Output {
+        try await listAccountDeviceGrants(Operations.listAccountDeviceGrants.Input(headers: headers))
+    }
+    /// Idempotently revoke one installation grant from the owner's browser
+    ///
+    /// - Remark: HTTP `DELETE /account/device-grants/{installation_id}`.
+    /// - Remark: Generated from `#/paths//account/device-grants/{installation_id}/delete(revokeAccountDeviceGrant)`.
+    public func revokeAccountDeviceGrant(
+        path: Operations.revokeAccountDeviceGrant.Input.Path,
+        headers: Operations.revokeAccountDeviceGrant.Input.Headers = .init()
+    ) async throws -> Operations.revokeAccountDeviceGrant.Output {
+        try await revokeAccountDeviceGrant(Operations.revokeAccountDeviceGrant.Input(
             path: path,
             headers: headers
         ))

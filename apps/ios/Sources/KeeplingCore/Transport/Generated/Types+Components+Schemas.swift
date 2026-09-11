@@ -1254,6 +1254,8 @@ extension Components {
         }
         /// - Remark: Generated from `#/components/schemas/DeviceGrantSummary`.
         public struct DeviceGrantSummary: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/DeviceGrantSummary/authorized_at`.
+            public var authorized_at: Foundation.Date
             /// - Remark: Generated from `#/components/schemas/DeviceGrantSummary/client_kind`.
             public var client_kind: Components.Schemas.NativeClientIdentity
             /// - Remark: Generated from `#/components/schemas/DeviceGrantSummary/generation`.
@@ -1264,42 +1266,62 @@ extension Components {
             public var installation_id: Components.Schemas.InstallationIdentity
             /// - Remark: Generated from `#/components/schemas/DeviceGrantSummary/label`.
             public var label: Swift.String
+            /// - Remark: Generated from `#/components/schemas/DeviceGrantSummary/last_used_at`.
+            public var last_used_at: Foundation.Date?
             /// - Remark: Generated from `#/components/schemas/DeviceGrantSummary/revoked`.
             public var revoked: Swift.Bool
+            /// - Remark: Generated from `#/components/schemas/DeviceGrantSummary/scope`.
+            public var scope: [Swift.String]
             /// Creates a new `DeviceGrantSummary`.
             ///
             /// - Parameters:
+            ///   - authorized_at:
             ///   - client_kind:
             ///   - generation:
             ///   - id:
             ///   - installation_id:
             ///   - label:
+            ///   - last_used_at:
             ///   - revoked:
+            ///   - scope:
             public init(
+                authorized_at: Foundation.Date,
                 client_kind: Components.Schemas.NativeClientIdentity,
                 generation: Swift.Int64,
                 id: Components.Schemas.DeviceGrantIdentity,
                 installation_id: Components.Schemas.InstallationIdentity,
                 label: Swift.String,
-                revoked: Swift.Bool
+                last_used_at: Foundation.Date? = nil,
+                revoked: Swift.Bool,
+                scope: [Swift.String]
             ) {
+                self.authorized_at = authorized_at
                 self.client_kind = client_kind
                 self.generation = generation
                 self.id = id
                 self.installation_id = installation_id
                 self.label = label
+                self.last_used_at = last_used_at
                 self.revoked = revoked
+                self.scope = scope
             }
             public enum CodingKeys: String, CodingKey {
+                case authorized_at
                 case client_kind
                 case generation
                 case id
                 case installation_id
                 case label
+                case last_used_at
                 case revoked
+                case scope
             }
             public init(from decoder: any Swift.Decoder) throws {
                 let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.authorized_at = try container.decode(
+                    Foundation.Date.self,
+                    forKey: .authorized_at
+                )
                 self.client_kind = try container.decode(
                     Components.Schemas.NativeClientIdentity.self,
                     forKey: .client_kind
@@ -1320,17 +1342,28 @@ extension Components {
                     Swift.String.self,
                     forKey: .label
                 )
+                self.last_used_at = try container.decodeIfPresent(
+                    Foundation.Date.self,
+                    forKey: .last_used_at
+                )
                 self.revoked = try container.decode(
                     Swift.Bool.self,
                     forKey: .revoked
                 )
+                self.scope = try container.decode(
+                    [Swift.String].self,
+                    forKey: .scope
+                )
                 try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "authorized_at",
                     "client_kind",
                     "generation",
                     "id",
                     "installation_id",
                     "label",
-                    "revoked"
+                    "last_used_at",
+                    "revoked",
+                    "scope"
                 ])
             }
         }
@@ -3677,6 +3710,8 @@ extension Components {
             @frozen public enum fieldPayload: String, Codable, Hashable, Sendable, CaseIterable {
                 case notes = "notes"
                 case title = "title"
+                case completed_at = "completed_at"
+                case trashed_at = "trashed_at"
             }
             /// - Remark: Generated from `#/components/schemas/ConflictField/field`.
             public var field: Components.Schemas.ConflictField.fieldPayload
@@ -6017,6 +6052,461 @@ extension Components {
                 try decoder.ensureNoAdditionalProperties(knownKeys: [
                     "code",
                     "message"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/McpCaptureTaskParams`.
+        public struct McpCaptureTaskParams: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/McpCaptureTaskParams/mutation_id`.
+            public var mutation_id: Components.Schemas.MutationIdentity
+            /// - Remark: Generated from `#/components/schemas/McpCaptureTaskParams/task_id`.
+            public var task_id: Components.Schemas.TaskIdentity
+            /// - Remark: Generated from `#/components/schemas/McpCaptureTaskParams/title`.
+            public var title: Swift.String
+            /// - Remark: Generated from `#/components/schemas/McpCaptureTaskParams/version`.
+            @frozen public enum versionPayload: Int, Codable, Hashable, Sendable, CaseIterable {
+                case _1 = 1
+            }
+            /// - Remark: Generated from `#/components/schemas/McpCaptureTaskParams/version`.
+            public var version: Components.Schemas.McpCaptureTaskParams.versionPayload
+            /// Creates a new `McpCaptureTaskParams`.
+            ///
+            /// - Parameters:
+            ///   - mutation_id:
+            ///   - task_id:
+            ///   - title:
+            ///   - version:
+            public init(
+                mutation_id: Components.Schemas.MutationIdentity,
+                task_id: Components.Schemas.TaskIdentity,
+                title: Swift.String,
+                version: Components.Schemas.McpCaptureTaskParams.versionPayload
+            ) {
+                self.mutation_id = mutation_id
+                self.task_id = task_id
+                self.title = title
+                self.version = version
+            }
+            public enum CodingKeys: String, CodingKey {
+                case mutation_id
+                case task_id
+                case title
+                case version
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.mutation_id = try container.decode(
+                    Components.Schemas.MutationIdentity.self,
+                    forKey: .mutation_id
+                )
+                self.task_id = try container.decode(
+                    Components.Schemas.TaskIdentity.self,
+                    forKey: .task_id
+                )
+                self.title = try container.decode(
+                    Swift.String.self,
+                    forKey: .title
+                )
+                self.version = try container.decode(
+                    Components.Schemas.McpCaptureTaskParams.versionPayload.self,
+                    forKey: .version
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "mutation_id",
+                    "task_id",
+                    "title",
+                    "version"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams`.
+        public struct McpUpdateTaskParams: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams/expected_revision`.
+            public var expected_revision: Components.Schemas.Revision
+            /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams/mutation_id`.
+            public var mutation_id: Components.Schemas.MutationIdentity
+            /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams/task_id`.
+            public var task_id: Components.Schemas.TaskIdentity
+            /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams/version`.
+            @frozen public enum versionPayload: Int, Codable, Hashable, Sendable, CaseIterable {
+                case _1 = 1
+            }
+            /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams/version`.
+            public var version: Components.Schemas.McpUpdateTaskParams.versionPayload
+            /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams/title`.
+            public var title: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams/notes`.
+            public var notes: Swift.String?
+            /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams/project_id`.
+            public var project_id: Components.Schemas.NullableOrganizationIdentity?
+            /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams/tag_ids`.
+            public var tag_ids: [Components.Schemas.OrganizationIdentity]?
+            /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams/deadline_on`.
+            public var deadline_on: Components.Schemas.NullableCivilDate?
+            /// - Remark: Generated from `#/components/schemas/McpUpdateTaskParams/planned_on`.
+            public var planned_on: Components.Schemas.NullableCivilDate?
+            /// Creates a new `McpUpdateTaskParams`.
+            ///
+            /// - Parameters:
+            ///   - expected_revision:
+            ///   - mutation_id:
+            ///   - task_id:
+            ///   - version:
+            ///   - title:
+            ///   - notes:
+            ///   - project_id:
+            ///   - tag_ids:
+            ///   - deadline_on:
+            ///   - planned_on:
+            public init(
+                expected_revision: Components.Schemas.Revision,
+                mutation_id: Components.Schemas.MutationIdentity,
+                task_id: Components.Schemas.TaskIdentity,
+                version: Components.Schemas.McpUpdateTaskParams.versionPayload,
+                title: Swift.String? = nil,
+                notes: Swift.String? = nil,
+                project_id: Components.Schemas.NullableOrganizationIdentity? = nil,
+                tag_ids: [Components.Schemas.OrganizationIdentity]? = nil,
+                deadline_on: Components.Schemas.NullableCivilDate? = nil,
+                planned_on: Components.Schemas.NullableCivilDate? = nil
+            ) {
+                self.expected_revision = expected_revision
+                self.mutation_id = mutation_id
+                self.task_id = task_id
+                self.version = version
+                self.title = title
+                self.notes = notes
+                self.project_id = project_id
+                self.tag_ids = tag_ids
+                self.deadline_on = deadline_on
+                self.planned_on = planned_on
+            }
+            public enum CodingKeys: String, CodingKey {
+                case expected_revision
+                case mutation_id
+                case task_id
+                case version
+                case title
+                case notes
+                case project_id
+                case tag_ids
+                case deadline_on
+                case planned_on
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.expected_revision = try container.decode(
+                    Components.Schemas.Revision.self,
+                    forKey: .expected_revision
+                )
+                self.mutation_id = try container.decode(
+                    Components.Schemas.MutationIdentity.self,
+                    forKey: .mutation_id
+                )
+                self.task_id = try container.decode(
+                    Components.Schemas.TaskIdentity.self,
+                    forKey: .task_id
+                )
+                self.version = try container.decode(
+                    Components.Schemas.McpUpdateTaskParams.versionPayload.self,
+                    forKey: .version
+                )
+                self.title = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .title
+                )
+                self.notes = try container.decodeIfPresent(
+                    Swift.String.self,
+                    forKey: .notes
+                )
+                self.project_id = try container.decodeIfPresent(
+                    Components.Schemas.NullableOrganizationIdentity.self,
+                    forKey: .project_id
+                )
+                self.tag_ids = try container.decodeIfPresent(
+                    [Components.Schemas.OrganizationIdentity].self,
+                    forKey: .tag_ids
+                )
+                self.deadline_on = try container.decodeIfPresent(
+                    Components.Schemas.NullableCivilDate.self,
+                    forKey: .deadline_on
+                )
+                self.planned_on = try container.decodeIfPresent(
+                    Components.Schemas.NullableCivilDate.self,
+                    forKey: .planned_on
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "expected_revision",
+                    "mutation_id",
+                    "task_id",
+                    "version",
+                    "title",
+                    "notes",
+                    "project_id",
+                    "tag_ids",
+                    "deadline_on",
+                    "planned_on"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/McpCompleteTaskParams`.
+        public struct McpCompleteTaskParams: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/McpCompleteTaskParams/expected_revision`.
+            public var expected_revision: Components.Schemas.Revision
+            /// - Remark: Generated from `#/components/schemas/McpCompleteTaskParams/mutation_id`.
+            public var mutation_id: Components.Schemas.MutationIdentity
+            /// - Remark: Generated from `#/components/schemas/McpCompleteTaskParams/task_id`.
+            public var task_id: Components.Schemas.TaskIdentity
+            /// - Remark: Generated from `#/components/schemas/McpCompleteTaskParams/version`.
+            @frozen public enum versionPayload: Int, Codable, Hashable, Sendable, CaseIterable {
+                case _1 = 1
+            }
+            /// - Remark: Generated from `#/components/schemas/McpCompleteTaskParams/version`.
+            public var version: Components.Schemas.McpCompleteTaskParams.versionPayload
+            /// Creates a new `McpCompleteTaskParams`.
+            ///
+            /// - Parameters:
+            ///   - expected_revision:
+            ///   - mutation_id:
+            ///   - task_id:
+            ///   - version:
+            public init(
+                expected_revision: Components.Schemas.Revision,
+                mutation_id: Components.Schemas.MutationIdentity,
+                task_id: Components.Schemas.TaskIdentity,
+                version: Components.Schemas.McpCompleteTaskParams.versionPayload
+            ) {
+                self.expected_revision = expected_revision
+                self.mutation_id = mutation_id
+                self.task_id = task_id
+                self.version = version
+            }
+            public enum CodingKeys: String, CodingKey {
+                case expected_revision
+                case mutation_id
+                case task_id
+                case version
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.expected_revision = try container.decode(
+                    Components.Schemas.Revision.self,
+                    forKey: .expected_revision
+                )
+                self.mutation_id = try container.decode(
+                    Components.Schemas.MutationIdentity.self,
+                    forKey: .mutation_id
+                )
+                self.task_id = try container.decode(
+                    Components.Schemas.TaskIdentity.self,
+                    forKey: .task_id
+                )
+                self.version = try container.decode(
+                    Components.Schemas.McpCompleteTaskParams.versionPayload.self,
+                    forKey: .version
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "expected_revision",
+                    "mutation_id",
+                    "task_id",
+                    "version"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/McpReopenTaskParams`.
+        public struct McpReopenTaskParams: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/McpReopenTaskParams/expected_revision`.
+            public var expected_revision: Components.Schemas.Revision
+            /// - Remark: Generated from `#/components/schemas/McpReopenTaskParams/mutation_id`.
+            public var mutation_id: Components.Schemas.MutationIdentity
+            /// - Remark: Generated from `#/components/schemas/McpReopenTaskParams/task_id`.
+            public var task_id: Components.Schemas.TaskIdentity
+            /// - Remark: Generated from `#/components/schemas/McpReopenTaskParams/version`.
+            @frozen public enum versionPayload: Int, Codable, Hashable, Sendable, CaseIterable {
+                case _1 = 1
+            }
+            /// - Remark: Generated from `#/components/schemas/McpReopenTaskParams/version`.
+            public var version: Components.Schemas.McpReopenTaskParams.versionPayload
+            /// Creates a new `McpReopenTaskParams`.
+            ///
+            /// - Parameters:
+            ///   - expected_revision:
+            ///   - mutation_id:
+            ///   - task_id:
+            ///   - version:
+            public init(
+                expected_revision: Components.Schemas.Revision,
+                mutation_id: Components.Schemas.MutationIdentity,
+                task_id: Components.Schemas.TaskIdentity,
+                version: Components.Schemas.McpReopenTaskParams.versionPayload
+            ) {
+                self.expected_revision = expected_revision
+                self.mutation_id = mutation_id
+                self.task_id = task_id
+                self.version = version
+            }
+            public enum CodingKeys: String, CodingKey {
+                case expected_revision
+                case mutation_id
+                case task_id
+                case version
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.expected_revision = try container.decode(
+                    Components.Schemas.Revision.self,
+                    forKey: .expected_revision
+                )
+                self.mutation_id = try container.decode(
+                    Components.Schemas.MutationIdentity.self,
+                    forKey: .mutation_id
+                )
+                self.task_id = try container.decode(
+                    Components.Schemas.TaskIdentity.self,
+                    forKey: .task_id
+                )
+                self.version = try container.decode(
+                    Components.Schemas.McpReopenTaskParams.versionPayload.self,
+                    forKey: .version
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "expected_revision",
+                    "mutation_id",
+                    "task_id",
+                    "version"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/McpPreviewBulkChangeParams`.
+        public struct McpPreviewBulkChangeParams: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/McpPreviewBulkChangeParams/command`.
+            @frozen public enum commandPayload: String, Codable, Hashable, Sendable, CaseIterable {
+                case trash_task = "trash_task"
+                case restore_task = "restore_task"
+                case undo_task = "undo_task"
+            }
+            /// - Remark: Generated from `#/components/schemas/McpPreviewBulkChangeParams/command`.
+            public var command: Components.Schemas.McpPreviewBulkChangeParams.commandPayload
+            /// - Remark: Generated from `#/components/schemas/McpPreviewBulkChangeParams/mutation_id`.
+            public var mutation_id: Components.Schemas.MutationIdentity
+            /// - Remark: Generated from `#/components/schemas/McpPreviewBulkChangeParams/targetsPayload`.
+            public struct targetsPayloadPayload: Codable, Hashable, Sendable {
+                /// - Remark: Generated from `#/components/schemas/McpPreviewBulkChangeParams/targetsPayload/expected_revision`.
+                public var expected_revision: Components.Schemas.Revision
+                /// - Remark: Generated from `#/components/schemas/McpPreviewBulkChangeParams/targetsPayload/task_id`.
+                public var task_id: Components.Schemas.TaskIdentity
+                /// Creates a new `targetsPayloadPayload`.
+                ///
+                /// - Parameters:
+                ///   - expected_revision:
+                ///   - task_id:
+                public init(
+                    expected_revision: Components.Schemas.Revision,
+                    task_id: Components.Schemas.TaskIdentity
+                ) {
+                    self.expected_revision = expected_revision
+                    self.task_id = task_id
+                }
+                public enum CodingKeys: String, CodingKey {
+                    case expected_revision
+                    case task_id
+                }
+                public init(from decoder: any Swift.Decoder) throws {
+                    let container = try decoder.container(keyedBy: CodingKeys.self)
+                    self.expected_revision = try container.decode(
+                        Components.Schemas.Revision.self,
+                        forKey: .expected_revision
+                    )
+                    self.task_id = try container.decode(
+                        Components.Schemas.TaskIdentity.self,
+                        forKey: .task_id
+                    )
+                    try decoder.ensureNoAdditionalProperties(knownKeys: [
+                        "expected_revision",
+                        "task_id"
+                    ])
+                }
+            }
+            /// - Remark: Generated from `#/components/schemas/McpPreviewBulkChangeParams/targets`.
+            public typealias targetsPayload = [Components.Schemas.McpPreviewBulkChangeParams.targetsPayloadPayload]
+            /// - Remark: Generated from `#/components/schemas/McpPreviewBulkChangeParams/targets`.
+            public var targets: Components.Schemas.McpPreviewBulkChangeParams.targetsPayload
+            /// Creates a new `McpPreviewBulkChangeParams`.
+            ///
+            /// - Parameters:
+            ///   - command:
+            ///   - mutation_id:
+            ///   - targets:
+            public init(
+                command: Components.Schemas.McpPreviewBulkChangeParams.commandPayload,
+                mutation_id: Components.Schemas.MutationIdentity,
+                targets: Components.Schemas.McpPreviewBulkChangeParams.targetsPayload
+            ) {
+                self.command = command
+                self.mutation_id = mutation_id
+                self.targets = targets
+            }
+            public enum CodingKeys: String, CodingKey {
+                case command
+                case mutation_id
+                case targets
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.command = try container.decode(
+                    Components.Schemas.McpPreviewBulkChangeParams.commandPayload.self,
+                    forKey: .command
+                )
+                self.mutation_id = try container.decode(
+                    Components.Schemas.MutationIdentity.self,
+                    forKey: .mutation_id
+                )
+                self.targets = try container.decode(
+                    Components.Schemas.McpPreviewBulkChangeParams.targetsPayload.self,
+                    forKey: .targets
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "command",
+                    "mutation_id",
+                    "targets"
+                ])
+            }
+        }
+        /// - Remark: Generated from `#/components/schemas/McpCommitBulkChangeParams`.
+        public struct McpCommitBulkChangeParams: Codable, Hashable, Sendable {
+            /// - Remark: Generated from `#/components/schemas/McpCommitBulkChangeParams/mutation_id`.
+            public var mutation_id: Components.Schemas.MutationIdentity
+            /// - Remark: Generated from `#/components/schemas/McpCommitBulkChangeParams/preview_token`.
+            public var preview_token: Swift.String
+            /// Creates a new `McpCommitBulkChangeParams`.
+            ///
+            /// - Parameters:
+            ///   - mutation_id:
+            ///   - preview_token:
+            public init(
+                mutation_id: Components.Schemas.MutationIdentity,
+                preview_token: Swift.String
+            ) {
+                self.mutation_id = mutation_id
+                self.preview_token = preview_token
+            }
+            public enum CodingKeys: String, CodingKey {
+                case mutation_id
+                case preview_token
+            }
+            public init(from decoder: any Swift.Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                self.mutation_id = try container.decode(
+                    Components.Schemas.MutationIdentity.self,
+                    forKey: .mutation_id
+                )
+                self.preview_token = try container.decode(
+                    Swift.String.self,
+                    forKey: .preview_token
+                )
+                try decoder.ensureNoAdditionalProperties(knownKeys: [
+                    "mutation_id",
+                    "preview_token"
                 ])
             }
         }

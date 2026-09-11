@@ -382,7 +382,7 @@ export async function runElectronLeg({ inputDigest, origin, runId, sessionCookie
 // already be installed on a booted simulator (or reachable per Phase 4's
 // physical-device setup) -- this plan does not build or install the app.
 
-export async function runIphoneLeg() {
+export async function runIphoneLeg({ inputDigest, origin, runId, sessionCookie }) {
   const bootedList = spawnSync('xcrun', ['simctl', 'list', 'devices', 'booted'], { encoding: 'utf8' })
   const bootedLine = (bootedList.stdout ?? '').split('\n').find((line) => line.includes('(Booted)'))
   if (!bootedLine) {
@@ -401,14 +401,13 @@ export async function runIphoneLeg() {
         '(this plan does not build or install it; see docs/testing/ios-testing.md for the build/install lanes).',
     )
   }
-  // An installed app was found, but this lane has no live UI/recording-
-  // proxy driver wired to it yet -- driving the installed app through the
-  // same recording-proxy pattern `verify-real-stack-ios.mjs` uses is the
-  // next increment. Reported BLOCKED, not silently skipped or faked.
-  throw blocked(
-    `Keepling is installed on the booted simulator ${udid}, but this leg has no live UI driver wired to it yet -- ` +
-      'see tooling/cross-adapter/legs.mjs runIphoneLeg() and docs/testing/cross-adapter-testing.md for the disclosed gap',
-  )
+  const { createIphoneAdapter } = await import('./iphone-driver.mjs')
+  const adapter = await createIphoneAdapter({ origin, sessionCookie })
+  try {
+    return await runSharedScenarioSet('iphone', adapter, { inputDigest, origin, runId, sessionCookie })
+  } finally {
+    await adapter.teardown()
+  }
 }
 
 export const LEG_RUNNERS = {

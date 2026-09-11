@@ -1169,6 +1169,396 @@ public enum Operations {
             }
         }
     }
+    /// List installation grants for the signed-in owner's browser
+    ///
+    /// T-05-13. The owner's browser has no device grant, so it cannot reach the bearer-only `/device-grants` routes. This is the same inventory read through the session credential instead. It is a separate route rather than a widened pipeline on `/device-grants`, because widening that pipeline would admit EVERY device grant -- including an agent's -- to grant administration.
+    ///
+    /// - Remark: HTTP `GET /account/device-grants`.
+    /// - Remark: Generated from `#/paths//account/device-grants/get(listAccountDeviceGrants)`.
+    public enum listAccountDeviceGrants {
+        public static let id: Swift.String = "listAccountDeviceGrants"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/account/device-grants/GET/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listAccountDeviceGrants.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.listAccountDeviceGrants.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.listAccountDeviceGrants.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - headers:
+            public init(headers: Operations.listAccountDeviceGrants.Input.Headers = .init()) {
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/account/device-grants/GET/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/account/device-grants/GET/responses/200/content/application\/json`.
+                    case json(Components.Schemas.DeviceGrantsResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.DeviceGrantsResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.listAccountDeviceGrants.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.listAccountDeviceGrants.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Installation grant inventory without credential material
+            ///
+            /// - Remark: Generated from `#/paths//account/device-grants/get(listAccountDeviceGrants)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.listAccountDeviceGrants.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.listAccountDeviceGrants.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Closed RFC 9457 problem
+            ///
+            /// - Remark: Generated from `#/paths//account/device-grants/get(listAccountDeviceGrants)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Components.Responses.ProblemResponse)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Components.Responses.ProblemResponse {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Closed RFC 9457 problem
+            ///
+            /// - Remark: Generated from `#/paths//account/device-grants/get(listAccountDeviceGrants)/responses/503`.
+            ///
+            /// HTTP response code: `503 serviceUnavailable`.
+            case serviceUnavailable(Components.Responses.ProblemResponse)
+            /// The associated value of the enum case if `self` is `.serviceUnavailable`.
+            ///
+            /// - Throws: An error if `self` is not `.serviceUnavailable`.
+            /// - SeeAlso: `.serviceUnavailable`.
+            public var serviceUnavailable: Components.Responses.ProblemResponse {
+                get throws {
+                    switch self {
+                    case let .serviceUnavailable(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "serviceUnavailable",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case application_problem_plus_json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                case "application/problem+json":
+                    self = .application_problem_plus_json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                case .application_problem_plus_json:
+                    return "application/problem+json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json,
+                    .application_problem_plus_json
+                ]
+            }
+        }
+    }
+    /// Idempotently revoke one installation grant from the owner's browser
+    ///
+    /// - Remark: HTTP `DELETE /account/device-grants/{installation_id}`.
+    /// - Remark: Generated from `#/paths//account/device-grants/{installation_id}/delete(revokeAccountDeviceGrant)`.
+    public enum revokeAccountDeviceGrant {
+        public static let id: Swift.String = "revokeAccountDeviceGrant"
+        public struct Input: Sendable, Hashable {
+            /// - Remark: Generated from `#/paths/account/device-grants/{installation_id}/DELETE/path`.
+            public struct Path: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/account/device-grants/{installation_id}/DELETE/path/installation_id`.
+                public var installation_id: Components.Schemas.InstallationIdentity
+                /// Creates a new `Path`.
+                ///
+                /// - Parameters:
+                ///   - installation_id:
+                public init(installation_id: Components.Schemas.InstallationIdentity) {
+                    self.installation_id = installation_id
+                }
+            }
+            public var path: Operations.revokeAccountDeviceGrant.Input.Path
+            /// - Remark: Generated from `#/paths/account/device-grants/{installation_id}/DELETE/header`.
+            public struct Headers: Sendable, Hashable {
+                public var accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.revokeAccountDeviceGrant.AcceptableContentType>]
+                /// Creates a new `Headers`.
+                ///
+                /// - Parameters:
+                ///   - accept:
+                public init(accept: [OpenAPIRuntime.AcceptHeaderContentType<Operations.revokeAccountDeviceGrant.AcceptableContentType>] = .defaultValues()) {
+                    self.accept = accept
+                }
+            }
+            public var headers: Operations.revokeAccountDeviceGrant.Input.Headers
+            /// Creates a new `Input`.
+            ///
+            /// - Parameters:
+            ///   - path:
+            ///   - headers:
+            public init(
+                path: Operations.revokeAccountDeviceGrant.Input.Path,
+                headers: Operations.revokeAccountDeviceGrant.Input.Headers = .init()
+            ) {
+                self.path = path
+                self.headers = headers
+            }
+        }
+        @frozen public enum Output: Sendable, Hashable {
+            public struct Ok: Sendable, Hashable {
+                /// - Remark: Generated from `#/paths/account/device-grants/{installation_id}/DELETE/responses/200/content`.
+                @frozen public enum Body: Sendable, Hashable {
+                    /// - Remark: Generated from `#/paths/account/device-grants/{installation_id}/DELETE/responses/200/content/application\/json`.
+                    case json(Components.Schemas.DeviceGrantRevocationResponse)
+                    /// The associated value of the enum case if `self` is `.json`.
+                    ///
+                    /// - Throws: An error if `self` is not `.json`.
+                    /// - SeeAlso: `.json`.
+                    public var json: Components.Schemas.DeviceGrantRevocationResponse {
+                        get throws {
+                            switch self {
+                            case let .json(body):
+                                return body
+                            }
+                        }
+                    }
+                }
+                /// Received HTTP response body
+                public var body: Operations.revokeAccountDeviceGrant.Output.Ok.Body
+                /// Creates a new `Ok`.
+                ///
+                /// - Parameters:
+                ///   - body: Received HTTP response body
+                public init(body: Operations.revokeAccountDeviceGrant.Output.Ok.Body) {
+                    self.body = body
+                }
+            }
+            /// Installation grant is revoked
+            ///
+            /// - Remark: Generated from `#/paths//account/device-grants/{installation_id}/delete(revokeAccountDeviceGrant)/responses/200`.
+            ///
+            /// HTTP response code: `200 ok`.
+            case ok(Operations.revokeAccountDeviceGrant.Output.Ok)
+            /// The associated value of the enum case if `self` is `.ok`.
+            ///
+            /// - Throws: An error if `self` is not `.ok`.
+            /// - SeeAlso: `.ok`.
+            public var ok: Operations.revokeAccountDeviceGrant.Output.Ok {
+                get throws {
+                    switch self {
+                    case let .ok(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "ok",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Closed RFC 9457 problem
+            ///
+            /// - Remark: Generated from `#/paths//account/device-grants/{installation_id}/delete(revokeAccountDeviceGrant)/responses/401`.
+            ///
+            /// HTTP response code: `401 unauthorized`.
+            case unauthorized(Components.Responses.ProblemResponse)
+            /// The associated value of the enum case if `self` is `.unauthorized`.
+            ///
+            /// - Throws: An error if `self` is not `.unauthorized`.
+            /// - SeeAlso: `.unauthorized`.
+            public var unauthorized: Components.Responses.ProblemResponse {
+                get throws {
+                    switch self {
+                    case let .unauthorized(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "unauthorized",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Closed RFC 9457 problem
+            ///
+            /// - Remark: Generated from `#/paths//account/device-grants/{installation_id}/delete(revokeAccountDeviceGrant)/responses/403`.
+            ///
+            /// HTTP response code: `403 forbidden`.
+            case forbidden(Components.Responses.ProblemResponse)
+            /// The associated value of the enum case if `self` is `.forbidden`.
+            ///
+            /// - Throws: An error if `self` is not `.forbidden`.
+            /// - SeeAlso: `.forbidden`.
+            public var forbidden: Components.Responses.ProblemResponse {
+                get throws {
+                    switch self {
+                    case let .forbidden(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "forbidden",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Closed RFC 9457 problem
+            ///
+            /// - Remark: Generated from `#/paths//account/device-grants/{installation_id}/delete(revokeAccountDeviceGrant)/responses/404`.
+            ///
+            /// HTTP response code: `404 notFound`.
+            case notFound(Components.Responses.ProblemResponse)
+            /// The associated value of the enum case if `self` is `.notFound`.
+            ///
+            /// - Throws: An error if `self` is not `.notFound`.
+            /// - SeeAlso: `.notFound`.
+            public var notFound: Components.Responses.ProblemResponse {
+                get throws {
+                    switch self {
+                    case let .notFound(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "notFound",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Closed RFC 9457 problem
+            ///
+            /// - Remark: Generated from `#/paths//account/device-grants/{installation_id}/delete(revokeAccountDeviceGrant)/responses/503`.
+            ///
+            /// HTTP response code: `503 serviceUnavailable`.
+            case serviceUnavailable(Components.Responses.ProblemResponse)
+            /// The associated value of the enum case if `self` is `.serviceUnavailable`.
+            ///
+            /// - Throws: An error if `self` is not `.serviceUnavailable`.
+            /// - SeeAlso: `.serviceUnavailable`.
+            public var serviceUnavailable: Components.Responses.ProblemResponse {
+                get throws {
+                    switch self {
+                    case let .serviceUnavailable(response):
+                        return response
+                    default:
+                        try throwUnexpectedResponseStatus(
+                            expectedStatus: "serviceUnavailable",
+                            response: self
+                        )
+                    }
+                }
+            }
+            /// Undocumented response.
+            ///
+            /// A response with a code that is not documented in the OpenAPI document.
+            case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+        }
+        @frozen public enum AcceptableContentType: AcceptableProtocol {
+            case json
+            case application_problem_plus_json
+            case other(Swift.String)
+            public init?(rawValue: Swift.String) {
+                switch rawValue.lowercased() {
+                case "application/json":
+                    self = .json
+                case "application/problem+json":
+                    self = .application_problem_plus_json
+                default:
+                    self = .other(rawValue)
+                }
+            }
+            public var rawValue: Swift.String {
+                switch self {
+                case let .other(string):
+                    return string
+                case .json:
+                    return "application/json"
+                case .application_problem_plus_json:
+                    return "application/problem+json"
+                }
+            }
+            public static var allCases: [Self] {
+                [
+                    .json,
+                    .application_problem_plus_json
+                ]
+            }
+        }
+    }
     /// Pull one bounded account-scoped synchronization page
     ///
     /// - Remark: HTTP `GET /sync`.

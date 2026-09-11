@@ -289,4 +289,85 @@ final class ServerDrivenTests: XCTestCase {
         return object["revision"] as? Int
     }
 
+    // MARK: - 5/6. Cross-adapter shared scenarios (06-05-PLAN.md Task 3)
+    //
+    // Drives the SAME four scenarios every other adapter leg proves
+    // (`tooling/cross-adapter/legs.mjs`'s `SHARED_SCENARIOS`), through the
+    // exact `KeeplingSyncAdapter` this file already proves end to end
+    // above -- never a stub, never a fixture, and never a second,
+    // test-only command surface added to the shipped app: this is a test
+    // target driving production `Application`-layer code
+    // (`OutboundCommands`, `KeeplingSyncAdapter`) exactly the way
+    // `testAByteIdenticalReplayIsAcceptedOnceByTheRealServer` above
+    // already does.
+    //
+    // Each method performs exactly ONE action, so
+    // `tooling/cross-adapter/iphone-driver.mjs` can drive them like RPCs:
+    // one `xcodebuild test-without-building
+    // -only-testing:KeeplingCoreTests/ServerDrivenTests/<method>`
+    // invocation per call, with parameters threaded through the SAME
+    // `.xctestrun`-injected `KEEPLING_LANE_*` environment variables
+    // `tooling/ios-device/server-driven-run.mjs` already uses. The result
+    // is printed to stdout as one parseable `IOS_CROSS_ADAPTER_RESULT`
+    // line; the driver script reads the affected task back from the real
+    // server's own API afterward, exactly like every other leg -- this
+    // suite's own self-report of what it sent is never the comparison
+    // source (D-27).
+
+    func testCrossAdapterCapture() async throws {
+        let lane = try laneEnvironment()
+        let environment = ProcessInfo.processInfo.environment
+        guard let title = environment["KEEPLING_LANE_TASK_TITLE"], !title.isEmpty else {
+            XCTFail("testCrossAdapterCapture requires KEEPLING_LANE_TASK_TITLE")
+            return
+        }
+        // The client mints its OWN task id, locally -- exactly as the real
+        // outbox does -- never handed one by the harness
+        // (06-05-PLAN.md Task 1's "a leg must be able to mint its own task
+        // id" requirement).
+        let taskId = UUID().uuidString
+        let port = try adapter(for: lane, credential: lane.bearer)
+        let capture = try OutboundCommands.capture(title: title, mutationId: UUID().uuidString, taskId: taskId)
+        let acknowledgement = try await port.push(toLocalMutation(capture))
+        print("IOS_CROSS_ADAPTER_RESULT action=capture task_id=\(taskId) outcome=\(acknowledgement.outcome.rawValue)")
+    }
+
+    /// Drives `complete_task` or `reopen_task` with a caller-supplied
+    /// `expected_revision` -- the same lifecycle verb the shared cross-
+    /// adapter scenario set uses for both the ordinary `complete_task` /
+    /// `reopen_task` scenarios AND, called again with the ORIGINAL
+    /// (now-stale) revision after an out-of-band advance, the
+    /// `update_stale_expected_revision` scenario. `baseTitle`/`baseNotes`
+    /// are carried only in the LOCAL optimistic effect, never in the wire
+    /// bytes for a lifecycle command (`OutboundCommands.lifecycle`'s own
+    /// doc comment), so their exact value has no bearing on the server's
+    /// accept/refuse decision under test here.
+    func testCrossAdapterLifecycle() async throws {
+        let lane = try laneEnvironment()
+        let environment = ProcessInfo.processInfo.environment
+        guard
+            let taskId = environment["KEEPLING_LANE_TASK_ID"], !taskId.isEmpty,
+            let transitionRaw = environment["KEEPLING_LANE_TRANSITION"],
+            let expectedRevisionRaw = environment["KEEPLING_LANE_EXPECTED_REVISION"],
+            let expectedRevision = Int(expectedRevisionRaw)
+        else {
+            XCTFail(
+                "testCrossAdapterLifecycle requires KEEPLING_LANE_TASK_ID / KEEPLING_LANE_TRANSITION " +
+                "(complete|reopen) / KEEPLING_LANE_EXPECTED_REVISION"
+            )
+            return
+        }
+        guard let transition = OutboundCommands.Lifecycle(rawValue: transitionRaw == "complete" ? "complete_task" : "reopen_task") else {
+            XCTFail("testCrossAdapterLifecycle: unrecognised KEEPLING_LANE_TRANSITION \(transitionRaw)")
+            return
+        }
+        let port = try adapter(for: lane, credential: lane.bearer)
+        let basis = OutboundCommands.Basis(baseTitle: "cross-adapter", baseNotes: "", expectedRevision: expectedRevision)
+        let command = try OutboundCommands.lifecycle(
+            transition, taskId: taskId, basis: basis, mutationId: UUID().uuidString, acceptedAt: "2026-01-01T00:00:00Z"
+        )
+        let acknowledgement = try await port.push(toLocalMutation(command))
+        print("IOS_CROSS_ADAPTER_RESULT action=\(transitionRaw) task_id=\(taskId) outcome=\(acknowledgement.outcome.rawValue)")
+    }
+
 }

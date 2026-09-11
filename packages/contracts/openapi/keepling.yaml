@@ -2721,6 +2721,8 @@ components:
           enum:
             - notes
             - title
+            - completed_at
+            - trashed_at
         mine:
           type: [string, 'null']
     PersistedConflict:
