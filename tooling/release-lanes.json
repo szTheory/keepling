@@ -5,5 +5,19 @@
     "job": "ci-contract",
     "authority": "ci",
     "physicalBlocker": null
+  },
+  {
+    "lane": "export-elixir",
+    "workflow": "repository-integrity.yml",
+    "job": "phase2-server",
+    "authority": "ci",
+    "physicalBlocker": null
+  },
+  {
+    "lane": "export-reader",
+    "workflow": "repository-integrity.yml",
+    "job": "ci-contract",
+    "authority": "ci",
+    "physicalBlocker": null
   }
 ]

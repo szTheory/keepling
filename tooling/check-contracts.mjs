@@ -354,8 +354,8 @@ const validateRedactionVectors = (vectors) => {
 }
 
 /**
- * D-15 cross-consumer gate (04-03-PLAN.md Task 3): every one of the 13
- * golden vector files in packages/contracts/vectors/ declares its required
+ * D-15 cross-consumer gate (04-03-PLAN.md Task 3): every golden vector file
+ * in packages/contracts/vectors/ declares its required
  * consumers in manifest.json. This fails loudly when a listed consumer did
  * not (or can no longer be proven to) execute a file it is listed for --
  * never a silent, hand-maintained assumption.
@@ -422,7 +422,7 @@ const validateVectorManifest = () => {
   const actualFiles = readdirSync(vectorsDirectory)
     .filter((entry) => entry.endsWith('.json') && entry !== 'manifest.json')
     .sort()
-  if (actualFiles.length !== 15) fail(`expected 15 vector files, found ${actualFiles.length}: ${actualFiles.join(', ')}`)
+  if (actualFiles.length !== 16) fail(`expected 16 vector files, found ${actualFiles.length}: ${actualFiles.join(', ')}`)
   for (const file of actualFiles) {
     if (!manifestFiles.includes(file)) fail(`vector file not in manifest: ${file}`)
   }

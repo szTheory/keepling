@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "description": "D-07 lane 2 (06-08-PLAN.md Task 3): a fixed-fixture, fixed-clock export bundle pinning the exact bytes both the Elixir producer's own round-trip test and the independent tooling reader must reproduce. Built by calling Keepling.Application.Export.write_bundle/4 directly with hand-authored entity records and manifest_extra -- never a live database read -- so the fixture is deterministic across every run and every environment, with no dependency on migration-seeded state such as a real restore epoch.",
+  "excluded_manifest_fields": {
+    "generated_at": "the wall-clock instant write_bundle/4 ran, always DateTime.utc_now() -- provenance only per FORMAT.md, never a compatibility or byte-identity signal",
+    "keepling_version": "the running Keepling release version, provenance only per FORMAT.md"
+  },
+  "fixture": {
+    "account_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    "manifest_extra": {
+      "feed_high_water_sequence": 42,
+      "restore_epoch": "55555555-5555-4555-8555-555555555555"
+    },
+    "entities": {
+      "task": [
+        {
+          "id": "33333333-3333-4333-8333-333333333333",
+          "title": "Golden task",
+          "notes": "",
+          "inbox_state": "clarified",
+          "project_id": "11111111-1111-4111-8111-111111111111",
+          "tag_ids": ["22222222-2222-4222-8222-222222222222"],
+          "planned_on": null,
+          "deadline_on": null,
+          "completed_at": null,
+          "trashed_at": null,
+          "captured_at": "2026-09-11T12:00:00.000000Z",
+          "revision": 1
+        }
+      ],
+      "project": [
+        {
+          "id": "11111111-1111-4111-8111-111111111111",
+          "kind": "project",
+          "display_name": "Golden Project",
+          "archived_at": null
+        }
+      ],
+      "tag": [
+        {
+          "id": "22222222-2222-4222-8222-222222222222",
+          "kind": "tag",
+          "display_name": "Golden Tag",
+          "archived_at": null
+        }
+      ],
+      "task-activity": [],
+      "conflict": [],
+      "today-order": [
+        {
+          "task_id": "33333333-3333-4333-8333-333333333333",
+          "section": "today",
+          "position": 1
+        }
+      ],
+      "account-settings": [
+        { "timezone": "America/New_York" }
+      ],
+      "access-inventory": [
+        {
+          "kind": "device_grant",
+          "id": "44444444-4444-4444-8444-444444444444",
+          "client_kind": "electron",
+          "label": "Golden Mac",
+          "scope": [],
+          "inserted_at": "2026-09-11T12:00:00.000000Z",
+          "revoked_at": null
+        }
+      ]
+    }
+  },
+  "expected": {
+    "manifest": {
+      "export_format_version": 1,
+      "account_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      "feed_high_water_sequence": 42,
+      "restore_epoch": "55555555-5555-4555-8555-555555555555",
+      "files": [
+        { "path": "data/task.ndjson", "sha256": "5446ac00a4c14f07201d8f9ecf57acf88ace605007414c453ccb4d36806070d5", "rowCount": 1 },
+        { "path": "data/project.ndjson", "sha256": "a362d3f27ec35f90252bf712740908ff0fba8f933e6dce896c7e066448436992", "rowCount": 1 },
+        { "path": "data/tag.ndjson", "sha256": "24c1fef977de302b95bd3745a55b85d5fd01564db48768e86aac740736286e65", "rowCount": 1 },
+        { "path": "data/task-activity.ndjson", "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "rowCount": 0 },
+        { "path": "data/conflict.ndjson", "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "rowCount": 0 },
+        { "path": "data/today-order.ndjson", "sha256": "6845cb92b451cecc3de0c3ae6305e0908e8b3aea324766c405304cd6cda254e7", "rowCount": 1 },
+        { "path": "data/account-settings.ndjson", "sha256": "0b35cf7f860d6c1b363fe8507c21ce66772cbd841a4ef08b7bb7c65c6c760b54", "rowCount": 1 },
+        { "path": "data/access-inventory.ndjson", "sha256": "4d927d3e6fca3146935900cd567b688dd5284264ed8c55eec2820fbee93d44eb", "rowCount": 1 },
+        { "path": "tasks.md", "sha256": "fee4abe5f45f55313267fa51e50d8fd6c7e2ba5a0007339c015eeaf4a149dd25", "rowCount": 1 },
+        { "path": "FORMAT.md", "sha256": "bcbee470a1fd3424fb65e07b068004195f19f87cdc769709f838721ecf6fabc0", "rowCount": 90 }
+      ]
+    },
+    "files": {
+      "data/task.ndjson": "{\"captured_at\":\"2026-09-11T12:00:00.000000Z\",\"completed_at\":null,\"deadline_on\":null,\"id\":\"33333333-3333-4333-8333-333333333333\",\"inbox_state\":\"clarified\",\"notes\":\"\",\"planned_on\":null,\"project_id\":\"11111111-1111-4111-8111-111111111111\",\"revision\":1,\"tag_ids\":[\"22222222-2222-4222-8222-222222222222\"],\"title\":\"Golden task\",\"trashed_at\":null}\n",
+      "data/project.ndjson": "{\"archived_at\":null,\"display_name\":\"Golden Project\",\"id\":\"11111111-1111-4111-8111-111111111111\",\"kind\":\"project\"}\n",
+      "data/tag.ndjson": "{\"archived_at\":null,\"display_name\":\"Golden Tag\",\"id\":\"22222222-2222-4222-8222-222222222222\",\"kind\":\"tag\"}\n",
+      "data/task-activity.ndjson": "",
+      "data/conflict.ndjson": "",
+      "data/today-order.ndjson": "{\"position\":1,\"section\":\"today\",\"task_id\":\"33333333-3333-4333-8333-333333333333\"}\n",
+      "data/account-settings.ndjson": "{\"timezone\":\"America/New_York\"}\n",
+      "data/access-inventory.ndjson": "{\"client_kind\":\"electron\",\"id\":\"44444444-4444-4444-8444-444444444444\",\"inserted_at\":\"2026-09-11T12:00:00.000000Z\",\"kind\":\"device_grant\",\"label\":\"Golden Mac\",\"revoked_at\":null,\"scope\":[]}\n",
+      "tasks.md": "# Tasks\n\n- [ ] Golden task\n"
+    }
+  }
+}

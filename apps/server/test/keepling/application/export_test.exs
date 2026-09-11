@@ -347,6 +347,47 @@ defmodule Keepling.Application.ExportTest do
     assert Integer.to_string(stat.mode, 8) |> String.slice(-3, 3) == "600"
   end
 
+  # -- D-07 lane 2: golden vector byte comparison (06-08-PLAN.md Task 3) ----
+
+  @golden_vector_path Path.expand(
+                         "../../../../../packages/contracts/vectors/export-golden.json",
+                         __DIR__
+                       )
+  @external_resource @golden_vector_path
+
+  test "the export bundle matches its registered golden vector, byte for byte", %{
+    destination_dir: destination_dir
+  } do
+    golden = @golden_vector_path |> File.read!() |> Jason.decode!()
+    fixture = golden["fixture"]
+    expected = golden["expected"]
+
+    entity_streams = Map.new(Export.entities(), fn entity -> {entity, fixture["entities"][entity]} end)
+
+    assert {:ok, result} =
+             Export.write_bundle(
+               fixture["account_id"],
+               destination_dir,
+               entity_streams,
+               fixture["manifest_extra"]
+             )
+
+    entries = bundle_entries(result.bundle_path)
+
+    for {path, expected_content} <- expected["files"] do
+      assert entries[path] == expected_content, "#{path} did not match the golden vector"
+    end
+
+    format_md_path =
+      Path.expand("../../../../../packages/contracts/schemas/export/FORMAT.md", __DIR__)
+
+    assert entries["FORMAT.md"] == File.read!(format_md_path),
+           "FORMAT.md in the bundle no longer matches the checked-in copy verbatim"
+
+    manifest = Jason.decode!(entries["manifest.json"])
+    assert Map.drop(manifest, ["generated_at", "keepling_version"]) == expected["manifest"]
+  end
+
   defp run_export(destination_dir) do
     with_connection(fn _pid ->
       PostgresExport.execute("export", %{"destination_dir" => destination_dir}, %{})

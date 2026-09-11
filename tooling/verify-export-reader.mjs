@@ -202,10 +202,11 @@ const readBundleEntry = (bundlePath, entryPath) => {
 }
 
 const args = process.argv.slice(2)
-const bundlePath = args[0] ? resolve(args[0]) : null
+const goldenMode = args.includes('--golden')
+const bundlePath = !goldenMode && args[0] ? resolve(args[0]) : null
 
-if (!bundlePath) {
-  fail('usage: node tooling/verify-export-reader.mjs <bundle.zip>')
+if (!goldenMode && !bundlePath) {
+  fail('usage: node tooling/verify-export-reader.mjs <bundle.zip>  |  node tooling/verify-export-reader.mjs --golden')
   process.exit(2)
 }
 
@@ -225,6 +226,102 @@ for (const relativePath of TRACKED_INPUT_PATHS) {
 const trackedInputSha256 = trackedInputDigest.digest('hex')
 
 const startedAtMs = Date.now()
+
+// Entity name (as it appears in packages/contracts/schemas/export/) for
+// each data/*.ndjson path a bundle (or the golden vector) can carry.
+const ENTITY_SCHEMA_BY_PATH = Object.fromEntries(
+  ['task', 'project', 'tag', 'task-activity', 'conflict', 'today-order', 'account-settings', 'access-inventory'].map(
+    (entity) => [`data/${entity}.ndjson`, entity],
+  ),
+)
+
+const entitySchemas = new Map()
+const schemaFor = (entity) => {
+  if (!entitySchemas.has(entity)) {
+    const schemaPath = join(schemasDir, `${entity}.schema.json`)
+    entitySchemas.set(entity, JSON.parse(readFileSync(schemaPath, 'utf8')))
+  }
+  return entitySchemas.get(entity)
+}
+
+// -- D-07 lane 2 (06-08-PLAN.md Task 3): golden vector byte comparison ------
+// `--golden` holds this reader to the SAME bytes the Elixir export_test.exs
+// golden-vector case does, by an independent route: it never runs the
+// Elixir producer -- it recomputes every recorded sha256/rowCount straight
+// from `expected.files`' own literal content strings and asserts they
+// equal `expected.manifest.files`, then validates every entity record
+// against its checked-in schema. A vector whose checked-in digests
+// disagree with its own checked-in content fails here exactly as it would
+// fail a real bundle comparison.
+if (goldenMode) {
+  const goldenPath = join(repositoryRoot, 'packages', 'contracts', 'vectors', 'export-golden.json')
+  let golden
+  try {
+    golden = JSON.parse(readFileSync(goldenPath, 'utf8'))
+  } catch (error) {
+    fail(`BLOCKED: could not read/parse ${goldenPath}: ${error instanceof Error ? error.message : String(error)}`)
+    process.exit(1)
+  }
+
+  let goldenFailed = false
+  let goldenCases = 0
+  const manifestFilesByPath = Object.fromEntries(golden.expected.manifest.files.map((entry) => [entry.path, entry]))
+
+  for (const [path, content] of Object.entries(golden.expected.files)) {
+    const manifestEntry = manifestFilesByPath[path]
+    if (!manifestEntry) {
+      fail(`golden vector file "${path}" has no corresponding expected.manifest.files entry`)
+      goldenFailed = true
+      continue
+    }
+    const bytes = Buffer.from(content, 'utf8')
+    const actualSha256 = sha256Hex(bytes)
+    if (actualSha256 !== manifestEntry.sha256) {
+      fail(`golden vector "${path}": recorded sha256 does not match its own checked-in content (recorded=${manifestEntry.sha256} actual=${actualSha256})`)
+      goldenFailed = true
+    } else {
+      goldenCases += 1
+    }
+
+    const entity = ENTITY_SCHEMA_BY_PATH[path]
+    if (!entity) continue
+    const nonEmptyLines = content.split('\n').filter((line) => line.length > 0)
+    if (nonEmptyLines.length !== manifestEntry.rowCount) {
+      fail(`golden vector "${path}": recorded rowCount ${manifestEntry.rowCount} does not match its own content (actual=${nonEmptyLines.length})`)
+      goldenFailed = true
+      continue
+    }
+    const schema = schemaFor(entity)
+    for (const [index, line] of nonEmptyLines.entries()) {
+      const record = JSON.parse(line)
+      const errors = validateAgainstSchema(schema, record, `${path}:${index + 1}`)
+      if (errors.length > 0) {
+        for (const schemaError of errors) fail(schemaError)
+        goldenFailed = true
+      } else {
+        goldenCases += 1
+      }
+    }
+  }
+
+  const formatMdPath = join(schemasDir, 'FORMAT.md')
+  const formatMdOnDisk = readFileSync(formatMdPath, 'utf8')
+  const formatMdEntry = manifestFilesByPath['FORMAT.md']
+  if (formatMdEntry && sha256Hex(Buffer.from(formatMdOnDisk, 'utf8')) !== formatMdEntry.sha256) {
+    fail('golden vector "FORMAT.md": recorded sha256 does not match the checked-in FORMAT.md on disk')
+    goldenFailed = true
+  } else if (formatMdEntry) {
+    goldenCases += 1
+  }
+
+  if (goldenFailed) {
+    fail('export-golden.json vector did not self-validate')
+    process.exit(1)
+  }
+
+  console.log(`verify-export-reader --golden PASSED cases=${goldenCases} trackedInputSha256=${trackedInputSha256}`)
+  process.exit(0)
+}
 
 if (!existsSync(bundlePath)) {
   fail(`BLOCKED: bundle does not exist at ${bundlePath}`)
@@ -255,23 +352,6 @@ try {
 if (!Array.isArray(manifest.files) || manifest.files.length === 0) {
   fail('manifest.json declares zero files -- a vacuous manifest is refused, never a pass')
   process.exit(1)
-}
-
-// Entity name (as it appears in packages/contracts/schemas/export/) for
-// each data/*.ndjson path this bundle can carry.
-const ENTITY_SCHEMA_BY_PATH = Object.fromEntries(
-  ['task', 'project', 'tag', 'task-activity', 'conflict', 'today-order', 'account-settings', 'access-inventory'].map(
-    (entity) => [`data/${entity}.ndjson`, entity],
-  ),
-)
-
-const entitySchemas = new Map()
-const schemaFor = (entity) => {
-  if (!entitySchemas.has(entity)) {
-    const schemaPath = join(schemasDir, `${entity}.schema.json`)
-    entitySchemas.set(entity, JSON.parse(readFileSync(schemaPath, 'utf8')))
-  }
-  return entitySchemas.get(entity)
 }
 
 let overallFailed = false

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_comment": "Per-file required consumers for the 15 golden vector files in this directory. Consumers are harnesses that execute a file's cases against real reducer/domain logic and assert the file's own expectations -- not merely parse or structurally validate it. Membership was determined by inspecting every consuming test file directly (04-03-PLAN.md Task 3; full evidence trail in 04-03-SUMMARY.md), never hand-guessed: only sync.json binds packages/contracts/schemas/sync-state-machine.schema.json among these 15 files, so it is the only file with more than one consumer bound to a shared schema. mcp-injection.json (05-11-PLAN.md) is the only file whose 'tooling' consumer is proven by a static executed-file report at tooling/vector-conformance-reports/tooling.json rather than a regenerated one -- see that report's own comment. The other files bind their own domain-specific shapes (task lifecycle, conflicts, organizations, undo, activity, task dates, trash/restore, compatibility, redaction, recovery, account-lifecycle, MCP tool schemas/errors -- 05-05-PLAN.md, MCP adversarial injection corpus -- 05-11-PLAN.md) and are exercised only by their owning Elixir test module (plus, for mcp-injection.json, the tooling adversarial lane). Enforced by tooling/check-contracts.mjs's cross-consumer gate.",
+  "_comment": "Per-file required consumers for the 16 golden vector files in this directory. Consumers are harnesses that execute a file's cases against real reducer/domain logic and assert the file's own expectations -- not merely parse or structurally validate it. Membership was determined by inspecting every consuming test file directly (04-03-PLAN.md Task 3; full evidence trail in 04-03-SUMMARY.md), never hand-guessed: only sync.json binds packages/contracts/schemas/sync-state-machine.schema.json among these files, so it is the only file whose multiple consumers share ONE schema. mcp-injection.json (05-11-PLAN.md) and export-golden.json (06-08-PLAN.md) are the only files whose 'tooling' consumer is proven by a static executed-file report at tooling/vector-conformance-reports/tooling.json rather than a regenerated one -- see that report's own comment. export-golden.json's 'elixir' consumer is export_test.exs's golden-vector byte-comparison case; its 'tooling' consumer is `node tooling/verify-export-reader.mjs --golden`, which independently recomputes every recorded digest/rowCount from the vector's own checked-in content and validates every record against its entity schema -- proof the two readers are held to the same bytes without the tooling reader ever running the Elixir producer. The other files bind their own domain-specific shapes (task lifecycle, conflicts, organizations, undo, activity, task dates, trash/restore, compatibility, redaction, recovery, account-lifecycle, MCP tool schemas/errors -- 05-05-PLAN.md, MCP adversarial injection corpus -- 05-11-PLAN.md) and are exercised only by their owning Elixir test module (plus, for mcp-injection.json, the tooling adversarial lane). Enforced by tooling/check-contracts.mjs's cross-consumer gate.",
   "files": {
     "account-lifecycle.json": {
       "consumers": ["elixir"]
@@ -16,6 +16,9 @@
     },
     "editing.json": {
       "consumers": ["elixir"]
+    },
+    "export-golden.json": {
+      "consumers": ["elixir", "tooling"]
     },
     "lifecycle.json": {
       "consumers": ["elixir"]
