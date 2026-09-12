@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto'
-import { existsSync, lstatSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync } from 'node:fs'
+import { existsSync, lstatSync, mkdtempSync, readFileSync, readdirSync, readlinkSync, rmSync, writeFileSync } from 'node:fs'
 import { homedir, tmpdir } from 'node:os'
 import { basename, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import process from 'node:process'
@@ -33,7 +33,7 @@ const selectedManifest = manifestFlag === -1
   ? readFileSync(join(tmpdir(), locatorName), 'utf8').trim()
   : process.argv[manifestFlag + 1]
 if (!selectedManifest) fail('a package manifest must be selected explicitly or by the package-once locator')
-const manifestPath = resolve(selectedManifest)
+let manifestPath = resolve(selectedManifest)
 let manifest
 try {
   manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
@@ -99,6 +99,18 @@ if (!existsSync(copiedApplicationPath)) {
   copiedApplicationPath = join(expandRoot, basename(manifest.copiedApplicationPath))
   const executableRelativeToApplication = relative(manifest.copiedApplicationPath, manifest.executablePath)
   executablePath = join(copiedApplicationPath, executableRelativeToApplication)
+  // The Playwright specs run in a SEPARATE process and read only the manifest
+  // file this script names in `KEEPLING_PACKAGE_MANIFEST`. Rebasing the paths
+  // in memory is therefore invisible to them: they would launch the BUILD
+  // runner's ephemeral path, which does not exist here, and every spec fails
+  // with ENOENT. Persist the rebased manifest and point the child at it.
+  // The digests are deliberately left untouched -- they are re-verified below
+  // against the expanded tree, and the specs re-assert them too.
+  manifestPath = join(expandRoot, 'package-manifest.json')
+  writeFileSync(
+    manifestPath,
+    JSON.stringify({ ...manifest, copiedApplicationPath, executablePath }, null, 2) + '\n',
+  )
 }
 
 if (!copiedApplicationPath.endsWith('.app') || !existsSync(copiedApplicationPath)) fail('manifest does not select an existing copied .app')
