@@ -35,19 +35,29 @@ jobs:
       # a guard.
       - name: Prove the release verifier still refuses a vanished lane and a locally bound lane
         run: |
-          set -o pipefail
-          if node tooling/verify-release.mjs --manifest tooling/fixtures/release-manifest.vanished-lane.json --offline; then
-            echo "verify-release accepted a manifest with vanished lanes" >&2
-            exit 1
-          fi
-          node tooling/verify-release.mjs --manifest tooling/fixtures/release-manifest.vanished-lane.json --offline 2>&1 \
-            | grep -q 'lane vanished from manifest'
-          if node tooling/verify-release.mjs --manifest tooling/fixtures/release-manifest.local-unattested.json --offline; then
-            echo "verify-release accepted a local-attested lane bound to locally built bytes" >&2
-            exit 1
-          fi
-          node tooling/verify-release.mjs --manifest tooling/fixtures/release-manifest.local-unattested.json --offline 2>&1 \
-            | grep -q 'nothing local may bind to locally built bytes'
+          # NOTE: deliberately no `set -o pipefail` here. Each fixture makes the
+          # verifier exit non-zero ON PURPOSE -- that refusal IS the assertion.
+          # Piping it straight into grep under pipefail fails the step precisely
+          # WHEN THE GUARD WORKS, because the node exit status poisons the
+          # pipeline. Capture the output first, then assert against it.
+          set -u
+          assert_refused() {
+            fixture="$1"
+            expected="$2"
+            output="$(node tooling/verify-release.mjs --manifest "$fixture" --offline 2>&1)" && {
+              echo "verify-release ACCEPTED $fixture; the guard is gone" >&2
+              printf '%s\n' "$output" >&2
+              exit 1
+            }
+            printf '%s\n' "$output" | grep -q "$expected" || {
+              echo "verify-release refused $fixture but not for the stated reason:" >&2
+              echo "  expected to find: $expected" >&2
+              printf '%s\n' "$output" >&2
+              exit 1
+            }
+          }
+          assert_refused tooling/fixtures/release-manifest.vanished-lane.json 'lane vanished from manifest'
+          assert_refused tooling/fixtures/release-manifest.local-unattested.json 'nothing local may bind to locally built bytes'
           echo 'release-verifier guards intact: vanished-lane=refused local-unattested=refused'
       - name: Report the committed release evidence that exists at this revision
         run: |
