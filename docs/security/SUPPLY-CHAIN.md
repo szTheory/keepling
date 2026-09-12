@@ -26,7 +26,7 @@ tampered or malicious source is still correctly signed — signing proves the by
 have not changed since a specific signing event, nothing about what decided their
 content.
 
-## 2. Provenance (SLSA Build Level 2 attestation, keyless image signing)
+## 2. Provenance (SLSA Build Level 2 attestation)
 
 **What it addresses:** whether the released bytes came from this repository's build.
 
@@ -37,18 +37,29 @@ reusable workflow with isolated signing, and this pipeline's build and attestati
 steps share a single job — claiming Level 3 here would be an overclaim of precisely
 the kind this document exists to correct.
 
-The self-hosted server's container image is signed keylessly, by digest, using the
-GitHub Actions workflow's own OIDC identity (Sigstore/cosign). No long-lived signing
-key exists anywhere in this repository or in any maintainer's custody — a signature
-over a mutable tag would prove nothing about the bytes a puller actually receives,
-so signing always targets the immutable pushed digest.
+**The self-hosted server's container image is NOT signed.** Nothing in this
+repository builds or pushes that image to any registry, so there is no published
+digest to sign; choosing a registry is a deferred decision, tracked as window #80 in
+`KNOWN-LIMITATIONS.md`. When it is closed, the image will be signed keylessly by
+digest using the GitHub Actions workflow's own OIDC identity (Sigstore/cosign), never
+by mutable tag — a signature over a tag proves nothing about the bytes a puller
+actually receives. Until then, treat the server image as carrying no provenance
+guarantee whatsoever.
+
+What is true today is the key-custody claim: no long-lived signing key exists
+anywhere in this repository or in any maintainer's custody, and none will be
+introduced to close the gap above.
 
 SHA-256 checksums for the archive and the stapled application are published in the
 GitHub Release body — a trust domain distinct from the self-hosted server serving the
 same bytes, which is the only thing that gives a checksum any value. Read that
 section for what it is: almost nobody will manually verify a checksum. The
-load-bearing controls for provenance are the reproducibility lane and this
-attestation, not a hash a user is asked to compare by hand.
+load-bearing control for provenance is this attestation, not a hash a user is asked
+to compare by hand. The nondeterminism canary lane was intended to share that load;
+it currently fails for Developer ID builds, because notarization requires an embedded
+RFC 3161 secure timestamp and a freshly-timestamped signature cannot be
+byte-reproducible. That is tracked as window #82 and is not claimed as a working
+control here.
 
 **What it does NOT address:** whether the source code itself is trustworthy, or what
 dependencies it pulls in. Provenance proves "this artifact was built by this
