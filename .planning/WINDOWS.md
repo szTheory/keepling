@@ -124,7 +124,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T01:19:02.196Z",
-    "resolved_at": "2026-09-03T23:50:04.775Z"
+    "resolved_at": "2026-09-03T23:50:04.775Z",
+    "owner": "01"
   },
   {
     "id": 2,
@@ -136,7 +137,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T01:19:02.274Z",
-    "resolved_at": "2026-09-03T23:50:04.865Z"
+    "resolved_at": "2026-09-03T23:50:04.865Z",
+    "owner": "01"
   },
   {
     "id": 3,
@@ -148,7 +150,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T01:19:02.349Z",
-    "resolved_at": "2026-09-03T23:50:04.953Z"
+    "resolved_at": "2026-09-03T23:50:04.953Z",
+    "owner": "01"
   },
   {
     "id": 4,
@@ -160,7 +163,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T01:31:44.014Z",
-    "resolved_at": "2026-09-03T23:50:05.039Z"
+    "resolved_at": "2026-09-03T23:50:05.039Z",
+    "owner": "KPL-01"
   },
   {
     "id": 5,
@@ -172,7 +176,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T01:31:44.083Z",
-    "resolved_at": "2026-09-03T23:50:05.124Z"
+    "resolved_at": "2026-09-03T23:50:05.124Z",
+    "owner": "KPL-01"
   },
   {
     "id": 6,
@@ -184,7 +189,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T02:10:59.290Z",
-    "resolved_at": "2026-09-03T23:50:05.208Z"
+    "resolved_at": "2026-09-03T23:50:05.208Z",
+    "owner": "KPL-01"
   },
   {
     "id": 7,
@@ -196,7 +202,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T02:10:59.359Z",
-    "resolved_at": "2026-09-03T23:50:05.293Z"
+    "resolved_at": "2026-09-03T23:50:05.293Z",
+    "owner": "KPL-01"
   },
   {
     "id": 8,
@@ -208,7 +215,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T02:10:59.428Z",
-    "resolved_at": "2026-09-03T23:50:05.380Z"
+    "resolved_at": "2026-09-03T23:50:05.380Z",
+    "owner": "KPL-01"
   },
   {
     "id": 9,
@@ -220,7 +228,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T02:10:59.498Z",
-    "resolved_at": "2026-09-03T23:50:05.467Z"
+    "resolved_at": "2026-09-03T23:50:05.467Z",
+    "owner": "KPL-01"
   },
   {
     "id": 10,
@@ -232,7 +241,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T02:33:05.090Z",
-    "resolved_at": "2026-09-03T23:50:05.554Z"
+    "resolved_at": "2026-09-03T23:50:05.554Z",
+    "owner": "KPL-01"
   },
   {
     "id": 11,
@@ -244,7 +254,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T02:33:05.162Z",
-    "resolved_at": "2026-09-03T23:50:05.640Z"
+    "resolved_at": "2026-09-03T23:50:05.640Z",
+    "owner": "KPL-01"
   },
   {
     "id": 12,
@@ -256,7 +267,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T02:33:05.234Z",
-    "resolved_at": "2026-09-03T23:50:05.726Z"
+    "resolved_at": "2026-09-03T23:50:05.726Z",
+    "owner": "KPL-01"
   },
   {
     "id": 13,
@@ -268,7 +280,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T03:57:58.529Z",
-    "resolved_at": "2026-09-03T23:50:05.816Z"
+    "resolved_at": "2026-09-03T23:50:05.816Z",
+    "owner": "KPL-01"
   },
   {
     "id": 14,
@@ -280,7 +293,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T05:18:34.955Z",
-    "resolved_at": "2026-09-03T23:50:05.905Z"
+    "resolved_at": "2026-09-03T23:50:05.905Z",
+    "owner": "KPL-01"
   },
   {
     "id": 15,
@@ -292,7 +306,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T05:48:12.063Z",
-    "resolved_at": "2026-09-03T23:50:05.993Z"
+    "resolved_at": "2026-09-03T23:50:05.993Z",
+    "owner": "KPL-01"
   },
   {
     "id": 16,
@@ -304,7 +319,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T05:48:12.168Z",
-    "resolved_at": "2026-09-03T23:50:06.084Z"
+    "resolved_at": "2026-09-03T23:50:06.084Z",
+    "owner": "KPL-01"
   },
   {
     "id": 17,
@@ -316,7 +332,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T05:48:12.271Z",
-    "resolved_at": "2026-09-03T23:50:06.173Z"
+    "resolved_at": "2026-09-03T23:50:06.173Z",
+    "owner": "KPL-01"
   },
   {
     "id": 18,
@@ -328,7 +345,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T05:48:12.377Z",
-    "resolved_at": "2026-09-03T23:50:06.259Z"
+    "resolved_at": "2026-09-03T23:50:06.259Z",
+    "owner": "KPL-01"
   },
   {
     "id": 19,
@@ -340,7 +358,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T14:01:34.378Z",
-    "resolved_at": "2026-09-03T23:50:06.345Z"
+    "resolved_at": "2026-09-03T23:50:06.345Z",
+    "owner": "KPL-01"
   },
   {
     "id": 20,
@@ -352,7 +371,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T14:01:34.472Z",
-    "resolved_at": "2026-09-03T23:50:06.437Z"
+    "resolved_at": "2026-09-03T23:50:06.437Z",
+    "owner": "KPL-01"
   },
   {
     "id": 21,
@@ -364,7 +384,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T14:01:34.566Z",
-    "resolved_at": "2026-09-03T23:50:06.531Z"
+    "resolved_at": "2026-09-03T23:50:06.531Z",
+    "owner": "KPL-01"
   },
   {
     "id": 22,
@@ -376,7 +397,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T16:02:33.525Z",
-    "resolved_at": "2026-09-03T23:50:06.625Z"
+    "resolved_at": "2026-09-03T23:50:06.625Z",
+    "owner": "KPL-01"
   },
   {
     "id": 23,
@@ -388,7 +410,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T16:02:33.629Z",
-    "resolved_at": "2026-09-03T23:50:06.713Z"
+    "resolved_at": "2026-09-03T23:50:06.713Z",
+    "owner": "KPL-01"
   },
   {
     "id": 24,
@@ -400,7 +423,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-08-31T16:02:33.734Z",
-    "resolved_at": "2026-09-03T23:50:06.801Z"
+    "resolved_at": "2026-09-03T23:50:06.801Z",
+    "owner": "KPL-01"
   },
   {
     "id": 25,
@@ -412,7 +436,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-08-31T22:38:58.822Z",
-    "resolved_at": "2026-09-01T02:23:20.832Z"
+    "resolved_at": "2026-09-01T02:23:20.832Z",
+    "owner": "KPL-01"
   },
   {
     "id": 26,
@@ -424,7 +449,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-08-31T22:38:58.894Z",
-    "resolved_at": "2026-09-01T02:23:20.907Z"
+    "resolved_at": "2026-09-01T02:23:20.907Z",
+    "owner": "KPL-01"
   },
   {
     "id": 27,
@@ -436,7 +462,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-01T01:37:57.347Z",
-    "resolved_at": "2026-09-01T01:42:08.820Z"
+    "resolved_at": "2026-09-01T01:42:08.820Z",
+    "owner": "KPL-01"
   },
   {
     "id": 28,
@@ -448,7 +475,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-01T01:37:57.421Z",
-    "resolved_at": "2026-09-01T02:23:20.983Z"
+    "resolved_at": "2026-09-01T02:23:20.983Z",
+    "owner": "KPL-01"
   },
   {
     "id": 29,
@@ -460,7 +488,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T02:22:51.183Z",
-    "resolved_at": "2026-09-03T23:50:06.901Z"
+    "resolved_at": "2026-09-03T23:50:06.901Z",
+    "owner": "KPL-01"
   },
   {
     "id": 30,
@@ -472,7 +501,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T02:22:51.264Z",
-    "resolved_at": "2026-09-03T23:50:06.998Z"
+    "resolved_at": "2026-09-03T23:50:06.998Z",
+    "owner": "KPL-01"
   },
   {
     "id": 31,
@@ -484,7 +514,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T05:55:08.453Z",
-    "resolved_at": "2026-09-03T23:50:07.084Z"
+    "resolved_at": "2026-09-03T23:50:07.084Z",
+    "owner": "KPL-02"
   },
   {
     "id": 32,
@@ -496,7 +527,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T05:55:08.534Z",
-    "resolved_at": "2026-09-03T23:50:07.170Z"
+    "resolved_at": "2026-09-03T23:50:07.170Z",
+    "owner": "KPL-02"
   },
   {
     "id": 33,
@@ -508,7 +540,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T06:19:46.697Z",
-    "resolved_at": "2026-09-03T23:50:07.256Z"
+    "resolved_at": "2026-09-03T23:50:07.256Z",
+    "owner": "KPL-02"
   },
   {
     "id": 34,
@@ -520,7 +553,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T06:19:46.778Z",
-    "resolved_at": "2026-09-03T23:50:07.342Z"
+    "resolved_at": "2026-09-03T23:50:07.342Z",
+    "owner": "KPL-02"
   },
   {
     "id": 35,
@@ -532,7 +566,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T06:19:46.857Z",
-    "resolved_at": "2026-09-03T23:50:07.426Z"
+    "resolved_at": "2026-09-03T23:50:07.426Z",
+    "owner": "KPL-02"
   },
   {
     "id": 36,
@@ -544,7 +579,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T07:13:47.287Z",
-    "resolved_at": "2026-09-03T23:50:07.515Z"
+    "resolved_at": "2026-09-03T23:50:07.515Z",
+    "owner": "KPL-02"
   },
   {
     "id": 37,
@@ -556,7 +592,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T07:13:47.399Z",
-    "resolved_at": "2026-09-03T23:50:07.607Z"
+    "resolved_at": "2026-09-03T23:50:07.607Z",
+    "owner": "KPL-02"
   },
   {
     "id": 38,
@@ -568,7 +605,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T07:13:47.518Z",
-    "resolved_at": "2026-09-03T23:50:07.692Z"
+    "resolved_at": "2026-09-03T23:50:07.692Z",
+    "owner": "KPL-02"
   },
   {
     "id": 39,
@@ -580,7 +618,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T08:35:49.662Z",
-    "resolved_at": "2026-09-03T23:50:07.780Z"
+    "resolved_at": "2026-09-03T23:50:07.780Z",
+    "owner": "KPL-02"
   },
   {
     "id": 40,
@@ -592,7 +631,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T08:35:49.770Z",
-    "resolved_at": "2026-09-03T23:50:07.867Z"
+    "resolved_at": "2026-09-03T23:50:07.867Z",
+    "owner": "KPL-02"
   },
   {
     "id": 41,
@@ -604,7 +644,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-01T08:35:49.877Z",
-    "resolved_at": "2026-09-03T23:50:07.955Z"
+    "resolved_at": "2026-09-03T23:50:07.955Z",
+    "owner": "KPL-02"
   },
   {
     "id": 42,
@@ -616,7 +657,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-02T03:18:29.294Z",
-    "resolved_at": "2026-09-03T23:50:08.046Z"
+    "resolved_at": "2026-09-03T23:50:08.046Z",
+    "owner": "KPL-02"
   },
   {
     "id": 43,
@@ -628,7 +670,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-02T03:18:34.980Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "BACKLOG/999.2"
   },
   {
     "id": 44,
@@ -640,7 +683,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-02T18:23:00.601Z",
-    "resolved_at": "2026-09-03T23:50:08.133Z"
+    "resolved_at": "2026-09-03T23:50:08.133Z",
+    "owner": "KPL-03"
   },
   {
     "id": 45,
@@ -652,7 +696,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-02T18:23:00.686Z",
-    "resolved_at": "2026-09-03T23:50:08.219Z"
+    "resolved_at": "2026-09-03T23:50:08.219Z",
+    "owner": "KPL-03"
   },
   {
     "id": 46,
@@ -664,7 +709,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-02T18:23:00.770Z",
-    "resolved_at": "2026-09-03T23:50:08.308Z"
+    "resolved_at": "2026-09-03T23:50:08.308Z",
+    "owner": "KPL-03"
   },
   {
     "id": 47,
@@ -676,7 +722,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-02T18:23:00.852Z",
-    "resolved_at": "2026-09-03T23:50:08.396Z"
+    "resolved_at": "2026-09-03T23:50:08.396Z",
+    "owner": "KPL-03"
   },
   {
     "id": 48,
@@ -688,7 +735,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-02T18:23:00.938Z",
-    "resolved_at": "2026-09-03T23:50:08.482Z"
+    "resolved_at": "2026-09-03T23:50:08.482Z",
+    "owner": "KPL-03"
   },
   {
     "id": 49,
@@ -700,7 +748,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-02T18:54:39.314Z",
-    "resolved_at": "2026-09-03T23:50:08.569Z"
+    "resolved_at": "2026-09-03T23:50:08.569Z",
+    "owner": "KPL-03"
   },
   {
     "id": 50,
@@ -712,7 +761,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-02T18:55:07.249Z",
-    "resolved_at": "2026-09-03T23:50:08.653Z"
+    "resolved_at": "2026-09-03T23:50:08.653Z",
+    "owner": "KPL-03"
   },
   {
     "id": 51,
@@ -724,7 +774,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-02T18:55:07.362Z",
-    "resolved_at": "2026-09-03T23:50:08.740Z"
+    "resolved_at": "2026-09-03T23:50:08.740Z",
+    "owner": "KPL-03"
   },
   {
     "id": 52,
@@ -736,7 +787,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-02T18:55:07.476Z",
-    "resolved_at": "2026-09-03T23:50:08.827Z"
+    "resolved_at": "2026-09-03T23:50:08.827Z",
+    "owner": "KPL-03"
   },
   {
     "id": 53,
@@ -748,7 +800,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-02T18:55:07.591Z",
-    "resolved_at": "2026-09-03T23:50:08.912Z"
+    "resolved_at": "2026-09-03T23:50:08.912Z",
+    "owner": "KPL-03"
   },
   {
     "id": 54,
@@ -760,7 +813,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "Recorded plan deviation, not an outstanding defect: a 'deviation' entry documents an approved implementation decision that is already reflected in shipped code and disclosed in its plan SUMMARY. Reviewed individually 2026-09-03; none describes unfixed behaviour. Kept as audit trail rather than as a ship gate.",
     "recorded_at": "2026-09-03T01:41:18.549Z",
-    "resolved_at": "2026-09-03T23:50:09.007Z"
+    "resolved_at": "2026-09-03T23:50:09.007Z",
+    "owner": "KPL-03"
   },
   {
     "id": 55,
@@ -772,7 +826,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-03T20:47:11.732Z",
-    "resolved_at": "2026-09-03T23:49:58.264Z"
+    "resolved_at": "2026-09-03T23:49:58.264Z",
+    "owner": "KPL-03"
   },
   {
     "id": 56,
@@ -784,7 +839,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-03T20:47:11.845Z",
-    "resolved_at": "2026-09-03T23:49:58.349Z"
+    "resolved_at": "2026-09-03T23:49:58.349Z",
+    "owner": "KPL-03"
   },
   {
     "id": 57,
@@ -796,7 +852,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-04T04:12:07.673Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "KPL-03"
   },
   {
     "id": 58,
@@ -808,7 +865,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-04T04:12:07.673Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "KPL-03"
   },
   {
     "id": 59,
@@ -820,7 +878,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "CLOSED 2026-09-11 (06-01): verified against source, not merely carried forward. DesktopApplication.ts lines 466-517 document and implement O-45's real fix -- undoLastLocalAction now retains the server-issued undo handle from acknowledgements and reconciles through it (POST /commands/undo-task), refusing loudly rather than silently when no handle exists yet or the handle has expired. This row was stale; the code has been fixed since.",
     "recorded_at": "2026-09-04T04:12:07.673Z",
-    "resolved_at": "2026-09-11T00:00:00.000Z"
+    "resolved_at": "2026-09-11T00:00:00.000Z",
+    "owner": "KPL-03"
   },
   {
     "id": 60,
@@ -832,7 +891,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-04T04:12:07.673Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "KPL-03"
   },
   {
     "id": 61,
@@ -844,7 +904,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-04T04:12:07.673Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "KPL-03"
   },
   {
     "id": 62,
@@ -856,7 +917,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-07T04:03:27.449Z",
-    "resolved_at": "2026-09-08T21:00:00.000Z"
+    "resolved_at": "2026-09-08T21:00:00.000Z",
+    "owner": "KPL-04"
   },
   {
     "id": 63,
@@ -868,7 +930,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-07T04:03:27.539Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "BACKLOG"
   },
   {
     "id": 64,
@@ -880,7 +943,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-07T04:33:11.054Z",
-    "resolved_at": "2026-09-08T22:30:00.000Z"
+    "resolved_at": "2026-09-08T22:30:00.000Z",
+    "owner": "KPL-04"
   },
   {
     "id": 65,
@@ -892,7 +956,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-09T02:00:00.000Z",
-    "resolved_at": "2026-09-09T02:30:00.000Z"
+    "resolved_at": "2026-09-09T02:30:00.000Z",
+    "owner": "KPL-04"
   },
   {
     "id": 66,
@@ -904,7 +969,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-10T23:42:06.351Z",
-    "resolved_at": "2026-09-11T02:13:45.161Z"
+    "resolved_at": "2026-09-11T02:13:45.161Z",
+    "owner": "KPL-05"
   },
   {
     "id": 67,
@@ -916,7 +982,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-10T23:42:13.957Z",
-    "resolved_at": "2026-09-11T04:13:38.031Z"
+    "resolved_at": "2026-09-11T04:13:38.031Z",
+    "owner": "KPL-05"
   },
   {
     "id": 68,
@@ -928,7 +995,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-11T00:17:48.787Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "KPL-05"
   },
   {
     "id": 69,
@@ -940,7 +1008,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "06-05: both drivers wired and live. tooling/cross-adapter/electron-driver.mjs drives the packaged Mac app's real task-list UI via Playwright; tooling/cross-adapter/iphone-driver.mjs drives the real Swift KeeplingSyncAdapter (two new methods on the existing ServerDrivenTests.swift test target) via xcodebuild test-without-building. pnpm verify:cross-adapter now reports legs_total=4 legs_ran=4 legs_blocked=0 legs_failed=0 comparison_ok=true. A real cross-client contract bug (ConflictField.field's OpenAPI enum missing completed_at/trashed_at) was found and fixed en route. SRV-02 is checked.",
     "recorded_at": "2026-09-11T01:31:52.629Z",
-    "resolved_at": "2026-09-11T20:15:00.000Z"
+    "resolved_at": "2026-09-11T20:15:00.000Z",
+    "owner": "Phase 6"
   },
   {
     "id": 70,
@@ -952,7 +1021,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-11T01:52:56.106Z",
-    "resolved_at": "2026-09-11T02:13:45.033Z"
+    "resolved_at": "2026-09-11T02:13:45.033Z",
+    "owner": "05"
   },
   {
     "id": 71,
@@ -964,7 +1034,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-11T02:22:01.221Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "05"
   },
   {
     "id": 72,
@@ -976,7 +1047,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "",
     "recorded_at": "2026-09-11T02:34:24.731Z",
-    "resolved_at": "2026-09-11T04:13:00.585Z"
+    "resolved_at": "2026-09-11T04:13:00.585Z",
+    "owner": "05"
   },
   {
     "id": 73,
@@ -988,7 +1060,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-11T03:16:33.943Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "05"
   },
   {
     "id": 74,
@@ -1000,7 +1073,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "waived",
     "reason": "06-11: recorded as decision D-013 in .planning/knowledge/DECISIONS.md -- an RFC 8707 audience check at :client_authenticated would buy no reduction in actual authority given this repository's single origin, single authorization server, and single account, and would invert the deliberate D-09 byte-identity assertion. Not a defect; closed by decision, not by an implementation change.",
     "recorded_at": "2026-09-11T03:16:34.067Z",
-    "resolved_at": "2026-09-11T21:30:00.000Z"
+    "resolved_at": "2026-09-11T21:30:00.000Z",
+    "owner": "05"
   },
   {
     "id": 75,
@@ -1012,7 +1086,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-11T03:18:17.153Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "05"
   },
   {
     "id": 76,
@@ -1024,7 +1099,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-11T04:13:26.978Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "05"
   },
   {
     "id": 77,
@@ -1036,7 +1112,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-11T04:13:44.809Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "05"
   },
   {
     "id": 78,
@@ -1048,7 +1125,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "fixed",
     "reason": "06-09: DesktopShell.tsx's new-task/go-inbox/go-today keyboard commands now call workspaceRef.current?.guardedSetRoute(...) instead of facade.setRoute(...) directly, routing through the same dirty-state guard mouse navigation already used. Proven against the real shipped Electron app in apps/desktop/test/e2e/guarded-navigation.spec.ts (7/7 cases).",
     "recorded_at": "2026-09-11T18:00:00.000Z",
-    "resolved_at": "2026-09-11T21:30:00.000Z"
+    "resolved_at": "2026-09-11T21:30:00.000Z",
+    "owner": "Phase 6"
   },
   {
     "id": 79,
@@ -1060,7 +1138,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-11T21:30:00.000Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "06-11"
   },
   {
     "id": 80,
@@ -1072,7 +1151,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-11T23:15:00.000Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "BACKLOG"
   },
   {
     "id": 81,
@@ -1085,7 +1165,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "reason": "",
     "recorded_at": "2026-09-12T02:30:00.000Z",
     "resolved_at": null,
-    "resolution": "Section 2's image-signing paragraph now states in bold that the server image is NOT signed, names window #80 as the blocker, and moves the keyless-by-digest language into the conditional future. The key-custody claim, which was true, is kept and stated separately. The section heading no longer advertises keyless image signing. The same pass also corrected the adjacent claim that the reproducibility lane is a load-bearing provenance control, since window #82 records that it fails for Developer ID builds."
+    "resolution": "Section 2's image-signing paragraph now states in bold that the server image is NOT signed, names window #80 as the blocker, and moves the keyless-by-digest language into the conditional future. The key-custody claim, which was true, is kept and stated separately. The section heading no longer advertises keyless image signing. The same pass also corrected the adjacent claim that the reproducibility lane is a load-bearing provenance control, since window #82 records that it fails for Developer ID builds.",
+    "owner": "BACKLOG"
   },
   {
     "id": 82,
@@ -1097,7 +1178,8 @@ last_updated: 2026-09-12T04:30:00.000Z
     "status": "open",
     "reason": "",
     "recorded_at": "2026-09-12T02:45:00.000Z",
-    "resolved_at": null
+    "resolved_at": null,
+    "owner": "BACKLOG"
   },
   {
     "id": 83,
