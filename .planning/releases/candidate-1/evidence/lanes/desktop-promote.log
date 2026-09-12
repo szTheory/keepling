@@ -1,0 +1,5 @@
+job desktop-promote was SKIPPED by GitHub Actions at run 34668212473: its `needs` gate
+requires every required desktop lane to have succeeded, and desktop-macos-integration
+did not. No step in this job executed, so this lane produced no evidence at this
+revision and reports BLOCKED with a zero case count.
+Source: `gh run view 34668212473 --json jobs` -> job desktop-promote conclusion=skipped

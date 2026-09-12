@@ -1,0 +1,384 @@
+phase2-privacy	Set up job	2026-09-12T02:38:30.6815670Z Current runner version: '2.337.0'
+phase2-privacy	Set up job	2026-09-12T02:38:30.6843330Z ##[group]Runner Image Provisioner
+phase2-privacy	Set up job	2026-09-12T02:38:30.6844070Z Hosted Compute Agent
+phase2-privacy	Set up job	2026-09-12T02:38:30.6844520Z Version: 20260828.587
+phase2-privacy	Set up job	2026-09-12T02:38:30.6845020Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+phase2-privacy	Set up job	2026-09-12T02:38:30.6845520Z Build Date: 2026-08-28T16:44:25Z
+phase2-privacy	Set up job	2026-09-12T02:38:30.6846140Z Worker ID: {894a8292-67c5-45a9-81b9-083564e5139c}
+phase2-privacy	Set up job	2026-09-12T02:38:30.6846760Z Azure Region: westus
+phase2-privacy	Set up job	2026-09-12T02:38:30.6847290Z ##[endgroup]
+phase2-privacy	Set up job	2026-09-12T02:38:30.6848510Z ##[group]Operating System
+phase2-privacy	Set up job	2026-09-12T02:38:30.6849090Z macOS
+phase2-privacy	Set up job	2026-09-12T02:38:30.6849590Z 15.7.9
+phase2-privacy	Set up job	2026-09-12T02:38:30.6849970Z 24G830
+phase2-privacy	Set up job	2026-09-12T02:38:30.6850410Z ##[endgroup]
+phase2-privacy	Set up job	2026-09-12T02:38:30.6850970Z ##[group]Runner Image
+phase2-privacy	Set up job	2026-09-12T02:38:30.6851600Z Image: macos-15-arm64
+phase2-privacy	Set up job	2026-09-12T02:38:30.6852260Z Version: 20260907.0337.1
+phase2-privacy	Set up job	2026-09-12T02:38:30.6853360Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+phase2-privacy	Set up job	2026-09-12T02:38:30.6855150Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+phase2-privacy	Set up job	2026-09-12T02:38:30.6856020Z ##[endgroup]
+phase2-privacy	Set up job	2026-09-12T02:38:30.6856800Z ##[group]GITHUB_TOKEN Permissions
+phase2-privacy	Set up job	2026-09-12T02:38:30.6858200Z Contents: read
+phase2-privacy	Set up job	2026-09-12T02:38:30.6858580Z Metadata: read
+phase2-privacy	Set up job	2026-09-12T02:38:30.6858940Z ##[endgroup]
+phase2-privacy	Set up job	2026-09-12T02:38:30.6860380Z Secret source: Actions
+phase2-privacy	Set up job	2026-09-12T02:38:30.6860960Z Cache mode: write
+phase2-privacy	Set up job	2026-09-12T02:38:30.6861410Z Prepare workflow directory
+phase2-privacy	Set up job	2026-09-12T02:38:30.7140880Z Prepare all required actions
+phase2-privacy	Set up job	2026-09-12T02:38:30.7176020Z Getting action download info
+phase2-privacy	Set up job	2026-09-12T02:38:31.1702700Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+phase2-privacy	Set up job	2026-09-12T02:38:31.4401840Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+phase2-privacy	Set up job	2026-09-12T02:38:31.6043260Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+phase2-privacy	Set up job	2026-09-12T02:38:31.7028880Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+phase2-privacy	Set up job	2026-09-12T02:38:31.9351620Z Complete job name: phase2-privacy
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0890430Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0898880Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0899670Z with:
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0900080Z   repository: szTheory/keepling
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0903380Z   token: ***
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0904880Z   ssh-strict: true
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0905350Z   ssh-user: git
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0905820Z   persist-credentials: true
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0906210Z   clean: true
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0906560Z   sparse-checkout-cone-mode: true
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0906960Z   fetch-depth: 1
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0907290Z   fetch-tags: false
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0907770Z   show-progress: true
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0908340Z   lfs: false
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0908950Z   submodules: false
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0909460Z   set-safe-directory: true
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0910600Z env:
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0911030Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0911590Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0912170Z ##[endgroup]
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.5427120Z Syncing repository: szTheory/keepling
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.5429240Z ##[group]Getting Git version info
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.5429830Z Working directory is '/Users/runner/work/keepling/keepling'
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.5430990Z [command]/opt/homebrew/bin/git version
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6024890Z git version 2.55.0
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6041060Z ##[endgroup]
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6051470Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/d06938c3-048c-4ffa-b288-325291933993/.gitconfig'
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6060220Z Temporarily overriding HOME='/Users/runner/work/_temp/d06938c3-048c-4ffa-b288-325291933993' before making global git config changes
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6064220Z Adding repository directory to the temporary git global config as a safe directory
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6065490Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6204960Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6211290Z ##[group]Initializing the repository
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6213790Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6568810Z hint: Using 'master' as the name for the initial branch. This default branch name
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6571590Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6573940Z hint: to use in all of your new repositories, which will suppress this warning,
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6575760Z hint: call:
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6576810Z hint:
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6578210Z hint: 	git config --global init.defaultBranch <name>
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6579730Z hint:
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6581270Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6583420Z hint: 'development'. The just-created branch can be renamed via this command:
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6585170Z hint:
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6586220Z hint: 	git branch -m <name>
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6587420Z hint:
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6588870Z hint: Disable this message with "git config set advice.defaultBranchName false"
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6591210Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6595410Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6731680Z ##[endgroup]
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6732670Z ##[group]Disabling automatic garbage collection
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6733630Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6785050Z ##[endgroup]
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6785860Z ##[group]Setting up auth
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6796900Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.6868950Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.8365470Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.8447760Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.9619910Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.9879560Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:33.0809640Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:33.0885740Z ##[endgroup]
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:33.0887260Z ##[group]Fetching the repository
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:33.0897450Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +26628e1771d5b90569b5eec232047456fdda9f2e:refs/remotes/origin/main
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.1614580Z From https://github.com/szTheory/keepling
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.1618540Z  * [new ref]         26628e1771d5b90569b5eec232047456fdda9f2e -> origin/main
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.1629020Z ##[endgroup]
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.1630770Z ##[group]Determining the checkout info
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.1633010Z ##[endgroup]
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.1633830Z [command]/opt/homebrew/bin/git sparse-checkout disable
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.1738620Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.1836280Z ##[group]Checking out the ref
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.1842260Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.4201240Z Switched to a new branch 'main'
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.4208310Z branch 'main' set up to track 'origin/main'.
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.4219150Z ##[endgroup]
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.4964290Z [command]/opt/homebrew/bin/git log -1 --format=%H
+phase2-privacy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:34.5059720Z 26628e1771d5b90569b5eec232047456fdda9f2e
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.5266900Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.5268610Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.5268970Z with:
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.5269130Z   node-version: 24.7.0
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.5269320Z   always-auth: false
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.5269500Z   check-latest: false
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.5271850Z   token: ***
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.5271990Z env:
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.5272140Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.5272450Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.5273460Z ##[endgroup]
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.6801750Z Attempting to download 24.7.0...
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.7010270Z (node:3693) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.7038720Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:35.4465570Z Acquiring 24.7.0 - arm64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-darwin-arm64.tar.gz
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:36.1635460Z Extracting ...
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:36.1834440Z [command]/usr/bin/tar xz --strip 1 -C /Users/runner/work/_temp/c500f0df-f01b-4f9f-a4de-7fb87e115c26 -f /Users/runner/work/_temp/167dcdcd-ccf4-42b4-8df6-577af84bdba0
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:37.7768100Z Adding to the cache ...
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:40.7521760Z ##[group]Environment details
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:41.2184880Z node: v24.7.0
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:41.2186140Z npm: 11.5.1
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:41.2186780Z yarn: 1.22.22
+phase2-privacy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:41.2188350Z ##[endgroup]
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7962540Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7963890Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7964310Z with:
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7964980Z   path: ~/.asdf/installs
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/deps
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/_build
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	node_modules
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7965640Z   key: phase2-macOS-privacy-239f60fba7d28b4091024f9e47fbff804023daf728f515bed6a0f61e598b64d3
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7966100Z   enableCrossOsArchive: false
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7966460Z   fail-on-cache-miss: false
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7966780Z   lookup-only: false
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7966980Z   save-always: false
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7967240Z env:
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7967390Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7967690Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.7968130Z ##[endgroup]
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.9596160Z (node:3873) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:41.9597130Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:42.2686860Z (node:3873) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:42.2790390Z Cache hit for: phase2-macOS-privacy-239f60fba7d28b4091024f9e47fbff804023daf728f515bed6a0f61e598b64d3
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:43.5865580Z Received 0 of 191883213 (0.0%), 0.0 MBs/sec
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:44.5877230Z Received 62914560 of 191883213 (32.8%), 30.0 MBs/sec
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:45.5965300Z Received 130023424 of 191883213 (67.8%), 41.3 MBs/sec
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:46.5949360Z Received 163577856 of 191883213 (85.2%), 38.9 MBs/sec
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:46.7649050Z Received 191883213 of 191883213 (100.0%), 43.8 MBs/sec
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:46.7775530Z Cache Size: ~183 MB (191883213 B)
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:46.7807460Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/f27a8c53-9e61-4aaf-a022-fe6e14bd84e4/cache.tzst -P -C /Users/runner/work/keepling/keepling --delay-directory-restore --use-compress-program unzstd
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:56.4654880Z Cache restored successfully
+phase2-privacy	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:38:56.5109030Z Cache restored from key: phase2-macOS-privacy-239f60fba7d28b4091024f9e47fbff804023daf728f515bed6a0f61e598b64d3
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:38:56.5474850Z ##[group]Run brew list asdf >/dev/null 2>&1 || brew install asdf
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:38:56.5477960Z ^[[36;1mbrew list asdf >/dev/null 2>&1 || brew install asdf^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:38:56.5479710Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:38:56.5481210Z ^[[36;1mcorepack enable^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:38:56.5481850Z ^[[36;1mpnpm install --frozen-lockfile^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:38:56.5483190Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:38:56.5598310Z shell: /bin/bash -e {0}
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:38:56.5599280Z env:
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:38:56.5599740Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:38:56.5600160Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:38:56.5600850Z ##[endgroup]
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:01.6220240Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:01.6420150Z ✔︎ Bottle Manifest asdf (0.20.0)
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:01.6421690Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:01.6487200Z asdf
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:01.6755220Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32masdf^[[39m^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:01.9156280Z ✔︎ Bottle asdf (0.20.0)
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:01.9177840Z ^[[34m==>^[[0m ^[[1mPouring asdf--0.20.0.arm64_sequoia.bottle.tar.gz^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:02.0824680Z 🍺  /opt/homebrew/Cellar/asdf/0.20.0: 10 files, 4.4MB
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:02.0827200Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:02.0828540Z Bash completion has been installed to:
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:02.0829390Z   /opt/homebrew/etc/bash_completion.d
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:05.2752610Z version 29.0.5 of erlang is already installed
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:05.2894560Z version 1.20.2-otp-29 of elixir is already installed
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:05.9266570Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:06.1699190Z ✔︎ Bottle Manifest postgresql@18 (18.6)
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:06.1709490Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:06.1713700Z postgresql@18
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:06.2726460Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32mpostgresql@18^[[39m^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:08.8973000Z ✔︎ Bottle postgresql@18 (18.6)
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:08.9290660Z ^[[34m==>^[[0m ^[[1mPouring postgresql@18--18.6.arm64_sequoia.bottle.tar.gz^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3327070Z The files belonging to this database system will be owned by user "runner".
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3328780Z This user must also own the server process.
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3329840Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3331040Z The database cluster will be initialized with locale "en_US.UTF-8".
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3332730Z The default text search configuration will be set to "english".
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3333620Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3333990Z Data page checksums are enabled.
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3334560Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3340770Z fixing permissions on existing directory /opt/homebrew/var/postgresql@18 ... ok
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3341470Z creating subdirectories ... ok
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3346920Z selecting dynamic shared memory implementation ... posix
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.3920660Z selecting default "max_connections" ... 100
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.4178610Z selecting default "shared_buffers" ... 128MB
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.4207530Z selecting default time zone ... UTC
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.4218340Z creating configuration files ... ok
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:12.5863320Z running bootstrap script ... ok
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.1046510Z performing post-bootstrap initialization ... ok
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.1192390Z syncing data to disk ... ok
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.1195790Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.1195860Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.1196170Z Success. You can now start the database server using:
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.1196450Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.1197060Z     '/opt/homebrew/Cellar/postgresql@18/18.6/bin/pg_ctl' -D '/opt/homebrew/var/postgresql@18' -l logfile start
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.1197770Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.1198740Z initdb: warning: enabling "trust" authentication for local connections
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.1200810Z initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7335810Z 🍺  /opt/homebrew/Cellar/postgresql@18/18.6: 3,873 files, 77.7MB
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7339990Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7340460Z ^[[34m==>^[[0m ^[[1mpostgresql@18^[[0m
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7341110Z This formula has created a default database cluster with:
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7341910Z   initdb --locale=en_US.UTF-8 -E UTF-8 /opt/homebrew/var/postgresql@18
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7342370Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7355530Z When uninstalling, some dead symlinks are left behind so you may want to run:
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7356220Z   brew cleanup --prune-prefix
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7356590Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7356820Z To start postgresql@18 now and restart at login:
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7357370Z   brew services start postgresql@18
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7358180Z Or, if you don't want/need a background service you can just run:
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:13.7358940Z   LC_ALL="en_US.UTF-8" /opt/homebrew/opt/postgresql@18/bin/postgres -D /opt/homebrew/var/postgresql@18
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:14.4411890Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:14.6903070Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:15.7332460Z Scope: all 4 workspace projects
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:15.8052660Z Lockfile is up to date, resolution step is skipped
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:16.8039560Z Progress: resolved 0, reused 0, downloaded 1, added 0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:17.2830170Z Packages: +2 -45
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:17.2937490Z ++---------------------------------------------
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:17.7992830Z Progress: resolved 0, reused 0, downloaded 14, added 0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:18.8004770Z Progress: resolved 0, reused 0, downloaded 45, added 0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:18.8685160Z Progress: resolved 0, reused 0, downloaded 46, added 2, done
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:19.0177110Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:19.0949890Z Done in 3.6s using pnpm v10.33.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:19.7278310Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:20.8240980Z * creating /Users/runner/.mix/archives/hex-2.5.1
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.3143260Z Resolving Hex dependencies...
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4165450Z Resolution completed in 0.099s
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4307780Z Unchanged:
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4308060Z   argon2_elixir 4.1.3
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4319330Z   bandit 1.12.5
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4319990Z   certifi 2.15.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4320800Z   comeonin 5.5.1
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4321810Z   db_connection 2.10.2
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4322690Z   decimal 3.1.1
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4323350Z   dns_cluster 0.2.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4323850Z   ecto 3.14.2
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4324300Z   ecto_sql 3.14.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4324770Z   elixir_make 0.10.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4325550Z   expo 1.1.1
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4327930Z   gettext 1.0.2
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4329810Z   hackney 1.25.0 VULNERABLE!
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4330640Z     EEF-CVE-2026-47075 (MEDIUM)
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4331320Z     aka: CVE-2026-47075, GHSA-j9wq-vxxc-94wf
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4332340Z     CR/LF injection in query parameter in hackney
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4333470Z     https://osv.dev/vulnerability/EEF-CVE-2026-47075
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4334140Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4334350Z     EEF-CVE-2026-47071 (HIGH)
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4335240Z     aka: CVE-2026-47071, GHSA-gp9c-pm5m-5cxr
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4336210Z     SOCKS5 TLS upgrade ignores caller timeout in hackney
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4337340Z     https://osv.dev/vulnerability/EEF-CVE-2026-47071
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4337980Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4338190Z     EEF-CVE-2026-47069 (LOW)
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4338990Z     aka: CVE-2026-47069, GHSA-mp55-p8c9-rfw2
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4339830Z     CRLF injection in cookie domain/path options in hackney
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4340210Z     https://osv.dev/vulnerability/EEF-CVE-2026-47069
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4340690Z 
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4340820Z     EEF-CVE-2026-47076 (MEDIUM)
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4341210Z     aka: CVE-2026-47076, GHSA-pj7v-xfvx-wmjq
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4341760Z     SSRF allowlist bypass via percent-encoded host in hackney
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4348770Z     https://osv.dev/vulnerability/EEF-CVE-2026-47076
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4349110Z   hammer 7.4.1
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4349420Z   hex_core 0.15.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4349770Z   hpax 1.0.4
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4350000Z   idna 6.1.1
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4350650Z   jason 1.4.5
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4350990Z   metrics 1.0.1
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4351290Z   mime 2.0.7
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4351580Z   mimerl 1.5.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4351820Z   optimus 0.6.1
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4352140Z   parse_trans 3.4.1
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4352350Z   phoenix 1.8.13
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4352640Z   phoenix_ecto 4.7.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4352900Z   phoenix_pubsub 2.3.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4353160Z   phoenix_template 1.0.4
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4354210Z   plug 1.20.3
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4355000Z   plug_crypto 2.2.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4356070Z   postgrex 0.22.4
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4356360Z   protobuf 0.16.1
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4356570Z   purl 0.3.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4356850Z   sbom 0.10.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4357050Z   ssl_verify_fun 1.1.7
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4357300Z   stream_data 1.4.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4357470Z   telemetry 1.4.2
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4357720Z   telemetry_metrics 1.2.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4357980Z   telemetry_poller 1.3.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4358250Z   thousand_island 1.5.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4358490Z   tzdata 1.1.4
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4358710Z   unicode_util_compat 0.7.1
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4358960Z   websock 0.5.3
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.4359190Z   websock_adapter 0.6.0
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.5458080Z * creating /Users/runner/.mix/elixir/1-20-otp-29/rebar3
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.5771520Z Found packages with security advisories, see above for details
+phase2-privacy	Provision exact repository runtimes	2026-09-12T02:39:21.5828620Z All dependencies have been fetched
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:21.6258910Z ##[group]Run set -o pipefail
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:21.6259400Z ^[[36;1mset -o pipefail^[[0m
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:21.6260980Z ^[[36;1m./tooling/test-phase-2.sh --lane "privacy" | tee "$RUNNER_TEMP/privacy.txt"^[[0m
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:21.6261700Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/privacy.txt"^[[0m
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:21.6320610Z shell: /bin/bash -e {0}
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:21.6320860Z env:
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:21.6321210Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:21.6321680Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:21.6322200Z ##[endgroup]
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:24.4192700Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:24.7456060Z lane=privacy status=RUNNING command=mix test telemetry_redaction_test.exs ops_redaction_test.exs && verify-privacy.sh --self-test cases=17 seed=20260901 inputs_sha256=c6edd21e23c46a55d10b4ef943b72e5aea08d99b5e79ddde03b4e4ec6720fa97
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:28.0984250Z lane=privacy status=PASS command=mix test telemetry_redaction_test.exs ops_redaction_test.exs && verify-privacy.sh --self-test cases=17 seed=20260901 elapsed_ms=3353 inputs_sha256=c6edd21e23c46a55d10b4ef943b72e5aea08d99b5e79ddde03b4e4ec6720fa97
+phase2-privacy	Run exact Phase 2 lane	2026-09-12T02:39:29.1427520Z Privacy verification passed: artifacts=1 sentinels=7
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1623690Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1624920Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1625260Z with:
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1625440Z   name: phase2-privacy-timing
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1625670Z   path: /Users/runner/work/_temp/privacy.txt
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1625920Z   if-no-files-found: error
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1626120Z   retention-days: 14
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1626320Z   compression-level: 6
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1626500Z   overwrite: false
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1626690Z   include-hidden-files: false
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1626880Z env:
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1627040Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1627360Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.1627760Z ##[endgroup]
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.3552000Z (node:5592) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.3552910Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.3595890Z With the provided path, there will be 1 file uploaded
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.3604730Z Artifact name is valid!
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.3605950Z Root directory input is valid!
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.7880780Z Beginning upload of artifact content to blob storage
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:29.8028550Z (node:5592) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:30.1066960Z Uploaded bytes 390
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:30.1960160Z Finished uploading artifact content to blob storage!
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:30.1961680Z SHA256 digest of uploaded artifact zip is 197bc7bafd0f104967e2bb48eed22a4352bd37065dd6f9386d3278138a909cc0
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:30.1966380Z Finalizing artifact upload
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:30.4791610Z Artifact phase2-privacy-timing.zip successfully finalized. Artifact ID 10289034106
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:30.4794860Z Artifact phase2-privacy-timing has been successfully uploaded! Final size is 390 bytes. Artifact ID is 10289034106
+phase2-privacy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:30.4799990Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34668212479/artifacts/10289034106
+phase2-privacy	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:39:30.5862460Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:39:30.5863690Z Post job cleanup.
+phase2-privacy	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:39:30.7278530Z Cache hit occurred on the primary key phase2-macOS-privacy-239f60fba7d28b4091024f9e47fbff804023daf728f515bed6a0f61e598b64d3, not saving cache.
+phase2-privacy	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:39:30.7281740Z (node:5595) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-privacy	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-12T02:39:30.7283630Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-privacy	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:39:30.7395960Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:39:30.7397510Z Post job cleanup.
+phase2-privacy	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:39:30.8737810Z (node:5597) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-privacy	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:39:30.8772930Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:30.8884900Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:30.8885950Z Post job cleanup.
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:30.9804780Z [command]/opt/homebrew/bin/git version
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:30.9900180Z git version 2.55.0
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:30.9953570Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/aef1794c-6f28-4c3d-953f-0b309eb6a480/.gitconfig'
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:30.9954840Z Temporarily overriding HOME='/Users/runner/work/_temp/aef1794c-6f28-4c3d-953f-0b309eb6a480' before making global git config changes
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:30.9955690Z Adding repository directory to the temporary git global config as a safe directory
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:30.9956440Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:31.0006220Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:31.0073310Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:31.1138720Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:31.1201650Z http.https://github.com/.extraheader
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:31.1208690Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:31.1294990Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:31.2956760Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-privacy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:31.3207170Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-privacy	Complete job	2026-09-12T02:39:31.4096950Z Cleaning up orphan processes
+phase2-privacy	Complete job	2026-09-12T02:39:32.0940540Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

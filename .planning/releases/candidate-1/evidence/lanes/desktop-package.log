@@ -1,0 +1,423 @@
+desktop-package	Set up job	2026-09-12T02:38:30.0691650Z Current runner version: '2.337.0'
+desktop-package	Set up job	2026-09-12T02:38:30.0706950Z ##[group]Runner Image Provisioner
+desktop-package	Set up job	2026-09-12T02:38:30.0707520Z Hosted Compute Agent
+desktop-package	Set up job	2026-09-12T02:38:30.0707920Z Version: 20260828.587
+desktop-package	Set up job	2026-09-12T02:38:30.0708480Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+desktop-package	Set up job	2026-09-12T02:38:30.0708980Z Build Date: 2026-08-28T16:44:25Z
+desktop-package	Set up job	2026-09-12T02:38:30.0709420Z Worker ID: {30e35f91-a0fd-4e2e-8c9e-4dabe62be28f}
+desktop-package	Set up job	2026-09-12T02:38:30.0709890Z Azure Region: westus
+desktop-package	Set up job	2026-09-12T02:38:30.0710270Z ##[endgroup]
+desktop-package	Set up job	2026-09-12T02:38:30.0711290Z ##[group]Operating System
+desktop-package	Set up job	2026-09-12T02:38:30.0711830Z macOS
+desktop-package	Set up job	2026-09-12T02:38:30.0712160Z 15.7.9
+desktop-package	Set up job	2026-09-12T02:38:30.0712490Z 24G830
+desktop-package	Set up job	2026-09-12T02:38:30.0712830Z ##[endgroup]
+desktop-package	Set up job	2026-09-12T02:38:30.0713190Z ##[group]Runner Image
+desktop-package	Set up job	2026-09-12T02:38:30.0713570Z Image: macos-15-arm64
+desktop-package	Set up job	2026-09-12T02:38:30.0713950Z Version: 20260907.0337.1
+desktop-package	Set up job	2026-09-12T02:38:30.0714690Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+desktop-package	Set up job	2026-09-12T02:38:30.0715810Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+desktop-package	Set up job	2026-09-12T02:38:30.0716550Z ##[endgroup]
+desktop-package	Set up job	2026-09-12T02:38:30.0717270Z ##[group]GITHUB_TOKEN Permissions
+desktop-package	Set up job	2026-09-12T02:38:30.0718620Z Contents: read
+desktop-package	Set up job	2026-09-12T02:38:30.0718990Z Metadata: read
+desktop-package	Set up job	2026-09-12T02:38:30.0719360Z ##[endgroup]
+desktop-package	Set up job	2026-09-12T02:38:30.0720810Z Secret source: Actions
+desktop-package	Set up job	2026-09-12T02:38:30.0721400Z Cache mode: write
+desktop-package	Set up job	2026-09-12T02:38:30.0721830Z Prepare workflow directory
+desktop-package	Set up job	2026-09-12T02:38:30.0991150Z Prepare all required actions
+desktop-package	Set up job	2026-09-12T02:38:30.1026120Z Getting action download info
+desktop-package	Set up job	2026-09-12T02:38:30.5560930Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+desktop-package	Set up job	2026-09-12T02:38:30.8927570Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+desktop-package	Set up job	2026-09-12T02:38:30.9794630Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+desktop-package	Set up job	2026-09-12T02:38:31.1471870Z Complete job name: desktop-package
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1876390Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1882960Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1883580Z with:
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1883910Z   repository: szTheory/keepling
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1886710Z   token: ***
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1887040Z   ssh-strict: true
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1887360Z   ssh-user: git
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1887690Z   persist-credentials: true
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1888050Z   clean: true
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1888380Z   sparse-checkout-cone-mode: true
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1888890Z   fetch-depth: 1
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1889220Z   fetch-tags: false
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1889570Z   show-progress: true
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1889920Z   lfs: false
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1890270Z   submodules: false
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1890610Z   set-safe-directory: true
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1891090Z env:
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1891500Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.1892000Z ##[endgroup]
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.4696450Z Syncing repository: szTheory/keepling
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.4698550Z ##[group]Getting Git version info
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.4699280Z Working directory is '/Users/runner/work/keepling/keepling'
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.4700210Z [command]/opt/homebrew/bin/git version
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5195680Z git version 2.55.0
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5207760Z ##[endgroup]
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5213960Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/580ba775-5aac-4dfc-ae4d-e484948f6b0f/.gitconfig'
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5220510Z Temporarily overriding HOME='/Users/runner/work/_temp/580ba775-5aac-4dfc-ae4d-e484948f6b0f' before making global git config changes
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5222380Z Adding repository directory to the temporary git global config as a safe directory
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5223980Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5365260Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5366870Z ##[group]Initializing the repository
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5369440Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5543910Z hint: Using 'master' as the name for the initial branch. This default branch name
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5544920Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5545760Z hint: to use in all of your new repositories, which will suppress this warning,
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5546390Z hint: call:
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5546760Z hint:
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5547220Z hint: 	git config --global init.defaultBranch <name>
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5547780Z hint:
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5548270Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5549020Z hint: 'development'. The just-created branch can be renamed via this command:
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5549630Z hint:
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5549990Z hint: 	git branch -m <name>
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5550410Z hint:
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5550940Z hint: Disable this message with "git config set advice.defaultBranchName false"
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5551830Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5553990Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5623280Z ##[endgroup]
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5624110Z ##[group]Disabling automatic garbage collection
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5624850Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5684810Z ##[endgroup]
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5685570Z ##[group]Setting up auth
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5686270Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.5740260Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.6487240Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.6543370Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.7207510Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.7261010Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.8257700Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.8328910Z ##[endgroup]
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.8330590Z ##[group]Fetching the repository
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.8332510Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +26628e1771d5b90569b5eec232047456fdda9f2e:refs/remotes/origin/main
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.8046120Z From https://github.com/szTheory/keepling
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.8051420Z  * [new ref]         26628e1771d5b90569b5eec232047456fdda9f2e -> origin/main
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.8054280Z ##[endgroup]
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.8055210Z ##[group]Determining the checkout info
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.8056250Z ##[endgroup]
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.8057020Z [command]/opt/homebrew/bin/git sparse-checkout disable
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.8125650Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.8188310Z ##[group]Checking out the ref
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.8190040Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:33.0911110Z Switched to a new branch 'main'
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:33.0913820Z branch 'main' set up to track 'origin/main'.
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:33.0919000Z ##[endgroup]
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:33.0991160Z [command]/opt/homebrew/bin/git log -1 --format=%H
+desktop-package	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:33.1046010Z 26628e1771d5b90569b5eec232047456fdda9f2e
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.1359670Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.1363920Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.1365030Z with:
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.1365640Z   node-version: 24.7.0
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.1366290Z   always-auth: false
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.1367000Z   check-latest: false
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.1375230Z   token: ***
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.1375830Z env:
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.1376580Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.1377560Z ##[endgroup]
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.2754630Z Attempting to download 24.7.0...
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.2889070Z (node:5876) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:33.2891390Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.1279520Z Acquiring 24.7.0 - arm64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-darwin-arm64.tar.gz
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.6902690Z Extracting ...
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:34.7064610Z [command]/usr/bin/tar xz --strip 1 -C /Users/runner/work/_temp/ac301f2a-dcd7-4fb6-8d5b-4822d5019df2 -f /Users/runner/work/_temp/3c44b850-58ae-4ca4-9fca-3e50582e0e76
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:36.4196630Z Adding to the cache ...
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:38.9294240Z ##[group]Environment details
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:39.2540160Z node: v24.7.0
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:39.2541670Z npm: 11.5.1
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:39.2552500Z yarn: 1.22.22
+desktop-package	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:38:39.2562580Z ##[endgroup]
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:39.2716620Z ##[group]Run corepack enable && pnpm install --frozen-lockfile
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:39.2717190Z ^[[36;1mcorepack enable && pnpm install --frozen-lockfile^[[0m
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:39.2769180Z shell: /bin/bash -e {0}
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:39.2769480Z env:
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:39.2769730Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:39.2770010Z ##[endgroup]
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:39.4336200Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:40.2467960Z Scope: all 4 workspace projects
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:40.2794820Z Lockfile is up to date, resolution step is skipped
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:40.3553650Z Packages: +912
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:40.3554500Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:40.4628760Z Progress: resolved 0, reused 0, downloaded 1, added 0
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:41.4639580Z Progress: resolved 0, reused 0, downloaded 27, added 4
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:42.4666990Z Progress: resolved 0, reused 0, downloaded 61, added 16
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:43.4733520Z Progress: resolved 0, reused 0, downloaded 101, added 24
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:44.4846870Z Progress: resolved 0, reused 0, downloaded 176, added 49
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:45.4764280Z Progress: resolved 0, reused 0, downloaded 303, added 93
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:46.4793580Z Progress: resolved 0, reused 0, downloaded 402, added 129
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:47.4812660Z Progress: resolved 0, reused 0, downloaded 486, added 156
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:47.7363890Z Packages are cloned from the content-addressable store to the virtual store.
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:47.7367500Z   Content-addressable store is at: /Users/runner/Library/pnpm/store/v10
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:47.7410760Z   Virtual store is at:             node_modules/.pnpm
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:48.4828590Z Progress: resolved 0, reused 0, downloaded 692, added 244
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:49.4921160Z Progress: resolved 0, reused 0, downloaded 870, added 358
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:50.4855700Z Progress: resolved 0, reused 0, downloaded 870, added 797
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:50.8647260Z Progress: resolved 0, reused 0, downloaded 870, added 912, done
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:51.0166380Z 
+desktop-package	Install locked JavaScript inputs	2026-09-12T02:38:51.0945410Z Done in 11s using pnpm v10.33.0
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1287430Z ##[group]Run set -euo pipefail
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1287770Z ^[[36;1mset -euo pipefail^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1288020Z ^[[36;1mif [ -z "${APPLE_DEVELOPER_ID_CERT_P12}" ]; then^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1288310Z ^[[36;1m  echo "available=false" >> "$GITHUB_OUTPUT"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1288650Z ^[[36;1m  echo "identity=" >> "$GITHUB_OUTPUT"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1289590Z ^[[36;1m  echo "::notice title=Unsigned build::No Developer ID certificate is reachable from this event (push). This artifact is UNSIGNED and UNNOTARIZED, and the package manifest records it as such."^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1291300Z ^[[36;1m  exit 0^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1291480Z ^[[36;1mfi^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1291740Z ^[[36;1mkeychain="$RUNNER_TEMP/keepling-signing.keychain-db"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1292140Z ^[[36;1mkeychain_password="$(uuidgen)"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1292610Z ^[[36;1msecurity create-keychain -p "$keychain_password" "$keychain"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1293020Z ^[[36;1msecurity set-keychain-settings -lut 900 "$keychain"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1293640Z ^[[36;1msecurity unlock-keychain -p "$keychain_password" "$keychain"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1294140Z ^[[36;1mprintf '%s' "$APPLE_DEVELOPER_ID_CERT_P12" | base64 --decode > "$RUNNER_TEMP/devid.p12"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1295040Z ^[[36;1msecurity import "$RUNNER_TEMP/devid.p12" -k "$keychain" -P "$APPLE_DEVELOPER_ID_CERT_PASSWORD" -T /usr/bin/codesign^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1295660Z ^[[36;1mrm -f "$RUNNER_TEMP/devid.p12"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1296100Z ^[[36;1msecurity set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain" >/dev/null^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1296810Z ^[[36;1msecurity list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1297590Z ^[[36;1mfingerprint="$(security find-identity -v -p codesigning "$keychain" | awk '/Developer ID Application:/ { print $2; exit }')"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1298110Z ^[[36;1mif [ -z "$fingerprint" ]; then^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1298670Z ^[[36;1m  echo "The imported certificate is not a usable Developer ID Application codesigning identity." >&2^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1299060Z ^[[36;1m  exit 1^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1299250Z ^[[36;1mfi^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1299460Z ^[[36;1mecho "available=true" >> "$GITHUB_OUTPUT"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1299750Z ^[[36;1mecho "identity=$fingerprint" >> "$GITHUB_OUTPUT"^[[0m
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1360340Z shell: /bin/bash -e {0}
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1360530Z env:
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1360740Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1361110Z   APPLE_DEVELOPER_ID_CERT_P12: 
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1361390Z   APPLE_DEVELOPER_ID_CERT_PASSWORD: 
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1361710Z ##[endgroup]
+desktop-package	Import the Developer ID identity into an ephemeral keychain	2026-09-12T02:38:51.1892100Z ##[notice]No Developer ID certificate is reachable from this event (push). This artifact is UNSIGNED and UNNOTARIZED, and the package manifest records it as such.
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1954940Z ##[group]Run set -o pipefail
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1955580Z ^[[36;1mset -o pipefail^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1955890Z ^[[36;1mpnpm package:desktop | tee "$RUNNER_TEMP/package.txt"^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1956390Z ^[[36;1mmanifest_path=$(grep -o '/.*/package-manifest.json' "$RUNNER_TEMP/package.txt" | tail -1)^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1956860Z ^[[36;1martifact_root=$(dirname "$manifest_path")^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1957180Z ^[[36;1mecho "manifest-path=$manifest_path" >> "$GITHUB_OUTPUT"^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1957550Z ^[[36;1mecho "artifact-root=$artifact_root" >> "$GITHUB_OUTPUT"^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1958450Z ^[[36;1mdigest=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync(process.argv[1],'utf8')).applicationDigestSha256)" "$manifest_path")^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1959100Z ^[[36;1mecho "application-digest=$digest" >> "$GITHUB_OUTPUT"^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1959770Z ^[[36;1marchive_path=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync(process.argv[1],'utf8')).archivePath)" "$manifest_path")^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1960510Z ^[[36;1m# T-06-02-01: stage ONLY the manifest and the `ditto` transport^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1960960Z ^[[36;1m# archive -- a single regular file -- rather than the raw `.app`^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1961400Z ^[[36;1m# directory tree `actions/upload-artifact`'s own zip previously^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1961900Z ^[[36;1m# lost mode bits and symlinks from. Every downstream job expands^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1962270Z ^[[36;1m# this archive itself and re-verifies against^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1962650Z ^[[36;1m# `applicationDigestSha256` (see `smoke-desktop-packaged.mjs` and^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1963050Z ^[[36;1m# `verify-macos-integration.mjs`).^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1963370Z ^[[36;1mmkdir -p "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}"^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1963870Z ^[[36;1mcp "$manifest_path" "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/"^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1964370Z ^[[36;1mcp "$archive_path" "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/"^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1964880Z ^[[36;1m# D-17(b): the STAPLED archive travels too, and separately. It is^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1965310Z ^[[36;1m# the shipped artifact; the archive above is the tested one. They^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1965750Z ^[[36;1m# are different bytes on purpose -- stapling mutates the bundle --^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1966150Z ^[[36;1m# and `--promote` gates the stapled one on the code directory hash,^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1966700Z ^[[36;1m# the only identity that survives that mutation. On an unsigned run^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1967080Z ^[[36;1m# there is no stapled artifact and this is a no-op.^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1967690Z ^[[36;1mstapled_archive_path=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync(process.argv[1],'utf8')).stapledArchivePath ?? '')" "$manifest_path")^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1968270Z ^[[36;1mif [ -n "$stapled_archive_path" ]; then^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1968630Z ^[[36;1m  cp "$stapled_archive_path" "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/"^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.1968990Z ^[[36;1mfi^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.2011650Z shell: /bin/bash -e {0}
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.2012440Z env:
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.2012690Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.2013090Z   KEEPLING_MACOS_SIGNING_IDENTITY: 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.2013430Z   KEEPLING_MACOS_NOTARIZE: 0
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.2013830Z   APPLE_ID: 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.2014090Z   APPLE_APP_SPECIFIC_PASSWORD: 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.2014360Z   APPLE_TEAM_ID: 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.2014590Z ##[endgroup]
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.4380040Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.4387050Z > keepling@ package:desktop /Users/runner/work/keepling/keepling
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.4388130Z > pnpm --dir apps/desktop package
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.4388970Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.6379170Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.6383170Z > @keepling/desktop@0.0.0 package /Users/runner/work/keepling/keepling/apps/desktop
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.6384600Z > node ../../tooling/package-desktop.mjs
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.6385570Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:51.8589950Z Desktop package signing: no Developer ID identity -- this build will be UNSIGNED
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.0625920Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.0830190Z > @keepling/desktop@0.0.0 build /Users/runner/work/keepling/keepling/apps/desktop
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.0931100Z > pnpm run build:main && pnpm run build:preload && pnpm run build:utility-preload && pnpm run build:renderer && pnpm run build:worker
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.1030320Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.3306170Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.3414200Z > @keepling/desktop@0.0.0 build:main /Users/runner/work/keepling/keepling/apps/desktop
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.3515920Z > vite build --config vite.main.config.ts
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.3517320Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.5652540Z ^[[36mvite v8.2.2 ^[[32mbuilding client environment for production...^[[36m^[[39m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.5732590Z transforming...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.5935110Z ✓ 118 modules transformed.
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6120130Z rendering chunks...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6224670Z computing gzip size...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6261760Z dist/main/index.cjs  294.84 kB │ gzip: 73.54 kB │ map: 832.63 kB
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6310610Z ^[[33m^[[33m[EMPTY_IMPORT_META] ^[[0m`import.meta` may not be a valid syntax with the `cjs` output format.
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6328970Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6345840Z     ^[[38;5;246m╭^[[0m^[[38;5;246m─^[[0m^[[38;5;246m[^[[0m main/adapters/credentials.ts:20:86 ^[[38;5;246m]^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6354580Z ^[[32m✓ built in 61ms^[[39m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6355030Z     ^[[38;5;246m│^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6361770Z  ^[[38;5;246m20 │^[[0m ^[[38;5;249mc^[[0m^[[38;5;249mo^[[0m^[[38;5;249mn^[[0m^[[38;5;249ms^[[0m^[[38;5;249mt^[[0m^[[38;5;249m ^[[0m^[[38;5;249mr^[[0m^[[38;5;249me^[[0m^[[38;5;249ms^[[0m^[[38;5;249mo^[[0m^[[38;5;249ml^[[0m^[[38;5;249mv^[[0m^[[38;5;249me^[[0m^[[38;5;249mR^[[0m^[[38;5;249me^[[0m^[[38;5;249mq^[[0m^[[38;5;249mu^[[0m^[[38;5;249mi^[[0m^[[38;5;249mr^[[0m^[[38;5;249me^[[0m^[[38;5;249m ^[[0m^[[38;5;249m=^[[0m^[[38;5;249m ^[[0m^[[38;5;249m(^[[0m^[[38;5;249m)^[[0m^[[38;5;249m ^[[0m^[[38;5;249m=^[[0m^[[38;5;249m>^[[0m^[[38;5;249m ^[[0m^[[38;5;249mt^[[0m^[[38;5;249my^[[0m^[[38;5;249mp^[[0m^[[38;5;249me^[[0m^[[38;5;249mo^[[0m^[[38;5;249mf^[[0m^[[38;5;249m ^[[0m^[[38;5;249mr^[[0m^[[38;5;249me^[[0m^[[38;5;249mq^[[0m^[[38;5;249mu^[[0m^[[38;5;249mi^[[0m^[[38;5;249mr^[[0m^[[38;5;249me^[[0m^[[38;5;249m ^[[0m^[[38;5;249m=^[[0m^[[38;5;249m=^[[0m^[[38;5;249m=^[[0m^[[38;5;249m ^[[0m^[[38;5;249m"^[[0m^[[38;5;249mf^[[0m^[[38;5;249mu^[[0m^[[38;5;249mn^[[0m^[[38;5;249mc^[[0m^[[38;5;249mt^[[0m^[[38;5;249mi^[[0m^[[38;5;249mo^[[0m^[[38;5;249mn^[[0m^[[38;5;249m"^[[0m^[[38;5;249m ^[[0m^[[38;5;249m?^[[0m^[[38;5;249m ^[[0m^[[38;5;249mr^[[0m^[[38;5;249me^[[0m^[[38;5;249mq^[[0m^[[38;5;249mu^[[0m^[[38;5;249mi^[[0m^[[38;5;249mr^[[0m^[[38;5;249me^[[0m^[[38;5;249m ^[[0m^[[38;5;249m:^[[0m^[[38;5;249m ^[[0m^[[38;5;249mc^[[0m^[[38;5;249mr^[[0m^[[38;5;249me^[[0m^[[38;5;249ma^[[0m^[[38;5;249mt^[[0m^[[38;5;249me^[[0m^[[38;5;249mR^[[0m^[[38;5;249me^[[0m^[[38;5;249mq^[[0m^[[38;5;249mu^[[0m^[[38;5;249mi^[[0m^[[38;5;249mr^[[0m^[[38;5;249me^[[0m^[[38;5;249m(^[[0mimport.meta^[[38;5;249m.^[[0m^[[38;5;249mu^[[0m^[[38;5;249mr^[[0m^[[38;5;249ml^[[0m^[[38;5;249m)^[[0m^[[38;5;249m;^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6365320Z  ^[[38;5;240m   │^[[0m                                                                                      ─────┬─────  
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6366930Z  ^[[38;5;240m   │^[[0m                                                                                           ╰─────── This `import.meta` will be replaced with an empty object (`{}`) automatically. If this is desired, you can suppress this warning by adding `transform.define: { 'import.meta': {} }`. If `import.meta` needs to be kept as-is, you need to set the output format to `esm`.
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6368940Z  ^[[38;5;240m   │^[[0m 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6370050Z  ^[[38;5;240m   │^[[0m ^[[38;5;115mHelp^[[0m: If you want to polyfill `import.meta.url` like Rollup does, check out the Document: https://rolldown.rs/in-depth/non-esm-output-formats#well-known-import-meta-properties
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6370930Z ^[[38;5;246m────╯^[[0m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.6371240Z ^[[39m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.8540160Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.8646230Z > @keepling/desktop@0.0.0 build:preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.8746460Z > vite build --config vite.preload.config.ts
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:52.8848010Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.0638550Z ^[[36mvite v8.2.2 ^[[32mbuilding client environment for production...^[[36m^[[39m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.0706010Z transforming...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.0861760Z ✓ 97 modules transformed.
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.0923630Z rendering chunks...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.1012480Z computing gzip size...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.1037750Z dist/preload/index.cjs  175.63 kB │ gzip: 39.39 kB │ map: 502.05 kB
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.1038230Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.1039430Z ^[[32m✓ built in 39ms^[[39m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.3253490Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.3356790Z > @keepling/desktop@0.0.0 build:utility-preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.3458310Z > vite build --config vite.utility-preload.config.ts
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.3570710Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.6732500Z ^[[36mvite v8.2.2 ^[[32mbuilding client environment for production...^[[36m^[[39m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.6850940Z transforming...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.6898960Z ✓ 97 modules transformed.
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.6974800Z rendering chunks...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.7060670Z computing gzip size...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.7086070Z dist/preload/utility.cjs  175.89 kB │ gzip: 39.05 kB │ map: 503.97 kB
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.7086360Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.7087730Z ^[[32m✓ built in 39ms^[[39m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.9135070Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.9236440Z > @keepling/desktop@0.0.0 build:renderer /Users/runner/work/keepling/keepling/apps/desktop
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.9336370Z > vite build --config vite.renderer.config.ts
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:53.9437430Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.1511700Z ^[[36mvite v8.2.2 ^[[32mbuilding client environment for production...^[[36m^[[39m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.1575370Z transforming...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.1917870Z ✓ 28 modules transformed.
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.2195170Z rendering chunks...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.2433660Z computing gzip size...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.2470850Z dist/renderer/index.html                   0.64 kB │ gzip:  0.37 kB
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.2471560Z dist/renderer/assets/index-BaCnRNI7.css    3.68 kB │ gzip:  1.10 kB
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.2472380Z dist/renderer/assets/index-taLD0tBu.js   217.87 kB │ gzip: 67.79 kB │ map: 956.23 kB
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.2472770Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.2473060Z ^[[32m✓ built in 96ms^[[39m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.4488120Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.4589580Z > @keepling/desktop@0.0.0 build:worker /Users/runner/work/keepling/keepling/apps/desktop
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.4689650Z > vite build --config vite.worker.config.ts
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.4790570Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.7383990Z ^[[36mvite v8.2.2 ^[[32mbuilding client environment for production...^[[36m^[[39m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.7478200Z transforming...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.7497000Z ✓ 3 modules transformed.
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.7533140Z rendering chunks...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.7562650Z computing gzip size...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.7573260Z dist/worker/index.cjs  56.01 kB │ gzip: 14.68 kB │ map: 99.57 kB
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.7573590Z 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:54.7575040Z ^[[32m✓ built in 19ms^[[39m
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:55.1065420Z ^[[33m❯^[[39m Checking your system
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:55.1069690Z ^[[33m❯^[[39m Checking package manager version
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:55.6979300Z ^[[32m✔^[[39m Found pnpm@10.33.0
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:55.7080920Z ^[[32m✔^[[39m Checking your system
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:55.9967550Z ^[[?25h^[[33m❯^[[39m Loading configuration
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1019520Z ^[[32m✔^[[39m Loading configuration
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1019910Z ^[[33m❯^[[39m Resolving make targets
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1041960Z › Making for the following targets: 
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1042340Z ^[[32m✔^[[39m Resolving make targets
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1042650Z ^[[33m❯^[[39m Running package command
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1046670Z ^[[33m❯^[[39m Preparing to package application
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1068930Z ^[[32m✔^[[39m Preparing to package application
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1069520Z ^[[33m❯^[[39m Running packaging hooks
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1071840Z ^[[33m❯^[[39m Running generateAssets hook
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1072770Z ^[[32m✔^[[39m Running generateAssets hook
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1073250Z ^[[33m❯^[[39m Running prePackage hook
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1073860Z ^[[32m✔^[[39m Running prePackage hook
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1074160Z ^[[32m✔^[[39m Running packaging hooks
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1074460Z ^[[33m❯^[[39m Packaging application
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1076080Z › Determining targets...
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1113490Z ^[[33m❯^[[39m Packaging for arm64 on darwin
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1114740Z ^[[33m❯^[[39m Copying files
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1115180Z ^[[33m❯^[[39m Preparing native dependencies
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:56.1115600Z ^[[33m❯^[[39m Finalizing package
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.1846280Z ^[[32m✔^[[39m Copying files
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.2964810Z ^[[32m✔^[[39m Preparing native dependencies
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.4206460Z ^[[32m✔^[[39m Finalizing package
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.4208530Z ^[[32m✔^[[39m Packaging for arm64 on darwin
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.4208870Z ^[[32m✔^[[39m Packaging application
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.4209190Z ^[[33m❯^[[39m Running postPackage hook
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.4210370Z ^[[32m✔^[[39m Running postPackage hook
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.4210670Z ^[[32m✔^[[39m Running package command
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.4211000Z ^[[33m❯^[[39m Running preMake hook
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.4211270Z ^[[32m✔^[[39m Running preMake hook
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.4211560Z ^[[33m❯^[[39m Making distributables
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:38:59.4217560Z ^[[33m❯^[[39m Making a zip distributable for darwin/arm64
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:39:11.0160290Z ^[[32m✔^[[39m Making a zip distributable for darwin/arm64
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:39:11.0160800Z ^[[32m✔^[[39m Making distributables
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:39:11.0161100Z ^[[33m❯^[[39m Running postMake hook
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:39:11.0161590Z › Artifacts available at: /Users/runner/work/keepling/keepling/apps/desktop/out/make
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:39:11.0162130Z ^[[32m✔^[[39m Running postMake hook
+desktop-package	Build once and record the immutable package manifest	2026-09-12T02:39:23.4041850Z ^[[?25hDesktop package manifest: /var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/keepling-desktop-package-NO0a7a/package-manifest.json
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6955740Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6957010Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6957380Z with:
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6957710Z   name: keepling-desktop-package
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6957990Z   path: /Users/runner/work/_temp/keepling-desktop-package
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6958330Z   if-no-files-found: error
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6958610Z   retention-days: 14
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6958820Z   compression-level: 6
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6959250Z   overwrite: false
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6959450Z   include-hidden-files: false
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6959780Z env:
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6960010Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:23.6960460Z ##[endgroup]
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:24.0086060Z (node:7351) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:24.0089090Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:24.0111630Z With the provided path, there will be 2 files uploaded
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:24.0112650Z Artifact name is valid!
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:24.0113170Z Root directory input is valid!
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:24.4548510Z Beginning upload of artifact content to blob storage
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:24.6134370Z (node:7351) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:25.6505710Z Uploaded bytes 8388608
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:25.6601040Z Uploaded bytes 16777216
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:25.9201960Z Uploaded bytes 25165824
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:25.9303500Z Uploaded bytes 33554432
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:25.9544040Z Uploaded bytes 41943040
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:26.1872670Z Uploaded bytes 50331648
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:26.3639240Z Uploaded bytes 58720256
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:26.4045630Z Uploaded bytes 67108864
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:26.8509050Z Uploaded bytes 75497472
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:27.0274500Z Uploaded bytes 83886080
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:27.2511450Z Uploaded bytes 92274688
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:27.3462770Z Uploaded bytes 100663296
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:27.4438960Z Uploaded bytes 109051904
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:27.8323800Z Uploaded bytes 117440512
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:27.9267980Z Uploaded bytes 125829120
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:28.0822610Z Uploaded bytes 129325481
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:28.1525860Z Finished uploading artifact content to blob storage!
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:28.1628600Z SHA256 digest of uploaded artifact zip is c08b3b7b7c1f841ec0d264cfb4020752ad8cea7b9dd7a025df60cba7fa1b4538
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:28.1661440Z Finalizing artifact upload
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:28.4658180Z Artifact keepling-desktop-package.zip successfully finalized. Artifact ID 10289744334
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:28.4659280Z Artifact keepling-desktop-package has been successfully uploaded! Final size is 129325481 bytes. Artifact ID is 10289744334
+desktop-package	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:39:28.4945590Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34668212473/artifacts/10289744334
+desktop-package	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:39:28.5269170Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-package	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:39:28.5270360Z Post job cleanup.
+desktop-package	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:39:28.6634630Z (node:7538) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-package	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-12T02:39:28.6635450Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.6778930Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.6779970Z Post job cleanup.
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.7888370Z [command]/opt/homebrew/bin/git version
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.8069730Z git version 2.55.0
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.8087580Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/8aeb7ee8-8fce-466f-a052-64029ae67b51/.gitconfig'
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.8094500Z Temporarily overriding HOME='/Users/runner/work/_temp/8aeb7ee8-8fce-466f-a052-64029ae67b51' before making global git config changes
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.8095540Z Adding repository directory to the temporary git global config as a safe directory
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.8098070Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.8193660Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.8255240Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.9081120Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.9136490Z http.https://github.com/.extraheader
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.9143440Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.9272370Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.9944660Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+desktop-package	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:39:28.9993740Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+desktop-package	Complete job	2026-09-12T02:39:29.1181680Z Evaluate and set job outputs
+desktop-package	Complete job	2026-09-12T02:39:29.1187530Z Set output 'application-digest'
+desktop-package	Complete job	2026-09-12T02:39:29.1189390Z Cleaning up orphan processes
+desktop-package	Complete job	2026-09-12T02:39:30.1257210Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

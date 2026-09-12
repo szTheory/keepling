@@ -1,0 +1,165 @@
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8768141Z Current runner version: '2.337.0'
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8808862Z ##[group]Runner Image Provisioner
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8810381Z Hosted Compute Agent
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8811779Z Version: 20260828.587
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8812972Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8814252Z Build Date: 2026-08-28T16:44:25Z
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8815369Z Worker ID: {71e2bb61-d4d6-4a2c-95f7-5371128177bf}
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8816737Z Azure Region: centralus
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8817838Z ##[endgroup]
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8820508Z ##[group]Operating System
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8822196Z Ubuntu
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8823078Z 24.04.5
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8824032Z LTS
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8824915Z ##[endgroup]
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8825870Z ##[group]Runner Image
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8827122Z Image: ubuntu-24.04
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8828159Z Version: 20260907.300.1
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8830199Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8833735Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8835607Z ##[endgroup]
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8837413Z ##[group]GITHUB_TOKEN Permissions
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8841028Z Contents: read
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8842495Z Metadata: read
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8843622Z ##[endgroup]
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8846992Z Secret source: Actions
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8848655Z Cache mode: write
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.8849931Z Prepare workflow directory
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.9660051Z Prepare all required actions
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:36.9735831Z Getting action download info
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:37.3156325Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:37.4306783Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+opentofu-host-fixtures	Set up job	2026-09-12T02:38:37.6456874Z Complete job name: opentofu-host-fixtures
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7257440Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7266450Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7267520Z with:
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7267997Z   repository: szTheory/keepling
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7272149Z   token: ***
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7272613Z   ssh-strict: true
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7273068Z   ssh-user: git
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7273536Z   persist-credentials: true
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7274042Z   clean: true
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7274511Z   sparse-checkout-cone-mode: true
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7275065Z   fetch-depth: 1
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7275517Z   fetch-tags: false
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7275979Z   show-progress: true
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7276438Z   lfs: false
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7276899Z   submodules: false
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7277364Z   set-safe-directory: true
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7278103Z env:
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7278582Z   KEEPLING_PHASE2_SEED: 20260901
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7279313Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:37.7280068Z ##[endgroup]
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8283314Z Syncing repository: szTheory/keepling
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8285930Z ##[group]Getting Git version info
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8287333Z Working directory is '/home/runner/work/keepling/keepling'
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8289452Z [command]/usr/bin/git version
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8290514Z git version 2.55.0
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8294228Z ##[endgroup]
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8301998Z Temporarily overriding HOME='/home/runner/work/_temp/6df239f0-059d-48b3-b9ad-bc0518926872' before making global git config changes
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8304534Z Adding repository directory to the temporary git global config as a safe directory
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8306476Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8310180Z Deleting the contents of '/home/runner/work/keepling/keepling'
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8312043Z ##[group]Initializing the repository
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8313362Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8315118Z hint: Using 'master' as the name for the initial branch. This default branch name
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8316799Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8318386Z hint: to use in all of your new repositories, which will suppress this warning,
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8319630Z hint: call:
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8320561Z hint:
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8321832Z hint: 	git config --global init.defaultBranch <name>
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8322570Z hint:
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8323658Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8324720Z hint: 'development'. The just-created branch can be renamed via this command:
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8325902Z hint:
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8326824Z hint: 	git branch -m <name>
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8327759Z hint:
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8328927Z hint: Disable this message with "git config set advice.defaultBranchName false"
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8330464Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8334111Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8337407Z ##[endgroup]
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8338787Z ##[group]Disabling automatic garbage collection
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8339995Z [command]/usr/bin/git config --local gc.auto 0
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8343237Z ##[endgroup]
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8344735Z ##[group]Setting up auth
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8346017Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8349992Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8354378Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8358542Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8362714Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8366203Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8369763Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8373283Z ##[endgroup]
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8374646Z ##[group]Fetching the repository
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:38.8376484Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +26628e1771d5b90569b5eec232047456fdda9f2e:refs/remotes/origin/main
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4117100Z From https://github.com/szTheory/keepling
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4118226Z  * [new ref]         26628e1771d5b90569b5eec232047456fdda9f2e -> origin/main
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4120635Z ##[endgroup]
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4121762Z ##[group]Determining the checkout info
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4122750Z ##[endgroup]
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4123430Z [command]/usr/bin/git sparse-checkout disable
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4131933Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4133942Z ##[group]Checking out the ref
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4134593Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4135188Z Switched to a new branch 'main'
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4135595Z branch 'main' set up to track 'origin/main'.
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4136585Z ##[endgroup]
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4138568Z [command]/usr/bin/git log -1 --format=%H
+opentofu-host-fixtures	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:40.4139341Z 26628e1771d5b90569b5eec232047456fdda9f2e
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:40.4269218Z ##[group]Run set -o pipefail
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:40.4269918Z ^[[36;1mset -o pipefail^[[0m
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:40.4270658Z ^[[36;1m./tooling/test-phase-2.sh --lane opentofu-host-fixtures | tee "$RUNNER_TEMP/opentofu-host-fixtures.txt"^[[0m
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:40.4271697Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/opentofu-host-fixtures.txt"^[[0m
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:40.4313387Z shell: /usr/bin/bash -e {0}
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:40.4313781Z env:
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:40.4314085Z   KEEPLING_PHASE2_SEED: 20260901
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:40.4314607Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:40.4315138Z ##[endgroup]
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:41.2988666Z lane=opentofu-host-fixtures status=RUNNING command=eight hermetic OpenTofu/bootstrap/archive/teardown/DNS-fence fixture commands cases=8 seed=20260901 inputs_sha256=a2129174948e0f8d1f97efeeec96426adc96721c9473c48a40a3fa382d83b7a8
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:43.9723320Z lane=opentofu-host-fixtures status=PASS command=eight hermetic OpenTofu/bootstrap/archive/teardown/DNS-fence fixture commands cases=8 seed=20260901 elapsed_ms=3267 inputs_sha256=a2129174948e0f8d1f97efeeec96426adc96721c9473c48a40a3fa382d83b7a8
+opentofu-host-fixtures	Run exact hermetic host-boundary lane	2026-09-12T02:38:43.9893010Z Privacy verification passed: artifacts=1 sentinels=7
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:43.9999582Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0001635Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0002054Z with:
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0002300Z   name: opentofu-host-fixtures-timing
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0002674Z   path: /home/runner/work/_temp/opentofu-host-fixtures.txt
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0003032Z   if-no-files-found: error
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0003264Z   retention-days: 14
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0003483Z   compression-level: 6
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0003695Z   overwrite: false
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0003904Z   include-hidden-files: false
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0004132Z env:
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0004328Z   KEEPLING_PHASE2_SEED: 20260901
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0004699Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.0005125Z ##[endgroup]
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.1710182Z (node:5181) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.1712190Z (Use `node --trace-deprecation ...` to show where the warning was created)
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.1772097Z With the provided path, there will be 1 file uploaded
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.1778305Z Artifact name is valid!
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.1779963Z Root directory input is valid!
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.4575967Z Beginning upload of artifact content to blob storage
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:44.4777594Z (node:5181) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:53.7537566Z Uploaded bytes 376
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:53.7962016Z Finished uploading artifact content to blob storage!
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:53.7963491Z SHA256 digest of uploaded artifact zip is 7c2588fd5a485467092131e7da636a3f7488a61732c86b5618261a0f3ef9a08c
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:53.7965758Z Finalizing artifact upload
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:58.3381702Z Artifact opentofu-host-fixtures-timing.zip successfully finalized. Artifact ID 10289594766
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:58.3383929Z Artifact opentofu-host-fixtures-timing has been successfully uploaded! Final size is 376 bytes. Artifact ID is 10289594766
+opentofu-host-fixtures	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:58.3392316Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34668212479/artifacts/10289594766
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.3600381Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.3602630Z Post job cleanup.
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.4498660Z [command]/usr/bin/git version
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.4542496Z git version 2.55.0
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.4585558Z Temporarily overriding HOME='/home/runner/work/_temp/50dd9eda-fb66-4ad4-913b-5d6dfd3d3b7f' before making global git config changes
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.4589478Z Adding repository directory to the temporary git global config as a safe directory
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.4592623Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.4633845Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.4673598Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.4918612Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.4947911Z http.https://github.com/.extraheader
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.4961881Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.4998099Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.5235450Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+opentofu-host-fixtures	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:58.5270633Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+opentofu-host-fixtures	Complete job	2026-09-12T02:38:58.5646854Z Cleaning up orphan processes
+opentofu-host-fixtures	Complete job	2026-09-12T02:38:58.5875655Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

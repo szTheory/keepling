@@ -284,7 +284,16 @@ jobs:
             console.log(manifestPath);
           " "$artifact_root"
           echo "manifest-path=$artifact_root/package-manifest.json" >> "$GITHUB_OUTPUT"
-      - name: Run the macOS rows that need no Accessibility grant, against the downloaded bytes
+      # `--without-accessibility-trust` now also subtracts the live-appearance
+      # row (A14). That row needs a logged-in Aqua session to deliver
+      # `AppleInterfaceThemeChangedNotification` to an already-running app, which
+      # a hosted runner does not have -- see the `requiresLiveAppearanceSession`
+      # comment in `tooling/verify-macos-integration.mjs`. It is NOT dropped: it
+      # is the `macos-integration-live-appearance` lane in
+      # `tooling/release-lanes.json`, `authority: "local-attested"` with a stated
+      # physical blocker, and it emits an explicit BLOCKED zero-case entry into
+      # every release manifest.
+      - name: Run the macOS rows a hosted runner can physically drive, against the downloaded bytes
         run: |
           node tooling/verify-macos-integration.mjs \
             --without-accessibility-trust \

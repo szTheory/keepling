@@ -35,7 +35,7 @@
     "  workflow / job  where continuous integration runs it, or null when it is not wired.",
     "  authority       'ci' or 'local-attested'. 'local-attested' iff physicalBlocker is non-null.",
     "  physicalBlocker null, or the PHYSICAL reason continuous integration can never run it.",
-    "                  Four lanes carry one. It is not a synonym for 'not wired up yet'.",
+    "                  Five lanes carry one. It is not a synonym for 'not wired up yet'.",
     "  ciWiring        'wired' when a committed workflow job runs it today, 'unwired' otherwise.",
     "  wiringBlocker   null, or why an otherwise-CI-capable lane is not wired today. An unwired",
     "                  lane reports BLOCKED with this reason; it may never report PASSED.",
@@ -238,7 +238,7 @@
     },
     {
       "lane": "macos-integration-no-grant",
-      "command": "node tooling/verify-macos-integration.mjs (the rows needing no Accessibility grant)",
+      "command": "node tooling/verify-macos-integration.mjs --without-accessibility-trust (rows A10, A12, A13: the rows needing no Accessibility grant and no live appearance session)",
       "workflow": "desktop.yml",
       "job": "desktop-macos-integration",
       "authority": "ci",
@@ -247,6 +247,18 @@
       "wiringBlocker": null,
       "requiresSecrets": false,
       "owner": "KPL-06"
+    },
+    {
+      "lane": "macos-integration-live-appearance",
+      "command": "node tooling/verify-macos-integration.mjs --rows A14 (Light/Dark change while the app is open)",
+      "workflow": null,
+      "job": null,
+      "authority": "local-attested",
+      "physicalBlocker": "Row A14 is the only row that changes a system appearance setting WHILE the application is already running and asserts the window re-themes without a relaunch. Delivering that change to a running application requires a logged-in Aqua session whose appearance daemon posts AppleInterfaceThemeChangedNotification; a hosted GitHub runner has no such session, so the notification is never delivered and the measured window background never changes. This is an observed boundary, not a prediction: at revision 26628e1771d5b90569b5eec232047456fdda9f2e the row reported `status=FAIL cases=4` on macos-15 with `background stayed {\"b\":0,\"g\":0,\"r\":0}` (run 34668212473, job desktop-macos-integration), while the identical row reports `status=PASS cases=4` on a real logged-in session. Rows A10, A12 and A13 pass on the same runner because each applies its setting BEFORE launch; A14 is the only row that cannot.",
+      "ciWiring": "unwired",
+      "wiringBlocker": null,
+      "requiresSecrets": false,
+      "owner": "backlog"
     },
     {
       "lane": "hosted-runner-tcc-report",

@@ -1,0 +1,9 @@
+{
+  "artifactName": "server-oci-image",
+  "kind": "oci-image",
+  "produced": false,
+  "revision": "26628e1771d5b90569b5eec232047456fdda9f2e",
+  "reason": "Nothing in this repository builds or pushes the server image to any registry, so there is no published digest to record or sign. This is a recorded owner decision, not an oversight (.planning/WINDOWS.md row 80). The image-compose-deploy lane builds an image locally inside the lane and discards it; that is a lane, not a released artefact.",
+  "toClose": "Close WINDOWS.md row 80: decide the registry and push trigger, add the build+push pipeline, then sign and record the pushed digest.",
+  "owner": "BACKLOG"
+}

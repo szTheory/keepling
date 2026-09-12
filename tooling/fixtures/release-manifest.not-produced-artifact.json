@@ -1,0 +1,43 @@
+{
+  "$comment": [
+    "FIXTURE, never a real release manifest. It encodes the loophole that the ABSENCE RECORD opens",
+    "if it is left unguarded. A release manifest must carry an entry for every named artefact even",
+    "when that artefact was not produced, because an OMITTED artefact reads as satisfied. But once",
+    "such an entry exists it carries a digest, and a digest is a binding target: a lane could name",
+    "it and claim PASSED, thereby claiming to have tested bytes that were never built.",
+    "tooling/verify-release.mjs MUST reject this with a message naming the absence:",
+    "a lane cannot have tested bytes that were never built."
+  ],
+  "schemaVersion": 2,
+  "revision": {
+    "sha": "26628e1771d5b90569b5eec232047456fdda9f2e",
+    "ref": "refs/heads/main",
+    "runId": "not-produced-artifact-fixture"
+  },
+  "artifacts": [
+    {
+      "name": "ios-archive",
+      "kind": "ios-xcarchive",
+      "artifactPath": ".planning/releases/candidate-0/artifact",
+      "digestSha256": "069096c18a47250c5e22eb663d0234fae15ea05fb22152330ef8e9daeb10f44a",
+      "builtByRunId": "34668212473",
+      "builtByJob": "desktop-package",
+      "runnerImage": "macos-15",
+      "produced": false,
+      "notProducedReason": "no committed workflow job builds an iOS archive"
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "ios-simulator",
+      "status": "PASSED",
+      "cases": 7,
+      "skipped": 0,
+      "seed": "20260901",
+      "elapsedMs": 4200,
+      "inputsSha256": "e30f524d0eec805c2641cde323630a8b22da1c4511b80d164bac3643422b6259",
+      "evidenceDigestSha256": "82db996cfd088bbf67dd4aed1297edbd4174ca41df24e9f205baec6162ee37be",
+      "ranAgainstArtifactDigest": "069096c18a47250c5e22eb663d0234fae15ea05fb22152330ef8e9daeb10f44a"
+    }
+  ]
+}

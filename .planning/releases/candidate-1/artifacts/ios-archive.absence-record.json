@@ -1,0 +1,9 @@
+{
+  "artifactName": "ios-archive",
+  "kind": "ios-xcarchive",
+  "produced": false,
+  "revision": "26628e1771d5b90569b5eec232047456fdda9f2e",
+  "reason": "No committed workflow job builds an iOS archive. The inventory marks every iOS lane (ios-simulator, ios-signed-build, real-stack-ios-simulator, ios-device) ciWiring=unwired, so no continuous-integration run at this revision produced iOS bytes. This record exists because an OMITTED artefact reads as satisfied; an absent artefact must be stated.",
+  "toClose": "Wire tooling/build-ios-signed.mjs into a committed macOS job on main and record its archive digest here.",
+  "owner": "BACKLOG"
+}

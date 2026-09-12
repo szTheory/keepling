@@ -2635,13 +2635,43 @@ const ROW_REGISTRY = {
   A11: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: true, requiresScreenRecording: true, run: rowA11 },
   A12: { requiresAccessibilityTrust: false, requiresProtectedSettingsWrite: true, requiresScreenRecording: true, run: rowA12 },
   A13: { requiresAccessibilityTrust: false, requiresProtectedSettingsWrite: true, requiresScreenRecording: true, run: rowA13 },
-  A14: { requiresAccessibilityTrust: false, requiresProtectedSettingsWrite: false, requiresScreenRecording: true, run: rowA14 },
+  A14: { requiresAccessibilityTrust: false, requiresProtectedSettingsWrite: false, requiresScreenRecording: true, requiresLiveAppearanceSession: true, run: rowA14 },
   A15: { requiresAccessibilityTrust: true, requiresProtectedSettingsWrite: false, requiresScreenRecording: false, run: rowA15 },
 }
 
 const PIXEL_MEASURED_ROWS = ALL_ROWS.filter((row) => ROW_REGISTRY[row]?.requiresScreenRecording)
 const UNTRUSTED_ROWS = ALL_ROWS.filter((row) => ROW_REGISTRY[row]?.requiresAccessibilityTrust === false)
-if (requestedRows === null) requestedRows = UNTRUSTED_ROWS
+
+/**
+ * `requiresLiveAppearanceSession` is a SEPARATE, observed boundary from the
+ * Accessibility grant, and it is the only thing `--without-accessibility-trust`
+ * subtracts beyond the trusted rows.
+ *
+ * A row carrying it changes a system appearance setting WHILE the application
+ * is already running and asserts the window re-themes without a relaunch.
+ * Delivering that change to a running process requires a logged-in Aqua
+ * session whose appearance daemon posts `AppleInterfaceThemeChangedNotification`.
+ * A hosted GitHub runner has no such session: the notification is never
+ * delivered, so the measured background never changes and the row fails for a
+ * reason that has nothing to do with the product.
+ *
+ * This is observed, not predicted. At revision 26628e1 row A14 reported
+ * `status=FAIL cases=4` on `macos-15` with `background stayed
+ * {"b":0,"g":0,"r":0}` (run 34668212473, job desktop-macos-integration), while
+ * the identical row reports `status=PASS cases=4` on a real logged-in session.
+ * A10/A12/A13 pass on the same runner because each applies its setting BEFORE
+ * launch.
+ *
+ * Excluding it here is NOT a way to make a failing lane green: the row still
+ * exists, still runs under `--all` and `--rows A14`, and is named in
+ * `tooling/release-lanes.json` as the `macos-integration-live-appearance`
+ * lane with `authority: "local-attested"` and a stated physical blocker, so it
+ * emits an explicit BLOCKED entry with a zero case count into every release
+ * manifest rather than disappearing.
+ */
+const LIVE_APPEARANCE_ROWS = ALL_ROWS.filter((row) => ROW_REGISTRY[row]?.requiresLiveAppearanceSession === true)
+const HOSTED_RUNNABLE_UNTRUSTED_ROWS = UNTRUSTED_ROWS.filter((row) => !LIVE_APPEARANCE_ROWS.includes(row))
+if (requestedRows === null) requestedRows = HOSTED_RUNNABLE_UNTRUSTED_ROWS
 
 const cleanUp = async () => {
   for (const handle of [...liveApplications]) await quitApplication(handle)

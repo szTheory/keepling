@@ -1,0 +1,13 @@
+{
+  "artifactName": "source-tree",
+  "kind": "git-tree",
+  "produced": true,
+  "revision": "26628e1771d5b90569b5eec232047456fdda9f2e",
+  "gitTreeSha1": "b0507809d657ebbd650d9df0235c2ed5cf15a83f",
+  "what": "The exact source tree both continuous-integration runs checked out at this revision, named by its git tree object. It exists as an artefact entry because several lanes -- the governance lanes and the Phase 2 lanes -- run against SOURCE, not against a built artefact, and binding them to the packaged application's digest would claim they tested bytes they never opened. A lane must name an artefact digest that exists in the manifest; this is the artefact those lanes actually ran against.",
+  "checkedOutBy": {
+    "desktop.yml": "34668212473",
+    "repository-integrity.yml": "34668212479"
+  },
+  "verifyWith": "git rev-parse 26628e1771d5b90569b5eec232047456fdda9f2e^{tree}"
+}

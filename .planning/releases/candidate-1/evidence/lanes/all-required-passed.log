@@ -1,0 +1,84 @@
+All required checks passed	Set up job	2026-09-12T02:43:00.3929872Z Current runner version: '2.337.0'
+All required checks passed	Set up job	2026-09-12T02:43:00.3969625Z ##[group]Runner Image Provisioner
+All required checks passed	Set up job	2026-09-12T02:43:00.3971193Z Hosted Compute Agent
+All required checks passed	Set up job	2026-09-12T02:43:00.3972758Z Version: 20260828.587
+All required checks passed	Set up job	2026-09-12T02:43:00.3973899Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+All required checks passed	Set up job	2026-09-12T02:43:00.3975221Z Build Date: 2026-08-28T16:44:25Z
+All required checks passed	Set up job	2026-09-12T02:43:00.3976558Z Worker ID: {1dc0e6d3-8448-4ca5-b152-7a4bba73ec66}
+All required checks passed	Set up job	2026-09-12T02:43:00.3977834Z Azure Region: westus
+All required checks passed	Set up job	2026-09-12T02:43:00.3978975Z ##[endgroup]
+All required checks passed	Set up job	2026-09-12T02:43:00.3982207Z ##[group]Operating System
+All required checks passed	Set up job	2026-09-12T02:43:00.3983343Z Ubuntu
+All required checks passed	Set up job	2026-09-12T02:43:00.3984346Z 24.04.5
+All required checks passed	Set up job	2026-09-12T02:43:00.3985260Z LTS
+All required checks passed	Set up job	2026-09-12T02:43:00.3986304Z ##[endgroup]
+All required checks passed	Set up job	2026-09-12T02:43:00.3987364Z ##[group]Runner Image
+All required checks passed	Set up job	2026-09-12T02:43:00.3988394Z Image: ubuntu-24.04
+All required checks passed	Set up job	2026-09-12T02:43:00.3989500Z Version: 20260907.300.1
+All required checks passed	Set up job	2026-09-12T02:43:00.3991364Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+All required checks passed	Set up job	2026-09-12T02:43:00.3994881Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+All required checks passed	Set up job	2026-09-12T02:43:00.3996620Z ##[endgroup]
+All required checks passed	Set up job	2026-09-12T02:43:00.3998692Z ##[group]GITHUB_TOKEN Permissions
+All required checks passed	Set up job	2026-09-12T02:43:00.4002311Z Contents: read
+All required checks passed	Set up job	2026-09-12T02:43:00.4003879Z Metadata: read
+All required checks passed	Set up job	2026-09-12T02:43:00.4004820Z ##[endgroup]
+All required checks passed	Set up job	2026-09-12T02:43:00.4008011Z Secret source: Actions
+All required checks passed	Set up job	2026-09-12T02:43:00.4009710Z Cache mode: write
+All required checks passed	Set up job	2026-09-12T02:43:00.4011154Z Prepare workflow directory
+All required checks passed	Set up job	2026-09-12T02:43:00.4663737Z Prepare all required actions
+All required checks passed	Set up job	2026-09-12T02:43:00.4759897Z Complete job name: All required checks passed
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6965962Z ##[group]Run node -e '
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6967262Z ^[[36;1mnode -e '^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6968439Z ^[[36;1m  const needs = JSON.parse(process.env.NEEDS_CONTEXT);^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6969843Z ^[[36;1m  let failed = false;^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6971188Z ^[[36;1m  for (const [job, info] of Object.entries(needs)) {^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6972844Z ^[[36;1m    const result = info.result;^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6974335Z ^[[36;1m    console.log("needs job=" + job + " result=" + result);^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6975799Z ^[[36;1m    if (result !== "success") {^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6977439Z ^[[36;1m      console.error("required job " + job + " did not succeed (result=" + result + ")");^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6979129Z ^[[36;1m      failed = true;^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6980149Z ^[[36;1m    }^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6981178Z ^[[36;1m  }^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6982529Z ^[[36;1m  if (failed) process.exit(1);^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.6983615Z ^[[36;1m'^[[0m
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.7508227Z shell: /usr/bin/bash -e {0}
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.7510235Z env:
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.7511338Z   KEEPLING_PHASE2_SEED: 20260901
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.7513345Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.7518218Z   NEEDS_CONTEXT: {
+All required checks passed	Assert every required dependency succeeded	  "ci-contract": {
+All required checks passed	Assert every required dependency succeeded	    "result": "success",
+All required checks passed	Assert every required dependency succeeded	    "outputs": {}
+All required checks passed	Assert every required dependency succeeded	  },
+All required checks passed	Assert every required dependency succeeded	  "repository-integrity": {
+All required checks passed	Assert every required dependency succeeded	    "result": "success",
+All required checks passed	Assert every required dependency succeeded	    "outputs": {}
+All required checks passed	Assert every required dependency succeeded	  },
+All required checks passed	Assert every required dependency succeeded	  "phase2-linux": {
+All required checks passed	Assert every required dependency succeeded	    "result": "failure",
+All required checks passed	Assert every required dependency succeeded	    "outputs": {}
+All required checks passed	Assert every required dependency succeeded	  },
+All required checks passed	Assert every required dependency succeeded	  "phase2-runtime": {
+All required checks passed	Assert every required dependency succeeded	    "result": "success",
+All required checks passed	Assert every required dependency succeeded	    "outputs": {}
+All required checks passed	Assert every required dependency succeeded	  },
+All required checks passed	Assert every required dependency succeeded	  "image-compose-deploy": {
+All required checks passed	Assert every required dependency succeeded	    "result": "failure",
+All required checks passed	Assert every required dependency succeeded	    "outputs": {}
+All required checks passed	Assert every required dependency succeeded	  },
+All required checks passed	Assert every required dependency succeeded	  "opentofu-host-fixtures": {
+All required checks passed	Assert every required dependency succeeded	    "result": "success",
+All required checks passed	Assert every required dependency succeeded	    "outputs": {}
+All required checks passed	Assert every required dependency succeeded	  }
+All required checks passed	Assert every required dependency succeeded	}
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.7522996Z ##[endgroup]
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.9673830Z required job phase2-linux did not succeed (result=failure)
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.9676154Z required job image-compose-deploy did not succeed (result=failure)
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.9677915Z needs job=ci-contract result=success
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.9679728Z needs job=repository-integrity result=success
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.9681169Z needs job=phase2-linux result=failure
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.9683091Z needs job=phase2-runtime result=success
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.9684588Z needs job=image-compose-deploy result=failure
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.9686395Z needs job=opentofu-host-fixtures result=success
+All required checks passed	Assert every required dependency succeeded	2026-09-12T02:43:00.9709076Z ##[error]Process completed with exit code 1.
+All required checks passed	Complete job	2026-09-12T02:43:00.9873032Z Cleaning up orphan processes

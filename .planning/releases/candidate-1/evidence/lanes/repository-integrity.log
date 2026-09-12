@@ -1,0 +1,165 @@
+repository-integrity	Set up job	2026-09-12T02:38:24.9331693Z Current runner version: '2.337.0'
+repository-integrity	Set up job	2026-09-12T02:38:24.9356055Z ##[group]Runner Image Provisioner
+repository-integrity	Set up job	2026-09-12T02:38:24.9356892Z Hosted Compute Agent
+repository-integrity	Set up job	2026-09-12T02:38:24.9357451Z Version: 20260828.587
+repository-integrity	Set up job	2026-09-12T02:38:24.9357957Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+repository-integrity	Set up job	2026-09-12T02:38:24.9358652Z Build Date: 2026-08-28T16:44:25Z
+repository-integrity	Set up job	2026-09-12T02:38:24.9359210Z Worker ID: {45332fcf-a9f0-437d-b6c2-b3b7fd8ef6e5}
+repository-integrity	Set up job	2026-09-12T02:38:24.9359876Z Azure Region: westus2
+repository-integrity	Set up job	2026-09-12T02:38:24.9360377Z ##[endgroup]
+repository-integrity	Set up job	2026-09-12T02:38:24.9362017Z ##[group]Operating System
+repository-integrity	Set up job	2026-09-12T02:38:24.9362614Z Ubuntu
+repository-integrity	Set up job	2026-09-12T02:38:24.9363034Z 24.04.5
+repository-integrity	Set up job	2026-09-12T02:38:24.9363479Z LTS
+repository-integrity	Set up job	2026-09-12T02:38:24.9364001Z ##[endgroup]
+repository-integrity	Set up job	2026-09-12T02:38:24.9364457Z ##[group]Runner Image
+repository-integrity	Set up job	2026-09-12T02:38:24.9365009Z Image: ubuntu-24.04
+repository-integrity	Set up job	2026-09-12T02:38:24.9365478Z Version: 20260907.300.1
+repository-integrity	Set up job	2026-09-12T02:38:24.9366403Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+repository-integrity	Set up job	2026-09-12T02:38:24.9368023Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+repository-integrity	Set up job	2026-09-12T02:38:24.9369000Z ##[endgroup]
+repository-integrity	Set up job	2026-09-12T02:38:24.9369946Z ##[group]GITHUB_TOKEN Permissions
+repository-integrity	Set up job	2026-09-12T02:38:24.9372409Z Contents: read
+repository-integrity	Set up job	2026-09-12T02:38:24.9372902Z Metadata: read
+repository-integrity	Set up job	2026-09-12T02:38:24.9373357Z ##[endgroup]
+repository-integrity	Set up job	2026-09-12T02:38:24.9375269Z Secret source: Actions
+repository-integrity	Set up job	2026-09-12T02:38:24.9376089Z Cache mode: write
+repository-integrity	Set up job	2026-09-12T02:38:24.9376789Z Prepare workflow directory
+repository-integrity	Set up job	2026-09-12T02:38:24.9996554Z Prepare all required actions
+repository-integrity	Set up job	2026-09-12T02:38:25.0038246Z Getting action download info
+repository-integrity	Set up job	2026-09-12T02:38:25.3490350Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+repository-integrity	Set up job	2026-09-12T02:38:25.8751297Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+repository-integrity	Set up job	2026-09-12T02:38:26.2648748Z Complete job name: repository-integrity
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3073560Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3078670Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3079147Z with:
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3079399Z   repository: szTheory/keepling
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3081766Z   token: ***
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3082014Z   ssh-strict: true
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3082268Z   ssh-user: git
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3082530Z   persist-credentials: true
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3082809Z   clean: true
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3083067Z   sparse-checkout-cone-mode: true
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3083371Z   fetch-depth: 1
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3083620Z   fetch-tags: false
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3083879Z   show-progress: true
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3084142Z   lfs: false
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3084448Z   submodules: false
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3084711Z   set-safe-directory: true
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3085075Z env:
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3085320Z   KEEPLING_PHASE2_SEED: 20260901
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3085724Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3086165Z ##[endgroup]
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3777170Z Syncing repository: szTheory/keepling
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3779023Z ##[group]Getting Git version info
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3779652Z Working directory is '/home/runner/work/keepling/keepling'
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3782483Z [command]/usr/bin/git version
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3850085Z git version 2.55.0
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3864448Z ##[endgroup]
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3879137Z Temporarily overriding HOME='/home/runner/work/_temp/3d65682f-6af5-4fd3-a2ae-92e55dab91e4' before making global git config changes
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3891469Z Adding repository directory to the temporary git global config as a safe directory
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3893150Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3986608Z Deleting the contents of '/home/runner/work/keepling/keepling'
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3992117Z ##[group]Initializing the repository
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.3992889Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4191624Z hint: Using 'master' as the name for the initial branch. This default branch name
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4192381Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4194113Z hint: to use in all of your new repositories, which will suppress this warning,
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4194888Z hint: call:
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4195357Z hint:
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4195903Z hint: 	git config --global init.defaultBranch <name>
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4196583Z hint:
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4197203Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4198157Z hint: 'development'. The just-created branch can be renamed via this command:
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4199019Z hint:
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4199490Z hint: 	git branch -m <name>
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4200001Z hint:
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4201282Z hint: Disable this message with "git config set advice.defaultBranchName false"
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4202423Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4205421Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4245166Z ##[endgroup]
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4245982Z ##[group]Disabling automatic garbage collection
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4247525Z [command]/usr/bin/git config --local gc.auto 0
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4271930Z ##[endgroup]
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4272694Z ##[group]Setting up auth
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4276798Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4301594Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4833999Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.4859329Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.5032161Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.5060073Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.5244078Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.5264859Z ##[endgroup]
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.5266241Z ##[group]Fetching the repository
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:26.5271791Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +26628e1771d5b90569b5eec232047456fdda9f2e:refs/remotes/origin/main
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.4541832Z From https://github.com/szTheory/keepling
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.4542906Z  * [new ref]         26628e1771d5b90569b5eec232047456fdda9f2e -> origin/main
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.4545146Z ##[endgroup]
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.4546018Z ##[group]Determining the checkout info
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.4547014Z ##[endgroup]
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.4553884Z [command]/usr/bin/git sparse-checkout disable
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.4586502Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.4609043Z ##[group]Checking out the ref
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.4647584Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.5379211Z Switched to a new branch 'main'
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.5388229Z branch 'main' set up to track 'origin/main'.
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.5399416Z ##[endgroup]
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.5431521Z [command]/usr/bin/git log -1 --format=%H
+repository-integrity	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:27.5450391Z 26628e1771d5b90569b5eec232047456fdda9f2e
+repository-integrity	Run exact repository lane	2026-09-12T02:38:27.5671775Z ##[group]Run set -o pipefail
+repository-integrity	Run exact repository lane	2026-09-12T02:38:27.5672652Z ^[[36;1mset -o pipefail^[[0m
+repository-integrity	Run exact repository lane	2026-09-12T02:38:27.5673907Z ^[[36;1m./tooling/test-phase-2.sh --lane repository-integrity | tee "$RUNNER_TEMP/repository-integrity.txt"^[[0m
+repository-integrity	Run exact repository lane	2026-09-12T02:38:27.5675542Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/repository-integrity.txt"^[[0m
+repository-integrity	Run exact repository lane	2026-09-12T02:38:27.5709685Z shell: /usr/bin/bash -e {0}
+repository-integrity	Run exact repository lane	2026-09-12T02:38:27.5710373Z env:
+repository-integrity	Run exact repository lane	2026-09-12T02:38:27.5711050Z   KEEPLING_PHASE2_SEED: 20260901
+repository-integrity	Run exact repository lane	2026-09-12T02:38:27.5712070Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+repository-integrity	Run exact repository lane	2026-09-12T02:38:27.5713133Z ##[endgroup]
+repository-integrity	Run exact repository lane	2026-09-12T02:38:30.1679490Z lane=repository-integrity status=RUNNING command=./tooling/check-repository-integrity.sh cases=3 seed=none inputs_sha256=39f25664f283d163c68ea163c3b95726abf70ab4d1de85ad6edd7099c632cbb1
+repository-integrity	Run exact repository lane	2026-09-12T02:38:30.8279183Z lane=repository-integrity status=PASS command=./tooling/check-repository-integrity.sh cases=3 seed=none elapsed_ms=667 inputs_sha256=39f25664f283d163c68ea163c3b95726abf70ab4d1de85ad6edd7099c632cbb1
+repository-integrity	Run exact repository lane	2026-09-12T02:38:30.8390073Z Privacy verification passed: artifacts=1 sentinels=7
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8454873Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8455782Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8455985Z with:
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8456136Z   name: repository-integrity-timing
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8456344Z   path: /home/runner/work/_temp/repository-integrity.txt
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8456518Z   if-no-files-found: error
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8456646Z   retention-days: 14
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8456777Z   compression-level: 6
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8456894Z   overwrite: false
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8457010Z   include-hidden-files: false
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8457139Z env:
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8457245Z   KEEPLING_PHASE2_SEED: 20260901
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8457440Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.8457668Z ##[endgroup]
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.9440081Z (node:2036) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.9441117Z (Use `node --trace-deprecation ...` to show where the warning was created)
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.9478255Z With the provided path, there will be 1 file uploaded
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.9482055Z Artifact name is valid!
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:30.9482491Z Root directory input is valid!
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:31.3114256Z Beginning upload of artifact content to blob storage
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:31.3231676Z (node:2036) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:31.6258705Z Uploaded bytes 335
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:31.7034781Z Finished uploading artifact content to blob storage!
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:31.7035653Z SHA256 digest of uploaded artifact zip is fb3973544555388745350a9940676f05b9243d36ccd37bab565dc065d7f7fe59
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:31.7036274Z Finalizing artifact upload
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:31.9549160Z Artifact repository-integrity-timing.zip successfully finalized. Artifact ID 10289504864
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:31.9551490Z Artifact repository-integrity-timing has been successfully uploaded! Final size is 335 bytes. Artifact ID is 10289504864
+repository-integrity	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-12T02:38:31.9554601Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34668212479/artifacts/10289504864
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.9698978Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:31.9699731Z Post job cleanup.
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0245496Z [command]/usr/bin/git version
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0274636Z git version 2.55.0
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0296575Z Temporarily overriding HOME='/home/runner/work/_temp/2b9b877d-d70c-4271-835a-af8ffb830518' before making global git config changes
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0297339Z Adding repository directory to the temporary git global config as a safe directory
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.0300717Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.1025014Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.1055269Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.1315204Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.1342685Z http.https://github.com/.extraheader
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.1377779Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.1472265Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.1751262Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+repository-integrity	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-12T02:38:32.1753518Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+repository-integrity	Complete job	2026-09-12T02:38:32.2189988Z Cleaning up orphan processes
+repository-integrity	Complete job	2026-09-12T02:38:32.2367428Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

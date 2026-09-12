@@ -129,6 +129,18 @@ const isCiBuiltArtifact = (artifact) => {
 }
 
 /**
+ * An artifact entry may be an ABSENCE RECORD: a committed statement that a
+ * named artifact was NOT produced at this revision, with the reason. Those
+ * records exist because an OMITTED artifact reads as satisfied -- the same rule
+ * that forces an unrunnable lane to emit an explicit BLOCKED entry. But an
+ * absence record must never become a binding target: a lane claiming PASSED
+ * against `produced: false` bytes would be claiming to have tested something
+ * that does not exist, which is the loophole the absence record itself opens if
+ * it is left unguarded. So it is refused here.
+ */
+const isProducedArtifact = (artifact) => artifact?.produced !== false
+
+/**
  * Attestation verification is a best-effort provenance check that is NEVER
  * allowed to hard-fail the run: a GitHub outage or explicit `--offline`
  * degrades to `attestation=UNVERIFIED`, printed loudly, so the release
@@ -285,6 +297,15 @@ for (const lane of manifestLanes) {
     const inventoryEntry = inventoryByLane.get(lane.lane)
     if (!inventoryEntry) {
       fail(`lane ${lane.lane} claims PASSED but is not named in the committed release-lanes.json inventory`)
+      overallFailed = true
+      continue
+    }
+    if (!isProducedArtifact(referencedArtifact)) {
+      fail(
+        `lane ${lane.lane} claims PASSED against artifact ${referencedArtifact.artifactPath}, which the manifest itself ` +
+          `records as NOT PRODUCED at this revision (${referencedArtifact.notProducedReason ?? 'no stated reason'}) -- ` +
+          `a lane cannot have tested bytes that were never built`,
+      )
       overallFailed = true
       continue
     }
