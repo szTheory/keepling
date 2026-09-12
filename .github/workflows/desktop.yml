@@ -48,8 +48,58 @@ jobs:
           node-version: 24.7.0
       - name: Install locked JavaScript inputs
         run: corepack enable && pnpm install --frozen-lockfile
+      # T-06-10-02: the Apple signing credentials are reachable ONLY from a
+      # `push` event on this repository. A fork's changes arrive as
+      # `pull_request`, which never takes this branch, so a fork can never
+      # cause arbitrary bytes to be signed as Keepling. The step below is not
+      # skipped on those runs -- it reports an explicit unsigned status, so a
+      # fork build is visibly unsigned rather than silently indistinguishable
+      # from a signed one.
+      #
+      # The identity is imported into an EPHEMERAL, run-scoped keychain and
+      # `security find-identity` is scoped to that keychain, so nothing here
+      # touches or enumerates any other identity on the machine.
+      - name: Import the Developer ID identity into an ephemeral keychain
+        id: signing
+        env:
+          APPLE_DEVELOPER_ID_CERT_P12: ${{ github.event_name == 'push' && secrets.APPLE_DEVELOPER_ID_CERT_P12 || '' }}
+          APPLE_DEVELOPER_ID_CERT_PASSWORD: ${{ github.event_name == 'push' && secrets.APPLE_DEVELOPER_ID_CERT_PASSWORD || '' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${APPLE_DEVELOPER_ID_CERT_P12}" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "identity=" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Unsigned build::No Developer ID certificate is reachable from this event (${{ github.event_name }}). This artifact is UNSIGNED and UNNOTARIZED, and the package manifest records it as such."
+            exit 0
+          fi
+          keychain="$RUNNER_TEMP/keepling-signing.keychain-db"
+          keychain_password="$(uuidgen)"
+          security create-keychain -p "$keychain_password" "$keychain"
+          security set-keychain-settings -lut 900 "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          printf '%s' "$APPLE_DEVELOPER_ID_CERT_P12" | base64 --decode > "$RUNNER_TEMP/devid.p12"
+          security import "$RUNNER_TEMP/devid.p12" -k "$keychain" -P "$APPLE_DEVELOPER_ID_CERT_PASSWORD" -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/devid.p12"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain" >/dev/null
+          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          fingerprint="$(security find-identity -v -p codesigning "$keychain" | awk '/Developer ID Application:/ { print $2; exit }')"
+          if [ -z "$fingerprint" ]; then
+            echo "The imported certificate is not a usable Developer ID Application codesigning identity." >&2
+            exit 1
+          fi
+          echo "available=true" >> "$GITHUB_OUTPUT"
+          echo "identity=$fingerprint" >> "$GITHUB_OUTPUT"
       - name: Build once and record the immutable package manifest
         id: package
+        env:
+          # Empty on every run that cannot reach the secrets; forge.config.ts
+          # then finds no identity and produces the same unsigned bundle it
+          # produced before this task existed.
+          KEEPLING_MACOS_SIGNING_IDENTITY: ${{ steps.signing.outputs.identity }}
+          KEEPLING_MACOS_NOTARIZE: ${{ steps.signing.outputs.available == 'true' && '1' || '0' }}
+          APPLE_ID: ${{ github.event_name == 'push' && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ github.event_name == 'push' && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ github.event_name == 'push' && secrets.APPLE_TEAM_ID || '' }}
         run: |
           set -o pipefail
           pnpm package:desktop | tee "$RUNNER_TEMP/package.txt"
@@ -70,6 +120,16 @@ jobs:
           mkdir -p "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}"
           cp "$manifest_path" "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/"
           cp "$archive_path" "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/"
+          # D-17(b): the STAPLED archive travels too, and separately. It is
+          # the shipped artifact; the archive above is the tested one. They
+          # are different bytes on purpose -- stapling mutates the bundle --
+          # and `--promote` gates the stapled one on the code directory hash,
+          # the only identity that survives that mutation. On an unsigned run
+          # there is no stapled artifact and this is a no-op.
+          stapled_archive_path=$(node -e "console.log(JSON.parse(require('node:fs').readFileSync(process.argv[1],'utf8')).stapledArchivePath ?? '')" "$manifest_path")
+          if [ -n "$stapled_archive_path" ]; then
+            cp "$stapled_archive_path" "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/"
+          fi
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: ${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
@@ -264,6 +324,32 @@ jobs:
         with:
           name: ${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
           path: ${{ runner.temp }}/${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+      # The stapled artifact's own path was ephemeral to the BUILD runner and
+      # does not exist here; only the stapled archive travelled. Point the
+      # manifest at this job's copy so the code directory hash gate has real
+      # bytes to inspect. The gate is fail-closed: a manifest claiming a
+      # Developer ID signature with no reachable stapled artifact is refused,
+      # so this rebase can never quietly turn the gate into a no-op.
+      - name: Rebase the stapled artifact path onto this job's download
+        run: |
+          set -o pipefail
+          artifact_root="$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}"
+          chmod -R u+x "$artifact_root"
+          node -e "
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const root = process.argv[1];
+            const manifestPath = path.join(root, 'package-manifest.json');
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+            manifest.archivePath = path.join(root, path.basename(manifest.archivePath));
+            if (manifest.stapledArchivePath) {
+              manifest.stapledArchivePath = path.join(root, path.basename(manifest.stapledArchivePath));
+            }
+            // The .app tree itself never travels -- say so, rather than
+            // leaving a path that resolves to nothing on this runner.
+            manifest.stapledApplicationPath = null;
+            fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+          " "$artifact_root"
       - name: Promote only the recorded digest, exclusively, after every required lane passed
         run: |
           node tooling/package-desktop.mjs --promote "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/package-manifest.json"

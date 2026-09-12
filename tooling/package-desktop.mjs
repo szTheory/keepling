@@ -106,6 +106,56 @@ if (promoteFlagIndex !== -1) {
       fail(`promotion manifest is missing required field "${field}"`)
     }
   }
+  /**
+   * D-17(b)/T-06-10-01 (06-10 Task 2): gate the SHIPPED STAPLED artifact on
+   * the identity that survives stapling.
+   *
+   * `applicationDigestSha256` cannot do this job. Stapling mutates the
+   * bundle irreducibly, so the directory digest of the shipped file provably
+   * differs from the one every gate tested -- and chasing that stability is
+   * the trap, not the fix. The code directory hash is invariant across
+   * stapling, so it is what the shipped bytes are held to here.
+   *
+   * Fail-closed: a manifest that claims a Developer ID signature but offers
+   * no reachable stapled artifact to check is REFUSED, not waved through.
+   */
+  if (manifest.codeSigning && manifest.codeSigning.developerIdSigned === true) {
+    if (typeof manifest.codeDirectoryHash !== 'string' || manifest.codeDirectoryHash.length === 0) {
+      fail('promotion manifest claims a Developer ID signature but is missing required field "codeDirectoryHash"')
+    }
+
+    let shippedBundlePath = null
+    if (typeof manifest.stapledApplicationPath === 'string' && existsSync(manifest.stapledApplicationPath)) {
+      shippedBundlePath = manifest.stapledApplicationPath
+    } else if (typeof manifest.stapledArchivePath === 'string' && existsSync(manifest.stapledArchivePath)) {
+      const expandedRoot = mkdtempSync(join(tmpdir(), 'keepling-promote-staple-'))
+      const expanded = spawnSync('ditto', ['-x', '-k', manifest.stapledArchivePath, expandedRoot], { encoding: 'utf8' })
+      if (expanded.error || expanded.status !== 0) {
+        fail(`the stapled archive could not be expanded for the code directory hash gate: ${expanded.stderr?.trim() ?? 'unknown error'}`)
+      }
+      const bundles = readdirSync(expandedRoot, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && entry.name.endsWith('.app'))
+        .map((entry) => join(expandedRoot, entry.name))
+      if (bundles.length !== 1) fail(`expected exactly one application bundle inside the stapled archive, found ${bundles.length}`)
+      shippedBundlePath = bundles[0]
+    }
+
+    if (!shippedBundlePath) {
+      fail('promotion manifest claims a Developer ID signature but names no reachable stapled artifact to check the code directory hash against')
+    }
+
+    const inspected = spawnSync('codesign', ['-dvvv', shippedBundlePath], { encoding: 'utf8' })
+    const report = `${inspected.stdout ?? ''}${inspected.stderr ?? ''}`
+    const shippedCodeDirectoryHash = /^CDHash=([0-9a-f]+)$/m.exec(report)?.[1] ?? null
+    if (inspected.status !== 0 || shippedCodeDirectoryHash === null) {
+      fail(`the shipped artifact at ${shippedBundlePath} reported no code directory hash, so it cannot be gated`)
+    }
+    if (shippedCodeDirectoryHash !== manifest.codeDirectoryHash) {
+      fail(`the shipped stapled artifact's code directory hash ${shippedCodeDirectoryHash} does not match the tested ${manifest.codeDirectoryHash}`)
+    }
+    console.log(`Shipped stapled artifact gated: codeDirectoryHash=${shippedCodeDirectoryHash}`)
+  }
+
   const promotionRoot = resolve(process.env.KEEPLING_DESKTOP_PROMOTION_DIR ?? join(tmpdir(), 'keepling-desktop-promotions'))
   mkdirSync(promotionRoot, { recursive: true })
   const promotionPath = join(promotionRoot, `${manifest.applicationDigestSha256}.json`)
@@ -295,8 +345,47 @@ if (process.argv.includes('--reuse-if-unchanged')) {
 
 const startedAt = Date.now()
 
+/**
+ * This script -- not `forge.config.ts` -- is the single decider of whether
+ * this build is signed, and it is deliberately the place that can FAIL.
+ *
+ * @electron/packager hardcodes `continueOnError: true` when it hands the
+ * bundle to @electron/osx-sign, so a signing failure inside the packager step
+ * produces a green build and a silently unsigned application. That is exactly
+ * the vacuous green this project has been burned by. Resolving the identity
+ * here, handing it to the packager through the environment, and then
+ * asserting afterwards that the bundle really carries a Developer ID
+ * signature turns that swallowed error back into a loud one.
+ *
+ * The identity is the certificate's SHA-1 fingerprint, never its common name:
+ * the name embeds a legal name and a team id, and this repository is headed
+ * for a public release. `security find-identity` only LISTS identities; no
+ * whole-keychain verb (which would decrypt every unrelated identity present)
+ * is ever used.
+ */
+const resolveSigningIdentity = () => {
+  if (process.platform !== 'darwin') return null
+  if (process.env.KEEPLING_MACOS_SKIP_SIGNING === '1') return null
+  const override = process.env.KEEPLING_MACOS_SIGNING_IDENTITY
+  if (override && override.length > 0) return override
+  const listed = spawnSync('security', ['find-identity', '-v', '-p', 'codesigning'], { encoding: 'utf8' })
+  if (listed.status !== 0 || typeof listed.stdout !== 'string') return null
+  const fingerprints = listed.stdout
+    .split('\n')
+    .map((line) => /^\s*\d+\)\s+([0-9A-F]{40})\s+"Developer ID Application:/.exec(line))
+    .filter((match) => match !== null)
+    .map((match) => match[1])
+  if (fingerprints.length !== 1) return null
+  return fingerprints[0]
+}
+
+const signingIdentity = resolveSigningIdentity()
+console.log(`Desktop package signing: ${signingIdentity ? 'Developer ID identity resolved' : 'no Developer ID identity -- this build will be UNSIGNED'}`)
+
 run('pnpm', ['run', 'build'])
-run('pnpm', ['exec', 'electron-forge', 'make', '--platform', 'darwin', '--arch', architecture])
+run('pnpm', ['exec', 'electron-forge', 'make', '--platform', 'darwin', '--arch', architecture], {
+  env: { ...process.env, KEEPLING_MACOS_SIGNING_IDENTITY: signingIdentity ?? '' },
+})
 
 const findOutputs = (root, predicate, descendIntoMatch = true) => {
   const outputs = []
@@ -350,6 +439,147 @@ const archivePath = join(artifactRoot, `${executableName}.ditto.zip`)
 run('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', copiedApplicationPath, archivePath])
 const archiveDigestSha256 = hashFile(archivePath)
 
+/**
+ * D-16/D-17 (06-10 Task 2): sign -> digest -> archive -> notarize -> staple
+ * -> record the surviving identity.
+ *
+ * Steps 1-4 are already done by the time control reaches here: `osxSign` in
+ * `forge.config.ts` signed the bundle INSIDE the packager step, so
+ * `applicationDigestSha256` above describes the SIGNED bytes, and
+ * `archiveDigestSha256` describes a lossless archive of those same bytes.
+ * Steps 5-8 follow.
+ *
+ * Two bindings, deliberately kept apart, because they describe different
+ * bytes on purpose:
+ *
+ *   applicationDigestSha256  pre-staple, step 3 -- what every gate tested
+ *   codeDirectoryHash        the code directory hash -- the ONLY identity
+ *                            that survives stapling, and therefore what a
+ *                            launch-time check on the shipped file shows
+ *
+ * `xcrun stapler staple` mutates the bundle irreducibly, by design. This
+ * code never re-hashes the directory after stapling and records the result
+ * under `applicationDigestSha256`, and never chases directory-hash stability
+ * across stapling -- that chase ends in a loosened binding, and the binding
+ * it would loosen is the one that already caught a real artifact-transport
+ * defect (T-06-02-01). The stapled artifact is gated on CDHash equality
+ * instead, in `--promote` above.
+ */
+const collectCodesignFacts = (bundlePath) => {
+  // `codesign -dvvv` writes its report to stderr. A non-zero status means
+  // the bundle carries no signature at all.
+  const result = spawnSync('codesign', ['-dvvv', bundlePath], { cwd: desktopRoot, encoding: 'utf8' })
+  const report = `${result.stdout ?? ''}${result.stderr ?? ''}`
+  if (result.status !== 0) return { signed: false, developerIdSigned: false, hardenedRuntime: false, codeDirectoryHash: null }
+  const codeDirectoryHash = /^CDHash=([0-9a-f]+)$/m.exec(report)?.[1] ?? null
+  return {
+    signed: codeDirectoryHash !== null,
+    // Only the BOOLEAN is kept. The authority line embeds a legal name and a
+    // team id; this manifest is uploaded as a CI artifact and must never
+    // carry either.
+    developerIdSigned: /^Authority=Developer ID Application: /m.test(report),
+    hardenedRuntime: /^CodeDirectory .*\bruntime\b/m.test(report),
+    codeDirectoryHash,
+  }
+}
+
+const signedFacts = collectCodesignFacts(applicationPath)
+const codeDirectoryHash = signedFacts.codeDirectoryHash
+// The loud half of the `continueOnError: true` workaround described above: an
+// identity was resolvable, so a bundle that came back merely ad-hoc signed
+// means the packager swallowed a signing failure.
+if (signingIdentity && !signedFacts.developerIdSigned) {
+  fail('a Developer ID identity was resolved but the packaged bundle is not Developer ID signed -- @electron/packager swallowed the signing failure (it hardcodes continueOnError)')
+}
+if (signedFacts.developerIdSigned && !signedFacts.hardenedRuntime) {
+  fail('the bundle is Developer ID signed without the hardened runtime, which notarization rejects')
+}
+if (signedFacts.developerIdSigned && codeDirectoryHash === null) {
+  fail('the signed bundle reported no code directory hash, so the identity that survives stapling cannot be recorded')
+}
+
+/**
+ * Notarization is OPT-IN per invocation (`KEEPLING_MACOS_NOTARIZE=1`) because
+ * a submission round trip to Apple takes minutes and every local
+ * `pnpm package:desktop` would otherwise pay it. The manifest records what
+ * actually happened either way -- `notarization.status` is `not-attempted`
+ * when it was skipped, never an optimistic default. Nothing downstream may
+ * read a signed-but-unnotarized build as notarized.
+ */
+const notarization = { attempted: false, status: 'not-attempted', stapled: false, submissionId: null }
+let stapledApplicationPath = null
+let stapledArchivePath = null
+let stapledArchiveDigestSha256 = null
+
+if (process.env.KEEPLING_MACOS_NOTARIZE === '1') {
+  if (!signedFacts.developerIdSigned) {
+    fail('notarization was requested but the bundle is not Developer ID signed; Apple rejects anything else')
+  }
+  // Credentials are read from the environment or from a stored keychain
+  // profile and are NEVER echoed, recorded, or written to the manifest.
+  const keychainProfile = process.env.KEEPLING_NOTARY_KEYCHAIN_PROFILE
+  const credentialArguments = keychainProfile
+    ? ['--keychain-profile', keychainProfile]
+    : ['--apple-id', process.env.APPLE_ID ?? '', '--password', process.env.APPLE_APP_SPECIFIC_PASSWORD ?? '', '--team-id', process.env.APPLE_TEAM_ID ?? '']
+  if (!keychainProfile && credentialArguments.some((value) => value === '')) {
+    fail('notarization was requested without a keychain profile and without the three Apple credential environment variables')
+  }
+
+  notarization.attempted = true
+  // Step 5: the ARCHIVE is what is submitted. Notarization mutates nothing
+  // in the bundle; stapling (step 6) does.
+  //
+  // This deliberately does NOT go through `run`: that helper echoes the full
+  // argument vector in its failure message, which would print the
+  // app-specific password into the build log on any submission error.
+  const submitted = spawnSync(
+    'xcrun',
+    ['notarytool', 'submit', archivePath, ...credentialArguments, '--wait', '--output-format', 'json'],
+    { cwd: desktopRoot, encoding: 'utf8' },
+  )
+  if (submitted.error || submitted.status !== 0) {
+    fail(`xcrun notarytool submit exited ${submitted.status ?? 'without status'}${submitted.stderr ? `: ${submitted.stderr.trim()}` : ''}`)
+  }
+  let submissionRecord
+  try {
+    submissionRecord = JSON.parse(submitted.stdout ?? '')
+  } catch {
+    fail('the notarization submission did not return parseable JSON')
+  }
+  notarization.status = submissionRecord.status ?? 'unknown'
+  notarization.submissionId = submissionRecord.id ?? null
+  if (notarization.status !== 'Accepted') {
+    fail(`notarization returned status "${notarization.status}" (submission ${notarization.submissionId}); run \`xcrun notarytool log ${notarization.submissionId}\` for the reason`)
+  }
+
+  // Step 6: staple onto the BUILT bundle. The copied bundle under the
+  // artifact root is deliberately left un-stapled: its digest is what
+  // `--reuse-if-unchanged` re-hashes and what the transport archive was
+  // made from, and mutating it would break both bindings.
+  run('xcrun', ['stapler', 'staple', applicationPath])
+  notarization.stapled = true
+  stapledApplicationPath = applicationPath
+
+  // Step 7: re-read the code directory hash from the STAPLED bundle and
+  // prove it equals the pre-staple one. This is the claim -- "the code
+  // directory hash is the identity that survives stapling" -- measured
+  // rather than asserted, on every run.
+  const stapledFacts = collectCodesignFacts(applicationPath)
+  if (stapledFacts.codeDirectoryHash !== codeDirectoryHash) {
+    fail(`the code directory hash changed across stapling (${codeDirectoryHash} -> ${stapledFacts.codeDirectoryHash}); the surviving-identity binding does not hold`)
+  }
+
+  // The shipped artifact. `ditto` of the already-notarized bundle re-packages
+  // NOTHING -- it does not re-run the packager, re-sign, or alter a byte of
+  // the bundle; it is the same lossless transport used for the tested
+  // archive, applied to the stapled tree so a downloader receives a ticket
+  // that works offline. Its digest is recorded separately and is NOT
+  // interchangeable with `archiveDigestSha256`.
+  stapledArchivePath = join(artifactRoot, `${executableName}.stapled.ditto.zip`)
+  run('ditto', ['-c', '-k', '--sequesterRsrc', '--keepParent', applicationPath, stapledArchivePath])
+  stapledArchiveDigestSha256 = hashFile(stapledArchivePath)
+}
+
 const versionsJson = run(
   executablePath,
   ['-p', 'JSON.stringify(process.versions)'],
@@ -378,15 +608,30 @@ const manifest = {
   archiveDigestSha256,
   archivePath,
   architecture,
+  // D-17(b): the identity that survives stapling, recorded as a field
+  // DISTINCT from `applicationDigestSha256`. The two describe different
+  // bytes, on purpose.
+  codeDirectoryHash,
+  codeSigning: {
+    // Only booleans and a kind. Never the certificate common name, which
+    // embeds a legal name and a team id.
+    signed: signedFacts.signed,
+    developerIdSigned: signedFacts.developerIdSigned,
+    hardenedRuntime: signedFacts.hardenedRuntime,
+  },
   copiedApplicationPath,
   createdAt: new Date().toISOString(),
   embeddedVersions,
   executableDigestSha256: hashFile(executablePath),
   executablePath,
   inputDigestSha256,
+  notarization,
   platform: 'darwin',
-  schemaVersion: 1,
+  schemaVersion: 2,
   sourceRevision,
+  stapledApplicationPath,
+  stapledArchiveDigestSha256,
+  stapledArchivePath,
   trackedInputs,
   zipDigestSha256: hashFile(zipPath),
   zipPath,
@@ -395,5 +640,11 @@ const manifestPath = join(artifactRoot, 'package-manifest.json')
 mkdirSync(artifactRoot, { recursive: true })
 writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, { encoding: 'utf8', flag: 'wx' })
 writeFileSync(locatorPath, `${manifestPath}\n`, { encoding: 'utf8' })
+
+// A stable, well-known copy of the same manifest, so a gate can name the
+// artifact without first scraping a tmpdir path out of this script's stdout.
+// `apps/desktop/out/` is gitignored build output; the authoritative copy
+// remains the one under the artifact root, and this one is never promoted.
+writeFileSync(join(outRoot, 'keepling-package-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, { encoding: 'utf8' })
 
 console.log(`Desktop package manifest: ${manifestPath}`)
