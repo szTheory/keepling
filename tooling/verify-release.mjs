@@ -28,6 +28,23 @@
  *                        `artifacts[]`, or an artifact present in the
  *                        manifest is missing on disk. Non-zero.
  *
+ * The committed inventory also carries each lane's `authority` (D-09). The
+ * anti-loophole rule -- NOTHING LOCAL MAY BIND TO LOCALLY BUILT BYTES -- is
+ * enforced here: a `local-attested` lane reporting PASSED must record a
+ * `ranAgainstArtifactDigest` resolving to an artifact that a CI run built
+ * (`builtByRunId`/`builtByJob`/`runnerImage` all present and non-local). A
+ * local-attested lane whose evidence records no CI artifact digest is a HARD
+ * FAILURE, so a failing lane cannot be moved out of CI to make it green.
+ * Symmetrically, a lane the inventory marks `ciWiring: "unwired"` with
+ * `authority: "ci"` may never report PASSED -- it has no CI job it could have
+ * passed in.
+ *
+ * A fork-originated manifest (`revision.forkOrigin === true`) may omit a lane
+ * whose inventory entry sets `requiresSecrets: true`; the lane is then REPORTED
+ * explicitly as `status=NOT_RUN_ON_FORK reason=fork-no-secrets` rather than
+ * being silently absent, because an omitted lane reads as satisfied (D-15b).
+ * Every other absence stays a hard failure.
+ *
  * A lane that vanished from a manifest is a hard failure, not a pass; a
  * missing artifact yields INCOMPLETE, never a pass. This command runs
  * fully offline against a committed bundle -- `--offline` (or an
@@ -101,6 +118,17 @@ const hashArtifact = (root) => {
 }
 
 /**
+ * A `local-attested` lane's evidence is valid ONLY if it binds to bytes a
+ * continuous-integration run produced. An artifact entry proves that by naming
+ * the run, the job and the runner image that built it; a locally produced
+ * artifact names none of those, or names the reserved `local` sentinel.
+ */
+const isCiBuiltArtifact = (artifact) => {
+  const isNamed = (value) => typeof value === 'string' && value.trim() !== '' && !/^local\b/i.test(value.trim())
+  return isNamed(artifact?.builtByRunId) && isNamed(artifact?.builtByJob) && isNamed(artifact?.runnerImage)
+}
+
+/**
  * Attestation verification is a best-effort provenance check that is NEVER
  * allowed to hard-fail the run: a GitHub outage or explicit `--offline`
  * degrades to `attestation=UNVERIFIED`, printed loudly, so the release
@@ -168,6 +196,17 @@ try {
   process.exit(1)
 }
 
+// The inventory is either a bare array (schemaVersion 1) or an object with a
+// `lanes` array plus its `$comment` block (schemaVersion 2). Both are accepted;
+// neither is allowed to be empty, because an empty inventory would make the
+// exactly-once assertion vacuously true.
+const inventoryLanes = Array.isArray(lanesInventory) ? lanesInventory : lanesInventory?.lanes
+if (!Array.isArray(inventoryLanes) || inventoryLanes.length === 0) {
+  fail('release-lanes.json declares zero lanes -- a vacuous inventory cannot detect a vanished lane')
+  process.exit(1)
+}
+const inventoryByLane = new Map(inventoryLanes.map((entry) => [entry.lane, entry]))
+
 let overallFailed = false
 let overallVerdict = VERDICTS.PASSED
 
@@ -209,9 +248,17 @@ const laneCountsByName = new Map()
 for (const lane of manifestLanes) {
   laneCountsByName.set(lane.lane, (laneCountsByName.get(lane.lane) ?? 0) + 1)
 }
-for (const inventoryEntry of lanesInventory) {
+const forkOrigin = manifest.revision?.forkOrigin === true
+for (const inventoryEntry of inventoryLanes) {
   const count = laneCountsByName.get(inventoryEntry.lane) ?? 0
   if (count === 0) {
+    // D-15b: on a fork-originated run a secrets-requiring lane physically
+    // cannot run. Report that explicitly rather than letting the omission
+    // stand, which would read as satisfied.
+    if (forkOrigin && inventoryEntry.requiresSecrets === true) {
+      console.log(`lane=${inventoryEntry.lane} status=NOT_RUN_ON_FORK reason=fork-no-secrets`)
+      continue
+    }
     fail(`lane vanished from manifest: ${inventoryEntry.lane}`)
     overallFailed = true
   } else if (count > 1) {
@@ -235,8 +282,36 @@ for (const lane of manifestLanes) {
       overallFailed = true
       continue
     }
-    console.log(`lane=${lane.lane} status=PASSED cases=${cases} ranAgainstArtifactDigest=${lane.ranAgainstArtifactDigest}`)
+    const inventoryEntry = inventoryByLane.get(lane.lane)
+    if (!inventoryEntry) {
+      fail(`lane ${lane.lane} claims PASSED but is not named in the committed release-lanes.json inventory`)
+      overallFailed = true
+      continue
+    }
+    if (inventoryEntry.authority === 'local-attested' && !isCiBuiltArtifact(referencedArtifact)) {
+      // THE ANTI-LOOPHOLE RULE: nothing local may bind to locally built bytes.
+      fail(
+        `local-attested lane ${lane.lane} claims PASSED against artifact ${referencedArtifact.artifactPath}, ` +
+          `whose evidence records no continuous-integration artifact digest ` +
+          `(builtByRunId=${referencedArtifact.builtByRunId ?? 'absent'} builtByJob=${referencedArtifact.builtByJob ?? 'absent'} runnerImage=${referencedArtifact.runnerImage ?? 'absent'}) -- ` +
+          `nothing local may bind to locally built bytes`,
+      )
+      overallFailed = true
+      continue
+    }
+    if (inventoryEntry.authority === 'ci' && inventoryEntry.ciWiring === 'unwired') {
+      fail(
+        `lane ${lane.lane} claims PASSED but the inventory marks it unwired from continuous integration ` +
+          `(${inventoryEntry.wiringBlocker ?? 'no stated reason'}) -- it has no job it could have passed in`,
+      )
+      overallFailed = true
+      continue
+    }
+    console.log(`lane=${lane.lane} status=PASSED cases=${cases} authority=${inventoryEntry.authority} ranAgainstArtifactDigest=${lane.ranAgainstArtifactDigest}`)
   } else if (lane.status === VERDICTS.BLOCKED) {
+    const inventoryEntry = inventoryByLane.get(lane.lane)
+    const reason = lane.reason ?? inventoryEntry?.physicalBlocker ?? inventoryEntry?.wiringBlocker ?? 'no stated reason'
+    console.log(`lane=${lane.lane} status=BLOCKED cases=${lane.cases ?? 0} owner=${inventoryEntry?.owner ?? 'UNOWNED'} reason=${reason}`)
     fail(`lane ${lane.lane} reports BLOCKED`)
     overallFailed = true
   } else if (lane.status === VERDICTS.NOT_RUN_ON_FORK) {

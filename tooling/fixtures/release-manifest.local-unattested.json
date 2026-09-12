@@ -1,0 +1,38 @@
+{
+  "$comment": [
+    "FIXTURE, never a real release manifest. It encodes the exact loophole D-09 exists to close:",
+    "the `macos-integration-full-grant` lane -- a `local-attested` lane -- claims PASSED against an",
+    "artefact that was built LOCALLY (builtByRunId/builtByJob name the local machine, runnerImage is",
+    "empty) rather than against a continuous-integration-attested artefact digest.",
+    "tooling/verify-release.mjs MUST reject this with a message naming the anti-loophole rule:",
+    "nothing local may bind to locally built bytes."
+  ],
+  "schemaVersion": 1,
+  "revision": {
+    "sha": "f7b7c902cd13c8b0ca6a1c78467b3f67e30b5213",
+    "ref": "refs/heads/main",
+    "runId": "local-unattested-fixture"
+  },
+  "artifacts": [
+    {
+      "artifactPath": ".planning/releases/candidate-0/artifact",
+      "digestSha256": "069096c18a47250c5e22eb663d0234fae15ea05fb22152330ef8e9daeb10f44a",
+      "builtByRunId": "local-developer-machine",
+      "builtByJob": "local",
+      "runnerImage": ""
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "macos-integration-full-grant",
+      "status": "PASSED",
+      "cases": 3,
+      "skipped": 0,
+      "seed": "20260901",
+      "elapsedMs": 4200,
+      "inputsSha256": "e30f524d0eec805c2641cde323630a8b22da1c4511b80d164bac3643422b6259",
+      "evidenceDigestSha256": "82db996cfd088bbf67dd4aed1297edbd4174ca41df24e9f205baec6162ee37be",
+      "ranAgainstArtifactDigest": "069096c18a47250c5e22eb663d0234fae15ea05fb22152330ef8e9daeb10f44a"
+    }
+  ]
+}
