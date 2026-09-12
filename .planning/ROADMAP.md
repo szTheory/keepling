@@ -388,7 +388,7 @@ recovery-severity. Evidence is `.artifacts/trust-soak/trust-soak-evidence.json`,
 stating its own detection floor and disclosed blind spot. Owner dogfood feedback stays informal,
 unstructured, non-evidentiary and non-gating.
 
-**Plans:** 12/13 plans executed
+**Plans:** 13/13 plans executed
 
 Plans:
 
@@ -418,7 +418,7 @@ Plans:
 
 **Wave 5** *(blocked on Wave 4 completion)*
 
-- [ ] 06-13-PLAN.md — Close the lane inventory, verify and retain the release evidence, and dispose every claim with an owner.
+- [x] 06-13-PLAN.md — Close the lane inventory, verify and retain the release evidence, and dispose every claim with an owner.
 
 ## Candidate future milestone: Sigra identity migration
 
@@ -471,7 +471,7 @@ attempted now.
 | 3. Mac Daily Loop | Complete    | 7 | 100% (27/27 plans, incl. 3 gap-closure plans 03-25..03-27; verified 2026-09-04 — 03-VERIFICATION.md status: passed, 5/5 must-haves. MAC-01..05 and QUAL-03..04 complete; SRV-02 deferred to Phase 5 cross-adapter proof by design) |
 | 4. Native iPhone Daily Loop | Complete    | 4 | 100% (18/18 plans; verified 2026-09-10 — 04-VERIFICATION.md status: passed, 23/23 must-haves: 20 by evidence, 3 accepted by the owner as disclosed-not-proven. IOS-01..04 all complete. The full gate passes in one invocation: `lanes=24 failed=0 blocked=0`, 496 executed cases, two lanes driven on a physical iPhone. SRV-02's iPhone adapter proof is delivered but deferred to the Phase 5 cross-adapter proof by design. Disclosed residuals: SC5 daily adoption (never a gate), G7's locked-device write, the Debug-configuration substitution for the device suites, and 04-14's D9 judgment) |
 | 5. Safe Agent Access | Complete    | 5 | 0% |
-| 6. Portability and Trust Release | In Progress| 1 + cross-cutting verification | 0% |
+| 6. Portability and Trust Release | Complete    | 1 + cross-cutting verification | 100% (13/13 plans; verified 2026-09-12 — 06-VERIFICATION.md status: human_needed, 8/8 must-haves after remediation in 5bf5a19. DATA-01 and QUAL-02/QUAL-03 are deliberately UNCHECKED with disclosures; QUAL-04/QUAL-05 stay checked, each narrowed. The release candidate is `.planning/releases/candidate-1/`, bound to CI at `26628e1`: 39 lanes, 11 PASSED, 28 BLOCKED, and `verify-release.mjs` exits non-zero — the intended outcome under the phase's no-overclaim contract, not a defect. 13 new ledger rows (83-95), all owned. Outstanding owner actions: publish the Developer ID `.p12` to repository secrets so CI can sign (#91), four GitHub dashboard settings, and the SRV-02 checkbox decision (#92)) |
 
 ---
 *Roadmap created: 2026-08-28 after project initialization*
