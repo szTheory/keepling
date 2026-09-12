@@ -20,6 +20,16 @@ damaged and can't be opened" warning that an unsigned build produces on current
 macOS, and the code directory hash recorded in the release manifest is the identity a
 Gatekeeper check on the shipped file can be compared against after the fact.
 
+**Status in the current release candidate: NOT YET TRUE OF THE SHIPPED BYTES.**
+The chain above has been exercised end to end and works — a locally built bundle
+signs, notarizes, staples, and passes `spctl --assess` as `source=Notarized
+Developer ID`. But no Developer ID certificate is reachable from CI yet, so the
+packaged application this candidate actually binds to is UNSIGNED: its own
+committed package manifest records `developerIdSigned: false`,
+`hardenedRuntime: false`, and `notarization.status: "not-attempted"`. Read this
+section as the design and as a proven-capable mechanism, not as a property of
+the current release. Tracked as window #91 in `KNOWN-LIMITATIONS.md`.
+
 **What it does NOT address:** whether the bytes that were signed came from this
 repository, or what is inside them. A correctly-signed application built from
 tampered or malicious source is still correctly signed — signing proves the bytes
@@ -36,6 +46,12 @@ project claims exactly Level 2 and nowhere claims Level 3: Level 3 requires a
 reusable workflow with isolated signing, and this pipeline's build and attestation
 steps share a single job — claiming Level 3 here would be an overclaim of precisely
 the kind this document exists to correct.
+
+**Status in the current release candidate: NO ATTESTATION WAS PRODUCED.** The
+attestation step lives in the `desktop-promote` job, which was SKIPPED — its
+`needs` gate requires every required desktop lane to have succeeded — so
+`actions/attest-build-provenance` never ran and this candidate carries no
+provenance attestation at all. Tracked as window #88 in `KNOWN-LIMITATIONS.md`.
 
 **The self-hosted server's container image is NOT signed.** Nothing in this
 repository builds or pushes that image to any registry, so there is no published
@@ -73,6 +89,13 @@ disclosure can be checked against a concrete, dated inventory.
 
 Two CycloneDX documents are generated **from source**, at the release revision, never
 by scanning the built application:
+
+**Status in the current release candidate: NEITHER DOCUMENT EXISTS.** The
+generator also lives in the skipped `desktop-promote` job, so
+`tooling/generate-sbom.mjs` never ran and no bill of materials was produced for
+this candidate. The description below is the design, not an inventory you can
+go read today. Tracked as the `sbom-generation` lane's BLOCKED entry in the
+release manifest.
 
 - **Hex** — `apps/server/mix.exs` and `mix.lock`, via the dev-only, non-runtime
   `:sbom` mix task. Every first-party and third-party Hex component carries the

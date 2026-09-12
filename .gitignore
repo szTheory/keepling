@@ -39,3 +39,8 @@ apps/ios/Signing.local.xcconfig
 # otherwise silently untrack them, which would make the signed bundle depend
 # on files no clone contains.
 !apps/desktop/build/
+# Owner-local operational helpers. `publish-signing-secrets.sh` reads a
+# Developer ID .p12 passphrase and 1Password credentials at runtime; it holds
+# no secrets itself, but this repository is headed for a public release and a
+# stray `git add -A` should not publish a signing-secrets workflow.
+tooling/local/

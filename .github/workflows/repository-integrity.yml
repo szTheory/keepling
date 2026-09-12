@@ -59,7 +59,8 @@ jobs:
           assert_refused tooling/fixtures/release-manifest.vanished-lane.json 'lane vanished from manifest'
           assert_refused tooling/fixtures/release-manifest.local-unattested.json 'nothing local may bind to locally built bytes'
           assert_refused tooling/fixtures/release-manifest.not-produced-artifact.json 'a lane cannot have tested bytes that were never built'
-          echo 'release-verifier guards intact: vanished-lane=refused local-unattested=refused not-produced-artifact=refused'
+          assert_refused tooling/fixtures/release-manifest.dangling-evidence.json 'a digest naming nothing proves nothing'
+          echo 'release-verifier guards intact: vanished-lane=refused local-unattested=refused not-produced-artifact=refused dangling-evidence=refused'
       - name: Report the committed release evidence that exists at this revision
         run: |
           set -o pipefail

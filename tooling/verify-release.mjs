@@ -320,6 +320,30 @@ for (const lane of manifestLanes) {
       overallFailed = true
       continue
     }
+    // A recorded evidence digest is worthless if nobody recomputes it. Without
+    // this check a manifest could name a digest for a file that does not exist,
+    // or whose bytes have since changed, and still be accepted -- the lane
+    // would claim to be backed by evidence nobody ever opened.
+    if (lane.evidenceDigestSha256) {
+      const evidencePath = join(dirname(manifestPath), 'evidence', 'lanes', `${lane.lane}.log`)
+      if (!existsSync(evidencePath)) {
+        fail(
+          `lane ${lane.lane} records evidenceDigestSha256=${lane.evidenceDigestSha256} but its evidence file ` +
+            `does not exist at ${relative(dirname(manifestPath), evidencePath)} -- a digest naming nothing proves nothing`,
+        )
+        overallFailed = true
+        continue
+      }
+      const recomputed = sha256(readFileSync(evidencePath))
+      if (recomputed !== lane.evidenceDigestSha256) {
+        fail(
+          `lane ${lane.lane} evidence digest does not match its recorded value ` +
+            `(recorded=${lane.evidenceDigestSha256} recomputed=${recomputed}) -- the retained evidence was altered`,
+        )
+        overallFailed = true
+        continue
+      }
+    }
     if (inventoryEntry.authority === 'ci' && inventoryEntry.ciWiring === 'unwired') {
       fail(
         `lane ${lane.lane} claims PASSED but the inventory marks it unwired from continuous integration ` +

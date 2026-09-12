@@ -1,0 +1,34 @@
+{
+  "$comment": "GUARD FIXTURE -- not a real release. Everything here is valid EXCEPT that the PASSED lane records an evidenceDigestSha256 for an evidence file that does not exist beside this manifest. verify-release.mjs must REFUSE it: a recorded digest that nobody recomputes, naming a file nobody wrote, is evidence in name only.",
+  "schemaVersion": 2,
+  "revision": {
+    "sha": "26628e1771d5b90569b5eec232047456fdda9f2e",
+    "ref": "refs/heads/main",
+    "runId": "not-produced-artifact-fixture"
+  },
+  "artifacts": [
+    {
+      "name": "ios-archive",
+      "kind": "ios-xcarchive",
+      "artifactPath": ".planning/releases/candidate-0/artifact",
+      "digestSha256": "069096c18a47250c5e22eb663d0234fae15ea05fb22152330ef8e9daeb10f44a",
+      "builtByRunId": "34668212473",
+      "builtByJob": "desktop-package",
+      "runnerImage": "macos-15",
+      "produced": true
+    }
+  ],
+  "lanes": [
+    {
+      "lane": "ios-simulator",
+      "status": "PASSED",
+      "cases": 7,
+      "skipped": 0,
+      "seed": "20260901",
+      "elapsedMs": 4200,
+      "inputsSha256": "e30f524d0eec805c2641cde323630a8b22da1c4511b80d164bac3643422b6259",
+      "evidenceDigestSha256": "82db996cfd088bbf67dd4aed1297edbd4174ca41df24e9f205baec6162ee37be",
+      "ranAgainstArtifactDigest": "069096c18a47250c5e22eb663d0234fae15ea05fb22152330ef8e9daeb10f44a"
+    }
+  ]
+}
