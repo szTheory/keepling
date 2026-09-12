@@ -41,7 +41,10 @@
     "                  lane reports BLOCKED with this reason; it may never report PASSED.",
     "  requiresSecrets true when the lane needs repository secrets, and so reports",
     "                  NOT_RUN_ON_FORK rather than being absent on a fork-originated run.",
-    "  owner           the phase number or 'backlog' accountable for closing a non-passing lane."
+    "  owner           the phase number or 'backlog' accountable for closing a non-passing lane. KPL-06 is",
+    "                  the final phase of this milestone, so it may not remain the owner of a lane that is still",
+    "                  BLOCKED at its end -- that is the unowned pattern D-35 exists to kill. Every such owner was",
+    "                  moved to 'backlog' by plan 06-13 Task 3, each with a .planning/WINDOWS.md row."
   ],
   "lanes": [
     {
@@ -78,7 +81,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "phase2-server",
@@ -90,7 +93,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "phase2-sync-property",
@@ -102,7 +105,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "phase2-backup-restore",
@@ -114,7 +117,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "phase2-contracts-compatibility",
@@ -150,7 +153,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "opentofu-host-fixtures",
@@ -174,7 +177,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "export-reader",
@@ -186,7 +189,7 @@
       "ciWiring": "unwired",
       "wiringBlocker": "The independent reader exists and runs locally, but no committed workflow job invokes it; a prior inventory revision claimed repository-integrity.yml/ci-contract runs it, and no such step exists.",
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "desktop-units",
@@ -282,7 +285,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": true,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "slsa-provenance-attestation",
@@ -294,7 +297,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": true,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "sbom-generation",
@@ -306,7 +309,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "package-reproducible",
@@ -330,7 +333,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "weekly-historical-pitr",
@@ -342,7 +345,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "quarterly-host-replacement",
@@ -354,7 +357,7 @@
       "ciWiring": "wired",
       "wiringBlocker": null,
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "phase-1-desktop",
@@ -366,7 +369,7 @@
       "ciWiring": "unwired",
       "wiringBlocker": "D-14 names this lane required on pull request and main, and no committed workflow job invokes it today.",
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "mcp-gate-selftest",
@@ -378,7 +381,7 @@
       "ciWiring": "unwired",
       "wiringBlocker": "D-14 names this lane required on pull request and main, and no committed workflow job invokes it today.",
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "mcp-phase-non-model",
@@ -390,7 +393,7 @@
       "ciWiring": "unwired",
       "wiringBlocker": "D-14 names this lane required on pull request and main, and no committed workflow job invokes it today.",
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "cross-adapter-phase",
@@ -402,7 +405,7 @@
       "ciWiring": "unwired",
       "wiringBlocker": "D-14 names this lane required on pull request and main, and no committed workflow job invokes it today.",
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "ios-simulator",
@@ -462,7 +465,7 @@
       "ciWiring": "unwired",
       "wiringBlocker": "The soak's verdict is gated on a calendar measurement window that accumulates in wall-clock time and is not yet at its stated floor; until the floor is reached this lane reports BLOCKED with a zero case count by construction.",
       "requiresSecrets": false,
-      "owner": "KPL-06"
+      "owner": "backlog"
     },
     {
       "lane": "macos-integration-full-grant",

@@ -1,10 +1,11 @@
 ---
 schema_version: 1
-open_count: 16
+open_count: 28
 waived_count: 50
 fixed_count: 16
-total_count: 82
-last_updated: 2026-09-12T02:45:00.000Z
+closed_count: 1
+total_count: 95
+last_updated: 2026-09-12T04:30:00.000Z
 ---
 
 # Broken Windows Ledger
@@ -97,6 +98,19 @@ last_updated: 2026-09-12T02:45:00.000Z
 | 80 | 06 | deviation | .github/workflows/desktop.yml |  | DECISION DEFERRED BY THE OWNER (2026-09-11): server OCI image signing is not implemented, and this is a recorded decision rather than an oversight. Plan 06-10 Task 3 was to `cosign` the server image's pushed digest, but NOTHING IN THIS REPOSITORY BUILDS OR PUSHES THAT IMAGE TO ANY REGISTRY, so there is no digest to sign. `06-RESEARCH.md` Pattern 5 names the gap itself ("Registry: GHCR or wherever image is pushed") and never resolves it. The owner was asked directly during the 06-10 checkpoint and chose to defer rather than have a registry guessed at: adding a build-and-push pipeline is new infrastructure, well outside 06-10's declared `files_modified`, and picking a registry is a decision with cost, retention and access consequences that outlive this phase. TO CLOSE: decide where the server image is published and what triggers a push, then add the build+push pipeline and sign the resulting digest. Everything else in 06-10 Task 3 (job-scoped `id-token`/`attestations` permissions, `attest-build-provenance`, exact-Level-2 claim discipline, the checksum release-body template) IS implemented and passing, so this is the single remaining piece of that task. Until it is closed, no supply-chain document may claim the server image is signed. | open |  | 2026-09-11T23:15:00.000Z |  | BACKLOG |
 | 81 | 06 | unmet-truth | docs/security/SUPPLY-CHAIN.md | 40 | Class: overclaim. docs/security/SUPPLY-CHAIN.md section 2 states in the present tense that "The self-hosted server's container image is signed keylessly, by digest, using the GitHub Actions workflow's own OIDC identity (Sigstore/cosign)." IT IS NOT. Window #80 records that server OCI image signing was deferred by the owner because nothing in this repository builds or pushes that image to any registry, and window #80's own closing sentence states the rule this violates: "Until it is closed, no supply-chain document may claim the server image is signed." The claim predates 06-10 Task 2 (it landed in commit bb43580 with Task 4) and lives outside Task 2's declared file scope, so 06-10 Task 2 reported it rather than editing it inline. This repository is headed for a public Apache-2.0 release and this is a public-facing trust document, so a false present-tense control claim is the exact overclaim class this phase spent three plans refusing elsewhere. TO CLOSE: reword section 2's image-signing paragraph to future/conditional form naming window #80 as the blocker, or close window #80 and make the sentence true. | closed |  | 2026-09-12T02:30:00.000Z |  | BACKLOG |
 | 82 | 06 | unmet-truth | tooling/verify-package-reproducibility.mjs |  | Class: gate-regression. tooling/verify-desktop-phase.mjs's package-reproducible lane FAILS as of plan 06-10 Task 2, taking the desktop phase gate from 10/11 to 9/11. Two separate builds at one clean revision now differ in 16 of 618 compared entries, and the 16 are exactly the signature-bearing ones: every signed Mach-O (Electron Framework, all four helpers, Contents/MacOS/Keepling, the bundled dylibs) plus both _CodeSignature/CodeResources files. The other 602 entries are byte-identical, so the PAYLOAD is still reproducible; the SIGNATURES are not, and cannot be: @electron/osx-sign signs with --timestamp, embedding a fresh RFC 3161 secure timestamp from Apple's timestamp authority into every signature blob, and a secure timestamp is REQUIRED for notarization. A signed build is not byte-reproducible by construction. TO CLOSE, pick one deliberately: (a) have the lane invoke packaging with KEEPLING_MACOS_SKIP_SIGNING=1 (the escape hatch already exists in forge.config.ts and tooling/package-desktop.mjs), so it keeps asserting byte-identical builds and stops asserting byte-identical signatures; or (b) keep signing on and assert the narrower true thing -- every non-signature entry identical AND the differing set exactly the signature-bearing set -- which needs a real signature-blob classifier, not a path allowlist. WHAT MUST NOT HAPPEN is relaxing the existing comparison to ignore these 16 paths and calling the lane green; that is the loosened-binding trap the 06-10 Task 1 checkpoint exists to refuse, and it would silently stop noticing a genuine payload change inside a signed binary. | open |  | 2026-09-12T02:45:00.000Z |  | BACKLOG |
+| 83 | 06 | unmet-truth | tooling/verify-export-reader.mjs |  | Class: unwired-lane. The independent export reader exists and runs locally, but NO committed workflow job under .github/ invokes it. `tooling/verify-export-reader.mjs` is referenced only by SUPPORT.md, PRIVACY.md and itself; a prior revision of `tooling/release-lanes.json` claimed repository-integrity.yml/ci-contract runs it and no such step exists. An unwired lane may never report PASSED because it has no job it could have passed in, so `.planning/releases/candidate-1/release-manifest.json` records `export-reader` as BLOCKED with a zero case count. This matters beyond bookkeeping: DATA-01 asserts a person can export all their data in a versioned, documented, neutral format without internal database knowledge, and the public PRIVACY.md leans on the reader as the evidence that the export is genuinely readable without Keepling. Both currently rest on a lane no continuous-integration run has ever executed. TO CLOSE: add a job to .github/workflows/repository-integrity.yml running `node tooling/verify-export-reader.mjs --golden`, add `export-reader` to the required-lane list in tooling/check-ci-contract.mjs, and re-run the release manifest at the resulting revision. | open |  | 2026-09-12T04:10:00.000Z |  | BACKLOG |
+| 84 | 06 | unrun-verify | tooling/verify-macos-integration.mjs |  | Class: physical-blocker. macOS integration row A14 (Light and Dark change while the app is open) cannot run on a hosted GitHub runner, and this is now an OBSERVED boundary rather than a prediction. A14 is the only row that changes a system appearance setting WHILE the application is already running and asserts the window re-themes without a relaunch; delivering that change to a running process needs a logged-in Aqua session whose appearance daemon posts AppleInterfaceThemeChangedNotification, which a hosted runner has not got. Measured both ways at revision 26628e1: `ROW id=A14 status=FAIL cases=4` on macos-15 with `background stayed` an all-zero colour (run 34668212473, job desktop-macos-integration), and `status=PASS cases=4` on a real logged-in session. Rows A10, A12 and A13 pass on the same runner because each applies its setting BEFORE launch. The row has been split out as the `macos-integration-live-appearance` lane, authority local-attested with a stated physical blocker, and emits an explicit zero-case BLOCKED entry into every release manifest rather than disappearing. It is NOT a product defect and must not be recorded as one. TO CLOSE with continuous-integration authority: run the row on a self-hosted macOS runner with a real logged-in session, against the exact continuous-integration-built bytes. | open |  | 2026-09-12T04:10:00.000Z |  | BACKLOG |
+| 85 | 06 | unmet-truth | tooling/test-phase-2.sh |  | Class: privacy-gate-failure. The `phase2-server` lane FAILS its mandatory post-run privacy scan at revision 26628e1. The lane's own command succeeded (`mix compile --warnings-as-errors && mix test`), and then `./tooling/verify-privacy.sh` over the lane's diagnostic log reported `hostile sentinel found in a diagnostic artifact` and the job exited non-zero (run 34668212479). Because no PASS line was emitted, no case count from that lane may be claimed, and the `export-elixir` lane -- whose evidence IS that job -- is BLOCKED with it. The cause is NOT yet isolated. It may well be a test-fixture literal appearing in ExUnit output rather than a product leak: `apps/server/test/keepling_web/mcp/content_isolation_test.exs` is the only server test outside the two redaction suites that uses a vector sentinel, and it uses them as in-test literals. But probably-benign is not a standard this project accepts from a privacy gate, and the same scan passes on every other lane. QUAL-05 stays checked on the strength of the `phase2-privacy` lane, which PASSED with 17 cases at this revision, and carries a dated addendum naming this row so the claim can never be cited without it. TO CLOSE: reproduce with `./tooling/test-phase-2.sh --lane server`, identify the emitter, and either stop it emitting or record why the appearance is not a leak. | open |  | 2026-09-12T04:10:00.000Z |  | BACKLOG |
+| 86 | 06 | unmet-truth | apps/server/mix.lock |  | Class: vulnerable-dependency. The `image-compose-deploy` lane FAILS at revision 26628e1 because the server image build's dependency audit reports hackney 1.25.0 as VULNERABLE with four open advisories: EEF-CVE-2026-47071 (HIGH, SOCKS5 TLS upgrade ignores caller timeout), EEF-CVE-2026-47075 (MEDIUM, CR/LF injection in query parameter), EEF-CVE-2026-47076 (MEDIUM, SSRF allowlist bypass via percent-encoded host) and EEF-CVE-2026-47069 (LOW, CRLF injection in cookie domain and path options). This is a real supply-chain finding in the bytes the self-hosted server image would ship, not an infrastructure fault, and it is one of the two failures that keep the `all-required-passed` aggregator red. The audit firing is the control working. TO CLOSE: raise the hackney dependency (directly, or via whichever parent pulls it in) to a version carrying no open advisory, then re-run `./tooling/test-phase-2.sh --lane image-compose-deploy`. | open |  | 2026-09-12T04:10:00.000Z |  | BACKLOG |
+| 87 | 06 | unmet-truth | .github/workflows/repository-integrity.yml |  | Class: ci-provisioning-defect. The `Install asdf` step is not idempotent against its own cache, so the `phase2-sync-property` and `phase2-backup-restore` jobs never reach their lanes. The step runs `git clone https://github.com/asdf-vm/asdf.git "$HOME/.asdf" --branch v0.14.1` unconditionally, but an earlier `actions/cache` restore of `~/.asdf/installs` has already created `$HOME/.asdf`, so the clone dies with `fatal: destination path '/home/runner/.asdf' already exists and is not an empty directory` and exit 128. Observed at revision 26628e1 in run 34668212479 for both jobs. This is toolchain provisioning failing before any project code runs; neither lane's result says anything about the product, and both are recorded as BLOCKED with this reason rather than as failures. It is also one of the two causes -- via phase2-linux -- that keep the `all-required-passed` aggregator red, and so it is part of what keeps QUAL-02 unchecked. TO CLOSE: make the step a no-op when `$HOME/.asdf/.git` already exists (or restore the cache after the clone), and re-run both lanes. | open |  | 2026-09-12T04:10:00.000Z |  | BACKLOG |
+| 88 | 06 | unrun-verify | .github/workflows/desktop.yml |  | Class: unproven-clause. QUAL-03's second clause -- distribution jobs do not silently rebuild different bytes -- still has NO passing lane behind it, and this is now a tested absence rather than an untested one. The 2026-09-04 disclosure on QUAL-03 said clause 2 was unproven only because no workflow had ever executed and that Phase 6 must re-verify it against a real remote before any release claim. Phase 6 now has a real remote, and at revision 26628e1 the `desktop-promote` job was SKIPPED: its `needs` gate requires every required desktop lane to have succeeded, and `desktop-macos-integration` did not, because of row A14's physical blocker (window 84). The gate refusing to promote is the gate working correctly, but it means no promotion has yet happened at any revision, so `desktop-promote`, `slsa-provenance-attestation` and `sbom-generation` are all BLOCKED and no provenance attestation or bill of materials exists for any revision. QUAL-03 has therefore been UNCHECKED, with clause 1 (the digest binding, proven again at this revision by `desktop-packaged` passing 11 cases against the exact continuous-integration application digest) recorded as still proven. TO CLOSE: close window 84 so the macOS lane passes on a hosted runner, let `desktop-promote` run, and re-verify at the resulting revision with `node tooling/verify-release.mjs --manifest .planning/releases/<tag>/release-manifest.json`. | open |  | 2026-09-12T04:10:00.000Z |  | BACKLOG |
+| 89 | 06 | unmet-truth | tooling/release-lanes.json |  | Class: contract-in-tension-with-evidence. The `macos-integration-full-grant` lane records its physical blocker as a hosted GitHub runner being unable to receive a non-interactive TCC Accessibility grant. The `hosted-runner-tcc-report` lane exists precisely to publish what the runner ACTUALLY grants rather than what the contract predicts, and at revision 26628e1 it answered `accessibility_trusted: true`, alongside `screen_recording_preflight: true` and a `universal_access_write` that persisted and read back a matching token (run 34668212473). That is in direct tension with the recorded blocker, and it was surfaced by the reporting step doing its job. It is NOT yet resolved either way: the report describes the TccProbe process at probe time, and no run has attempted the full-grant rows on a hosted runner, so neither the contract nor the report has been falsified. What must not happen is the tension being left unstated while the blocker keeps reading as settled fact. TO CLOSE: run `node tooling/verify-macos-integration.mjs --rows A1,A2,A3` on a hosted macos-15 runner against downloaded continuous-integration bytes and record the outcome, then either wire the full-grant rows into continuous integration or replace the blocker text with what the attempt actually showed. | open |  | 2026-09-12T04:10:00.000Z |  | BACKLOG |
+| 90 | 06 | unmet-truth | .planning/releases/candidate-1/release-manifest.json |  | Class: partial-retention. D-13 requires the release evidence to be retained both in the repository AND as GitHub Release assets, which do not expire. The repository half is done: the manifest, all five artefact records, both full continuous-integration logs and a per-lane evidence log for every lane that produced one are committed under `.planning/releases/candidate-1/`. The release-asset half is NOT done, because attaching assets requires pushing and creating a release and this revision has neither been tagged nor released. The 14-day build-artefact retention in the workflows is untouched and is a convenience, not the retention mechanism. Nothing is currently lost -- the committed copy does not expire either -- so this is a partial, not a gap. TO CLOSE: tag the release revision and run `gh release create <tag> .planning/releases/<tag>/release-manifest.json .planning/releases/<tag>/artifacts/* .planning/releases/<tag>/evidence/**`, or record a decision that the committed copy is the sole retention mechanism and amend D-13. | open |  | 2026-09-12T04:10:00.000Z |  | BACKLOG |
+| 91 | 06 | unmet-truth | .github/workflows/desktop.yml |  | Class: no-continuous-integration-signing. Every continuous-integration-built desktop artefact is UNSIGNED and UNNOTARIZED, at every revision so far, because the Developer ID .p12 has not been exported to repository secrets. The `desktop-package` job detects this and takes its documented unsigned path, printing `No Developer ID certificate is reachable from this event (push). This artifact is UNSIGNED and UNNOTARIZED, and the package manifest records it as such`, and the manifest does record it (codeSigning.developerIdSigned false, notarization.status not-attempted) -- the machinery is behaving correctly and honestly. The consequence is what matters: a signed, notarized and stapled build HAS been produced and verified end to end locally (spctl --assess returns accepted with source Notarized Developer ID), but that attestation binds to LOCALLY BUILT bytes, and nothing local may bind to locally built bytes. So no signing claim may currently be attached to any released artefact, and `.planning/releases/candidate-1/release-manifest.json` states the unsigned fact directly on the artefact entry. TO CLOSE: export the Developer ID .p12 and its password to repository secrets (an owner action), re-run desktop.yml, and re-verify the manifest at the resulting revision. | open |  | 2026-09-12T04:10:00.000Z |  | BACKLOG |
+| 92 | 06 | unmet-truth | tooling/verify-cross-adapter-phase.mjs |  | Class: unwired-lane-behind-a-checked-box. SRV-02 is CHECKED on the strength of plan 06-05's cross-adapter run, which was real and thorough -- all four legs (web-api, mcp, electron, iphone) passed with byte-identical result_code, conflict_shape, activity_fact and final_revision across all four shared scenarios, and it surfaced and fixed a genuine cross-client contract bug (ConflictField.field's OpenAPI enum was missing completed_at and trashed_at, which fatally crashed the real Swift decoder). But that run was LOCAL. The `cross-adapter-phase` lane is ciWiring unwired: no committed workflow job runs `node tooling/verify-cross-adapter-phase.mjs`, so the lane is BLOCKED with a zero case count in .planning/releases/candidate-1/release-manifest.json and SRV-02 has no continuous-integration-authoritative evidence at revision 26628e1. Plan 06-13 deliberately did NOT uncheck the box: the evidence behind it genuinely ran and passed, the gap is CI authority rather than falsity, and re-adjudicating another plan's finding was outside this plan's scope. It is filed here instead so the gap is owned rather than silent, which is the whole point of D-35. This row is adjacent to, not a duplicate of, row 75 (which is about `gsd-tools phase complete` checking the wrong boxes). TO CLOSE: add a committed job running `node tooling/verify-cross-adapter-phase.mjs`, add `cross-adapter-phase` to the required-lane list in tooling/check-ci-contract.mjs, and re-verify the release manifest at the resulting revision. OR decide explicitly that a local cross-adapter run is sufficient authority for SRV-02 and record that decision. | open |  | 2026-09-12T04:20:00.000Z |  | BACKLOG |
+| 93 | 06 | unmet-truth | tooling/check-ci-contract.mjs |  | Class: contract-names-a-lane-nothing-runs. D-14 names `phase-1-desktop`, `mcp-gate-selftest` and `mcp-phase-non-model` as REQUIRED on pull requests and main, and no committed workflow job runs any of them: nothing invokes `./tooling/test-phase-1.sh`, `node tooling/mcp-gate-selftest.mjs`, or `node tooling/verify-mcp-phase.mjs` non-model lanes. All three are recorded ciWiring unwired in tooling/release-lanes.json and appear as explicit zero-case BLOCKED entries in .planning/releases/candidate-1/release-manifest.json, which is the honest treatment -- an omitted lane reads as satisfied. The gap is that a lane the lane-assignment decision calls required has never once been enforced, so 'required' currently means required-on-paper for these three. Their inventory owner was moved from KPL-06 to backlog by plan 06-13, because KPL-06 is the final phase of the milestone and may not remain the owner of a lane still BLOCKED at its end. TO CLOSE: add a job per lane to .github/workflows/repository-integrity.yml, add each lane to the required-lane list in tooling/check-ci-contract.mjs (which asserts the committed contract and would then fail closed on regression), and re-verify the release manifest at the resulting revision. | open |  | 2026-09-12T04:30:00.000Z |  | BACKLOG |
+| 94 | 06 | unrun-verify | tooling/verify-trust-soak.mjs |  | Class: measurement-window-not-accumulated. The trust soak's verdict is BLOCKED with ZERO samples and this is the correct state, not a failure to fix. .artifacts/trust-soak/trust-soak-evidence.json reports verdict BLOCKED, every one of the ten chaos operator counts at 0, every invariant I1 through I10 at samples 0 violations 0 disposition BLOCKED, an empty dailyUsageCensus, and detectionFloor confidence null with its own note: insufficient accumulated samples to state a detection floor, this proves nothing about defects of any rarity yet. The window accumulates in calendar time, which no plan can manufacture. Consequently the fifth release criterion's defect-absence half is satisfied by this gate's verdict and by nothing else -- not by judgement, and never by owner dogfood feedback, which is reported as an outcome and given no evidence row. The lane keeps the release manifest's overall verdict non-zero, which is exactly what it is for. Its inventory owner was moved from KPL-06 to backlog because KPL-06 is ending. TO CLOSE: accumulate the stated measurement window, then `node tooling/verify-trust-soak.mjs` and re-verify the release manifest. | open |  | 2026-09-12T04:30:00.000Z |  | BACKLOG |
+| 95 | 06 | unrun-verify | .github/workflows/recovery-drills.yml |  | Class: scheduled-lane-never-bound-to-a-revision. The `daily-restore`, `weekly-historical-pitr` and `quarterly-host-replacement` lanes live in a schedule-triggered workflow, so no run of any of them exists AT the candidate release revision 26628e1 and all three are recorded as explicit zero-case BLOCKED entries in .planning/releases/candidate-1/release-manifest.json. They are not broken -- a scheduled drill passing last night is real evidence about last night's tree. What is missing is a way to bind a drill result to the exact revision being released, which is what every other lane in the manifest does. Their inventory owner was moved from KPL-06 to backlog because KPL-06 is ending. TO CLOSE: add `workflow_dispatch` to recovery-drills.yml so the drills can be run at a named revision, dispatch them at the release revision, and bind their run ids into that revision's manifest. | open |  | 2026-09-12T04:30:00.000Z |  | BACKLOG |
 
 ````json
 [
@@ -1084,6 +1098,175 @@ last_updated: 2026-09-12T02:45:00.000Z
     "reason": "",
     "recorded_at": "2026-09-12T02:45:00.000Z",
     "resolved_at": null
+  },
+  {
+    "id": 83,
+    "kind": "unmet-truth",
+    "phase": "06",
+    "file": "tooling/verify-export-reader.mjs",
+    "line": null,
+    "description": "Class: unwired-lane. The independent export reader exists and runs locally, but NO committed workflow job under .github/ invokes it. `tooling/verify-export-reader.mjs` is referenced only by SUPPORT.md, PRIVACY.md and itself; a prior revision of `tooling/release-lanes.json` claimed repository-integrity.yml/ci-contract runs it and no such step exists. An unwired lane may never report PASSED because it has no job it could have passed in, so `.planning/releases/candidate-1/release-manifest.json` records `export-reader` as BLOCKED with a zero case count. This matters beyond bookkeeping: DATA-01 asserts a person can export all their data in a versioned, documented, neutral format without internal database knowledge, and the public PRIVACY.md leans on the reader as the evidence that the export is genuinely readable without Keepling. Both currently rest on a lane no continuous-integration run has ever executed. TO CLOSE: add a job to .github/workflows/repository-integrity.yml running `node tooling/verify-export-reader.mjs --golden`, add `export-reader` to the required-lane list in tooling/check-ci-contract.mjs, and re-run the release manifest at the resulting revision.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:10:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 84,
+    "kind": "unrun-verify",
+    "phase": "06",
+    "file": "tooling/verify-macos-integration.mjs",
+    "line": null,
+    "description": "Class: physical-blocker. macOS integration row A14 (Light and Dark change while the app is open) cannot run on a hosted GitHub runner, and this is now an OBSERVED boundary rather than a prediction. A14 is the only row that changes a system appearance setting WHILE the application is already running and asserts the window re-themes without a relaunch; delivering that change to a running process needs a logged-in Aqua session whose appearance daemon posts AppleInterfaceThemeChangedNotification, which a hosted runner has not got. Measured both ways at revision 26628e1: `ROW id=A14 status=FAIL cases=4` on macos-15 with `background stayed` an all-zero colour (run 34668212473, job desktop-macos-integration), and `status=PASS cases=4` on a real logged-in session. Rows A10, A12 and A13 pass on the same runner because each applies its setting BEFORE launch. The row has been split out as the `macos-integration-live-appearance` lane, authority local-attested with a stated physical blocker, and emits an explicit zero-case BLOCKED entry into every release manifest rather than disappearing. It is NOT a product defect and must not be recorded as one. TO CLOSE with continuous-integration authority: run the row on a self-hosted macOS runner with a real logged-in session, against the exact continuous-integration-built bytes.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:10:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 85,
+    "kind": "unmet-truth",
+    "phase": "06",
+    "file": "tooling/test-phase-2.sh",
+    "line": null,
+    "description": "Class: privacy-gate-failure. The `phase2-server` lane FAILS its mandatory post-run privacy scan at revision 26628e1. The lane's own command succeeded (`mix compile --warnings-as-errors && mix test`), and then `./tooling/verify-privacy.sh` over the lane's diagnostic log reported `hostile sentinel found in a diagnostic artifact` and the job exited non-zero (run 34668212479). Because no PASS line was emitted, no case count from that lane may be claimed, and the `export-elixir` lane -- whose evidence IS that job -- is BLOCKED with it. The cause is NOT yet isolated. It may well be a test-fixture literal appearing in ExUnit output rather than a product leak: `apps/server/test/keepling_web/mcp/content_isolation_test.exs` is the only server test outside the two redaction suites that uses a vector sentinel, and it uses them as in-test literals. But probably-benign is not a standard this project accepts from a privacy gate, and the same scan passes on every other lane. QUAL-05 stays checked on the strength of the `phase2-privacy` lane, which PASSED with 17 cases at this revision, and carries a dated addendum naming this row so the claim can never be cited without it. TO CLOSE: reproduce with `./tooling/test-phase-2.sh --lane server`, identify the emitter, and either stop it emitting or record why the appearance is not a leak.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:10:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 86,
+    "kind": "unmet-truth",
+    "phase": "06",
+    "file": "apps/server/mix.lock",
+    "line": null,
+    "description": "Class: vulnerable-dependency. The `image-compose-deploy` lane FAILS at revision 26628e1 because the server image build's dependency audit reports hackney 1.25.0 as VULNERABLE with four open advisories: EEF-CVE-2026-47071 (HIGH, SOCKS5 TLS upgrade ignores caller timeout), EEF-CVE-2026-47075 (MEDIUM, CR/LF injection in query parameter), EEF-CVE-2026-47076 (MEDIUM, SSRF allowlist bypass via percent-encoded host) and EEF-CVE-2026-47069 (LOW, CRLF injection in cookie domain and path options). This is a real supply-chain finding in the bytes the self-hosted server image would ship, not an infrastructure fault, and it is one of the two failures that keep the `all-required-passed` aggregator red. The audit firing is the control working. TO CLOSE: raise the hackney dependency (directly, or via whichever parent pulls it in) to a version carrying no open advisory, then re-run `./tooling/test-phase-2.sh --lane image-compose-deploy`.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:10:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 87,
+    "kind": "unmet-truth",
+    "phase": "06",
+    "file": ".github/workflows/repository-integrity.yml",
+    "line": null,
+    "description": "Class: ci-provisioning-defect. The `Install asdf` step is not idempotent against its own cache, so the `phase2-sync-property` and `phase2-backup-restore` jobs never reach their lanes. The step runs `git clone https://github.com/asdf-vm/asdf.git \"$HOME/.asdf\" --branch v0.14.1` unconditionally, but an earlier `actions/cache` restore of `~/.asdf/installs` has already created `$HOME/.asdf`, so the clone dies with `fatal: destination path '/home/runner/.asdf' already exists and is not an empty directory` and exit 128. Observed at revision 26628e1 in run 34668212479 for both jobs. This is toolchain provisioning failing before any project code runs; neither lane's result says anything about the product, and both are recorded as BLOCKED with this reason rather than as failures. It is also one of the two causes -- via phase2-linux -- that keep the `all-required-passed` aggregator red, and so it is part of what keeps QUAL-02 unchecked. TO CLOSE: make the step a no-op when `$HOME/.asdf/.git` already exists (or restore the cache after the clone), and re-run both lanes.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:10:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 88,
+    "kind": "unrun-verify",
+    "phase": "06",
+    "file": ".github/workflows/desktop.yml",
+    "line": null,
+    "description": "Class: unproven-clause. QUAL-03's second clause -- distribution jobs do not silently rebuild different bytes -- still has NO passing lane behind it, and this is now a tested absence rather than an untested one. The 2026-09-04 disclosure on QUAL-03 said clause 2 was unproven only because no workflow had ever executed and that Phase 6 must re-verify it against a real remote before any release claim. Phase 6 now has a real remote, and at revision 26628e1 the `desktop-promote` job was SKIPPED: its `needs` gate requires every required desktop lane to have succeeded, and `desktop-macos-integration` did not, because of row A14's physical blocker (window 84). The gate refusing to promote is the gate working correctly, but it means no promotion has yet happened at any revision, so `desktop-promote`, `slsa-provenance-attestation` and `sbom-generation` are all BLOCKED and no provenance attestation or bill of materials exists for any revision. QUAL-03 has therefore been UNCHECKED, with clause 1 (the digest binding, proven again at this revision by `desktop-packaged` passing 11 cases against the exact continuous-integration application digest) recorded as still proven. TO CLOSE: close window 84 so the macOS lane passes on a hosted runner, let `desktop-promote` run, and re-verify at the resulting revision with `node tooling/verify-release.mjs --manifest .planning/releases/<tag>/release-manifest.json`.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:10:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 89,
+    "kind": "unmet-truth",
+    "phase": "06",
+    "file": "tooling/release-lanes.json",
+    "line": null,
+    "description": "Class: contract-in-tension-with-evidence. The `macos-integration-full-grant` lane records its physical blocker as a hosted GitHub runner being unable to receive a non-interactive TCC Accessibility grant. The `hosted-runner-tcc-report` lane exists precisely to publish what the runner ACTUALLY grants rather than what the contract predicts, and at revision 26628e1 it answered `accessibility_trusted: true`, alongside `screen_recording_preflight: true` and a `universal_access_write` that persisted and read back a matching token (run 34668212473). That is in direct tension with the recorded blocker, and it was surfaced by the reporting step doing its job. It is NOT yet resolved either way: the report describes the TccProbe process at probe time, and no run has attempted the full-grant rows on a hosted runner, so neither the contract nor the report has been falsified. What must not happen is the tension being left unstated while the blocker keeps reading as settled fact. TO CLOSE: run `node tooling/verify-macos-integration.mjs --rows A1,A2,A3` on a hosted macos-15 runner against downloaded continuous-integration bytes and record the outcome, then either wire the full-grant rows into continuous integration or replace the blocker text with what the attempt actually showed.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:10:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 90,
+    "kind": "unmet-truth",
+    "phase": "06",
+    "file": ".planning/releases/candidate-1/release-manifest.json",
+    "line": null,
+    "description": "Class: partial-retention. D-13 requires the release evidence to be retained both in the repository AND as GitHub Release assets, which do not expire. The repository half is done: the manifest, all five artefact records, both full continuous-integration logs and a per-lane evidence log for every lane that produced one are committed under `.planning/releases/candidate-1/`. The release-asset half is NOT done, because attaching assets requires pushing and creating a release and this revision has neither been tagged nor released. The 14-day build-artefact retention in the workflows is untouched and is a convenience, not the retention mechanism. Nothing is currently lost -- the committed copy does not expire either -- so this is a partial, not a gap. TO CLOSE: tag the release revision and run `gh release create <tag> .planning/releases/<tag>/release-manifest.json .planning/releases/<tag>/artifacts/* .planning/releases/<tag>/evidence/**`, or record a decision that the committed copy is the sole retention mechanism and amend D-13.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:10:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 91,
+    "kind": "unmet-truth",
+    "phase": "06",
+    "file": ".github/workflows/desktop.yml",
+    "line": null,
+    "description": "Class: no-continuous-integration-signing. Every continuous-integration-built desktop artefact is UNSIGNED and UNNOTARIZED, at every revision so far, because the Developer ID .p12 has not been exported to repository secrets. The `desktop-package` job detects this and takes its documented unsigned path, printing `No Developer ID certificate is reachable from this event (push). This artifact is UNSIGNED and UNNOTARIZED, and the package manifest records it as such`, and the manifest does record it (codeSigning.developerIdSigned false, notarization.status not-attempted) -- the machinery is behaving correctly and honestly. The consequence is what matters: a signed, notarized and stapled build HAS been produced and verified end to end locally (spctl --assess returns accepted with source Notarized Developer ID), but that attestation binds to LOCALLY BUILT bytes, and nothing local may bind to locally built bytes. So no signing claim may currently be attached to any released artefact, and `.planning/releases/candidate-1/release-manifest.json` states the unsigned fact directly on the artefact entry. TO CLOSE: export the Developer ID .p12 and its password to repository secrets (an owner action), re-run desktop.yml, and re-verify the manifest at the resulting revision.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:10:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 92,
+    "kind": "unmet-truth",
+    "phase": "06",
+    "file": "tooling/verify-cross-adapter-phase.mjs",
+    "line": null,
+    "description": "Class: unwired-lane-behind-a-checked-box. SRV-02 is CHECKED on the strength of plan 06-05's cross-adapter run, which was real and thorough -- all four legs (web-api, mcp, electron, iphone) passed with byte-identical result_code, conflict_shape, activity_fact and final_revision across all four shared scenarios, and it surfaced and fixed a genuine cross-client contract bug (ConflictField.field's OpenAPI enum was missing completed_at and trashed_at, which fatally crashed the real Swift decoder). But that run was LOCAL. The `cross-adapter-phase` lane is ciWiring unwired: no committed workflow job runs `node tooling/verify-cross-adapter-phase.mjs`, so the lane is BLOCKED with a zero case count in .planning/releases/candidate-1/release-manifest.json and SRV-02 has no continuous-integration-authoritative evidence at revision 26628e1. Plan 06-13 deliberately did NOT uncheck the box: the evidence behind it genuinely ran and passed, the gap is CI authority rather than falsity, and re-adjudicating another plan's finding was outside this plan's scope. It is filed here instead so the gap is owned rather than silent, which is the whole point of D-35. This row is adjacent to, not a duplicate of, row 75 (which is about `gsd-tools phase complete` checking the wrong boxes). TO CLOSE: add a committed job running `node tooling/verify-cross-adapter-phase.mjs`, add `cross-adapter-phase` to the required-lane list in tooling/check-ci-contract.mjs, and re-verify the release manifest at the resulting revision. OR decide explicitly that a local cross-adapter run is sufficient authority for SRV-02 and record that decision.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:20:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 93,
+    "kind": "unmet-truth",
+    "phase": "06",
+    "file": "tooling/check-ci-contract.mjs",
+    "line": null,
+    "description": "Class: contract-names-a-lane-nothing-runs. D-14 names `phase-1-desktop`, `mcp-gate-selftest` and `mcp-phase-non-model` as REQUIRED on pull requests and main, and no committed workflow job runs any of them: nothing invokes `./tooling/test-phase-1.sh`, `node tooling/mcp-gate-selftest.mjs`, or `node tooling/verify-mcp-phase.mjs` non-model lanes. All three are recorded ciWiring unwired in tooling/release-lanes.json and appear as explicit zero-case BLOCKED entries in .planning/releases/candidate-1/release-manifest.json, which is the honest treatment -- an omitted lane reads as satisfied. The gap is that a lane the lane-assignment decision calls required has never once been enforced, so 'required' currently means required-on-paper for these three. Their inventory owner was moved from KPL-06 to backlog by plan 06-13, because KPL-06 is the final phase of the milestone and may not remain the owner of a lane still BLOCKED at its end. TO CLOSE: add a job per lane to .github/workflows/repository-integrity.yml, add each lane to the required-lane list in tooling/check-ci-contract.mjs (which asserts the committed contract and would then fail closed on regression), and re-verify the release manifest at the resulting revision.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:30:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 94,
+    "kind": "unrun-verify",
+    "phase": "06",
+    "file": "tooling/verify-trust-soak.mjs",
+    "line": null,
+    "description": "Class: measurement-window-not-accumulated. The trust soak's verdict is BLOCKED with ZERO samples and this is the correct state, not a failure to fix. .artifacts/trust-soak/trust-soak-evidence.json reports verdict BLOCKED, every one of the ten chaos operator counts at 0, every invariant I1 through I10 at samples 0 violations 0 disposition BLOCKED, an empty dailyUsageCensus, and detectionFloor confidence null with its own note: insufficient accumulated samples to state a detection floor, this proves nothing about defects of any rarity yet. The window accumulates in calendar time, which no plan can manufacture. Consequently the fifth release criterion's defect-absence half is satisfied by this gate's verdict and by nothing else -- not by judgement, and never by owner dogfood feedback, which is reported as an outcome and given no evidence row. The lane keeps the release manifest's overall verdict non-zero, which is exactly what it is for. Its inventory owner was moved from KPL-06 to backlog because KPL-06 is ending. TO CLOSE: accumulate the stated measurement window, then `node tooling/verify-trust-soak.mjs` and re-verify the release manifest.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:30:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
+  },
+  {
+    "id": 95,
+    "kind": "unrun-verify",
+    "phase": "06",
+    "file": ".github/workflows/recovery-drills.yml",
+    "line": null,
+    "description": "Class: scheduled-lane-never-bound-to-a-revision. The `daily-restore`, `weekly-historical-pitr` and `quarterly-host-replacement` lanes live in a schedule-triggered workflow, so no run of any of them exists AT the candidate release revision 26628e1 and all three are recorded as explicit zero-case BLOCKED entries in .planning/releases/candidate-1/release-manifest.json. They are not broken -- a scheduled drill passing last night is real evidence about last night's tree. What is missing is a way to bind a drill result to the exact revision being released, which is what every other lane in the manifest does. Their inventory owner was moved from KPL-06 to backlog because KPL-06 is ending. TO CLOSE: add `workflow_dispatch` to recovery-drills.yml so the drills can be run at a named revision, dispatch them at the release revision, and bind their run ids into that revision's manifest.",
+    "status": "open",
+    "reason": "",
+    "recorded_at": "2026-09-12T04:30:00.000Z",
+    "resolved_at": null,
+    "owner": "BACKLOG"
   }
 ]
 ````
