@@ -120,7 +120,7 @@ if [ "$mode" = --fields ]; then
             });' "$vault"
       done
   done
-  echo "Paste these labels back and fill them into $map_file, then run --apply."
+  echo "Copy the references you need into $map_file, then run --check."
   exit 0
 fi
 
