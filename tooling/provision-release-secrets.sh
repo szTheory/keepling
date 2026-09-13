@@ -25,9 +25,9 @@ excluded_vaults="Squad"
 
 mode=--check
 case "${1:-}" in
-  --check|--discover|--apply) mode=$1 ;;
+  --check|--discover|--fields|--apply) mode=$1 ;;
   "") mode=--check ;;
-  *) echo "usage: $0 [--check|--discover|--apply]" >&2; exit 2 ;;
+  *) echo "usage: $0 [--check|--discover|--fields|--apply]" >&2; exit 2 ;;
 esac
 
 die() { echo "provision-release-secrets: $*" >&2; exit 1; }
@@ -79,8 +79,43 @@ if [ "$mode" = --discover ]; then
         });' "$vault"
   done
   echo
-  echo "Field names for an item:  op item get '<title>' --vault '<vault>' --format=json | jq -r '.fields[].label'"
-  echo "Then edit $map_file and re-run with --apply."
+  echo "Run --fields next to print the field labels of every 'Keepling' item,"
+  echo "then edit $map_file and re-run with --apply."
+  exit 0
+fi
+
+# ------------------------------------------------------------------- fields --
+# Print every field label of every item whose title begins "Keepling". Writing
+# the map needs a field label per credential, and getting them one item at a
+# time is six invocations and six chances to mistype a title. Labels are not
+# credential values, so this is safe to read and safe to paste.
+if [ "$mode" = --fields ]; then
+  non_excluded_vaults | while IFS= read -r vault; do
+    op item list --vault "$vault" --format=json 2>/dev/null |
+      node -e '
+        let d = "";
+        process.stdin.on("data", (c) => (d += c)).on("end", () => {
+          for (const i of JSON.parse(d || "[]"))
+            if (/^keepling/i.test(i.title)) console.log(i.id);
+        });' |
+      while IFS= read -r item_id; do
+        op item get "$item_id" --vault "$vault" --format=json 2>/dev/null |
+          node -e '
+            let d = "";
+            process.stdin.on("data", (c) => (d += c)).on("end", () => {
+              const item = JSON.parse(d || "{}");
+              if (!item.title) return;
+              console.log("op://" + process.argv[1] + "/" + item.title);
+              for (const f of item.fields || [])
+                // A label with no value is a section header or an unfilled
+                // template row; naming it in the map would resolve to nothing.
+                if (f.label && (f.value !== undefined || f.reference))
+                  console.log("    " + f.label);
+              console.log("");
+            });' "$vault"
+      done
+  done
+  echo "Paste these labels back and fill them into $map_file, then run --apply."
   exit 0
 fi
 
