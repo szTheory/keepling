@@ -24,6 +24,10 @@ compose='docker compose -f infra/compose/compose.yml'
 cleanup() {
   result=$?
   trap - EXIT HUP INT TERM
+  # A Compose service failing with nothing but `didn't complete successfully:
+  # exit 1` is undiagnosable, and teardown destroys the only copy of why. Dump
+  # every service's log before removing anything, but only on failure.
+  [ "$result" -eq 0 ] || $compose -p "$project" logs --no-color --timestamps >&2 2>/dev/null || true
   $compose -p "$project" down --remove-orphans >/dev/null 2>&1 || true
   case "$proof_root" in
     "${TMPDIR:-/tmp}"/keepling-compose-proof.*) rm -rf -- "$proof_root" ;;
