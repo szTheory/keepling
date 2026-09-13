@@ -239,6 +239,14 @@ describe('NodeSqliteLocalStore fault safety', () => {
     // This widens the slack, NOT the invariant. A genuine unbounded hang, or a
     // busy timeout that never fires, blows past 10s just as surely as it blew
     // past 5s -- the failure this test exists to catch is still caught.
+    //
+    // THE WIDENING ABOVE DID NOT WORK ON ITS OWN, and the reason is the
+    // per-test timeout passed to `it` below. Vitest's default testTimeout is
+    // 5000ms and this suite sets none, so vitest aborted the test at 5s before
+    // this assertion could ever observe a value between 5s and 10s. The run
+    // failed with "Test timed out in 5000ms" rather than with an assertion
+    // failure -- the widened bound was unreachable. Raising the assertion
+    // without raising the framework timeout that gates it changes nothing.
     const BUSY_TIMEOUT_MS = 2_500
     expect(elapsedMs).toBeLessThan(BUSY_TIMEOUT_MS * 4)
 
@@ -248,7 +256,11 @@ describe('NodeSqliteLocalStore fault safety', () => {
     store.acceptCapture(mutationFor('mutation-busy-2', 'task-busy-2', 'After lock released'))
     expect(store.snapshot().tasks.map((task) => task.id)).toEqual(['task-busy-0', 'task-busy-2'])
     store.close()
-  })
+    // Deliberately double the 10s assertion bound. The assertion must be what
+    // decides this test, not the framework: at any value at or below 10s the
+    // runner aborts first and a real regression is reported as a timeout
+    // instead of as the bound it actually broke.
+  }, 20_000)
 
   it('rolls back completely on a mid-transaction failure and preserves the prior committed state (quit-during-transaction proxy, D-34)', () => {
     const root = fixtureRoot('mid-transaction')
