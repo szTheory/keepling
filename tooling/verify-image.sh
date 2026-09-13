@@ -25,8 +25,8 @@ case "$image_platform:$engine_architecture" in
 esac
 metadata_file=$(mktemp "${TMPDIR:-/tmp}/keepling-image-build.XXXXXX")
 database_name="keepling-image-db-$$"
+network_name="keepling-image-net-$$"
 app_name="keepling-image-app-$$"
-database_port=$((57000 + $$ % 500))
 operator_token='image-proof-operator-token-00000000000000000000000000000000'
 secret_key_base='image-proof-secret-key-base-000000000000000000000000000000000000000000000000'
 
@@ -34,6 +34,7 @@ cleanup() {
   status=$?
   trap - EXIT HUP INT TERM
   docker rm -f "$app_name" "$database_name" >/dev/null 2>&1 || true
+  docker network rm "$network_name" >/dev/null 2>&1 || true
   rm -f -- "$metadata_file"
   exit "$status"
 }
@@ -75,16 +76,29 @@ if docker run --rm -e "ERL_FLAGS=$emulation_erl_flags" --entrypoint /bin/sh "$im
   die "runtime contains Mix or test-only controls"
 fi
 
-# NO BIND MOUNT FOR THE PROOF DATABASE. It used to bind `$database_root` onto
-# /var/lib/postgresql, which works only on Docker Desktop, where bind-mount
-# ownership is translated for the container. On a Linux engine -- which is what
-# the continuous-integration runner is -- the directory belongs to the runner
-# user, the container's postgres user cannot write to it, initdb never
-# completes, and the lane dies at "PostgreSQL did not become ready". It also
-# left root-owned directories behind that the cleanup could not remove. Nothing
-# in this script reads the data directory, so the container's own ephemeral
-# storage is all it ever needed; `docker rm -f` in the cleanup disposes of it.
-docker run -d --name "$database_name" -p "127.0.0.1:$database_port:5432" \
+# THE PROOF DATABASE IS REACHED CONTAINER-TO-CONTAINER, on a disposable
+# user-defined network, and it is NOT bind-mounted. Both were Docker Desktop
+# assumptions that a Linux engine -- which is what the continuous-integration
+# runner is -- does not share:
+#
+#   * The bind mount of a `mktemp -d` directory onto /var/lib/postgresql works
+#     only where bind-mount ownership is translated for the container. On Linux
+#     the directory stays owned by the runner user, the container's postgres
+#     user cannot write to it, initdb never completes, and the lane dies at
+#     "PostgreSQL did not become ready" -- leaving root-owned directories the
+#     cleanup then cannot remove. Nothing here reads that data directory.
+#
+#   * Publishing the database on 127.0.0.1 and dialling `host.docker.internal`
+#     works on Docker Desktop because its VM makes container traffic appear to
+#     come from the host. On Linux the host-gateway address is not loopback, so
+#     a database listening only on 127.0.0.1 refuses the connection and the
+#     migration dies in the Ecto connection pool instead.
+#
+# A shared network removes both problems rather than papering over them: the
+# release dials the database by container name on 5432, the way it would in any
+# real deployment, and nothing depends on the host's network namespace.
+docker network create "$network_name" >/dev/null
+docker run -d --name "$database_name" --network "$network_name" \
   -e POSTGRES_DB=keepling -e POSTGRES_USER=keepling -e POSTGRES_PASSWORD=keepling-image-proof \
   postgres:18.6-bookworm@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af >/dev/null
 
@@ -95,8 +109,8 @@ until docker exec "$database_name" pg_isready -U keepling -d keepling >/dev/null
   sleep 1
 done
 
-database_url="ecto://keepling:keepling-image-proof@host.docker.internal:$database_port/keepling"
-docker run --rm --add-host host.docker.internal:host-gateway \
+database_url="ecto://keepling:keepling-image-proof@$database_name:5432/keepling"
+docker run --rm --network "$network_name" \
   -e "ERL_FLAGS=$emulation_erl_flags" \
   -e DATABASE_URL="$database_url" -e SECRET_KEY_BASE="$secret_key_base" -e PHX_HOST=localhost \
   -e KEEPLING_OPERATOR_TOKEN="$operator_token" -e KEEPLING_SERVER_RELEASE=0.1.0 \
@@ -104,7 +118,7 @@ docker run --rm --add-host host.docker.internal:host-gateway \
   -e KEEPLING_DEVICE_GRANT_SERVER_INSTANCE=keepling-image-proof \
   --entrypoint /app/bin/keepling "$image_tag" eval 'Application.ensure_loaded(:keepling); {:ok, _, _} = Ecto.Migrator.with_repo(Keepling.Repo, fn repo -> Ecto.Migrator.run(repo, :up, all: true) end)' >/dev/null
 
-docker run -d --name "$app_name" -p 127.0.0.1::4000 --add-host host.docker.internal:host-gateway \
+docker run -d --name "$app_name" -p 127.0.0.1::4000 --network "$network_name" \
   -e "ERL_FLAGS=$emulation_erl_flags" \
   -e DATABASE_URL="$database_url" -e SECRET_KEY_BASE="$secret_key_base" -e PHX_HOST=localhost \
   -e KEEPLING_OPERATOR_TOKEN="$operator_token" -e KEEPLING_SERVER_RELEASE=0.1.0 \
