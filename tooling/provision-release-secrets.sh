@@ -9,7 +9,8 @@
 # DESIGN NOTES, because this handles credentials:
 #   * Secret VALUES never touch the filesystem, never reach a shell argument
 #     (which is world-readable in `ps`), and are never echoed. They move through
-#     a pipe from `op read` into `gh secret set --body-file -` and nowhere else.
+#     a pipe from `op read` into `gh secret set`, which reads stdin when no
+#     --body is given, and nowhere else.
 #   * The map file names locations, never values, so it is safe to commit.
 #   * The Squad vault is excluded from discovery unconditionally. It is an
 #     employer vault and nothing in this repository may read it.
@@ -187,6 +188,9 @@ b2_s3_endpoint() {
       const body = JSON.parse(d || "{}");
       const url = body?.apiInfo?.storageApi?.s3ApiUrl || body.s3ApiUrl;
       if (!url) process.exit(1);
+      // If the reader has already exited, writing raises EPIPE as an unhandled
+      // error event and node prints a stack trace that buries the real cause.
+      process.stdout.on("error", () => process.exit(1));
       process.stdout.write(url);
     });'
 }
@@ -203,6 +207,7 @@ b2_s3_region() {
       // https://s3.us-west-004.backblazeb2.com -> us-west-004
       const region = new URL(d.trim()).hostname.split(".")[1];
       if (!region) process.exit(1);
+      process.stdout.on("error", () => process.exit(1));
       process.stdout.write(region);
     });'
 }
@@ -289,11 +294,19 @@ uploaded=0
 while IFS="$(printf '\t')" read -r environment secret reference requirement; do
   # The value exists only inside this pipe. It is never a file, never an
   # argument, and never printed.
-  if resolve_reference "$reference" |
-    gh secret set "$secret" --env "$environment" --repo "$repository" --body-file - >/dev/null 2>&1; then
+  #
+  # Stderr of the whole pipeline is captured and stdout discarded, in that
+  # order, so a failure reports what the resolver or `gh` actually said. The
+  # earlier form discarded both and could only ever say "failed", which is not
+  # a diagnosis.
+  if failure=$(
+    { resolve_reference "$reference" |
+      gh secret set "$secret" --env "$environment" --repo "$repository"; } 2>&1 >/dev/null
+  ); then
     echo "set $environment/$secret"
     uploaded=$((uploaded + 1))
   else
+    printf '%s\n' "$failure" | sed -e '/^[[:space:]]*$/d' -e 's/^/  /' >&2
     die "failed to set $environment/$secret"
   fi
 done <<MAP_ENTRIES
