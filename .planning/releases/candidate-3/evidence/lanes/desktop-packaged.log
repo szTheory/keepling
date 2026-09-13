@@ -1,0 +1,254 @@
+desktop-packaged	Set up job	﻿2026-09-13T19:33:03.2462960Z Current runner version: '2.337.0'
+desktop-packaged	Set up job	2026-09-13T19:33:03.2476420Z ##[group]Runner Image Provisioner
+desktop-packaged	Set up job	2026-09-13T19:33:03.2476920Z Hosted Compute Agent
+desktop-packaged	Set up job	2026-09-13T19:33:03.2477280Z Version: 20260828.587
+desktop-packaged	Set up job	2026-09-13T19:33:03.2477670Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+desktop-packaged	Set up job	2026-09-13T19:33:03.2478120Z Build Date: 2026-08-28T16:44:25Z
+desktop-packaged	Set up job	2026-09-13T19:33:03.2478530Z Worker ID: {629464c5-a494-4f24-9ed8-feb6e2cd904b}
+desktop-packaged	Set up job	2026-09-13T19:33:03.2478970Z Azure Region: westus
+desktop-packaged	Set up job	2026-09-13T19:33:03.2479320Z ##[endgroup]
+desktop-packaged	Set up job	2026-09-13T19:33:03.2480070Z ##[group]Operating System
+desktop-packaged	Set up job	2026-09-13T19:33:03.2480440Z macOS
+desktop-packaged	Set up job	2026-09-13T19:33:03.2480750Z 15.7.9
+desktop-packaged	Set up job	2026-09-13T19:33:03.2481050Z 24G830
+desktop-packaged	Set up job	2026-09-13T19:33:03.2481380Z ##[endgroup]
+desktop-packaged	Set up job	2026-09-13T19:33:03.2481720Z ##[group]Runner Image
+desktop-packaged	Set up job	2026-09-13T19:33:03.2482080Z Image: macos-15-arm64
+desktop-packaged	Set up job	2026-09-13T19:33:03.2482430Z Version: 20260907.0337.1
+desktop-packaged	Set up job	2026-09-13T19:33:03.2483120Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+desktop-packaged	Set up job	2026-09-13T19:33:03.2484140Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+desktop-packaged	Set up job	2026-09-13T19:33:03.2484750Z ##[endgroup]
+desktop-packaged	Set up job	2026-09-13T19:33:03.2485410Z ##[group]GITHUB_TOKEN Permissions
+desktop-packaged	Set up job	2026-09-13T19:33:03.2486300Z Contents: read
+desktop-packaged	Set up job	2026-09-13T19:33:03.2486650Z Metadata: read
+desktop-packaged	Set up job	2026-09-13T19:33:03.2486990Z ##[endgroup]
+desktop-packaged	Set up job	2026-09-13T19:33:03.2488130Z Secret source: Actions
+desktop-packaged	Set up job	2026-09-13T19:33:03.2488660Z Cache mode: write
+desktop-packaged	Set up job	2026-09-13T19:33:03.2489070Z Prepare workflow directory
+desktop-packaged	Set up job	2026-09-13T19:33:03.2725400Z Prepare all required actions
+desktop-packaged	Set up job	2026-09-13T19:33:03.2756080Z Getting action download info
+desktop-packaged	Set up job	2026-09-13T19:33:03.5636080Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+desktop-packaged	Set up job	2026-09-13T19:33:03.7626320Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+desktop-packaged	Set up job	2026-09-13T19:33:03.8522640Z Download action repository 'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+desktop-packaged	Set up job	2026-09-13T19:33:04.3216300Z Complete job name: desktop-packaged
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T19:33:04.3571490Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3577230Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3577790Z with:
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3578100Z   repository: szTheory/keepling
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3580650Z   token: ***
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3580940Z   ssh-strict: true
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3581240Z   ssh-user: git
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3581550Z   persist-credentials: true
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3581870Z   clean: true
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3582180Z   sparse-checkout-cone-mode: true
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3582570Z   fetch-depth: 1
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3582860Z   fetch-tags: false
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3583170Z   show-progress: true
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3583470Z   lfs: false
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3583780Z   submodules: false
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3584090Z   set-safe-directory: true
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3584540Z env:
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3584930Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.3585380Z ##[endgroup]
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.6363130Z Syncing repository: szTheory/keepling
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.6364690Z ##[group]Getting Git version info
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.6365370Z Working directory is '/Users/runner/work/keepling/keepling'
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.6366100Z [command]/opt/homebrew/bin/git version
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.6878030Z git version 2.55.0
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.6894410Z ##[endgroup]
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.6900290Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/ceb3780a-9e4a-4469-85a8-e59880b0083b/.gitconfig'
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.6906460Z Temporarily overriding HOME='/Users/runner/work/_temp/ceb3780a-9e4a-4469-85a8-e59880b0083b' before making global git config changes
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.6907890Z Adding repository directory to the temporary git global config as a safe directory
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.6909860Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7005770Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7008200Z ##[group]Initializing the repository
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7011520Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7171210Z hint: Using 'master' as the name for the initial branch. This default branch name
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7172410Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7173270Z hint: to use in all of your new repositories, which will suppress this warning,
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7173850Z hint: call:
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7174180Z hint:
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7174620Z hint: 	git config --global init.defaultBranch <name>
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7175080Z hint:
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7175520Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7176250Z hint: 'development'. The just-created branch can be renamed via this command:
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7176830Z hint:
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7177150Z hint: 	git branch -m <name>
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7177520Z hint:
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7177980Z hint: Disable this message with "git config set advice.defaultBranchName false"
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7178710Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7181430Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7245850Z ##[endgroup]
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7246470Z ##[group]Disabling automatic garbage collection
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7248180Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7297680Z ##[endgroup]
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7298300Z ##[group]Setting up auth
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7301390Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.7354560Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.8182610Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.8232380Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.8855050Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.8908400Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.9831680Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.9834310Z ##[endgroup]
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.9835200Z ##[group]Fetching the repository
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:04.9836890Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96:refs/remotes/origin/main
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.0829760Z From https://github.com/szTheory/keepling
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.0830370Z  * [new ref]         c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96 -> origin/main
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.0831730Z ##[endgroup]
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.0832100Z ##[group]Determining the checkout info
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.0833020Z ##[endgroup]
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.0836420Z [command]/opt/homebrew/bin/git sparse-checkout disable
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.0901350Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.0974150Z ##[group]Checking out the ref
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.0975070Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.2321630Z Switched to a new branch 'main'
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.2329690Z branch 'main' set up to track 'origin/main'.
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.2334490Z ##[endgroup]
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.2409020Z [command]/opt/homebrew/bin/git log -1 --format=%H
+desktop-packaged	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:06.2465060Z c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T19:33:06.2654150Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.2655560Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.2655880Z with:
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.2656060Z   node-version: 24.7.0
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.2656250Z   always-auth: false
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.2656440Z   check-latest: false
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.2658520Z   token: ***
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.2658690Z env:
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.2658920Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.2659240Z ##[endgroup]
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.3757890Z Attempting to download 24.7.0...
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.3896480Z (node:4087) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:06.3897520Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:07.1858100Z Acquiring 24.7.0 - arm64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-darwin-arm64.tar.gz
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:07.8510920Z Extracting ...
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:07.8672860Z [command]/usr/bin/tar xz --strip 1 -C /Users/runner/work/_temp/48f47b48-1295-49d1-bdb5-0fb1728cbd0b -f /Users/runner/work/_temp/176150f7-d8b3-4745-a9fd-3d573bbf2aab
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:08.9562600Z Adding to the cache ...
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:10.8085390Z ##[group]Environment details
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:11.1690680Z node: v24.7.0
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:11.1691560Z npm: 11.5.1
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:11.1693130Z yarn: 1.22.22
+desktop-packaged	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:11.1710140Z ##[endgroup]
+desktop-packaged	Install locked JavaScript inputs	﻿2026-09-13T19:33:11.2088300Z ##[group]Run corepack enable && pnpm install --frozen-lockfile
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:11.2088840Z ^[[36;1mcorepack enable && pnpm install --frozen-lockfile^[[0m
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:11.2140630Z shell: /bin/bash -e {0}
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:11.2140860Z env:
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:11.2141110Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:11.2141410Z ##[endgroup]
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:11.3543990Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:12.2183950Z Scope: all 4 workspace projects
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:12.2612370Z Lockfile is up to date, resolution step is skipped
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:12.4123710Z Packages: +912
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:12.4225220Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:12.5534590Z Progress: resolved 0, reused 0, downloaded 1, added 0
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:13.5513270Z Progress: resolved 0, reused 0, downloaded 29, added 13
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:14.5525500Z Progress: resolved 0, reused 0, downloaded 56, added 23
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:15.5539430Z Progress: resolved 0, reused 0, downloaded 111, added 43
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:16.5535250Z Progress: resolved 0, reused 0, downloaded 173, added 69
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:17.5547860Z Progress: resolved 0, reused 0, downloaded 293, added 127
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:18.5563410Z Progress: resolved 0, reused 0, downloaded 407, added 172
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:19.5576830Z Progress: resolved 0, reused 0, downloaded 491, added 207
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:19.8107750Z Packages are cloned from the content-addressable store to the virtual store.
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:19.8108600Z   Content-addressable store is at: /Users/runner/Library/pnpm/store/v10
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:19.8114740Z   Virtual store is at:             node_modules/.pnpm
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:20.5619390Z Progress: resolved 0, reused 0, downloaded 690, added 343
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:21.5677310Z Progress: resolved 0, reused 0, downloaded 870, added 506
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:22.2302380Z Progress: resolved 0, reused 0, downloaded 870, added 912, done
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:22.3304010Z 
+desktop-packaged	Install locked JavaScript inputs	2026-09-13T19:33:22.3924040Z Done in 10.4s using pnpm v10.33.0
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	﻿2026-09-13T19:33:22.4324000Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.4325280Z ##[group]Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.4325590Z with:
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.4325860Z   name: keepling-desktop-package
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.4326170Z   path: /Users/runner/work/_temp/keepling-desktop-package
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.4326570Z   merge-multiple: false
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.4326870Z   repository: szTheory/keepling
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.4327210Z   run-id: 34777805267
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.4327510Z env:
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.4327750Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.4328200Z ##[endgroup]
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.6282030Z Downloading single artifact
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.6391720Z (node:4298) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.6392870Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.7873760Z Preparing to download the following artifacts:
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.7875100Z - keepling-desktop-package (ID: 10323893801, Size: 260101582, Expected Digest: sha256:28b617e7b9f1e25aa19e5309bb9a43a5eefd554171d38cb223e895e96665bcab)
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.9659290Z Redirecting to blob download url: https://productionresultssa11.blob.core.windows.net/actions-results/6c96096e-95f6-41d2-8f12-7d4a9be542d9/workflow-job-run-08bd7d4d-5d3a-5a1f-8b45-80b04d0efa15/artifacts/d673bfa41ddf059217fd82e3d6ea2d41bfb7cc9b5796cb68d3af55bc077e78ee.zip
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:22.9660820Z Starting download of artifact to: /Users/runner/work/_temp/keepling-desktop-package
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:23.1423370Z (node:4298) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:32.7475220Z SHA256 digest of downloaded artifact is 28b617e7b9f1e25aa19e5309bb9a43a5eefd554171d38cb223e895e96665bcab
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:32.7491820Z Artifact download completed successfully.
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:32.7493060Z Total of 1 artifact(s) downloaded
+desktop-packaged	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T19:33:32.7493390Z Download artifact has finished successfully
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	﻿2026-09-13T19:33:32.7612050Z ##[group]Run set -o pipefail
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7612410Z ^[[36;1mset -o pipefail^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7612850Z ^[[36;1martifact_root="$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}"^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7613230Z ^[[36;1mchmod -R u+x "$artifact_root"^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7613480Z ^[[36;1mnode -e "^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7613790Z ^[[36;1m  const fs = require('node:fs');^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7614030Z ^[[36;1m  const path = require('node:path');^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7614300Z ^[[36;1m  const root = process.argv[1];^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7614720Z ^[[36;1m  const manifestPath = path.join(root, 'package-manifest.json');^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7615160Z ^[[36;1m  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7615650Z ^[[36;1m  // T-06-02-01: only the transport archive -- a single regular^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7616110Z ^[[36;1m  // file -- was actually staged and downloaded onto this runner.^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7616510Z ^[[36;1m  // The raw .app directory this manifest's copiedApplicationPath^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7617070Z ^[[36;1m  // names was the BUILD job's ephemeral tree and does not exist^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7617760Z ^[[36;1m  // here; the consuming scripts (smoke-desktop-packaged.mjs,^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7618240Z ^[[36;1m  // verify-macos-integration.mjs) expand archivePath themselves^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7618710Z ^[[36;1m  // and re-verify against applicationDigestSha256, so^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7619090Z ^[[36;1m  // copiedApplicationPath/executablePath are left as recorded.^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7619540Z ^[[36;1m  const archiveName = path.basename(manifest.archivePath);^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7619980Z ^[[36;1m  manifest.archivePath = path.join(root, archiveName);^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7620390Z ^[[36;1m  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7620820Z ^[[36;1m  console.log(manifestPath);^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7621110Z ^[[36;1m" "$artifact_root" | tee "$RUNNER_TEMP/rebase.txt"^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7621600Z ^[[36;1mecho "manifest-path=$artifact_root/package-manifest.json" >> "$GITHUB_OUTPUT"^[[0m
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7859960Z shell: /bin/bash -e {0}
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7860320Z env:
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7860600Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.7860960Z ##[endgroup]
+desktop-packaged	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T19:33:32.8605520Z /Users/runner/work/_temp/keepling-desktop-package/package-manifest.json
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	﻿2026-09-13T19:33:32.8947010Z ##[group]Run node tooling/smoke-desktop-packaged.mjs --manifest "/Users/runner/work/_temp/keepling-desktop-package/package-manifest.json"
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:32.8947890Z ^[[36;1mnode tooling/smoke-desktop-packaged.mjs --manifest "/Users/runner/work/_temp/keepling-desktop-package/package-manifest.json"^[[0m
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:32.8981110Z shell: /bin/bash -e {0}
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:32.8981330Z env:
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:32.8981540Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:32.8982050Z ##[endgroup]
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4180560Z playwright: headless (default) -- excluding @windowed specs. KEEPLING_TEST_HEADLESS=0 runs them.
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4181650Z 
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4183580Z (node:4511) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4184290Z Running 11 tests using 1 worker
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4185380Z playwright: headless (default) -- excluding @windowed specs. KEEPLING_TEST_HEADLESS=0 runs them.
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4189090Z ··PACKAGED_DAILY_LOOP_FULL passed=1
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4191760Z ·PACKAGED_DAILY_LOOP_RECONNECT passed=1 digest=bd85468a3ec6283eb1548b6f42648b922b788ef38561d9d764a7c36f09f0a215 revision=c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4193230Z ·PACKAGED_PROFILE_OWNERSHIP accepted_instances=1 rejected_instances=1
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4198370Z PACKAGED_OFFLINE_CAPTURE passed=1 digest=bd85468a3ec6283eb1548b6f42648b922b788ef38561d9d764a7c36f09f0a215 revision=c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96 executable=/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/keepling-desktop-packaged-expand-wKcoPG/Keepling.app/Contents/MacOS/Keepling
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4201940Z ·······
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4202450Z   11 passed (13.7s)
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4233030Z ##[notice]  11 passed (13.7s)
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4252500Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4253370Z (node:4526) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4254290Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-packaged	Run every packaged Playwright spec against the exact downloaded bytes	2026-09-13T19:33:48.4255830Z Packaged desktop smoke passed: digest=bd85468a3ec6283eb1548b6f42648b922b788ef38561d9d764a7c36f09f0a215 executable=/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/keepling-desktop-packaged-expand-wKcoPG/Keepling.app/Contents/MacOS/Keepling passed=11
+desktop-packaged	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T19:33:48.4782080Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-packaged	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:48.4783610Z Post job cleanup.
+desktop-packaged	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:48.7704340Z (node:4965) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-packaged	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:33:48.7705210Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T19:33:48.7890910Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:48.7891950Z Post job cleanup.
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:48.9084080Z [command]/opt/homebrew/bin/git version
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:48.9174850Z git version 2.55.0
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:48.9203010Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/e25c9243-4698-4c3c-af09-3547e386c56c/.gitconfig'
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:48.9214790Z Temporarily overriding HOME='/Users/runner/work/_temp/e25c9243-4698-4c3c-af09-3547e386c56c' before making global git config changes
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:48.9215640Z Adding repository directory to the temporary git global config as a safe directory
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:48.9217770Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:48.9313500Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:48.9375860Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:49.0177640Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:49.0222740Z http.https://github.com/.extraheader
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:49.0229380Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:49.0284080Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:49.0969830Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+desktop-packaged	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:33:49.1029060Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+desktop-packaged	Complete job	﻿2026-09-13T19:33:49.1863640Z Cleaning up orphan processes
+desktop-packaged	Complete job	2026-09-13T19:33:49.6650690Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

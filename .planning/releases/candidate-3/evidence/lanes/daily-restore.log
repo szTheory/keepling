@@ -1,0 +1,704 @@
+daily-restore (latest-wal)	Set up job	﻿2026-09-13T19:49:19.1864550Z Current runner version: '2.337.0'
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1883140Z ##[group]Runner Image Provisioner
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1883750Z Hosted Compute Agent
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1884330Z Version: 20260828.587
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1884880Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1885410Z Build Date: 2026-08-28T16:44:25Z
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1885900Z Worker ID: {80e303b2-6041-4703-a33d-ab0af9ab93ce}
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1886470Z Azure Region: westus
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1886860Z ##[endgroup]
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1888270Z ##[group]Operating System
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1888710Z macOS
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1889140Z 15.7.9
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1889480Z 24G830
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1889840Z ##[endgroup]
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1890220Z ##[group]Runner Image
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1890630Z Image: macos-15-arm64
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1891030Z Version: 20260907.0337.1
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1891820Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1893020Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1893710Z ##[endgroup]
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1894500Z ##[group]GITHUB_TOKEN Permissions
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1895600Z Contents: read
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1895990Z Metadata: read
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1896390Z ##[endgroup]
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1897760Z Secret source: Actions
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1898370Z Cache mode: write
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.1898850Z Prepare workflow directory
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.2251430Z Prepare all required actions
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.2289480Z Getting action download info
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.6322130Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.8402230Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:19.9158450Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+daily-restore (latest-wal)	Set up job	2026-09-13T19:49:20.1312220Z Complete job name: daily-restore (latest-wal)
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T19:49:20.1727260Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1734920Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1737450Z with:
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1737940Z   repository: szTheory/keepling
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1740740Z   token: ***
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1741100Z   ssh-strict: true
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1741540Z   ssh-user: git
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1741910Z   persist-credentials: true
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1742360Z   clean: true
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1743180Z   sparse-checkout-cone-mode: true
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1743640Z   fetch-depth: 1
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1744000Z   fetch-tags: false
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1761370Z   show-progress: true
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1761800Z   lfs: false
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1762230Z   submodules: false
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1762630Z   set-safe-directory: true
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1763370Z env:
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1763780Z   KEEPLING_RESTORE_SEED: 20260901
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1764330Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1765120Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1765620Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1766140Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1766770Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.1767190Z ##[endgroup]
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5511870Z Syncing repository: szTheory/keepling
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5513490Z ##[group]Getting Git version info
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5514050Z Working directory is '/Users/runner/work/keepling/keepling'
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5515660Z [command]/opt/homebrew/bin/git version
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6019790Z git version 2.55.0
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6031550Z ##[endgroup]
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6038070Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/beb5953f-b91d-4654-861f-20c2b19cec43/.gitconfig'
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6045330Z Temporarily overriding HOME='/Users/runner/work/_temp/beb5953f-b91d-4654-861f-20c2b19cec43' before making global git config changes
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6046430Z Adding repository directory to the temporary git global config as a safe directory
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6049350Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6245410Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6285420Z ##[group]Initializing the repository
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6294250Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6415530Z hint: Using 'master' as the name for the initial branch. This default branch name
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6417700Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6418530Z hint: to use in all of your new repositories, which will suppress this warning,
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6419170Z hint: call:
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6419820Z hint:
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6420440Z hint: 	git config --global init.defaultBranch <name>
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6421000Z hint:
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6421470Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6422260Z hint: 'development'. The just-created branch can be renamed via this command:
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6422820Z hint:
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6423170Z hint: 	git branch -m <name>
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6424360Z hint:
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6424960Z hint: Disable this message with "git config set advice.defaultBranchName false"
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6425780Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6429260Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6498360Z ##[endgroup]
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6499200Z ##[group]Disabling automatic garbage collection
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6500450Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6554360Z ##[endgroup]
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6555100Z ##[group]Setting up auth
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6559280Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.6618230Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.7470770Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.7526330Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.8217270Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.8271560Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.9476280Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.9606000Z ##[endgroup]
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.9608190Z ##[group]Fetching the repository
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.9609490Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96:refs/remotes/origin/main
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.0460630Z From https://github.com/szTheory/keepling
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.0467310Z  * [new ref]         c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96 -> origin/main
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.0494550Z ##[endgroup]
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.0495520Z ##[group]Determining the checkout info
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.0496410Z ##[endgroup]
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.0497040Z [command]/opt/homebrew/bin/git sparse-checkout disable
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.0580550Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.0625100Z ##[group]Checking out the ref
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.0630370Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.2119580Z Switched to a new branch 'main'
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.2122370Z branch 'main' set up to track 'origin/main'.
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.2129180Z ##[endgroup]
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.2212240Z [command]/opt/homebrew/bin/git log -1 --format=%H
+daily-restore (latest-wal)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:22.2273400Z c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-13T19:49:22.4589730Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4593760Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4594930Z with:
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4595500Z   path: ~/.asdf/installs
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/deps
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/_build
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4596750Z   key: recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4597930Z   enableCrossOsArchive: false
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4598440Z   fail-on-cache-miss: false
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4598990Z   lookup-only: false
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4599420Z   save-always: false
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4599820Z env:
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4600210Z   KEEPLING_RESTORE_SEED: 20260901
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4601110Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4602530Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4603290Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4604040Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4604900Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.4605480Z ##[endgroup]
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.5509760Z (node:18923) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.5511630Z (Use `node --trace-deprecation ...` to show where the warning was created)
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.8097640Z Cache hit for: recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:22.8163790Z (node:18923) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.0898950Z Received 4194304 of 78000949 (5.4%), 4.0 MBs/sec
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.8675310Z Received 78000949 of 78000949 (100.0%), 41.7 MBs/sec
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.8683770Z Cache Size: ~74 MB (78000949 B)
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.8926460Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/9c00e60e-5921-4af7-b34a-97bca63793e8/cache.tzst -P -C /Users/runner/work/keepling/keepling --delay-directory-restore --use-compress-program unzstd
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:26.1008170Z Cache restored successfully
+daily-restore (latest-wal)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:26.1306130Z Cache restored from key: recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+daily-restore (latest-wal)	Provision exact repository runtimes	﻿2026-09-13T19:49:26.1471890Z ##[group]Run brew list asdf >/dev/null 2>&1 || brew install asdf
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1472410Z ^[[36;1mbrew list asdf >/dev/null 2>&1 || brew install asdf^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1472800Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1473290Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1525920Z shell: /bin/bash -e {0}
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1526210Z env:
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1528480Z   KEEPLING_RESTORE_SEED: 20260901
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1528900Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1529900Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1530270Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1530630Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1531020Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:26.1531310Z ##[endgroup]
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:28.6558930Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:28.6759000Z ✔︎ Bottle Manifest asdf (0.20.0)
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:28.6759650Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:28.6864830Z asdf
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:28.7117950Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32masdf^[[39m^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:29.0135190Z ✔︎ Bottle asdf (0.20.0)
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:29.0189500Z ^[[34m==>^[[0m ^[[1mPouring asdf--0.20.0.arm64_sequoia.bottle.tar.gz^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:29.1101220Z 🍺  /opt/homebrew/Cellar/asdf/0.20.0: 10 files, 4.4MB
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:29.1102910Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:29.1103340Z Bash completion has been installed to:
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:29.1103790Z   /opt/homebrew/etc/bash_completion.d
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:31.4067700Z version 29.0.5 of erlang is already installed
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:31.4103980Z version 1.20.2-otp-29 of elixir is already installed
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:31.9677540Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:32.2372660Z ✔︎ Bottle Manifest postgresql@18 (18.6)
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:32.2374540Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:32.2374830Z postgresql@18
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:32.3088490Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32mpostgresql@18^[[39m^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:33.5115860Z ✔︎ Bottle postgresql@18 (18.6)
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:33.5351240Z ^[[34m==>^[[0m ^[[1mPouring postgresql@18--18.6.arm64_sequoia.bottle.tar.gz^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0044610Z The files belonging to this database system will be owned by user "runner".
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0047060Z This user must also own the server process.
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0047620Z 
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0049890Z The database cluster will be initialized with locale "en_US.UTF-8".
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0051050Z The default text search configuration will be set to "english".
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0052670Z 
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0053510Z Data page checksums are enabled.
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0053710Z 
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0054000Z fixing permissions on existing directory /opt/homebrew/var/postgresql@18 ... ok
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0054490Z creating subdirectories ... ok
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0054870Z selecting dynamic shared memory implementation ... posix
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0439100Z selecting default "max_connections" ... 100
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0613790Z selecting default "shared_buffers" ... 128MB
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0636250Z selecting default time zone ... UTC
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.0646320Z creating configuration files ... ok
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.1793970Z running bootstrap script ... ok
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.5327170Z performing post-bootstrap initialization ... ok
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.5435350Z syncing data to disk ... ok
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.5436690Z 
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.5436790Z 
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.5437430Z Success. You can now start the database server using:
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.5437710Z 
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.5438250Z     '/opt/homebrew/Cellar/postgresql@18/18.6/bin/pg_ctl' -D '/opt/homebrew/var/postgresql@18' -l logfile start
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.5439020Z 
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.5439400Z initdb: warning: enabling "trust" authentication for local connections
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:36.5441420Z initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0654330Z 🍺  /opt/homebrew/Cellar/postgresql@18/18.6: 3,873 files, 77.7MB
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0658480Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0659540Z ^[[34m==>^[[0m ^[[1mpostgresql@18^[[0m
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0659940Z This formula has created a default database cluster with:
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0667760Z   initdb --locale=en_US.UTF-8 -E UTF-8 /opt/homebrew/var/postgresql@18
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0668060Z 
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0668250Z When uninstalling, some dead symlinks are left behind so you may want to run:
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0668720Z   brew cleanup --prune-prefix
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0668920Z 
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0669040Z To start postgresql@18 now and restart at login:
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0669510Z   brew services start postgresql@18
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0669870Z Or, if you don't want/need a background service you can just run:
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.0670420Z   LC_ALL="en_US.UTF-8" /opt/homebrew/opt/postgresql@18/bin/postgres -D /opt/homebrew/var/postgresql@18
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:37.4888050Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:38.2802690Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:39.3470750Z * creating /Users/runner/.mix/archives/hex-2.5.1
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.4108420Z Resolving Hex dependencies...
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.6708140Z Resolution completed in 0.228s
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.6908610Z Unchanged:
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7009550Z   argon2_elixir 4.1.3
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7045940Z   bandit 1.12.5
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7046290Z   certifi 2.17.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7046640Z   comeonin 5.5.1
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7046890Z   db_connection 2.10.2
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7047680Z   decimal 3.1.1
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7047960Z   dns_cluster 0.2.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7048140Z   ecto 3.14.2
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7048440Z   ecto_sql 3.14.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7048680Z   elixir_make 0.10.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7049010Z   expo 1.1.1
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7049230Z   gettext 1.0.2
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7049510Z   h2 0.12.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7049730Z   hackney 4.7.4
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7049990Z   hammer 7.4.1
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7050560Z   hex_core 0.15.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7050840Z   hpax 1.0.4
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7051200Z   idna 7.1.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7051420Z   jason 1.4.5
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7052440Z   mime 2.0.7
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7052630Z   mimerl 1.5.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7052940Z   optimus 0.6.1
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7053200Z   parse_trans 3.4.2
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7053440Z   phoenix 1.8.13
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7053590Z   phoenix_ecto 4.7.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7053790Z   phoenix_pubsub 2.3.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7054060Z   phoenix_template 1.0.4
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7054950Z   plug 1.20.3
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7055380Z   plug_crypto 2.2.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7055890Z   postgrex 0.22.4
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7056440Z   protobuf 0.16.1
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7056640Z   purl 0.3.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7057010Z   quic 1.8.2
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7057320Z   sbom 0.10.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7057720Z   ssl_verify_fun 1.1.7
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7058070Z   stream_data 1.4.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7058350Z   telemetry 1.4.2
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7058600Z   telemetry_metrics 1.2.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7058890Z   telemetry_poller 1.3.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7059230Z   thousand_island 1.5.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7059520Z   tzdata 1.1.5
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7059830Z   websock 0.5.3
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7060530Z   websock_adapter 0.6.0
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.7060780Z   webtransport 0.4.5
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.8219920Z * creating /Users/runner/.mix/elixir/1-20-otp-29/rebar3
+daily-restore (latest-wal)	Provision exact repository runtimes	2026-09-13T19:49:40.8722420Z All dependencies have been fetched
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	﻿2026-09-13T19:49:40.8944430Z ##[group]Run set -eu
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8944810Z ^[[36;1mset -eu^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8945100Z ^[[36;1mevidence="$RUNNER_TEMP/latest-wal.json"^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8945430Z ^[[36;1mstarted=$(date +%s)^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8945660Z ^[[36;1mmissing=0^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8946250Z ^[[36;1mfor name in KEEPLING_BACKUP_PRIMARY_ENDPOINT KEEPLING_BACKUP_PRIMARY_REGION KEEPLING_BACKUP_PRIMARY_ACCESS_KEY KEEPLING_BACKUP_PRIMARY_SECRET_KEY; do^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8946890Z ^[[36;1m  test -n "$(printenv "$name")" || missing=1^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8947210Z ^[[36;1mdone^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8947400Z ^[[36;1mif test "$missing" -ne 0; then^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8947850Z ^[[36;1m  jq -n '{version:1,fixture:"latest-wal",result:"NON_PASSING",reason:"missing_protected_credentials"}' >"$evidence"^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8948630Z ^[[36;1m  ./tooling/verify-privacy.sh "$evidence"^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8948930Z ^[[36;1m  exit 1^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8949120Z ^[[36;1mfi^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8949410Z ^[[36;1m./tooling/verify-restore.sh --fixture "latest-wal"^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8949850Z ^[[36;1melapsed=$(( $(date +%s) - started ))^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8950570Z ^[[36;1mjq -n --arg revision "$GITHUB_SHA" --argjson elapsed "$elapsed" '{version:1,fixture:"latest-wal",result:"PASS",revision:$revision,elapsed_seconds:$elapsed,semantic:"complete"}' >"$evidence"^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.8951300Z ^[[36;1m./tooling/verify-privacy.sh "$evidence"^[[0m
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.9074150Z shell: /bin/bash -e {0}
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.9074400Z env:
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.9074630Z   KEEPLING_RESTORE_SEED: 20260901
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.9074980Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.9075650Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.9075970Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.9076370Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.9076720Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:40.9077000Z ##[endgroup]
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:44.2431050Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:50.1561890Z Restore verification passed: fixture=latest-wal kind=wal clean_target=true manifest=verified semantic=complete epoch=rotated rpo_seconds=120 duration_seconds=720 selection_seed=none
+daily-restore (latest-wal)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.2744090Z Privacy verification passed: artifacts=1 sentinels=7
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	﻿2026-09-13T19:49:51.2903290Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2904480Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2904820Z with:
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2904990Z   name: recovery-latest-wal-bounded
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2905270Z   path: /Users/runner/work/_temp/latest-wal.json
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2905530Z   if-no-files-found: error
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2905730Z   retention-days: 30
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2905930Z   compression-level: 6
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2906130Z   overwrite: false
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2906470Z   include-hidden-files: false
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2906700Z env:
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2906910Z   KEEPLING_RESTORE_SEED: 20260901
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2907240Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2907850Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2908120Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2908440Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2908770Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.2909010Z ##[endgroup]
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.5659700Z (node:20618) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.5701940Z (Use `node --trace-deprecation ...` to show where the warning was created)
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.5793220Z With the provided path, there will be 1 file uploaded
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.5795970Z Artifact name is valid!
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.5796310Z Root directory input is valid!
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.9741910Z Beginning upload of artifact content to blob storage
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:51.9840400Z (node:20618) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:52.2620420Z Uploaded bytes 282
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:52.3370180Z Finished uploading artifact content to blob storage!
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:52.3371050Z SHA256 digest of uploaded artifact zip is 81738d7ba0da63883eff5466a992746fcfc57067d557d26779653191ba722274
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:52.3380170Z Finalizing artifact upload
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:52.6072960Z Artifact recovery-latest-wal-bounded.zip successfully finalized. Artifact ID 10323969740
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:52.6086170Z Artifact recovery-latest-wal-bounded has been successfully uploaded! Final size is 282 bytes. Artifact ID is 10323969740
+daily-restore (latest-wal)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:49:52.6104250Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34778845662/artifacts/10323969740
+daily-restore (latest-wal)	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-13T19:49:52.8133980Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+daily-restore (latest-wal)	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:52.8135050Z Post job cleanup.
+daily-restore (latest-wal)	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:52.9254220Z Cache hit occurred on the primary key recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1, not saving cache.
+daily-restore (latest-wal)	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:52.9255390Z (node:20622) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+daily-restore (latest-wal)	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:52.9256360Z (Use `node --trace-deprecation ...` to show where the warning was created)
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T19:49:52.9356800Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:52.9357890Z Post job cleanup.
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.0281510Z [command]/opt/homebrew/bin/git version
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.0356000Z git version 2.55.0
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.0375400Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/0f2df58b-9276-4e8f-ab6c-a97478a903d1/.gitconfig'
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.0382500Z Temporarily overriding HOME='/Users/runner/work/_temp/0f2df58b-9276-4e8f-ab6c-a97478a903d1' before making global git config changes
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.0383460Z Adding repository directory to the temporary git global config as a safe directory
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.0386490Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.0455440Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.0520010Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.1303580Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.1349880Z http.https://github.com/.extraheader
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.1357060Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.1416130Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.2102980Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+daily-restore (latest-wal)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:53.2168510Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+daily-restore (latest-wal)	Complete job	﻿2026-09-13T19:49:53.3701670Z Cleaning up orphan processes
+daily-restore (latest-wal)	Complete job	2026-09-13T19:49:53.9369030Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+daily-restore (newest-logical)	Set up job	﻿2026-09-13T19:49:19.3081370Z Current runner version: '2.337.0'
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3099280Z ##[group]Runner Image Provisioner
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3099900Z Hosted Compute Agent
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3100310Z Version: 20260828.587
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3100750Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3101250Z Build Date: 2026-08-28T16:44:25Z
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3101740Z Worker ID: {2e00047e-f7e8-4849-a3a6-78e1ee892ca1}
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3102230Z Azure Region: westus
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3102630Z ##[endgroup]
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3103550Z ##[group]Operating System
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3103980Z macOS
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3104330Z 15.7.9
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3104670Z 24G830
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3105030Z ##[endgroup]
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3105450Z ##[group]Runner Image
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3105920Z Image: macos-15-arm64
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3106350Z Version: 20260907.0337.1
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3107160Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3108400Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3109110Z ##[endgroup]
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3109980Z ##[group]GITHUB_TOKEN Permissions
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3111540Z Contents: read
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3111930Z Metadata: read
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3112320Z ##[endgroup]
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3114480Z Secret source: Actions
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3115080Z Cache mode: write
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3115590Z Prepare workflow directory
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3669450Z Prepare all required actions
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.3709040Z Getting action download info
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:19.5817560Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:20.0925260Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:20.2536490Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+daily-restore (newest-logical)	Set up job	2026-09-13T19:49:20.5124510Z Complete job name: daily-restore (newest-logical)
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T19:49:20.5678660Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5685930Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5686590Z with:
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5686940Z   repository: szTheory/keepling
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5689600Z   token: ***
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5689930Z   ssh-strict: true
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5690270Z   ssh-user: git
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5690620Z   persist-credentials: true
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5691000Z   clean: true
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5691430Z   sparse-checkout-cone-mode: true
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5691930Z   fetch-depth: 1
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5692300Z   fetch-tags: false
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5692660Z   show-progress: true
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5693040Z   lfs: false
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5693560Z   submodules: false
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5694010Z   set-safe-directory: true
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5694800Z env:
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5695170Z   KEEPLING_RESTORE_SEED: 20260901
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5712580Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5713410Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5713890Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5714390Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5714940Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:20.5715360Z ##[endgroup]
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.0370490Z Syncing repository: szTheory/keepling
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.0372260Z ##[group]Getting Git version info
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.0373010Z Working directory is '/Users/runner/work/keepling/keepling'
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.0374830Z [command]/opt/homebrew/bin/git version
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2107250Z git version 2.55.0
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2305340Z ##[endgroup]
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2318190Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/421bc66c-d7aa-4fa8-ae73-6c659a7c464c/.gitconfig'
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2321740Z Temporarily overriding HOME='/Users/runner/work/_temp/421bc66c-d7aa-4fa8-ae73-6c659a7c464c' before making global git config changes
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2325010Z Adding repository directory to the temporary git global config as a safe directory
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2327910Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2330020Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2332080Z ##[group]Initializing the repository
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2332780Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2518250Z hint: Using 'master' as the name for the initial branch. This default branch name
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2519370Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2520270Z hint: to use in all of your new repositories, which will suppress this warning,
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2520950Z hint: call:
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2521400Z hint:
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2522050Z hint: 	git config --global init.defaultBranch <name>
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2522610Z hint:
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2523160Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2525030Z hint: 'development'. The just-created branch can be renamed via this command:
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2527470Z hint:
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2528610Z hint: 	git branch -m <name>
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2529940Z hint:
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2531540Z hint: Disable this message with "git config set advice.defaultBranchName false"
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2536410Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2539160Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2641250Z ##[endgroup]
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2643160Z ##[group]Disabling automatic garbage collection
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2649980Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2714920Z ##[endgroup]
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2717370Z ##[group]Setting up auth
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2720160Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.2795150Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.3996750Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.4178540Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.5927770Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.6232060Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.7746860Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.7796290Z ##[endgroup]
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.7800440Z ##[group]Fetching the repository
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:21.7801890Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96:refs/remotes/origin/main
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.3189650Z From https://github.com/szTheory/keepling
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.3293850Z  * [new ref]         c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96 -> origin/main
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.3384110Z ##[endgroup]
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.3385340Z ##[group]Determining the checkout info
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.3386640Z ##[endgroup]
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.3387410Z [command]/opt/homebrew/bin/git sparse-checkout disable
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.3389640Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.3392190Z ##[group]Checking out the ref
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.3393470Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.7500320Z Switched to a new branch 'main'
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.7645270Z branch 'main' set up to track 'origin/main'.
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.7791080Z ##[endgroup]
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.7893400Z [command]/opt/homebrew/bin/git log -1 --format=%H
+daily-restore (newest-logical)	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:49:23.7982630Z c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-13T19:49:24.1145190Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1146870Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1147170Z with:
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1147410Z   path: ~/.asdf/installs
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/deps
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/_build
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1147920Z   key: recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1148380Z   enableCrossOsArchive: false
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1148640Z   fail-on-cache-miss: false
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1148860Z   lookup-only: false
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1149060Z   save-always: false
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1149220Z env:
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1149410Z   KEEPLING_RESTORE_SEED: 20260901
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1149730Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1150530Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1150850Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1151150Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1151510Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.1151780Z ##[endgroup]
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.2900680Z (node:6036) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.3000050Z (Use `node --trace-deprecation ...` to show where the warning was created)
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.4332090Z (node:6036) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:24.4364120Z Cache hit for: recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:25.4909150Z Received 73806645 of 78000949 (94.6%), 70.2 MBs/sec
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:25.5689030Z Received 78000949 of 78000949 (100.0%), 68.4 MBs/sec
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:25.5693500Z Cache Size: ~74 MB (78000949 B)
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:25.5831150Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/374c39d0-39ea-4934-be62-1c1c5fccdfb7/cache.tzst -P -C /Users/runner/work/keepling/keepling --delay-directory-restore --use-compress-program unzstd
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:28.6290560Z Cache restored successfully
+daily-restore (newest-logical)	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:49:28.6817620Z Cache restored from key: recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+daily-restore (newest-logical)	Provision exact repository runtimes	﻿2026-09-13T19:49:28.7045850Z ##[group]Run brew list asdf >/dev/null 2>&1 || brew install asdf
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7046410Z ^[[36;1mbrew list asdf >/dev/null 2>&1 || brew install asdf^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7046880Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7047480Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7100440Z shell: /bin/bash -e {0}
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7100780Z env:
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7106000Z   KEEPLING_RESTORE_SEED: 20260901
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7106380Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7107170Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7107490Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7107950Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7108470Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:28.7108780Z ##[endgroup]
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:33.0268880Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:33.0370790Z ✔︎ Bottle Manifest asdf (0.20.0)
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:33.0372590Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:33.0471830Z asdf
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:33.0968190Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32masdf^[[39m^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:34.1692070Z ✔︎ Bottle asdf (0.20.0)
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:34.1712970Z ^[[34m==>^[[0m ^[[1mPouring asdf--0.20.0.arm64_sequoia.bottle.tar.gz^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:34.2892490Z 🍺  /opt/homebrew/Cellar/asdf/0.20.0: 10 files, 4.4MB
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:34.2894720Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:34.2895650Z Bash completion has been installed to:
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:34.2896660Z   /opt/homebrew/etc/bash_completion.d
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:37.4685540Z version 29.0.5 of erlang is already installed
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:37.4761400Z version 1.20.2-otp-29 of elixir is already installed
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:38.0326940Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:38.4869290Z ✔︎ Bottle Manifest postgresql@18 (18.6)
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:38.4896980Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:38.5007580Z postgresql@18
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:38.6025850Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32mpostgresql@18^[[39m^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:40.9495590Z ✔︎ Bottle postgresql@18 (18.6)
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:40.9874190Z ^[[34m==>^[[0m ^[[1mPouring postgresql@18--18.6.arm64_sequoia.bottle.tar.gz^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.4673380Z The files belonging to this database system will be owned by user "runner".
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.4675830Z This user must also own the server process.
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.4676830Z 
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.4677890Z The database cluster will be initialized with locale "en_US.UTF-8".
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.4678510Z The default text search configuration will be set to "english".
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.4679520Z 
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.4679790Z Data page checksums are enabled.
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.4680060Z 
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.4680340Z fixing permissions on existing directory /opt/homebrew/var/postgresql@18 ... ok
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.4681920Z creating subdirectories ... ok
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.4682610Z selecting dynamic shared memory implementation ... posix
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.5340390Z selecting default "max_connections" ... 100
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.5599590Z selecting default "shared_buffers" ... 128MB
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.5653960Z selecting default time zone ... UTC
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.5671570Z creating configuration files ... ok
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:44.7771750Z running bootstrap script ... ok
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.2865690Z performing post-bootstrap initialization ... ok
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.2995870Z syncing data to disk ... ok
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.2997290Z 
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.2997610Z 
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.2998920Z Success. You can now start the database server using:
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.2999680Z 
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.3000390Z     '/opt/homebrew/Cellar/postgresql@18/18.6/bin/pg_ctl' -D '/opt/homebrew/var/postgresql@18' -l logfile start
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.3001440Z 
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.3002000Z initdb: warning: enabling "trust" authentication for local connections
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.3005380Z initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9476620Z 🍺  /opt/homebrew/Cellar/postgresql@18/18.6: 3,873 files, 77.7MB
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9484550Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9485830Z ^[[34m==>^[[0m ^[[1mpostgresql@18^[[0m
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9486950Z This formula has created a default database cluster with:
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9493580Z   initdb --locale=en_US.UTF-8 -E UTF-8 /opt/homebrew/var/postgresql@18
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9494370Z 
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9494950Z When uninstalling, some dead symlinks are left behind so you may want to run:
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9496110Z   brew cleanup --prune-prefix
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9496600Z 
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9497000Z To start postgresql@18 now and restart at login:
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9497830Z   brew services start postgresql@18
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9498800Z Or, if you don't want/need a background service you can just run:
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:45.9500240Z   LC_ALL="en_US.UTF-8" /opt/homebrew/opt/postgresql@18/bin/postgres -D /opt/homebrew/var/postgresql@18
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:47.0123950Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:48.5593150Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.1064870Z * creating /Users/runner/.mix/archives/hex-2.5.1
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.7563980Z Resolving Hex dependencies...
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8708590Z Resolution completed in 0.112s
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8839820Z Unchanged:
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8840590Z   argon2_elixir 4.1.3
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8846690Z   bandit 1.12.5
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8847270Z   certifi 2.17.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8848090Z   comeonin 5.5.1
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8848900Z   db_connection 2.10.2
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8849540Z   decimal 3.1.1
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8850200Z   dns_cluster 0.2.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8850720Z   ecto 3.14.2
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8851370Z   ecto_sql 3.14.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8851840Z   elixir_make 0.10.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8852460Z   expo 1.1.1
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8852870Z   gettext 1.0.2
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8853480Z   h2 0.12.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8854100Z   hackney 4.7.4
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8854730Z   hammer 7.4.1
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8855260Z   hex_core 0.15.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8855920Z   hpax 1.0.4
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8856550Z   idna 7.1.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8857180Z   jason 1.4.5
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8857580Z   mime 2.0.7
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8858010Z   mimerl 1.5.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8858630Z   optimus 0.6.1
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8859330Z   parse_trans 3.4.2
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8859870Z   phoenix 1.8.13
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8860500Z   phoenix_ecto 4.7.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8861180Z   phoenix_pubsub 2.3.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8861870Z   phoenix_template 1.0.4
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8862440Z   plug 1.20.3
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8863050Z   plug_crypto 2.2.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8863580Z   postgrex 0.22.4
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8864030Z   protobuf 0.16.1
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8864570Z   purl 0.3.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8865130Z   quic 1.8.2
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8865720Z   sbom 0.10.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8866230Z   ssl_verify_fun 1.1.7
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8866700Z   stream_data 1.4.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8867340Z   telemetry 1.4.2
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8867910Z   telemetry_metrics 1.2.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8868670Z   telemetry_poller 1.3.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8869290Z   thousand_island 1.5.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8869920Z   tzdata 1.1.5
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8870330Z   websock 0.5.3
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8870780Z   websock_adapter 0.6.0
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.8871400Z   webtransport 0.4.5
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:50.9868530Z * creating /Users/runner/.mix/elixir/1-20-otp-29/rebar3
+daily-restore (newest-logical)	Provision exact repository runtimes	2026-09-13T19:49:51.0818470Z All dependencies have been fetched
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	﻿2026-09-13T19:49:51.1151440Z ##[group]Run set -eu
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1151790Z ^[[36;1mset -eu^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1152170Z ^[[36;1mevidence="$RUNNER_TEMP/newest-logical.json"^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1153220Z ^[[36;1mstarted=$(date +%s)^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1153950Z ^[[36;1mmissing=0^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1154630Z ^[[36;1mfor name in KEEPLING_BACKUP_PRIMARY_ENDPOINT KEEPLING_BACKUP_PRIMARY_REGION KEEPLING_BACKUP_PRIMARY_ACCESS_KEY KEEPLING_BACKUP_PRIMARY_SECRET_KEY; do^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1155280Z ^[[36;1m  test -n "$(printenv "$name")" || missing=1^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1155690Z ^[[36;1mdone^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1156000Z ^[[36;1mif test "$missing" -ne 0; then^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1156520Z ^[[36;1m  jq -n '{version:1,fixture:"newest-logical",result:"NON_PASSING",reason:"missing_protected_credentials"}' >"$evidence"^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1157450Z ^[[36;1m  ./tooling/verify-privacy.sh "$evidence"^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1157810Z ^[[36;1m  exit 1^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1158100Z ^[[36;1mfi^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1158380Z ^[[36;1m./tooling/verify-restore.sh --fixture "newest-logical"^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1158930Z ^[[36;1melapsed=$(( $(date +%s) - started ))^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1159760Z ^[[36;1mjq -n --arg revision "$GITHUB_SHA" --argjson elapsed "$elapsed" '{version:1,fixture:"newest-logical",result:"PASS",revision:$revision,elapsed_seconds:$elapsed,semantic:"complete"}' >"$evidence"^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1160490Z ^[[36;1m./tooling/verify-privacy.sh "$evidence"^[[0m
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1206690Z shell: /bin/bash -e {0}
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1206970Z env:
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1207260Z   KEEPLING_RESTORE_SEED: 20260901
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1207700Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1208390Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1208770Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1209360Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1209790Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:51.1210100Z ##[endgroup]
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:49:54.7896530Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:50:02.5397550Z Restore verification passed: fixture=newest-logical kind=logical clean_target=true manifest=verified semantic=complete epoch=rotated rpo_seconds=60 duration_seconds=420 selection_seed=none
+daily-restore (newest-logical)	Run one protected restore fixture and retain bounded evidence	2026-09-13T19:50:03.6347330Z Privacy verification passed: artifacts=1 sentinels=7
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	﻿2026-09-13T19:50:03.6521700Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6522980Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6523320Z with:
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6523500Z   name: recovery-newest-logical-bounded
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6523840Z   path: /Users/runner/work/_temp/newest-logical.json
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6524140Z   if-no-files-found: error
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6524370Z   retention-days: 30
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6524560Z   compression-level: 6
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6524750Z   overwrite: false
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6524970Z   include-hidden-files: false
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6525200Z env:
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6525370Z   KEEPLING_RESTORE_SEED: 20260901
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6525660Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6526320Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6526630Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6526960Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6527270Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:03.6527530Z ##[endgroup]
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.0222690Z (node:8058) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.0223540Z (Use `node --trace-deprecation ...` to show where the warning was created)
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.0267410Z With the provided path, there will be 1 file uploaded
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.0270770Z Artifact name is valid!
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.0272020Z Root directory input is valid!
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.2405360Z Beginning upload of artifact content to blob storage
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.2487300Z (node:8058) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.2770130Z Uploaded bytes 292
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.2888690Z Finished uploading artifact content to blob storage!
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.2890290Z SHA256 digest of uploaded artifact zip is ff821c155646988dbafed11184515d0edae5e0c0b4a6ba54efc2e6c58d8cd968
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.2899120Z Finalizing artifact upload
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.6135020Z Artifact recovery-newest-logical-bounded.zip successfully finalized. Artifact ID 10324470263
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.6152890Z Artifact recovery-newest-logical-bounded has been successfully uploaded! Final size is 292 bytes. Artifact ID is 10324470263
+daily-restore (newest-logical)	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:50:04.6159530Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34778845662/artifacts/10324470263
+daily-restore (newest-logical)	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-13T19:50:04.8593920Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+daily-restore (newest-logical)	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:50:04.8595030Z Post job cleanup.
+daily-restore (newest-logical)	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:50:04.9972730Z Cache hit occurred on the primary key recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1, not saving cache.
+daily-restore (newest-logical)	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:50:04.9975350Z (node:8062) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+daily-restore (newest-logical)	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:50:04.9976950Z (Use `node --trace-deprecation ...` to show where the warning was created)
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T19:50:05.0076890Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.0078000Z Post job cleanup.
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.1051830Z [command]/opt/homebrew/bin/git version
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.1130350Z git version 2.55.0
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.1150050Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/fa804293-2129-4e49-b3c0-956eee619437/.gitconfig'
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.1160430Z Temporarily overriding HOME='/Users/runner/work/_temp/fa804293-2129-4e49-b3c0-956eee619437' before making global git config changes
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.1162420Z Adding repository directory to the temporary git global config as a safe directory
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.1164590Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.1240220Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.1313140Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.2275350Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.2338030Z http.https://github.com/.extraheader
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.2376760Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.2421660Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.3456450Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+daily-restore (newest-logical)	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:50:05.3867500Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+daily-restore (newest-logical)	Complete job	﻿2026-09-13T19:50:05.5424200Z Cleaning up orphan processes
+daily-restore (newest-logical)	Complete job	2026-09-13T19:50:06.3245630Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

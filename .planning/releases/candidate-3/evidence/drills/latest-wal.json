@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "fixture": "latest-wal",
+  "result": "PASS",
+  "revision": "c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96",
+  "elapsed_seconds": 11,
+  "semantic": "complete"
+}

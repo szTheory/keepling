@@ -1,0 +1,9 @@
+{
+  "artifactName": "server-oci-image",
+  "kind": "oci-image",
+  "produced": false,
+  "revision": "c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96",
+  "reason": "Nothing in this repository builds or pushes the server image to any registry, so there is no published digest to record or sign. This is a recorded owner decision, not an oversight (.planning/WINDOWS.md row 80). CHANGED SINCE CANDIDATE-2 IN ONE RESPECT, and only one: the image-compose-deploy lane now PASSES (run 34777805271, cases=3), so an image IS built at this revision -- inside the lane, from the repository root context, and then discarded when the lane ends. That is a lane, not a released artefact: nothing retains those bytes, nothing names their digest, and no registry serves them. The absence recorded here is therefore unchanged in substance; what changed is that the reason is now solely the missing publish pipeline rather than the missing publish pipeline plus a lane that could not build the image at all.",
+  "toClose": "Close WINDOWS.md row 80: decide the registry and push trigger, add the build+push pipeline, then sign and record the pushed digest.",
+  "owner": "BACKLOG"
+}

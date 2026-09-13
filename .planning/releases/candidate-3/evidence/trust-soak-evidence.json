@@ -1,0 +1,79 @@
+{
+  "applicationDigestSha256": "UNVERIFIED",
+  "keeplingBuildDigest": "UNVERIFIED",
+  "gitRevision": "6e9fbedc41b9525a2142a6e12f0bdb49f26264bc",
+  "laneSourceDigest": "3499a0585bb0f075",
+  "oracleSourceDigest": "a682454d222ac88b",
+  "seedCorpusDigest": "97215f0a4f6b5c33",
+  "chaosOperatorCounts": {
+    "process-kill-mid-flight": 0,
+    "network-partition-in-flight-window": 0,
+    "clock-skew-plus-minus-one-day": 0,
+    "relaunch": 0,
+    "account-switch": 0,
+    "logout": 0,
+    "offline-window-past-low-water": 0,
+    "concurrent-conflicting-same-field-edits": 0,
+    "reconnect-during-pull": 0,
+    "restore-epoch-bump": 0
+  },
+  "dailyUsageCensus": {},
+  "detectionFloor": {
+    "confidence": null,
+    "perCycleManifestationProbability": null,
+    "note": "Insufficient accumulated samples to state a detection floor. This proves nothing about defects of any rarity yet."
+  },
+  "blindSpot": "The oracle sees only durable state. Loss between a keystroke and a commit -- before a mutation reaches its own client’s durable outbox -- is entirely outside its reach; that window belongs to the end-to-end and accessibility lanes, never to this oracle.",
+  "verdict": "BLOCKED",
+  "invariants": [
+    {
+      "name": "I1",
+      "samples": 0,
+      "violations": 0,
+      "disposition": "BLOCKED"
+    },
+    {
+      "name": "I2",
+      "samples": 0,
+      "violations": 0,
+      "disposition": "BLOCKED"
+    },
+    {
+      "name": "I3",
+      "samples": 0,
+      "violations": 0,
+      "disposition": "BLOCKED"
+    },
+    {
+      "name": "I4",
+      "samples": 0,
+      "violations": 0,
+      "disposition": "BLOCKED"
+    },
+    {
+      "name": "I5",
+      "samples": 0,
+      "violations": 0,
+      "disposition": "BLOCKED"
+    },
+    {
+      "name": "I6",
+      "samples": 0,
+      "violations": 0,
+      "disposition": "BLOCKED"
+    },
+    {
+      "name": "I7",
+      "samples": 0,
+      "violations": 0,
+      "disposition": "BLOCKED"
+    },
+    {
+      "name": "I8",
+      "samples": 0,
+      "violations": 0,
+      "disposition": "BLOCKED"
+    }
+  ],
+  "generatedAt": "2026-09-11T21:54:31.229Z"
+}

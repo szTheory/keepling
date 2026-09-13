@@ -1,0 +1,450 @@
+phase2-server	Set up job	﻿2026-09-13T19:29:00.4422249Z Current runner version: '2.337.0'
+phase2-server	Set up job	2026-09-13T19:29:00.4447586Z ##[group]Runner Image Provisioner
+phase2-server	Set up job	2026-09-13T19:29:00.4448465Z Hosted Compute Agent
+phase2-server	Set up job	2026-09-13T19:29:00.4449166Z Version: 20260828.587
+phase2-server	Set up job	2026-09-13T19:29:00.4449811Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+phase2-server	Set up job	2026-09-13T19:29:00.4450624Z Build Date: 2026-08-28T16:44:25Z
+phase2-server	Set up job	2026-09-13T19:29:00.4451377Z Worker ID: {260141dd-a982-40e5-95b6-9a2958a3b1cd}
+phase2-server	Set up job	2026-09-13T19:29:00.4452079Z Azure Region: westus
+phase2-server	Set up job	2026-09-13T19:29:00.4452726Z ##[endgroup]
+phase2-server	Set up job	2026-09-13T19:29:00.4454598Z ##[group]Operating System
+phase2-server	Set up job	2026-09-13T19:29:00.4455364Z Ubuntu
+phase2-server	Set up job	2026-09-13T19:29:00.4455919Z 24.04.5
+phase2-server	Set up job	2026-09-13T19:29:00.4456438Z LTS
+phase2-server	Set up job	2026-09-13T19:29:00.4457012Z ##[endgroup]
+phase2-server	Set up job	2026-09-13T19:29:00.4457578Z ##[group]Runner Image
+phase2-server	Set up job	2026-09-13T19:29:00.4458529Z Image: ubuntu-24.04
+phase2-server	Set up job	2026-09-13T19:29:00.4459247Z Version: 20260907.300.1
+phase2-server	Set up job	2026-09-13T19:29:00.4460353Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+phase2-server	Set up job	2026-09-13T19:29:00.4462171Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+phase2-server	Set up job	2026-09-13T19:29:00.4463290Z ##[endgroup]
+phase2-server	Set up job	2026-09-13T19:29:00.4464847Z ##[group]GITHUB_TOKEN Permissions
+phase2-server	Set up job	2026-09-13T19:29:00.4467065Z Contents: read
+phase2-server	Set up job	2026-09-13T19:29:00.4467738Z Metadata: read
+phase2-server	Set up job	2026-09-13T19:29:00.4468425Z ##[endgroup]
+phase2-server	Set up job	2026-09-13T19:29:00.4470576Z Secret source: Actions
+phase2-server	Set up job	2026-09-13T19:29:00.4471576Z Cache mode: write
+phase2-server	Set up job	2026-09-13T19:29:00.4472333Z Prepare workflow directory
+phase2-server	Set up job	2026-09-13T19:29:00.4870405Z Prepare all required actions
+phase2-server	Set up job	2026-09-13T19:29:00.4920274Z Getting action download info
+phase2-server	Set up job	2026-09-13T19:29:00.8388874Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+phase2-server	Set up job	2026-09-13T19:29:00.9697634Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+phase2-server	Set up job	2026-09-13T19:29:01.0557371Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+phase2-server	Set up job	2026-09-13T19:29:01.2428539Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+phase2-server	Set up job	2026-09-13T19:29:01.4637729Z Complete job name: phase2-server
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T19:29:01.5439440Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5448404Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5449432Z with:
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5449943Z   repository: szTheory/keepling
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5454339Z   token: ***
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5454898Z   ssh-strict: true
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5455394Z   ssh-user: git
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5455895Z   persist-credentials: true
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5456463Z   clean: true
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5456949Z   sparse-checkout-cone-mode: true
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5457512Z   fetch-depth: 1
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5457992Z   fetch-tags: false
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5458484Z   show-progress: true
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5458977Z   lfs: false
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5459505Z   submodules: false
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5460003Z   set-safe-directory: true
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5460859Z env:
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5461348Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5462118Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.5462948Z ##[endgroup]
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6473339Z Syncing repository: szTheory/keepling
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6475556Z ##[group]Getting Git version info
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6476375Z Working directory is '/home/runner/work/keepling/keepling'
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6477491Z [command]/usr/bin/git version
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6542846Z git version 2.55.0
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6564487Z ##[endgroup]
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6580321Z Temporarily overriding HOME='/home/runner/work/_temp/fba9ceea-f1aa-45b7-ae9a-faefef3979dc' before making global git config changes
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6583096Z Adding repository directory to the temporary git global config as a safe directory
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6585671Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6635881Z Deleting the contents of '/home/runner/work/keepling/keepling'
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6640167Z ##[group]Initializing the repository
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6645067Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6750509Z hint: Using 'master' as the name for the initial branch. This default branch name
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6752814Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6755326Z hint: to use in all of your new repositories, which will suppress this warning,
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6757421Z hint: call:
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6758749Z hint:
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6760265Z hint: 	git config --global init.defaultBranch <name>
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6761820Z hint:
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6763248Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6766041Z hint: 'development'. The just-created branch can be renamed via this command:
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6768023Z hint:
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6769223Z hint: 	git branch -m <name>
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6770435Z hint:
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6771914Z hint: Disable this message with "git config set advice.defaultBranchName false"
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6774556Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6776474Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6814481Z ##[endgroup]
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6816680Z ##[group]Disabling automatic garbage collection
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6818809Z [command]/usr/bin/git config --local gc.auto 0
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6846103Z ##[endgroup]
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6846943Z ##[group]Setting up auth
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6852172Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.6882759Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.7208325Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.7241425Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.7462307Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.7492543Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.7713267Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.7747246Z ##[endgroup]
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.7748211Z ##[group]Fetching the repository
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:01.7756750Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96:refs/remotes/origin/main
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:02.9128262Z From https://github.com/szTheory/keepling
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:02.9129852Z  * [new ref]         c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96 -> origin/main
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:02.9133588Z ##[endgroup]
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:02.9135388Z ##[group]Determining the checkout info
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:02.9136930Z ##[endgroup]
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:02.9141350Z [command]/usr/bin/git sparse-checkout disable
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:02.9187104Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:02.9216019Z ##[group]Checking out the ref
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:02.9218527Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:03.0504188Z Switched to a new branch 'main'
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:03.0508835Z branch 'main' set up to track 'origin/main'.
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:03.0521463Z ##[endgroup]
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:03.0564023Z [command]/usr/bin/git log -1 --format=%H
+phase2-server	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:03.0586697Z c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T19:29:03.1040979Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.1047403Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.1049062Z with:
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.1049919Z   node-version: 24.7.0
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.1050895Z   always-auth: false
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.1051885Z   check-latest: false
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.1061826Z   token: ***
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.1062690Z env:
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.1063555Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.1065295Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.1066978Z ##[endgroup]
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.2462456Z Attempting to download 24.7.0...
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.2570427Z (node:2290) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.2575273Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:03.9681866Z Acquiring 24.7.0 - x64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-linux-x64.tar.gz
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:04.4687036Z Extracting ...
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:04.4827240Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/4441721e-dd10-496a-8533-8fa24994e061 -f /home/runner/work/_temp/9d141a33-a261-45c0-8f83-3c8d1efa7ac9
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:05.7698714Z Adding to the cache ...
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:07.8236180Z ##[group]Environment details
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:08.0545267Z node: v24.7.0
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:08.0545819Z npm: 11.5.1
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:08.0546160Z yarn: 1.22.22
+phase2-server	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:08.0548605Z ##[endgroup]
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-13T19:29:08.1342119Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1343542Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1344253Z with:
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1344585Z   path: ~/.asdf/installs
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/deps
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/_build
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	node_modules
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1345190Z   key: phase2-Linux-server-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1345701Z   enableCrossOsArchive: false
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1345965Z   fail-on-cache-miss: false
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1346207Z   lookup-only: false
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1346419Z   save-always: false
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1346618Z env:
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1346825Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1347195Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.1347624Z ##[endgroup]
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.2405008Z (node:2337) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.2406216Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.4925168Z Cache hit for: phase2-Linux-server-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:08.5047316Z (node:2337) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:09.7999251Z Received 0 of 172382243 (0.0%), 0.0 MBs/sec
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:10.8065125Z Received 109051904 of 172382243 (63.3%), 52.0 MBs/sec
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:11.4002071Z Received 172382243 of 172382243 (100.0%), 63.2 MBs/sec
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:11.4005587Z Cache Size: ~164 MB (172382243 B)
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:11.4052277Z [command]/usr/bin/tar -xf /home/runner/work/_temp/21b5daf5-f73b-4e3d-85fb-7f4b385ec628/cache.tzst -P -C /home/runner/work/keepling/keepling --use-compress-program unzstd
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:13.6002640Z Cache restored successfully
+phase2-server	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:13.6160478Z Cache restored from key: phase2-Linux-server-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-server	Install asdf	﻿2026-09-13T19:29:13.6289929Z ##[group]Run set -eu
+phase2-server	Install asdf	2026-09-13T19:29:13.6290278Z ^[[36;1mset -eu^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6290616Z ^[[36;1m# The cache step above restores ~/.asdf/installs, which CREATES^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6291138Z ^[[36;1m# $HOME/.asdf before this step runs. An unconditional clone then dies^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6291624Z ^[[36;1m# with "destination path already exists and is not an empty^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6292111Z ^[[36;1m# directory" (exit 128) and the lane never reaches any project code.^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6292606Z ^[[36;1m# Clone into a scratch directory and move only the parts that are^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6293091Z ^[[36;1m# missing, so a restored cache and a cold runner both end up with the^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6293468Z ^[[36;1m# same tree.^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6294031Z ^[[36;1mif [ ! -d "$HOME/.asdf/.git" ]; then^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6294356Z ^[[36;1m  scratch="$(mktemp -d)"^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6294803Z ^[[36;1m  git clone https://github.com/asdf-vm/asdf.git "$scratch/asdf" --branch v0.14.1^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6295288Z ^[[36;1m  mkdir -p "$HOME/.asdf"^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6295660Z ^[[36;1m  # `cp -R src/. dst` merges into an existing directory instead of^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6296121Z ^[[36;1m  # nesting, which is what the restored-cache case needs.^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6296509Z ^[[36;1m  cp -R "$scratch/asdf/." "$HOME/.asdf/"^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6296810Z ^[[36;1m  rm -rf "$scratch"^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6297042Z ^[[36;1mfi^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6297271Z ^[[36;1mecho "$HOME/.asdf/bin" >> "$GITHUB_PATH"^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6297607Z ^[[36;1mecho "$HOME/.asdf/shims" >> "$GITHUB_PATH"^[[0m
+phase2-server	Install asdf	2026-09-13T19:29:13.6338421Z shell: /usr/bin/bash -e {0}
+phase2-server	Install asdf	2026-09-13T19:29:13.6338692Z env:
+phase2-server	Install asdf	2026-09-13T19:29:13.6338899Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	Install asdf	2026-09-13T19:29:13.6339299Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	Install asdf	2026-09-13T19:29:13.6339720Z ##[endgroup]
+phase2-server	Install asdf	2026-09-13T19:29:13.6442065Z Cloning into '/tmp/tmp.RgLaKD7A6I/asdf'...
+phase2-server	Install asdf	2026-09-13T19:29:14.5637116Z Note: switching to 'f00f759f3d8d405468d0071310a91b8f5a9c3798'.
+phase2-server	Install asdf	2026-09-13T19:29:14.5637481Z 
+phase2-server	Install asdf	2026-09-13T19:29:14.5637792Z You are in 'detached HEAD' state. You can look around, make experimental
+phase2-server	Install asdf	2026-09-13T19:29:14.5638394Z changes and commit them, and you can discard any commits you make in this
+phase2-server	Install asdf	2026-09-13T19:29:14.5638964Z state without impacting any branches by switching back to a branch.
+phase2-server	Install asdf	2026-09-13T19:29:14.5639265Z 
+phase2-server	Install asdf	2026-09-13T19:29:14.5639545Z If you want to create a new branch to retain commits you create, you may
+phase2-server	Install asdf	2026-09-13T19:29:14.5640089Z do so (now or later) by using -c with the switch command. Example:
+phase2-server	Install asdf	2026-09-13T19:29:14.5640371Z 
+phase2-server	Install asdf	2026-09-13T19:29:14.5640517Z   git switch -c <new-branch-name>
+phase2-server	Install asdf	2026-09-13T19:29:14.5640699Z 
+phase2-server	Install asdf	2026-09-13T19:29:14.5640832Z Or undo this operation with:
+phase2-server	Install asdf	2026-09-13T19:29:14.5641005Z 
+phase2-server	Install asdf	2026-09-13T19:29:14.5641097Z   git switch -
+phase2-server	Install asdf	2026-09-13T19:29:14.5641226Z 
+phase2-server	Install asdf	2026-09-13T19:29:14.5641544Z Turn off this advice by setting config variable advice.detachedHead to false
+phase2-server	Install asdf	2026-09-13T19:29:14.5641866Z 
+phase2-server	Provision exact repository runtimes	﻿2026-09-13T19:29:14.6074292Z ##[group]Run ./tooling/runtime-preflight.sh --provision
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:14.6074786Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:14.6075287Z ^[[36;1mcorepack enable^[[0m
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:14.6075570Z ^[[36;1mpnpm install --frozen-lockfile^[[0m
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:14.6076079Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:14.6113590Z shell: /usr/bin/bash -e {0}
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:14.6113997Z env:
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:14.6114209Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:14.6114616Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:14.6115020Z ##[endgroup]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:14.6759473Z Cloning into '/home/runner/.asdf/repository'...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:17.6706895Z initializing plugin repository...erlang 29.0.5 is already installed
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:17.7073547Z elixir 1.20.2-otp-29 is already installed
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.4590076Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.4876088Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.4914468Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.4979995Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.5024660Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.5908116Z Get:6 https://apt.postgresql.org/pub/repos/apt noble-pgdg InRelease [189 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.6158214Z Get:7 https://dl.google.com/linux/chrome-stable/deb stable InRelease [2548 B]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.6280691Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1263 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.6419848Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [292 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.6438061Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [181 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.6452975Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1690 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.6537264Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [388 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.6566834Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1544 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.6640262Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [354 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.6666102Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.6883562Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [5772 B]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.6894007Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [12.6 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.7269071Z Get:18 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.7854097Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1006 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.7927722Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [213 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.7954895Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [46.4 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.7985043Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1206 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.8095864Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [76.3 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.8099160Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1445 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.8135458Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [336 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.8217984Z Get:26 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 Packages [825 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.9018701Z Get:27 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [463 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.9075943Z Get:28 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [414 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:18.9097679Z Get:29 https://dl.google.com/linux/chrome-stable/deb stable/main amd64 Packages [1408 B]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:22.9524875Z Fetched 12.3 MB in 1s (9048 kB/s)
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:23.7649758Z Reading package lists...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:23.7959841Z Reading package lists...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:23.9566752Z Building dependency tree...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:23.9575672Z Reading state information...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.0935605Z The following additional packages will be installed:
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.0936780Z   liburing2 postgresql-18-jit postgresql-client-18
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.0942717Z Suggested packages:
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.0943270Z   postgresql-doc-18
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.1156635Z The following NEW packages will be installed:
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.1158519Z   liburing2 postgresql-18 postgresql-18-jit postgresql-client-18
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.1369645Z 0 upgraded, 4 newly installed, 0 to remove and 50 not upgraded.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.1370287Z Need to get 19.6 MB of archives.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.1370743Z After this operation, 71.9 MB of additional disk space will be used.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.1371264Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.3499130Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 liburing2 amd64 2.5-1build1 [21.1 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.3867876Z Get:3 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-client-18 amd64 18.6-1.pgdg24.04+2 [2114 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.4772977Z Get:4 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-18 amd64 18.6-1.pgdg24.04+2 [7577 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.5404959Z Get:5 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-18-jit amd64 18.6-1.pgdg24.04+2 [9924 kB]
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.8171374Z Preconfiguring packages ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.8611671Z Fetched 19.6 MB in 0s (41.4 MB/s)
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.8832010Z Selecting previously unselected package liburing2:amd64.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9136285Z (Reading database ... 
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9136663Z (Reading database ... 5%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9137217Z (Reading database ... 10%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9137785Z (Reading database ... 15%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9138136Z (Reading database ... 20%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9138414Z (Reading database ... 25%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9138719Z (Reading database ... 30%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9139041Z (Reading database ... 35%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9139368Z (Reading database ... 40%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9139691Z (Reading database ... 45%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9140010Z (Reading database ... 50%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:24.9192302Z (Reading database ... 55%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:25.0469163Z (Reading database ... 60%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:25.2048810Z (Reading database ... 65%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:25.3964871Z (Reading database ... 70%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:25.5452730Z (Reading database ... 75%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:25.7051170Z (Reading database ... 80%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:25.8490696Z (Reading database ... 85%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:25.9862848Z (Reading database ... 90%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.1132140Z (Reading database ... 95%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.1132827Z (Reading database ... 100%
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.1133474Z (Reading database ... 201818 files and directories currently installed.)
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.1172195Z Preparing to unpack .../liburing2_2.5-1build1_amd64.deb ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.1208534Z Unpacking liburing2:amd64 (2.5-1build1) ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.1417923Z Selecting previously unselected package postgresql-client-18.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.1540127Z Preparing to unpack .../postgresql-client-18_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.1548316Z Unpacking postgresql-client-18 (18.6-1.pgdg24.04+2) ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.3442596Z Selecting previously unselected package postgresql-18.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.3566832Z Preparing to unpack .../postgresql-18_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.3595081Z Unpacking postgresql-18 (18.6-1.pgdg24.04+2) ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.8581983Z Selecting previously unselected package postgresql-18-jit.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.8706566Z Preparing to unpack .../postgresql-18-jit_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:26.8714618Z Unpacking postgresql-18-jit (18.6-1.pgdg24.04+2) ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:27.5179044Z Setting up postgresql-client-18 (18.6-1.pgdg24.04+2) ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:27.8838113Z update-alternatives: using /usr/share/postgresql/18/man/man1/psql.1.gz to provide /usr/share/man/man1/psql.1.gz (psql.1.gz) in auto mode
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:27.9101572Z Setting up liburing2:amd64 (2.5-1build1) ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:27.9122721Z Setting up postgresql-18 (18.6-1.pgdg24.04+2) ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:28.7677883Z Setting up postgresql-18-jit (18.6-1.pgdg24.04+2) ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:28.7704227Z Processing triggers for libc-bin (2.39-0ubuntu8.8) ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:28.8028696Z Processing triggers for postgresql-common (293.pgdg24.04+1) ...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:28.9266698Z Building PostgreSQL dictionaries from installed myspell/hunspell packages...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:28.9332688Z   en_us
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:29.0188225Z Removing obsolete dictionary files:
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:29.6442482Z 
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:29.6443374Z Running kernel seems to be up-to-date.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:29.6444275Z 
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:29.6444720Z No services need to be restarted.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:29.6445269Z 
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:29.6445691Z No containers need to be restarted.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:29.6446156Z 
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:29.6446685Z No user sessions are running outdated binaries.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:29.6447197Z 
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:29.6447714Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:30.9158153Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:31.0450587Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:31.9373924Z Scope: all 4 workspace projects
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:32.0180874Z Lockfile is up to date, resolution step is skipped
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:33.1423325Z Packages: +2 -47
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:33.1424512Z ++-----------------------------------------------
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:33.2625280Z Progress: resolved 0, reused 0, downloaded 1, added 0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:34.2675297Z Progress: resolved 0, reused 0, downloaded 25, added 0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:34.9974209Z Progress: resolved 0, reused 0, downloaded 48, added 2, done
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:35.2264689Z 
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:35.3581218Z Done in 3.7s using pnpm v10.33.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:35.9264773Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:36.7795047Z * creating /home/runner/.mix/archives/hex-2.5.1
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.2022873Z Resolving Hex dependencies...
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3425054Z Resolution completed in 0.138s
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3628437Z Unchanged:
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3628844Z   argon2_elixir 4.1.3
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3637616Z   bandit 1.12.5
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3638028Z   certifi 2.17.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3638393Z   comeonin 5.5.1
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3638772Z   db_connection 2.10.2
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3639156Z   decimal 3.1.1
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3639548Z   dns_cluster 0.2.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3639913Z   ecto 3.14.2
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3640248Z   ecto_sql 3.14.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3640606Z   elixir_make 0.10.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3640995Z   expo 1.1.1
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3641331Z   gettext 1.0.2
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3641665Z   h2 0.12.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3641981Z   hackney 4.7.4
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3642461Z   hammer 7.4.1
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3642801Z   hex_core 0.15.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3647059Z   hpax 1.0.4
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3647417Z   idna 7.1.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3647756Z   jason 1.4.5
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3648089Z   mime 2.0.7
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3648423Z   mimerl 1.5.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3648768Z   optimus 0.6.1
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3649128Z   parse_trans 3.4.2
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3649499Z   phoenix 1.8.13
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3649853Z   phoenix_ecto 4.7.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3664698Z   phoenix_pubsub 2.3.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3665292Z   phoenix_template 1.0.4
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3665893Z   plug 1.20.3
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3666517Z   plug_crypto 2.2.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3667443Z   postgrex 0.22.4
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3667961Z   protobuf 0.16.1
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3668466Z   purl 0.3.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3669237Z   quic 1.8.2
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3669722Z   sbom 0.10.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3670233Z   ssl_verify_fun 1.1.7
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3670783Z   stream_data 1.4.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3671308Z   telemetry 1.4.2
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3671858Z   telemetry_metrics 1.2.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3672442Z   telemetry_poller 1.3.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3673441Z   thousand_island 1.5.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3674269Z   tzdata 1.1.5
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3675329Z   websock 0.5.3
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3675915Z   websock_adapter 0.6.0
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.3676517Z   webtransport 0.4.5
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.6631029Z * creating /home/runner/.mix/elixir/1-20-otp-29/rebar3
+phase2-server	Provision exact repository runtimes	2026-09-13T19:29:37.7321163Z All dependencies have been fetched
+phase2-server	Run exact Phase 2 lane	﻿2026-09-13T19:29:37.7676387Z ##[group]Run set -o pipefail
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:37.7676734Z ^[[36;1mset -o pipefail^[[0m
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:37.7677121Z ^[[36;1m./tooling/test-phase-2.sh --lane "server" | tee "$RUNNER_TEMP/server.txt"^[[0m
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:37.7677613Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/server.txt"^[[0m
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:37.7713082Z shell: /usr/bin/bash -e {0}
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:37.7713341Z env:
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:37.7713550Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:37.7714176Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:37.7714592Z ##[endgroup]
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:40.1002410Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:40.2400538Z lane=server status=RUNNING command=mix compile --warnings-as-errors && mix test cases=337 seed=20260901 inputs_sha256=84a3038de36aefcb7bcab4532824886f5f98f961af8bf586d856568be9186859
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:49.6811733Z lane=server status=PASS command=mix compile --warnings-as-errors && mix test cases=337 seed=20260901 elapsed_ms=9441 inputs_sha256=84a3038de36aefcb7bcab4532824886f5f98f961af8bf586d856568be9186859
+phase2-server	Run exact Phase 2 lane	2026-09-13T19:29:50.3653355Z Privacy verification passed: artifacts=1 sentinels=7
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	﻿2026-09-13T19:29:50.3736571Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3739053Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3739718Z with:
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3740053Z   name: phase2-server-timing
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3740501Z   path: /home/runner/work/_temp/server.txt
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3740985Z   if-no-files-found: error
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3741372Z   retention-days: 14
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3741732Z   compression-level: 6
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3742096Z   overwrite: false
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3742459Z   include-hidden-files: false
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3742846Z env:
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3743164Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3744048Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.3744765Z ##[endgroup]
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.5558166Z (node:7764) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.5559590Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.5610936Z With the provided path, there will be 1 file uploaded
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.5617278Z Artifact name is valid!
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.5617871Z Root directory input is valid!
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.9388033Z Beginning upload of artifact content to blob storage
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:50.9596193Z (node:7764) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:51.2355144Z Uploaded bytes 366
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:51.3126867Z Finished uploading artifact content to blob storage!
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:51.3127704Z SHA256 digest of uploaded artifact zip is a07a509dc877e2b59e32e773addae94da2f5547204950974505c031599d475fc
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:51.3129809Z Finalizing artifact upload
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:51.5531588Z Artifact phase2-server-timing.zip successfully finalized. Artifact ID 10324063264
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:51.5533304Z Artifact phase2-server-timing has been successfully uploaded! Final size is 366 bytes. Artifact ID is 10324063264
+phase2-server	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-13T19:29:51.5538422Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34777805271/artifacts/10324063264
+phase2-server	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-13T19:29:51.6263560Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:51.6265259Z Post job cleanup.
+phase2-server	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:51.7345381Z Cache hit occurred on the primary key phase2-Linux-server-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3, not saving cache.
+phase2-server	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:51.7347819Z (node:7788) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-server	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T19:29:51.7348980Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-server	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T19:29:51.7476288Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:51.7477571Z Post job cleanup.
+phase2-server	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:51.8768463Z (node:7796) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-server	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T19:29:51.8769884Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T19:29:51.9028923Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:51.9030203Z Post job cleanup.
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:51.9846991Z [command]/usr/bin/git version
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:51.9883671Z git version 2.55.0
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:51.9921535Z Temporarily overriding HOME='/home/runner/work/_temp/8ac74e23-2a6a-4008-82a4-ccab4c470366' before making global git config changes
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:51.9923145Z Adding repository directory to the temporary git global config as a safe directory
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:51.9928300Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:51.9963606Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:51.9997604Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:52.0216891Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:52.0243265Z http.https://github.com/.extraheader
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:52.0254728Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:52.0284769Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:52.0498683Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-server	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T19:29:52.0528090Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-server	Complete job	﻿2026-09-13T19:29:52.0877584Z Cleaning up orphan processes
+phase2-server	Complete job	2026-09-13T19:29:52.1196197Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

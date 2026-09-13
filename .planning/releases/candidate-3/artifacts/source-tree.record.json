@@ -1,0 +1,15 @@
+{
+  "artifactName": "source-tree",
+  "kind": "git-tree",
+  "produced": true,
+  "revision": "c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96",
+  "gitTreeSha1": "548d959583b60cded3f12509fb51e5fd430b9478",
+  "what": "The exact source tree all three continuous-integration runs checked out at this revision, named by its git tree object. It exists as an artefact entry because several lanes -- the governance lanes and the Phase 2 lanes -- run against SOURCE, not against a built artefact, and binding them to the packaged application's digest would claim they tested bytes they never opened. A lane must name an artefact digest that exists in the manifest; this is the artefact those lanes actually ran against.",
+  "alsoTheProvenanceSubjectSource": "The SLSA provenance attestation for this revision's archive records resolvedDependencies[0].digest.gitCommit = c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96, which is the commit whose tree this record names. The attestation's claim about WHERE the bytes came from and this record's claim about WHAT the source lanes ran against are therefore the same tree, not two coincidental strings.",
+  "checkedOutBy": {
+    "desktop.yml": "34777805267",
+    "repository-integrity.yml": "34777805271",
+    "recovery-drills.yml": "34778845662"
+  },
+  "verifyWith": "git rev-parse c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96^{tree}"
+}
