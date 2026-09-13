@@ -381,6 +381,20 @@ jobs:
         run: |
           brew list asdf >/dev/null 2>&1 || brew install asdf
           ./tooling/runtime-preflight.sh --provision
+          # Installing Elixir is not enough. A fresh OTP install has no Hex,
+          # and `mix sbom.cyclonedx` needs it twice over: to resolve the
+          # project's own dependencies, and because the `:sbom` task itself is
+          # a Hex package. Without this the task dies on an interactive prompt
+          # that can never be answered in CI:
+          #   Mix requires the Hex package manager to fetch dependencies
+          #   ** (Mix) Could not find an SCM for dependency :phoenix
+          #   Shall I install Hex? (if running non-interactively, use ...)
+          mix local.hex --force
+          mix local.rebar --force
+          # The SBOM is generated FROM SOURCE, but "from source" still means
+          # from a resolved dependency tree -- mix.lock names the versions and
+          # `deps.get` is what makes them inspectable.
+          (cd apps/server && mix deps.get)
           corepack enable
           pnpm install --frozen-lockfile
       - name: Generate the Hex and npm bills of materials from source
