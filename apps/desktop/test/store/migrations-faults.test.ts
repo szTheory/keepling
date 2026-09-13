@@ -223,9 +223,24 @@ describe('NodeSqliteLocalStore fault safety', () => {
 
     expect(thrown).toBeInstanceOf(Error)
     expect(classifyStoreFailure(thrown)).toBe('busy')
-    // Finite: never an unbounded hang. The store's own busy timeout is
-    // 2.5s, so a failure must resolve well inside that bound plus slack.
-    expect(elapsedMs).toBeLessThan(5_000)
+    // Finite: never an unbounded hang. The store's own busy timeout is 2.5s
+    // (`local-store.ts`'s `timeout: 2_500`), so the invariant being defended is
+    // that the call returns on the order of that timeout instead of blocking
+    // forever.
+    //
+    // The bound is deliberately 4x the timeout rather than 2x. This assertion
+    // measures WALL CLOCK, so it also measures whatever else the machine was
+    // doing: on a contended GitHub runner it has been observed at 5279ms
+    // against a 5000ms bound and failed the `desktop-units` lane, which then
+    // skipped `desktop-promote` and blocked the release path. A 279ms overshoot
+    // on a shared runner is scheduling noise, not a regression in fault
+    // handling.
+    //
+    // This widens the slack, NOT the invariant. A genuine unbounded hang, or a
+    // busy timeout that never fires, blows past 10s just as surely as it blew
+    // past 5s -- the failure this test exists to catch is still caught.
+    const BUSY_TIMEOUT_MS = 2_500
+    expect(elapsedMs).toBeLessThan(BUSY_TIMEOUT_MS * 4)
 
     // No partial commit from the blocked attempt -- only the pre-lock task exists.
     expect(store.snapshot().tasks.map((task) => task.id)).toEqual(['task-busy-0'])
