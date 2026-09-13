@@ -29,6 +29,17 @@ cleanup() {
   # every service's log before removing anything, but only on failure.
   [ "$result" -eq 0 ] || $compose -p "$project" logs --no-color --timestamps >&2 2>/dev/null || true
   $compose -p "$project" down --remove-orphans >/dev/null 2>&1 || true
+  # THE STACK WRITES INTO THE BIND MOUNTS AS ROOT. PostgreSQL's data directory
+  # and Caddy's data and config directories come back owned by uid 0, so on a
+  # Linux engine the invoking user cannot remove them and `rm -rf` below fails
+  # -- which, under `set -e`, failed the whole lane AFTER every assertion in it
+  # had already passed. Docker Desktop hid this by translating bind-mount
+  # ownership. Hand ownership back using the same privilege that took it, with
+  # the PostgreSQL image this stack already pins by digest, so no new image
+  # enters the supply chain just to delete files.
+  docker run --rm --user 0:0 --mount "type=bind,source=$proof_root,target=/proof" \
+    postgres:18.6-bookworm@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af \
+    chown -R "$(id -u):$(id -g)" /proof >/dev/null 2>&1 || true
   case "$proof_root" in
     "${TMPDIR:-/tmp}"/keepling-compose-proof.*) rm -rf -- "$proof_root" ;;
     *) echo "Compose verification refused unsafe cleanup: $proof_root" >&2; exit 70 ;;
