@@ -20,15 +20,21 @@ damaged and can't be opened" warning that an unsigned build produces on current
 macOS, and the code directory hash recorded in the release manifest is the identity a
 Gatekeeper check on the shipped file can be compared against after the fact.
 
-**Status in the current release candidate: NOT YET TRUE OF THE SHIPPED BYTES.**
-The chain above has been exercised end to end and works — a locally built bundle
-signs, notarizes, staples, and passes `spctl --assess` as `source=Notarized
-Developer ID`. But no Developer ID certificate is reachable from CI yet, so the
-packaged application this candidate actually binds to is UNSIGNED: its own
-committed package manifest records `developerIdSigned: false`,
-`hardenedRuntime: false`, and `notarization.status: "not-attempted"`. Read this
-section as the design and as a proven-capable mechanism, not as a property of
-the current release. Tracked as window #91 in `KNOWN-LIMITATIONS.md`.
+**Status: TRUE AS OF REVISION `REWRITTEN-SHA`, BUT NOT OF THE RETAINED CANDIDATE.**
+Continuous integration signs, notarizes and staples: at `REWRITTEN-SHA` the
+`desktop-package` job imported the Developer ID identity, resolved it, and
+reported `The staple and validate action worked!`, and both `desktop-packaged`
+and `desktop-macos-integration` pass against those signed bytes. Window #91 is
+closed.
+
+The retained release candidate is a different matter and is deliberately not
+restated. `.planning/releases/candidate-1/` is bound to revision `26628e1`,
+which predates the signing secrets; that candidate's artifacts really are
+unsigned, and its own committed package manifest records
+`developerIdSigned: false`, `hardenedRuntime: false` and
+`notarization.status: "not-attempted"`. A later capability does not
+retroactively re-sign earlier bytes, and this section will not imply that it
+does.
 
 **What it does NOT address:** whether the bytes that were signed came from this
 repository, or what is inside them. A correctly-signed application built from
