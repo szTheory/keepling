@@ -44,6 +44,18 @@ printf '%s' 'ecto://keepling:compose-proof-postgres-password@db:5432/keepling' >
 printf '%s' 'compose-proof-secret-key-base-000000000000000000000000000000000000000000000000' >"$proof_root/secrets/secret-key-base"
 printf '%s' 'compose-proof-operator-token-000000000000000000000000000000000' >"$proof_root/secrets/operator-token"
 
+# THE PROOF SECRETS MUST BE WORLD-READABLE, and that is not a weakening of
+# anything. `umask 077` above writes them 0600 owned by the invoking user; the
+# release image runs as uid 10001, which on a Linux engine is simply a
+# different user, so the entrypoint's `cat /run/secrets/database_url` failed
+# with "Permission denied" and the release died at "DATABASE_URL is required".
+# Docker Desktop hid this by translating bind-mount ownership. These four
+# values are literals written three lines up, in a temporary directory this
+# script deletes on exit -- there is no secret here to protect, only a file
+# mode that stopped the proof from running. A real deployment's secrets are
+# Compose secrets sourced from the operator's own files, untouched by this.
+chmod 0444 "$proof_root"/secrets/*
+
 export KEEPLING_SERVER_IMAGE="$image_id"
 export KEEPLING_SERVER_DIGEST="$image_id"
 export KEEPLING_POSTGRES_DATA_DIR="$proof_root/postgres"
