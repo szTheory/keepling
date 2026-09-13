@@ -42,8 +42,12 @@ require_command op " -- install with 'brew install 1password-cli', then enable t
 gh auth status >/dev/null 2>&1 || die "gh is not authenticated; run 'gh auth login'"
 [ -r "$map_file" ] || die "$map_file is missing"
 
-op whoami >/dev/null 2>&1 ||
-  die "1Password is not signed in; run 'op signin', or unlock the desktop app with CLI integration enabled"
+# Probe with real work rather than with `op whoami`. Under desktop-app
+# integration the session is established lazily by the first command that
+# actually needs it, so `op whoami` reports "not signed in" on a perfectly
+# usable install -- and would turn a working setup into a false failure here.
+op vault list --format=json >/dev/null 2>&1 ||
+  die "1Password is unavailable; unlock the desktop app (Settings > Developer > Integrate with 1Password CLI), or run 'op signin'"
 
 repository=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
 
