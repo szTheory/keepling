@@ -24,7 +24,6 @@ case "$image_platform:$engine_architecture" in
   linux/amd64:arm64 | linux/amd64:aarch64) emulation_erl_flags='+JMsingle true' ;;
 esac
 metadata_file=$(mktemp "${TMPDIR:-/tmp}/keepling-image-build.XXXXXX")
-database_root=$(mktemp -d "${TMPDIR:-/tmp}/keepling-image-postgres.XXXXXX")
 database_name="keepling-image-db-$$"
 app_name="keepling-image-app-$$"
 database_port=$((57000 + $$ % 500))
@@ -36,10 +35,6 @@ cleanup() {
   trap - EXIT HUP INT TERM
   docker rm -f "$app_name" "$database_name" >/dev/null 2>&1 || true
   rm -f -- "$metadata_file"
-  case "$database_root" in
-    "${TMPDIR:-/tmp}"/keepling-image-postgres.*) rm -rf -- "$database_root" ;;
-    *) echo "Image verification refused unsafe temporary database cleanup: $database_root" >&2; exit 70 ;;
-  esac
   exit "$status"
 }
 trap cleanup EXIT HUP INT TERM
@@ -80,8 +75,16 @@ if docker run --rm -e "ERL_FLAGS=$emulation_erl_flags" --entrypoint /bin/sh "$im
   die "runtime contains Mix or test-only controls"
 fi
 
+# NO BIND MOUNT FOR THE PROOF DATABASE. It used to bind `$database_root` onto
+# /var/lib/postgresql, which works only on Docker Desktop, where bind-mount
+# ownership is translated for the container. On a Linux engine -- which is what
+# the continuous-integration runner is -- the directory belongs to the runner
+# user, the container's postgres user cannot write to it, initdb never
+# completes, and the lane dies at "PostgreSQL did not become ready". It also
+# left root-owned directories behind that the cleanup could not remove. Nothing
+# in this script reads the data directory, so the container's own ephemeral
+# storage is all it ever needed; `docker rm -f` in the cleanup disposes of it.
 docker run -d --name "$database_name" -p "127.0.0.1:$database_port:5432" \
-  --mount "type=bind,source=$database_root,target=/var/lib/postgresql" \
   -e POSTGRES_DB=keepling -e POSTGRES_USER=keepling -e POSTGRES_PASSWORD=keepling-image-proof \
   postgres:18.6-bookworm@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af >/dev/null
 
@@ -93,7 +96,7 @@ until docker exec "$database_name" pg_isready -U keepling -d keepling >/dev/null
 done
 
 database_url="ecto://keepling:keepling-image-proof@host.docker.internal:$database_port/keepling"
-docker run --rm \
+docker run --rm --add-host host.docker.internal:host-gateway \
   -e "ERL_FLAGS=$emulation_erl_flags" \
   -e DATABASE_URL="$database_url" -e SECRET_KEY_BASE="$secret_key_base" -e PHX_HOST=localhost \
   -e KEEPLING_OPERATOR_TOKEN="$operator_token" -e KEEPLING_SERVER_RELEASE=0.1.0 \
@@ -101,7 +104,7 @@ docker run --rm \
   -e KEEPLING_DEVICE_GRANT_SERVER_INSTANCE=keepling-image-proof \
   --entrypoint /app/bin/keepling "$image_tag" eval 'Application.ensure_loaded(:keepling); {:ok, _, _} = Ecto.Migrator.with_repo(Keepling.Repo, fn repo -> Ecto.Migrator.run(repo, :up, all: true) end)' >/dev/null
 
-docker run -d --name "$app_name" -p 127.0.0.1::4000 \
+docker run -d --name "$app_name" -p 127.0.0.1::4000 --add-host host.docker.internal:host-gateway \
   -e "ERL_FLAGS=$emulation_erl_flags" \
   -e DATABASE_URL="$database_url" -e SECRET_KEY_BASE="$secret_key_base" -e PHX_HOST=localhost \
   -e KEEPLING_OPERATOR_TOKEN="$operator_token" -e KEEPLING_SERVER_RELEASE=0.1.0 \
