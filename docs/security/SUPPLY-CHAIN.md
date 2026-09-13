@@ -20,21 +20,31 @@ damaged and can't be opened" warning that an unsigned build produces on current
 macOS, and the code directory hash recorded in the release manifest is the identity a
 Gatekeeper check on the shipped file can be compared against after the fact.
 
-**Status: TRUE AS OF REVISION `a revision superseded by the 2026-09-12 history rewrite`, BUT NOT OF THE RETAINED CANDIDATE.**
-Continuous integration signs, notarizes and staples: at `a revision superseded by the 2026-09-12 history rewrite` the
-`desktop-package` job imported the Developer ID identity, resolved it, and
-reported `The staple and validate action worked!`, and both `desktop-packaged`
-and `desktop-macos-integration` pass against those signed bytes. Window #91 is
-closed.
+**Status: TRUE OF THE CURRENT RETAINED CANDIDATE (`candidate-2`, revision
+`23d79e5`), AND STILL FALSE OF `candidate-1`.**
+Continuous integration signs, notarizes and staples. At `23d79e5` the
+`desktop-package` job imported the Developer ID identity into an ephemeral
+keychain, resolved it, and reported `The staple and validate action worked!`;
+both `desktop-packaged` and `desktop-macos-integration` pass against those
+signed bytes; and the committed package manifest at
+`.planning/releases/candidate-2/artifacts/desktop-macos-app.package-manifest.json`
+records `developerIdSigned: true`, `hardenedRuntime: true` and
+`notarization: {status: "Accepted", stapled: true}`. Checked against the
+artifact downloaded from that run rather than against the log that produced it:
+`spctl --assess` returns `accepted`, `source=Notarized Developer ID`. Window
+#91 is closed.
 
-The retained release candidate is a different matter and is deliberately not
-restated. `.planning/releases/candidate-1/` is bound to revision `26628e1`,
-which predates the signing secrets; that candidate's artifacts really are
-unsigned, and its own committed package manifest records
+**`candidate-1` is not improved by any of that, and this section will not imply
+that it is.** `.planning/releases/candidate-1/` is bound to revision `26628e1`,
+which predates the signing secrets. That candidate's artifacts really are
+unsigned and unnotarized, its own committed package manifest records
 `developerIdSigned: false`, `hardenedRuntime: false` and
-`notarization.status: "not-attempted"`. A later capability does not
-retroactively re-sign earlier bytes, and this section will not imply that it
-does.
+`notarization.status: "not-attempted"`, and that will be true of those bytes
+forever. A later capability does not retroactively re-sign earlier bytes. The
+same applies, below, to provenance and to the bills of materials: `candidate-1`
+has no attestation and no SBOM, and acquiring both at a later revision does not
+give them to it. If you are holding a `candidate-1` artifact, every claim on
+this page is false of it.
 
 **What it does NOT address:** whether the bytes that were signed came from this
 repository, or what is inside them. A correctly-signed application built from
@@ -53,11 +63,45 @@ reusable workflow with isolated signing, and this pipeline's build and attestati
 steps share a single job — claiming Level 3 here would be an overclaim of precisely
 the kind this document exists to correct.
 
-**Status in the current release candidate: NO ATTESTATION WAS PRODUCED.** The
-attestation step lives in the `desktop-promote` job, which was SKIPPED — its
-`needs` gate requires every required desktop lane to have succeeded — so
-`actions/attest-build-provenance` never ran and this candidate carries no
-provenance attestation at all. Tracked as window #88 in `KNOWN-LIMITATIONS.md`.
+**Status in the current release candidate (`candidate-2`, revision `23d79e5`):
+AN ATTESTATION EXISTS AND VERIFIES.** This corrects an earlier statement on this
+page that no attestation had been produced, which was true of `candidate-1` and
+is not true here. An underclaim misdescribes a posture exactly as much as an
+overclaim does.
+
+`actions/attest-build-provenance` ran in the `desktop-promote` job at `23d79e5`
+and created an attestation over two subjects. Verified with
+`gh attestation verify Keepling.ditto.zip --repo szTheory/keepling`, which exits
+`0` against the artifact downloaded from run `34735177060`, whose bytes re-hash
+to the attested subject digest byte for byte:
+
+| Field | Value |
+|---|---|
+| `predicateType` | `https://slsa.dev/provenance/v1` |
+| Subject | `Keepling.ditto.zip`, `sha256:57f594657752182b21ee72b3b15a199af7481719ef64993fb4af3b187eb1704a` |
+| Also attested | `Keepling.stapled.ditto.zip`, `sha256:c8522d65675d9ccdf6c1d64c47b2f5570fa6f77494be37ba46e75b88bdbba297` |
+| Builder id | `https://github.com/szTheory/keepling/.github/workflows/desktop.yml@refs/heads/main` |
+| Certificate issuer | `https://token.actions.githubusercontent.com` |
+| Source digest | `23d79e5caa7383a7be9e38ee473b6bde12ce8298` |
+| Attestation | <https://github.com/szTheory/keepling/attestations/47125915> |
+
+The decoded statement is retained at
+`.planning/releases/candidate-2/evidence/attestation/slsa-provenance.json`, so a
+GitHub outage costs the ability to re-verify, not the ability to read what was
+attested. Window #88 is closed. What unblocked it was repository visibility:
+GitHub refuses to persist an Actions attestation for a user-owned private
+repository, and this repository is now public.
+
+**Two honest caveats, neither of which is a reason to state the claim more
+weakly than it is true.** First, `candidate-1` still carries no attestation at
+all; nothing above applies to it. Second, `tooling/verify-release.mjs` prints
+`attestation=UNVERIFIED` for every artifact entry in the release manifest, online
+and offline — not because verification fails, but because the committed entries
+are *records of* the released bytes and the attestation is over the bytes, which
+are 129 MB and deliberately not committed. So this project's strongest
+supply-chain claim is currently the one its own release verifier cannot check.
+That is tracked as window #96 in `KNOWN-LIMITATIONS.md` and is called out in the
+release manifest's own header, rather than left for a reader to trip over.
 
 **The self-hosted server's container image is NOT signed.** Nothing in this
 repository builds or pushes that image to any registry, so there is no published
@@ -72,10 +116,15 @@ What is true today is the key-custody claim: no long-lived signing key exists
 anywhere in this repository or in any maintainer's custody, and none will be
 introduced to close the gap above.
 
-SHA-256 checksums for the archive and the stapled application are published in the
+SHA-256 checksums for the archive and the stapled application are *generated* for the
 GitHub Release body — a trust domain distinct from the self-hosted server serving the
-same bytes, which is the only thing that gives a checksum any value. Read that
-section for what it is: almost nobody will manually verify a checksum. The
+same bytes, which is the only thing that gives a checksum any value. Note the verb:
+the body is generated and retained at
+`.planning/releases/candidate-2/evidence/sbom/RELEASE-BODY.md`, but **no GitHub
+Release has been created for any revision yet**, so nothing is published in a second
+trust domain today and the distinct-domain property above is a design, not a fact.
+That is tracked as window #90. Read the checksums for what they are even once they
+are published: almost nobody will manually verify a checksum. The
 load-bearing control for provenance is this attestation, not a hash a user is asked
 to compare by hand. The nondeterminism canary lane was intended to share that load;
 it currently fails for Developer ID builds, because notarization requires an embedded
@@ -96,12 +145,22 @@ disclosure can be checked against a concrete, dated inventory.
 Two CycloneDX documents are generated **from source**, at the release revision, never
 by scanning the built application:
 
-**Status in the current release candidate: NEITHER DOCUMENT EXISTS.** The
-generator also lives in the skipped `desktop-promote` job, so
-`tooling/generate-sbom.mjs` never ran and no bill of materials was produced for
-this candidate. The description below is the design, not an inventory you can
-go read today. Tracked as the `sbom-generation` lane's BLOCKED entry in the
-release manifest.
+**Status in the current release candidate (`candidate-2`, revision `23d79e5`):
+BOTH DOCUMENTS EXIST.** This corrects an earlier statement on this page that
+neither document existed, which was true of `candidate-1` and is not true here.
+The generator ran in `desktop-promote`, its output was uploaded as the
+`keepling-release-evidence` artifact, and both documents are retained — and
+therefore readable without a GitHub round-trip — under
+`.planning/releases/candidate-2/evidence/sbom/`:
+
+| Document | Format | Components |
+|---|---|---|
+| `sbom-hex.cdx.json` | CycloneDX 1.6 | 54 components, plus the `keepling` root component in `metadata.component` (55 dependency nodes) |
+| `sbom-npm.cdx.json` | CycloneDX 1.6 | 742 components |
+
+The component counts are recounted from the retained bytes rather than quoted
+from the run that produced them. The description below is now an inventory you
+can go read, not only a design. `candidate-1` still has neither document.
 
 - **Hex** — `apps/server/mix.exs` and `mix.lock`, via the dev-only, non-runtime
   `:sbom` mix task. Every first-party and third-party Hex component carries the

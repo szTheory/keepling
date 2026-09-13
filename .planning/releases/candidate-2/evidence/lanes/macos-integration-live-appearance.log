@@ -1,0 +1,23 @@
+lane macos-integration-live-appearance produced NO evidence at run 34735177060 (revision
+23d79e5caa7383a7be9e38ee473b6bde12ce8298), and this is a change from candidate-1 rather than
+a regression.
+
+At candidate-1's revision the row still ran inside the desktop-macos-integration job and was
+observed to FAIL on a hosted runner (`ROW id=A14 status=FAIL cases=4`). Between the two
+revisions the row was split out into this lane, authority local-attested with a stated
+physical blocker, and the workflow step was narrowed to the three rows a hosted runner can
+physically drive. The job therefore no longer attempts A14 at all: `macOS integration lane
+summary: rows=3 failed=0 cases=9`.
+
+That split is why desktop-macos-integration now SUCCEEDS and desktop-promote ran for the
+first time. The row itself is no closer to running in continuous integration: changing a
+system appearance setting while the application is already running, and observing the window
+re-theme without a relaunch, needs a logged-in Aqua session whose appearance daemon posts
+AppleInterfaceThemeChangedNotification. A hosted GitHub runner has none.
+
+This lane therefore reports BLOCKED with a zero case count. A local pass exists and is NOT
+recorded as a passing status here, because it binds to locally built bytes and NOTHING LOCAL
+MAY BIND TO LOCALLY BUILT BYTES.
+
+Source: `gh run view 34735177060 --log`, job desktop-macos-integration, and
+.planning/WINDOWS.md row 84.

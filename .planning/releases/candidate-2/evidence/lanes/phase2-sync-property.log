@@ -1,0 +1,187 @@
+phase2-sync-property	Set up job	﻿2026-09-13T03:19:39.4515663Z Current runner version: '2.337.0'
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4553679Z ##[group]Runner Image Provisioner
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4554982Z Hosted Compute Agent
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4556080Z Version: 20260828.587
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4557149Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4558444Z Build Date: 2026-08-28T16:44:25Z
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4559676Z Worker ID: {8a79eafc-d33a-4349-acf9-5ef26264aa2d}
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4561391Z Azure Region: eastus2
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4562646Z ##[endgroup]
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4564987Z ##[group]Operating System
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4566166Z Ubuntu
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4567224Z 24.04.5
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4568153Z LTS
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4569806Z ##[endgroup]
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4571104Z ##[group]Runner Image
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4572270Z Image: ubuntu-24.04
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4573472Z Version: 20260907.300.1
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4575452Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4578671Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4580823Z ##[endgroup]
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4582915Z ##[group]GITHUB_TOKEN Permissions
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4585885Z Contents: read
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4587028Z Metadata: read
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4587979Z ##[endgroup]
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4592155Z Secret source: Actions
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4593738Z Cache mode: write
+phase2-sync-property	Set up job	2026-09-13T03:19:39.4595377Z Prepare workflow directory
+phase2-sync-property	Set up job	2026-09-13T03:19:39.5162952Z Prepare all required actions
+phase2-sync-property	Set up job	2026-09-13T03:19:39.5231822Z Getting action download info
+phase2-sync-property	Set up job	2026-09-13T03:19:39.7056547Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+phase2-sync-property	Set up job	2026-09-13T03:19:39.8273486Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+phase2-sync-property	Set up job	2026-09-13T03:19:39.9139727Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+phase2-sync-property	Set up job	2026-09-13T03:19:40.0763968Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+phase2-sync-property	Set up job	2026-09-13T03:19:40.3088178Z Complete job name: phase2-sync-property
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T03:19:40.3940621Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3950869Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3952229Z with:
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3952921Z   repository: szTheory/keepling
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3958140Z   token: ***
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3958821Z   ssh-strict: true
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3959516Z   ssh-user: git
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3960444Z   persist-credentials: true
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3961226Z   clean: true
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3961925Z   sparse-checkout-cone-mode: true
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3962734Z   fetch-depth: 1
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3963411Z   fetch-tags: false
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3964106Z   show-progress: true
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3964812Z   lfs: false
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3965534Z   submodules: false
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3966246Z   set-safe-directory: true
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3967257Z env:
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3967947Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3969032Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.3970351Z ##[endgroup]
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5051325Z Syncing repository: szTheory/keepling
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5054400Z ##[group]Getting Git version info
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5055492Z Working directory is '/home/runner/work/keepling/keepling'
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5056944Z [command]/usr/bin/git version
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5166174Z git version 2.55.0
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5190777Z ##[endgroup]
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5207205Z Temporarily overriding HOME='/home/runner/work/_temp/bb8bcad5-1d99-47ba-96b3-36dfcf3590f6' before making global git config changes
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5210961Z Adding repository directory to the temporary git global config as a safe directory
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5213908Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5268029Z Deleting the contents of '/home/runner/work/keepling/keepling'
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5289649Z ##[group]Initializing the repository
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5292342Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5372130Z hint: Using 'master' as the name for the initial branch. This default branch name
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5376176Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5378922Z hint: to use in all of your new repositories, which will suppress this warning,
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5381737Z hint: call:
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5383313Z hint:
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5385162Z hint: 	git config --global init.defaultBranch <name>
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5387184Z hint:
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5388659Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5390884Z hint: 'development'. The just-created branch can be renamed via this command:
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5392866Z hint:
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5393660Z hint: 	git branch -m <name>
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5394394Z hint:
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5395305Z hint: Disable this message with "git config set advice.defaultBranchName false"
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5396710Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5398971Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5432345Z ##[endgroup]
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5433494Z ##[group]Disabling automatic garbage collection
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5436293Z [command]/usr/bin/git config --local gc.auto 0
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5466668Z ##[endgroup]
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5467744Z ##[group]Setting up auth
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5474795Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5506129Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5832078Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.5863548Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.6080915Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.6114075Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.6333898Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.6369360Z ##[endgroup]
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.6371430Z ##[group]Fetching the repository
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:40.6378994Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +23d79e5caa7383a7be9e38ee473b6bde12ce8298:refs/remotes/origin/main
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.5071938Z From https://github.com/szTheory/keepling
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.5074552Z  * [new ref]         23d79e5caa7383a7be9e38ee473b6bde12ce8298 -> origin/main
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.5077595Z ##[endgroup]
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.5078599Z ##[group]Determining the checkout info
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.5079620Z ##[endgroup]
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.5083746Z [command]/usr/bin/git sparse-checkout disable
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.5132160Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.5161695Z ##[group]Checking out the ref
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.5165984Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.6271677Z Switched to a new branch 'main'
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.6275113Z branch 'main' set up to track 'origin/main'.
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.6285665Z ##[endgroup]
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.6327977Z [command]/usr/bin/git log -1 --format=%H
+phase2-sync-property	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:41.6352338Z 23d79e5caa7383a7be9e38ee473b6bde12ce8298
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T03:19:41.6787716Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.6793464Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.6794784Z with:
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.6795415Z   node-version: 24.7.0
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.6796188Z   always-auth: false
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.6796956Z   check-latest: false
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.6806353Z   token: ***
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.6807021Z env:
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.6807663Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.6808944Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.6810454Z ##[endgroup]
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.8306337Z Attempting to download 24.7.0...
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.8468616Z (node:2258) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:41.8471575Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:42.3485962Z Acquiring 24.7.0 - x64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-linux-x64.tar.gz
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:42.8348640Z Extracting ...
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:42.8475480Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/90e8c9fb-e1ee-4f11-b6cd-a7c8f6924ff9 -f /home/runner/work/_temp/f8b0fc96-b466-48d0-a5e2-181051ae8d7d
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:44.1549492Z Adding to the cache ...
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:46.3520348Z ##[group]Environment details
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:46.5826397Z node: v24.7.0
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:46.5827169Z npm: 11.5.1
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:46.5827479Z yarn: 1.22.22
+phase2-sync-property	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:46.5828130Z ##[endgroup]
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-13T03:19:46.6629321Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6631104Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6631460Z with:
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6631766Z   path: ~/.asdf/installs
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/deps
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/_build
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	node_modules
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6632383Z   key: phase2-Linux-sync-property-239f60fba7d28b4091024f9e47fbff804023daf728f515bed6a0f61e598b64d3
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6632927Z   enableCrossOsArchive: false
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6633180Z   fail-on-cache-miss: false
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6633416Z   lookup-only: false
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6633636Z   save-always: false
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6633839Z env:
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6634028Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6634392Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.6634825Z ##[endgroup]
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.7729271Z (node:2304) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.7730726Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.8422548Z Cache hit for: phase2-Linux-sync-property-239f60fba7d28b4091024f9e47fbff804023daf728f515bed6a0f61e598b64d3
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:46.8530005Z (node:2304) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:47.6875378Z Received 169344246 of 169344246 (100.0%), 199.1 MBs/sec
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:47.6878735Z Cache Size: ~161 MB (169344246 B)
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:47.6922134Z [command]/usr/bin/tar -xf /home/runner/work/_temp/3a6791ba-c194-4afc-b7ca-304b1ba4ca6e/cache.tzst -P -C /home/runner/work/keepling/keepling --use-compress-program unzstd
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:49.7903386Z Cache restored successfully
+phase2-sync-property	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-13T03:19:49.8059637Z Cache restored from key: phase2-Linux-sync-property-239f60fba7d28b4091024f9e47fbff804023daf728f515bed6a0f61e598b64d3
+phase2-sync-property	Install asdf	﻿2026-09-13T03:19:49.8220356Z ##[group]Run git clone https://github.com/asdf-vm/asdf.git "$HOME/.asdf" --branch v0.14.1
+phase2-sync-property	Install asdf	2026-09-13T03:19:49.8221091Z ^[[36;1mgit clone https://github.com/asdf-vm/asdf.git "$HOME/.asdf" --branch v0.14.1^[[0m
+phase2-sync-property	Install asdf	2026-09-13T03:19:49.8221571Z ^[[36;1mecho "$HOME/.asdf/bin" >> "$GITHUB_PATH"^[[0m
+phase2-sync-property	Install asdf	2026-09-13T03:19:49.8221909Z ^[[36;1mecho "$HOME/.asdf/shims" >> "$GITHUB_PATH"^[[0m
+phase2-sync-property	Install asdf	2026-09-13T03:19:49.8263562Z shell: /usr/bin/bash -e {0}
+phase2-sync-property	Install asdf	2026-09-13T03:19:49.8263839Z env:
+phase2-sync-property	Install asdf	2026-09-13T03:19:49.8264047Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-sync-property	Install asdf	2026-09-13T03:19:49.8264433Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-sync-property	Install asdf	2026-09-13T03:19:49.8264833Z ##[endgroup]
+phase2-sync-property	Install asdf	2026-09-13T03:19:49.8358729Z fatal: destination path '/home/runner/.asdf' already exists and is not an empty directory.
+phase2-sync-property	Install asdf	2026-09-13T03:19:49.8373420Z ##[error]Process completed with exit code 128.
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T03:19:49.8499572Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.8501020Z Post job cleanup.
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.9342375Z [command]/usr/bin/git version
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.9379671Z git version 2.55.0
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.9418850Z Temporarily overriding HOME='/home/runner/work/_temp/ba185853-4813-41f2-93c2-93d5ba45ecf7' before making global git config changes
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.9419916Z Adding repository directory to the temporary git global config as a safe directory
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.9425095Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.9463394Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.9498115Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.9721215Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.9748299Z http.https://github.com/.extraheader
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.9758918Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:49.9789855Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.0006820Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-sync-property	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.0038805Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-sync-property	Complete job	﻿2026-09-13T03:19:50.0389125Z Cleaning up orphan processes
+phase2-sync-property	Complete job	2026-09-13T03:19:50.0679891Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

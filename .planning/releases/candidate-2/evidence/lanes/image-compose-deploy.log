@@ -1,0 +1,388 @@
+image-compose-deploy	Set up job	﻿2026-09-13T03:19:03.4839883Z Current runner version: '2.337.0'
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4866394Z ##[group]Runner Image Provisioner
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4867345Z Hosted Compute Agent
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4867979Z Version: 20260828.587
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4868718Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4869811Z Build Date: 2026-08-28T16:44:25Z
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4870539Z Worker ID: {751a5c02-cf77-4678-8145-99e4ceccd3ac}
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4871451Z Azure Region: northcentralus
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4872100Z ##[endgroup]
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4873716Z ##[group]Operating System
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4874422Z Ubuntu
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4874972Z 24.04.5
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4875624Z LTS
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4876172Z ##[endgroup]
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4876809Z ##[group]Runner Image
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4877484Z Image: ubuntu-24.04
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4878082Z Version: 20260907.300.1
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4880008Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4881837Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4882859Z ##[endgroup]
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4884070Z ##[group]GITHUB_TOKEN Permissions
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4886381Z Contents: read
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4887056Z Metadata: read
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4887790Z ##[endgroup]
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4890792Z Secret source: Actions
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4891910Z Cache mode: write
+image-compose-deploy	Set up job	2026-09-13T03:19:03.4892974Z Prepare workflow directory
+image-compose-deploy	Set up job	2026-09-13T03:19:03.5457365Z Prepare all required actions
+image-compose-deploy	Set up job	2026-09-13T03:19:03.5532288Z Getting action download info
+image-compose-deploy	Set up job	2026-09-13T03:19:03.7833201Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+image-compose-deploy	Set up job	2026-09-13T03:19:03.9050127Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+image-compose-deploy	Set up job	2026-09-13T03:19:03.9952482Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+image-compose-deploy	Set up job	2026-09-13T03:19:04.2113793Z Complete job name: image-compose-deploy
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T03:19:04.2909272Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2918419Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2919674Z with:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2920215Z   repository: szTheory/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2923904Z   token: ***
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2924360Z   ssh-strict: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2924825Z   ssh-user: git
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2925300Z   persist-credentials: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2925810Z   clean: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2926268Z   sparse-checkout-cone-mode: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2926830Z   fetch-depth: 1
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2927282Z   fetch-tags: false
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2927746Z   show-progress: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2928211Z   lfs: false
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2928672Z   submodules: false
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2929303Z   set-safe-directory: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2930067Z env:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2930538Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2931273Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2932059Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.2932604Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.3921340Z Syncing repository: szTheory/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.3923208Z ##[group]Getting Git version info
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.3923988Z Working directory is '/home/runner/work/keepling/keepling'
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.3925073Z [command]/usr/bin/git version
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4013118Z git version 2.55.0
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4035036Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4051909Z Temporarily overriding HOME='/home/runner/work/_temp/73e768f8-e150-488b-8c4c-86a05605087f' before making global git config changes
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4054744Z Adding repository directory to the temporary git global config as a safe directory
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4057962Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4110815Z Deleting the contents of '/home/runner/work/keepling/keepling'
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4117086Z ##[group]Initializing the repository
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4121675Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4246468Z hint: Using 'master' as the name for the initial branch. This default branch name
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4248202Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4250307Z hint: to use in all of your new repositories, which will suppress this warning,
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4251784Z hint: call:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4252569Z hint:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4253575Z hint: 	git config --global init.defaultBranch <name>
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4254875Z hint:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4256004Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4257773Z hint: 'development'. The just-created branch can be renamed via this command:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4259411Z hint:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4260168Z hint: 	git branch -m <name>
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4260996Z hint:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4262075Z hint: Disable this message with "git config set advice.defaultBranchName false"
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4264355Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4267454Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4321252Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4322166Z ##[group]Disabling automatic garbage collection
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4325425Z [command]/usr/bin/git config --local gc.auto 0
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4359652Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4360516Z ##[group]Setting up auth
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4367005Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4400076Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4774361Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.4810714Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.5060109Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.5099958Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.5365375Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.5411184Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.5415252Z ##[group]Fetching the repository
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:04.5424180Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +23d79e5caa7383a7be9e38ee473b6bde12ce8298:refs/remotes/origin/main
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.5131573Z From https://github.com/szTheory/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.5134346Z  * [new ref]         23d79e5caa7383a7be9e38ee473b6bde12ce8298 -> origin/main
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.5138261Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.5139951Z ##[group]Determining the checkout info
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.5144576Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.5145836Z [command]/usr/bin/git sparse-checkout disable
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.5200025Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.5231326Z ##[group]Checking out the ref
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.5237520Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.6370069Z Switched to a new branch 'main'
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.6374471Z branch 'main' set up to track 'origin/main'.
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.6385035Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.6428272Z [command]/usr/bin/git log -1 --format=%H
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:05.6451861Z 23d79e5caa7383a7be9e38ee473b6bde12ce8298
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T03:19:05.6819951Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.6825488Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.6827075Z with:
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.6828043Z   node-version: 24.7.0
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.6829242Z   always-auth: false
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.6830294Z   check-latest: false
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.6839153Z   token: ***
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.6840121Z env:
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.6841039Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.6842591Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.6844248Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.6845392Z ##[endgroup]
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.8328594Z Attempting to download 24.7.0...
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.8439603Z (node:2266) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:05.8442337Z (Use `node --trace-deprecation ...` to show where the warning was created)
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:06.5072015Z Acquiring 24.7.0 - x64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-linux-x64.tar.gz
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:06.9736457Z Extracting ...
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:06.9864199Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/4643ecb6-a17c-4d24-a6a2-9633a035e46b -f /home/runner/work/_temp/f4173571-e8d8-45c2-aab5-a071ee91f57b
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:08.2424433Z Adding to the cache ...
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.3231917Z ##[group]Environment details
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.5508218Z node: v24.7.0
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.5509109Z npm: 11.5.1
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.5509466Z yarn: 1.22.22
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.5510165Z ##[endgroup]
+image-compose-deploy	Install locked JavaScript inputs	﻿2026-09-13T03:19:10.5687462Z ##[group]Run corepack enable && pnpm install --frozen-lockfile
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:10.5688081Z ^[[36;1mcorepack enable && pnpm install --frozen-lockfile^[[0m
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:10.5731803Z shell: /usr/bin/bash -e {0}
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:10.5732110Z env:
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:10.5732327Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:10.5732725Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:10.5733183Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:10.5733453Z ##[endgroup]
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:10.6967612Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:11.7381900Z Scope: all 4 workspace projects
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:11.8120426Z Lockfile is up to date, resolution step is skipped
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:12.0162865Z Packages: +910
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:12.0163816Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:12.1737420Z Progress: resolved 0, reused 0, downloaded 1, added 0
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:13.1770731Z Progress: resolved 0, reused 0, downloaded 67, added 22
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:14.1760760Z Progress: resolved 0, reused 0, downloaded 264, added 121
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:15.1830463Z Progress: resolved 0, reused 0, downloaded 526, added 328
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:15.2371243Z Packages are hard linked from the content-addressable store to the virtual store.
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:15.2389717Z   Content-addressable store is at: /home/runner/.local/share/pnpm/store/v10
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:15.2418571Z   Virtual store is at:             node_modules/.pnpm
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:16.1793677Z Progress: resolved 0, reused 0, downloaded 864, added 664
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:16.4593145Z Progress: resolved 0, reused 0, downloaded 868, added 910, done
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:16.8021075Z 
+image-compose-deploy	Install locked JavaScript inputs	2026-09-13T03:19:16.9026000Z Done in 5.5s using pnpm v10.33.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	﻿2026-09-13T03:19:16.9528821Z ##[group]Run set -o pipefail
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:19:16.9530091Z ^[[36;1mset -o pipefail^[[0m
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:19:16.9530594Z ^[[36;1m./tooling/test-phase-2.sh --lane image-compose-deploy | tee "$RUNNER_TEMP/image-compose-deploy.txt"^[[0m
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:19:16.9531231Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/image-compose-deploy.txt"^[[0m
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:19:16.9568392Z shell: /usr/bin/bash -e {0}
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:19:16.9568643Z env:
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:19:16.9568842Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:19:16.9569545Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:19:16.9569974Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:19:16.9570234Z ##[endgroup]
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:19:17.6270100Z lane=image-compose-deploy status=RUNNING command=./tooling/verify-image.sh && ./tooling/verify-compose.sh && ./tooling/verify-deploy.sh --local cases=3 seed=none inputs_sha256=4a11ad7e1d15aee198423172b470685e28977660b9a88d197d2cfda4c76d7c1a
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1925927Z #0 building with "default" instance using docker driver
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1926471Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1926703Z #1 [internal] load build definition from Dockerfile
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1927116Z #1 transferring dockerfile: 2.19kB done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1927401Z #1 DONE 0.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1927582Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1928041Z #2 [auth] docker/dockerfile:pull token for registry-1.docker.io
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1928664Z #2 DONE 0.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1929107Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1929697Z #3 resolve image config for docker-image://docker.io/docker/dockerfile:1.7
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1930537Z #3 DONE 0.5s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1930772Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1931766Z #4 docker-image://docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1933617Z #4 resolve docker.io/docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1935318Z #4 extracting sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1936710Z #4 sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e 8.40kB / 8.40kB done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1938112Z #4 sha256:b5f3b260a9678e1d83d2fce86eeddf79420b79147eaba2a25986f47133d73720 482B / 482B done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1939725Z #4 sha256:68ebc061390d9a7d6e194f9d58309c754a53cb8b4e3b0d89593920f42f4a9da4 1.26kB / 1.26kB done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1940628Z #4 sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416 11.98MB / 11.98MB 0.1s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1941420Z #4 extracting sha256:96918c57e42509b97f10c074d80672ecdbd3bb7dcd38c1bd95960cf291207416 0.1s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1941880Z #4 DONE 0.2s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1942005Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1942590Z #5 [internal] load metadata for docker.io/library/elixir:1.20.2-otp-29@sha256:c915d900894e1d664cd8ed72fd2c38fce72b612cc1757d57f86a0cc62e62dd79
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1943229Z #5 ...
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1943337Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1943573Z #6 [auth] library/debian:pull token for registry-1.docker.io
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1943903Z #6 DONE 0.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1944018Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1944405Z #7 [auth] library/elixir:pull token for registry-1.docker.io
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1944728Z #7 DONE 0.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1944856Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1945448Z #8 [internal] load metadata for docker.io/library/debian:trixie-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1946078Z #8 DONE 0.4s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1946197Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1947200Z #5 [internal] load metadata for docker.io/library/elixir:1.20.2-otp-29@sha256:c915d900894e1d664cd8ed72fd2c38fce72b612cc1757d57f86a0cc62e62dd79
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1947959Z #5 DONE 0.4s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1948075Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1948217Z #9 [internal] load .dockerignore
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1948522Z #9 transferring context: 2B done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1949297Z #9 DONE 0.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1949426Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1949564Z #10 [internal] load build context
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1950092Z #10 transferring context: 669.68kB 0.0s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1950376Z #10 DONE 0.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1950485Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1951037Z #11 [builder  1/10] FROM docker.io/library/elixir:1.20.2-otp-29@sha256:c915d900894e1d664cd8ed72fd2c38fce72b612cc1757d57f86a0cc62e62dd79
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1952041Z #11 resolve docker.io/library/elixir:1.20.2-otp-29@sha256:c915d900894e1d664cd8ed72fd2c38fce72b612cc1757d57f86a0cc62e62dd79 done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1952895Z #11 sha256:c915d900894e1d664cd8ed72fd2c38fce72b612cc1757d57f86a0cc62e62dd79 7.57kB / 7.57kB done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1953629Z #11 sha256:108020e11833c8a93d29f9b65efb2f1c6652edb04344dbbbd54e663a838c5337 7.56kB / 7.56kB done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1954383Z #11 sha256:68b64c51cda3d04397bcf5742a29a9a1ba7adcfd18a376bacb8d114ed64cbd5a 1.05MB / 25.64MB 0.1s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1955116Z #11 sha256:aa8b8392aa3e4a34a2c7f4503ba348361c49707737a40713598f958fe50e88f5 2.48kB / 2.48kB done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1955875Z #11 sha256:1da3cb2f93f2ca3c5bdaf4c024a7f1ebd717938d20c858e4be4b9aa81fc8608c 15.73MB / 49.31MB 0.1s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1956666Z #11 sha256:68b64c51cda3d04397bcf5742a29a9a1ba7adcfd18a376bacb8d114ed64cbd5a 23.07MB / 25.64MB 0.2s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1957430Z #11 sha256:1da3cb2f93f2ca3c5bdaf4c024a7f1ebd717938d20c858e4be4b9aa81fc8608c 49.31MB / 49.31MB 0.2s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1958171Z #11 sha256:ec935196e6a095bdd6ac865248321ea4fd33424071fe14264cd33900f8ae6212 0B / 67.80MB 0.2s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1959075Z #11 extracting sha256:1da3cb2f93f2ca3c5bdaf4c024a7f1ebd717938d20c858e4be4b9aa81fc8608c
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1960211Z #11 sha256:68b64c51cda3d04397bcf5742a29a9a1ba7adcfd18a376bacb8d114ed64cbd5a 25.64MB / 25.64MB 0.2s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1961025Z #11 sha256:1da3cb2f93f2ca3c5bdaf4c024a7f1ebd717938d20c858e4be4b9aa81fc8608c 49.31MB / 49.31MB 0.2s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1961810Z #11 sha256:ec935196e6a095bdd6ac865248321ea4fd33424071fe14264cd33900f8ae6212 7.34MB / 67.80MB 0.4s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1962568Z #11 sha256:d74736caedd40737be802d27bfe1d5d0e10377ddb1c7b4103391e0bbff5152e0 48.23MB / 236.32MB 0.4s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1963340Z #11 sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0 4.19MB / 293.74MB 0.4s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1964088Z #11 sha256:ec935196e6a095bdd6ac865248321ea4fd33424071fe14264cd33900f8ae6212 31.46MB / 67.80MB 0.5s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1964832Z #11 sha256:d74736caedd40737be802d27bfe1d5d0e10377ddb1c7b4103391e0bbff5152e0 80.74MB / 236.32MB 0.5s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1965582Z #11 sha256:ec935196e6a095bdd6ac865248321ea4fd33424071fe14264cd33900f8ae6212 63.96MB / 67.80MB 0.6s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1966333Z #11 sha256:d74736caedd40737be802d27bfe1d5d0e10377ddb1c7b4103391e0bbff5152e0 103.81MB / 236.32MB 0.6s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1967099Z #11 sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0 45.09MB / 293.74MB 0.6s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1967879Z #11 sha256:ec935196e6a095bdd6ac865248321ea4fd33424071fe14264cd33900f8ae6212 67.80MB / 67.80MB 0.6s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1968646Z #11 sha256:d74736caedd40737be802d27bfe1d5d0e10377ddb1c7b4103391e0bbff5152e0 137.36MB / 236.32MB 0.7s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1969637Z #11 sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0 79.69MB / 293.74MB 0.7s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1970386Z #11 sha256:fa93ad7600e715d1c85b0f873360db763298335fc5b63732cdc7ece1289d4ac1 0B / 828.10kB 0.7s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1971161Z #11 sha256:e6b3d37cf17b1b8d46c3acd665b3d7f9277d7385807caeaee09152afcf027ac0 191.52kB / 191.52kB 0.7s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1971951Z #11 sha256:d74736caedd40737be802d27bfe1d5d0e10377ddb1c7b4103391e0bbff5152e0 170.92MB / 236.32MB 0.8s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1972716Z #11 sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0 118.49MB / 293.74MB 0.8s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1973512Z #11 sha256:fa93ad7600e715d1c85b0f873360db763298335fc5b63732cdc7ece1289d4ac1 828.10kB / 828.10kB 0.7s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1974424Z #11 sha256:3fb01c15f1c9fdca8014d0f7f75646b4b5816d888962f37554ed912841545213 0B / 8.13MB 0.8s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1975168Z #11 sha256:d74736caedd40737be802d27bfe1d5d0e10377ddb1c7b4103391e0bbff5152e0 208.67MB / 236.32MB 0.9s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1976063Z #11 sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0 158.33MB / 293.74MB 0.9s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1976835Z #11 sha256:3fb01c15f1c9fdca8014d0f7f75646b4b5816d888962f37554ed912841545213 4.19MB / 8.13MB 0.9s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1977633Z #11 sha256:d74736caedd40737be802d27bfe1d5d0e10377ddb1c7b4103391e0bbff5152e0 236.32MB / 236.32MB 1.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1978403Z #11 sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0 195.04MB / 293.74MB 1.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1979664Z #11 sha256:3fb01c15f1c9fdca8014d0f7f75646b4b5816d888962f37554ed912841545213 8.13MB / 8.13MB 1.0s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1980471Z #11 sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0 228.59MB / 293.74MB 1.1s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1981285Z #11 sha256:d74736caedd40737be802d27bfe1d5d0e10377ddb1c7b4103391e0bbff5152e0 236.32MB / 236.32MB 1.2s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1982090Z #11 sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0 281.02MB / 293.74MB 1.3s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1982900Z #11 sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0 293.74MB / 293.74MB 2.0s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1983386Z #11 ...
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1983496Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1984033Z #12 [runtime 1/4] FROM docker.io/library/debian:trixie-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1985026Z #12 resolve docker.io/library/debian:trixie-slim@sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132 done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1985869Z #12 sha256:d7e12182ce18b85b93007c1dedf31f2d29e01ccf3182cc4017c709b6259bc132 8.97kB / 8.97kB done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1986601Z #12 sha256:abc9cb88a5587630d7f915f47b23b0668fe250fbfc6457aa4d52b534c1bbf73f 1.02kB / 1.02kB done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1987332Z #12 sha256:e426a54f50cc4cf82dd5cab8ba8426ed02c391840cb5a62dfd987542dbabea3b 451B / 451B done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1988094Z #12 sha256:6310eb16bf4251731feab01e8f633bf5e2d75a657ccad97f420b1f83cce457be 29.79MB / 29.79MB 0.2s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1989064Z #12 extracting sha256:6310eb16bf4251731feab01e8f633bf5e2d75a657ccad97f420b1f83cce457be 2.0s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1989544Z #12 DONE 2.2s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1989665Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1990194Z #11 [builder  1/10] FROM docker.io/library/elixir:1.20.2-otp-29@sha256:c915d900894e1d664cd8ed72fd2c38fce72b612cc1757d57f86a0cc62e62dd79
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1990758Z #11 ...
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1990858Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1991496Z #13 [runtime 2/4] RUN groupadd --system --gid 10001 keepling     && useradd --system --uid 10001 --gid keepling --home-dir /app --shell /usr/sbin/nologin keepling
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1992364Z #13 0.162 useradd warning: keepling's uid 10001 is greater than SYS_UID_MAX 999
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1992748Z #13 DONE 0.4s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1992864Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1992998Z #14 [runtime 3/4] WORKDIR /app
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1993237Z #14 DONE 0.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1993341Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1993877Z #11 [builder  1/10] FROM docker.io/library/elixir:1.20.2-otp-29@sha256:c915d900894e1d664cd8ed72fd2c38fce72b612cc1757d57f86a0cc62e62dd79
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1994738Z #11 extracting sha256:1da3cb2f93f2ca3c5bdaf4c024a7f1ebd717938d20c858e4be4b9aa81fc8608c 2.6s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1995453Z #11 extracting sha256:68b64c51cda3d04397bcf5742a29a9a1ba7adcfd18a376bacb8d114ed64cbd5a
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1996173Z #11 extracting sha256:68b64c51cda3d04397bcf5742a29a9a1ba7adcfd18a376bacb8d114ed64cbd5a 0.6s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1996869Z #11 extracting sha256:ec935196e6a095bdd6ac865248321ea4fd33424071fe14264cd33900f8ae6212
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1997571Z #11 extracting sha256:ec935196e6a095bdd6ac865248321ea4fd33424071fe14264cd33900f8ae6212 2.2s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1998272Z #11 extracting sha256:d74736caedd40737be802d27bfe1d5d0e10377ddb1c7b4103391e0bbff5152e0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.1999350Z #11 extracting sha256:d74736caedd40737be802d27bfe1d5d0e10377ddb1c7b4103391e0bbff5152e0 5.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2000218Z #11 extracting sha256:d74736caedd40737be802d27bfe1d5d0e10377ddb1c7b4103391e0bbff5152e0 6.1s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2000933Z #11 extracting sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2001636Z #11 extracting sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0 5.1s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2002387Z #11 extracting sha256:e95e90bc1b3f01da147d9aedcae442b6ad1edf7f8fa2e56747d15bca21cee2d0 6.0s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2003086Z #11 extracting sha256:e6b3d37cf17b1b8d46c3acd665b3d7f9277d7385807caeaee09152afcf027ac0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2003777Z #11 extracting sha256:e6b3d37cf17b1b8d46c3acd665b3d7f9277d7385807caeaee09152afcf027ac0 done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2004481Z #11 extracting sha256:fa93ad7600e715d1c85b0f873360db763298335fc5b63732cdc7ece1289d4ac1 done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2005175Z #11 extracting sha256:3fb01c15f1c9fdca8014d0f7f75646b4b5816d888962f37554ed912841545213 0.1s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2005887Z #11 extracting sha256:3fb01c15f1c9fdca8014d0f7f75646b4b5816d888962f37554ed912841545213 0.2s done
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2006335Z #11 DONE 21.9s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2006453Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2006587Z #15 [builder  2/10] WORKDIR /build
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2006835Z #15 DONE 0.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2006942Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2007960Z #16 [builder  3/10] RUN test "$(elixir -e 'IO.write(System.version())')" = "1.20.2"     && test "$(erl -noshell -eval 'io:format("~s", [erlang:system_info(otp_release)]), halt().')" = "29"     && test "$(cat /usr/local/lib/erlang/releases/29/OTP_VERSION)" = "29.0.5"
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2009071Z #16 DONE 0.5s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2009197Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2009459Z #17 [builder  4/10] RUN mix local.hex --force && mix local.rebar --force
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2009916Z #17 1.057 * creating /root/.mix/archives/hex-2.5.1
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2010329Z #17 1.754 * creating /root/.mix/elixir/1-20-otp-29/rebar3
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2010632Z #17 DONE 1.8s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2010743Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2010905Z #18 [builder  5/10] COPY mix.exs mix.lock ./
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2011182Z #18 DONE 0.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2011291Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2011600Z #19 [builder  6/10] COPY config/config.exs config/prod.exs config/runtime.exs config/
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2012002Z #19 DONE 0.0s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2012115Z 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2012360Z #20 [builder  7/10] RUN mix deps.get --only prod && mix deps.compile
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2012764Z #20 1.159 Resolving Hex dependencies...
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2013083Z #20 1.291 Resolution completed in 0.13s
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2013352Z #20 1.308 Unchanged:
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2013608Z #20 1.308   argon2_elixir 4.1.3
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2013863Z #20 1.309   bandit 1.12.5
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2014102Z #20 1.309   certifi 2.15.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2014339Z #20 1.309   comeonin 5.5.1
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2014603Z #20 1.309   db_connection 2.10.2
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2014862Z #20 1.309   decimal 3.1.1
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2015100Z #20 1.309   dns_cluster 0.2.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2015347Z #20 1.309   ecto 3.14.2
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2015580Z #20 1.309   ecto_sql 3.14.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2015840Z #20 1.309   elixir_make 0.10.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2016084Z #20 1.309   expo 1.1.1
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2016309Z #20 1.309   gettext 1.0.2
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2016596Z #20 1.309   hackney 1.25.0 VULNERABLE!
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2016920Z #20 1.309     EEF-CVE-2026-47075 (MEDIUM)
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2017284Z #20 1.309     aka: CVE-2026-47075, GHSA-j9wq-vxxc-94wf
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2017699Z #20 1.309     CR/LF injection in query parameter in hackney
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2018147Z #20 1.309     https://osv.dev/vulnerability/EEF-CVE-2026-47075
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2018469Z #20 1.309 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2018709Z #20 1.309     EEF-CVE-2026-47071 (HIGH)
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2019354Z #20 1.309     aka: CVE-2026-47071, GHSA-gp9c-pm5m-5cxr
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2019958Z #20 1.309     SOCKS5 TLS upgrade ignores caller timeout in hackney
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2020422Z #20 1.309     https://osv.dev/vulnerability/EEF-CVE-2026-47071
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2020847Z #20 1.310 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2021088Z #20 1.310     EEF-CVE-2026-47069 (LOW)
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2021450Z #20 1.310     aka: CVE-2026-47069, GHSA-mp55-p8c9-rfw2
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2021905Z #20 1.310     CRLF injection in cookie domain/path options in hackney
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2022400Z #20 1.310     https://osv.dev/vulnerability/EEF-CVE-2026-47069
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2022714Z #20 1.310 
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2022955Z #20 1.310     EEF-CVE-2026-47076 (MEDIUM)
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2023308Z #20 1.310     aka: CVE-2026-47076, GHSA-pj7v-xfvx-wmjq
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2023759Z #20 1.310     SSRF allowlist bypass via percent-encoded host in hackney
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2024243Z #20 1.310     https://osv.dev/vulnerability/EEF-CVE-2026-47076
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2024580Z #20 1.310   hammer 7.4.1
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2024814Z #20 1.310   hpax 1.0.4
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2025029Z #20 1.310   idna 6.1.1
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2025242Z #20 1.310   jason 1.4.5
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2025468Z #20 1.310   metrics 1.0.1
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2025703Z #20 1.310   mime 2.0.7
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2025919Z #20 1.310   mimerl 1.5.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2026159Z #20 1.310   parse_trans 3.4.1
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2026407Z #20 1.310   phoenix 1.8.13
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2026667Z #20 1.310   phoenix_ecto 4.7.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2026939Z #20 1.310   phoenix_pubsub 2.3.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2027232Z #20 1.310   phoenix_template 1.0.4
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2027495Z #20 1.310   plug 1.20.3
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2027729Z #20 1.310   plug_crypto 2.2.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2027976Z #20 1.310   postgrex 0.22.4
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2028241Z #20 1.310   ssl_verify_fun 1.1.7
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2028495Z #20 1.310   telemetry 1.4.2
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2028773Z #20 1.310   telemetry_metrics 1.2.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2029335Z #20 1.310   telemetry_poller 1.3.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2029636Z #20 1.310   thousand_island 1.5.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2029896Z #20 1.310   tzdata 1.1.4
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2030168Z #20 1.310   unicode_util_compat 0.7.1
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2030508Z Phase 2 lane failed: image-compose-deploy
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-13T03:20:31.2040418Z ##[error]Process completed with exit code 1.
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T03:20:31.2183805Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.2185057Z Post job cleanup.
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3055011Z [command]/usr/bin/git version
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3092447Z git version 2.55.0
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3136489Z Temporarily overriding HOME='/home/runner/work/_temp/a8b7ebf5-19e9-4bf2-b44d-dc41cf44c892' before making global git config changes
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3138235Z Adding repository directory to the temporary git global config as a safe directory
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3143645Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3191710Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3254578Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3466949Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3493084Z http.https://github.com/.extraheader
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3503801Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3533957Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3756540Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:20:31.3787663Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+image-compose-deploy	Complete job	﻿2026-09-13T03:20:31.4178372Z Cleaning up orphan processes
+image-compose-deploy	Complete job	2026-09-13T03:20:31.6071520Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

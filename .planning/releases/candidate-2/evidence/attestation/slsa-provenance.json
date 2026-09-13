@@ -1,0 +1,87 @@
+{
+  "$comment": [
+    "SLSA Build Level 2 provenance attestation for the candidate-2 archive, retrieved from",
+    "GitHub with:  gh api /repos/szTheory/keepling/attestations/sha256:57f594657752182b21ee72b3b15a199af7481719ef64993fb4af3b187eb1704a",
+    "",
+    "This file is the DECODED in-toto statement from the attestation bundle, plus the bundle's",
+    "media type and transparency-log entry. It is retained here because the bundle is served by",
+    "GitHub, and a service outage must not cost the ability to read what was attested.",
+    "",
+    "It is EVIDENCE OF an attestation, not a substitute for verifying one. The authoritative",
+    "check is:  gh attestation verify Keepling.ditto.zip --repo szTheory/keepling",
+    "against the downloaded continuous-integration archive. That command exits 0 at this",
+    "revision.",
+    "",
+    "The 129 MB archive itself is NOT committed to this repository. The binding that makes this",
+    "record meaningful is the digest: the attested subject digest below is byte-for-byte the",
+    "archiveDigestSha256 that the desktop-package job recorded in",
+    "artifacts/desktop-macos-app.package-manifest.json, and byte-for-byte the digest of the",
+    "artifact downloaded from run 34735177060 and re-hashed locally."
+  ],
+  "retrievedFrom": "gh api /repos/szTheory/keepling/attestations/sha256:57f594657752182b21ee72b3b15a199af7481719ef64993fb4af3b187eb1704a",
+  "attestationUrl": "https://github.com/szTheory/keepling/attestations/47125915",
+  "bundleMediaType": "application/vnd.dev.sigstore.bundle.v0.3+json",
+  "statement": {
+    "_type": "https://in-toto.io/Statement/v1",
+    "subject": [
+      {
+        "name": "Keepling.ditto.zip",
+        "digest": {
+          "sha256": "57f594657752182b21ee72b3b15a199af7481719ef64993fb4af3b187eb1704a"
+        }
+      },
+      {
+        "name": "Keepling.stapled.ditto.zip",
+        "digest": {
+          "sha256": "c8522d65675d9ccdf6c1d64c47b2f5570fa6f77494be37ba46e75b88bdbba297"
+        }
+      }
+    ],
+    "predicateType": "https://slsa.dev/provenance/v1",
+    "predicate": {
+      "buildDefinition": {
+        "buildType": "https://actions.github.io/buildtypes/workflow/v1",
+        "externalParameters": {
+          "workflow": {
+            "ref": "refs/heads/main",
+            "repository": "https://github.com/szTheory/keepling",
+            "path": ".github/workflows/desktop.yml"
+          }
+        },
+        "internalParameters": {
+          "github": {
+            "event_name": "push",
+            "repository_id": "1364930292",
+            "repository_owner_id": "28652",
+            "runner_environment": "github-hosted"
+          }
+        },
+        "resolvedDependencies": [
+          {
+            "uri": "git+https://github.com/szTheory/keepling@refs/heads/main",
+            "digest": {
+              "gitCommit": "23d79e5caa7383a7be9e38ee473b6bde12ce8298"
+            }
+          }
+        ]
+      },
+      "runDetails": {
+        "builder": {
+          "id": "https://github.com/szTheory/keepling/.github/workflows/desktop.yml@refs/heads/main"
+        },
+        "metadata": {
+          "invocationId": "https://github.com/szTheory/keepling/actions/runs/34735177060/attempts/1"
+        }
+      }
+    }
+  },
+  "transparencyLog": [
+    {
+      "logIndex": "2813684018",
+      "integratedTime": "1789269884",
+      "logId": "wNI9atQGlz+VWfO6LRygH4QUfY/8W4RFwiT5i5WRgB0="
+    }
+  ],
+  "certificateIssuer": "https://token.actions.githubusercontent.com",
+  "certificateSubjectAlternativeName": "https://github.com/szTheory/keepling/.github/workflows/desktop.yml@refs/heads/main"
+}

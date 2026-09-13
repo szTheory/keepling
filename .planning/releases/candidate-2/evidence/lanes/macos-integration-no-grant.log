@@ -1,0 +1,336 @@
+desktop-macos-integration	Set up job	﻿2026-09-13T03:22:36.9435560Z Current runner version: '2.337.0'
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9450350Z ##[group]Runner Image Provisioner
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9450860Z Hosted Compute Agent
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9451230Z Version: 20260828.587
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9451640Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9452100Z Build Date: 2026-08-28T16:44:25Z
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9452520Z Worker ID: {8bcb8839-9abb-42ba-9f25-c2b00f7f5aa9}
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9452980Z Azure Region: westus
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9453340Z ##[endgroup]
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9454140Z ##[group]Operating System
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9454510Z macOS
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9454840Z 15.7.9
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9455170Z 24G830
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9455500Z ##[endgroup]
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9455850Z ##[group]Runner Image
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9456240Z Image: macos-15-arm64
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9456610Z Version: 20260907.0337.1
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9457350Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9458470Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9459130Z ##[endgroup]
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9459850Z ##[group]GITHUB_TOKEN Permissions
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9460820Z Contents: read
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9461190Z Metadata: read
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9461560Z ##[endgroup]
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9463080Z Secret source: Actions
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9463670Z Cache mode: write
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9464100Z Prepare workflow directory
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9773590Z Prepare all required actions
+desktop-macos-integration	Set up job	2026-09-13T03:22:36.9809520Z Getting action download info
+desktop-macos-integration	Set up job	2026-09-13T03:22:37.2589770Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+desktop-macos-integration	Set up job	2026-09-13T03:22:37.4990630Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+desktop-macos-integration	Set up job	2026-09-13T03:22:37.6425270Z Download action repository 'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+desktop-macos-integration	Set up job	2026-09-13T03:22:38.1152160Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+desktop-macos-integration	Set up job	2026-09-13T03:22:38.2815240Z Complete job name: desktop-macos-integration
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T03:22:38.3241530Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3248640Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3249270Z with:
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3249610Z   repository: szTheory/keepling
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3252230Z   token: ***
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3252550Z   ssh-strict: true
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3252870Z   ssh-user: git
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3253300Z   persist-credentials: true
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3253650Z   clean: true
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3253980Z   sparse-checkout-cone-mode: true
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3254350Z   fetch-depth: 1
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3254670Z   fetch-tags: false
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3255000Z   show-progress: true
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3255330Z   lfs: false
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3255670Z   submodules: false
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3256000Z   set-safe-directory: true
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3256540Z env:
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3256950Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.3257410Z ##[endgroup]
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.7662180Z Syncing repository: szTheory/keepling
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.7663980Z ##[group]Getting Git version info
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.7665290Z Working directory is '/Users/runner/work/keepling/keepling'
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.7666320Z [command]/opt/homebrew/bin/git version
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.7876610Z git version 2.55.0
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.7894720Z ##[endgroup]
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.7907260Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/d71725eb-77b0-4f17-a1a5-ae353363708a/.gitconfig'
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.7910750Z Temporarily overriding HOME='/Users/runner/work/_temp/d71725eb-77b0-4f17-a1a5-ae353363708a' before making global git config changes
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.7913890Z Adding repository directory to the temporary git global config as a safe directory
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.7916960Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8031330Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8035060Z ##[group]Initializing the repository
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8038250Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8275780Z hint: Using 'master' as the name for the initial branch. This default branch name
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8276840Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8278130Z hint: to use in all of your new repositories, which will suppress this warning,
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8278870Z hint: call:
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8279240Z hint:
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8279680Z hint: 	git config --global init.defaultBranch <name>
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8280210Z hint:
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8280680Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8281450Z hint: 'development'. The just-created branch can be renamed via this command:
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8282450Z hint:
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8282930Z hint: 	git branch -m <name>
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8283410Z hint:
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8283930Z hint: Disable this message with "git config set advice.defaultBranchName false"
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8284730Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8290900Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8384640Z ##[endgroup]
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8385550Z ##[group]Disabling automatic garbage collection
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8387570Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8452420Z ##[endgroup]
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8453130Z ##[group]Setting up auth
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8456560Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.8514290Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.9235960Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:38.9304070Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:39.0132930Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:39.0199610Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:39.1455200Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:39.1534370Z ##[endgroup]
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:39.1535160Z ##[group]Fetching the repository
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:39.1548190Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +23d79e5caa7383a7be9e38ee473b6bde12ce8298:refs/remotes/origin/main
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.2398750Z From https://github.com/szTheory/keepling
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.2400110Z  * [new ref]         23d79e5caa7383a7be9e38ee473b6bde12ce8298 -> origin/main
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.2402690Z ##[endgroup]
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.2403570Z ##[group]Determining the checkout info
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.2404570Z ##[endgroup]
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.2405590Z [command]/opt/homebrew/bin/git sparse-checkout disable
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.2470600Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.2520970Z ##[group]Checking out the ref
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.2523200Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.4371850Z Switched to a new branch 'main'
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.4386520Z branch 'main' set up to track 'origin/main'.
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.4412660Z ##[endgroup]
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.4501840Z [command]/opt/homebrew/bin/git log -1 --format=%H
+desktop-macos-integration	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:22:40.4567090Z 23d79e5caa7383a7be9e38ee473b6bde12ce8298
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T03:22:40.4926100Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.4932290Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.4933520Z with:
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.4934170Z   node-version: 24.7.0
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.4934900Z   always-auth: false
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.4935620Z   check-latest: false
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.4942560Z   token: ***
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.4943190Z env:
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.4944000Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.4945070Z ##[endgroup]
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.6516820Z Attempting to download 24.7.0...
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.6727430Z (node:1361) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:40.6738210Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:41.3321010Z Acquiring 24.7.0 - arm64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-darwin-arm64.tar.gz
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:41.9915420Z Extracting ...
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:42.0084980Z [command]/usr/bin/tar xz --strip 1 -C /Users/runner/work/_temp/7dc57b86-8af3-41b6-b6e5-9b350d8b3553 -f /Users/runner/work/_temp/3b0fea18-2ada-4c25-9300-7c4d001ac560
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:43.4345580Z Adding to the cache ...
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:45.8638490Z ##[group]Environment details
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:46.3237240Z node: v24.7.0
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:46.3238280Z npm: 11.5.1
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:46.3238770Z yarn: 1.22.22
+desktop-macos-integration	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:22:46.3240200Z ##[endgroup]
+desktop-macos-integration	Install locked JavaScript inputs	﻿2026-09-13T03:22:46.3566090Z ##[group]Run corepack enable && pnpm install --frozen-lockfile
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:46.3566630Z ^[[36;1mcorepack enable && pnpm install --frozen-lockfile^[[0m
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:46.3620540Z shell: /bin/bash -e {0}
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:46.3637170Z env:
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:46.3637460Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:46.3637750Z ##[endgroup]
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:46.5293990Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:47.5499910Z Scope: all 4 workspace projects
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:47.6110850Z Lockfile is up to date, resolution step is skipped
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:47.7251450Z Packages: +912
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:47.7293070Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:47.8761280Z Progress: resolved 0, reused 0, downloaded 1, added 0
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:48.8805200Z Progress: resolved 0, reused 0, downloaded 33, added 8
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:49.8803120Z Progress: resolved 0, reused 0, downloaded 56, added 17
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:50.8846910Z Progress: resolved 0, reused 0, downloaded 78, added 24
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:51.8954900Z Progress: resolved 0, reused 0, downloaded 138, added 42
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:52.8891500Z Progress: resolved 0, reused 0, downloaded 227, added 80
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:53.8888460Z Progress: resolved 0, reused 0, downloaded 323, added 117
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:54.8899130Z Progress: resolved 0, reused 0, downloaded 403, added 152
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:55.8877360Z Progress: resolved 0, reused 0, downloaded 469, added 177
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:56.8018110Z Packages are cloned from the content-addressable store to the virtual store.
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:56.8125330Z   Content-addressable store is at: /Users/runner/Library/pnpm/store/v10
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:56.8241320Z   Virtual store is at:             node_modules/.pnpm
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:56.9048580Z Progress: resolved 0, reused 0, downloaded 530, added 198
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:57.9103220Z Progress: resolved 0, reused 0, downloaded 683, added 281
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:58.9090300Z Progress: resolved 0, reused 0, downloaded 835, added 374
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:22:59.9081850Z Progress: resolved 0, reused 0, downloaded 870, added 693
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:23:00.6335180Z Progress: resolved 0, reused 0, downloaded 870, added 912, done
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:23:00.7765400Z 
+desktop-macos-integration	Install locked JavaScript inputs	2026-09-13T03:23:00.8500020Z Done in 13.5s using pnpm v10.33.0
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	﻿2026-09-13T03:23:00.9039330Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:00.9043290Z ##[group]Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:00.9044270Z with:
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:00.9044960Z   name: keepling-desktop-package
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:00.9045830Z   path: /Users/runner/work/_temp/keepling-desktop-package
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:00.9046680Z   merge-multiple: false
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:00.9047870Z   repository: szTheory/keepling
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:00.9048660Z   run-id: 34735177060
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:00.9049340Z env:
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:00.9049990Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:00.9051070Z ##[endgroup]
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:01.1570420Z Downloading single artifact
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:01.1763950Z (node:1542) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:01.1799610Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:01.3690050Z Preparing to download the following artifacts:
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:01.3691150Z - keepling-desktop-package (ID: 10310443663, Size: 260101555, Expected Digest: sha256:61610b15c864cd36395dea6d029c190edcfad8754e5705300a9d5fb4e267b8f9)
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:01.5297750Z Redirecting to blob download url: https://productionresultssa4.blob.core.windows.net/actions-results/8335ec11-c06b-4d0f-81ec-51748b9faa84/workflow-job-run-6d27f203-5bba-5872-a3e3-2d9796980b21/artifacts/d673bfa41ddf059217fd82e3d6ea2d41bfb7cc9b5796cb68d3af55bc077e78ee.zip
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:01.5299680Z Starting download of artifact to: /Users/runner/work/_temp/keepling-desktop-package
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:01.8119010Z (node:1542) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:13.4207380Z SHA256 digest of downloaded artifact is 61610b15c864cd36395dea6d029c190edcfad8754e5705300a9d5fb4e267b8f9
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:13.4210970Z Artifact download completed successfully.
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:13.4212380Z Total of 1 artifact(s) downloaded
+desktop-macos-integration	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-13T03:23:13.4349830Z Download artifact has finished successfully
+desktop-macos-integration	Report what TCC this hosted runner actually grants	﻿2026-09-13T03:23:13.4607650Z ##[group]Run set -o pipefail
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:13.4607890Z ^[[36;1mset -o pipefail^[[0m
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:13.4608230Z ^[[36;1mswiftc -O -swift-version 5 -o "$RUNNER_TEMP/TccProbe" tooling/macos-integration/TccProbe.swift^[[0m
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:13.4608820Z ^[[36;1mecho "--- hosted-runner TCC report (definitive for this runner image) ---"^[[0m
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:13.4609340Z ^[[36;1m"$RUNNER_TEMP/TccProbe" | tee "$RUNNER_TEMP/tcc-report.json"^[[0m
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:13.4609620Z ^[[36;1mecho "--- end TCC report ---"^[[0m
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:13.4668210Z shell: /bin/bash -e {0}
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:13.4668610Z env:
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:13.4669170Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:13.4670040Z ##[endgroup]
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7509520Z --- hosted-runner TCC report (definitive for this runner image) ---
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7649140Z {
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7650100Z   "accessibility_trusted" : true,
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7650610Z   "process_ancestry" : [
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7650940Z     {
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7652080Z       "name" : "TccProbe",
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7652580Z       "pid" : 1770
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7653080Z     },
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7653300Z     {
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7653730Z       "name" : "bash",
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7654100Z       "pid" : 1653
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7654380Z     },
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7654750Z     {
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7655070Z       "name" : "Runner.Worker",
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7655490Z       "pid" : 1205
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7655880Z     },
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7656110Z     {
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7656590Z       "name" : "Runner.Listener",
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7656910Z       "pid" : 1198
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7657320Z     },
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7657590Z     {
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7657900Z       "name" : "hosted-compute-a",
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7658670Z       "pid" : 939
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7659000Z     },
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7659240Z     {
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7659790Z       "name" : "bash",
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7660170Z       "pid" : 924
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7660430Z     }
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7660740Z   ],
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7661050Z   "screen_recording_preflight" : true,
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7661390Z   "universal_access_write" : {
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7661770Z     "persisted" : true,
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7662120Z     "read_back_matched_token" : true,
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7662580Z     "synchronize_returned_true" : true
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7662880Z   }
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7663050Z }
+desktop-macos-integration	Report what TCC this hosted runner actually grants	2026-09-13T03:23:25.7663430Z --- end TCC report ---
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	﻿2026-09-13T03:23:25.7981680Z ##[group]Run set -o pipefail
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7982170Z ^[[36;1mset -o pipefail^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7982570Z ^[[36;1martifact_root="$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}"^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7983010Z ^[[36;1mchmod -R u+x "$artifact_root"^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7983410Z ^[[36;1mnode -e "^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7983640Z ^[[36;1m  const fs = require('node:fs');^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7984030Z ^[[36;1m  const path = require('node:path');^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7984450Z ^[[36;1m  const root = process.argv[1];^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7984810Z ^[[36;1m  const manifestPath = path.join(root, 'package-manifest.json');^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7985410Z ^[[36;1m  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7985940Z ^[[36;1m  // T-06-02-01: see the identical comment in desktop-packaged --^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7986400Z ^[[36;1m  // only the archive travels; copiedApplicationPath/executablePath^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7986910Z ^[[36;1m  // are left as recorded and verify-macos-integration.mjs expands^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7987430Z ^[[36;1m  // archivePath itself.^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7987810Z ^[[36;1m  const archiveName = path.basename(manifest.archivePath);^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7988280Z ^[[36;1m  manifest.archivePath = path.join(root, archiveName);^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7988790Z ^[[36;1m  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7989300Z ^[[36;1m  console.log(manifestPath);^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7989600Z ^[[36;1m" "$artifact_root"^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.7990060Z ^[[36;1mecho "manifest-path=$artifact_root/package-manifest.json" >> "$GITHUB_OUTPUT"^[[0m
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.9847180Z shell: /bin/bash -e {0}
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.9847580Z env:
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.9847890Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:25.9848320Z ##[endgroup]
+desktop-macos-integration	Rebase the downloaded manifest onto this job's own artifact directory	2026-09-13T03:23:26.0955470Z /Users/runner/work/_temp/keepling-desktop-package/package-manifest.json
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	﻿2026-09-13T03:23:26.1032970Z ##[group]Run node tooling/verify-macos-integration.mjs \
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:26.1033400Z ^[[36;1mnode tooling/verify-macos-integration.mjs \^[[0m
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:26.1033710Z ^[[36;1m  --without-accessibility-trust \^[[0m
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:26.1034470Z ^[[36;1m  --manifest "/Users/runner/work/_temp/keepling-desktop-package/package-manifest.json"^[[0m
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:26.1064280Z shell: /bin/bash -e {0}
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:26.1064490Z env:
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:26.1064680Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:26.1064980Z ##[endgroup]
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:38.3922740Z LANE_INPUT swiftc="Apple Swift version 6.1.2 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)" ax_probe_digest=9765f77ae1d35e29 settings_probe_digest=550be5960aadeef6
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:38.3925630Z LANE_ARTIFACT application_digest=6f3bac582f54d85323d4633c4229baaeafd828b017f0b51ef2aa81df3e6ee38c executable=/var/folders/nj/vtw8zd2j31d1gdrtntc5y4600000gn/T/keepling-macos-integration-expand-zkUP4p/Keepling.app/Contents/MacOS/Keepling source_revision=23d79e5caa7383a7be9e38ee473b6bde12ce8298
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:39.9548080Z SETTINGS captured=6 file=/Users/runner/work/keepling/keepling/.artifacts/macos-integration/settings-capture.json
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:40.1842390Z MACHINE_STATE at=before-first-row input_source=com.apple.keylayout.US managed={"appearance":null,"differentiateWithoutColor":null,"fullKeyboardAccess":null,"increaseContrast":null,"reduceMotion":true,"reduceTransparency":true} keepling_processes=0 rival_processes=0
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:40.3464120Z MACHINE_STATE at=before-A10 input_source=com.apple.keylayout.US managed={"appearance":null,"differentiateWithoutColor":null,"fullKeyboardAccess":null,"increaseContrast":null,"reduceMotion":true,"reduceTransparency":true} keepling_processes=0 rival_processes=0
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:44.5328350Z ROW id=A10 status=PASS cases=3 duration_ms=4187
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:45.3956980Z MACHINE_STATE at=after-A10 input_source=com.apple.keylayout.US managed={"appearance":null,"differentiateWithoutColor":null,"fullKeyboardAccess":null,"increaseContrast":null,"reduceMotion":true,"reduceTransparency":true} keepling_processes=0 rival_processes=0
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:45.5770760Z MACHINE_STATE at=before-A12 input_source=com.apple.keylayout.US managed={"appearance":null,"differentiateWithoutColor":null,"fullKeyboardAccess":null,"increaseContrast":null,"reduceMotion":true,"reduceTransparency":true} keepling_processes=0 rival_processes=0
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:47.6514360Z ROW id=A12 status=PASS cases=3 duration_ms=2075
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:48.5937150Z MACHINE_STATE at=after-A12 input_source=com.apple.keylayout.US managed={"appearance":null,"differentiateWithoutColor":null,"fullKeyboardAccess":null,"increaseContrast":null,"reduceMotion":true,"reduceTransparency":true} keepling_processes=0 rival_processes=0
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:48.7974510Z MACHINE_STATE at=before-A13 input_source=com.apple.keylayout.US managed={"appearance":null,"differentiateWithoutColor":null,"fullKeyboardAccess":null,"increaseContrast":null,"reduceMotion":true,"reduceTransparency":true} keepling_processes=0 rival_processes=0
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:50.9605820Z ROW id=A13 status=PASS cases=3 duration_ms=2163
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:51.9359600Z MACHINE_STATE at=after-A13 input_source=com.apple.keylayout.US managed={"appearance":null,"differentiateWithoutColor":null,"fullKeyboardAccess":null,"increaseContrast":null,"reduceMotion":true,"reduceTransparency":true} keepling_processes=0 rival_processes=0
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:51.9368450Z LANE_EVIDENCE recorded=false reason=partial-row-selection-is-never-recorded-as-gate-evidence
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:52.6884980Z SETTINGS restore=VERIFIED every mutated setting matches its captured value
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:52.6900890Z 
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:52.6902330Z macOS integration lane summary: rows=3 failed=0 cases=9 duration_ms=26512
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:52.6903940Z   PASS A10 Increase Contrast cases=3
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:52.6905130Z   PASS A12 Reduce Transparency cases=3
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:52.6906230Z   PASS A13 Reduce Motion cases=3
+desktop-macos-integration	Run the macOS rows a hosted runner can physically drive, against the downloaded bytes	2026-09-13T03:23:52.6907140Z macOS integration lane: PASSED cases=9
+desktop-macos-integration	Publish the TCC answer as an artifact	﻿2026-09-13T03:23:52.7102640Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7109340Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7109870Z with:
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7110190Z   name: hosted-runner-tcc-report
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7110480Z   path: /Users/runner/work/_temp/tcc-report.json
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7110850Z   if-no-files-found: warn
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7111160Z   retention-days: 14
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7111410Z   compression-level: 6
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7111690Z   overwrite: false
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7111920Z   include-hidden-files: false
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7112220Z env:
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7112550Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:52.7112930Z ##[endgroup]
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:53.2144550Z (node:2525) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:53.2153190Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:53.2217390Z With the provided path, there will be 1 file uploaded
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:53.2220060Z Artifact name is valid!
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:53.2220610Z Root directory input is valid!
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:53.5324260Z Beginning upload of artifact content to blob storage
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:53.5446620Z (node:2525) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:53.7374420Z Uploaded bytes 402
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:53.7890680Z Finished uploading artifact content to blob storage!
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:53.7895460Z SHA256 digest of uploaded artifact zip is 09b301ed6729d66cf5306c23003e06dec9bcd67a42eb7bdc657c6960923ae7be
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:53.7899080Z Finalizing artifact upload
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:54.0099550Z Artifact hosted-runner-tcc-report.zip successfully finalized. Artifact ID 10311210970
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:54.0104440Z Artifact hosted-runner-tcc-report has been successfully uploaded! Final size is 402 bytes. Artifact ID is 10311210970
+desktop-macos-integration	Publish the TCC answer as an artifact	2026-09-13T03:23:54.0125780Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34735177060/artifacts/10311210970
+desktop-macos-integration	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T03:23:54.0352270Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-macos-integration	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:23:54.0353270Z Post job cleanup.
+desktop-macos-integration	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:23:54.2089830Z (node:2528) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-macos-integration	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:23:54.2091830Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T03:23:54.2242100Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.2243310Z Post job cleanup.
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.3612570Z [command]/opt/homebrew/bin/git version
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.4241390Z git version 2.55.0
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.4264150Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/4624d0e8-772c-46f4-b8f6-aad02f5cd2f5/.gitconfig'
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.4277300Z Temporarily overriding HOME='/Users/runner/work/_temp/4624d0e8-772c-46f4-b8f6-aad02f5cd2f5' before making global git config changes
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.4279750Z Adding repository directory to the temporary git global config as a safe directory
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.4281630Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.4410300Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.4489300Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.5629300Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.5701230Z http.https://github.com/.extraheader
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.5714250Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.5803270Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.6923030Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+desktop-macos-integration	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:23:54.7002040Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+desktop-macos-integration	Complete job	﻿2026-09-13T03:23:54.8043870Z Cleaning up orphan processes
+desktop-macos-integration	Complete job	2026-09-13T03:23:55.0681430Z Terminate orphan process: pid (1993) (System Events)
+desktop-macos-integration	Complete job	2026-09-13T03:23:55.8381890Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

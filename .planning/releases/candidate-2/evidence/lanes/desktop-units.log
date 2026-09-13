@@ -1,0 +1,702 @@
+desktop-units	Set up job	﻿2026-09-13T03:19:07.5988870Z Current runner version: '2.337.0'
+desktop-units	Set up job	2026-09-13T03:19:07.6009800Z ##[group]Runner Image Provisioner
+desktop-units	Set up job	2026-09-13T03:19:07.6010410Z Hosted Compute Agent
+desktop-units	Set up job	2026-09-13T03:19:07.6010770Z Version: 20260828.587
+desktop-units	Set up job	2026-09-13T03:19:07.6011170Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+desktop-units	Set up job	2026-09-13T03:19:07.6011670Z Build Date: 2026-08-28T16:44:25Z
+desktop-units	Set up job	2026-09-13T03:19:07.6012210Z Worker ID: {f1c4fc95-a3d5-4e06-9372-5cb91cca4d44}
+desktop-units	Set up job	2026-09-13T03:19:07.6012690Z Azure Region: westus
+desktop-units	Set up job	2026-09-13T03:19:07.6013090Z ##[endgroup]
+desktop-units	Set up job	2026-09-13T03:19:07.6014020Z ##[group]Operating System
+desktop-units	Set up job	2026-09-13T03:19:07.6014430Z macOS
+desktop-units	Set up job	2026-09-13T03:19:07.6014840Z 15.7.9
+desktop-units	Set up job	2026-09-13T03:19:07.6015200Z 24G830
+desktop-units	Set up job	2026-09-13T03:19:07.6015540Z ##[endgroup]
+desktop-units	Set up job	2026-09-13T03:19:07.6016320Z ##[group]Runner Image
+desktop-units	Set up job	2026-09-13T03:19:07.6016720Z Image: macos-15-arm64
+desktop-units	Set up job	2026-09-13T03:19:07.6017100Z Version: 20260907.0337.1
+desktop-units	Set up job	2026-09-13T03:19:07.6017940Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+desktop-units	Set up job	2026-09-13T03:19:07.6019200Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+desktop-units	Set up job	2026-09-13T03:19:07.6019890Z ##[endgroup]
+desktop-units	Set up job	2026-09-13T03:19:07.6021180Z ##[group]GITHUB_TOKEN Permissions
+desktop-units	Set up job	2026-09-13T03:19:07.6022430Z Contents: read
+desktop-units	Set up job	2026-09-13T03:19:07.6022920Z Metadata: read
+desktop-units	Set up job	2026-09-13T03:19:07.6023320Z ##[endgroup]
+desktop-units	Set up job	2026-09-13T03:19:07.6024700Z Secret source: Actions
+desktop-units	Set up job	2026-09-13T03:19:07.6025310Z Cache mode: write
+desktop-units	Set up job	2026-09-13T03:19:07.6025750Z Prepare workflow directory
+desktop-units	Set up job	2026-09-13T03:19:07.6331210Z Prepare all required actions
+desktop-units	Set up job	2026-09-13T03:19:07.6372730Z Getting action download info
+desktop-units	Set up job	2026-09-13T03:19:08.0456780Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+desktop-units	Set up job	2026-09-13T03:19:08.3650360Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+desktop-units	Set up job	2026-09-13T03:19:08.6174990Z Complete job name: desktop-units
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T03:19:08.6716430Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6729330Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6731400Z with:
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6732340Z   repository: szTheory/keepling
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6740240Z   token: ***
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6741350Z   ssh-strict: true
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6742360Z   ssh-user: git
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6743460Z   persist-credentials: true
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6744620Z   clean: true
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6745580Z   sparse-checkout-cone-mode: true
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6746660Z   fetch-depth: 1
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6747650Z   fetch-tags: false
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6748790Z   show-progress: true
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6749850Z   lfs: false
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6750890Z   submodules: false
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6751860Z   set-safe-directory: true
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6755150Z env:
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6756710Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.6758120Z ##[endgroup]
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.0302030Z Syncing repository: szTheory/keepling
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.0304300Z ##[group]Getting Git version info
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.0304890Z Working directory is '/Users/runner/work/keepling/keepling'
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.0305880Z [command]/opt/homebrew/bin/git version
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.0966870Z git version 2.55.0
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.0987100Z ##[endgroup]
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.0994030Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/ab0ef4ad-cf0f-449c-be9e-7e525c44bbde/.gitconfig'
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.0997600Z Temporarily overriding HOME='/Users/runner/work/_temp/ab0ef4ad-cf0f-449c-be9e-7e525c44bbde' before making global git config changes
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.0999240Z Adding repository directory to the temporary git global config as a safe directory
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1001870Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1124820Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1128140Z ##[group]Initializing the repository
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1129330Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1363120Z hint: Using 'master' as the name for the initial branch. This default branch name
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1371610Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1381300Z hint: to use in all of your new repositories, which will suppress this warning,
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1396670Z hint: call:
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1397360Z hint:
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1398380Z hint: 	git config --global init.defaultBranch <name>
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1399880Z hint:
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1401330Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1402580Z hint: 'development'. The just-created branch can be renamed via this command:
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1403630Z hint:
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1405330Z hint: 	git branch -m <name>
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1406300Z hint:
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1407260Z hint: Disable this message with "git config set advice.defaultBranchName false"
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1409070Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1440390Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1483790Z ##[endgroup]
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1484840Z ##[group]Disabling automatic garbage collection
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1485670Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1601060Z ##[endgroup]
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1607140Z ##[group]Setting up auth
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1617310Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.1663210Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.2972540Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.3046390Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.3988760Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4055120Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4981590Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5053390Z ##[endgroup]
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5054210Z ##[group]Fetching the repository
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5058880Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +23d79e5caa7383a7be9e38ee473b6bde12ce8298:refs/remotes/origin/main
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.0865840Z From https://github.com/szTheory/keepling
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.0866980Z  * [new ref]         23d79e5caa7383a7be9e38ee473b6bde12ce8298 -> origin/main
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.0868980Z ##[endgroup]
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.0869720Z ##[group]Determining the checkout info
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.0870550Z ##[endgroup]
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.0871880Z [command]/opt/homebrew/bin/git sparse-checkout disable
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.0949590Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.1018740Z ##[group]Checking out the ref
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.1021900Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.2398580Z Switched to a new branch 'main'
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.2411580Z branch 'main' set up to track 'origin/main'.
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.2416430Z ##[endgroup]
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.2499930Z [command]/opt/homebrew/bin/git log -1 --format=%H
+desktop-units	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.2560810Z 23d79e5caa7383a7be9e38ee473b6bde12ce8298
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T03:19:10.2858980Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.2863620Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.2864760Z with:
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.2865410Z   node-version: 24.7.0
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.2866110Z   always-auth: false
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.2866770Z   check-latest: false
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.2874020Z   token: ***
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.2874690Z env:
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.2875960Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.2876970Z ##[endgroup]
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.4079400Z Attempting to download 24.7.0...
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.4215430Z (node:3548) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:10.4218120Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.3345720Z Acquiring 24.7.0 - arm64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-darwin-arm64.tar.gz
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.8514440Z Extracting ...
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.8688390Z [command]/usr/bin/tar xz --strip 1 -C /Users/runner/work/_temp/1362dfcb-ca6c-4c80-8ad7-ac20e1cd2df9 -f /Users/runner/work/_temp/3f4a5310-e0b9-4091-8f5b-410a98177910
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:13.0127780Z Adding to the cache ...
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:15.5265210Z ##[group]Environment details
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:15.8781840Z node: v24.7.0
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:15.8857220Z npm: 11.5.1
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:15.8858210Z yarn: 1.22.22
+desktop-units	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:15.8867220Z ##[endgroup]
+desktop-units	Install locked JavaScript inputs	﻿2026-09-13T03:19:15.9061350Z ##[group]Run corepack enable && pnpm install --frozen-lockfile
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:15.9062080Z ^[[36;1mcorepack enable && pnpm install --frozen-lockfile^[[0m
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:15.9155630Z shell: /bin/bash -e {0}
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:15.9155980Z env:
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:15.9156630Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:15.9156990Z ##[endgroup]
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:16.1637100Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:17.3041860Z Scope: all 4 workspace projects
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:17.3512960Z Lockfile is up to date, resolution step is skipped
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:17.4545100Z Packages: +912
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:17.4546040Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:17.6421030Z Progress: resolved 0, reused 0, downloaded 1, added 0
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:18.6401220Z Progress: resolved 0, reused 0, downloaded 27, added 4
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:20.1752960Z Progress: resolved 0, reused 0, downloaded 28, added 4
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:21.1771760Z Progress: resolved 0, reused 0, downloaded 57, added 16
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:22.1783370Z Progress: resolved 0, reused 0, downloaded 70, added 16
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:23.1828040Z Progress: resolved 0, reused 0, downloaded 88, added 23
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:24.1808200Z Progress: resolved 0, reused 0, downloaded 150, added 37
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:25.1838010Z Progress: resolved 0, reused 0, downloaded 252, added 69
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:26.1846770Z Progress: resolved 0, reused 0, downloaded 360, added 108
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:27.1876930Z Progress: resolved 0, reused 0, downloaded 453, added 138
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:28.1859960Z Progress: resolved 0, reused 0, downloaded 585, added 196
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:29.1884210Z Progress: resolved 0, reused 0, downloaded 830, added 336
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:29.5537990Z Packages are cloned from the content-addressable store to the virtual store.
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:29.5545740Z   Content-addressable store is at: /Users/runner/Library/pnpm/store/v10
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:29.5549140Z   Virtual store is at:             node_modules/.pnpm
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:30.1879150Z Progress: resolved 0, reused 0, downloaded 870, added 568
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:31.0830910Z Progress: resolved 0, reused 0, downloaded 870, added 912, done
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:31.1952870Z 
+desktop-units	Install locked JavaScript inputs	2026-09-13T03:19:31.2493480Z Done in 14.2s using pnpm v10.33.0
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	﻿2026-09-13T03:19:31.2786010Z ##[group]Run set -o pipefail
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.2786460Z ^[[36;1mset -o pipefail^[[0m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.2786790Z ^[[36;1mpnpm contracts:check^[[0m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.2787050Z ^[[36;1mpnpm test:desktop^[[0m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.2787350Z ^[[36;1mpnpm test:desktop:ipc^[[0m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.2787640Z ^[[36;1mpnpm typecheck:desktop^[[0m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.2787930Z ^[[36;1mpnpm typecheck:web^[[0m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.2862320Z shell: /bin/bash -e {0}
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.2862760Z env:
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.2863180Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.2863530Z ##[endgroup]
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.6308560Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.6322990Z > keepling@ contracts:check /Users/runner/work/keepling/keepling
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.6330030Z > node tooling/check-contracts.mjs && pnpm run contracts:check:mcp
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:31.6339600Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:32.6180500Z ✨ openapi-typescript 7.13.0
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:32.7442830Z Contract drift check passed: OpenAPI agrees; 4 sync cases, 6 compatibility cases, 2 codec fixtures, 6 skew lanes, and 19 trust facts validated
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:32.7445520Z Compatibility lane: old-client-new-server[digest=sha256:2222222222222222222222222222222222222222222222222222222222222222,schema=3,train=1,cases=2]
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:32.7446830Z Compatibility lane: current-client-current-server[digest=sha256:2222222222222222222222222222222222222222222222222222222222222222,schema=3,train=2,cases=2]
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:32.7448320Z Compatibility lane: new-client-old-server[digest=sha256:1111111111111111111111111111111111111111111111111111111111111111,schema=3,train=3,cases=2]
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:32.7450200Z Compatibility lane: old-image-new-schema[digest=sha256:1111111111111111111111111111111111111111111111111111111111111111,schema=3,train=1,cases=2]
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:32.7451870Z Compatibility lane: new-image-old-schema[digest=sha256:2222222222222222222222222222222222222222222222222222222222222222,schema=2,train=2,cases=2]
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:32.7453070Z Compatibility lane: rollback-image-current-schema[digest=sha256:1111111111111111111111111111111111111111111111111111111111111111,schema=3,train=1,cases=2]
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:32.7453910Z Vector manifest gate passed: 16 vector files, 20 consumer entries proven executed
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.0068010Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.0072920Z > keepling@ contracts:check:mcp /Users/runner/work/keepling/keepling
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.0078180Z > node tooling/generate-mcp-tool-schemas.mjs --check
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.0078620Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.0829560Z generate-mcp-tool-schemas --check: committed schema is current
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.3491020Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.3495350Z > keepling@ test:desktop /Users/runner/work/keepling/keepling
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.3561050Z > pnpm --dir apps/desktop test
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.3567390Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.5928050Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.5928820Z > @keepling/desktop@0.0.0 test /Users/runner/work/keepling/keepling/apps/desktop
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.5929530Z > node ../../tooling/run-tests.mjs unit
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.5929820Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:33.6344190Z run-tests: vitest run --config vitest.config.ts --project=application --project=renderer --project=store --project=performance
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:34.0063720Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:34.0066100Z ^[[1m^[[30m^[[46m RUN ^[[49m^[[39m^[[22m ^[[36mv4.1.11 ^[[39m^[[90m/Users/runner/work/keepling/keepling/apps/desktop^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:34.0066620Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:34.2705160Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/browser-delegated-auth.test.ts ^[[2m(^[[22m^[[2m20 tests^[[22m^[[2m)^[[22m^[[32m 13^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:34.2897820Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/server-refusal.test.ts ^[[2m(^[[22m^[[2m26 tests^[[22m^[[2m)^[[22m^[[32m 25^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:34.4848340Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/sync-presentation.test.ts ^[[2m(^[[22m^[[2m12 tests^[[22m^[[2m)^[[22m^[[32m 28^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:34.6014640Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/outbound-commands.test.ts ^[[2m(^[[22m^[[2m27 tests^[[22m^[[2m)^[[22m^[[32m 11^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:34.7473770Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/lifecycle.test.ts ^[[2m(^[[22m^[[2m11 tests^[[22m^[[2m)^[[22m^[[32m 14^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:34.9006370Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/undo-reconciliation.test.ts ^[[2m(^[[22m^[[2m8 tests^[[22m^[[2m)^[[22m^[[32m 8^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.0387750Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/conflict-presentation.test.ts ^[[2m(^[[22m^[[2m8 tests^[[22m^[[2m)^[[22m^[[32m 6^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.1845980Z (node:4113) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.1846740Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2469390Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/sync-vectors.test.ts ^[[2m(^[[22m^[[2m6 tests^[[22m^[[2m)^[[22m^[[32m 48^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2672310Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Populated^[[2m > ^[[22m^[[2mrenders a many-row Inbox list with stable roving focus (zero/one/many: many)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2737920Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2746930Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2765740Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Populated^[[2m > ^[[22m^[[2mrenders a many-row Inbox list with stable roving focus (zero/one/many: many)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2775440Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2833270Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2862470Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Populated^[[2m > ^[[22m^[[2mrenders exactly one row with normal geometry and singular wording (zero/one/many: one)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2872170Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2878260Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2900140Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Populated^[[2m > ^[[22m^[[2mrenders exactly one row with normal geometry and singular wording (zero/one/many: one)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2927400Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2948580Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2952000Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Empty^[[2m > ^[[22m^[[2mshows the authoritative Inbox empty copy (zero/one/many: zero)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2957770Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2959580Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2960570Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Empty^[[2m > ^[[22m^[[2mshows the authoritative Inbox empty copy (zero/one/many: zero)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.2963820Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3036650Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3054450Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Empty^[[2m > ^[[22m^[[2mshows the authoritative Today empty copy
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3060680Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3061120Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3061950Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Empty^[[2m > ^[[22m^[[2mshows the authoritative Today empty copy
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3063610Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3064060Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3064750Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Empty^[[2m > ^[[22m^[[2mshows the authoritative Trash empty copy
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3066480Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3066840Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3067590Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Empty^[[2m > ^[[22m^[[2mshows the authoritative Trash empty copy
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3070400Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3071570Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3074340Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Loading / durability labels^[[2m > ^[[22m^[[2mlabels a freshly captured task "Saved on this Mac" before any network concern (D-03)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3077220Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3097770Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3129400Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3132070Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Loading / durability labels^[[2m > ^[[22m^[[2mlabels a freshly captured task "Saved on this Mac" before any network concern (D-03)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3242880Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3258840Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3259350Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3263450Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Loading / durability labels^[[2m > ^[[22m^[[2mlabels a freshly captured task "Saved on this Mac" before any network concern (D-03)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3267630Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3284280Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3288370Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3289410Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3290630Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Loading / durability labels^[[2m > ^[[22m^[[2mlabels a freshly captured task "Saved on this Mac" before any network concern (D-03)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3291960Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3292420Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3293310Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Error / recovery^[[2m > ^[[22m^[[2mshows the healthy recovery copy when nothing is recoverable
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3295460Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3296420Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3297700Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Error / recovery^[[2m > ^[[22m^[[2mshows the healthy recovery copy when nothing is recoverable
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3301460Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3302940Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3303900Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Error / recovery^[[2m > ^[[22m^[[2moffers a named undo action after a lifecycle change and settles after undo
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3305080Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3305850Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3307290Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3308060Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3308520Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3309520Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Error / recovery^[[2m > ^[[22m^[[2moffers a named undo action after a lifecycle change and settles after undo
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3311080Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3318890Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3319710Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3320130Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3321620Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Error / recovery^[[2m > ^[[22m^[[2moffers a named undo action after a lifecycle change and settles after undo
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3329050Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3331890Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3332250Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3333220Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Error / recovery^[[2m > ^[[22m^[[2moffers a named undo action after a lifecycle change and settles after undo
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3344360Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3344970Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3346000Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Conflict^[[2m > ^[[22m^[[2mpresents mine/current inline and never overwrites without an explicit choice
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3349500Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3350380Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3351110Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3351530Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3352380Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Conflict^[[2m > ^[[22m^[[2mpresents mine/current inline and never overwrites without an explicit choice
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3354150Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3355270Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3356070Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Conflict^[[2m > ^[[22m^[[2mcommits the chosen field and clears the conflict on resolution
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3356940Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3357720Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3358340Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3358870Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3359180Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3359970Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Conflict^[[2m > ^[[22m^[[2mcommits the chosen field and clears the conflict on resolution
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3361050Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3362540Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3363000Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3363850Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Conflict^[[2m > ^[[22m^[[2mcommits the chosen field and clears the conflict on resolution
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3368510Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3373450Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3427700Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Partial^[[2m > ^[[22m^[[2mkeeps valid fields visible when notes are absent and lifecycle actions stay available
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3430630Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3431260Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3432460Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3432820Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3434310Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Partial^[[2m > ^[[22m^[[2mkeeps valid fields visible when notes are absent and lifecycle actions stay available
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3435510Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3435920Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3548190Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: dirty-work safety (D-12)^[[2m > ^[[22m^[[2moffers Save Changes / Discard Changes / Keep Editing when navigating away from a dirty draft
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3655990Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3762690Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3765370Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/state-matrix.test.tsx ^[[2m(^[[22m^[[2m16 tests^[[22m^[[2m)^[[22m^[[32m 129^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3869870Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3916270Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3928210Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3943150Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3956310Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3958450Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: dirty-work safety (D-12)^[[2m > ^[[22m^[[2moffers Save Changes / Discard Changes / Keep Editing when navigating away from a dirty draft
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3963800Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3964430Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3969810Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Overflow / long text^[[2m > ^[[22m^[[2mretains a long title and long recovery/dialog copy in full without losing content (backstop: visual wrap/clamp verified separately)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3972030Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3973580Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3974730Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3976710Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3983780Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: Overflow / long text^[[2m > ^[[22m^[[2mretains a long title and long recovery/dialog copy in full without losing content (backstop: visual wrap/clamp verified separately)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.3999730Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.4002590Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.4003690Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: responsive breakpoint (D-04)^[[2m > ^[[22m^[[2mre-derives the live breakpoint attribute on window resize
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.4008630Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.4010860Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.4019950Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.4021280Z ^[[90mstderr^[[2m | test/application/state-matrix.test.tsx^[[2m > ^[[22m^[[2mstate matrix: responsive breakpoint (D-04)^[[2m > ^[[22m^[[2mre-derives the live breakpoint attribute on window resize
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.4022390Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.4022840Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.5840700Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/recovery-presentation.test.ts ^[[2m(^[[22m^[[2m16 tests^[[22m^[[2m)^[[22m^[[32m 15^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.7121620Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/quick-entry-draft.test.ts ^[[2m(^[[22m^[[2m7 tests^[[22m^[[2m)^[[22m^[[32m 7^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.7842720Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/foreground-app.test.ts ^[[2m(^[[22m^[[2m8 tests^[[22m^[[2m)^[[22m^[[33m 405^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.8371340Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/client-facade-boundary.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[32m 8^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.9117050Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/offline-capture.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 4^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:35.9516020Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/mainWindowState.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[32m 3^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.0313370Z  ^[[32m✓^[[39m ^[[30m^[[45m application ^[[49m^[[39m test/application/menuLabels.test.ts ^[[2m(^[[22m^[[2m5 tests^[[22m^[[2m)^[[22m^[[32m 3^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.0658260Z (node:4124) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.0762520Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.4661250Z  ^[[32m✓^[[39m ^[[30m^[[46m performance ^[[49m^[[39m test/performance/runtime.spec.ts ^[[2m(^[[22m^[[2m15 tests^[[22m^[[2m)^[[22m^[[32m 7^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.8717440Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mevery state that authors actions renders them, verbatim, in order
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.8857430Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.8958780Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.9075820Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.9177080Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.9277710Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.9379090Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.9480130Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.9580580Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.9581590Z  ^[[32m✓^[[39m ^[[30m^[[45m renderer ^[[49m^[[39m test/renderer/sync-status-row.test.tsx ^[[2m(^[[22m^[[2m17 tests^[[22m^[[2m)^[[22m^[[32m 122^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.9683860Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.9784000Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.9885280Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:36.9985620Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.0087480Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.0203990Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.0317640Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.0428080Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.0529300Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.0640230Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.0781700Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.0920070Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.1074230Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.1200310Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.1334680Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.1435480Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.1536960Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mevery state that authors actions renders them, verbatim, in order
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.1636890Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.1736880Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.1838350Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mrenders nothing at all for a quiet row
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.1940560Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.2041840Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.2144240Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.2248480Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.2350360Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mrenders nothing at all for a quiet row
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.2351570Z  ^[[32m✓^[[39m ^[[30m^[[45m renderer ^[[49m^[[39m test/renderer/keyboardCommands.test.ts ^[[2m(^[[22m^[[2m19 tests^[[22m^[[2m)^[[22m^[[32m 9^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.2450250Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.2551430Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.2664120Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe export action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.2784210Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.2884750Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.2994980Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.3096340Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.3197110Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.3299240Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe export action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.3399000Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.3503370Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.3604330Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.3706350Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe export action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.3806120Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.3899310Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.3925980Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe inspect action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.3963640Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4010330Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4036160Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4078180Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4188610Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4295460Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe inspect action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4390110Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4414100Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4439320Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4467370Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe inspect action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4502470Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4547120Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4583880Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe remove_local_data action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4608380Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4634100Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4655580Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4678650Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4705710Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4742480Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe remove_local_data action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4756430Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4776910Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4836230Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4851120Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe remove_local_data action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4899400Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4925370Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.4968770Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe retry action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5043230Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5044100Z  ^[[32m✓^[[39m ^[[30m^[[45m store ^[[49m^[[39m test/store/outbound-mutations.test.ts ^[[2m(^[[22m^[[2m18 tests^[[22m^[[2m)^[[22m^[[32m 113^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5105610Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5141260Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5183730Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5239200Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5274730Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe retry action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5276330Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5277060Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5277460Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5278330Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe retry action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5279390Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5280020Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5280960Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe retry_opening action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5281950Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5282670Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5283320Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5283950Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5284760Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5285640Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe retry_opening action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5286690Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5290660Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5291140Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5292030Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe retry_opening action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5292980Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5293380Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5294610Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe retry_save action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5295640Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5296290Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5297000Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5297630Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5298000Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5298850Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe retry_save action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5299870Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5300540Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5300920Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5301860Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe retry_save action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5302800Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5312030Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5313050Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe review action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5314100Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5316390Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5317010Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5317630Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5318080Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5319270Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe review action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5320440Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5321170Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5321570Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5322500Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe review action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5323430Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5323830Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5325100Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe review_conflict action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5326200Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5326930Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5327550Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5328190Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5328570Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5329460Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe review_conflict action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5330830Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5331570Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5331940Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5333570Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe review_conflict action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5335030Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5335430Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5336420Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe show_recovery_options action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5337420Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5338090Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5338770Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5339380Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5339760Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5340650Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe show_recovery_options action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5342400Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5343110Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5345010Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5346040Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe show_recovery_options action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5353930Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5354460Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5355330Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe sign_in action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5356370Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5357000Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5357710Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5358360Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5358730Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5359680Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe sign_in action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5360680Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5361370Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5361740Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5362700Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mthe sign_in action reaches a real capability
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5363660Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5364080Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5365110Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2msigns in through the system browser, never by collecting anything here
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5366260Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5367000Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5368500Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5369730Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5370630Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5371750Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2msigns in through the system browser, never by collecting anything here
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5372780Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5373710Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5374080Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5375020Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2msigns in through the system browser, never by collecting anything here
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5376100Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5376500Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5377500Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mnever confirms an irreversible removal from a single press
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5379130Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5380710Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5381340Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5381950Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5384920Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5387760Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mnever confirms an irreversible removal from a single press
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5388830Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5389450Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5390620Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5391760Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mnever confirms an irreversible removal from a single press
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5392860Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5393960Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5395650Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mexports before offering removal, and says where the file went
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5397630Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5398280Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5399930Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5400590Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5400980Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5401870Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mexports before offering removal, and says where the file went
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5402820Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5403520Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5403870Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5404940Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mexports before offering removal, and says where the file went
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5406610Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5412230Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5413460Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mrefreshes from the server when a conflict has no mine/current chooser
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5414970Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5415590Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5416180Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5417220Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5418230Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5419480Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mrefreshes from the server when a conflict has no mine/current chooser
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5420450Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5421100Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5421980Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5422960Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mrefreshes from the server when a conflict has no mine/current chooser
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5426470Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5426850Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5427600Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mis not a second live region
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5428570Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5429180Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5430210Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5430550Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5431310Z ^[[90mstderr^[[2m | test/renderer/sync-status-row.test.tsx^[[2m > ^[[22m^[[2mrecovery actions reaching a person (O-42)^[[2m > ^[[22m^[[2mis not a second live region
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5432170Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5432550Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5433020Z (node:4222) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.5433860Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.6246000Z (node:4231) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.6290660Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7505190Z ^[[90mstderr^[[2m | test/renderer/workspace-tracer.test.tsx^[[2m > ^[[22m^[[2mworkspace-tracer: shared Inbox capture/list/detail slice^[[2m > ^[[22m^[[2mcaptures a task through the facade and lists it with the D-03 local trust label
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7506400Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7506900Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7507170Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7575980Z ^[[90mstderr^[[2m | test/renderer/workspace-tracer.test.tsx^[[2m > ^[[22m^[[2mworkspace-tracer: shared Inbox capture/list/detail slice^[[2m > ^[[22m^[[2mcaptures a task through the facade and lists it with the D-03 local trust label
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7579070Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7580690Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7582650Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7584040Z ^[[90mstderr^[[2m | test/renderer/workspace-tracer.test.tsx^[[2m > ^[[22m^[[2mworkspace-tracer: shared Inbox capture/list/detail slice^[[2m > ^[[22m^[[2mcaptures a task through the facade and lists it with the D-03 local trust label
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7590070Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7597760Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7600680Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7602470Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7780320Z ^[[90mstderr^[[2m | test/renderer/workspace-tracer.test.tsx^[[2m > ^[[22m^[[2mworkspace-tracer: shared Inbox capture/list/detail slice^[[2m > ^[[22m^[[2mcaptures a task through the facade and lists it with the D-03 local trust label
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7781880Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.7782190Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8009590Z ^[[90mstderr^[[2m | test/renderer/workspace-tracer.test.tsx^[[2m > ^[[22m^[[2mworkspace-tracer: shared Inbox capture/list/detail slice^[[2m > ^[[22m^[[2mmoves stable list focus independently from selection and opens by stable task identity
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8010920Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8018200Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8018870Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8019660Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8019940Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8021130Z ^[[90mstderr^[[2m | test/renderer/workspace-tracer.test.tsx^[[2m > ^[[22m^[[2mworkspace-tracer: shared Inbox capture/list/detail slice^[[2m > ^[[22m^[[2mmoves stable list focus independently from selection and opens by stable task identity
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8022700Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8022980Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8093470Z ^[[90mstderr^[[2m | test/renderer/workspace-tracer.test.tsx^[[2m > ^[[22m^[[2mworkspace-tracer: shared Inbox capture/list/detail slice^[[2m > ^[[22m^[[2mrenders byte-identical markup from two independent facade instances (web/desktop parity)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8112410Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8140390Z The current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8160680Z  ^[[32m✓^[[39m ^[[30m^[[45m renderer ^[[49m^[[39m test/renderer/workspace-tracer.test.tsx ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[32m 107^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8162230Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8264770Z ^[[90mstderr^[[2m | test/renderer/workspace-tracer.test.tsx^[[2m > ^[[22m^[[2mworkspace-tracer: shared Inbox capture/list/detail slice^[[2m > ^[[22m^[[2mrenders byte-identical markup from two independent facade instances (web/desktop parity)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8266010Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8266320Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8268290Z ^[[90mstderr^[[2m | test/renderer/workspace-tracer.test.tsx^[[2m > ^[[22m^[[2mworkspace-tracer: shared Inbox capture/list/detail slice^[[2m > ^[[22m^[[2mshows the authoritative empty state copy when Inbox has no tasks
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8270200Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8270500Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8271430Z ^[[90mstderr^[[2m | test/renderer/workspace-tracer.test.tsx^[[2m > ^[[22m^[[2mworkspace-tracer: shared Inbox capture/list/detail slice^[[2m > ^[[22m^[[2mshows the authoritative empty state copy when Inbox has no tasks
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8272460Z ^[[22m^[[39mThe current testing environment is not configured to support act(...)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.8272740Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.9424310Z (node:4232) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:37.9425170Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.0145540Z  ^[[32m✓^[[39m ^[[30m^[[45m store ^[[49m^[[39m test/store-worker/refusal-durability.test.ts ^[[2m(^[[22m^[[2m9 tests^[[22m^[[2m)^[[22m^[[32m 66^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.1227680Z (node:4233) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.1229500Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.2008510Z  ^[[32m✓^[[39m ^[[30m^[[45m store ^[[49m^[[39m test/store/outbox-transmission.test.ts ^[[2m(^[[22m^[[2m8 tests^[[22m^[[2m)^[[22m^[[32m 71^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.3128070Z (node:4234) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.3128720Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.3573190Z  ^[[32m✓^[[39m ^[[30m^[[45m store ^[[49m^[[39m test/store/outbox-state-migration.test.ts ^[[2m(^[[22m^[[2m4 tests^[[22m^[[2m)^[[22m^[[32m 38^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.4709830Z (node:4235) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.4710540Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.6220750Z  ^[[32m✓^[[39m ^[[30m^[[45m store ^[[49m^[[39m test/store/undo-handles.test.ts ^[[2m(^[[22m^[[2m9 tests^[[22m^[[2m)^[[22m^[[32m 147^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.7683190Z (node:4239) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.7685200Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.8339250Z  ^[[32m✓^[[39m ^[[30m^[[45m store ^[[49m^[[39m test/store/quick-entry-draft.test.ts ^[[2m(^[[22m^[[2m9 tests^[[22m^[[2m)^[[22m^[[32m 62^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.9490100Z (node:4240) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.9490750Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:38.9686530Z  ^[[32m✓^[[39m ^[[30m^[[45m store ^[[49m^[[39m test/store/offline-capture.test.ts ^[[2m(^[[22m^[[2m2 tests^[[22m^[[2m)^[[22m^[[32m 18^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.5368470Z  ^[[32m✓^[[39m ^[[30m^[[45m store ^[[49m^[[39m test/store/migrations-faults.test.ts ^[[2m(^[[22m^[[2m11 tests^[[22m^[[2m)^[[22m^[[33m 3905^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.5375900Z      ^[[33m^[[2m✓^[[22m^[[39m fails finitely under SQLITE_BUSY without hanging and without partial commit (D-34/D-38) ^[[33m 3820^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.5436760Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.5442210Z ^[[2m Test Files ^[[22m ^[[1m^[[32m28 passed^[[39m^[[22m^[[90m (28)^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.5443110Z ^[[2m      Tests ^[[22m ^[[1m^[[32m306 passed^[[39m^[[22m^[[90m (306)^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.5443640Z ^[[2m   Start at ^[[22m 03:19:34
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.5444410Z ^[[2m   Duration ^[[22m 7.53s^[[2m (transform 572ms, setup 0ms, import 1.65s, tests 5.39s, environment 2.41s)^[[22m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.5450030Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.8051110Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.8051940Z > keepling@ test:desktop:ipc /Users/runner/work/keepling/keepling
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.8052390Z > pnpm --dir apps/desktop test:ipc
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:41.8052580Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.0283010Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.0283750Z > @keepling/desktop@0.0.0 test:ipc /Users/runner/work/keepling/keepling/apps/desktop
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.0284230Z > node ../../tooling/run-tests.mjs ipc
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.0284380Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.0617490Z run-tests: vitest run --config vitest.config.ts --project=ipc
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.2555180Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.2556740Z ^[[1m^[[30m^[[46m RUN ^[[49m^[[39m^[[22m ^[[36mv4.1.11 ^[[39m^[[90m/Users/runner/work/keepling/keepling/apps/desktop^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.2557090Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.6745730Z  ^[[32m✓^[[39m ^[[30m^[[45m ipc ^[[49m^[[39m test/ipc/hostile-bridge.test.ts ^[[2m(^[[22m^[[2m75 tests^[[22m^[[2m)^[[22m^[[32m 178^[[2mms^[[22m^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.6760460Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.6763110Z ^[[2m Test Files ^[[22m ^[[1m^[[32m1 passed^[[39m^[[22m^[[90m (1)^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.6764750Z ^[[2m      Tests ^[[22m ^[[1m^[[32m75 passed^[[39m^[[22m^[[90m (75)^[[39m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.6765710Z ^[[2m   Start at ^[[22m 03:19:42
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.6767300Z ^[[2m   Duration ^[[22m 417ms^[[2m (transform 113ms, setup 0ms, import 156ms, tests 178ms, environment 0ms)^[[22m
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.6768930Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.9176020Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.9176650Z > keepling@ typecheck:desktop /Users/runner/work/keepling/keepling
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.9177330Z > pnpm --dir apps/desktop typecheck
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:42.9177580Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:43.1328230Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:43.1328960Z > @keepling/desktop@0.0.0 typecheck /Users/runner/work/keepling/keepling/apps/desktop
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:43.1329530Z > tsc --project tsconfig.json --noEmit --pretty false
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:43.1329770Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:45.3501460Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:45.3502540Z > keepling@ typecheck:web /Users/runner/work/keepling/keepling
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:45.3503030Z > pnpm --filter @keepling/web typecheck
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:45.3503190Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:45.5815410Z 
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:45.5818250Z > @keepling/web@0.0.0 typecheck /Users/runner/work/keepling/keepling/apps/web
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:45.5819210Z > tsc -b --pretty false
+desktop-units	Run contracts, pure/store/worker/ipc/performance vitest lanes, and both typechecks	2026-09-13T03:19:45.5819510Z 
+desktop-units	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T03:19:49.8027810Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-units	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:49.8029060Z Post job cleanup.
+desktop-units	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:49.9936780Z (node:4570) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-units	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:49.9937650Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T03:19:50.0068710Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.0069940Z Post job cleanup.
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.1028890Z [command]/opt/homebrew/bin/git version
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.1116220Z git version 2.55.0
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.1161200Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/01c8c06d-98e9-4096-adf7-6f485a54029c/.gitconfig'
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.1162240Z Temporarily overriding HOME='/Users/runner/work/_temp/01c8c06d-98e9-4096-adf7-6f485a54029c' before making global git config changes
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.1164220Z Adding repository directory to the temporary git global config as a safe directory
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.1165100Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.1254280Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.1314760Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.2284120Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.2335800Z http.https://github.com/.extraheader
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.2342790Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.2424840Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.3218920Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+desktop-units	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:50.3289400Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+desktop-units	Complete job	﻿2026-09-13T03:19:50.4618860Z Cleaning up orphan processes
+desktop-units	Complete job	2026-09-13T03:19:50.9302970Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

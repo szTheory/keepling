@@ -1,0 +1,763 @@
+desktop-e2e	Set up job	﻿2026-09-13T03:19:07.9882540Z Current runner version: '2.337.0'
+desktop-e2e	Set up job	2026-09-13T03:19:07.9900730Z ##[group]Runner Image Provisioner
+desktop-e2e	Set up job	2026-09-13T03:19:07.9901420Z Hosted Compute Agent
+desktop-e2e	Set up job	2026-09-13T03:19:07.9901870Z Version: 20260828.587
+desktop-e2e	Set up job	2026-09-13T03:19:07.9902310Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+desktop-e2e	Set up job	2026-09-13T03:19:07.9902830Z Build Date: 2026-08-28T16:44:25Z
+desktop-e2e	Set up job	2026-09-13T03:19:07.9903340Z Worker ID: {8ee263f0-0342-4fe4-a6bb-6af0d8555e66}
+desktop-e2e	Set up job	2026-09-13T03:19:07.9903920Z Azure Region: westus
+desktop-e2e	Set up job	2026-09-13T03:19:07.9904280Z ##[endgroup]
+desktop-e2e	Set up job	2026-09-13T03:19:07.9905280Z ##[group]Operating System
+desktop-e2e	Set up job	2026-09-13T03:19:07.9905680Z macOS
+desktop-e2e	Set up job	2026-09-13T03:19:07.9906000Z 15.7.9
+desktop-e2e	Set up job	2026-09-13T03:19:07.9906330Z 24G830
+desktop-e2e	Set up job	2026-09-13T03:19:07.9906660Z ##[endgroup]
+desktop-e2e	Set up job	2026-09-13T03:19:07.9907020Z ##[group]Runner Image
+desktop-e2e	Set up job	2026-09-13T03:19:07.9907400Z Image: macos-15-arm64
+desktop-e2e	Set up job	2026-09-13T03:19:07.9907790Z Version: 20260907.0337.1
+desktop-e2e	Set up job	2026-09-13T03:19:07.9908610Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+desktop-e2e	Set up job	2026-09-13T03:19:07.9909770Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+desktop-e2e	Set up job	2026-09-13T03:19:07.9910420Z ##[endgroup]
+desktop-e2e	Set up job	2026-09-13T03:19:07.9911190Z ##[group]GITHUB_TOKEN Permissions
+desktop-e2e	Set up job	2026-09-13T03:19:07.9912400Z Contents: read
+desktop-e2e	Set up job	2026-09-13T03:19:07.9912790Z Metadata: read
+desktop-e2e	Set up job	2026-09-13T03:19:07.9913140Z ##[endgroup]
+desktop-e2e	Set up job	2026-09-13T03:19:07.9914510Z Secret source: Actions
+desktop-e2e	Set up job	2026-09-13T03:19:07.9915100Z Cache mode: write
+desktop-e2e	Set up job	2026-09-13T03:19:07.9915550Z Prepare workflow directory
+desktop-e2e	Set up job	2026-09-13T03:19:08.0243240Z Prepare all required actions
+desktop-e2e	Set up job	2026-09-13T03:19:08.0303120Z Getting action download info
+desktop-e2e	Set up job	2026-09-13T03:19:08.4571610Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+desktop-e2e	Set up job	2026-09-13T03:19:08.7231360Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+desktop-e2e	Set up job	2026-09-13T03:19:08.9369200Z Complete job name: desktop-e2e
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T03:19:08.9855900Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9862830Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9863450Z with:
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9863790Z   repository: szTheory/keepling
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9866480Z   token: ***
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9866800Z   ssh-strict: true
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9867130Z   ssh-user: git
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9867470Z   persist-credentials: true
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9867820Z   clean: true
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9868160Z   sparse-checkout-cone-mode: true
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9868540Z   fetch-depth: 1
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9868860Z   fetch-tags: false
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9869200Z   show-progress: true
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9869530Z   lfs: false
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9869880Z   submodules: false
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9870230Z   set-safe-directory: true
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9870670Z env:
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9871060Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:08.9871530Z ##[endgroup]
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4149150Z Syncing repository: szTheory/keepling
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4151890Z ##[group]Getting Git version info
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4152640Z Working directory is '/Users/runner/work/keepling/keepling'
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4153850Z [command]/opt/homebrew/bin/git version
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4850140Z git version 2.55.0
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4880990Z ##[endgroup]
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4894320Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/92dceb74-0f46-4994-b0b3-d9fc4bb34a51/.gitconfig'
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4901040Z Temporarily overriding HOME='/Users/runner/work/_temp/92dceb74-0f46-4994-b0b3-d9fc4bb34a51' before making global git config changes
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4906360Z Adding repository directory to the temporary git global config as a safe directory
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.4909580Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5011780Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5018010Z ##[group]Initializing the repository
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5022690Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5270830Z hint: Using 'master' as the name for the initial branch. This default branch name
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5275120Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5278980Z hint: to use in all of your new repositories, which will suppress this warning,
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5297140Z hint: call:
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5297950Z hint:
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5298770Z hint: 	git config --global init.defaultBranch <name>
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5299830Z hint:
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5300780Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5302430Z hint: 'development'. The just-created branch can be renamed via this command:
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5303700Z hint:
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5304370Z hint: 	git branch -m <name>
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5305130Z hint:
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5306170Z hint: Disable this message with "git config set advice.defaultBranchName false"
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5307910Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5310850Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5379130Z ##[endgroup]
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5382470Z ##[group]Disabling automatic garbage collection
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5385570Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5461680Z ##[endgroup]
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5464390Z ##[group]Setting up auth
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5467360Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.5554350Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.6537270Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.6612150Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.7448860Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.7519310Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.8553460Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.8614550Z ##[endgroup]
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.8617090Z ##[group]Fetching the repository
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:09.8619830Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +23d79e5caa7383a7be9e38ee473b6bde12ce8298:refs/remotes/origin/main
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.8995730Z From https://github.com/szTheory/keepling
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.8996730Z  * [new ref]         23d79e5caa7383a7be9e38ee473b6bde12ce8298 -> origin/main
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.8997940Z ##[endgroup]
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.8998360Z ##[group]Determining the checkout info
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.8998810Z ##[endgroup]
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.8999120Z [command]/opt/homebrew/bin/git sparse-checkout disable
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.9047140Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.9112820Z ##[group]Checking out the ref
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:10.9114410Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:11.0739200Z Switched to a new branch 'main'
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:11.0752460Z branch 'main' set up to track 'origin/main'.
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:11.0755370Z ##[endgroup]
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:11.0844910Z [command]/opt/homebrew/bin/git log -1 --format=%H
+desktop-e2e	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:19:11.0914750Z 23d79e5caa7383a7be9e38ee473b6bde12ce8298
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T03:19:11.1152470Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.1154810Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.1155240Z with:
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.1155510Z   node-version: 24.7.0
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.1155800Z   always-auth: false
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.1156130Z   check-latest: false
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.1158320Z   token: ***
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.1158590Z env:
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.1158900Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.1159290Z ##[endgroup]
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.2556950Z Attempting to download 24.7.0...
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.2740450Z (node:3991) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.2742160Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:11.9495540Z Acquiring 24.7.0 - arm64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-darwin-arm64.tar.gz
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:12.6754810Z Extracting ...
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:12.6920000Z [command]/usr/bin/tar xz --strip 1 -C /Users/runner/work/_temp/0909d86e-4bd9-408c-9860-964cf38a6dbd -f /Users/runner/work/_temp/681b78d6-55b6-456b-a181-812e11d58fab
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:13.9354910Z Adding to the cache ...
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:16.3350070Z ##[group]Environment details
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:16.7154950Z node: v24.7.0
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:16.7172810Z npm: 11.5.1
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:16.7173480Z yarn: 1.22.22
+desktop-e2e	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:19:16.7174850Z ##[endgroup]
+desktop-e2e	Install locked JavaScript inputs	﻿2026-09-13T03:19:16.7343260Z ##[group]Run corepack enable && pnpm install --frozen-lockfile
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:16.7343710Z ^[[36;1mcorepack enable && pnpm install --frozen-lockfile^[[0m
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:16.7419360Z shell: /bin/bash -e {0}
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:16.7419630Z env:
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:16.7419920Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:16.7420200Z ##[endgroup]
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:16.9417790Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:17.8757270Z Scope: all 4 workspace projects
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:17.9209660Z Lockfile is up to date, resolution step is skipped
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:18.0251090Z Packages: +912
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:18.0352800Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:18.1783380Z Progress: resolved 0, reused 0, downloaded 1, added 0
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:19.1748130Z Progress: resolved 0, reused 0, downloaded 37, added 8
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:20.1765780Z Progress: resolved 0, reused 0, downloaded 54, added 13
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:21.1771390Z Progress: resolved 0, reused 0, downloaded 90, added 24
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:22.1797020Z Progress: resolved 0, reused 0, downloaded 159, added 43
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:23.1817230Z Progress: resolved 0, reused 0, downloaded 253, added 79
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:24.1828190Z Progress: resolved 0, reused 0, downloaded 369, added 119
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:25.1839910Z Progress: resolved 0, reused 0, downloaded 426, added 136
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:26.1867910Z Progress: resolved 0, reused 0, downloaded 516, added 166
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:26.2346880Z Packages are cloned from the content-addressable store to the virtual store.
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:26.2347590Z   Content-addressable store is at: /Users/runner/Library/pnpm/store/v10
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:26.2348380Z   Virtual store is at:             node_modules/.pnpm
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:27.1863320Z Progress: resolved 0, reused 0, downloaded 727, added 255
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:28.1943530Z Progress: resolved 0, reused 0, downloaded 870, added 367
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:29.1902240Z Progress: resolved 0, reused 0, downloaded 870, added 676
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:30.0544790Z Progress: resolved 0, reused 0, downloaded 870, added 912, done
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:30.1632950Z 
+desktop-e2e	Install locked JavaScript inputs	2026-09-13T03:19:30.2263350Z Done in 12.6s using pnpm v10.33.0
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	﻿2026-09-13T03:19:30.2605610Z ##[group]Run pnpm --dir apps/desktop exec playwright install --with-deps
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:30.2606270Z ^[[36;1mpnpm --dir apps/desktop exec playwright install --with-deps^[[0m
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:30.2685610Z shell: /bin/bash -e {0}
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:30.2685920Z env:
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:30.2686330Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:30.2686700Z ##[endgroup]
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:31.2092020Z Downloading Chrome for Testing 151.0.7922.34 (playwright chromium v1234) from https://cdn.playwright.dev/builds/cft/151.0.7922.34/mac-arm64/chrome-mac-arm64.zip
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:31.6912910Z |                                                                                |   0% of 178.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:31.9438960Z |■■■■■■■■                                                                        |  10% of 178.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:32.1250420Z |■■■■■■■■■■■■■■■■                                                                |  20% of 178.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:32.2468880Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 178.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:32.3949830Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 178.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:32.5148940Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 178.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:32.6826480Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 178.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:32.8235350Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 178.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:32.9767540Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 178.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:33.1428440Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 178.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:33.3224710Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 178.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:36.7910140Z Chrome for Testing 151.0.7922.34 (playwright chromium v1234) downloaded to /Users/runner/Library/Caches/ms-playwright/chromium-1234
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:36.8023830Z Downloading Chrome Headless Shell 151.0.7922.34 (playwright chromium-headless-shell v1234) from https://cdn.playwright.dev/builds/cft/151.0.7922.34/mac-arm64/chrome-headless-shell-mac-arm64.zip
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:37.1518620Z |                                                                                |   0% of 94.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:37.2341450Z |■■■■■■■■                                                                        |  10% of 94.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:37.3106950Z |■■■■■■■■■■■■■■■■                                                                |  20% of 94.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:37.3597930Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 94.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:37.4287480Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 94.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:37.5100550Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 94.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:37.5568130Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 94.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:37.6079740Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 94.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:37.6573630Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 94.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:37.7301790Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 94.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:37.7767070Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 94.7 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:39.4643250Z Chrome Headless Shell 151.0.7922.34 (playwright chromium-headless-shell v1234) downloaded to /Users/runner/Library/Caches/ms-playwright/chromium_headless_shell-1234
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:39.4647710Z Downloading Firefox 153.0 (playwright firefox v1538) from https://cdn.playwright.dev/dbazure/download/playwright/builds/firefox/1538/firefox-mac-arm64.zip
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:39.7570880Z |                                                                                |   0% of 101.5 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:39.9094280Z |■■■■■■■■                                                                        |  10% of 101.5 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:39.9899200Z |■■■■■■■■■■■■■■■■                                                                |  20% of 101.5 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:40.0834580Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 101.5 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:40.4629130Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 101.5 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:40.6224960Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 101.5 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:40.7649440Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 101.5 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:40.8804450Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 101.5 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:40.9544420Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 101.5 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:41.0757840Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 101.5 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:41.1942000Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 101.5 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:43.0310570Z Firefox 153.0 (playwright firefox v1538) downloaded to /Users/runner/Library/Caches/ms-playwright/firefox-1538
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:43.0337120Z Downloading WebKit 26.5 (playwright webkit v2336) from https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2336/webkit-mac-15-arm64.zip
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:43.3360000Z |                                                                                |   0% of 76.9 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:43.6539900Z |■■■■■■■■                                                                        |  10% of 76.9 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:43.7814240Z |■■■■■■■■■■■■■■■■                                                                |  20% of 76.9 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:44.0646850Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 76.9 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:44.1950420Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 76.9 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:44.5118860Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 76.9 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:44.6636500Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 76.9 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:44.9733570Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 76.9 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:45.2024960Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 76.9 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:45.5874170Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 76.9 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:45.6787600Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 76.9 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.3927200Z WebKit 26.5 (playwright webkit v2336) downloaded to /Users/runner/Library/Caches/ms-playwright/webkit-2336
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.3931660Z Downloading FFmpeg (playwright ffmpeg v1011) from https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1011/ffmpeg-mac-arm64.zip
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.6915700Z |                                                                                |   1% of 1 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.7017670Z |■■■■■■■■                                                                        |  10% of 1 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.7027450Z |■■■■■■■■■■■■■■■■                                                                |  20% of 1 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.7029340Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  31% of 1 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.7030720Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 1 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.7031610Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 1 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.7032360Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  61% of 1 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.7033180Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 1 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.7033910Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 1 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.7035270Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  91% of 1 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.7036080Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 1 MiB
+desktop-e2e	Install Playwright browsers/Electron runtime dependencies	2026-09-13T03:19:51.7299970Z FFmpeg (playwright ffmpeg v1011) downloaded to /Users/runner/Library/Caches/ms-playwright/ffmpeg-1011
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	﻿2026-09-13T03:19:51.7499430Z ##[group]Run pnpm test:desktop:e2e
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:51.7499850Z ^[[36;1mpnpm test:desktop:e2e^[[0m
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:51.9088940Z shell: /bin/bash -e {0}
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:51.9089260Z env:
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:51.9089690Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:51.9090130Z ##[endgroup]
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:52.1778170Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:52.1778910Z > keepling@ test:desktop:e2e /Users/runner/work/keepling/keepling
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:52.1779450Z > pnpm --dir apps/desktop test:e2e
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:52.1779630Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:52.4355550Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:52.4356950Z > @keepling/desktop@0.0.0 test:e2e /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:52.4358760Z > node ../../tooling/run-tests.mjs e2e
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:52.4359600Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:52.4743760Z run-tests: playwright test --config playwright.config.ts --project=electron
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:53.0544380Z playwright: headless (default) -- excluding @windowed specs. KEEPLING_TEST_HEADLESS=0 runs them.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:53.2332560Z (node:4669) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:53.2334080Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:53.6054420Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:53.6157860Z Running 66 tests using 1 worker
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:54.0547130Z playwright: headless (default) -- excluding @windowed specs. KEEPLING_TEST_HEADLESS=0 runs them.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:54.3707170Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:54.3707950Z > @keepling/desktop@0.0.0 build /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:54.3709000Z > pnpm run build:main && pnpm run build:preload && pnpm run build:utility-preload && pnpm run build:renderer && pnpm run build:worker
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:54.3709450Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:54.6188620Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:54.6267390Z > @keepling/desktop@0.0.0 build:main /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:54.6368840Z > vite build --config vite.main.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:54.6369230Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:54.9876420Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:54.9974490Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0501560Z ✓ 118 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0612260Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0757460Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0817380Z dist/main/index.cjs  294.84 kB │ gzip: 73.54 kB │ map: 832.63 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0817750Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0835970Z [EMPTY_IMPORT_META] `import.meta` may not be a valid syntax with the `cjs` output format.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0836740Z ✓ built in 95ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0839240Z     ╭─[ main/adapters/credentials.ts:20:86 ]
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0839500Z     │
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0840190Z  20 │ const resolveRequire = () => typeof require === "function" ? require : createRequire(import.meta.url);
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0840910Z     │                                                                                      ─────┬─────  
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0842530Z     │                                                                                           ╰─────── This `import.meta` will be replaced with an empty object (`{}`) automatically. If this is desired, you can suppress this warning by adding `transform.define: { 'import.meta': {} }`. If `import.meta` needs to be kept as-is, you need to set the output format to `esm`.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0843580Z     │ 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0844460Z     │ Help: If you want to polyfill `import.meta.url` like Rollup does, check out the Document: https://rolldown.rs/in-depth/non-esm-output-formats#well-known-import-meta-properties
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0845280Z ────╯
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.0845390Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.3762340Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.3763180Z > @keepling/desktop@0.0.0 build:preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.3763870Z > vite build --config vite.preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.3764090Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.5052120Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.5128670Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.5273670Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.5341790Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.5438510Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.5467200Z dist/preload/index.cjs  175.63 kB │ gzip: 39.39 kB │ map: 502.05 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.5467530Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.5468790Z ✓ built in 41ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.7907260Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.7908020Z > @keepling/desktop@0.0.0 build:utility-preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.7908710Z > vite build --config vite.utility-preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.7908980Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.9536820Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.9612700Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.9767830Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.9838150Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.9933700Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.9962250Z dist/preload/utility.cjs  175.89 kB │ gzip: 39.05 kB │ map: 503.97 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.9962720Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:55.9965290Z ✓ built in 42ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.2422930Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.2423730Z > @keepling/desktop@0.0.0 build:renderer /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.2424330Z > vite build --config vite.renderer.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.2424560Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.4011460Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.4087640Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.4520950Z ✓ 28 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.5090280Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.5379750Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.5422760Z dist/renderer/index.html                   0.64 kB │ gzip:  0.37 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.5423370Z dist/renderer/assets/index-BaCnRNI7.css    3.68 kB │ gzip:  1.10 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.5423990Z dist/renderer/assets/index-taLD0tBu.js   217.87 kB │ gzip: 67.79 kB │ map: 956.23 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.5424270Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.5425470Z ✓ built in 141ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.7796850Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.7797460Z > @keepling/desktop@0.0.0 build:worker /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.7817010Z > vite build --config vite.worker.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.7817560Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.9259520Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.9338160Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.9378800Z ✓ 3 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.9405510Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.9443570Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.9452970Z dist/worker/index.cjs  56.01 kB │ gzip: 14.68 kB │ map: 99.57 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.9453630Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.9454410Z ✓ built in 19ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:19:56.9732990Z Downloading Electron binary...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.0434830Z (node:4720) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.0436740Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.3340630Z ···········
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.3341580Z > @keepling/desktop@0.0.0 build /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.3342680Z > pnpm run build:main && pnpm run build:preload && pnpm run build:utility-preload && pnpm run build:renderer && pnpm run build:worker
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.3343220Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.6128030Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.6229420Z > @keepling/desktop@0.0.0 build:main /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.6331950Z > vite build --config vite.main.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.6431500Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9011200Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9119430Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9419240Z ✓ 118 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9527940Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9658940Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9707600Z dist/main/index.cjs  294.84 kB │ gzip: 73.54 kB │ map: 832.63 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9707960Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9723880Z [EMPTY_IMPORT_META] `import.meta` may not be a valid syntax with the `cjs` output format.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9729750Z     ╭─[ main/adapters/credentials.ts:20:86 ]
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9730150Z     │
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9730840Z  20 │ const resolveRequire = () => typeof require === "function" ? require : createRequire(import.meta.url);
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9732420Z     │                                                                                      ─────┬─────  
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9734160Z     │                                                                                           ╰─────── This `import.meta` will be replaced with an empty object (`{}`) automatically. If this is desired, you can suppress this warning by adding `transform.define: { 'import.meta': {} }`. If `import.meta` needs to be kept as-is, you need to set the output format to `esm`.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9735470Z     │ 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9736460Z     │ Help: If you want to polyfill `import.meta.url` like Rollup does, check out the Document: https://rolldown.rs/in-depth/non-esm-output-formats#well-known-import-meta-properties
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9737230Z ────╯
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9737400Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:16.9737590Z ✓ built in 71ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.2454780Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.2466740Z > @keepling/desktop@0.0.0 build:preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.2471270Z > vite build --config vite.preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.2473010Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.4186830Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.4237920Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.4476540Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.4566270Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.4902320Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.4931800Z dist/preload/index.cjs  175.63 kB │ gzip: 39.39 kB │ map: 502.05 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.4932250Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.4933840Z ✓ built in 79ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.7957450Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.8059820Z > @keepling/desktop@0.0.0 build:utility-preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.8093050Z > vite build --config vite.utility-preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.8094500Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.9539990Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.9628090Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.9886190Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:17.9970590Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.0068970Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.0102500Z dist/preload/utility.cjs  175.89 kB │ gzip: 39.05 kB │ map: 503.97 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.0104010Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.0104370Z ✓ built in 56ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.3391420Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.3494350Z > @keepling/desktop@0.0.0 build:renderer /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.3596440Z > vite build --config vite.renderer.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.3706440Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.5184100Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.5256800Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.5656940Z ✓ 28 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.6103030Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.6403740Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.6447940Z dist/renderer/index.html                   0.64 kB │ gzip:  0.37 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.6448660Z dist/renderer/assets/index-BaCnRNI7.css    3.68 kB │ gzip:  1.10 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.6449840Z dist/renderer/assets/index-taLD0tBu.js   217.87 kB │ gzip: 67.79 kB │ map: 956.23 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.6450370Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.6451190Z ✓ built in 126ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.8896560Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.8997940Z > @keepling/desktop@0.0.0 build:worker /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.9097870Z > vite build --config vite.worker.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:18.9198930Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:19.0525040Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:19.0601800Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:19.0641590Z ✓ 3 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:19.0673350Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:19.0708050Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:19.0720760Z dist/worker/index.cjs  56.01 kB │ gzip: 14.68 kB │ map: 99.57 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:19.0721880Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:19.0724170Z ✓ built in 19ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.3937970Z ··········
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.4036280Z > @keepling/desktop@0.0.0 build /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.4139030Z > pnpm run build:main && pnpm run build:preload && pnpm run build:utility-preload && pnpm run build:renderer && pnpm run build:worker
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.4248010Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.7287340Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.7293100Z > @keepling/desktop@0.0.0 build:main /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.7294890Z > vite build --config vite.main.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.7295760Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.9261300Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.9370400Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.9701900Z ✓ 118 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:26.9880050Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0112700Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0177620Z [EMPTY_IMPORT_META] `import.meta` may not be a valid syntax with the `cjs` output format.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0178650Z dist/main/index.cjs  294.84 kB │ gzip: 73.54 kB │ map: 832.63 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0196970Z     ╭─[ main/adapters/credentials.ts:20:86 ]
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0197680Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0206700Z     │
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0207110Z ✓ built in 91ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0218400Z  20 │ const resolveRequire = () => typeof require === "function" ? require : createRequire(import.meta.url);
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0219520Z     │                                                                                      ─────┬─────  
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0223520Z     │                                                                                           ╰─────── This `import.meta` will be replaced with an empty object (`{}`) automatically. If this is desired, you can suppress this warning by adding `transform.define: { 'import.meta': {} }`. If `import.meta` needs to be kept as-is, you need to set the output format to `esm`.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0228490Z     │ 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0230990Z     │ Help: If you want to polyfill `import.meta.url` like Rollup does, check out the Document: https://rolldown.rs/in-depth/non-esm-output-formats#well-known-import-meta-properties
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0233370Z ────╯
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.0234020Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.2862930Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.2964830Z > @keepling/desktop@0.0.0 build:preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.3065160Z > vite build --config vite.preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.3133480Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.4452110Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.4521100Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.4684560Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.4758000Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.4837520Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.4863320Z dist/preload/index.cjs  175.63 kB │ gzip: 39.39 kB │ map: 502.05 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.4863790Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.4868130Z ✓ built in 41ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.7337450Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.7438760Z > @keepling/desktop@0.0.0 build:utility-preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.7476970Z > vite build --config vite.utility-preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.7578400Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.9349420Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.9419650Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.9582530Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.9640830Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.9724960Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.9749480Z dist/preload/utility.cjs  175.89 kB │ gzip: 39.05 kB │ map: 503.97 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.9749880Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:27.9751530Z ✓ built in 39ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.2276580Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.2379030Z > @keepling/desktop@0.0.0 build:renderer /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.2480620Z > vite build --config vite.renderer.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.2581640Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.5086190Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.5183460Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.5561160Z ✓ 28 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.5752770Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.6127840Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.6173730Z dist/renderer/index.html                   0.64 kB │ gzip:  0.37 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.6175740Z dist/renderer/assets/index-BaCnRNI7.css    3.68 kB │ gzip:  1.10 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.6177770Z dist/renderer/assets/index-taLD0tBu.js   217.87 kB │ gzip: 67.79 kB │ map: 956.23 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.6178790Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.6181960Z ✓ built in 108ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.8986140Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.9088770Z > @keepling/desktop@0.0.0 build:worker /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.9188150Z > vite build --config vite.worker.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:28.9289160Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:29.0931410Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:29.1035920Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:29.1081650Z ✓ 3 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:29.1126900Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:29.1166500Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:29.1179760Z dist/worker/index.cjs  56.01 kB │ gzip: 14.68 kB │ map: 99.57 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:29.1180080Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:29.1181040Z ✓ built in 23ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:52.5452650Z ············
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:52.5453860Z > @keepling/desktop@0.0.0 build /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:52.5454950Z > pnpm run build:main && pnpm run build:preload && pnpm run build:utility-preload && pnpm run build:renderer && pnpm run build:worker
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:52.5455560Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:52.8037850Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:52.8038680Z > @keepling/desktop@0.0.0 build:main /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:52.8039250Z > vite build --config vite.main.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:52.8039440Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:52.9548950Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:52.9628780Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:52.9924300Z ✓ 118 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0165430Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0303860Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0384980Z dist/main/index.cjs  294.84 kB │ gzip: 73.54 kB │ map: 832.63 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0393830Z [EMPTY_IMPORT_META] `import.meta` may not be a valid syntax with the `cjs` output format.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0395620Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0400130Z     ╭─[ main/adapters/credentials.ts:20:86 ]
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0401170Z ✓ built in 83ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0417410Z     │
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0418220Z  20 │ const resolveRequire = () => typeof require === "function" ? require : createRequire(import.meta.url);
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0419110Z     │                                                                                      ─────┬─────  
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0421580Z     │                                                                                           ╰─────── This `import.meta` will be replaced with an empty object (`{}`) automatically. If this is desired, you can suppress this warning by adding `transform.define: { 'import.meta': {} }`. If `import.meta` needs to be kept as-is, you need to set the output format to `esm`.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0423750Z     │ 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0424610Z     │ Help: If you want to polyfill `import.meta.url` like Rollup does, check out the Document: https://rolldown.rs/in-depth/non-esm-output-formats#well-known-import-meta-properties
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0426400Z ────╯
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.0426760Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.3211570Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.3313160Z > @keepling/desktop@0.0.0 build:preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.3413160Z > vite build --config vite.preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.3513400Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.5243220Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.5316650Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.5448920Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.5525720Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.5617200Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.5647450Z dist/preload/index.cjs  175.63 kB │ gzip: 39.39 kB │ map: 502.05 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.5648800Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.5649260Z ✓ built in 40ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.8084390Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.8185970Z > @keepling/desktop@0.0.0 build:utility-preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.8286260Z > vite build --config vite.utility-preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:53.8387210Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.0060530Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.0137270Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.0282920Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.0356380Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.0447030Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.0475640Z dist/preload/utility.cjs  175.89 kB │ gzip: 39.05 kB │ map: 503.97 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.0477290Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.0477870Z ✓ built in 41ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.2945680Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.3047420Z > @keepling/desktop@0.0.0 build:renderer /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.3147200Z > vite build --config vite.renderer.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.3248610Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.5172310Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.5311250Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.5813570Z ✓ 28 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.6024370Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.6290110Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.6332590Z dist/renderer/index.html                   0.64 kB │ gzip:  0.37 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.6333520Z dist/renderer/assets/index-BaCnRNI7.css    3.68 kB │ gzip:  1.10 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.6334450Z dist/renderer/assets/index-taLD0tBu.js   217.87 kB │ gzip: 67.79 kB │ map: 956.23 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.6335840Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.6336090Z ✓ built in 115ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.9026850Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.9027870Z > @keepling/desktop@0.0.0 build:worker /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.9028690Z > vite build --config vite.worker.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:54.9028980Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:55.0842140Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:55.0941700Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:55.1051050Z ✓ 3 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:55.1090260Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:55.1134710Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:55.1144160Z dist/worker/index.cjs  56.01 kB │ gzip: 14.68 kB │ map: 99.57 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:55.1144520Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:20:55.1152130Z ✓ built in 30ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:05.5895500Z ·······
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:05.5945030Z > @keepling/desktop@0.0.0 build /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:05.5950530Z > pnpm run build:main && pnpm run build:preload && pnpm run build:utility-preload && pnpm run build:renderer && pnpm run build:worker
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:05.5959810Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:05.8427740Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:05.8449160Z > @keepling/desktop@0.0.0 build:main /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:05.8455300Z > vite build --config vite.main.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:05.8456510Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:05.9991690Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0079990Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0344680Z ✓ 118 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0456620Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0601680Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0668090Z dist/main/index.cjs  294.84 kB │ gzip: 73.54 kB │ map: 832.63 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0669030Z [EMPTY_IMPORT_META] `import.meta` may not be a valid syntax with the `cjs` output format.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0669700Z     ╭─[ main/adapters/credentials.ts:20:86 ]
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0670110Z     │
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0670680Z  20 │ const resolveRequire = () => typeof require === "function" ? require : createRequire(import.meta.url);
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0671390Z     │                                                                                      ─────┬─────  
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0677230Z     │                                                                                           ╰─────── This `import.meta` will be replaced with an empty object (`{}`) automatically. If this is desired, you can suppress this warning by adding `transform.define: { 'import.meta': {} }`. If `import.meta` needs to be kept as-is, you need to set the output format to `esm`.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0678630Z     │ 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0679460Z     │ Help: If you want to polyfill `import.meta.url` like Rollup does, check out the Document: https://rolldown.rs/in-depth/non-esm-output-formats#well-known-import-meta-properties
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0680210Z ────╯
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0680390Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0680410Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.0680560Z ✓ built in 66ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.3349500Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.3350300Z > @keepling/desktop@0.0.0 build:preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.3351080Z > vite build --config vite.preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.3351420Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.4842480Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.4925100Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.5097950Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.5184450Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.5290070Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.5320470Z dist/preload/index.cjs  175.63 kB │ gzip: 39.39 kB │ map: 502.05 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.5320780Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.5321680Z ✓ built in 47ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.7824700Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.7836810Z > @keepling/desktop@0.0.0 build:utility-preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.7847280Z > vite build --config vite.utility-preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.7847600Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.9148610Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.9229680Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.9378760Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.9442940Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.9531430Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.9560440Z dist/preload/utility.cjs  175.89 kB │ gzip: 39.05 kB │ map: 503.97 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.9560740Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:06.9562350Z ✓ built in 41ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.1962740Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.1967680Z > @keepling/desktop@0.0.0 build:renderer /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.1968350Z > vite build --config vite.renderer.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.1968630Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.3400930Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.3477370Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.3824090Z ✓ 28 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.4007220Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.4258190Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.4297130Z dist/renderer/index.html                   0.64 kB │ gzip:  0.37 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.4297850Z dist/renderer/assets/index-BaCnRNI7.css    3.68 kB │ gzip:  1.10 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.4298740Z dist/renderer/assets/index-taLD0tBu.js   217.87 kB │ gzip: 67.79 kB │ map: 956.23 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.4299120Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.4299460Z ✓ built in 89ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.6619450Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.6630180Z > @keepling/desktop@0.0.0 build:worker /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.6632250Z > vite build --config vite.worker.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.6634780Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.8116860Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.8199120Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.8247340Z ✓ 3 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.8284390Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.8387290Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.8402910Z dist/worker/index.cjs  56.01 kB │ gzip: 14.68 kB │ map: 99.57 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.8404390Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:07.8410750Z ✓ built in 28ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.1803220Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.1822370Z > @keepling/desktop@0.0.0 build:harness /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.1832490Z > vite build --config vite.harness.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.1850400Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.3797610Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.3874080Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.3931190Z ✓ 15 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.3971140Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.4025050Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.4043390Z dist-harness/harness.cjs  108.34 kB │ gzip: 29.11 kB │ map: 224.01 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.4043770Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:08.4048640Z ✓ built in 24ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.2927310Z ·····
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.2928140Z > @keepling/desktop@0.0.0 build /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.2929710Z > pnpm run build:main && pnpm run build:preload && pnpm run build:utility-preload && pnpm run build:renderer && pnpm run build:worker
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.2930320Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.5359560Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.5360300Z > @keepling/desktop@0.0.0 build:main /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.5360870Z > vite build --config vite.main.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.5361150Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.6883060Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.6965880Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7201770Z ✓ 118 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7368440Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7506110Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7551600Z dist/main/index.cjs  294.84 kB │ gzip: 73.54 kB │ map: 832.63 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7551960Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7559370Z [EMPTY_IMPORT_META] `import.meta` may not be a valid syntax with the `cjs` output format.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7560380Z     ╭─[ main/adapters/credentials.ts:20:86 ]
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7560760Z     │
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7561270Z  20 │ const resolveRequire = () => typeof require === "function" ? require : createRequire(import.meta.url);
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7561980Z     │                                                                                      ─────┬─────  
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7564820Z     │                                                                                           ╰─────── This `import.meta` will be replaced with an empty object (`{}`) automatically. If this is desired, you can suppress this warning by adding `transform.define: { 'import.meta': {} }`. If `import.meta` needs to be kept as-is, you need to set the output format to `esm`.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7566010Z     │ 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7566970Z     │ Help: If you want to polyfill `import.meta.url` like Rollup does, check out the Document: https://rolldown.rs/in-depth/non-esm-output-formats#well-known-import-meta-properties
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7569480Z ────╯
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7569560Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:13.7569740Z ✓ built in 67ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.0301560Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.0403060Z > @keepling/desktop@0.0.0 build:preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.0505740Z > vite build --config vite.preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.0607710Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.2462280Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.2542290Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.2695670Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.2780550Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.2884100Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.2913590Z dist/preload/index.cjs  175.63 kB │ gzip: 39.39 kB │ map: 502.05 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.2914540Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.2917730Z ✓ built in 45ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.5990670Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.6092150Z > @keepling/desktop@0.0.0 build:utility-preload /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.6193550Z > vite build --config vite.utility-preload.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.6294410Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.8482580Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.8556530Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.8684930Z ✓ 97 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.8746780Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.8835200Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.8899390Z dist/preload/utility.cjs  175.89 kB │ gzip: 39.05 kB │ map: 503.97 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.9001510Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:14.9103010Z ✓ built in 39ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.2242900Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.2344020Z > @keepling/desktop@0.0.0 build:renderer /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.2445510Z > vite build --config vite.renderer.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.2545780Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.5052060Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.5103430Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.5417160Z ✓ 28 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.5586800Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.5849520Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.5888420Z dist/renderer/index.html                   0.64 kB │ gzip:  0.37 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.5889180Z dist/renderer/assets/index-BaCnRNI7.css    3.68 kB │ gzip:  1.10 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.5890000Z dist/renderer/assets/index-taLD0tBu.js   217.87 kB │ gzip: 67.79 kB │ map: 956.23 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.5890330Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.5890510Z ✓ built in 87ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.9038110Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.9038960Z > @keepling/desktop@0.0.0 build:worker /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.9039650Z > vite build --config vite.worker.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:15.9039930Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:16.0814060Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:16.0922690Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:16.0994570Z ✓ 3 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:16.1049440Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:16.1106220Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:16.1131030Z dist/worker/index.cjs  56.01 kB │ gzip: 14.68 kB │ map: 99.57 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:16.1137080Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:16.1138500Z ✓ built in 30ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.2321480Z ············
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.2324200Z > @keepling/desktop@0.0.0 build:worker /Users/runner/work/keepling/keepling/apps/desktop
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.2325620Z > vite build --config vite.worker.config.ts
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.2326430Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.4083360Z vite v8.2.2 building client environment for production...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.4176960Z transforming...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.4226330Z ✓ 3 modules transformed.
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.4272820Z rendering chunks...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.4307040Z computing gzip size...
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.4326440Z dist/worker/index.cjs  56.01 kB │ gzip: 14.68 kB │ map: 99.57 kB
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.4327180Z 
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.4332060Z ✓ built in 24ms
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.5024940Z (node:4720) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.5025870Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.5291640Z (node:4720) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.5292470Z (Use `node --trace-warnings ...` to show where the warning was created)
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.8490070Z ·········
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.8493800Z   66 passed (1.7m)
+desktop-e2e	Run the real shipped-entry-point Electron E2E suite	2026-09-13T03:21:33.8530370Z ##[notice]  66 passed (1.7m)
+desktop-e2e	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-13T03:21:33.9621280Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-e2e	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:21:33.9622540Z Post job cleanup.
+desktop-e2e	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:21:34.4299490Z (node:8547) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+desktop-e2e	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-13T03:21:34.4300700Z (Use `node --trace-deprecation ...` to show where the warning was created)
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-13T03:21:34.4465250Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.4466420Z Post job cleanup.
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.5719130Z [command]/opt/homebrew/bin/git version
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.5968500Z git version 2.55.0
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.5995440Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/6775fe64-1473-405e-bff4-fbd9e2266825/.gitconfig'
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.6008880Z Temporarily overriding HOME='/Users/runner/work/_temp/6775fe64-1473-405e-bff4-fbd9e2266825' before making global git config changes
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.6011030Z Adding repository directory to the temporary git global config as a safe directory
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.6012750Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.6146300Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.6217790Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.7388680Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.7451910Z http.https://github.com/.extraheader
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.7459920Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.7552090Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.8565510Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+desktop-e2e	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-13T03:21:34.8846840Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+desktop-e2e	Complete job	﻿2026-09-13T03:21:35.0980680Z Cleaning up orphan processes
+desktop-e2e	Complete job	2026-09-13T03:21:37.3421460Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
