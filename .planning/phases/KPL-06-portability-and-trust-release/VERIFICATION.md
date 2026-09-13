@@ -224,7 +224,7 @@ the mechanism if not of the released bytes.
 
 | Scan | Result |
 |---|---|
-| Personal email (`REDACTED-PERSONAL-LOCAL-PART`, `@gmail.com`, `@icloud.com`, `@me.com`) in any tracked file | **0 hits** |
+| Personal email addresses (the owner's known personal local-part, plus the `@gmail.com`, `@icloud.com` and `@me.com` domains) in any tracked file | **0 hits** |  <!-- The literal local-part is deliberately NOT written here. An earlier revision of this table spelled it out, which meant this scan report was itself the only tracked file containing the personal data it certifies absent. The patterns live in the scanner (`tooling/local/go-public.sh`), which is gitignored; a report naming them defeats its own purpose. -->
 | Same patterns in any commit message across all refs | **0 hits** |
 | Commit author/committer identities across all refs | exactly one: `szTheory <szTheory@users.noreply.github.com>` — pseudonymous, GitHub noreply |
 | Apple Team IDs (extracted from the local keychain's 4 codesigning identities) in tracked files | **0 hits each** |
