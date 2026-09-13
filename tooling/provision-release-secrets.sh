@@ -135,33 +135,107 @@ read_map() {
 
 [ -n "$(read_map)" ] || die "$map_file declares no entries"
 
+map_reference_for() {
+  read_map | awk -F'\t' -v want="$1" '$2 == want { print $3; exit }'
+}
+
+# ------------------------------------------------------------- derivations --
+# Two of the values the recovery drills need are not stored anywhere, because
+# they are not independent facts: a Backblaze S3 endpoint and its region are
+# determined by the account the application key belongs to, and Backblaze will
+# state them itself. Asking the operator to look them up and paste them in is
+# asking them to transcribe something a machine already knows, which is both
+# manual work and a chance to get it silently wrong.
+#
+# b2_authorize_account is called at most once per run; the response is cached.
+b2_authorization=""
+b2_authorize() {
+  [ -n "$b2_authorization" ] && { printf '%s' "$b2_authorization"; return 0; }
+
+  key_id_reference=$(map_reference_for KEEPLING_BACKUP_PRIMARY_ACCESS_KEY)
+  application_key_reference=$(map_reference_for KEEPLING_BACKUP_PRIMARY_SECRET_KEY)
+  [ -n "$key_id_reference" ] && [ -n "$application_key_reference" ] ||
+    die "a derived Backblaze value needs KEEPLING_BACKUP_PRIMARY_ACCESS_KEY and KEEPLING_BACKUP_PRIMARY_SECRET_KEY in $map_file"
+
+  key_id=$(op read --no-newline "$key_id_reference") ||
+    die "could not read $key_id_reference"
+  application_key=$(op read --no-newline "$application_key_reference") ||
+    die "could not read $application_key_reference"
+
+  # Credentials go to curl through a stdin config file, never through argv.
+  # `curl -u` would put the application key in `ps` output for every user.
+  b2_authorization=$(
+    printf 'user = "%s:%s"\nurl = "https://api.backblazeb2.com/b2api/v3/b2_authorize_account"\n' \
+      "$key_id" "$application_key" |
+      curl --silent --show-error --fail --config - 2>/dev/null
+  ) || die "Backblaze rejected the application key in $key_id_reference"
+
+  printf '%s' "$b2_authorization"
+}
+
+# v3 nests the S3 endpoint under apiInfo.storageApi; v2 had it at the top
+# level. Accept either, so a future account on either API shape still resolves.
+b2_s3_endpoint() {
+  b2_authorize | node -e '
+    let d = "";
+    process.stdin.on("data", (c) => (d += c)).on("end", () => {
+      const body = JSON.parse(d || "{}");
+      const url = body?.apiInfo?.storageApi?.s3ApiUrl || body.s3ApiUrl;
+      if (!url) process.exit(1);
+      process.stdout.write(url);
+    });'
+}
+
+b2_s3_region() {
+  b2_s3_endpoint | node -e '
+    let d = "";
+    process.stdin.on("data", (c) => (d += c)).on("end", () => {
+      // https://s3.us-west-004.backblazeb2.com -> us-west-004
+      const region = new URL(d).hostname.split(".")[1];
+      if (!region) process.exit(1);
+      process.stdout.write(region);
+    });'
+}
+
+# Resolve one map reference to its value on stdout. Callers pipe this straight
+# into `gh secret set`; it is never assigned to a variable that outlives the
+# pipe and never printed.
+resolve_reference() {
+  case "$1" in
+    op://*/*/*) op read --no-newline "$1" ;;
+    derive:b2-s3-endpoint) b2_s3_endpoint ;;
+    derive:b2-s3-region) b2_s3_region ;;
+    *) return 1 ;;
+  esac
+}
+
 # --------------------------------------------------------------- the report --
 missing_required=0
 resolvable=0
 
-printf '%-20s %-36s %s\n' ENVIRONMENT SECRET 1PASSWORD
-printf '%-20s %-36s %s\n' ----------- ------ ---------
+printf '%-20s %-36s %-46s %s\n' ENVIRONMENT SECRET SOURCE STATE
+printf '%-20s %-36s %-46s %s\n' ----------- ------ ------ -----
 while IFS="$(printf '\t')" read -r environment secret reference requirement; do
   case "$reference" in
-    op://*/*/*) ;;
-    *) die "$secret has a malformed reference: $reference" ;;
+    op://*/*/*|derive:b2-s3-endpoint|derive:b2-s3-region) ;;
+    *) die "$secret has an unrecognised source: $reference" ;;
   esac
-  if op read "$reference" >/dev/null 2>&1; then
+  if resolve_reference "$reference" >/dev/null 2>&1; then
     state=found
     resolvable=$((resolvable + 1))
   else
     state="NOT FOUND"
     [ "$requirement" = required ] && missing_required=$((missing_required + 1))
   fi
-  printf '%-20s %-36s %s\n' "$environment" "$secret" "$state"
+  printf '%-20s %-36s %-46s %s\n' "$environment" "$secret" "$reference" "$state"
 done <<MAP_ENTRIES
 $(read_map)
 MAP_ENTRIES
 echo
 
 if [ "$missing_required" -gt 0 ]; then
-  echo "$missing_required required credential(s) could not be read from 1Password." >&2
-  echo "Run '$0 --discover' to find the right op:// references, then edit $map_file." >&2
+  echo "$missing_required required credential(s) could not be resolved." >&2
+  echo "Run '$0 --discover' and '$0 --fields' to find the right references, then edit $map_file." >&2
   [ "$mode" = --apply ] && die "refusing to upload a partial credential set"
   exit 1
 fi
@@ -189,7 +263,7 @@ uploaded=0
 while IFS="$(printf '\t')" read -r environment secret reference requirement; do
   # The value exists only inside this pipe. It is never a file, never an
   # argument, and never printed.
-  if op read --no-newline "$reference" |
+  if resolve_reference "$reference" |
     gh secret set "$secret" --env "$environment" --repo "$repository" --body-file - >/dev/null 2>&1; then
     echo "set $environment/$secret"
     uploaded=$((uploaded + 1))
