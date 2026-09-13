@@ -117,7 +117,7 @@ defmodule KeeplingWeb.MCP.ContentIsolationTest do
     # Differential: an identical context PLUS a text field decides nothing
     # differently -- proving the decision cannot depend on it even if a
     # caller mistakenly threaded one in.
-    poisoned = Map.put(production_context, :title, "HOSTILE_TASK_TITLE_SENTINEL_DO_NOT_EMIT")
+    poisoned = Map.put(production_context, :title, hostile_sentinel(:task_title))
     assert AgentScope.require(poisoned, "tasks.write") == AgentScope.require(production_context, "tasks.write")
   end
 
@@ -140,8 +140,8 @@ defmodule KeeplingWeb.MCP.ContentIsolationTest do
     # Differential: Preview.authorize_commit/2 uses Map.take/2 over the
     # closed field list on BOTH sides -- an extra text field present on
     # either map changes nothing about the decision.
-    poisoned_supplied = Map.put(binding, :title, "HOSTILE_TASK_TITLE_SENTINEL_DO_NOT_EMIT")
-    poisoned_authoritative = Map.put(binding, :notes, "HOSTILE_TASK_NOTE_SENTINEL_DO_NOT_EMIT")
+    poisoned_supplied = Map.put(binding, :title, hostile_sentinel(:task_title))
+    poisoned_authoritative = Map.put(binding, :notes, hostile_sentinel(:task_note))
 
     assert Preview.authorize_commit(poisoned_supplied, poisoned_authoritative) ==
              Preview.authorize_commit(binding, binding)
@@ -178,7 +178,7 @@ defmodule KeeplingWeb.MCP.ContentIsolationTest do
     # FunctionClauseError rather than silently coercing -- there is no
     # clause under which this function's decision could read task content.
     assert_raise FunctionClauseError, fn ->
-      TaskAddressing.classify_match_count("HOSTILE_TASK_TITLE_SENTINEL_DO_NOT_EMIT", limit)
+      TaskAddressing.classify_match_count(hostile_sentinel(:task_title), limit)
     end
 
     assert TaskAddressing.classify_match_count(0, limit) == :no_match
@@ -328,6 +328,25 @@ defmodule KeeplingWeb.MCP.ContentIsolationTest do
   # -- helpers --------------------------------------------------------------
 
   defp subset?(keys, allowlist), do: Enum.all?(keys, &(&1 in allowlist))
+
+  # NO SENTINEL IS WRITTEN AS A SOURCE LITERAL IN THIS FILE.
+  #
+  # That is not a style preference. Elixir's compile-time type checker echoes
+  # the offending source line back to stdout, so
+  #
+  #     TaskAddressing.classify_match_count("HOSTILE_TASK_..._DO_NOT_EMIT", limit)
+  #
+  # -- written here deliberately, to prove the function refuses a binary --
+  # caused the compiler to print that literal into the phase2-server lane log.
+  # The lane's mandatory post-run privacy scan then found a vector sentinel in a
+  # diagnostic artefact and failed the lane at every revision, which withheld
+  # the lane's output and so hid its own cause (window 85). Nothing in the
+  # product ever emitted it; the compiler quoting this file did.
+  #
+  # Reading the value from the vector keeps the test's intent exactly and
+  # removes the literal the compiler could quote.
+  defp hostile_sentinel(:task_title), do: Enum.at(load_hostile_sentinels(), 0)
+  defp hostile_sentinel(:task_note), do: Enum.at(load_hostile_sentinels(), 1)
 
   defp load_hostile_sentinels do
     @redaction_vectors_path

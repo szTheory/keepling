@@ -5,7 +5,8 @@ defmodule KeeplingWeb.CompatibilityControllerTest do
 
   setup do
     previous = Application.get_env(:keepling, :compatibility)
-    Application.put_env(:keepling, :compatibility, policy())
+    policy = policy()
+    Application.put_env(:keepling, :compatibility, policy)
 
     on_exit(fn ->
       if previous,
@@ -13,11 +14,14 @@ defmodule KeeplingWeb.CompatibilityControllerTest do
         else: Application.delete_env(:keepling, :compatibility)
     end)
 
-    :ok
+    {:ok, policy: policy}
   end
 
   @tag :transport
-  test "anonymous clients receive complete authoritative compatibility metadata", %{conn: conn} do
+  test "anonymous clients receive complete authoritative compatibility metadata", %{
+    conn: conn,
+    policy: policy
+  } do
     response =
       conn
       |> get("/compatibility", %{
@@ -46,7 +50,7 @@ defmodule KeeplingWeb.CompatibilityControllerTest do
 
     assert response["schema_range"] == %{"minimum" => 1, "maximum" => 3}
     assert response["platform_minimum_builds"] == %{"electron" => 17, "iphone" => 23}
-    assert response["deprecation_deadline"] == "2026-09-13T12:00:00Z"
+    assert response["deprecation_deadline"] == policy["deprecation_deadline"]
     assert response["update_location"] == "https://keepling.example/downloads"
 
     serialized = Jason.encode!(response)
@@ -128,22 +132,41 @@ defmodule KeeplingWeb.CompatibilityControllerTest do
     end
 
     assert_raise ArgumentError, ~r/at least 90 days/, fn ->
-      policy()
-      |> Map.put("deprecation_deadline", "2026-08-01T12:00:00Z")
+      fixture = policy()
+
+      fixture
+      |> Map.put("deprecation_deadline", fixture["previous_superseded_at"])
       |> Compatibility.validate_config!()
     end
   end
 
+  # THE SUPPORT WINDOW IS ANCHORED TO THE RUN'S OWN CLOCK, NOT TO FIXED DATES.
+  # KeeplingWeb.CompatibilityController overwrites the policy's "now" with
+  # DateTime.utc_now/0 before answering, so a fixture written as fixed dates is
+  # a time bomb rather than a fixture. The original pair -- superseded
+  # 2026-06-15T12:00:00Z, deadline 2026-09-13T12:00:00Z -- is exactly the 90-day
+  # minimum `Compatibility.validate_distributed!/2` enforces, which is why it
+  # read as deliberate; it also meant that at 2026-09-13T12:00:00Z the previous
+  # train stopped being supported, the advertised minimum rose from 1 to 2, and
+  # this suite began failing on every run. Deriving both dates from now keeps
+  # the exact shape the validation cares about (deadline == superseded + 90d)
+  # while keeping the deadline ahead of whenever the suite is run.
+  #
+  # Both dates come from ONE reading of the clock: computing them from two
+  # readings can straddle a second boundary and put the deadline a second below
+  # the minimum, which would make the validation case flake.
   defp policy do
+    superseded_at = DateTime.utc_now() |> DateTime.truncate(:second) |> DateTime.add(-1, :day)
+
     %{
-      "now" => "2026-09-01T12:00:00Z",
+      "now" => DateTime.to_iso8601(superseded_at),
       "server_release" => "0.2.0-test",
       "tested_oci_digest" => "sha256:" <> String.duplicate("a", 64),
       "distribution" => "distributed",
       "current_protocol_train" => 2,
       "previous_protocol_train" => 1,
-      "previous_superseded_at" => "2026-06-15T12:00:00Z",
-      "deprecation_deadline" => "2026-09-13T12:00:00Z",
+      "previous_superseded_at" => DateTime.to_iso8601(superseded_at),
+      "deprecation_deadline" => superseded_at |> DateTime.add(90, :day) |> DateTime.to_iso8601(),
       "emergency_override" => nil,
       "supported_protocols" => %{
         "read" => %{"minimum" => 1, "maximum" => 2},
