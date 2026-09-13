@@ -99,18 +99,23 @@ if [ "$mode" = --fields ]; then
             if (/^keepling/i.test(i.title)) console.log(i.id);
         });' |
       while IFS= read -r item_id; do
+        # shellcheck disable=SC2016  # inlined JavaScript; nothing here is a shell expansion
         op item get "$item_id" --vault "$vault" --format=json 2>/dev/null |
           node -e '
             let d = "";
             process.stdin.on("data", (c) => (d += c)).on("end", () => {
               const item = JSON.parse(d || "{}");
               if (!item.title) return;
-              console.log("op://" + process.argv[1] + "/" + item.title);
+              // Address the item by UUID, never by title. `op read` rejects a
+              // reference containing any character outside its own grammar,
+              // and these titles use an en dash, so the title form can never
+              // resolve. A UUID also survives the item being renamed.
+              console.log("# " + item.title);
               for (const f of item.fields || [])
                 // A label with no value is a section header or an unfilled
                 // template row; naming it in the map would resolve to nothing.
                 if (f.label && (f.value !== undefined || f.reference))
-                  console.log("    " + f.label);
+                  console.log("op://" + process.argv[1] + "/" + item.id + "/" + f.label);
               console.log("");
             });' "$vault"
       done
@@ -187,11 +192,16 @@ b2_s3_endpoint() {
 }
 
 b2_s3_region() {
+  # shellcheck disable=SC2016  # inlined JavaScript; nothing here is a shell expansion
   b2_s3_endpoint | node -e '
     let d = "";
     process.stdin.on("data", (c) => (d += c)).on("end", () => {
+      // An upstream failure arrives here as empty input. Guard before parsing:
+      // `new URL("")` throws, and a stack trace is a worse diagnostic than the
+      // real error the caller already printed.
+      if (!d.trim()) process.exit(1);
       // https://s3.us-west-004.backblazeb2.com -> us-west-004
-      const region = new URL(d).hostname.split(".")[1];
+      const region = new URL(d.trim()).hostname.split(".")[1];
       if (!region) process.exit(1);
       process.stdout.write(region);
     });'
@@ -220,6 +230,16 @@ while IFS="$(printf '\t')" read -r environment secret reference requirement; do
     op://*/*/*|derive:b2-s3-endpoint|derive:b2-s3-region) ;;
     *) die "$secret has an unrecognised source: $reference" ;;
   esac
+  # `op read` accepts only its own reference grammar and rejects anything else
+  # outright -- an en dash in an item title is enough. Catch that here, where
+  # the message can say what to do about it, rather than letting the same
+  # opaque complaint repeat once per row.
+  if printf '%s' "$reference" | LC_ALL=C grep -q '[^[:print:]]\|[^ -~]'; then
+    die "$secret has a non-ASCII character in its source, which 'op read' will
+    reject: $reference
+    Address the item by UUID instead of by title. Run '$0 --fields', which
+    emits UUID references ready to paste into $map_file."
+  fi
   # Keep the resolver's own error message. Discarding it leaves every distinct
   # failure looking identical -- a wrong field label, a wrong item title, a
   # locked vault and a rejected key all read as "NOT FOUND" -- and there is
