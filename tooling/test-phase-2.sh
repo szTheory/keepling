@@ -91,7 +91,19 @@ run_lane() {
   printf '%s\n' "lane=$lane status=RUNNING command=$command_text cases=$case_count seed=$seed inputs_sha256=$inputs_sha256"
   if ! "$@" >"$lane_log" 2>&1; then
     if ./tooling/verify-privacy.sh "$lane_log" >/dev/null 2>&1; then
-      sed -n '1,200p' "$lane_log" >&2
+      # HEAD *AND* TAIL. Printing only the first 200 lines is useless for any
+      # lane whose log is dominated by build output: `image-compose-deploy`
+      # failed for weeks with its actual cause past line 500, so continuous
+      # integration showed 200 lines of `Getting <package> (Hex package)` and
+      # nothing else. The cause of a failure is almost always near the end.
+      lane_log_lines=$(wc -l <"$lane_log" | tr -d '[:space:]')
+      if [ "$lane_log_lines" -le 300 ]; then
+        cat "$lane_log" >&2
+      else
+        sed -n '1,100p' "$lane_log" >&2
+        echo "... [$((lane_log_lines - 300)) lines omitted from the middle of $lane] ..." >&2
+        tail -n 200 "$lane_log" >&2
+      fi
     else
       echo "Phase 2 lane output withheld because privacy verification failed" >&2
     fi
