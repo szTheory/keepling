@@ -17,7 +17,7 @@ list_lanes() {
   echo "backup-restore             backup policy and three isolated restore fixtures"
   echo "opentofu-host-fixtures     pinned provider graph and hermetic live-boundary regressions"
   echo "privacy                    producer redaction tests and aggregate hostile scan"
-  echo "live-host-dns-acceptance   credentialed outer acceptance; explicit NON_PASSING marker"
+  echo "live-host-dns-acceptance   credentialed outer acceptance; runs only with every input present"
 }
 
 phase_database_root=''
@@ -160,7 +160,49 @@ report_deferred_live_acceptance() {
     echo "Deferred live acceptance truth is missing" >&2
     return 1
   }
-  printf '%s\n' "lane=live-host-dns-acceptance LIVE_ACCEPTANCE_STATUS=NON_PASSING reason=credentialed_outer_acceptance_deferred evidence=$deferred"
+  printf '%s\n' "lane=live-host-dns-acceptance LIVE_ACCEPTANCE_STATUS=NON_PASSING reason=${1:-credentialed_outer_acceptance_deferred} evidence=$deferred"
+  # Name what was absent. Without this the lane reports the same sentence
+  # whether one input is missing or nine, and an operator who has just supplied
+  # credentials cannot tell which one did not arrive.
+  [ -n "${2:-}" ] && printf '%s\n' "lane=live-host-dns-acceptance absent_inputs=$2"
+  return 0
+}
+
+# Every input the live acceptance needs before it can measure anything. The
+# change trigger is in this list deliberately: a real host replacement mutates
+# live DNS and provisions real infrastructure, so it must never run as a side
+# effect of a schedule -- only as a reviewed, named act.
+live_acceptance_inputs="HCLOUD_TOKEN
+CLOUDFLARE_API_TOKEN_FILE
+KEEPLING_DNS_ZONE_ID
+KEEPLING_DNS_RECORD_NAME
+KEEPLING_SSH_PUBLIC_KEY_FILE
+KEEPLING_BACKUP_PRIMARY_CREDENTIAL_FILE
+KEEPLING_BACKUP_MIRROR_CREDENTIAL_FILE
+KEEPLING_BACKUP_CIPHER_FILE
+KEEPLING_LIVE_CHANGE_TRIGGER"
+
+# THE ANTI-LOOPHOLE RULE FOR THIS LANE: absence of any input is NON_PASSING,
+# never a pass. A skipped outer acceptance must never be counted as evidence
+# that the outer acceptance holds. What this function adds is the other
+# direction, which was missing: when every input IS present, the lane must
+# actually run the acceptance rather than report NON_PASSING regardless. Before
+# this, supplying credentials changed nothing, so the lane could not distinguish
+# "not attempted" from "attempted and failed".
+lane_live_host_dns_acceptance() {
+  absent=
+  for input_name in $live_acceptance_inputs; do
+    eval "input_value=\${$input_name:-}"
+    [ -n "$input_value" ] || absent="${absent:+$absent,}$input_name"
+  done
+
+  if [ -n "$absent" ]; then
+    report_deferred_live_acceptance credentialed_outer_acceptance_unattempted "$absent"
+    return 3
+  fi
+
+  printf '%s\n' "lane=live-host-dns-acceptance LIVE_ACCEPTANCE_STATUS=ATTEMPTED trigger=$KEEPLING_LIVE_CHANGE_TRIGGER"
+  ./tooling/verify-host-replacement.sh
 }
 
 run_lanes() {
@@ -243,7 +285,12 @@ case "${1:-}" in
     [ "$#" -eq 2 ] || usage
     case "$2" in
       repository-integrity | server | sync-property | contracts-compatibility | image-compose-deploy | backup-restore | opentofu-host-fixtures | privacy) run_lanes "$2" ;;
-      live-host-dns-acceptance) report_deferred_live_acceptance; exit 3 ;;
+      live-host-dns-acceptance)
+        # Exit 3 means deliberately non-passing and not attempted; exit 1 means
+        # the acceptance ran and failed. Collapsing the two would let a real
+        # failure read as an expected deferral.
+        lane_live_host_dns_acceptance || exit $?
+        ;;
       *) usage ;;
     esac
     ;;
