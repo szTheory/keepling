@@ -236,12 +236,39 @@ jobs:
   # dependency reporting anything other than `success` (including
   # `skipped`, which `check-ci-contract.mjs` bans on every OTHER required
   # job) fails this job explicitly.
+  export-reader:
+    # D-07 lane 3. The independent export reader has existed and passed
+    # locally since 06-08, and was BLOCKED in both release candidates for one
+    # reason only: no committed job ran it, and an unwired lane may never
+    # report PASSED (window 83). It needs nothing but Node and a checked-in
+    # vector, so it runs as its own job rather than as a step inside another
+    # one -- a lane the aggregator names by itself cannot be lost in someone
+    # else's log.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Validate the golden export bundle by an independent route
+        run: |
+          set -o pipefail
+          node tooling/verify-export-reader.mjs --golden | tee "$RUNNER_TEMP/export-reader.txt"
+          ./tooling/verify-privacy.sh "$RUNNER_TEMP/export-reader.txt"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: export-reader-timing
+          path: ${{ runner.temp }}/export-reader.txt
+          if-no-files-found: error
+          retention-days: 14
+
   all-required-passed:
     name: All required checks passed
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     needs:
-      [ci-contract, repository-integrity, phase2-linux, phase2-runtime, image-compose-deploy, opentofu-host-fixtures]
+      [ci-contract, repository-integrity, phase2-linux, phase2-runtime, image-compose-deploy, opentofu-host-fixtures, export-reader]
     if: always()
     steps:
       - name: Assert every required dependency succeeded

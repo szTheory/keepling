@@ -182,14 +182,14 @@
     {
       "lane": "export-reader",
       "command": "node tooling/verify-export-reader.mjs --golden",
-      "workflow": null,
-      "job": null,
+      "workflow": ".github/workflows/repository-integrity.yml",
+      "job": "export-reader",
       "authority": "ci",
       "physicalBlocker": null,
-      "ciWiring": "unwired",
-      "wiringBlocker": "The independent reader exists and runs locally, but no committed workflow job invokes it; a prior inventory revision claimed repository-integrity.yml/ci-contract runs it, and no such step exists.",
+      "ciWiring": "wired",
+      "wiringBlocker": null,
       "requiresSecrets": false,
-      "owner": "backlog"
+      "owner": "ci"
     },
     {
       "lane": "desktop-units",
