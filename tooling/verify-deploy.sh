@@ -62,8 +62,22 @@ rollback_eligibility() {
 cleanup_deploy_proof() {
   result=$?
   trap - EXIT HUP INT TERM
-  if [ -n "$project" ]; then compose_run down --remove-orphans >/dev/null 2>&1 || true; fi
+  if [ -n "$project" ]; then
+    # A Compose service failing with nothing but `didn't complete
+    # successfully: exit 1` is undiagnosable, and teardown destroys the only
+    # copy of why. Dump every service's log first, but only on failure.
+    [ "$result" -eq 0 ] || compose_run logs --no-color --timestamps >&2 2>/dev/null || true
+    compose_run down --remove-orphans >/dev/null 2>&1 || true
+  fi
   if [ -n "$proof_root" ]; then
+    # PostgreSQL and Caddy write into their bind mounts as root, so those
+    # directories come back owned by uid 0 and the invoking user cannot remove
+    # them on a Linux engine -- which failed this trap, and so the lane, under
+    # `set -e`. Hand ownership back with the same privilege that took it, using
+    # the PostgreSQL image this stack already pins by digest.
+    docker run --rm --user 0:0 --mount "type=bind,source=$proof_root,target=/proof" \
+      postgres:18.6-bookworm@sha256:1c59e2c3c818eaa0f0628f695b36e7c9e362d6b219b36a54a32df645cbd7e1af \
+      chown -R "$(id -u):$(id -g)" /proof >/dev/null 2>&1 || true
     case "$proof_root" in
       "${TMPDIR:-/tmp}"/keepling-deploy-proof.*) rm -rf -- "$proof_root" ;;
       *) echo "Deploy verification refused unsafe cleanup: $proof_root" >&2; exit 70 ;;
@@ -113,6 +127,15 @@ deploy_exact_digest() {
   printf '%s' 'ecto://keepling:deploy-proof-postgres-password@db:5432/keepling' >"$proof_root/secrets/database-url"
   printf '%s' 'deploy-proof-secret-key-base-0000000000000000000000000000000000000000000000000' >"$proof_root/secrets/secret-key-base"
   printf '%s' 'deploy-proof-operator-token-00000000000000000000000000000000000' >"$proof_root/secrets/operator-token"
+
+  # `umask 077` writes these 0600 owned by the invoking user; the release image
+  # runs as uid 10001, which on a Linux engine is simply a different user, so
+  # its entrypoint's `cat /run/secrets/database_url` fails with "Permission
+  # denied" and the release dies at "DATABASE_URL is required". These four
+  # values are literals written three lines up, into a directory this script
+  # deletes on exit -- there is no secret here to protect, only a file mode
+  # that stopped the proof from running.
+  chmod 0444 "$proof_root"/secrets/*
 
   export KEEPLING_SERVER_IMAGE="$image_id"
   export KEEPLING_SERVER_DIGEST="$image_id"
