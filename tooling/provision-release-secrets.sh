@@ -213,21 +213,27 @@ resolve_reference() {
 missing_required=0
 resolvable=0
 
-printf '%-20s %-36s %-46s %s\n' ENVIRONMENT SECRET SOURCE STATE
-printf '%-20s %-36s %-46s %s\n' ----------- ------ ------ -----
+echo "Resolving $(read_map | wc -l | tr -d '[:space:]') credential(s) declared in $map_file:"
+echo
 while IFS="$(printf '\t')" read -r environment secret reference requirement; do
   case "$reference" in
     op://*/*/*|derive:b2-s3-endpoint|derive:b2-s3-region) ;;
     *) die "$secret has an unrecognised source: $reference" ;;
   esac
-  if resolve_reference "$reference" >/dev/null 2>&1; then
-    state=found
+  # Keep the resolver's own error message. Discarding it leaves every distinct
+  # failure looking identical -- a wrong field label, a wrong item title, a
+  # locked vault and a rejected key all read as "NOT FOUND" -- and there is
+  # nothing left to debug from. Stdout goes to /dev/null because it is the
+  # credential; stderr is the diagnosis and is kept.
+  if failure=$(resolve_reference "$reference" 2>&1 >/dev/null); then
+    printf '  found      %s\n' "$secret"
     resolvable=$((resolvable + 1))
   else
-    state="NOT FOUND"
+    printf '  NOT FOUND  %s\n' "$secret"
+    printf '             source: %s\n' "$reference"
+    printf '%s\n' "$failure" | sed -e '/^[[:space:]]*$/d' -e 's/^/             /' | head -4
     [ "$requirement" = required ] && missing_required=$((missing_required + 1))
   fi
-  printf '%-20s %-36s %-46s %s\n' "$environment" "$secret" "$reference" "$state"
 done <<MAP_ENTRIES
 $(read_map)
 MAP_ENTRIES
