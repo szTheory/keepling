@@ -111,7 +111,23 @@ jobs:
           key: phase2-${{ runner.os }}-${{ matrix.lane }}-${{ hashFiles('tooling/runtime-versions.env', 'apps/server/mix.lock', 'pnpm-lock.yaml') }}
       - name: Install asdf
         run: |
-          git clone https://github.com/asdf-vm/asdf.git "$HOME/.asdf" --branch v0.14.1
+          set -eu
+          # The cache step above restores ~/.asdf/installs, which CREATES
+          # $HOME/.asdf before this step runs. An unconditional clone then dies
+          # with "destination path already exists and is not an empty
+          # directory" (exit 128) and the lane never reaches any project code.
+          # Clone into a scratch directory and move only the parts that are
+          # missing, so a restored cache and a cold runner both end up with the
+          # same tree.
+          if [ ! -d "$HOME/.asdf/.git" ]; then
+            scratch="$(mktemp -d)"
+            git clone https://github.com/asdf-vm/asdf.git "$scratch/asdf" --branch v0.14.1
+            mkdir -p "$HOME/.asdf"
+            # `cp -R src/. dst` merges into an existing directory instead of
+            # nesting, which is what the restored-cache case needs.
+            cp -R "$scratch/asdf/." "$HOME/.asdf/"
+            rm -rf "$scratch"
+          fi
           echo "$HOME/.asdf/bin" >> "$GITHUB_PATH"
           echo "$HOME/.asdf/shims" >> "$GITHUB_PATH"
       - name: Provision exact repository runtimes

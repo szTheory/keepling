@@ -52,7 +52,7 @@ docker buildx build \
   --build-arg "OCI_REVISION=$revision" \
   --tag "$image_tag" \
   --file infra/images/server/Dockerfile \
-  apps/server
+  .
 
 manifest_digest=$(jq -r '."containerimage.digest" // empty' "$metadata_file")
 case "$manifest_digest" in sha256:????????????????????????????????????????????????????????????????) ;; *) die "build did not return an immutable manifest digest" ;; esac
@@ -98,6 +98,7 @@ docker run --rm \
   -e DATABASE_URL="$database_url" -e SECRET_KEY_BASE="$secret_key_base" -e PHX_HOST=localhost \
   -e KEEPLING_OPERATOR_TOKEN="$operator_token" -e KEEPLING_SERVER_RELEASE=0.1.0 \
   -e KEEPLING_TESTED_OCI_DIGEST="$manifest_digest" -e KEEPLING_UPDATE_LOCATION=https://github.com/szTheory/keepling/releases \
+  -e KEEPLING_DEVICE_GRANT_SERVER_INSTANCE=keepling-image-proof \
   --entrypoint /app/bin/keepling "$image_tag" eval 'Application.ensure_loaded(:keepling); {:ok, _, _} = Ecto.Migrator.with_repo(Keepling.Repo, fn repo -> Ecto.Migrator.run(repo, :up, all: true) end)' >/dev/null
 
 docker run -d --name "$app_name" -p 127.0.0.1::4000 \
@@ -105,6 +106,7 @@ docker run -d --name "$app_name" -p 127.0.0.1::4000 \
   -e DATABASE_URL="$database_url" -e SECRET_KEY_BASE="$secret_key_base" -e PHX_HOST=localhost \
   -e KEEPLING_OPERATOR_TOKEN="$operator_token" -e KEEPLING_SERVER_RELEASE=0.1.0 \
   -e KEEPLING_TESTED_OCI_DIGEST="$manifest_digest" -e KEEPLING_UPDATE_LOCATION=https://github.com/szTheory/keepling/releases \
+  -e KEEPLING_DEVICE_GRANT_SERVER_INSTANCE=keepling-image-proof \
   "$image_tag" >/dev/null
 
 host_port=$(docker port "$app_name" 4000/tcp | sed -n 's/.*://p')

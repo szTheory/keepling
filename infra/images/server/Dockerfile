@@ -8,19 +8,34 @@ FROM ${BUILDER_IMAGE} AS builder
 ARG KEEPLING_BUILD_ERL_FLAGS
 ENV MIX_ENV=prod
 ENV ERL_FLAGS=${KEEPLING_BUILD_ERL_FLAGS}
-WORKDIR /build
+# The build context is the REPOSITORY ROOT, and this stage mirrors the
+# repository's own directory layout inside the image. That is not decoration:
+# two server modules read files from `packages/contracts` AT COMPILE TIME --
+# `Keepling.Application.Export` reads schemas/export/FORMAT.md and
+# `KeeplingWeb.MCP.ToolSchemas` reads generated/mcp-tools.schema.json -- each
+# by walking five directories up from its own `__DIR__`. With `apps/server` as
+# the context those paths resolved to `/packages/...`, which was outside the
+# context entirely, and the release could not compile. Keeping the layout
+# identical to the repository makes any repo-relative read resolve here exactly
+# as it does on a developer machine.
+WORKDIR /build/apps/server
 
 RUN test "$(elixir -e 'IO.write(System.version())')" = "1.20.2" \
     && test "$(erl -noshell -eval 'io:format("~s", [erlang:system_info(otp_release)]), halt().')" = "29" \
     && test "$(cat /usr/local/lib/erlang/releases/29/OTP_VERSION)" = "29.0.5"
 RUN mix local.hex --force && mix local.rebar --force
 
-COPY mix.exs mix.lock ./
-COPY config/config.exs config/prod.exs config/runtime.exs config/
+COPY apps/server/mix.exs apps/server/mix.lock ./
+COPY apps/server/config/config.exs apps/server/config/prod.exs apps/server/config/runtime.exs config/
 RUN mix deps.get --only prod && mix deps.compile
 
-COPY lib lib
-COPY priv priv
+# Copied as its own layer, before `lib`, so that editing server code does not
+# invalidate it and editing a contract does invalidate the compile that depends
+# on it.
+COPY packages/contracts /build/packages/contracts
+
+COPY apps/server/lib lib
+COPY apps/server/priv priv
 RUN mix compile --warnings-as-errors && mix release
 
 FROM ${RUNTIME_IMAGE} AS runtime
@@ -48,7 +63,7 @@ RUN groupadd --system --gid 10001 keepling \
     && useradd --system --uid 10001 --gid keepling --home-dir /app --shell /usr/sbin/nologin keepling
 
 WORKDIR /app
-COPY --from=builder --chown=keepling:keepling /build/_build/prod/rel/keepling ./
+COPY --from=builder --chown=keepling:keepling /build/apps/server/_build/prod/rel/keepling ./
 
 ENV HOME=/app \
     LANG=C.UTF-8 \

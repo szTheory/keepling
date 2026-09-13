@@ -1,0 +1,34 @@
+# The server image builds from the REPOSITORY ROOT, because two server modules
+# read files from `packages/contracts` at compile time (see
+# infra/images/server/Dockerfile). Without this file the context would include
+# every node_modules tree, every build output and the whole .git directory --
+# tens of thousands of files that no image layer uses.
+#
+# This is an EXCLUDE list rather than an allow-list on purpose: an allow-list
+# silently drops a newly added compile-time input and fails the build in the
+# same confusing way the `apps/server` context did.
+
+.git
+.github
+.planning
+.gsd
+
+**/node_modules
+**/_build
+**/deps
+**/.elixir_ls
+**/dist
+**/out
+**/.turbo
+**/.vite
+**/coverage
+**/playwright-report
+**/test-results
+
+apps/desktop
+apps/ios
+apps/web
+infra/tofu/**/.terraform
+
+**/.DS_Store
+**/*.log

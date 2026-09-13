@@ -51,7 +51,7 @@ defmodule Keepling.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:argon2_elixir, "== 4.1.3"},
-      {:tzdata, "== 1.1.4"},
+      {:tzdata, "== 1.1.5"},
       {:hammer, "== 7.4.1"},
       {:stream_data, "== 1.4.0", only: :test},
       {:sbom, "~> 0.10.0", only: :dev, runtime: false}
