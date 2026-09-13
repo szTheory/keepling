@@ -20,8 +20,8 @@ damaged and can't be opened" warning that an unsigned build produces on current
 macOS, and the code directory hash recorded in the release manifest is the identity a
 Gatekeeper check on the shipped file can be compared against after the fact.
 
-**Status: TRUE AS OF REVISION `REWRITTEN-SHA`, BUT NOT OF THE RETAINED CANDIDATE.**
-Continuous integration signs, notarizes and staples: at `REWRITTEN-SHA` the
+**Status: TRUE AS OF REVISION `a revision superseded by the 2026-09-12 history rewrite`, BUT NOT OF THE RETAINED CANDIDATE.**
+Continuous integration signs, notarizes and staples: at `a revision superseded by the 2026-09-12 history rewrite` the
 `desktop-package` job imported the Developer ID identity, resolved it, and
 reported `The staple and validate action worked!`, and both `desktop-packaged`
 and `desktop-macos-integration` pass against those signed bytes. Window #91 is
