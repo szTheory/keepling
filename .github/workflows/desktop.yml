@@ -381,24 +381,34 @@ jobs:
         run: |
           brew list asdf >/dev/null 2>&1 || brew install asdf
           ./tooling/runtime-preflight.sh --provision
+          corepack enable
+          pnpm install --frozen-lockfile
           # Installing Elixir is not enough. A fresh OTP install has no Hex,
           # and `mix sbom.cyclonedx` needs it twice over: to resolve the
-          # project's own dependencies, and because the `:sbom` task itself is
+          # project's own dependencies, and because the `:sbom` task is itself
           # a Hex package. Without this the task dies on an interactive prompt
-          # that can never be answered in CI:
+          # no CI run can answer:
           #   Mix requires the Hex package manager to fetch dependencies
           #   ** (Mix) Could not find an SCM for dependency :phoenix
           #   Shall I install Hex? (if running non-interactively, use ...)
-          mix local.hex --force
-          mix local.rebar --force
-          # The SBOM is generated FROM SOURCE, but "from source" still means
-          # from a resolved dependency tree -- mix.lock names the versions and
-          # `deps.get` is what makes them inspectable.
-          (cd apps/server && mix deps.get)
-          corepack enable
-          pnpm install --frozen-lockfile
+          #
+          # These go through `--exec`, like every other mix invocation in this
+          # repository's workflows. `--provision` exports the asdf toolchain
+          # PATH inside its OWN process and writes nothing to $GITHUB_PATH, so
+          # a bare `mix` in this step resolves against the runner's PATH and
+          # fails with `mix: command not found` (exit 127) even though the
+          # preflight just reported Elixir 1.20.2. `--exec` re-runs the same
+          # resolution and then execs the command inside it.
+          #
+          # `deps.get` matters because "from source" still means from a
+          # RESOLVED tree: mix.lock names the versions, deps.get is what makes
+          # them inspectable.
+          ./tooling/runtime-preflight.sh --exec -- sh -c 'mix local.hex --force && mix local.rebar --force && cd apps/server && mix deps.get'
       - name: Generate the Hex and npm bills of materials from source
-        run: node tooling/generate-sbom.mjs --out "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/sbom"
+        # Also via `--exec`: generate-sbom.mjs shells out to `mix
+        # sbom.cyclonedx`, so it needs the same toolchain PATH the mix steps do
+        # rather than whatever the runner happens to expose.
+        run: ./tooling/runtime-preflight.sh --exec -- node tooling/generate-sbom.mjs --out "$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}/sbom"
       # D-21: SHA-256 checksums for the archive and the stapled application,
       # worded as a TEMPLATE for the GitHub Release body -- this repository
       # has no git remote and has never cut a GitHub Release, so no
