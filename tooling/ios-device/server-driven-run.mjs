@@ -78,25 +78,57 @@ let tls = null
 let displayHost = advertiseHost
 
 if (useTailnet) {
-  const { issueTailnetCertificate, redactFQDN, requireOnlineIOSPeer, tailnetFQDN } = await import(
-    `${repositoryRoot}/tooling/ios-device/tailnet.mjs`
-  )
-  // Peer first, certificate second: a phone that is not on the tailnet
-  // produces a connection timeout later that looks exactly like a
-  // certificate problem, and this phase has already lost enough time to
-  // failures that pointed at the wrong layer.
-  requireOnlineIOSPeer()
-  const fqdn = tailnetFQDN()
-  tls = issueTailnetCertificate(fqdn)
-  // Every interface, so the tailnet one is included. Phoenix and PostgreSQL
-  // stay on loopback exactly as the shared harness requires.
-  bindHost = '0.0.0.0'
-  advertiseHost = fqdn
-  // The MagicDNS name embeds the tailnet name, which identifies the
-  // account. This repository may become open source and its lane output is
-  // read into committed evidence, so what gets PRINTED is redacted while
-  // what gets DIALLED is the real name.
-  displayHost = redactFQDN(fqdn)
+  // MEASURED DEFECT this try/catch repairs: every statement in this block
+  // runs BEFORE the `try` at the bottom of the file that turns an
+  // `isBlocked` error into a `BLOCKED:` marker line. The tailnet preflight
+  // is precisely where blocked conditions are DETECTED -- an offline peer,
+  // an unissuable certificate -- so the one place that raises them was the
+  // one place that could not report them. An offline phone therefore
+  // escaped as an uncaught exception, printed Node's stack-trace format
+  // instead of the marker `tooling/ios-lanes/server-driven-device.mjs`
+  // scans for, and the gate recorded `status=FAIL cases=0`.
+  //
+  // That is the anti-vacuity contract (D-24/D-25) broken in its less
+  // obvious direction. The rule that a blocked lane must never read as
+  // PASSED has a mirror: it must never read as FAILED either. A FAIL is a
+  // claim that the code under test is wrong, and "Tailscale is toggled off
+  // on the phone" is not a claim about this codebase at all. Recording it
+  // as one sends the next reader to debug the wrong layer -- the exact
+  // failure mode the comment below already warns about, reproduced one
+  // level up.
+  try {
+    const { issueTailnetCertificate, redactFQDN, requireOnlineIOSPeer, tailnetFQDN } = await import(
+      `${repositoryRoot}/tooling/ios-device/tailnet.mjs`
+    )
+    // Peer first, certificate second: a phone that is not on the tailnet
+    // produces a connection timeout later that looks exactly like a
+    // certificate problem, and this phase has already lost enough time to
+    // failures that pointed at the wrong layer.
+    requireOnlineIOSPeer()
+    const fqdn = tailnetFQDN()
+    tls = issueTailnetCertificate(fqdn)
+    // Every interface, so the tailnet one is included. Phoenix and PostgreSQL
+    // stay on loopback exactly as the shared harness requires.
+    bindHost = '0.0.0.0'
+    advertiseHost = fqdn
+    // The MagicDNS name embeds the tailnet name, which identifies the
+    // account. This repository may become open source and its lane output is
+    // read into committed evidence, so what gets PRINTED is redacted while
+    // what gets DIALLED is the real name.
+    displayHost = redactFQDN(fqdn)
+  } catch (error) {
+    // Same two branches, same marker, same exit code as the handler at the
+    // bottom of this file. Deliberately duplicated rather than factored out:
+    // there is no `stack` to stop here (nothing has started yet), and the
+    // shape that matters -- `BLOCKED: ` at the start of a line -- is what
+    // the lane parser keys on.
+    if (error?.isBlocked) {
+      console.error(`BLOCKED: ${error.message}`)
+    } else {
+      console.error(`iOS server-driven lane failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
+    process.exit(1)
+  }
 }
 
 const fail = (message) => {
