@@ -524,6 +524,44 @@ jobs:
           xcrun simctl install "$udid" "$app"
           xcrun simctl listapps "$udid" | grep -qi keepling
           echo "KEEPLING_CROSS_ADAPTER_IOS_DESTINATION=platform=iOS Simulator,id=$udid" >> "$GITHUB_ENV"
+      # The `deterministic` lane is the ONLY lane in this gate that does not
+      # boot its own server. It runs ExUnit directly, and its own comment
+      # states the contract this step satisfies: it "defaults to the current OS
+      # user against the developer's already-running local PostgreSQL on its
+      # default port ... Override both with real values for CI or a disposable
+      # instance." A hosted runner has no such local PostgreSQL, so the first
+      # CI run of this widened job failed there and only there -- the other
+      # four lanes passed, cross-adapter included.
+      #
+      # Port 55470, NOT 5432 and NOT 55460: tooling/mcp-client/client.mjs boots
+      # the disposable server the other four lanes drive on 55460, and a
+      # collision would have this instance and that one fighting for a port
+      # mid-gate. Those lanes are unaffected by the variables exported here --
+      # client.mjs spreads process.env and then overwrites both with its own
+      # values, so it never inherits this database.
+      #
+      # No createdb: apps/server/mix.exs aliases `test` to
+      # ["ecto.create --quiet", "ecto.migrate --quiet", "test"], so the suite
+      # builds and migrates its own database. initdb's default `postgres`
+      # database is what ecto.create connects to in order to do it, and
+      # --auth-host=trust with the runner's own OS user as the superuser is
+      # the same shape tooling/test-phase-2.sh already provisions.
+      - name: Provision the disposable PostgreSQL the deterministic lane needs
+        run: |
+          set -eu
+          root="$RUNNER_TEMP/keepling-mcp-deterministic-db"
+          mkdir -p "$root/socket"
+          ./tooling/runtime-preflight.sh --exec -- \
+            initdb --auth-host=trust --auth-local=trust --encoding=UTF8 --no-locale \
+              -D "$root/data" >/dev/null
+          ./tooling/runtime-preflight.sh --exec -- \
+            pg_ctl -D "$root/data" -l "$root/postgres.log" \
+              -o "-h 127.0.0.1 -k $root/socket -p 55470" -w start >/dev/null
+          ./tooling/runtime-preflight.sh --exec -- \
+            psql -h 127.0.0.1 -p 55470 -d postgres -c 'select version()'
+          echo "KEEPLING_TEST_DATABASE_URL=ecto://$(id -un)@127.0.0.1:55470/keepling_test" >> "$GITHUB_ENV"
+          echo 'KEEPLING_TEST_SECRET_KEY_BASE=mcp-deterministic-lane-test-only-secret-key-base-000000000000000000000000' >> "$GITHUB_ENV"
+
       # Exactly the command tooling/release-lanes.json declares for the
       # mcp-phase-non-model lane -- not a variant of it. A gate whose wired
       # command and inventoried command can drift is the defect window 102
@@ -531,7 +569,14 @@ jobs:
       - name: Run the MCP phase gate, less the lane a paid credential owns
         run: |
           set -o pipefail
-          node tooling/verify-mcp-phase.mjs --exclude-lane representative-model | tee "$RUNNER_TEMP/mcp-phase-non-model.txt"
+          # 2>&1 INTO the tee, not just stdout. The gate writes its LANE and
+          # summary lines to stdout but every failure diagnostic to stderr, so
+          # a stdout-only tee produced an evidence artifact containing 22
+          # verdicts and not one word of why any of them failed -- row 99's
+          # swallowed-diagnostics shape, reproduced in the artifact that
+          # exists to prevent it. Measured on this job's first CI run.
+          node tooling/verify-mcp-phase.mjs --exclude-lane representative-model 2>&1 \
+            | tee "$RUNNER_TEMP/mcp-phase-non-model.txt"
           ./tooling/verify-privacy.sh "$RUNNER_TEMP/mcp-phase-non-model.txt"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()

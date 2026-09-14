@@ -131,9 +131,15 @@ jobs:
       - name: Run the iOS phase gate, less the lanes a physical handset owns
         run: |
           set -o pipefail
-          node tooling/verify-ios-phase.mjs --exclude-lane device --exclude-lane server-driven-device \
+          # 2>&1 INTO the tee, not just stdout. The gate writes its LANE and
+          # summary lines to stdout but every failure diagnostic to stderr, so
+          # a stdout-only tee produced an evidence artifact containing 22
+          # verdicts and not one word of why any of them failed -- row 99's
+          # swallowed-diagnostics shape, reproduced in the artifact that
+          # exists to prevent it. Measured on this job's first CI run.
+          node tooling/verify-ios-phase.mjs --exclude-lane device --exclude-lane server-driven-device 2>&1 \
             | tee "$RUNNER_TEMP/ios-simulator.txt"
-          node tooling/verify-ios-phase.mjs --lane server-driven-sim \
+          node tooling/verify-ios-phase.mjs --lane server-driven-sim 2>&1 \
             | tee -a "$RUNNER_TEMP/ios-simulator.txt"
           ./tooling/verify-privacy.sh "$RUNNER_TEMP/ios-simulator.txt"
 

@@ -61,6 +61,41 @@ const inputDigestFor = (paths) => {
 }
 
 /**
+ * Node's spawnSync defaults maxBuffer to 1 MiB, and a child that exceeds it
+ * is KILLED with its output truncated at the limit. That default is wrong for
+ * every lane in this file: a cold `xcodebuild test` on a fresh runner emits
+ * far more than 1 MiB of compile output before it ever reaches a result
+ * marker, so the lane was killed mid-build and then reported as though its
+ * OUTPUT were unparseable rather than as though it had been terminated.
+ * Window 102's first wired CI run is the measurement: 20 of 22 lanes reported
+ * `xcodebuild summary line "** TEST SUCCEEDED **" not found`, the only two
+ * survivors being the one lane that shells out to node and the one that
+ * drives its own runner. The same lanes pass locally, where warm DerivedData
+ * makes an incremental build quiet enough to fit.
+ *
+ * 64 MiB rather than Infinity: an unbounded buffer turns a runaway lane into
+ * an out-of-memory kill of the gate itself, which is a worse failure than a
+ * truncated one because it takes the other lanes' results with it.
+ */
+const MAX_LANE_OUTPUT_BYTES = 64 * 1024 * 1024
+
+/**
+ * Row 99's prescription -- "the cause of a failure is almost always near the
+ * end", but a build that fails early puts it near the START -- applied to a
+ * lane runner instead of to a shell script. A short trailing slice of
+ * xcodebuild output is almost always compiler warnings, which is exactly what
+ * the first wired CI run printed for all 20 failing lanes and why none of
+ * them could be diagnosed from CI at all.
+ */
+const excerpt = (text) => {
+  const lines = text.trim().split('\n')
+  if (lines.length <= 300) return lines.join('\n')
+  const head = lines.slice(0, 100)
+  const tail = lines.slice(-200)
+  return [...head, `--- ${lines.length - 300} line(s) omitted ---`, ...tail].join('\n')
+}
+
+/**
  * Runs one lane's command, then hands raw stdout/stderr to `parse` to
  * extract a positive case count. `parse` MUST throw or return a
  * non-positive count for output it cannot make sense of -- there is no
@@ -70,7 +105,12 @@ const inputDigestFor = (paths) => {
  */
 const runLane = ({ command, args, cwd, env, name, parse, trackedInputPaths }) => {
   const startedAt = Date.now()
-  const result = spawnSync(command, args, { cwd: cwd ?? repositoryRoot, encoding: 'utf8', env: { ...process.env, ...env } })
+  const result = spawnSync(command, args, {
+    cwd: cwd ?? repositoryRoot,
+    encoding: 'utf8',
+    env: { ...process.env, ...env },
+    maxBuffer: MAX_LANE_OUTPUT_BYTES,
+  })
   const durationMs = Date.now() - startedAt
   const stdout = result.stdout ?? ''
   const stderr = result.stderr ?? ''
@@ -103,14 +143,22 @@ const runLane = ({ command, args, cwd, env, name, parse, trackedInputPaths }) =>
   console.log(`LANE name=${name} status=${statusWord} cases=${cases} duration_ms=${durationMs} input_digest=${inputDigest}`)
   if (!passed) {
     anyFailed = true
-    if (blocked) fail(`${name}: ${parseError}`)
+    // A spawn-level error -- notably ERR_CHILD_PROCESS_STDIO_MAXBUFFER, which
+    // KILLS the child and truncates its output -- is reported FIRST and by
+    // name. It used to fall through to the parse error below, so a lane that
+    // was terminated mid-run reported "summary line not found", which reads
+    // as "the tests did not pass" when what happened is "the tests never
+    // finished". Those must never be indistinguishable: the first is a defect
+    // in the code under test, the second a defect in this runner.
+    if (result.error) fail(`${name}: the lane process did not complete: ${String(result.error.message ?? result.error)}`)
+    else if (blocked) fail(`${name}: ${parseError}`)
     else if (parseError) fail(`${name}: ${parseError}`)
     else if (!exitedCleanly) fail(`${name}: exited ${result.status ?? 'without status'}${stderr ? `: ${stderr.trim().slice(-2000)}` : ''}`)
     else fail(`${name}: reported zero cases`)
     console.error(`--- ${name} stdout tail ---`)
-    console.error(stdout.trim().slice(-4000))
+    console.error(excerpt(stdout))
     console.error(`--- ${name} stderr tail ---`)
-    console.error(stderr.trim().slice(-2000))
+    console.error(excerpt(stderr))
   }
 }
 
