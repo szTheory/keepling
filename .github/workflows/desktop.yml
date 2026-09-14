@@ -204,6 +204,19 @@ jobs:
         run: pnpm --dir apps/desktop exec playwright install --with-deps
       - name: Run the real shipped-entry-point Electron E2E suite
         run: pnpm test:desktop:e2e
+      # Window 101: a test that fails and then PASSES ON RETRY leaves this job
+      # GREEN, so `if: failure()` would never fire and the trace/video that
+      # Playwright retained for the failed attempt would be thrown away -- the
+      # flake's own evidence, discarded precisely in the case where it is the
+      # only evidence there is. That is what made window 101 take five CI runs
+      # and a from-scratch local reproduction to diagnose. `always()` keeps it.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: desktop-e2e-failed-attempt-traces
+          path: apps/desktop/test-results/playwright
+          if-no-files-found: ignore
+          retention-days: 14
 
   # EXPERIMENT, NON-BLOCKING (this first run ONLY). It is genuinely unknown
   # whether a GitHub-hosted macos-15 runner can be granted Accessibility,

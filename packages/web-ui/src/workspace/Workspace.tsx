@@ -270,7 +270,15 @@ const Workspace = forwardRef<WorkspaceHandle, WorkspaceProps>(function Workspace
   const showDetail = breakpoint !== 'compact' || selectedTask !== null
 
   const attemptNavigation = async (navigation: PendingNavigation) => {
-    if (!dirty) {
+    // Window 101: ask the editor what it holds right now rather than trusting
+    // the `dirty` state below, which this component keeps for RENDERING and
+    // which lags the editor by two async hops (a passive `onDirtyChange`,
+    // then the re-render that rebuilds `WorkspaceHandle`). A navigation
+    // command from the main process can arrive inside that gap -- see
+    // `TaskEditorHandle.isDirty` and the Workspace.test.tsx cases for
+    // window 101. The `?? dirty` fallback keeps the guard failing CLOSED
+    // when no editor is mounted to ask.
+    if (!(editorRef.current?.isDirty() ?? dirty)) {
       commitNavigation(navigation)
       return
     }

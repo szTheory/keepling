@@ -22,6 +22,20 @@ type TaskEditorHandle = {
   discard: () => void
   /** O-11 gap closure (D-06): the current in-progress edit, or `null` when not dirty. Used only for semantic-restoration persistence -- never a durability signal (D-03). */
   getDraft: () => { notes: string; title: string } | null
+  /**
+   * Window 101: whether the editor holds an unsaved edit RIGHT NOW, read
+   * straight from the current render rather than from a mirrored copy.
+   *
+   * `Workspace`'s dirty-state guard must consult this instead of the `dirty`
+   * state it keeps for rendering. That state arrives two async hops late --
+   * `onDirtyChange` is a passive effect, and the `setDirty` it calls needs a
+   * further re-render before `WorkspaceHandle` closes over the new value --
+   * so a keyboard navigation command delivered inside that gap would read a
+   * stale `false` and navigate away from an unsaved edit with no dialog.
+   * This handle is rebuilt during the COMMIT phase of the very render that
+   * computes `dirty`, which is strictly earlier than either hop.
+   */
+  isDirty: () => boolean
   save: () => Promise<boolean>
 }
 
@@ -98,7 +112,7 @@ const TaskEditor = forwardRef<TaskEditorHandle, TaskEditorProps>(function TaskEd
     setProblem(null)
   }
 
-  useImperativeHandle(ref, () => ({ discard, getDraft: () => (dirty ? { notes, title } : null), save }))
+  useImperativeHandle(ref, () => ({ discard, getDraft: () => (dirty ? { notes, title } : null), isDirty: () => dirty, save }))
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if ((event.metaKey || event.ctrlKey) && (event.key === 's' || event.key === 'Enter')) {
