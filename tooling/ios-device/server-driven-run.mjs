@@ -131,6 +131,40 @@ if (useTailnet) {
   }
 }
 
+/**
+ * The four scenarios this lane measures, named one by one.
+ *
+ * MEASURED DEFECT this replaces: the selector used to be the CLASS --
+ * `-only-testing:KeeplingCoreTests/ServerDrivenTests`. That class also
+ * holds `testCrossAdapterCapture` and `testCrossAdapterLifecycle`, which
+ * are not scenarios at all: they are RPC entry points that
+ * `tooling/cross-adapter/iphone-driver.mjs` invokes ONE AT A TIME with
+ * `KEEPLING_LANE_*` parameters threaded through the `.xctestrun`. Selecting
+ * the class ran them with no parameters, so they `XCTFail` by design --
+ * `Executed 6 tests, with 2 failures` -- and the lane reported
+ * `status=FAIL cases=0` on a run in which all four real scenarios passed.
+ * Measured on hardware at 4bd7648: `6/2f, 6/2f, 6/2f`, both failures being
+ * the two RPC methods' own "requires KEEPLING_LANE_TASK_TITLE" refusals.
+ *
+ * WHY NOT RELAX THE XCTFail TO AN XCTSkip INSTEAD -- read before "simplifying"
+ * -------------------------------------------------------------------------
+ * Because that would make the two methods report success-by-absence when
+ * the cross-adapter driver forgets to set their parameters, which is the
+ * precise shape D-24 forbids: a test that learns nothing must never be
+ * counted as a test that passed. The refusal is correct and stays. What was
+ * wrong is that this lane was invoking methods it never meant to invoke.
+ *
+ * The count is asserted against `scenarios=4` below rather than trusted, so
+ * adding a fifth scenario to the class without adding it here fails loudly
+ * instead of silently narrowing what this lane measures.
+ */
+const LANE_SCENARIOS = [
+  'testAuthenticationExpiryIsSettledAndNotReturnedToQueued',
+  'testAFencedCredentialBuysNothingFromTheRealServer',
+  'testAByteIdenticalReplayIsAcceptedOnceByTheRealServer',
+  'testAStaleExpectedRevisionIsAnsweredAsAStructuredConflict',
+]
+
 const fail = (message) => {
   throw new Error(message)
 }
@@ -290,7 +324,7 @@ try {
     '-xctestrun', xctestrun,
     '-destination', destination,
     '-destination-timeout', '300',
-    '-only-testing:KeeplingCoreTests/ServerDrivenTests',
+    ...LANE_SCENARIOS.map((method) => `-only-testing:KeeplingCoreTests/ServerDrivenTests/${method}`),
   ])
   const output = `${test.stdout ?? ''}\n${test.stderr ?? ''}`
 
@@ -365,9 +399,27 @@ try {
     fail('the proxy recorded no 401 or 409 -- the client never actually met a server refusal')
   }
 
+  // The selector above names four methods; xcodebuild must report having
+  // run exactly four. A mismatch means the class and `LANE_SCENARIOS` have
+  // drifted apart -- a scenario added to the class and not here would
+  // otherwise shrink what this lane measures while it kept printing
+  // `scenarios=4` and passing, which is the quiet-narrowing failure the
+  // anti-vacuity contract exists to catch.
+  const ran = [...output.matchAll(/Executed (\d+) tests?,\s*with(?:\s+\d+\s+tests?\s+skipped\s+and)?\s*(\d+) failures?/g)]
+  const executedCount = ran.length > 0 ? Number(ran.at(-1)[1]) : null
+  if (executedCount !== LANE_SCENARIOS.length) {
+    fail(
+      `expected xcodebuild to run exactly ${LANE_SCENARIOS.length} scenario(s), but its last summary reports ` +
+        `${executedCount ?? 'no'} executed. KeeplingCoreTests/ServerDrivenTests and LANE_SCENARIOS have drifted; ` +
+        'add the new method to LANE_SCENARIOS (or remove the stale one) rather than widening the selector back ' +
+        'to the whole class -- the class also holds the cross-adapter RPC entry points, which fail when run ' +
+        'without their KEEPLING_LANE_* parameters.',
+    )
+  }
+
   const order = commandArrivals.map((record) => `${record.path.split('/').pop()}:${record.status}`)
   console.log(
-    `IOS_SERVER_DRIVEN scenarios=4 destination=${JSON.stringify(destination)} host=${displayHost} ` +
+    `IOS_SERVER_DRIVEN scenarios=${LANE_SCENARIOS.length} destination=${JSON.stringify(destination)} host=${displayHost} ` +
       `transport=${tls ? 'https-publicly-trusted' : 'http-loopback'} ` +
       `command_arrivals=${commandArrivals.length} injected=${injected.length} refusals=${refusals.length}`,
   )
