@@ -1,0 +1,220 @@
+image-compose-deploy	UNKNOWN STEP	﻿2026-09-13T20:19:11.3753650Z Current runner version: '2.337.0'
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3778289Z ##[group]Runner Image Provisioner
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3779229Z Hosted Compute Agent
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3779836Z Version: 20260828.587
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3780762Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3781634Z Build Date: 2026-08-28T16:44:25Z
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3782312Z Worker ID: {4ef7087d-0766-4314-a616-f956a1880290}
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3783119Z Azure Region: eastus
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3783689Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3785227Z ##[group]Operating System
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3785960Z Ubuntu
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3786483Z 24.04.5
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3787427Z LTS
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3787980Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3788594Z ##[group]Runner Image
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3789318Z Image: ubuntu-24.04
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3789913Z Version: 20260907.300.1
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3791456Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3793022Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3793990Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3795138Z ##[group]GITHUB_TOKEN Permissions
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3797333Z Contents: read
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3797928Z Metadata: read
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3798653Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3801070Z Secret source: Actions
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3802172Z Cache mode: write
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.3803094Z Prepare workflow directory
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.4195963Z Prepare all required actions
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.4244524Z Getting action download info
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.5931513Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.7013259Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:11.7872353Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0017761Z Complete job name: image-compose-deploy
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0788944Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0798171Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0799098Z with:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0799553Z   repository: szTheory/keepling
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0803792Z   token: ***
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0804254Z   ssh-strict: true
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0804692Z   ssh-user: git
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0805140Z   persist-credentials: true
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0805626Z   clean: true
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0806064Z   sparse-checkout-cone-mode: true
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0806611Z   fetch-depth: 1
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0807037Z   fetch-tags: false
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0807489Z   show-progress: true
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0807966Z   lfs: false
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0808379Z   submodules: false
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0808832Z   set-safe-directory: true
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0809734Z env:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0810168Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0811154Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0811941Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.0812479Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.1853518Z Syncing repository: szTheory/keepling
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.1855311Z ##[group]Getting Git version info
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.1856048Z Working directory is '/home/runner/work/keepling/keepling'
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.1857093Z [command]/usr/bin/git version
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.1905479Z git version 2.55.0
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.1928972Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.1944217Z Temporarily overriding HOME='/home/runner/work/_temp/b6cd47e3-6103-4744-96fe-46eae0c8c9a9' before making global git config changes
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.1946174Z Adding repository directory to the temporary git global config as a safe directory
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.1949569Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.1994822Z Deleting the contents of '/home/runner/work/keepling/keepling'
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.1999944Z ##[group]Initializing the repository
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2004035Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2107120Z hint: Using 'master' as the name for the initial branch. This default branch name
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2108477Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2109590Z hint: to use in all of your new repositories, which will suppress this warning,
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2111124Z hint: call:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2111649Z hint:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2112192Z hint: 	git config --global init.defaultBranch <name>
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2112874Z hint:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2113504Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2114508Z hint: 'development'. The just-created branch can be renamed via this command:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2115422Z hint:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2116055Z hint: 	git branch -m <name>
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2116588Z hint:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2117207Z hint: Disable this message with "git config set advice.defaultBranchName false"
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2118217Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2121703Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2164683Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2165461Z ##[group]Disabling automatic garbage collection
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2168604Z [command]/usr/bin/git config --local gc.auto 0
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2198662Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2200000Z ##[group]Setting up auth
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2206190Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2237151Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2577375Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2609233Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2831423Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.2863355Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.3086058Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.3120277Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.3121693Z ##[group]Fetching the repository
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:12.3130924Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +069df06570f7bc65ccb646935fd637dcc83bbd9c:refs/remotes/origin/main
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.3324158Z From https://github.com/szTheory/keepling
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.3331381Z  * [new ref]         069df06570f7bc65ccb646935fd637dcc83bbd9c -> origin/main
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.3334677Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.3335693Z ##[group]Determining the checkout info
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.3336945Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.3337917Z [command]/usr/bin/git sparse-checkout disable
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.3384091Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.3412182Z ##[group]Checking out the ref
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.3415667Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.4804653Z Switched to a new branch 'main'
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.4807565Z branch 'main' set up to track 'origin/main'.
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.4822106Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.4863203Z [command]/usr/bin/git log -1 --format=%H
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.4886944Z 069df06570f7bc65ccb646935fd637dcc83bbd9c
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5320181Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5326914Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5328653Z with:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5329588Z   node-version: 24.7.0
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5330790Z   always-auth: false
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5331870Z   check-latest: false
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5341776Z   token: ***
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5342765Z env:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5343711Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5345394Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5347223Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.5348446Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.6847979Z Attempting to download 24.7.0...
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.6967234Z (node:2265) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:13.6969547Z (Use `node --trace-deprecation ...` to show where the warning was created)
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:14.1208257Z Acquiring 24.7.0 - x64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-linux-x64.tar.gz
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:14.8235123Z Extracting ...
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:14.8358444Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/baa40390-b4bc-427b-a8e5-1a5bf9ece9b0 -f /home/runner/work/_temp/e13db329-35cc-44be-8bd7-5f34794a5e07
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:16.1320312Z Adding to the cache ...
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.2664903Z ##[group]Environment details
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.4937989Z node: v24.7.0
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.4938597Z npm: 11.5.1
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.4938962Z yarn: 1.22.22
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.4939736Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.5121659Z ##[group]Run corepack enable && pnpm install --frozen-lockfile
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.5122205Z ^[[36;1mcorepack enable && pnpm install --frozen-lockfile^[[0m
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.5162993Z shell: /usr/bin/bash -e {0}
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.5163297Z env:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.5163506Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.5163917Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.5164358Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.5164644Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:18.6354270Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:19.5971311Z Scope: all 4 workspace projects
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:19.6541377Z Lockfile is up to date, resolution step is skipped
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:19.8075206Z Packages: +910
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:19.8076552Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:19.9632328Z Progress: resolved 0, reused 0, downloaded 1, added 0
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:20.9631262Z Progress: resolved 0, reused 0, downloaded 76, added 26
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:21.9624766Z Progress: resolved 0, reused 0, downloaded 385, added 261
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:22.4229530Z Packages are hard linked from the content-addressable store to the virtual store.
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:22.4231180Z   Content-addressable store is at: /home/runner/.local/share/pnpm/store/v10
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:22.4232073Z   Virtual store is at:             node_modules/.pnpm
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:22.9643465Z Progress: resolved 0, reused 0, downloaded 772, added 639
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.3303691Z Progress: resolved 0, reused 0, downloaded 868, added 910, done
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.5715036Z 
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.6676581Z Done in 4.4s using pnpm v10.33.0
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.7215706Z ##[group]Run set -o pipefail
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.7216079Z ^[[36;1mset -o pipefail^[[0m
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.7216592Z ^[[36;1m./tooling/test-phase-2.sh --lane image-compose-deploy | tee "$RUNNER_TEMP/image-compose-deploy.txt"^[[0m
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.7217249Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/image-compose-deploy.txt"^[[0m
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.7255120Z shell: /usr/bin/bash -e {0}
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.7255373Z env:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.7255575Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.7255963Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.7256382Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.7256644Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:19:23.8001788Z lane=image-compose-deploy status=RUNNING command=./tooling/verify-image.sh && ./tooling/verify-compose.sh && ./tooling/verify-deploy.sh --local cases=3 seed=none inputs_sha256=b66292c73157a26fef8264963c54a478e24e739dacaf869b519266a64b07a883
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9418731Z lane=image-compose-deploy status=PASS command=./tooling/verify-image.sh && ./tooling/verify-compose.sh && ./tooling/verify-deploy.sh --local cases=3 seed=none elapsed_ms=150141 inputs_sha256=b66292c73157a26fef8264963c54a478e24e739dacaf869b519266a64b07a883
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9566380Z Privacy verification passed: artifacts=1 sentinels=7
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9661604Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9663040Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9663424Z with:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9663638Z   name: image-compose-deploy-timing
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9663981Z   path: /home/runner/work/_temp/image-compose-deploy.txt
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9664342Z   if-no-files-found: error
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9664573Z   retention-days: 14
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9664783Z   compression-level: 6
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9664992Z   overwrite: false
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9665216Z   include-hidden-files: false
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9665446Z env:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9665647Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9666039Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9666451Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:53.9666707Z ##[endgroup]
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.1405816Z (node:9329) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.1406675Z (Use `node --trace-deprecation ...` to show where the warning was created)
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.1454405Z With the provided path, there will be 1 file uploaded
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.1460035Z Artifact name is valid!
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.1461205Z Root directory input is valid!
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.3663710Z Beginning upload of artifact content to blob storage
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.3911660Z (node:9329) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.4157964Z Uploaded bytes 360
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.4306419Z Finished uploading artifact content to blob storage!
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.4307860Z SHA256 digest of uploaded artifact zip is 23bdb2d09da21255b299aeca044901af7f98c66ab1fe2e439f826c9286ff2364
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.4308982Z Finalizing artifact upload
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.6358171Z Artifact image-compose-deploy-timing.zip successfully finalized. Artifact ID 10324452111
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.6359671Z Artifact image-compose-deploy-timing has been successfully uploaded! Final size is 360 bytes. Artifact ID is 10324452111
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.6365801Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34780345148/artifacts/10324452111
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.6548426Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.6549694Z Post job cleanup.
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.7861219Z (node:9342) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.7862297Z (Use `node --trace-deprecation ...` to show where the warning was created)
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.8042769Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.8044067Z Post job cleanup.
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.8911625Z [command]/usr/bin/git version
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.8949372Z git version 2.55.0
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.8991309Z Temporarily overriding HOME='/home/runner/work/_temp/e3982103-0da0-42f3-943e-fb43cfdb45a8' before making global git config changes
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.8992999Z Adding repository directory to the temporary git global config as a safe directory
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.8997864Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.9036538Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.9071491Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.9300228Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.9326969Z http.https://github.com/.extraheader
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.9339859Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.9372656Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.9598671Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:54.9633512Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:55.0003906Z Cleaning up orphan processes
+image-compose-deploy	UNKNOWN STEP	2026-09-13T20:21:55.0384553Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

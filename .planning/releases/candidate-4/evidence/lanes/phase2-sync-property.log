@@ -1,0 +1,449 @@
+phase2-sync-property	UNKNOWN STEP	﻿2026-09-13T20:19:41.1047055Z Current runner version: '2.337.0'
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1071703Z ##[group]Runner Image Provisioner
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1072591Z Hosted Compute Agent
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1073311Z Version: 20260828.587
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1073956Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1074764Z Build Date: 2026-08-28T16:44:25Z
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1075571Z Worker ID: {c32c34fc-0b6e-45a4-b187-6c69181a9227}
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1076331Z Azure Region: northcentralus
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1077022Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1079171Z ##[group]Operating System
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1079850Z Ubuntu
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1080531Z 24.04.5
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1081129Z LTS
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1082146Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1082771Z ##[group]Runner Image
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1083399Z Image: ubuntu-24.04
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1084042Z Version: 20260907.300.1
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1085384Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1087090Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1088246Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1089457Z ##[group]GITHUB_TOKEN Permissions
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1091565Z Contents: read
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1092292Z Metadata: read
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1092907Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1095186Z Secret source: Actions
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1096184Z Cache mode: write
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1097298Z Prepare workflow directory
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1512849Z Prepare all required actions
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.1563287Z Getting action download info
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.4275376Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.5466598Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:41.6393501Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.1973383Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.4215578Z Complete job name: phase2-sync-property
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5148812Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5158912Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5160165Z with:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5160864Z   repository: szTheory/keepling
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5166572Z   token: ***
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5168059Z   ssh-strict: true
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5169324Z   ssh-user: git
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5170576Z   persist-credentials: true
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5171860Z   clean: true
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5173073Z   sparse-checkout-cone-mode: true
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5174489Z   fetch-depth: 1
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5175703Z   fetch-tags: false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5176994Z   show-progress: true
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5178646Z   lfs: false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5179859Z   submodules: false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5181175Z   set-safe-directory: true
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5183036Z env:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5184236Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5186028Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.5188161Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6214451Z Syncing repository: szTheory/keepling
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6216895Z ##[group]Getting Git version info
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6218363Z Working directory is '/home/runner/work/keepling/keepling'
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6220043Z [command]/usr/bin/git version
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6300457Z git version 2.55.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6322933Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6336695Z Temporarily overriding HOME='/home/runner/work/_temp/b6d0f238-d7cb-4b88-a233-e26cec73ce76' before making global git config changes
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6338932Z Adding repository directory to the temporary git global config as a safe directory
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6342564Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6394497Z Deleting the contents of '/home/runner/work/keepling/keepling'
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6398929Z ##[group]Initializing the repository
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6403596Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6528407Z hint: Using 'master' as the name for the initial branch. This default branch name
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6530765Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6533556Z hint: to use in all of your new repositories, which will suppress this warning,
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6535014Z hint: call:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6535775Z hint:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6536560Z hint: 	git config --global init.defaultBranch <name>
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6537493Z hint:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6538685Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6540544Z hint: 'development'. The just-created branch can be renamed via this command:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6541628Z hint:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6542480Z hint: 	git branch -m <name>
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6543517Z hint:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6544745Z hint: Disable this message with "git config set advice.defaultBranchName false"
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6546158Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6548741Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6595569Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6596800Z ##[group]Disabling automatic garbage collection
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6599909Z [command]/usr/bin/git config --local gc.auto 0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6629456Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6630590Z ##[group]Setting up auth
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6635748Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.6668107Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.7048856Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.7082508Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.7305100Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.7335562Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.7555045Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.7588745Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.7590624Z ##[group]Fetching the repository
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:42.7597646Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +069df06570f7bc65ccb646935fd637dcc83bbd9c:refs/remotes/origin/main
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:43.9552873Z From https://github.com/szTheory/keepling
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:43.9555515Z  * [new ref]         069df06570f7bc65ccb646935fd637dcc83bbd9c -> origin/main
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:43.9558777Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:43.9559894Z ##[group]Determining the checkout info
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:43.9561323Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:43.9565891Z [command]/usr/bin/git sparse-checkout disable
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:43.9614278Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:43.9641916Z ##[group]Checking out the ref
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:43.9645352Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1015896Z Switched to a new branch 'main'
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1021312Z branch 'main' set up to track 'origin/main'.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1036325Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1078764Z [command]/usr/bin/git log -1 --format=%H
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1102547Z 069df06570f7bc65ccb646935fd637dcc83bbd9c
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1517559Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1522672Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1523753Z with:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1524191Z   node-version: 24.7.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1524742Z   always-auth: false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1525301Z   check-latest: false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1534135Z   token: ***
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1534610Z env:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1535055Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1536094Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.1537201Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.2966958Z Attempting to download 24.7.0...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.3075955Z (node:2250) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:44.3079738Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:45.0564993Z Acquiring 24.7.0 - x64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-linux-x64.tar.gz
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:45.4884821Z Extracting ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:45.5029560Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/9597f0a3-d21f-4bc9-bc6f-400f43a0c89f -f /home/runner/work/_temp/b14a326a-5e1a-4dc8-88b8-57780c31105b
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:46.8210995Z Adding to the cache ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:48.9294528Z ##[group]Environment details
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.1664086Z node: v24.7.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.1664509Z npm: 11.5.1
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.1664833Z yarn: 1.22.22
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.1665592Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2458741Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2460221Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2460572Z with:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2460890Z   path: ~/.asdf/installs
+phase2-sync-property	UNKNOWN STEP	apps/server/deps
+phase2-sync-property	UNKNOWN STEP	apps/server/_build
+phase2-sync-property	UNKNOWN STEP	node_modules
+phase2-sync-property	UNKNOWN STEP	
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2461529Z   key: phase2-Linux-sync-property-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2462093Z   enableCrossOsArchive: false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2462373Z   fail-on-cache-miss: false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2462615Z   lookup-only: false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2462833Z   save-always: false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2463038Z env:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2463232Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2463644Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.2464040Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.3543560Z (node:2297) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.3545001Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.4546778Z Cache hit for: phase2-Linux-sync-property-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:49.4649563Z (node:2297) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:50.5729253Z Received 125829120 of 172338255 (73.0%), 119.8 MBs/sec
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:50.8961429Z Received 172338255 of 172338255 (100.0%), 123.7 MBs/sec
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:50.8969275Z Cache Size: ~164 MB (172338255 B)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:50.9008188Z [command]/usr/bin/tar -xf /home/runner/work/_temp/dc97b0fb-c48c-4fe5-ab15-1890ac425676/cache.tzst -P -C /home/runner/work/keepling/keepling --use-compress-program unzstd
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1128667Z Cache restored successfully
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1291629Z Cache restored from key: phase2-Linux-sync-property-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1438681Z ##[group]Run set -eu
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1439049Z ^[[36;1mset -eu^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1439498Z ^[[36;1m# The cache step above restores ~/.asdf/installs, which CREATES^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1440072Z ^[[36;1m# $HOME/.asdf before this step runs. An unconditional clone then dies^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1440587Z ^[[36;1m# with "destination path already exists and is not an empty^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1441065Z ^[[36;1m# directory" (exit 128) and the lane never reaches any project code.^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1441567Z ^[[36;1m# Clone into a scratch directory and move only the parts that are^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1442074Z ^[[36;1m# missing, so a restored cache and a cold runner both end up with the^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1442454Z ^[[36;1m# same tree.^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1442704Z ^[[36;1mif [ ! -d "$HOME/.asdf/.git" ]; then^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1442995Z ^[[36;1m  scratch="$(mktemp -d)"^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1443474Z ^[[36;1m  git clone https://github.com/asdf-vm/asdf.git "$scratch/asdf" --branch v0.14.1^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1443927Z ^[[36;1m  mkdir -p "$HOME/.asdf"^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1444278Z ^[[36;1m  # `cp -R src/. dst` merges into an existing directory instead of^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1444717Z ^[[36;1m  # nesting, which is what the restored-cache case needs.^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1445099Z ^[[36;1m  cp -R "$scratch/asdf/." "$HOME/.asdf/"^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1445395Z ^[[36;1m  rm -rf "$scratch"^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1445625Z ^[[36;1mfi^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1445845Z ^[[36;1mecho "$HOME/.asdf/bin" >> "$GITHUB_PATH"^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1446171Z ^[[36;1mecho "$HOME/.asdf/shims" >> "$GITHUB_PATH"^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1486369Z shell: /usr/bin/bash -e {0}
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1486634Z env:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1486844Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1487257Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1487848Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.1597428Z Cloning into '/tmp/tmp.gqDB4kj3hz/asdf'...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9852414Z Note: switching to 'f00f759f3d8d405468d0071310a91b8f5a9c3798'.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9852980Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9853518Z You are in 'detached HEAD' state. You can look around, make experimental
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9854594Z changes and commit them, and you can discard any commits you make in this
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9855633Z state without impacting any branches by switching back to a branch.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9856161Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9856693Z If you want to create a new branch to retain commits you create, you may
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9858024Z do so (now or later) by using -c with the switch command. Example:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9858552Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9858822Z   git switch -c <new-branch-name>
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9859180Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9859418Z Or undo this operation with:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9859722Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9859911Z   git switch -
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9860124Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9860694Z Turn off this advice by setting config variable advice.detachedHead to false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:53.9861271Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:54.0273038Z ##[group]Run ./tooling/runtime-preflight.sh --provision
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:54.0273496Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:54.0273821Z ^[[36;1mcorepack enable^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:54.0274238Z ^[[36;1mpnpm install --frozen-lockfile^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:54.0274723Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:54.0310243Z shell: /usr/bin/bash -e {0}
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:54.0310492Z env:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:54.0310703Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:54.0311087Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:54.0311484Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:54.1214778Z Cloning into '/home/runner/.asdf/repository'...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:56.4921822Z initializing plugin repository...erlang 29.0.5 is already installed
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:56.5296885Z elixir 1.20.2-otp-29 is already installed
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.1259231Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.1485889Z Get:6 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.2278681Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [463 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.2423493Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.2440311Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.2484782Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [414 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.2548011Z Get:9 https://dl.google.com/linux/chrome-stable/deb stable InRelease [2548 B]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.2549484Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.2554804Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.2609697Z Get:10 https://apt.postgresql.org/pub/repos/apt noble-pgdg InRelease [189 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.3630574Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1263 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.3739402Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [292 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.3759304Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [181 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.3770829Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1690 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.3884950Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [388 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.3912441Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1544 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.3990002Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [354 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.4017302Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.4654071Z Get:19 https://dl.google.com/linux/chrome-stable/deb stable/main amd64 Packages [1413 B]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.4766075Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [5772 B]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.4782949Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [12.6 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.5784238Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1006 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.5844202Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [213 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.5897392Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [46.4 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.5899033Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1206 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.5959398Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [76.3 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.5970482Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1445 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.6061862Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [336 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:19:57.6082673Z Get:29 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 Packages [825 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:01.9435670Z Fetched 12.3 MB in 1s (8503 kB/s)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:02.7849178Z Reading package lists...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:02.8157379Z Reading package lists...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:02.9940533Z Building dependency tree...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:02.9947603Z Reading state information...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.1466376Z The following additional packages will be installed:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.1468022Z   liburing2 postgresql-18-jit postgresql-client-18
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.1473823Z Suggested packages:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.1721569Z   postgresql-doc-18
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.1721975Z The following NEW packages will be installed:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.1726842Z   liburing2 postgresql-18 postgresql-18-jit postgresql-client-18
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.1951421Z 0 upgraded, 4 newly installed, 0 to remove and 50 not upgraded.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.1952230Z Need to get 19.6 MB of archives.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.1952807Z After this operation, 71.9 MB of additional disk space will be used.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.1953348Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.2322966Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 liburing2 amd64 2.5-1build1 [21.1 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.4000471Z Get:3 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-client-18 amd64 18.6-1.pgdg24.04+2 [2114 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.4263321Z Get:4 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-18 amd64 18.6-1.pgdg24.04+2 [7577 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.4811616Z Get:5 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-18-jit amd64 18.6-1.pgdg24.04+2 [9924 kB]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.7716591Z Preconfiguring packages ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8279778Z Fetched 19.6 MB in 0s (54.2 MB/s)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8540070Z Selecting previously unselected package liburing2:amd64.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8842775Z (Reading database ... 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8843277Z (Reading database ... 5%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8843564Z (Reading database ... 10%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8843847Z (Reading database ... 15%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8844250Z (Reading database ... 20%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8844853Z (Reading database ... 25%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8845211Z (Reading database ... 30%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8845677Z (Reading database ... 35%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8846156Z (Reading database ... 40%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8846433Z (Reading database ... 45%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8846684Z (Reading database ... 50%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:03.8909607Z (Reading database ... 55%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:04.0356707Z (Reading database ... 60%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:04.1946989Z (Reading database ... 65%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:04.3810864Z (Reading database ... 70%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:04.5375192Z (Reading database ... 75%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:04.6621253Z (Reading database ... 80%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:04.8402888Z (Reading database ... 85%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:04.9925842Z (Reading database ... 90%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.1046767Z (Reading database ... 95%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.1047254Z (Reading database ... 100%
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.1048316Z (Reading database ... 201818 files and directories currently installed.)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.1089265Z Preparing to unpack .../liburing2_2.5-1build1_amd64.deb ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.1127527Z Unpacking liburing2:amd64 (2.5-1build1) ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.1374497Z Selecting previously unselected package postgresql-client-18.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.1500107Z Preparing to unpack .../postgresql-client-18_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.1507723Z Unpacking postgresql-client-18 (18.6-1.pgdg24.04+2) ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.3624144Z Selecting previously unselected package postgresql-18.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.3749528Z Preparing to unpack .../postgresql-18_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.3778942Z Unpacking postgresql-18 (18.6-1.pgdg24.04+2) ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.8830943Z Selecting previously unselected package postgresql-18-jit.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.8958009Z Preparing to unpack .../postgresql-18-jit_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:05.8966145Z Unpacking postgresql-18-jit (18.6-1.pgdg24.04+2) ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:06.7603481Z Setting up postgresql-client-18 (18.6-1.pgdg24.04+2) ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:07.1906550Z update-alternatives: using /usr/share/postgresql/18/man/man1/psql.1.gz to provide /usr/share/man/man1/psql.1.gz (psql.1.gz) in auto mode
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:07.2875136Z Setting up liburing2:amd64 (2.5-1build1) ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:07.2907154Z Setting up postgresql-18 (18.6-1.pgdg24.04+2) ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:08.5335577Z Setting up postgresql-18-jit (18.6-1.pgdg24.04+2) ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:08.5363258Z Processing triggers for libc-bin (2.39-0ubuntu8.8) ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:08.5760778Z Processing triggers for postgresql-common (293.pgdg24.04+1) ...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:08.6926394Z Building PostgreSQL dictionaries from installed myspell/hunspell packages...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:08.6991434Z   en_us
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:08.7387997Z Removing obsolete dictionary files:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:09.3905796Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:09.3906503Z Running kernel seems to be up-to-date.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:09.3906780Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:09.3906989Z No services need to be restarted.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:09.3907211Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:09.3907385Z No containers need to be restarted.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:09.3907618Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:09.3908163Z No user sessions are running outdated binaries.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:09.3908432Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:09.3908788Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:10.6544468Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:10.7877346Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:11.7208605Z Scope: all 4 workspace projects
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:11.8084591Z Lockfile is up to date, resolution step is skipped
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:12.9471426Z Packages: +2 -47
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:12.9472888Z ++-----------------------------------------------
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:13.0828997Z Progress: resolved 0, reused 0, downloaded 1, added 0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:14.0853901Z Progress: resolved 0, reused 0, downloaded 22, added 0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:14.6299391Z Progress: resolved 0, reused 0, downloaded 48, added 2, done
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:14.8132228Z 
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:14.9098847Z Done in 3.5s using pnpm v10.33.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:15.4218993Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.1807558Z * creating /home/runner/.mix/archives/hex-2.5.1
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.4978796Z Resolving Hex dependencies...
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6266172Z Resolution completed in 0.127s
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6471117Z Unchanged:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6472294Z   argon2_elixir 4.1.3
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6482452Z   bandit 1.12.5
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6483572Z   certifi 2.17.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6484351Z   comeonin 5.5.1
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6485107Z   db_connection 2.10.2
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6485908Z   decimal 3.1.1
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6486629Z   dns_cluster 0.2.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6487327Z   ecto 3.14.2
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6488255Z   ecto_sql 3.14.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6489074Z   elixir_make 0.10.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6489836Z   expo 1.1.1
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6490484Z   gettext 1.0.2
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6491128Z   h2 0.12.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6491571Z   hackney 4.7.4
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6491916Z   hammer 7.4.1
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6492137Z   hex_core 0.15.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6492734Z   hpax 1.0.4
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6493293Z   idna 7.1.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6493616Z   jason 1.4.5
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6494004Z   mime 2.0.7
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6494360Z   mimerl 1.5.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6494670Z   optimus 0.6.1
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6495070Z   parse_trans 3.4.2
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6495409Z   phoenix 1.8.13
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6495793Z   phoenix_ecto 4.7.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6496144Z   phoenix_pubsub 2.3.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6496491Z   phoenix_template 1.0.4
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6496855Z   plug 1.20.3
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6497604Z   plug_crypto 2.2.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6498248Z   postgrex 0.22.4
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6498697Z   protobuf 0.16.1
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6499076Z   purl 0.3.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6499415Z   quic 1.8.2
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6500132Z   sbom 0.10.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6500535Z   ssl_verify_fun 1.1.7
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6500954Z   stream_data 1.4.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6501371Z   telemetry 1.4.2
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6501762Z   telemetry_metrics 1.2.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6502017Z   telemetry_poller 1.3.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6502262Z   thousand_island 1.5.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6502499Z   tzdata 1.1.5
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6502695Z   websock 0.5.3
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6502895Z   websock_adapter 0.6.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.6503128Z   webtransport 0.4.5
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.7202888Z * creating /home/runner/.mix/elixir/1-20-otp-29/rebar3
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.7420766Z All dependencies have been fetched
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.7766994Z ##[group]Run set -o pipefail
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.7767335Z ^[[36;1mset -o pipefail^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.7768013Z ^[[36;1m./tooling/test-phase-2.sh --lane "sync-property" | tee "$RUNNER_TEMP/sync-property.txt"^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.7768581Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/sync-property.txt"^[[0m
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.7804464Z shell: /usr/bin/bash -e {0}
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.7804719Z env:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.7804917Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.7805307Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:16.7805702Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:18.9660816Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:19.1101784Z lane=sync-property status=RUNNING command=mix test test/keepling/application/sync test/keepling/adapters/postgres/sync_feed_test.exs cases=20 seed=20260901 inputs_sha256=61b3304932f2e61b1e63d0aba457f7ca896bbd91259e8c4e670378597cdb9b32
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:21.6329881Z lane=sync-property status=PASS command=mix test test/keepling/application/sync test/keepling/adapters/postgres/sync_feed_test.exs cases=20 seed=20260901 elapsed_ms=2523 inputs_sha256=61b3304932f2e61b1e63d0aba457f7ca896bbd91259e8c4e670378597cdb9b32
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2661483Z Privacy verification passed: artifacts=1 sentinels=7
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2723505Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2724990Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2725383Z with:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2725600Z   name: phase2-sync-property-timing
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2725933Z   path: /home/runner/work/_temp/sync-property.txt
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2726259Z   if-no-files-found: error
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2726499Z   retention-days: 14
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2726725Z   compression-level: 6
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2726943Z   overwrite: false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2727166Z   include-hidden-files: false
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2727400Z env:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2727594Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2728441Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.2728843Z ##[endgroup]
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.4520381Z (node:5897) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.4521205Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.4566620Z With the provided path, there will be 1 file uploaded
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.4572183Z Artifact name is valid!
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.4573067Z Root directory input is valid!
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.7244953Z Beginning upload of artifact content to blob storage
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.7427471Z (node:5897) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.8268638Z Uploaded bytes 406
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.8563641Z Finished uploading artifact content to blob storage!
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.8564923Z SHA256 digest of uploaded artifact zip is b96482110533c8dabcf8908d78d2520bd669c181e61c4a4072a26afde8b34ff4
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:22.8566481Z Finalizing artifact upload
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.0765229Z Artifact phase2-sync-property-timing.zip successfully finalized. Artifact ID 10324452021
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.0767360Z Artifact phase2-sync-property-timing has been successfully uploaded! Final size is 406 bytes. Artifact ID is 10324452021
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.0774536Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34780345148/artifacts/10324452021
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.1509096Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.1510411Z Post job cleanup.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.2643993Z Cache hit occurred on the primary key phase2-Linux-sync-property-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3, not saving cache.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.2647106Z (node:5920) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.2648708Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.2783487Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.2784755Z Post job cleanup.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.3991280Z (node:5928) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.3992380Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.4140933Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.4142210Z Post job cleanup.
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.4962789Z [command]/usr/bin/git version
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5001271Z git version 2.55.0
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5038988Z Temporarily overriding HOME='/home/runner/work/_temp/e894ba36-e843-4c3d-98ea-7976f1527312' before making global git config changes
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5040521Z Adding repository directory to the temporary git global config as a safe directory
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5044937Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5081433Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5115715Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5339084Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5363996Z http.https://github.com/.extraheader
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5374177Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5405020Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5622908Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.5653119Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.6025020Z Cleaning up orphan processes
+phase2-sync-property	UNKNOWN STEP	2026-09-13T20:20:23.6367278Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

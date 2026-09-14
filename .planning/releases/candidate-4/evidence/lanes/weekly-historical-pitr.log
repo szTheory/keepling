@@ -1,0 +1,351 @@
+weekly-historical-pitr	UNKNOWN STEP	﻿2026-09-13T20:21:55.7186400Z Current runner version: '2.337.0'
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7204090Z ##[group]Runner Image Provisioner
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7204660Z Hosted Compute Agent
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7205060Z Version: 20260828.587
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7205500Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7205990Z Build Date: 2026-08-28T16:44:25Z
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7206450Z Worker ID: {c14f0bcc-0bb5-4776-ba86-9c63e2b8ab90}
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7206940Z Azure Region: westus
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7207330Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7208270Z ##[group]Operating System
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7208700Z macOS
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7209050Z 15.7.9
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7209410Z 24G830
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7209770Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7210140Z ##[group]Runner Image
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7210570Z Image: macos-15-arm64
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7211120Z Version: 20260907.0337.1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7212020Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7213240Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7214720Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7215610Z ##[group]GITHUB_TOKEN Permissions
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7217160Z Contents: read
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7217550Z Metadata: read
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7217920Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7219370Z Secret source: Actions
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7219960Z Cache mode: write
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7220420Z Prepare workflow directory
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7604540Z Prepare all required actions
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.7638660Z Getting action download info
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:55.9174410Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.3024310Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.3911700Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5622020Z Complete job name: weekly-historical-pitr
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5960690Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5968360Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5969240Z with:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5969640Z   repository: szTheory/keepling
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5973030Z   token: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5973460Z   ssh-strict: true
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5973870Z   ssh-user: git
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5974380Z   persist-credentials: true
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5974830Z   clean: true
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5975350Z   sparse-checkout-cone-mode: true
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5975840Z   fetch-depth: 1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5976240Z   fetch-tags: false
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5976750Z   show-progress: true
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5977230Z   lfs: false
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5990260Z   submodules: false
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5990670Z   set-safe-directory: true
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5991280Z env:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5991630Z   KEEPLING_RESTORE_SEED: 20260901
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5992140Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5992900Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5993370Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5993880Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5994450Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.5994870Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.8811250Z Syncing repository: szTheory/keepling
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.8812760Z ##[group]Getting Git version info
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.8813300Z Working directory is '/Users/runner/work/keepling/keepling'
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.8814650Z [command]/opt/homebrew/bin/git version
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9309720Z git version 2.55.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9322810Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9328820Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/13e19596-6ebe-4ddb-9c5a-2bd57cc8b747/.gitconfig'
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9334610Z Temporarily overriding HOME='/Users/runner/work/_temp/13e19596-6ebe-4ddb-9c5a-2bd57cc8b747' before making global git config changes
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9335600Z Adding repository directory to the temporary git global config as a safe directory
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9337950Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9462450Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9466300Z ##[group]Initializing the repository
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9469000Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9745310Z hint: Using 'master' as the name for the initial branch. This default branch name
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9746690Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9747450Z hint: to use in all of your new repositories, which will suppress this warning,
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9748170Z hint: call:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9748550Z hint:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9749000Z hint: 	git config --global init.defaultBranch <name>
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9749490Z hint:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9749990Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9750820Z hint: 'development'. The just-created branch can be renamed via this command:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9751400Z hint:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9751860Z hint: 	git branch -m <name>
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9752280Z hint:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9752840Z hint: Disable this message with "git config set advice.defaultBranchName false"
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9753810Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9760190Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9823860Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9825130Z ##[group]Disabling automatic garbage collection
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9826610Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9876630Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9877230Z ##[group]Setting up auth
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9881090Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:56.9932840Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:57.0786930Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:57.0829460Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:57.1387430Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:57.1438600Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:57.2553630Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:57.2882860Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:57.2927100Z ##[group]Fetching the repository
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:57.2928420Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +069df06570f7bc65ccb646935fd637dcc83bbd9c:refs/remotes/origin/main
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:58.8632160Z From https://github.com/szTheory/keepling
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:58.8634870Z  * [new ref]         069df06570f7bc65ccb646935fd637dcc83bbd9c -> origin/main
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:58.8638840Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:58.8640100Z ##[group]Determining the checkout info
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:58.8641360Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:58.8642200Z [command]/opt/homebrew/bin/git sparse-checkout disable
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:58.8704990Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:58.8891350Z ##[group]Checking out the ref
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:58.9012130Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.1481150Z Switched to a new branch 'main'
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.1486790Z branch 'main' set up to track 'origin/main'.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.1489470Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.1568890Z [command]/opt/homebrew/bin/git log -1 --format=%H
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.1618010Z 069df06570f7bc65ccb646935fd637dcc83bbd9c
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2538650Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2540320Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2540760Z with:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2541130Z   path: ~/.asdf/installs
+weekly-historical-pitr	UNKNOWN STEP	apps/server/deps
+weekly-historical-pitr	UNKNOWN STEP	apps/server/_build
+weekly-historical-pitr	UNKNOWN STEP	
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2541750Z   key: recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2542290Z   enableCrossOsArchive: false
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2542640Z   fail-on-cache-miss: false
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2542970Z   lookup-only: false
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2543260Z   save-always: false
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2543540Z env:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2543820Z   KEEPLING_RESTORE_SEED: 20260901
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2544270Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2544990Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2545380Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2545810Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2546270Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.2546620Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.3576530Z (node:10783) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.3578500Z (Use `node --trace-deprecation ...` to show where the warning was created)
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.4333830Z Cache hit for: recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:21:59.4397370Z (node:10783) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:00.0915460Z Received 78000949 of 78000949 (100.0%), 126.1 MBs/sec
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:00.1017370Z Cache Size: ~74 MB (78000949 B)
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:00.1118760Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/1deb3783-c145-48cb-b2ee-677628ed7f57/cache.tzst -P -C /Users/runner/work/keepling/keepling --delay-directory-restore --use-compress-program unzstd
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0127310Z Cache restored successfully
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0414220Z Cache restored from key: recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0518240Z ##[group]Run brew list asdf >/dev/null 2>&1 || brew install asdf
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0518680Z ^[[36;1mbrew list asdf >/dev/null 2>&1 || brew install asdf^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0519000Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0519440Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0563340Z shell: /bin/bash -e {0}
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0563570Z env:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0563750Z   KEEPLING_RESTORE_SEED: 20260901
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0564070Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0566390Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0566690Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0567010Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0567340Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:02.0567620Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:04.6808570Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:04.7011260Z ✔︎ Bottle Manifest asdf (0.20.0)
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:04.7012770Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:04.7060860Z asdf
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:04.7675960Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32masdf^[[39m^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:05.1396970Z ✔︎ Bottle asdf (0.20.0)
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:05.1420110Z ^[[34m==>^[[0m ^[[1mPouring asdf--0.20.0.arm64_sequoia.bottle.tar.gz^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:05.2452930Z 🍺  /opt/homebrew/Cellar/asdf/0.20.0: 10 files, 4.4MB
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:05.2453960Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:05.2471200Z Bash completion has been installed to:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:05.2472610Z   /opt/homebrew/etc/bash_completion.d
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:08.5989880Z version 29.0.5 of erlang is already installed
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:08.6025990Z version 1.20.2-otp-29 of elixir is already installed
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:09.0178880Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:09.4443570Z ✔︎ Bottle Manifest postgresql@18 (18.6)
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:09.4455500Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:09.4470630Z postgresql@18
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:09.5105280Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32mpostgresql@18^[[39m^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:10.9115860Z ✔︎ Bottle postgresql@18 (18.6)
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:10.9413240Z ^[[34m==>^[[0m ^[[1mPouring postgresql@18--18.6.arm64_sequoia.bottle.tar.gz^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4471000Z The files belonging to this database system will be owned by user "runner".
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4471860Z This user must also own the server process.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4472180Z 
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4472980Z The database cluster will be initialized with locale "en_US.UTF-8".
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4473580Z The default text search configuration will be set to "english".
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4473890Z 
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4474190Z Data page checksums are enabled.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4474530Z 
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4474790Z fixing permissions on existing directory /opt/homebrew/var/postgresql@18 ... ok
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4477480Z creating subdirectories ... ok
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4478080Z selecting dynamic shared memory implementation ... posix
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.4897060Z selecting default "max_connections" ... 100
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.5084480Z selecting default "shared_buffers" ... 128MB
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.5107020Z selecting default time zone ... UTC
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.5117320Z creating configuration files ... ok
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:13.6381400Z running bootstrap script ... ok
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.1593810Z performing post-bootstrap initialization ... ok
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.1711720Z syncing data to disk ... ok
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.1712580Z 
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.1717430Z 
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.1717900Z Success. You can now start the database server using:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.1718270Z 
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.1722990Z     '/opt/homebrew/Cellar/postgresql@18/18.6/bin/pg_ctl' -D '/opt/homebrew/var/postgresql@18' -l logfile start
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.1724330Z 
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.1726120Z initdb: warning: enabling "trust" authentication for local connections
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.1728750Z initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6905190Z 🍺  /opt/homebrew/Cellar/postgresql@18/18.6: 3,873 files, 77.7MB
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6908640Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6909080Z ^[[34m==>^[[0m ^[[1mpostgresql@18^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6910050Z This formula has created a default database cluster with:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6910590Z   initdb --locale=en_US.UTF-8 -E UTF-8 /opt/homebrew/var/postgresql@18
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6913840Z 
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6914120Z When uninstalling, some dead symlinks are left behind so you may want to run:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6914560Z   brew cleanup --prune-prefix
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6914780Z 
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6915020Z To start postgresql@18 now and restart at login:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6915440Z   brew services start postgresql@18
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6915930Z Or, if you don't want/need a background service you can just run:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:14.6916520Z   LC_ALL="en_US.UTF-8" /opt/homebrew/opt/postgresql@18/bin/postgres -D /opt/homebrew/var/postgresql@18
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:15.0938130Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:15.8642790Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:16.8329370Z * creating /Users/runner/.mix/archives/hex-2.5.1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.6871260Z Resolving Hex dependencies...
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7800720Z Resolution completed in 0.09s
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7924290Z Unchanged:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7924710Z   argon2_elixir 4.1.3
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7930520Z   bandit 1.12.5
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7930830Z   certifi 2.17.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7931100Z   comeonin 5.5.1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7931430Z   db_connection 2.10.2
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7931730Z   decimal 3.1.1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7932100Z   dns_cluster 0.2.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7932440Z   ecto 3.14.2
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7932660Z   ecto_sql 3.14.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7932970Z   elixir_make 0.10.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7933140Z   expo 1.1.1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7933340Z   gettext 1.0.2
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7933660Z   h2 0.12.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7933910Z   hackney 4.7.4
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7934070Z   hammer 7.4.1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7934220Z   hex_core 0.15.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7934430Z   hpax 1.0.4
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7934720Z   idna 7.1.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7934940Z   jason 1.4.5
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7935260Z   mime 2.0.7
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7935610Z   mimerl 1.5.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7935880Z   optimus 0.6.1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7936110Z   parse_trans 3.4.2
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7936330Z   phoenix 1.8.13
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7936580Z   phoenix_ecto 4.7.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7936750Z   phoenix_pubsub 2.3.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7936930Z   phoenix_template 1.0.4
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7937260Z   plug 1.20.3
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7937560Z   plug_crypto 2.2.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7937780Z   postgrex 0.22.4
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7938030Z   protobuf 0.16.1
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7938330Z   purl 0.3.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7938610Z   quic 1.8.2
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7938880Z   sbom 0.10.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7939080Z   ssl_verify_fun 1.1.7
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7939350Z   stream_data 1.4.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7939590Z   telemetry 1.4.2
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7939880Z   telemetry_metrics 1.2.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7940200Z   telemetry_poller 1.3.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7940430Z   thousand_island 1.5.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7940660Z   tzdata 1.1.5
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7940830Z   websock 0.5.3
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7941000Z   websock_adapter 0.6.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.7941190Z   webtransport 0.4.5
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.8867980Z * creating /Users/runner/.mix/elixir/1-20-otp-29/rebar3
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9598470Z All dependencies have been fetched
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9857670Z ##[group]Run set -eu
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9858050Z ^[[36;1mset -eu^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9858330Z ^[[36;1mevidence="$RUNNER_TEMP/historical-pitr.json"^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9858790Z ^[[36;1mmissing=0^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9859370Z ^[[36;1mfor name in KEEPLING_BACKUP_PRIMARY_ENDPOINT KEEPLING_BACKUP_PRIMARY_REGION KEEPLING_BACKUP_PRIMARY_ACCESS_KEY KEEPLING_BACKUP_PRIMARY_SECRET_KEY; do^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9860120Z ^[[36;1m  test -n "$(printenv "$name")" || missing=1^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9860530Z ^[[36;1mdone^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9860810Z ^[[36;1mif test "$missing" -ne 0; then^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9861430Z ^[[36;1m  jq -n '{version:1,fixture:"historical-pitr",result:"NON_PASSING",reason:"missing_protected_credentials",seed:20260901}' >"$evidence"^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9862120Z ^[[36;1m  ./tooling/verify-privacy.sh "$evidence"^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9862820Z ^[[36;1m  exit 1^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9863050Z ^[[36;1mfi^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9863360Z ^[[36;1mstarted=$(date +%s)^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9863760Z ^[[36;1m./tooling/verify-restore.sh --fixture historical-pitr^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9864240Z ^[[36;1melapsed=$(( $(date +%s) - started ))^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9865020Z ^[[36;1mjq -n --arg revision "$GITHUB_SHA" --argjson elapsed "$elapsed" '{version:1,fixture:"historical-pitr",result:"PASS",revision:$revision,elapsed_seconds:$elapsed,seed:20260901,semantic:"complete"}' >"$evidence"^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9865910Z ^[[36;1m./tooling/verify-privacy.sh "$evidence"^[[0m
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9909210Z shell: /bin/bash -e {0}
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9909580Z env:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9909900Z   KEEPLING_RESTORE_SEED: 20260901
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9910330Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9911000Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9911320Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9911720Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9912040Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:17.9912340Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:20.9920080Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:26.3146150Z Restore verification passed: fixture=historical-pitr kind=pitr clean_target=true manifest=verified semantic=complete epoch=rotated rpo_seconds=240 duration_seconds=1260 selection_seed=20260901 selection_offset_seconds=302501
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4203550Z Privacy verification passed: artifacts=1 sentinels=7
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4299220Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4300410Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4300750Z with:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4300960Z   name: recovery-historical-pitr-bounded
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4301260Z   path: /Users/runner/work/_temp/historical-pitr.json
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4301530Z   if-no-files-found: error
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4301760Z   retention-days: 90
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4301970Z   compression-level: 6
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4302170Z   overwrite: false
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4302350Z   include-hidden-files: false
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4302570Z env:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4302740Z   KEEPLING_RESTORE_SEED: 20260901
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4303090Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4303640Z   KEEPLING_BACKUP_PRIMARY_ENDPOINT: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4303940Z   KEEPLING_BACKUP_PRIMARY_REGION: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4304260Z   KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4304590Z   KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ***
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.4304830Z ##[endgroup]
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.7334900Z (node:12548) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.7335510Z (Use `node --trace-deprecation ...` to show where the warning was created)
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.7366190Z With the provided path, there will be 1 file uploaded
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.7368700Z Artifact name is valid!
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.7369210Z Root directory input is valid!
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.9398920Z Beginning upload of artifact content to blob storage
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.9500940Z (node:12548) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:27.9980920Z Uploaded bytes 306
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.0152030Z Finished uploading artifact content to blob storage!
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.0152810Z SHA256 digest of uploaded artifact zip is 048ad72f65f1e388623f9ab3859774c08a9611956865706169ee9e961447df22
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.0155520Z Finalizing artifact upload
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.2076120Z Artifact recovery-historical-pitr-bounded.zip successfully finalized. Artifact ID 10324722308
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.2124210Z Artifact recovery-historical-pitr-bounded has been successfully uploaded! Final size is 306 bytes. Artifact ID is 10324722308
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.2134460Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34780506996/artifacts/10324722308
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.4904810Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.4906480Z Post job cleanup.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.6068690Z Cache hit occurred on the primary key recovery-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1, not saving cache.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.6069790Z (node:12551) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.6070950Z (Use `node --trace-deprecation ...` to show where the warning was created)
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.6152340Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.6153370Z Post job cleanup.
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.6937630Z [command]/opt/homebrew/bin/git version
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.7007360Z git version 2.55.0
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.7025080Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/cab6cdff-1396-493d-b6d9-53fcde1b3d25/.gitconfig'
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.7031860Z Temporarily overriding HOME='/Users/runner/work/_temp/cab6cdff-1396-493d-b6d9-53fcde1b3d25' before making global git config changes
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.7032610Z Adding repository directory to the temporary git global config as a safe directory
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.7035010Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.7089390Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.7140920Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.7818570Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.7878480Z http.https://github.com/.extraheader
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.7885910Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.7963550Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.9299790Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:28.9601870Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:29.0985180Z Cleaning up orphan processes
+weekly-historical-pitr	UNKNOWN STEP	2026-09-13T20:22:29.5949780Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

@@ -1,0 +1,17 @@
+{
+  "artifactName": "source-tree",
+  "kind": "git-tree",
+  "produced": true,
+  "revision": "069df06570f7bc65ccb646935fd637dcc83bbd9c",
+  "gitTreeSha1": "9510141c437460041a58686085106938df532c0f",
+  "what": "The exact source tree all four continuous-integration runs checked out at this revision, named by its git tree object. It exists as an artefact entry because several lanes -- the governance lanes and the Phase 2 lanes -- run against SOURCE, not against a built artefact, and binding them to the packaged application's digest would claim they tested bytes they never opened.",
+  "alsoTheProvenanceSubjectSource": "The SLSA provenance attestation for this revision's archive records resolvedDependencies[0].digest.gitCommit = 069df06570f7bc65ccb646935fd637dcc83bbd9c, which is the commit whose tree this record names.",
+  "relationshipToCandidate3": "The product code here is BYTE-IDENTICAL to candidate-3's revision c2e4ce3. The three intervening commits (12dbe9b, 9a0b062, 069df06) touch only files under .planning/ and KNOWN-LIMITATIONS.md. The package manifest's inputDigestSha256 is 713dd01d1aa87f6340be17444cab299e1fbcfab80d46b893ce350a62803e639d at BOTH revisions, which is that claim measured rather than asserted. The application digests nevertheless DIFFER between the two candidates, because a notarized Developer ID build is not byte-reproducible by construction -- see .planning/WINDOWS.md row 82 and the BLOCKED package-reproducible lane.",
+  "checkedOutBy": {
+    "desktop.yml": "34780345200",
+    "repository-integrity.yml": "34780345148",
+    "recovery-drills.yml (historical-pitr)": "34780506996",
+    "recovery-drills.yml (daily)": "34793473769"
+  },
+  "verifyWith": "git rev-parse 069df06570f7bc65ccb646935fd637dcc83bbd9c^{tree}"
+}

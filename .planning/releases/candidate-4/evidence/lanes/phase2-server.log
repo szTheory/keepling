@@ -1,0 +1,451 @@
+phase2-server	UNKNOWN STEP	﻿2026-09-13T20:18:18.7463299Z Current runner version: '2.337.0'
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7487255Z ##[group]Runner Image Provisioner
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7488033Z Hosted Compute Agent
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7488598Z Version: 20260828.587
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7489210Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7489874Z Build Date: 2026-08-28T16:44:25Z
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7490495Z Worker ID: {8f011280-5f84-4a3e-b3b3-6c33e9a1fdfb}
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7491268Z Azure Region: westus3
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7491769Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7493298Z ##[group]Operating System
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7493911Z Ubuntu
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7494412Z 24.04.5
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7494862Z LTS
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7495294Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7496173Z ##[group]Runner Image
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7496729Z Image: ubuntu-24.04
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7497239Z Version: 20260907.300.1
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7498375Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7499825Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7500674Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7502043Z ##[group]GITHUB_TOKEN Permissions
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7504278Z Contents: read
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7504847Z Metadata: read
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7505386Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7507393Z Secret source: Actions
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7508284Z Cache mode: write
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7508921Z Prepare workflow directory
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7889733Z Prepare all required actions
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:18.7940152Z Getting action download info
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.1040182Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.1858820Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.2561257Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.6609474Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.8715673Z Complete job name: phase2-server
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9693497Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9704948Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9706660Z with:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9707570Z   repository: szTheory/keepling
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9716793Z   token: ***
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9717678Z   ssh-strict: true
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9718563Z   ssh-user: git
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9719495Z   persist-credentials: true
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9720470Z   clean: true
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9721450Z   sparse-checkout-cone-mode: true
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9722488Z   fetch-depth: 1
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9723363Z   fetch-tags: false
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9724257Z   show-progress: true
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9725221Z   lfs: false
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9726061Z   submodules: false
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9726969Z   set-safe-directory: true
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9728277Z env:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9729119Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9730521Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:19.9732059Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0737761Z Syncing repository: szTheory/keepling
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0740501Z ##[group]Getting Git version info
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0742018Z Working directory is '/home/runner/work/keepling/keepling'
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0744076Z [command]/usr/bin/git version
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0793109Z git version 2.55.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0812383Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0826152Z Temporarily overriding HOME='/home/runner/work/_temp/a030c22d-aca3-46f5-93a7-6f46434b16ca' before making global git config changes
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0828776Z Adding repository directory to the temporary git global config as a safe directory
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0831859Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0875206Z Deleting the contents of '/home/runner/work/keepling/keepling'
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0879330Z ##[group]Initializing the repository
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0883564Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0974596Z hint: Using 'master' as the name for the initial branch. This default branch name
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0977280Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0979584Z hint: to use in all of your new repositories, which will suppress this warning,
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0982093Z hint: call:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0983446Z hint:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0984866Z hint: 	git config --global init.defaultBranch <name>
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0986231Z hint:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0987618Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0989398Z hint: 'development'. The just-created branch can be renamed via this command:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0990961Z hint:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0991934Z hint: 	git branch -m <name>
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0993035Z hint:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0994268Z hint: Disable this message with "git config set advice.defaultBranchName false"
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0996197Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.0999468Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1031102Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1032751Z ##[group]Disabling automatic garbage collection
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1034623Z [command]/usr/bin/git config --local gc.auto 0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1061670Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1063168Z ##[group]Setting up auth
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1068312Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1095881Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1388085Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1416877Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1595558Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1622241Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1796950Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1829931Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1831728Z ##[group]Fetching the repository
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:20.1839447Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +069df06570f7bc65ccb646935fd637dcc83bbd9c:refs/remotes/origin/main
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:21.9968080Z From https://github.com/szTheory/keepling
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:21.9968939Z  * [new ref]         069df06570f7bc65ccb646935fd637dcc83bbd9c -> origin/main
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:21.9972146Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:21.9979819Z ##[group]Determining the checkout info
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:21.9980632Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:21.9981266Z [command]/usr/bin/git sparse-checkout disable
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.0022569Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.0046710Z ##[group]Checking out the ref
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.0050580Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1238032Z Switched to a new branch 'main'
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1241350Z branch 'main' set up to track 'origin/main'.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1251625Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1289176Z [command]/usr/bin/git log -1 --format=%H
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1310466Z 069df06570f7bc65ccb646935fd637dcc83bbd9c
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1559376Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1561759Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1562154Z with:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1562392Z   node-version: 24.7.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1562654Z   always-auth: false
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1562928Z   check-latest: false
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1565609Z   token: ***
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1565855Z env:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1566111Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1566519Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.1566936Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.2935299Z Attempting to download 24.7.0...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.3038624Z (node:2174) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:22.3039596Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:23.3476980Z Acquiring 24.7.0 - x64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-linux-x64.tar.gz
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:23.9361022Z Extracting ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:23.9467717Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/97651fe6-9bb0-4fb1-88c0-89d4d6d2fe2d -f /home/runner/work/_temp/9e9899dd-2609-4aea-ba9f-559942a7840a
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:25.1456859Z Adding to the cache ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.5589034Z ##[group]Environment details
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.7764654Z node: v24.7.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.7765056Z npm: 11.5.1
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.7765376Z yarn: 1.22.22
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.7766203Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8494453Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8495689Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8496016Z with:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8496307Z   path: ~/.asdf/installs
+phase2-server	UNKNOWN STEP	apps/server/deps
+phase2-server	UNKNOWN STEP	apps/server/_build
+phase2-server	UNKNOWN STEP	node_modules
+phase2-server	UNKNOWN STEP	
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8496865Z   key: phase2-Linux-server-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8497352Z   enableCrossOsArchive: false
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8497598Z   fail-on-cache-miss: false
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8497823Z   lookup-only: false
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8498026Z   save-always: false
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8498224Z env:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8498410Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8498798Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.8499156Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.9528507Z (node:2223) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:26.9529607Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:27.1665630Z Cache hit for: phase2-Linux-server-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:27.1770368Z (node:2223) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:28.4252353Z Received 29360128 of 172382243 (17.0%), 28.0 MBs/sec
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:29.4276100Z Received 163577856 of 172382243 (94.9%), 78.0 MBs/sec
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:29.5209683Z Received 172382243 of 172382243 (100.0%), 78.3 MBs/sec
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:29.5212933Z Cache Size: ~164 MB (172382243 B)
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:29.5294686Z [command]/usr/bin/tar -xf /home/runner/work/_temp/4038452e-7c8b-4174-ad97-29dc7273049a/cache.tzst -P -C /home/runner/work/keepling/keepling --use-compress-program unzstd
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:30.8516606Z Cache restored successfully
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.0940919Z Cache restored from key: phase2-Linux-server-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1059659Z ##[group]Run set -eu
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1060028Z ^[[36;1mset -eu^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1060342Z ^[[36;1m# The cache step above restores ~/.asdf/installs, which CREATES^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1061161Z ^[[36;1m# $HOME/.asdf before this step runs. An unconditional clone then dies^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1061618Z ^[[36;1m# with "destination path already exists and is not an empty^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1062058Z ^[[36;1m# directory" (exit 128) and the lane never reaches any project code.^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1062502Z ^[[36;1m# Clone into a scratch directory and move only the parts that are^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1062968Z ^[[36;1m# missing, so a restored cache and a cold runner both end up with the^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1063322Z ^[[36;1m# same tree.^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1063566Z ^[[36;1mif [ ! -d "$HOME/.asdf/.git" ]; then^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1063854Z ^[[36;1m  scratch="$(mktemp -d)"^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1064322Z ^[[36;1m  git clone https://github.com/asdf-vm/asdf.git "$scratch/asdf" --branch v0.14.1^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1064741Z ^[[36;1m  mkdir -p "$HOME/.asdf"^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1065069Z ^[[36;1m  # `cp -R src/. dst` merges into an existing directory instead of^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1065484Z ^[[36;1m  # nesting, which is what the restored-cache case needs.^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1065856Z ^[[36;1m  cp -R "$scratch/asdf/." "$HOME/.asdf/"^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1066149Z ^[[36;1m  rm -rf "$scratch"^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1066377Z ^[[36;1mfi^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1066596Z ^[[36;1mecho "$HOME/.asdf/bin" >> "$GITHUB_PATH"^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1066914Z ^[[36;1mecho "$HOME/.asdf/shims" >> "$GITHUB_PATH"^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1092336Z shell: /usr/bin/bash -e {0}
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1092605Z env:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1092819Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1093196Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1093573Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:31.1181717Z Cloning into '/tmp/tmp.xL0NzKJYEY/asdf'...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5440872Z Note: switching to 'f00f759f3d8d405468d0071310a91b8f5a9c3798'.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5441448Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5441969Z You are in 'detached HEAD' state. You can look around, make experimental
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5442991Z changes and commit them, and you can discard any commits you make in this
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5443952Z state without impacting any branches by switching back to a branch.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5444430Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5444884Z If you want to create a new branch to retain commits you create, you may
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5445750Z do so (now or later) by using -c with the switch command. Example:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5446263Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5446510Z   git switch -c <new-branch-name>
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5446819Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5447042Z Or undo this operation with:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5447323Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5447478Z   git switch -
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5447697Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5448239Z Turn off this advice by setting config variable advice.detachedHead to false
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5448770Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5715617Z ##[group]Run ./tooling/runtime-preflight.sh --provision
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5716056Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5716485Z ^[[36;1mcorepack enable^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5716760Z ^[[36;1mpnpm install --frozen-lockfile^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5717215Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5739158Z shell: /usr/bin/bash -e {0}
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5739427Z env:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5739633Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5740002Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.5740381Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:32.6276299Z Cloning into '/home/runner/.asdf/repository'...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:36.6845763Z initializing plugin repository...erlang 29.0.5 is already installed
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:36.7162424Z elixir 1.20.2-otp-29 is already installed
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.4497489Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.4684110Z Get:6 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.4802403Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.4823746Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.4878968Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.4891360Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.5346393Z Get:7 https://apt.postgresql.org/pub/repos/apt noble-pgdg InRelease [189 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.5472322Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [414 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.5612885Z Get:9 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [463 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.5844410Z Get:10 https://dl.google.com/linux/chrome-stable/deb stable InRelease [2548 B]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.6326382Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1263 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.6392687Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [292 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.6416636Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [181 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.6435131Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1690 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.6521868Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [388 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.6547023Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1544 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.6623758Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [354 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.6648671Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.6796030Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [5772 B]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.6806866Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [12.6 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.7615025Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1006 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.7665647Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [213 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.7684525Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [46.4 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.7695336Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1206 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.7763713Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [76.3 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.7772046Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1445 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.7792349Z Get:28 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 Packages [825 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.7852673Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [336 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:37.8792334Z Get:29 https://dl.google.com/linux/chrome-stable/deb stable/main amd64 Packages [1413 B]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:42.1647754Z Fetched 12.3 MB in 1s (8857 kB/s)
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.0346478Z Reading package lists...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.0672412Z Reading package lists...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.2627167Z Building dependency tree...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.2634189Z Reading state information...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.4189202Z The following additional packages will be installed:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.4192346Z   liburing2 postgresql-18-jit postgresql-client-18
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.4199078Z Suggested packages:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.4199415Z   postgresql-doc-18
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.4422321Z The following NEW packages will be installed:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.4426356Z   liburing2 postgresql-18 postgresql-18-jit postgresql-client-18
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.4626651Z 0 upgraded, 4 newly installed, 0 to remove and 50 not upgraded.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.4627106Z Need to get 19.6 MB of archives.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.4627516Z After this operation, 71.9 MB of additional disk space will be used.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.5256249Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.5256921Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 liburing2 amd64 2.5-1build1 [21.1 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.5343735Z Get:3 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-client-18 amd64 18.6-1.pgdg24.04+2 [2114 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.6127002Z Get:4 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-18 amd64 18.6-1.pgdg24.04+2 [7577 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.6744983Z Get:5 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-18-jit amd64 18.6-1.pgdg24.04+2 [9924 kB]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.9558806Z Preconfiguring packages ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:43.9954316Z Fetched 19.6 MB in 0s (69.4 MB/s)
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0161489Z Selecting previously unselected package liburing2:amd64.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0364360Z (Reading database ... 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0364717Z (Reading database ... 5%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0365009Z (Reading database ... 10%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0365262Z (Reading database ... 15%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0368349Z (Reading database ... 20%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0368618Z (Reading database ... 25%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0368863Z (Reading database ... 30%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0369104Z (Reading database ... 35%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0369348Z (Reading database ... 40%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0369582Z (Reading database ... 45%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0369819Z (Reading database ... 50%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.0403819Z (Reading database ... 55%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.1971048Z (Reading database ... 60%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.3385650Z (Reading database ... 65%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.5445091Z (Reading database ... 70%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.6824670Z (Reading database ... 75%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.8567488Z (Reading database ... 80%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:44.9865797Z (Reading database ... 85%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.1418051Z (Reading database ... 90%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.2905527Z (Reading database ... 95%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.2906134Z (Reading database ... 100%
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.2906878Z (Reading database ... 201818 files and directories currently installed.)
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.2947843Z Preparing to unpack .../liburing2_2.5-1build1_amd64.deb ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.2981409Z Unpacking liburing2:amd64 (2.5-1build1) ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.3154714Z Selecting previously unselected package postgresql-client-18.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.3267221Z Preparing to unpack .../postgresql-client-18_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.3275757Z Unpacking postgresql-client-18 (18.6-1.pgdg24.04+2) ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.5001934Z Selecting previously unselected package postgresql-18.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.5116947Z Preparing to unpack .../postgresql-18_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.5149905Z Unpacking postgresql-18 (18.6-1.pgdg24.04+2) ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.9847263Z Selecting previously unselected package postgresql-18-jit.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.9965566Z Preparing to unpack .../postgresql-18-jit_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:45.9972969Z Unpacking postgresql-18-jit (18.6-1.pgdg24.04+2) ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:46.6466081Z Setting up postgresql-client-18 (18.6-1.pgdg24.04+2) ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:46.9392419Z update-alternatives: using /usr/share/postgresql/18/man/man1/psql.1.gz to provide /usr/share/man/man1/psql.1.gz (psql.1.gz) in auto mode
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:46.9569004Z Setting up liburing2:amd64 (2.5-1build1) ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:46.9586322Z Setting up postgresql-18 (18.6-1.pgdg24.04+2) ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:47.6936255Z Setting up postgresql-18-jit (18.6-1.pgdg24.04+2) ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:47.6957494Z Processing triggers for libc-bin (2.39-0ubuntu8.8) ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:47.7213886Z Processing triggers for postgresql-common (293.pgdg24.04+1) ...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:47.8257467Z Building PostgreSQL dictionaries from installed myspell/hunspell packages...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:47.8263725Z   en_us
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:48.1465096Z Removing obsolete dictionary files:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:48.7058389Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:48.7059084Z Running kernel seems to be up-to-date.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:48.7059501Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:48.7059757Z No services need to be restarted.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:48.7060055Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:48.7060304Z No containers need to be restarted.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:48.7060611Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:48.7061001Z No user sessions are running outdated binaries.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:48.7061268Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:48.7061542Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:50.0653472Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:50.1895111Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:51.0734872Z Scope: all 4 workspace projects
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:51.1726942Z Lockfile is up to date, resolution step is skipped
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:51.7310309Z Progress: resolved 0, reused 0, downloaded 1, added 0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:52.1476574Z Packages: +2 -47
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:52.1477152Z ++-----------------------------------------------
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:52.7322409Z Progress: resolved 0, reused 0, downloaded 6, added 0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:53.7316466Z Progress: resolved 0, reused 0, downloaded 36, added 0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:54.0864580Z Progress: resolved 0, reused 0, downloaded 48, added 2, done
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:54.2512290Z 
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:54.3440160Z Done in 3.6s using pnpm v10.33.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:54.7913848Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:55.6001865Z * creating /home/runner/.mix/archives/hex-2.5.1
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.0699694Z Resolving Hex dependencies...
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.1987327Z Resolution completed in 0.127s
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2238807Z Unchanged:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2239564Z   argon2_elixir 4.1.3
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2262479Z   bandit 1.12.5
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2263282Z   certifi 2.17.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2263862Z   comeonin 5.5.1
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2264449Z   db_connection 2.10.2
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2265007Z   decimal 3.1.1
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2265548Z   dns_cluster 0.2.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2266075Z   ecto 3.14.2
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2266587Z   ecto_sql 3.14.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2267134Z   elixir_make 0.10.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2267669Z   expo 1.1.1
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2268169Z   gettext 1.0.2
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2268675Z   h2 0.12.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2269174Z   hackney 4.7.4
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2269636Z   hammer 7.4.1
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2270174Z   hex_core 0.15.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2270676Z   hpax 1.0.4
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2271314Z   idna 7.1.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2271843Z   jason 1.4.5
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2272339Z   mime 2.0.7
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2272805Z   mimerl 1.5.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2273362Z   optimus 0.6.1
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2274102Z   parse_trans 3.4.2
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2274670Z   phoenix 1.8.13
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2275236Z   phoenix_ecto 4.7.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2275850Z   phoenix_pubsub 2.3.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2276872Z   phoenix_template 1.0.4
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2277539Z   plug 1.20.3
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2278084Z   plug_crypto 2.2.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2278641Z   postgrex 0.22.4
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2279404Z   protobuf 0.16.1
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2280000Z   purl 0.3.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2280522Z   quic 1.8.2
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2281229Z   sbom 0.10.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2281796Z   ssl_verify_fun 1.1.7
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2282386Z   stream_data 1.4.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2282943Z   telemetry 1.4.2
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2283463Z   telemetry_metrics 1.2.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2284091Z   telemetry_poller 1.3.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2284671Z   thousand_island 1.5.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2285338Z   tzdata 1.1.5
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2285864Z   websock 0.5.3
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2286390Z   websock_adapter 0.6.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.2286952Z   webtransport 0.4.5
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.3989168Z * creating /home/runner/.mix/elixir/1-20-otp-29/rebar3
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.4489578Z All dependencies have been fetched
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.4803666Z ##[group]Run set -o pipefail
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.4804202Z ^[[36;1mset -o pipefail^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.4804809Z ^[[36;1m./tooling/test-phase-2.sh --lane "server" | tee "$RUNNER_TEMP/server.txt"^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.4805624Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/server.txt"^[[0m
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.4838153Z shell: /usr/bin/bash -e {0}
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.4838574Z env:
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.4838906Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.4839578Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:56.4840250Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:59.0248114Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-server	UNKNOWN STEP	2026-09-13T20:18:59.1394189Z lane=server status=RUNNING command=mix compile --warnings-as-errors && mix test cases=337 seed=20260901 inputs_sha256=84a3038de36aefcb7bcab4532824886f5f98f961af8bf586d856568be9186859
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.3081534Z lane=server status=PASS command=mix compile --warnings-as-errors && mix test cases=337 seed=20260901 elapsed_ms=10169 inputs_sha256=84a3038de36aefcb7bcab4532824886f5f98f961af8bf586d856568be9186859
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8829667Z Privacy verification passed: artifacts=1 sentinels=7
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8882549Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8883859Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8884239Z with:
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8884452Z   name: phase2-server-timing
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8884712Z   path: /home/runner/work/_temp/server.txt
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8884998Z   if-no-files-found: error
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8885233Z   retention-days: 14
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8885447Z   compression-level: 6
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8885661Z   overwrite: false
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8885880Z   include-hidden-files: false
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8886108Z env:
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8886299Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8886686Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:09.8887065Z ##[endgroup]
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.0594666Z (node:7649) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.0595414Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.0640469Z With the provided path, there will be 1 file uploaded
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.0645993Z Artifact name is valid!
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.0646608Z Root directory input is valid!
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.3895790Z Beginning upload of artifact content to blob storage
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.4063826Z (node:7649) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.6289586Z Uploaded bytes 367
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.6958619Z Finished uploading artifact content to blob storage!
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.6960277Z SHA256 digest of uploaded artifact zip is ac4f60420ac90f18eb63cb2ad63f6fb328b5a039e1eff54028f65cf426b6e7bb
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.6961283Z Finalizing artifact upload
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.9119639Z Artifact phase2-server-timing.zip successfully finalized. Artifact ID 10325081768
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.9121478Z Artifact phase2-server-timing has been successfully uploaded! Final size is 367 bytes. Artifact ID is 10325081768
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.9127616Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34780345148/artifacts/10325081768
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.9802610Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:10.9803791Z Post job cleanup.
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.0898879Z Cache hit occurred on the primary key phase2-Linux-server-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3, not saving cache.
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.0900476Z (node:7672) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.0901382Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.0994412Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.0995558Z Post job cleanup.
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.2309693Z (node:7680) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.2310447Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.2425130Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.2426279Z Post job cleanup.
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3269495Z [command]/usr/bin/git version
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3305301Z git version 2.55.0
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3339936Z Temporarily overriding HOME='/home/runner/work/_temp/e3f32633-49fe-463b-a2dc-120769ebb38f' before making global git config changes
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3341587Z Adding repository directory to the temporary git global config as a safe directory
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3346123Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3378577Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3408832Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3586393Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3611721Z http.https://github.com/.extraheader
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3622553Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3649190Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3827918Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.3856677Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.4150588Z Cleaning up orphan processes
+phase2-server	UNKNOWN STEP	2026-09-13T20:19:11.4408293Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

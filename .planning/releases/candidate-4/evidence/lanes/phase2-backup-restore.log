@@ -1,0 +1,449 @@
+phase2-backup-restore	UNKNOWN STEP	﻿2026-09-13T20:19:27.5268895Z Current runner version: '2.337.0'
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5290369Z ##[group]Runner Image Provisioner
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5291179Z Hosted Compute Agent
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5291694Z Version: 20260828.587
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5292239Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5292849Z Build Date: 2026-08-28T16:44:25Z
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5293386Z Worker ID: {55db1283-fc49-4696-ba74-79b54728daf5}
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5294035Z Azure Region: centralus
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5294514Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5295829Z ##[group]Operating System
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5296372Z Ubuntu
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5296800Z 24.04.5
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5297270Z LTS
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5297730Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5298489Z ##[group]Runner Image
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5299026Z Image: ubuntu-24.04
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5299517Z Version: 20260907.300.1
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5300611Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5301843Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5302636Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5303572Z ##[group]GITHUB_TOKEN Permissions
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5305559Z Contents: read
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5306117Z Metadata: read
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5306591Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5308258Z Secret source: Actions
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5309068Z Cache mode: write
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5309611Z Prepare workflow directory
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5621409Z Prepare all required actions
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.5661054Z Getting action download info
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.8111330Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:27.9372426Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.0562692Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.1938667Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4284664Z Complete job name: phase2-backup-restore
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4888749Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4896773Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4897667Z with:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4898207Z   repository: szTheory/keepling
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4902004Z   token: ***
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4902472Z   ssh-strict: true
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4903002Z   ssh-user: git
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4903545Z   persist-credentials: true
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4904072Z   clean: true
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4904599Z   sparse-checkout-cone-mode: true
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4905176Z   fetch-depth: 1
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4905896Z   fetch-tags: false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4906402Z   show-progress: true
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4907061Z   lfs: false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4907535Z   submodules: false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4908031Z   set-safe-directory: true
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4908693Z env:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4909371Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4910398Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.4911162Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5868388Z Syncing repository: szTheory/keepling
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5870119Z ##[group]Getting Git version info
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5870848Z Working directory is '/home/runner/work/keepling/keepling'
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5871879Z [command]/usr/bin/git version
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5907432Z git version 2.55.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5923113Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5935151Z Temporarily overriding HOME='/home/runner/work/_temp/cd8d6c93-e27f-45be-9428-21c910e4630c' before making global git config changes
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5937723Z Adding repository directory to the temporary git global config as a safe directory
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5940024Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5982992Z Deleting the contents of '/home/runner/work/keepling/keepling'
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5986840Z ##[group]Initializing the repository
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.5990539Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6932642Z hint: Using 'master' as the name for the initial branch. This default branch name
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6934041Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6935229Z hint: to use in all of your new repositories, which will suppress this warning,
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6936469Z hint: call:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6937148Z hint:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6937961Z hint: 	git config --global init.defaultBranch <name>
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6938798Z hint:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6939422Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6940503Z hint: 'development'. The just-created branch can be renamed via this command:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6941581Z hint:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6942126Z hint: 	git branch -m <name>
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6942723Z hint:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6943411Z hint: Disable this message with "git config set advice.defaultBranchName false"
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6944418Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6946450Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6981428Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6982601Z ##[group]Disabling automatic garbage collection
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.6983481Z [command]/usr/bin/git config --local gc.auto 0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7006265Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7007127Z ##[group]Setting up auth
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7010929Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7034571Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7571244Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7596373Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7748392Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7770070Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7921035Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7943784Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7944686Z ##[group]Fetching the repository
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:28.7950665Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +069df06570f7bc65ccb646935fd637dcc83bbd9c:refs/remotes/origin/main
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.0250588Z From https://github.com/szTheory/keepling
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.0252945Z  * [new ref]         069df06570f7bc65ccb646935fd637dcc83bbd9c -> origin/main
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.0258453Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.0260561Z ##[group]Determining the checkout info
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.0262263Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.0264570Z [command]/usr/bin/git sparse-checkout disable
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.0300787Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.0324139Z ##[group]Checking out the ref
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.0326597Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1417902Z Switched to a new branch 'main'
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1419798Z branch 'main' set up to track 'origin/main'.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1429135Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1461195Z [command]/usr/bin/git log -1 --format=%H
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1479183Z 069df06570f7bc65ccb646935fd637dcc83bbd9c
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1803412Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1808840Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1810334Z with:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1811201Z   node-version: 24.7.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1812158Z   always-auth: false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1813163Z   check-latest: false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1821643Z   token: ***
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1822493Z env:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1823352Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1824836Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.1826509Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.2979196Z Attempting to download 24.7.0...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.3067825Z (node:2727) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.3070405Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:30.9842936Z Acquiring 24.7.0 - x64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-linux-x64.tar.gz
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:31.6893227Z Extracting ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:31.6979118Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/3a2bcc67-05f0-4710-8773-d92c2d277790 -f /home/runner/work/_temp/be4ba328-d54f-405a-adef-1025281b2884
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:32.8922172Z Adding to the cache ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.0621586Z ##[group]Environment details
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.2422062Z node: v24.7.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.2422497Z npm: 11.5.1
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.2422930Z yarn: 1.22.22
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.2423757Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3070229Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3071362Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3071724Z with:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3072051Z   path: ~/.asdf/installs
+phase2-backup-restore	UNKNOWN STEP	apps/server/deps
+phase2-backup-restore	UNKNOWN STEP	apps/server/_build
+phase2-backup-restore	UNKNOWN STEP	node_modules
+phase2-backup-restore	UNKNOWN STEP	
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3072684Z   key: phase2-Linux-backup-restore-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3073235Z   enableCrossOsArchive: false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3073559Z   fail-on-cache-miss: false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3073838Z   lookup-only: false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3074087Z   save-always: false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3074387Z env:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3074717Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3075133Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3075946Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3984863Z (node:2773) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.3986229Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.5264267Z Cache hit for: phase2-Linux-backup-restore-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:35.5345625Z (node:2773) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:36.6979246Z Received 92274688 of 172281393 (53.6%), 87.9 MBs/sec
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:37.6987771Z Received 168087089 of 172281393 (97.6%), 80.1 MBs/sec
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:37.7674845Z Received 172281393 of 172281393 (100.0%), 79.3 MBs/sec
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:37.7675856Z Cache Size: ~164 MB (172281393 B)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:37.7708902Z [command]/usr/bin/tar -xf /home/runner/work/_temp/a29c2301-6583-41e1-8996-0118e1d0e28a/cache.tzst -P -C /home/runner/work/keepling/keepling --use-compress-program unzstd
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0556917Z Cache restored successfully
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0678382Z Cache restored from key: phase2-Linux-backup-restore-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0781476Z ##[group]Run set -eu
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0781975Z ^[[36;1mset -eu^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0782415Z ^[[36;1m# The cache step above restores ~/.asdf/installs, which CREATES^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0782944Z ^[[36;1m# $HOME/.asdf before this step runs. An unconditional clone then dies^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0783413Z ^[[36;1m# with "destination path already exists and is not an empty^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0783860Z ^[[36;1m# directory" (exit 128) and the lane never reaches any project code.^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0784404Z ^[[36;1m# Clone into a scratch directory and move only the parts that are^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0784875Z ^[[36;1m# missing, so a restored cache and a cold runner both end up with the^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0785265Z ^[[36;1m# same tree.^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0786137Z ^[[36;1mif [ ! -d "$HOME/.asdf/.git" ]; then^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0786472Z ^[[36;1m  scratch="$(mktemp -d)"^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0787074Z ^[[36;1m  git clone https://github.com/asdf-vm/asdf.git "$scratch/asdf" --branch v0.14.1^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0787508Z ^[[36;1m  mkdir -p "$HOME/.asdf"^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0787893Z ^[[36;1m  # `cp -R src/. dst` merges into an existing directory instead of^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0788350Z ^[[36;1m  # nesting, which is what the restored-cache case needs.^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0788788Z ^[[36;1m  cp -R "$scratch/asdf/." "$HOME/.asdf/"^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0789119Z ^[[36;1m  rm -rf "$scratch"^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0789485Z ^[[36;1mfi^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0789767Z ^[[36;1mecho "$HOME/.asdf/bin" >> "$GITHUB_PATH"^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0790104Z ^[[36;1mecho "$HOME/.asdf/shims" >> "$GITHUB_PATH"^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0814373Z shell: /usr/bin/bash -e {0}
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0814801Z env:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0815075Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0815745Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0816198Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:39.0899284Z Cloning into '/tmp/tmp.vKyU2P9giL/asdf'...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3387442Z Note: switching to 'f00f759f3d8d405468d0071310a91b8f5a9c3798'.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3387946Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3388238Z You are in 'detached HEAD' state. You can look around, make experimental
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3388890Z changes and commit them, and you can discard any commits you make in this
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3389438Z state without impacting any branches by switching back to a branch.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3389732Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3389991Z If you want to create a new branch to retain commits you create, you may
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3390528Z do so (now or later) by using -c with the switch command. Example:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3390800Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3390964Z   git switch -c <new-branch-name>
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3391179Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3391325Z Or undo this operation with:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3391504Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3391650Z   git switch -
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3391811Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3392078Z Turn off this advice by setting config variable advice.detachedHead to false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3392362Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3630658Z ##[group]Run ./tooling/runtime-preflight.sh --provision
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3631119Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3631558Z ^[[36;1mcorepack enable^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3631906Z ^[[36;1mpnpm install --frozen-lockfile^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3632425Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3654046Z shell: /usr/bin/bash -e {0}
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3654773Z env:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3655104Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3655589Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.3656030Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:40.4348660Z Cloning into '/home/runner/.asdf/repository'...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:43.1332748Z initializing plugin repository...erlang 29.0.5 is already installed
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:43.1611262Z elixir 1.20.2-otp-29 is already installed
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:43.9227128Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:43.9660920Z Get:6 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:43.9847211Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:43.9877553Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:43.9907096Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:43.9928253Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.0194386Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [463 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.0431391Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [414 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.0949343Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1263 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.1016561Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [292 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.1032804Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [181 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.1045957Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1690 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.1126298Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [388 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.1150535Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1544 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.1223696Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [354 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.1243396Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.1279836Z Get:17 https://dl.google.com/linux/chrome-stable/deb stable InRelease [2548 B]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.1343384Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [5772 B]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.1352713Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [12.6 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.1450982Z Get:20 https://apt.postgresql.org/pub/repos/apt noble-pgdg InRelease [189 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.2164299Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1006 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.2220112Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [213 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.2234626Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [46.4 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.2267258Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1206 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.2304304Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [76.3 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.2313324Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1445 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.2383381Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [336 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.2444563Z Get:28 https://dl.google.com/linux/chrome-stable/deb stable/main amd64 Packages [1413 B]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:44.2629942Z Get:29 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 Packages [825 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:48.8462752Z Fetched 12.3 MB in 1s (9843 kB/s)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.5343954Z Reading package lists...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.5631735Z Reading package lists...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.6969708Z Building dependency tree...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.6973785Z Reading state information...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.8420970Z The following additional packages will be installed:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.8422710Z   liburing2 postgresql-18-jit postgresql-client-18
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.8428877Z Suggested packages:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.8429279Z   postgresql-doc-18
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.8602729Z The following NEW packages will be installed:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.8605598Z   liburing2 postgresql-18 postgresql-18-jit postgresql-client-18
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.8783904Z 0 upgraded, 4 newly installed, 0 to remove and 50 not upgraded.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.8784493Z Need to get 19.6 MB of archives.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.8784935Z After this operation, 71.9 MB of additional disk space will be used.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.8785676Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.9310862Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 liburing2 amd64 2.5-1build1 [21.1 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:49.9563425Z Get:3 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-client-18 amd64 18.6-1.pgdg24.04+2 [2114 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.0790773Z Get:4 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-18 amd64 18.6-1.pgdg24.04+2 [7577 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.1525001Z Get:5 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-18-jit amd64 18.6-1.pgdg24.04+2 [9924 kB]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.4280709Z Preconfiguring packages ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.4736169Z Fetched 19.6 MB in 0s (57.9 MB/s)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.4912764Z Selecting previously unselected package liburing2:amd64.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5084046Z (Reading database ... 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5084566Z (Reading database ... 5%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5085109Z (Reading database ... 10%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5085652Z (Reading database ... 15%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5086618Z (Reading database ... 20%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5087104Z (Reading database ... 25%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5087630Z (Reading database ... 30%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5088157Z (Reading database ... 35%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5088639Z (Reading database ... 40%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5089195Z (Reading database ... 45%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5089663Z (Reading database ... 50%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.5151622Z (Reading database ... 55%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:50.8179265Z (Reading database ... 60%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:51.0144447Z (Reading database ... 65%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:51.1837974Z (Reading database ... 70%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:51.3797571Z (Reading database ... 75%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:51.6189250Z (Reading database ... 80%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:52.0774724Z (Reading database ... 85%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:52.3338754Z (Reading database ... 90%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:52.6419742Z (Reading database ... 95%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:52.6420212Z (Reading database ... 100%
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:52.6420808Z (Reading database ... 201818 files and directories currently installed.)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:52.6460988Z Preparing to unpack .../liburing2_2.5-1build1_amd64.deb ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:52.7802400Z Unpacking liburing2:amd64 (2.5-1build1) ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:52.7973231Z Selecting previously unselected package postgresql-client-18.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:52.8080671Z Preparing to unpack .../postgresql-client-18_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:52.8460713Z Unpacking postgresql-client-18 (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:53.1174434Z Selecting previously unselected package postgresql-18.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:53.1284663Z Preparing to unpack .../postgresql-18_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:53.1311230Z Unpacking postgresql-18 (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:53.7873583Z Selecting previously unselected package postgresql-18-jit.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:53.7985093Z Preparing to unpack .../postgresql-18-jit_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:53.7996452Z Unpacking postgresql-18-jit (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:54.5056534Z Setting up postgresql-client-18 (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:54.7651608Z update-alternatives: using /usr/share/postgresql/18/man/man1/psql.1.gz to provide /usr/share/man/man1/psql.1.gz (psql.1.gz) in auto mode
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:54.8841448Z Setting up liburing2:amd64 (2.5-1build1) ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:54.8868786Z Setting up postgresql-18 (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:55.6096711Z Setting up postgresql-18-jit (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:55.6132388Z Processing triggers for libc-bin (2.39-0ubuntu8.8) ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:55.9796406Z Processing triggers for postgresql-common (293.pgdg24.04+1) ...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.0732264Z Building PostgreSQL dictionaries from installed myspell/hunspell packages...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.0807674Z   en_us
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.1583621Z Removing obsolete dictionary files:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.8424047Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.8424960Z Running kernel seems to be up-to-date.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.8425280Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.8425781Z No services need to be restarted.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.8426031Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.8426248Z No containers need to be restarted.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.8426487Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.8426797Z No user sessions are running outdated binaries.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.8427057Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:56.8427408Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:57.8665122Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:57.9702622Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:58.8840228Z Scope: all 4 workspace projects
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:58.9480323Z Lockfile is up to date, resolution step is skipped
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:59.6556241Z Packages: +2 -47
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:59.6557048Z ++-----------------------------------------------
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:19:59.9367877Z Progress: resolved 0, reused 0, downloaded 1, added 0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:00.9346874Z Progress: resolved 0, reused 0, downloaded 32, added 0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:01.3929535Z Progress: resolved 0, reused 0, downloaded 48, added 2, done
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:01.5781131Z 
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:01.6572707Z Done in 3s using pnpm v10.33.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:02.0471415Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:02.8689764Z * creating /home/runner/.mix/archives/hex-2.5.1
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.4069725Z Resolving Hex dependencies...
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5087865Z Resolution completed in 0.099s
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5254602Z Unchanged:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5255189Z   argon2_elixir 4.1.3
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5263368Z   bandit 1.12.5
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5263994Z   certifi 2.17.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5264898Z   comeonin 5.5.1
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5265262Z   db_connection 2.10.2
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5266372Z   decimal 3.1.1
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5266778Z   dns_cluster 0.2.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5267529Z   ecto 3.14.2
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5267895Z   ecto_sql 3.14.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5268731Z   elixir_make 0.10.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5269142Z   expo 1.1.1
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5269934Z   gettext 1.0.2
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5270304Z   h2 0.12.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5271718Z   hackney 4.7.4
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5272136Z   hammer 7.4.1
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5272500Z   hex_core 0.15.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5272819Z   hpax 1.0.4
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5273126Z   idna 7.1.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5276750Z   jason 1.4.5
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5277130Z   mime 2.0.7
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5277506Z   mimerl 1.5.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5284697Z   optimus 0.6.1
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5285279Z   parse_trans 3.4.2
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5286613Z   phoenix 1.8.13
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5287263Z   phoenix_ecto 4.7.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5287797Z   phoenix_pubsub 2.3.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5288338Z   phoenix_template 1.0.4
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5288799Z   plug 1.20.3
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5289623Z   plug_crypto 2.2.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5290070Z   postgrex 0.22.4
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5290540Z   protobuf 0.16.1
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5291209Z   purl 0.3.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5291628Z   quic 1.8.2
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5292047Z   sbom 0.10.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5292458Z   ssl_verify_fun 1.1.7
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5292928Z   stream_data 1.4.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5293372Z   telemetry 1.4.2
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5293797Z   telemetry_metrics 1.2.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5294313Z   telemetry_poller 1.3.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5294757Z   thousand_island 1.5.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5295183Z   tzdata 1.1.5
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5295712Z   websock 0.5.3
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5296200Z   websock_adapter 0.6.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.5296618Z   webtransport 0.4.5
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.7754756Z * creating /home/runner/.mix/elixir/1-20-otp-29/rebar3
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.8385254Z All dependencies have been fetched
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.8673707Z ##[group]Run set -o pipefail
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.8674243Z ^[[36;1mset -o pipefail^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.8674914Z ^[[36;1m./tooling/test-phase-2.sh --lane "backup-restore" | tee "$RUNNER_TEMP/backup-restore.txt"^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.8675859Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/backup-restore.txt"^[[0m
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.8702855Z shell: /usr/bin/bash -e {0}
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.8703304Z env:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.8703722Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.8704386Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.8705051Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:03.9265879Z lane=backup-restore status=RUNNING command=./tooling/verify-backup.sh and three ./tooling/verify-restore.sh fixtures cases=4 seed=20260901 inputs_sha256=d8a1ae0c06fd36a5daef7c2f88d22dfb8943b3c4f70b0b9b07223de7fa9c9422
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5357180Z lane=backup-restore status=PASS command=./tooling/verify-backup.sh and three ./tooling/verify-restore.sh fixtures cases=4 seed=20260901 elapsed_ms=22609 inputs_sha256=d8a1ae0c06fd36a5daef7c2f88d22dfb8943b3c4f70b0b9b07223de7fa9c9422
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5453383Z Privacy verification passed: artifacts=1 sentinels=7
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5507931Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5509089Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5509517Z with:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5509787Z   name: phase2-backup-restore-timing
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5510150Z   path: /home/runner/work/_temp/backup-restore.txt
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5510497Z   if-no-files-found: error
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5510797Z   retention-days: 14
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5511086Z   compression-level: 6
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5511343Z   overwrite: false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5511622Z   include-hidden-files: false
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5511937Z env:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5512175Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5512668Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.5513071Z ##[endgroup]
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.7050096Z (node:9110) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.7051399Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.7088683Z With the provided path, there will be 1 file uploaded
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.7092539Z Artifact name is valid!
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.7093173Z Root directory input is valid!
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.9774692Z Beginning upload of artifact content to blob storage
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:26.9910744Z (node:9110) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:27.1151880Z Uploaded bytes 346
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:27.1512343Z Finished uploading artifact content to blob storage!
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:27.1513147Z SHA256 digest of uploaded artifact zip is e5c4b701c9dcd6dba0943ef5fdd46787f627fd592614ba64d7cf9709c673fc37
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:27.1514307Z Finalizing artifact upload
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.1634681Z Artifact phase2-backup-restore-timing.zip successfully finalized. Artifact ID 10324822075
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.1636585Z Artifact phase2-backup-restore-timing has been successfully uploaded! Final size is 346 bytes. Artifact ID is 10324822075
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.1641242Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34780345148/artifacts/10324822075
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.2259907Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.2260936Z Post job cleanup.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.3140853Z Cache hit occurred on the primary key phase2-Linux-backup-restore-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3, not saving cache.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.3142368Z (node:9135) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.3143477Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.3224095Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.3225129Z Post job cleanup.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.4244176Z (node:9143) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.4244993Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.4351697Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.4352759Z Post job cleanup.
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5030515Z [command]/usr/bin/git version
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5058385Z git version 2.55.0
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5084350Z Temporarily overriding HOME='/home/runner/work/_temp/658f8169-8d8a-455a-9b04-4eacba11cdbd' before making global git config changes
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5085546Z Adding repository directory to the temporary git global config as a safe directory
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5089024Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5116650Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5141025Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5301271Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5320955Z http.https://github.com/.extraheader
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5328846Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5352003Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5507787Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5529488Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.5783202Z Cleaning up orphan processes
+phase2-backup-restore	UNKNOWN STEP	2026-09-13T20:20:28.6009874Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

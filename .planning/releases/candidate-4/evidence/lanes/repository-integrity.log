@@ -1,0 +1,165 @@
+repository-integrity	UNKNOWN STEP	﻿2026-09-13T20:19:20.0004733Z Current runner version: '2.337.0'
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0029578Z ##[group]Runner Image Provisioner
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0030471Z Hosted Compute Agent
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0031405Z Version: 20260828.587
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0032126Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0032867Z Build Date: 2026-08-28T16:44:25Z
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0033670Z Worker ID: {626fd528-21c1-49ed-9e77-c9fb4661e244}
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0034396Z Azure Region: westus
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0035000Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0036650Z ##[group]Operating System
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0037360Z Ubuntu
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0038002Z 24.04.5
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0038507Z LTS
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0039071Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0039647Z ##[group]Runner Image
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0040278Z Image: ubuntu-24.04
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0041117Z Version: 20260907.300.1
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0042429Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0044127Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0045121Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0046717Z ##[group]GITHUB_TOKEN Permissions
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0048859Z Contents: read
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0049574Z Metadata: read
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0050170Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0052606Z Secret source: Actions
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0053693Z Cache mode: write
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0054426Z Prepare workflow directory
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0494739Z Prepare all required actions
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.0544821Z Getting action download info
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.4122293Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.5272478Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.7296345Z Complete job name: repository-integrity
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8047032Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8056242Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8057195Z with:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8057649Z   repository: szTheory/keepling
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8061627Z   token: ***
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8062076Z   ssh-strict: true
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8062520Z   ssh-user: git
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8062979Z   persist-credentials: true
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8063480Z   clean: true
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8064004Z   sparse-checkout-cone-mode: true
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8064544Z   fetch-depth: 1
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8064982Z   fetch-tags: false
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8065442Z   show-progress: true
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8065936Z   lfs: false
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8066365Z   submodules: false
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8066823Z   set-safe-directory: true
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8067564Z env:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8068062Z   KEEPLING_PHASE2_SEED: 20260901
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8068824Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.8069571Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9041191Z Syncing repository: szTheory/keepling
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9043002Z ##[group]Getting Git version info
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9043751Z Working directory is '/home/runner/work/keepling/keepling'
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9044815Z [command]/usr/bin/git version
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9117253Z git version 2.55.0
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9137852Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9151754Z Temporarily overriding HOME='/home/runner/work/_temp/2d62eb1e-1e15-44c9-a0e5-a5bb5feccb90' before making global git config changes
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9153777Z Adding repository directory to the temporary git global config as a safe directory
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9156381Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9205632Z Deleting the contents of '/home/runner/work/keepling/keepling'
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9209512Z ##[group]Initializing the repository
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9215160Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9318736Z hint: Using 'master' as the name for the initial branch. This default branch name
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9320067Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9321763Z hint: to use in all of your new repositories, which will suppress this warning,
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9322749Z hint: call:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9323497Z hint:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9324441Z hint: 	git config --global init.defaultBranch <name>
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9325619Z hint:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9326744Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9328580Z hint: 'development'. The just-created branch can be renamed via this command:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9329995Z hint:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9330733Z hint: 	git branch -m <name>
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9331941Z hint:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9333159Z hint: Disable this message with "git config set advice.defaultBranchName false"
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9335152Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9337951Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9380074Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9382014Z ##[group]Disabling automatic garbage collection
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9383907Z [command]/usr/bin/git config --local gc.auto 0
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9412916Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9413681Z ##[group]Setting up auth
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9418883Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9450176Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9807153Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:20.9838287Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:21.0057728Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:21.0087527Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:21.0306594Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:21.0341508Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:21.0342378Z ##[group]Fetching the repository
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:21.0350332Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +069df06570f7bc65ccb646935fd637dcc83bbd9c:refs/remotes/origin/main
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.3042881Z From https://github.com/szTheory/keepling
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.3044940Z  * [new ref]         069df06570f7bc65ccb646935fd637dcc83bbd9c -> origin/main
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.3047763Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.3048950Z ##[group]Determining the checkout info
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.3050281Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.3053319Z [command]/usr/bin/git sparse-checkout disable
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.3098960Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.3126630Z ##[group]Checking out the ref
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.3137971Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4515496Z Switched to a new branch 'main'
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4519210Z branch 'main' set up to track 'origin/main'.
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4533950Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4576904Z [command]/usr/bin/git log -1 --format=%H
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4601211Z 069df06570f7bc65ccb646935fd637dcc83bbd9c
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4914315Z ##[group]Run set -o pipefail
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4915735Z ^[[36;1mset -o pipefail^[[0m
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4918034Z ^[[36;1m./tooling/test-phase-2.sh --lane repository-integrity | tee "$RUNNER_TEMP/repository-integrity.txt"^[[0m
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4921272Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/repository-integrity.txt"^[[0m
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4962531Z shell: /usr/bin/bash -e {0}
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4963777Z env:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4964769Z   KEEPLING_PHASE2_SEED: 20260901
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4966563Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.4968505Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.7205663Z lane=repository-integrity status=RUNNING command=./tooling/check-repository-integrity.sh cases=3 seed=none inputs_sha256=39f25664f283d163c68ea163c3b95726abf70ab4d1de85ad6edd7099c632cbb1
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9460154Z lane=repository-integrity status=PASS command=./tooling/check-repository-integrity.sh cases=3 seed=none elapsed_ms=228 inputs_sha256=39f25664f283d163c68ea163c3b95726abf70ab4d1de85ad6edd7099c632cbb1
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9607911Z Privacy verification passed: artifacts=1 sentinels=7
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9716011Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9717896Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9718345Z with:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9718635Z   name: repository-integrity-timing
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9719053Z   path: /home/runner/work/_temp/repository-integrity.txt
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9719450Z   if-no-files-found: error
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9719743Z   retention-days: 14
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9720053Z   compression-level: 6
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9720327Z   overwrite: false
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9720602Z   include-hidden-files: false
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9721271Z env:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9721545Z   KEEPLING_PHASE2_SEED: 20260901
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9722023Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:22.9722493Z ##[endgroup]
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:23.1416645Z (node:2372) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:23.1417632Z (Use `node --trace-deprecation ...` to show where the warning was created)
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:23.1463298Z With the provided path, there will be 1 file uploaded
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:23.1468239Z Artifact name is valid!
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:23.1469264Z Root directory input is valid!
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:23.5569935Z Beginning upload of artifact content to blob storage
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:23.5736784Z (node:2372) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:23.8636859Z Uploaded bytes 335
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:23.9426780Z Finished uploading artifact content to blob storage!
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:23.9428751Z SHA256 digest of uploaded artifact zip is e0655191f07b0f717f3bf6d90d8c8b6c885ef9d11adf52141aa1a06ed0161e2e
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:23.9430408Z Finalizing artifact upload
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.1798793Z Artifact repository-integrity-timing.zip successfully finalized. Artifact ID 10325600119
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.1800521Z Artifact repository-integrity-timing has been successfully uploaded! Final size is 335 bytes. Artifact ID is 10325600119
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.1806488Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34780345148/artifacts/10325600119
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.2023296Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.2024783Z Post job cleanup.
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.2889795Z [command]/usr/bin/git version
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.2927860Z git version 2.55.0
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.2967843Z Temporarily overriding HOME='/home/runner/work/_temp/3ee64087-2687-4345-869b-54a0e6b76cd9' before making global git config changes
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.2969383Z Adding repository directory to the temporary git global config as a safe directory
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.2973922Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.3010435Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.3044457Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.3267097Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.3292812Z http.https://github.com/.extraheader
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.3306036Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.3337688Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.3566965Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.3597552Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.3974832Z Cleaning up orphan processes
+repository-integrity	UNKNOWN STEP	2026-09-13T20:19:24.4270455Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

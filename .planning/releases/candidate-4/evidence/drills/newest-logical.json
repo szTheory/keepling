@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "fixture": "newest-logical",
+  "result": "PASS",
+  "revision": "069df06570f7bc65ccb646935fd637dcc83bbd9c",
+  "elapsed_seconds": 6,
+  "semantic": "complete"
+}

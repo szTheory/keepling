@@ -1,0 +1,192 @@
+export-reader	UNKNOWN STEP	﻿2026-09-13T20:18:59.1132981Z Current runner version: '2.337.0'
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1160370Z ##[group]Runner Image Provisioner
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1161249Z Hosted Compute Agent
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1161778Z Version: 20260828.587
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1162377Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1163069Z Build Date: 2026-08-28T16:44:25Z
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1163996Z Worker ID: {212d9dc5-35b9-4bff-9bfe-e5d8b06b11ad}
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1165038Z Azure Region: centralus
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1165565Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1167018Z ##[group]Operating System
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1167612Z Ubuntu
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1168110Z 24.04.5
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1168594Z LTS
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1169103Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1169873Z ##[group]Runner Image
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1170472Z Image: ubuntu-24.04
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1170976Z Version: 20260907.300.1
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1172137Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1173837Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1174749Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1175765Z ##[group]GITHUB_TOKEN Permissions
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1177976Z Contents: read
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1178553Z Metadata: read
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1179108Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1181791Z Secret source: Actions
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1182668Z Cache mode: write
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1183527Z Prepare workflow directory
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1547787Z Prepare all required actions
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.1597417Z Getting action download info
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.4319469Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.5224744Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.5934056Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.7662053Z Complete job name: export-reader
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8394629Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8403832Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8404604Z with:
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8404976Z   repository: szTheory/keepling
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8408373Z   token: ***
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8408748Z   ssh-strict: true
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8409128Z   ssh-user: git
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8409853Z   persist-credentials: true
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8410279Z   clean: true
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8410667Z   sparse-checkout-cone-mode: true
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8411145Z   fetch-depth: 1
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8411528Z   fetch-tags: false
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8411910Z   show-progress: true
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8412330Z   lfs: false
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8412693Z   submodules: false
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8413089Z   set-safe-directory: true
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8413775Z env:
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8414153Z   KEEPLING_PHASE2_SEED: 20260901
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8414786Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.8415441Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9386475Z Syncing repository: szTheory/keepling
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9388094Z ##[group]Getting Git version info
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9388741Z Working directory is '/home/runner/work/keepling/keepling'
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9389967Z [command]/usr/bin/git version
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9430744Z git version 2.55.0
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9449539Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9464316Z Temporarily overriding HOME='/home/runner/work/_temp/f985dff5-ff20-4a0e-be83-916948ec6fb6' before making global git config changes
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9466987Z Adding repository directory to the temporary git global config as a safe directory
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9470150Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9508673Z Deleting the contents of '/home/runner/work/keepling/keepling'
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9513994Z ##[group]Initializing the repository
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9518376Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9599527Z hint: Using 'master' as the name for the initial branch. This default branch name
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9601565Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9603523Z hint: to use in all of your new repositories, which will suppress this warning,
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9605011Z hint: call:
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9605872Z hint:
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9606913Z hint: 	git config --global init.defaultBranch <name>
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9608110Z hint:
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9609460Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9611237Z hint: 'development'. The just-created branch can be renamed via this command:
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9612711Z hint:
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9613581Z hint: 	git branch -m <name>
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9614480Z hint:
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9615631Z hint: Disable this message with "git config set advice.defaultBranchName false"
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9617584Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9620192Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9647398Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9648100Z ##[group]Disabling automatic garbage collection
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9650692Z [command]/usr/bin/git config --local gc.auto 0
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9672872Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9673540Z ##[group]Setting up auth
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9678389Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9703235Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9965636Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+export-reader	UNKNOWN STEP	2026-09-13T20:18:59.9991257Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+export-reader	UNKNOWN STEP	2026-09-13T20:19:00.0164337Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+export-reader	UNKNOWN STEP	2026-09-13T20:19:00.0191671Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+export-reader	UNKNOWN STEP	2026-09-13T20:19:00.0362146Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+export-reader	UNKNOWN STEP	2026-09-13T20:19:00.0388944Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:19:00.0390320Z ##[group]Fetching the repository
+export-reader	UNKNOWN STEP	2026-09-13T20:19:00.0399048Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +069df06570f7bc65ccb646935fd637dcc83bbd9c:refs/remotes/origin/main
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.3313138Z From https://github.com/szTheory/keepling
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.3315035Z  * [new ref]         069df06570f7bc65ccb646935fd637dcc83bbd9c -> origin/main
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.3319101Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.3320802Z ##[group]Determining the checkout info
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.3322368Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.3340877Z [command]/usr/bin/git sparse-checkout disable
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.3365979Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.3391061Z ##[group]Checking out the ref
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.3393529Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.4556193Z Switched to a new branch 'main'
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.4559247Z branch 'main' set up to track 'origin/main'.
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.4571244Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.4607469Z [command]/usr/bin/git log -1 --format=%H
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.4629199Z 069df06570f7bc65ccb646935fd637dcc83bbd9c
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.5001307Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.5006924Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.5008344Z with:
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.5009121Z   node-version: 24.7.0
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.5010160Z   always-auth: false
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.5011039Z   check-latest: false
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.5019448Z   token: ***
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.5020229Z env:
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.5021002Z   KEEPLING_PHASE2_SEED: 20260901
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.5022430Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.5023866Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.6385640Z Attempting to download 24.7.0...
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.6488506Z (node:2177) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+export-reader	UNKNOWN STEP	2026-09-13T20:19:01.6492874Z (Use `node --trace-deprecation ...` to show where the warning was created)
+export-reader	UNKNOWN STEP	2026-09-13T20:19:02.3537127Z Acquiring 24.7.0 - x64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-linux-x64.tar.gz
+export-reader	UNKNOWN STEP	2026-09-13T20:19:03.0288261Z Extracting ...
+export-reader	UNKNOWN STEP	2026-09-13T20:19:03.0403865Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/d4fda5b8-2a1a-4e0d-9ef4-16e5cb7b41d2 -f /home/runner/work/_temp/e76200da-2f9f-47d6-8602-875391e528bd
+export-reader	UNKNOWN STEP	2026-09-13T20:19:04.2282722Z Adding to the cache ...
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.6378562Z ##[group]Environment details
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8659974Z node: v24.7.0
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8661055Z npm: 11.5.1
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8661545Z yarn: 1.22.22
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8662266Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8786207Z ##[group]Run set -o pipefail
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8786590Z ^[[36;1mset -o pipefail^[[0m
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8787104Z ^[[36;1mnode tooling/verify-export-reader.mjs --golden | tee "$RUNNER_TEMP/export-reader.txt"^[[0m
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8787716Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/export-reader.txt"^[[0m
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8815957Z shell: /usr/bin/bash -e {0}
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8816248Z env:
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8816493Z   KEEPLING_PHASE2_SEED: 20260901
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8816879Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.8817261Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9227461Z verify-export-reader --golden PASSED cases=16 trackedInputSha256=6163530e92505f314ec045c331b55f62889aa1cca7f6b69851bffd8e8b9aacf9
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9346686Z Privacy verification passed: artifacts=1 sentinels=7
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9441972Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9443280Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9443674Z with:
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9443895Z   name: export-reader-timing
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9444175Z   path: /home/runner/work/_temp/export-reader.txt
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9444486Z   if-no-files-found: error
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9444721Z   retention-days: 14
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9444933Z   compression-level: 6
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9445148Z   overwrite: false
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9445359Z   include-hidden-files: false
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9445586Z env:
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9445808Z   KEEPLING_PHASE2_SEED: 20260901
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9446419Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+export-reader	UNKNOWN STEP	2026-09-13T20:19:05.9446798Z ##[endgroup]
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.1236694Z (node:2233) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.1237934Z (Use `node --trace-deprecation ...` to show where the warning was created)
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.1279709Z With the provided path, there will be 1 file uploaded
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.1283870Z Artifact name is valid!
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.1284707Z Root directory input is valid!
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.3793196Z Beginning upload of artifact content to blob storage
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.3954750Z (node:2233) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.5094826Z Uploaded bytes 267
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.5459242Z Finished uploading artifact content to blob storage!
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.5460926Z SHA256 digest of uploaded artifact zip is 8f6ec7b1001fbf93c76d9aac41a586891d3ad64aee31b5f87312e16ce4f5b811
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.5461862Z Finalizing artifact upload
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.7795596Z Artifact export-reader-timing.zip successfully finalized. Artifact ID 10325165802
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.7796750Z Artifact export-reader-timing has been successfully uploaded! Final size is 267 bytes. Artifact ID is 10325165802
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.7804936Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34780345148/artifacts/10325165802
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.7975383Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.7977077Z Post job cleanup.
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.9134712Z (node:2245) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.9135486Z (Use `node --trace-deprecation ...` to show where the warning was created)
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.9251957Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+export-reader	UNKNOWN STEP	2026-09-13T20:19:06.9253108Z Post job cleanup.
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0054685Z [command]/usr/bin/git version
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0086335Z git version 2.55.0
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0120467Z Temporarily overriding HOME='/home/runner/work/_temp/94fc0a45-a26e-46fa-a20b-5a7a71ed0ddf' before making global git config changes
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0122062Z Adding repository directory to the temporary git global config as a safe directory
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0126341Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0158324Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0188087Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0370247Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0391381Z http.https://github.com/.extraheader
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0400513Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0425121Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0593038Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0617975Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.0910970Z Cleaning up orphan processes
+export-reader	UNKNOWN STEP	2026-09-13T20:19:07.1222652Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

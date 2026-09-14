@@ -1,0 +1,477 @@
+ci-contract	UNKNOWN STEP	﻿2026-09-13T20:18:18.3901386Z Current runner version: '2.337.0'
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3919499Z ##[group]Runner Image Provisioner
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3920201Z Hosted Compute Agent
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3920628Z Version: 20260828.587
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3921097Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3921597Z Build Date: 2026-08-28T16:44:25Z
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3922052Z Worker ID: {36fbcca2-793a-4815-a3c7-c265922a893b}
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3922659Z Azure Region: centralus
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3923080Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3924066Z ##[group]Operating System
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3924494Z Ubuntu
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3924839Z 24.04.5
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3925218Z LTS
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3925591Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3925963Z ##[group]Runner Image
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3926386Z Image: ubuntu-24.04
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3926773Z Version: 20260907.300.1
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3927715Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3928830Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3929701Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3930867Z ##[group]GITHUB_TOKEN Permissions
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3932705Z Contents: read
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3933098Z Metadata: read
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3933514Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3935124Z Secret source: Actions
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3935849Z Cache mode: write
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.3936379Z Prepare workflow directory
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.4216782Z Prepare all required actions
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.4253200Z Getting action download info
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.6214163Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.7199575Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9235827Z Complete job name: ci-contract
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9769112Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9776515Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9777334Z with:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9777705Z   repository: szTheory/keepling
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9781048Z   token: ***
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9781413Z   ssh-strict: true
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9781772Z   ssh-user: git
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9782217Z   persist-credentials: true
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9782661Z   clean: true
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9783121Z   sparse-checkout-cone-mode: true
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9783560Z   fetch-depth: 1
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9783948Z   fetch-tags: false
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9784396Z   show-progress: true
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9784924Z   lfs: false
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9785357Z   submodules: false
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9785778Z   set-safe-directory: true
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9786369Z env:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9786846Z   KEEPLING_PHASE2_SEED: 20260901
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9787495Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:18.9788192Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.0608265Z Syncing repository: szTheory/keepling
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.0610064Z ##[group]Getting Git version info
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.0610778Z Working directory is '/home/runner/work/keepling/keepling'
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.0611737Z [command]/usr/bin/git version
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.0952253Z git version 2.55.0
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.0965339Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.0975376Z Temporarily overriding HOME='/home/runner/work/_temp/e0fa450f-4f8d-4431-98b8-43d33ca327a1' before making global git config changes
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.0976692Z Adding repository directory to the temporary git global config as a safe directory
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.0978872Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.2566197Z Deleting the contents of '/home/runner/work/keepling/keepling'
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.2570126Z ##[group]Initializing the repository
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.2573722Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3499466Z hint: Using 'master' as the name for the initial branch. This default branch name
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3500839Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3502097Z hint: to use in all of your new repositories, which will suppress this warning,
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3502850Z hint: call:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3503311Z hint:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3503856Z hint: 	git config --global init.defaultBranch <name>
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3504535Z hint:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3505225Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3506197Z hint: 'development'. The just-created branch can be renamed via this command:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3506943Z hint:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3507615Z hint: 	git branch -m <name>
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3508153Z hint:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3508866Z hint: Disable this message with "git config set advice.defaultBranchName false"
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3510022Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.3512212Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.4651097Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.4652107Z ##[group]Disabling automatic garbage collection
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.4654644Z [command]/usr/bin/git config --local gc.auto 0
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.4678468Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.4679502Z ##[group]Setting up auth
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.4683666Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.4707033Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.4966473Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.4987785Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.5135202Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.5156750Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.5303029Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.5326517Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.5327504Z ##[group]Fetching the repository
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:19.5333879Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +069df06570f7bc65ccb646935fd637dcc83bbd9c:refs/remotes/origin/main
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.0490316Z From https://github.com/szTheory/keepling
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.0492166Z  * [new ref]         069df06570f7bc65ccb646935fd637dcc83bbd9c -> origin/main
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.0495270Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.0496361Z ##[group]Determining the checkout info
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.0497718Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.0498681Z [command]/usr/bin/git sparse-checkout disable
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.0537826Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.0560833Z ##[group]Checking out the ref
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.0600741Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1545736Z Switched to a new branch 'main'
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1547164Z branch 'main' set up to track 'origin/main'.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1555096Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1585462Z [command]/usr/bin/git log -1 --format=%H
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1602248Z 069df06570f7bc65ccb646935fd637dcc83bbd9c
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1872456Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1876289Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1877372Z with:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1878073Z   node-version: 24.7.0
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1878835Z   always-auth: false
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1879786Z   check-latest: false
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1885713Z   token: ***
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1886400Z env:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1887089Z   KEEPLING_PHASE2_SEED: 20260901
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1888175Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.1889402Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.2873868Z Attempting to download 24.7.0...
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.2949967Z (node:2031) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.2952064Z (Use `node --trace-deprecation ...` to show where the warning was created)
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:21.9576067Z Acquiring 24.7.0 - x64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-linux-x64.tar.gz
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:22.5084433Z Extracting ...
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:22.5194489Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/f882f7e0-ad78-4121-b39a-71853623e14b -f /home/runner/work/_temp/42405999-40e0-4518-b8ba-0b14322cb6ff
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:23.5636281Z Adding to the cache ...
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:25.8699789Z ##[group]Environment details
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.0891200Z node: v24.7.0
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.0891720Z npm: 11.5.1
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.0891975Z yarn: 1.22.22
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.0892797Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1008298Z ##[group]Run ./tooling/check-ci-contract.mjs && ./tooling/test-phase-2.sh --list
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1008839Z ^[[36;1m./tooling/check-ci-contract.mjs && ./tooling/test-phase-2.sh --list^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1034662Z shell: /usr/bin/bash -e {0}
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1034942Z env:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1035228Z   KEEPLING_PHASE2_SEED: 20260901
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1035588Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1035958Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1775205Z CI contract passed: lanes=9 pins=full-sha caches=exact scheduled=non-vacuous privacy_self_test=passed
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1824737Z repository-integrity       repository boundary checks
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1825604Z server                     complete ExUnit suite against disposable PostgreSQL
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1826196Z sync-property              seeded reference model and PostgreSQL feed tests
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1826827Z contracts-compatibility    generated contracts and current/previous skew matrix
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1827315Z image-compose-deploy       disposable OCI, Compose, migration, and retry proof
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1827816Z backup-restore             backup policy and three isolated restore fixtures
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1828346Z opentofu-host-fixtures     pinned provider graph and hermetic live-boundary regressions
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1828802Z privacy                    producer redaction tests and aggregate hostile scan
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1829515Z live-host-dns-acceptance   credentialed outer acceptance; runs only with every input present
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1856379Z ##[group]Run # NOTE: deliberately no `set -o pipefail` here. Each fixture makes the
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1856918Z ^[[36;1m# NOTE: deliberately no `set -o pipefail` here. Each fixture makes the^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1857315Z ^[[36;1m# verifier exit non-zero ON PURPOSE -- that refusal IS the assertion.^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1857723Z ^[[36;1m# Piping it straight into grep under pipefail fails the step precisely^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1858239Z ^[[36;1m# WHEN THE GUARD WORKS, because the node exit status poisons the^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1858620Z ^[[36;1m# pipeline. Capture the output first, then assert against it.^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1858942Z ^[[36;1mset -u^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1859159Z ^[[36;1massert_refused() {^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1859679Z ^[[36;1m  fixture="$1"^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1859924Z ^[[36;1m  expected="$2"^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1860275Z ^[[36;1m  output="$(node tooling/verify-release.mjs --manifest "$fixture" --offline 2>&1)" && {^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1860780Z ^[[36;1m    echo "verify-release ACCEPTED $fixture; the guard is gone" >&2^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1861118Z ^[[36;1m    printf '%s\n' "$output" >&2^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1861370Z ^[[36;1m    exit 1^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1861582Z ^[[36;1m  }^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1861854Z ^[[36;1m  printf '%s\n' "$output" | grep -q "$expected" || {^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1862231Z ^[[36;1m    echo "verify-release refused $fixture but not for the stated reason:" >&2^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1862612Z ^[[36;1m    echo "  expected to find: $expected" >&2^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1862892Z ^[[36;1m    printf '%s\n' "$output" >&2^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1863135Z ^[[36;1m    exit 1^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1863332Z ^[[36;1m  }^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1863554Z ^[[36;1m}^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1863930Z ^[[36;1massert_refused tooling/fixtures/release-manifest.vanished-lane.json 'lane vanished from manifest'^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1864640Z ^[[36;1massert_refused tooling/fixtures/release-manifest.local-unattested.json 'nothing local may bind to locally built bytes'^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1865339Z ^[[36;1massert_refused tooling/fixtures/release-manifest.not-produced-artifact.json 'a lane cannot have tested bytes that were never built'^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1865957Z ^[[36;1massert_refused tooling/fixtures/release-manifest.dangling-evidence.json 'a digest naming nothing proves nothing'^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1866630Z ^[[36;1mecho 'release-verifier guards intact: vanished-lane=refused local-unattested=refused not-produced-artifact=refused dangling-evidence=refused'^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1884867Z shell: /usr/bin/bash -e {0}
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1885137Z env:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1885361Z   KEEPLING_PHASE2_SEED: 20260901
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1885723Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.1886063Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3087378Z release-verifier guards intact: vanished-lane=refused local-unattested=refused not-produced-artifact=refused dangling-evidence=refused
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3115261Z ##[group]Run set -o pipefail
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3115592Z ^[[36;1mset -o pipefail^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3115892Z ^[[36;1mfor manifest in .planning/releases/*/release-manifest.json; do^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3116213Z ^[[36;1m  [ -e "$manifest" ] || continue^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3116565Z ^[[36;1m  echo "::group::verify-release $manifest"^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3117000Z ^[[36;1m  node tooling/verify-release.mjs --manifest "$manifest" --offline || echo "NON-PASSING: $manifest"^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3117419Z ^[[36;1m  echo "::endgroup::"^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3117661Z ^[[36;1mdone^[[0m
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3136466Z shell: /usr/bin/bash -e {0}
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3136757Z env:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3137030Z   KEEPLING_PHASE2_SEED: 20260901
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3137364Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3137708Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3173740Z ##[group]verify-release .planning/releases/candidate-0/release-manifest.json
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3428784Z verify-release tracked_input_sha256=60fa3884bb89514c28056ad7cf678e6dbeb28556615f7889bb56b5e4f8f9e49f
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3431571Z attestation=UNVERIFIED artifact=.planning/releases/candidate-0/artifact reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3434391Z verify-release failed: lane vanished from manifest: repository-integrity
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3435143Z verify-release failed: lane vanished from manifest: all-required-passed
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3436002Z verify-release failed: lane vanished from manifest: phase2-server
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3436798Z verify-release failed: lane vanished from manifest: phase2-sync-property
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3437444Z verify-release failed: lane vanished from manifest: phase2-backup-restore
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3438050Z verify-release failed: lane vanished from manifest: phase2-contracts-compatibility
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3438783Z verify-release failed: lane vanished from manifest: phase2-privacy
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3439440Z verify-release failed: lane vanished from manifest: image-compose-deploy
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3440114Z verify-release failed: lane vanished from manifest: opentofu-host-fixtures
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3440656Z verify-release failed: lane vanished from manifest: export-elixir
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3441123Z verify-release failed: lane vanished from manifest: export-reader
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3441528Z verify-release failed: lane vanished from manifest: desktop-units
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3441964Z verify-release failed: lane vanished from manifest: desktop-package
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3442472Z verify-release failed: lane vanished from manifest: desktop-packaged
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3442887Z verify-release failed: lane vanished from manifest: desktop-e2e
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3443392Z verify-release failed: lane vanished from manifest: macos-integration-no-grant
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3443885Z verify-release failed: lane vanished from manifest: macos-integration-live-appearance
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3444375Z verify-release failed: lane vanished from manifest: hosted-runner-tcc-report
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3444842Z verify-release failed: lane vanished from manifest: desktop-promote
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3445289Z verify-release failed: lane vanished from manifest: slsa-provenance-attestation
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3445767Z verify-release failed: lane vanished from manifest: sbom-generation
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3446190Z verify-release failed: lane vanished from manifest: package-reproducible
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3446633Z verify-release failed: lane vanished from manifest: daily-restore
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3447113Z verify-release failed: lane vanished from manifest: weekly-historical-pitr
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3447571Z verify-release failed: lane vanished from manifest: quarterly-host-replacement
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3448095Z verify-release failed: lane vanished from manifest: phase-1-desktop
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3448513Z verify-release failed: lane vanished from manifest: mcp-gate-selftest
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3449103Z verify-release failed: lane vanished from manifest: mcp-phase-non-model
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3449687Z verify-release failed: lane vanished from manifest: cross-adapter-phase
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3450102Z verify-release failed: lane vanished from manifest: ios-simulator
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3450553Z verify-release failed: lane vanished from manifest: ios-signed-build
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3450972Z verify-release failed: lane vanished from manifest: real-stack-desktop
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3451434Z verify-release failed: lane vanished from manifest: real-stack-ios-simulator
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3451878Z verify-release failed: lane vanished from manifest: trust-soak
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3452316Z verify-release failed: lane vanished from manifest: macos-integration-full-grant
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3452777Z verify-release failed: lane vanished from manifest: ios-device
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3453233Z verify-release failed: lane vanished from manifest: mcp-representative-model
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3453684Z verify-release failed: lane vanished from manifest: live-host-dns-acceptance
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3454681Z verify-release failed: lane ci-contract records evidenceDigestSha256=82db996cfd088bbf67dd4aed1297edbd4174ca41df24e9f205baec6162ee37be but its evidence file does not exist at evidence/lanes/ci-contract.log -- a digest naming nothing proves nothing
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3455599Z verify-release failed: revision f7b7c902cd13c8b0ca6a1c78467b3f67e30b5213 verification did not pass (PASSED)
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3469632Z NON-PASSING: .planning/releases/candidate-0/release-manifest.json
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3470472Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3471107Z ##[group]verify-release .planning/releases/candidate-1/release-manifest.json
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3722825Z verify-release tracked_input_sha256=60fa3884bb89514c28056ad7cf678e6dbeb28556615f7889bb56b5e4f8f9e49f
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3727277Z attestation=UNVERIFIED artifact=.planning/releases/candidate-1/artifacts/desktop-macos-app.package-manifest.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3728430Z attestation=UNVERIFIED artifact=.planning/releases/candidate-1/artifacts/ios-archive.absence-record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3729722Z attestation=UNVERIFIED artifact=.planning/releases/candidate-1/artifacts/server-oci-image.absence-record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3730828Z attestation=UNVERIFIED artifact=.planning/releases/candidate-1/artifacts/web-bundle.absence-record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3731846Z attestation=UNVERIFIED artifact=.planning/releases/candidate-1/artifacts/source-tree.record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3733864Z lane=ci-contract status=PASSED cases=5 authority=ci ranAgainstArtifactDigest=2aa86c8ebc448eed9fb3c7e2cb20c33cf26a7c5bdbfba4e6f521837227672fde
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3734972Z lane=repository-integrity status=PASSED cases=3 authority=ci ranAgainstArtifactDigest=2aa86c8ebc448eed9fb3c7e2cb20c33cf26a7c5bdbfba4e6f521837227672fde
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3736858Z lane=all-required-passed status=BLOCKED cases=0 owner=backlog reason=The aggregator ran with if: always() and FAILED: it reports `required job phase2-linux did not succeed (result=failure)` and `required job image-compose-deploy did not succeed (result=failure)`. The aggregator working correctly is what produces this BLOCKED entry; the blockers are the two lanes it names, each of which carries its own entry below.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3738324Z verify-release failed: lane all-required-passed reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3741593Z lane=phase2-server status=BLOCKED cases=0 owner=backlog reason=The lane's own command SUCCEEDED (`mix compile --warnings-as-errors && mix test`, 337 declared cases) and then the mandatory post-run privacy scan over the lane's diagnostic log FAILED: `Privacy verification failed: hostile sentinel found in a diagnostic artifact` (tooling/verify-privacy.sh, run 34668212479). No PASS line was emitted, so no case count from this lane may be claimed. The 337 figure is the lane's DECLARED case count from its RUNNING line, not a passing count, and is deliberately not recorded as cases here. TO CLOSE: reproduce with `./tooling/test-phase-2.sh --lane server` and identify which emitter puts a vector sentinel into the lane log -- apps/server/test/keepling_web/mcp/content_isolation_test.exs is the only server test outside the two redaction suites that uses one. See .planning/WINDOWS.md.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3744818Z lane=phase2-sync-property status=BLOCKED cases=0 owner=backlog reason=Never reached the lane: the job failed at its `Install asdf` step with `fatal: destination path '/home/runner/.asdf' already exists and is not an empty directory` (exit 128). The actions/cache restore of ~/.asdf/installs creates $HOME/.asdf, after which the unconditional `git clone ... $HOME/.asdf` cannot succeed. Toolchain provisioning, before any project code ran. See .planning/WINDOWS.md.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3746957Z lane=phase2-backup-restore status=BLOCKED cases=0 owner=backlog reason=Never reached the lane: identical `Install asdf` failure to phase2-sync-property in the same run (`fatal: destination path '/home/runner/.asdf' already exists and is not an empty directory`, exit 128). Toolchain provisioning, before any project code ran. See .planning/WINDOWS.md.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3748376Z lane=phase2-contracts-compatibility status=PASSED cases=30 authority=ci ranAgainstArtifactDigest=2aa86c8ebc448eed9fb3c7e2cb20c33cf26a7c5bdbfba4e6f521837227672fde
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3749566Z lane=phase2-privacy status=PASSED cases=17 authority=ci ranAgainstArtifactDigest=2aa86c8ebc448eed9fb3c7e2cb20c33cf26a7c5bdbfba4e6f521837227672fde
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3752664Z lane=image-compose-deploy status=BLOCKED cases=0 owner=backlog reason=The lane FAILED building the server image: the image build's dependency audit reports hackney 1.25.0 as VULNERABLE with four advisories, one HIGH (EEF-CVE-2026-47071, SOCKS5 TLS upgrade ignores caller timeout) and three MEDIUM/LOW CR/LF-injection and SSRF-allowlist-bypass advisories. This is a real supply-chain finding in the bytes the server image would ship, not an infrastructure fault. TO CLOSE: update the hackney dependency (directly or via its parent) to a version carrying no open advisory and re-run `./tooling/test-phase-2.sh --lane image-compose-deploy`. See .planning/WINDOWS.md.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3755282Z lane=opentofu-host-fixtures status=PASSED cases=8 authority=ci ranAgainstArtifactDigest=2aa86c8ebc448eed9fb3c7e2cb20c33cf26a7c5bdbfba4e6f521837227672fde
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3756925Z lane=export-elixir status=BLOCKED cases=0 owner=backlog reason=This lane's evidence is the phase2-server job, which produced no PASS line at this revision (its post-run privacy scan failed -- see the phase2-server entry). The export suite's own result is therefore not separable from a lane that did not pass, and no case count may be claimed for it. TO CLOSE: close the phase2-server privacy finding, or give the export suite its own job with its own PASS line.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3759932Z lane=export-reader status=BLOCKED cases=0 owner=ci reason=Unwired. The independent reader `tooling/verify-export-reader.mjs` exists and runs locally, but NO committed workflow job under .github/ invokes it -- it is referenced only by SUPPORT.md, PRIVACY.md and itself. An unwired lane may never report PASSED because it has no job it could have passed in. DATA-01 and the public PRIVACY.md both lean on this reader. TO CLOSE: add a job running `node tooling/verify-export-reader.mjs --golden` to repository-integrity.yml and add it to the required-lane list. See .planning/WINDOWS.md.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3762393Z lane=desktop-units status=PASSED cases=381 authority=ci ranAgainstArtifactDigest=2aa86c8ebc448eed9fb3c7e2cb20c33cf26a7c5bdbfba4e6f521837227672fde
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3763604Z lane=desktop-package status=PASSED cases=1 authority=ci ranAgainstArtifactDigest=f14a8d8ab2dc61ec3d47c0f45b3f50f7cd73d02597dce0199d73d4511b74d02e
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3764916Z lane=desktop-packaged status=PASSED cases=11 authority=ci ranAgainstArtifactDigest=f14a8d8ab2dc61ec3d47c0f45b3f50f7cd73d02597dce0199d73d4511b74d02e
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3766110Z verify-release failed: lane phase2-server reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3766669Z verify-release failed: lane phase2-sync-property reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3767161Z verify-release failed: lane phase2-backup-restore reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3767826Z verify-release failed: lane image-compose-deploy reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3768318Z verify-release failed: lane export-elixir reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3768910Z verify-release failed: lane export-reader reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3769591Z verify-release failed: lane macos-integration-live-appearance reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3770078Z verify-release failed: lane desktop-promote reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3770518Z verify-release failed: lane slsa-provenance-attestation reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3770942Z verify-release failed: lane sbom-generation reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3771336Z verify-release failed: lane package-reproducible reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3771753Z verify-release failed: lane daily-restore reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3772176Z verify-release failed: lane weekly-historical-pitr reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3772601Z verify-release failed: lane quarterly-host-replacement reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3773014Z verify-release failed: lane phase-1-desktop reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3773418Z verify-release failed: lane mcp-gate-selftest reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3773820Z verify-release failed: lane mcp-phase-non-model reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3774341Z verify-release failed: lane cross-adapter-phase reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3774724Z verify-release failed: lane ios-simulator reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3775114Z verify-release failed: lane ios-signed-build reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3775520Z verify-release failed: lane real-stack-desktop reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3775940Z verify-release failed: lane real-stack-ios-simulator reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3776332Z verify-release failed: lane trust-soak reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3776756Z verify-release failed: lane macos-integration-full-grant reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3777163Z verify-release failed: lane ios-device reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3777579Z verify-release failed: lane mcp-representative-model reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3778015Z verify-release failed: lane live-host-dns-acceptance reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3778587Z verify-release failed: revision 26628e1771d5b90569b5eec232047456fdda9f2e verification did not pass (PASSED)
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3779462Z lane=desktop-e2e status=PASSED cases=65 authority=ci ranAgainstArtifactDigest=2aa86c8ebc448eed9fb3c7e2cb20c33cf26a7c5bdbfba4e6f521837227672fde
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3780318Z lane=macos-integration-no-grant status=PASSED cases=9 authority=ci ranAgainstArtifactDigest=f14a8d8ab2dc61ec3d47c0f45b3f50f7cd73d02597dce0199d73d4511b74d02e
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3782692Z lane=macos-integration-live-appearance status=BLOCKED cases=0 owner=backlog reason=Physical blocker. Row A14 changes the system appearance WHILE the app is running and asserts the window re-themes without a relaunch. That requires a logged-in Aqua session whose appearance daemon posts AppleInterfaceThemeChangedNotification; a hosted GitHub runner has none. Observed at this revision: `ROW id=A14 status=FAIL cases=4` on macos-15 with `background stayed {"b":0,"g":0,"r":0}` (run 34668212473). The identical row reports `status=PASS cases=4` on a real logged-in session. That local pass is NOT recorded as a passing status here: it binds to locally built bytes, and nothing local may bind to locally built bytes. See .planning/WINDOWS.md.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3784725Z lane=hosted-runner-tcc-report status=PASSED cases=1 authority=ci ranAgainstArtifactDigest=f14a8d8ab2dc61ec3d47c0f45b3f50f7cd73d02597dce0199d73d4511b74d02e
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3786221Z lane=desktop-promote status=BLOCKED cases=0 owner=backlog reason=The job was SKIPPED: its `needs` gate requires every required desktop lane to have succeeded, and desktop-macos-integration did not (row A14, physical blocker above). The gate refusing to promote is the gate working. No promotion occurred at this revision, so QUAL-03's promotion clause has no passing lane behind it here.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3788042Z lane=slsa-provenance-attestation status=BLOCKED cases=0 owner=backlog reason=Lives in the skipped desktop-promote job, so `actions/attest-build-provenance` never ran and no provenance attestation exists for this revision's archive. Consequently `verify-release.mjs` cannot report anything other than attestation=UNVERIFIED for these bytes, online or offline.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3789549Z lane=sbom-generation status=BLOCKED cases=0 owner=backlog reason=Lives in the skipped desktop-promote job, so `node tooling/generate-sbom.mjs` never ran and no bill of materials exists for this revision.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3791435Z lane=package-reproducible status=BLOCKED cases=0 owner=backlog reason=Unwired, by a deliberate open decision recorded as .planning/WINDOWS.md row 82: a notarized Developer ID build is not byte-reproducible by construction, because @electron/osx-sign embeds a fresh RFC 3161 secure timestamp -- required for notarization -- into every signature blob. 16 of 618 entries differ and they are exactly the signature-bearing ones. The lane may not report PASSED while unwired. TO CLOSE: pick option (a) or (b) in row 82. Owner: BACKLOG.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3793593Z lane=daily-restore status=BLOCKED cases=0 owner=backlog reason=Scheduled lane (recovery-drills.yml, `on: schedule`). No run exists at this revision, so it has no evidence here. An absent scheduled run is reported explicitly rather than omitted, because an omitted lane reads as satisfied. TO CLOSE at a revision: dispatch recovery-drills.yml at that revision and bind its run id.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3795125Z lane=weekly-historical-pitr status=BLOCKED cases=0 owner=backlog reason=Scheduled lane (recovery-drills.yml, `on: schedule`). No run exists at this revision. TO CLOSE at a revision: dispatch recovery-drills.yml at that revision and bind its run id.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3796429Z lane=quarterly-host-replacement status=BLOCKED cases=0 owner=backlog reason=Scheduled lane (recovery-drills.yml, `on: schedule`). No run exists at this revision. TO CLOSE at a revision: dispatch recovery-drills.yml at that revision and bind its run id.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3797868Z lane=phase-1-desktop status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `./tooling/test-phase-1.sh`. An unwired lane may never report PASSED. TO CLOSE: add the job and add the lane to the required-lane list in tooling/check-ci-contract.mjs.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3799454Z lane=mcp-gate-selftest status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `node tooling/mcp-gate-selftest.mjs`. TO CLOSE: add the job and add the lane to the required-lane list.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3801108Z lane=mcp-phase-non-model status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `node tooling/verify-mcp-phase.mjs` non-model lanes. TO CLOSE: add the job and add the lane to the required-lane list.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3802686Z lane=cross-adapter-phase status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `node tooling/verify-cross-adapter-phase.mjs`. SRV-02 depends on this lane and stays unchecked. TO CLOSE: add the job and add the lane to the required-lane list.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3804104Z lane=ios-simulator status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names the iOS simulator lanes required on main, but no committed workflow job runs them. TO CLOSE: add a macOS job running `node tooling/verify-ios-phase.mjs --lane simulator`.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3806303Z lane=ios-signed-build status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on main only, never on forked pull requests, but no committed workflow job runs `node tooling/build-ios-signed.mjs`. It also requires repository secrets that are not present. TO CLOSE: add the main-only job and provision the signing secrets.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3807775Z lane=real-stack-desktop status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 places this lane on-demand via workflow_dispatch on main, and no such committed job exists. It also requires repository secrets. TO CLOSE: add the workflow_dispatch job.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3809359Z lane=real-stack-ios-simulator status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 places this lane on-demand via workflow_dispatch on main, and no such committed job exists. It also requires repository secrets. TO CLOSE: add the workflow_dispatch job.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3812314Z lane=trust-soak status=BLOCKED cases=0 owner=backlog reason=The soak's verdict at this revision is BLOCKED with zero samples: .artifacts/trust-soak/trust-soak-evidence.json reports verdict=BLOCKED, every chaos operator count 0, every invariant I1-I10 samples=0 violations=0 disposition=BLOCKED, an empty dailyUsageCensus, and detectionFloor confidence=null with the note 'Insufficient accumulated samples to state a detection floor. This proves nothing about defects of any rarity yet.' The measurement window accumulates in calendar time. This is the correct and honest outcome, and it keeps the overall run non-zero. TO CLOSE: accumulate the stated window and re-run `node tooling/verify-trust-soak.mjs`.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3816287Z lane=macos-integration-full-grant status=BLOCKED cases=0 owner=backlog reason=Physical blocker as recorded in the inventory: a hosted runner cannot be given a non-interactive TCC Accessibility grant. A signed, notarized, stapled local build exists and the full-grant rows have passed locally in the past, but that evidence binds to LOCALLY BUILT bytes and to a different revision, so under the anti-loophole rule it may not be recorded as a passing status here. It additionally could NOT be regenerated during this plan: two attempts at the current local artefact were aborted by the lane's own focus guard (`FOCUS_STOLEN by_bundle=dev.playstead.mac`), and the lane correctly refuses to claim a row it could not drive. TO CLOSE with CI authority: sign a CI build (export the Developer ID .p12 to repository secrets), then run the full-grant rows against those exact CI bytes on a machine with the grant.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3818768Z lane=ios-device status=BLOCKED cases=0 owner=backlog reason=Physical blocker as recorded in the inventory: the lane drives a physically present, unlocked iPhone, which a hosted runner does not have.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3819910Z lane=mcp-representative-model status=BLOCKED cases=0 owner=backlog reason=Physical blocker as recorded in the inventory: the lane calls a real, paid, non-deterministic third-party model credential.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3821460Z lane=live-host-dns-acceptance status=BLOCKED cases=0 owner=backlog reason=Protected outer lane, carried forward unchanged per D-40: the lane provisions a real paid host and real DNS and is single-attempt. It keeps exiting non-zero so that no skip is ever counted as evidence. DATA-03 and OPS-02 stay unchecked, which is the honest outcome and is already recorded as a dated narrowing. Owner: BACKLOG.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3822534Z NON-PASSING: .planning/releases/candidate-1/release-manifest.json
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3823108Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.3823564Z ##[group]verify-release .planning/releases/candidate-2/release-manifest.json
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4024543Z verify-release tracked_input_sha256=60fa3884bb89514c28056ad7cf678e6dbeb28556615f7889bb56b5e4f8f9e49f
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4028685Z attestation=UNVERIFIED artifact=.planning/releases/candidate-2/artifacts/desktop-macos-app.package-manifest.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4029686Z attestation=UNVERIFIED artifact=.planning/releases/candidate-2/artifacts/ios-archive.absence-record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4030599Z attestation=UNVERIFIED artifact=.planning/releases/candidate-2/artifacts/server-oci-image.absence-record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4032039Z attestation=UNVERIFIED artifact=.planning/releases/candidate-2/artifacts/web-bundle.absence-record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4032780Z attestation=UNVERIFIED artifact=.planning/releases/candidate-2/artifacts/source-tree.record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4034157Z lane=ci-contract status=PASSED cases=5 authority=ci ranAgainstArtifactDigest=5a8b79ace9953076cc44298a6f3543b42ec54859cc93037afc17b78716268dcc
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4035271Z lane=repository-integrity status=PASSED cases=3 authority=ci ranAgainstArtifactDigest=5a8b79ace9953076cc44298a6f3543b42ec54859cc93037afc17b78716268dcc
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4038135Z lane=all-required-passed status=BLOCKED cases=0 owner=backlog reason=The aggregator ran with if: always() and FAILED, exactly as at candidate-1 and for exactly the same two causes: it reports `required job phase2-linux did not succeed (result=failure)` and `required job image-compose-deploy did not succeed (result=failure)` (run 34735177037). The aggregator working correctly is what produces this BLOCKED entry; the blockers are the two lanes it names, each of which carries its own entry below. NOTE what did NOT change it: the desktop workflow is entirely green at this revision, and this aggregator does not need it to be -- it aggregates the repository-integrity workflow's own required jobs.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4040525Z verify-release failed: lane all-required-passed reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4040932Z verify-release failed: lane phase2-server reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4041582Z verify-release failed: lane phase2-sync-property reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4042002Z verify-release failed: lane phase2-backup-restore reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4042422Z verify-release failed: lane image-compose-deploy reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4045380Z lane=phase2-server status=BLOCKED cases=0 owner=backlog reason=Unchanged from candidate-1 and REPRODUCED at this revision. The lane's own command SUCCEEDED (`mix compile --warnings-as-errors && mix test`, 337 declared cases) and then the mandatory post-run privacy scan over the lane's diagnostic log FAILED: `Privacy verification failed: hostile sentinel found in a diagnostic artifact` (tooling/verify-privacy.sh, run 34735177037). No PASS line was emitted, so no case count from this lane may be claimed. The 337 figure is the lane's DECLARED case count from its RUNNING line, not a passing count, and is deliberately not recorded as cases here. TO CLOSE: reproduce with `./tooling/test-phase-2.sh --lane server` and identify which emitter puts a vector sentinel into the lane log -- apps/server/test/keepling_web/mcp/content_isolation_test.exs is the only server test outside the two redaction suites that uses one. See .planning/WINDOWS.md row 85.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4048978Z lane=phase2-sync-property status=BLOCKED cases=0 owner=backlog reason=Unchanged from candidate-1 and REPRODUCED at this revision. Never reached the lane: the job failed at its `Install asdf` step with `fatal: destination path '/home/runner/.asdf' already exists and is not an empty directory` (exit 128, run 34735177037). The actions/cache restore of ~/.asdf/installs creates $HOME/.asdf, after which the unconditional `git clone ... $HOME/.asdf` cannot succeed. Toolchain provisioning, before any project code ran. See .planning/WINDOWS.md row 87.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4051369Z lane=phase2-backup-restore status=BLOCKED cases=0 owner=backlog reason=Unchanged from candidate-1 and REPRODUCED at this revision. Identical `Install asdf` failure to phase2-sync-property in the same run (`fatal: destination path '/home/runner/.asdf' already exists and is not an empty directory`, exit 128, run 34735177037). Toolchain provisioning, before any project code ran. See .planning/WINDOWS.md row 87.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4052826Z lane=phase2-contracts-compatibility status=PASSED cases=30 authority=ci ranAgainstArtifactDigest=5a8b79ace9953076cc44298a6f3543b42ec54859cc93037afc17b78716268dcc
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4053687Z lane=phase2-privacy status=PASSED cases=17 authority=ci ranAgainstArtifactDigest=5a8b79ace9953076cc44298a6f3543b42ec54859cc93037afc17b78716268dcc
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4056092Z lane=image-compose-deploy status=BLOCKED cases=0 owner=backlog reason=Unchanged from candidate-1 and REPRODUCED at this revision. The lane FAILED building the server image: the image build's dependency audit reports hackney 1.25.0 as VULNERABLE with four advisories, one HIGH (EEF-CVE-2026-47071, SOCKS5 TLS upgrade ignores caller timeout) and three MEDIUM/LOW CR/LF-injection and SSRF-allowlist-bypass advisories (run 34735177037). This is a real supply-chain finding in the bytes the server image would ship, not an infrastructure fault. TO CLOSE: update the hackney dependency (directly or via its parent) to a version carrying no open advisory and re-run `./tooling/test-phase-2.sh --lane image-compose-deploy`. See .planning/WINDOWS.md row 86.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4057881Z verify-release failed: lane export-elixir reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4058519Z lane=opentofu-host-fixtures status=PASSED cases=8 authority=ci ranAgainstArtifactDigest=5a8b79ace9953076cc44298a6f3543b42ec54859cc93037afc17b78716268dcc
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4060395Z lane=export-elixir status=BLOCKED cases=0 owner=backlog reason=Unchanged from candidate-1. This lane's evidence is the phase2-server job, which produced no PASS line at this revision either (its post-run privacy scan failed -- see the phase2-server entry). The export suite's own result is therefore not separable from a lane that did not pass, and no case count may be claimed for it. TO CLOSE: close the phase2-server privacy finding (.planning/WINDOWS.md row 85), or give the export suite its own job with its own PASS line.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4063084Z lane=export-reader status=BLOCKED cases=0 owner=ci reason=Unwired. The independent reader `tooling/verify-export-reader.mjs` exists and runs locally, but NO committed workflow job under .github/ invokes it -- it is referenced only by SUPPORT.md, PRIVACY.md and itself. An unwired lane may never report PASSED because it has no job it could have passed in. DATA-01 and the public PRIVACY.md both lean on this reader. TO CLOSE: add a job running `node tooling/verify-export-reader.mjs --golden` to repository-integrity.yml and add it to the required-lane list. See .planning/WINDOWS.md.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4064841Z lane=desktop-units status=PASSED cases=381 authority=ci ranAgainstArtifactDigest=5a8b79ace9953076cc44298a6f3543b42ec54859cc93037afc17b78716268dcc
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4065651Z lane=desktop-package status=PASSED cases=1 authority=ci ranAgainstArtifactDigest=e9ae649c5b37cd4846a5be43f1a152a495e7bfc678cd7daee9d135a163a0f65a
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4066450Z lane=desktop-packaged status=PASSED cases=11 authority=ci ranAgainstArtifactDigest=e9ae649c5b37cd4846a5be43f1a152a495e7bfc678cd7daee9d135a163a0f65a
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4067244Z lane=desktop-e2e status=PASSED cases=66 authority=ci ranAgainstArtifactDigest=5a8b79ace9953076cc44298a6f3543b42ec54859cc93037afc17b78716268dcc
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4068100Z lane=macos-integration-no-grant status=PASSED cases=9 authority=ci ranAgainstArtifactDigest=e9ae649c5b37cd4846a5be43f1a152a495e7bfc678cd7daee9d135a163a0f65a
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4071245Z lane=macos-integration-live-appearance status=BLOCKED cases=0 owner=backlog reason=Physical blocker, and at this revision the row was not attempted at all. Row A14 changes the system appearance WHILE the app is running and asserts the window re-themes without a relaunch; that requires a logged-in Aqua session whose appearance daemon posts AppleInterfaceThemeChangedNotification, which a hosted GitHub runner has none of. Between candidate-1 and this revision the row was split out of the desktop-macos-integration job into this local-attested lane, so the job reports `rows=3` and no longer produces an A14 result either way. THE SPLIT DID NOT CLOSE THE ROW, it only stopped a physically impossible row from failing a job: the row is exactly as unrunnable in continuous integration as it was, and it reports BLOCKED with a zero case count here rather than disappearing. A local pass exists and is NOT recorded as a passing status, because it binds to locally built bytes. See .planning/WINDOWS.md row 84.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4074711Z lane=hosted-runner-tcc-report status=PASSED cases=1 authority=ci ranAgainstArtifactDigest=e9ae649c5b37cd4846a5be43f1a152a495e7bfc678cd7daee9d135a163a0f65a
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4075892Z lane=desktop-promote status=PASSED cases=1 authority=ci ranAgainstArtifactDigest=e9ae649c5b37cd4846a5be43f1a152a495e7bfc678cd7daee9d135a163a0f65a
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4076722Z verify-release failed: lane export-reader reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4077184Z verify-release failed: lane macos-integration-live-appearance reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4077665Z verify-release failed: lane package-reproducible reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4078080Z verify-release failed: lane daily-restore reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4078554Z verify-release failed: lane weekly-historical-pitr reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4079017Z verify-release failed: lane quarterly-host-replacement reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4079595Z verify-release failed: lane phase-1-desktop reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4080024Z verify-release failed: lane mcp-gate-selftest reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4080452Z verify-release failed: lane mcp-phase-non-model reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4081227Z verify-release failed: lane cross-adapter-phase reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4081735Z verify-release failed: lane ios-simulator reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4082222Z verify-release failed: lane ios-signed-build reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4082745Z verify-release failed: lane real-stack-desktop reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4083299Z verify-release failed: lane real-stack-ios-simulator reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4083893Z verify-release failed: lane trust-soak reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4084473Z verify-release failed: lane macos-integration-full-grant reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4085028Z verify-release failed: lane ios-device reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4085572Z verify-release failed: lane mcp-representative-model reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4086181Z verify-release failed: lane live-host-dns-acceptance reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4086921Z verify-release failed: revision 23d79e5caa7383a7be9e38ee473b6bde12ce8298 verification did not pass (PASSED)
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4088170Z lane=slsa-provenance-attestation status=PASSED cases=2 authority=ci ranAgainstArtifactDigest=e9ae649c5b37cd4846a5be43f1a152a495e7bfc678cd7daee9d135a163a0f65a
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4089572Z lane=sbom-generation status=PASSED cases=2 authority=ci ranAgainstArtifactDigest=e9ae649c5b37cd4846a5be43f1a152a495e7bfc678cd7daee9d135a163a0f65a
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4091910Z lane=package-reproducible status=BLOCKED cases=0 owner=backlog reason=Unwired, by a deliberate open decision recorded as .planning/WINDOWS.md row 82: a notarized Developer ID build is not byte-reproducible by construction, because @electron/osx-sign embeds a fresh RFC 3161 secure timestamp -- required for notarization -- into every signature blob. 16 of 618 entries differ and they are exactly the signature-bearing ones. The lane may not report PASSED while unwired. TO CLOSE: pick option (a) or (b) in row 82. Owner: BACKLOG.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4094458Z lane=daily-restore status=BLOCKED cases=0 owner=backlog reason=Scheduled lane (recovery-drills.yml, `on: schedule`). No run exists at this revision, so it has no evidence here. An absent scheduled run is reported explicitly rather than omitted, because an omitted lane reads as satisfied. TO CLOSE at a revision: dispatch recovery-drills.yml at that revision and bind its run id.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4096074Z lane=weekly-historical-pitr status=BLOCKED cases=0 owner=backlog reason=Scheduled lane (recovery-drills.yml, `on: schedule`). No run exists at this revision. TO CLOSE at a revision: dispatch recovery-drills.yml at that revision and bind its run id.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4097341Z lane=quarterly-host-replacement status=BLOCKED cases=0 owner=backlog reason=Scheduled lane (recovery-drills.yml, `on: schedule`). No run exists at this revision. TO CLOSE at a revision: dispatch recovery-drills.yml at that revision and bind its run id.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4098771Z lane=phase-1-desktop status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `./tooling/test-phase-1.sh`. An unwired lane may never report PASSED. TO CLOSE: add the job and add the lane to the required-lane list in tooling/check-ci-contract.mjs.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4100395Z lane=mcp-gate-selftest status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `node tooling/mcp-gate-selftest.mjs`. TO CLOSE: add the job and add the lane to the required-lane list.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4101780Z lane=mcp-phase-non-model status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `node tooling/verify-mcp-phase.mjs` non-model lanes. TO CLOSE: add the job and add the lane to the required-lane list.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4103287Z lane=cross-adapter-phase status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `node tooling/verify-cross-adapter-phase.mjs`. SRV-02 depends on this lane and stays unchecked. TO CLOSE: add the job and add the lane to the required-lane list.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4104733Z lane=ios-simulator status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names the iOS simulator lanes required on main, but no committed workflow job runs them. TO CLOSE: add a macOS job running `node tooling/verify-ios-phase.mjs --lane simulator`.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4106222Z lane=ios-signed-build status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on main only, never on forked pull requests, but no committed workflow job runs `node tooling/build-ios-signed.mjs`. It also requires repository secrets that are not present. TO CLOSE: add the main-only job and provision the signing secrets.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4107641Z lane=real-stack-desktop status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 places this lane on-demand via workflow_dispatch on main, and no such committed job exists. It also requires repository secrets. TO CLOSE: add the workflow_dispatch job.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4108885Z lane=real-stack-ios-simulator status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 places this lane on-demand via workflow_dispatch on main, and no such committed job exists. It also requires repository secrets. TO CLOSE: add the workflow_dispatch job.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4111483Z lane=trust-soak status=BLOCKED cases=0 owner=backlog reason=The soak's verdict at this revision is BLOCKED with zero samples: .artifacts/trust-soak/trust-soak-evidence.json reports verdict=BLOCKED, every chaos operator count 0, every invariant I1-I10 samples=0 violations=0 disposition=BLOCKED, an empty dailyUsageCensus, and detectionFloor confidence=null with the note 'Insufficient accumulated samples to state a detection floor. This proves nothing about defects of any rarity yet.' The measurement window accumulates in calendar time. This is the correct and honest outcome, and it keeps the overall run non-zero. TO CLOSE: accumulate the stated window and re-run `node tooling/verify-trust-soak.mjs`.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4116484Z lane=macos-integration-full-grant status=BLOCKED cases=0 owner=backlog reason=Physical blocker as recorded in the inventory: a hosted GitHub runner cannot be given a non-interactive TCC Accessibility grant. UPDATED AT THIS REVISION, because half of candidate-1's stated closing condition is now met. Candidate-1's reason said: 'TO CLOSE with CI authority: sign a CI build (export the Developer ID .p12 to repository secrets), then run the full-grant rows against those exact CI bytes on a machine with the grant.' The first half is DONE -- continuous integration now signs, notarizes and staples (see the desktop-macos-app artefact), so continuous-integration-built bytes a grant-holding machine could run against now exist and are named by digest. The second half is NOT done: no run has attempted the full-grant rows against those bytes on a machine with the grant, so this lane has no passing evidence and reports BLOCKED with a zero case count. A local pass over locally built bytes still may not be recorded here. REVISED TO CLOSE: download the archive from run 34735177060, verify it against the attestation, and run `node tooling/verify-macos-integration.mjs` full-grant rows against those exact bytes on a machine holding the Accessibility grant. See .planning/WINDOWS.md rows 84 and 89.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4120163Z lane=ios-device status=BLOCKED cases=0 owner=backlog reason=Physical blocker as recorded in the inventory: the lane drives a physically present, unlocked iPhone, which a hosted runner does not have.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4121215Z lane=mcp-representative-model status=BLOCKED cases=0 owner=backlog reason=Physical blocker as recorded in the inventory: the lane calls a real, paid, non-deterministic third-party model credential.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4122851Z lane=live-host-dns-acceptance status=BLOCKED cases=0 owner=backlog reason=Protected outer lane, carried forward unchanged per D-40: the lane provisions a real paid host and real DNS and is single-attempt. It keeps exiting non-zero so that no skip is ever counted as evidence. DATA-03 and OPS-02 stay unchecked, which is the honest outcome and is already recorded as a dated narrowing. Owner: BACKLOG.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4124100Z NON-PASSING: .planning/releases/candidate-2/release-manifest.json
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4124660Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4125142Z ##[group]verify-release .planning/releases/candidate-3/release-manifest.json
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4348337Z verify-release tracked_input_sha256=60fa3884bb89514c28056ad7cf678e6dbeb28556615f7889bb56b5e4f8f9e49f
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4352929Z attestation=UNVERIFIED artifact=.planning/releases/candidate-3/artifacts/desktop-macos-app.package-manifest.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4353749Z attestation=UNVERIFIED artifact=.planning/releases/candidate-3/artifacts/ios-archive.absence-record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4354731Z attestation=UNVERIFIED artifact=.planning/releases/candidate-3/artifacts/server-oci-image.absence-record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4355475Z attestation=UNVERIFIED artifact=.planning/releases/candidate-3/artifacts/web-bundle.absence-record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4356533Z attestation=UNVERIFIED artifact=.planning/releases/candidate-3/artifacts/source-tree.record.json reason=offline-flag
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4358882Z lane=ci-contract status=PASSED cases=5 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4360032Z lane=repository-integrity status=PASSED cases=3 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4361307Z lane=all-required-passed status=PASSED cases=1 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4362554Z lane=phase2-server status=PASSED cases=337 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4363838Z lane=phase2-sync-property status=PASSED cases=20 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4364816Z lane=phase2-backup-restore status=PASSED cases=4 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4366064Z lane=phase2-contracts-compatibility status=PASSED cases=30 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4367252Z lane=phase2-privacy status=PASSED cases=17 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4368333Z lane=image-compose-deploy status=PASSED cases=3 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4369764Z lane=opentofu-host-fixtures status=PASSED cases=8 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4370938Z lane=export-elixir status=PASSED cases=337 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4371846Z lane=export-reader status=PASSED cases=16 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4372866Z lane=desktop-units status=PASSED cases=381 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4373816Z lane=desktop-package status=PASSED cases=1 authority=ci ranAgainstArtifactDigest=2ec8d7c5696b2d58e334b3446b9bff6f9e1c837d161d07f50be4fbf53632c7e5
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4374667Z lane=desktop-packaged status=PASSED cases=11 authority=ci ranAgainstArtifactDigest=2ec8d7c5696b2d58e334b3446b9bff6f9e1c837d161d07f50be4fbf53632c7e5
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4375745Z lane=desktop-e2e status=PASSED cases=66 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4376758Z lane=macos-integration-no-grant status=PASSED cases=9 authority=ci ranAgainstArtifactDigest=2ec8d7c5696b2d58e334b3446b9bff6f9e1c837d161d07f50be4fbf53632c7e5
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4377640Z lane=hosted-runner-tcc-report status=PASSED cases=1 authority=ci ranAgainstArtifactDigest=2ec8d7c5696b2d58e334b3446b9bff6f9e1c837d161d07f50be4fbf53632c7e5
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4383569Z lane=desktop-promote status=PASSED cases=1 authority=ci ranAgainstArtifactDigest=2ec8d7c5696b2d58e334b3446b9bff6f9e1c837d161d07f50be4fbf53632c7e5
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4389522Z lane=slsa-provenance-attestation status=PASSED cases=2 authority=ci ranAgainstArtifactDigest=2ec8d7c5696b2d58e334b3446b9bff6f9e1c837d161d07f50be4fbf53632c7e5
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4395803Z lane=sbom-generation status=PASSED cases=2 authority=ci ranAgainstArtifactDigest=2ec8d7c5696b2d58e334b3446b9bff6f9e1c837d161d07f50be4fbf53632c7e5
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4397526Z lane=daily-restore status=PASSED cases=2 authority=ci ranAgainstArtifactDigest=bd97612b7c07027013ddd50ddb9c4b3486bb56540aa2b34cca01e64be5f57531
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4398407Z verify-release failed: lane weekly-historical-pitr reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4402177Z lane=weekly-historical-pitr status=BLOCKED cases=0 owner=backlog reason=Scheduled lane (recovery-drills.yml). NOT DISPATCHED AT THIS REVISION, and that is the only thing wrong with it. The fixture itself passes: it was dispatched two commits earlier at revision af49e08 as run 34777715708 and succeeded, the first time this drill has ever passed, on the same credential provisioning that unblocked daily-restore. But run 34778845662 at c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96 selected drill=newest-logical, which runs both daily fixtures and SKIPS this job, so no evidence exists at the revision this manifest is cut at. A pass at a nearby revision is not a pass at this one, and is not recorded as one. TO CLOSE, one command: `gh workflow run recovery-drills.yml --ref main -f drill=historical-pitr` at this revision, then bind its evidence here. Row 100's caveat applies to it exactly as it applies to daily-restore.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4406941Z lane=quarterly-host-replacement status=BLOCKED cases=0 owner=backlog reason=Two independent things block this lane, and provisioning the credentials fixed neither. FIRST, the job body hardcodes `result: NON_PASSING` and `exit 1` before it reads any token, so it cannot pass whatever secrets exist; it has no runtime provisioning and materialises none of the five credential FILES the lane needs. SECOND, tooling/verify-host-replacement.sh requires eight inputs, five of them files outside the repository, and two of those inputs are not yet decided at all -- the DNS record name for the app host, and an SSH public key item. HCLOUD_TOKEN and CLOUDFLARE_API_TOKEN are now provisioned in the recovery-live environment (which had to be created; it did not exist), so the credential half is genuinely started, but the workflow half is untouched. DATA-03 and OPS-02 stay unchecked, which is the honest outcome. See .planning/WINDOWS.md row 95 as amended.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4411789Z lane=package-reproducible status=BLOCKED cases=0 owner=backlog reason=Unwired, by a deliberate open decision recorded as .planning/WINDOWS.md row 82: a notarized Developer ID build is not byte-reproducible by construction, so the lane needs a defined comparison that excludes the signature and staple before it can mean anything. Unchanged at this revision.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4413602Z verify-release failed: lane quarterly-host-replacement reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4414277Z verify-release failed: lane package-reproducible reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4414866Z verify-release failed: lane phase-1-desktop reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4415499Z verify-release failed: lane mcp-gate-selftest reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4416223Z verify-release failed: lane mcp-phase-non-model reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4416749Z verify-release failed: lane cross-adapter-phase reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4417260Z verify-release failed: lane ios-simulator reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4417680Z verify-release failed: lane ios-signed-build reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4418171Z verify-release failed: lane real-stack-desktop reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4419582Z verify-release failed: lane real-stack-ios-simulator reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4420158Z verify-release failed: lane trust-soak reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4420656Z verify-release failed: lane macos-integration-live-appearance reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4421194Z verify-release failed: lane macos-integration-full-grant reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4421671Z verify-release failed: lane ios-device reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4422121Z verify-release failed: lane mcp-representative-model reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4422580Z verify-release failed: lane live-host-dns-acceptance reports BLOCKED
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4423131Z verify-release failed: revision c2e4ce37ff0ca2c27067b098c2cfbdc59155ba96 verification did not pass (PASSED)
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4424276Z lane=phase-1-desktop status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `./tooling/test-phase-1.sh`. An unwired lane may never report PASSED. Unchanged at this revision.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4425585Z lane=mcp-gate-selftest status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `node tooling/mcp-gate-selftest.mjs`. Unchanged at this revision.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4426873Z lane=mcp-phase-non-model status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `node tooling/verify-mcp-phase.mjs` non-model lanes. Unchanged at this revision.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4428829Z lane=cross-adapter-phase status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on pull requests and main, but no committed workflow job runs `node tooling/verify-cross-adapter-phase.mjs`. The wiring is genuinely expensive rather than merely absent -- it needs Postgres, a booted Phoenix server, a packaged Electron application and a booted iOS simulator on one macOS runner. SRV-02 stays unchecked. Unchanged at this revision.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4430693Z lane=ios-simulator status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names the iOS simulator lanes required on main, but no committed workflow job runs them. Unchanged at this revision.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4431935Z lane=ios-signed-build status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 names this lane required on main only, never on forked pull requests, but no committed workflow job runs `node tooling/build-ios-signed.mjs`. Unchanged at this revision.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4433226Z lane=real-stack-desktop status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 places this lane on-demand via workflow_dispatch on main, and no such committed job exists. It also requires repository secrets. Unchanged at this revision.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4434496Z lane=real-stack-ios-simulator status=BLOCKED cases=0 owner=backlog reason=Unwired: D-14 places this lane on-demand via workflow_dispatch on main, and no such committed job exists. It also requires repository secrets. Unchanged at this revision.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4437010Z lane=trust-soak status=BLOCKED cases=0 owner=backlog reason=The soak's verdict at this revision is BLOCKED with zero samples, and the retained evidence at evidence/trust-soak-evidence.json is byte-identical to the file retained with candidate-1 and candidate-2 because the soak has accumulated nothing since: verdict=BLOCKED, every chaos operator count 0, every invariant I1-I10 samples=0 violations=0 disposition=BLOCKED, an empty dailyUsageCensus, and detectionFloor confidence=null. That is the correct and honest outcome, and it keeps this manifest's overall verdict non-zero. The measurement window accumulates in calendar time and cannot be shortened by any change to this repository.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4439574Z lane=macos-integration-live-appearance status=BLOCKED cases=0 owner=backlog reason=Physical blocker. Row A14 changes the system appearance WHILE the app is running and asserts the window re-themes without a relaunch. A hosted runner cannot drive that. Unchanged at this revision.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4443287Z lane=macos-integration-full-grant status=BLOCKED cases=0 owner=backlog reason=Physical blocker as recorded in the inventory: a hosted GitHub runner cannot be given a non-interactive TCC Accessibility grant, and the hosted-runner-tcc-report lane above is the runner stating so itself rather than anyone assuming it. HALF OF THE CLOSING CONDITION REMAINS MET AND HALF REMAINS UNMET, exactly as at candidate-2: continuous integration signs, notarizes and staples, so CI-built bytes a grant-holding machine could run against exist and are named by digest (ddce0c7dfb470a74dd2aa629b1c486a58fa5bd81f9b776b1c0980decb181fe1f); but no run has attempted the full-grant rows against those bytes on a machine with the grant, so this lane has no passing evidence. A local pass over locally built bytes may never be recorded here. TO CLOSE: download the archive from run 34777805267, verify it against the attestation, and run the full-grant rows against those exact bytes on a machine holding the Accessibility grant. See .planning/WINDOWS.md rows 84 and 89.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4446314Z lane=ios-device status=BLOCKED cases=0 owner=backlog reason=Physical blocker as recorded in the inventory: the lane drives a physically present, unlocked iPhone, which a hosted runner does not have.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4447306Z lane=mcp-representative-model status=BLOCKED cases=0 owner=backlog reason=Physical blocker as recorded in the inventory: the lane calls a real, paid, non-deterministic third-party model credential.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4450325Z lane=live-host-dns-acceptance status=BLOCKED cases=0 owner=backlog reason=Protected outer lane. CHANGED AT THIS REVISION, and the change is real but does not make it passable. Commit 1195bdc replaced the hardcoded deferral in tooling/test-phase-2.sh with a check of all nine required inputs: with every input present the lane now actually invokes tooling/verify-host-replacement.sh, and with any input absent it defers and NAMES the absent ones. Tested at eight of nine inputs, it still defers. So the lane is no longer structurally incapable of running -- but it still has no committed job that supplies those inputs (see quarterly-host-replacement above), so it has not run, and it reports BLOCKED with a zero case count. It provisions a real paid host and real DNS and is single-attempt; it keeps exiting non-zero so that no skip is ever counted as evidence.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4452314Z NON-PASSING: .planning/releases/candidate-3/release-manifest.json
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4452855Z ##[endgroup]
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4540991Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.4541904Z Post job cleanup.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.5414965Z (node:2220) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.5415890Z (Use `node --trace-deprecation ...` to show where the warning was created)
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.5548804Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.5550124Z Post job cleanup.
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6155076Z [command]/usr/bin/git version
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6180505Z git version 2.55.0
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6202958Z Temporarily overriding HOME='/home/runner/work/_temp/20327392-e572-4bef-a537-852b5542e445' before making global git config changes
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6203841Z Adding repository directory to the temporary git global config as a safe directory
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6206374Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6231893Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6254216Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6400708Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6418268Z http.https://github.com/.extraheader
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6425492Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6446896Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6585799Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6605431Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.6861114Z Cleaning up orphan processes
+ci-contract	UNKNOWN STEP	2026-09-13T20:18:26.7052910Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

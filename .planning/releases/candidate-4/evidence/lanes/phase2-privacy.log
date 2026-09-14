@@ -1,0 +1,361 @@
+phase2-privacy	UNKNOWN STEP	﻿2026-09-13T20:18:22.7009970Z Current runner version: '2.337.0'
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7027710Z ##[group]Runner Image Provisioner
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7028270Z Hosted Compute Agent
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7028650Z Version: 20260828.587
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7029060Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7029630Z Build Date: 2026-08-28T16:44:25Z
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7030090Z Worker ID: {f051cf13-b1c0-44fd-a4cb-ce46d13b0849}
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7030550Z Azure Region: westus
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7030920Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7031950Z ##[group]Operating System
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7032360Z macOS
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7032680Z 15.7.9
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7033000Z 24G830
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7033330Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7033680Z ##[group]Runner Image
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7034050Z Image: macos-15-arm64
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7034420Z Version: 20260907.0337.1
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7035280Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7036320Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7036970Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7037730Z ##[group]GITHUB_TOKEN Permissions
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7039080Z Contents: read
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7039510Z Metadata: read
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7039910Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7041770Z Secret source: Actions
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7042350Z Cache mode: write
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7042800Z Prepare workflow directory
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7440530Z Prepare all required actions
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.7479010Z Getting action download info
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:22.9104320Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.2233600Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.4076320Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.5000540Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7296960Z Complete job name: phase2-privacy
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7808940Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7816510Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7817170Z with:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7817530Z   repository: szTheory/keepling
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7820390Z   token: ***
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7820710Z   ssh-strict: true
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7821040Z   ssh-user: git
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7821600Z   persist-credentials: true
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7821990Z   clean: true
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7822340Z   sparse-checkout-cone-mode: true
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7822740Z   fetch-depth: 1
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7823220Z   fetch-tags: false
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7823560Z   show-progress: true
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7823940Z   lfs: false
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7824260Z   submodules: false
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7824600Z   set-safe-directory: true
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7825350Z env:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7825710Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7826260Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:23.7826810Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.3397810Z Syncing repository: szTheory/keepling
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.3399740Z ##[group]Getting Git version info
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.3400350Z Working directory is '/Users/runner/work/keepling/keepling'
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.3401390Z [command]/opt/homebrew/bin/git version
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4267280Z git version 2.55.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4284760Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4296900Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/ee0f7806-592c-46ad-97fc-7dd04de80250/.gitconfig'
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4301040Z Temporarily overriding HOME='/Users/runner/work/_temp/ee0f7806-592c-46ad-97fc-7dd04de80250' before making global git config changes
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4304500Z Adding repository directory to the temporary git global config as a safe directory
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4307300Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4435210Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4438990Z ##[group]Initializing the repository
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4443310Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4777940Z hint: Using 'master' as the name for the initial branch. This default branch name
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4780610Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4784730Z hint: to use in all of your new repositories, which will suppress this warning,
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4785770Z hint: call:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4786140Z hint:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4786670Z hint: 	git config --global init.defaultBranch <name>
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4788400Z hint:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4790270Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4791210Z hint: 'development'. The just-created branch can be renamed via this command:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4793230Z hint:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4793620Z hint: 	git branch -m <name>
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4794020Z hint:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4798740Z hint: Disable this message with "git config set advice.defaultBranchName false"
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4799890Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4809170Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4905210Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4907470Z ##[group]Disabling automatic garbage collection
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.4910640Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.5023490Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.5025480Z ##[group]Setting up auth
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.5029200Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.5116270Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.6548760Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.6621840Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.7556990Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.8621100Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.9222240Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.9301950Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.9302790Z ##[group]Fetching the repository
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:24.9307730Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +069df06570f7bc65ccb646935fd637dcc83bbd9c:refs/remotes/origin/main
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.4451130Z From https://github.com/szTheory/keepling
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.4453260Z  * [new ref]         069df06570f7bc65ccb646935fd637dcc83bbd9c -> origin/main
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.4456220Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.4457490Z ##[group]Determining the checkout info
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.4458740Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.4467190Z [command]/opt/homebrew/bin/git sparse-checkout disable
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.4613730Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.4654650Z ##[group]Checking out the ref
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.4656690Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.6621960Z Switched to a new branch 'main'
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.6637840Z branch 'main' set up to track 'origin/main'.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.6645570Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.6773750Z [command]/opt/homebrew/bin/git log -1 --format=%H
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.6854830Z 069df06570f7bc65ccb646935fd637dcc83bbd9c
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.7209400Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.7211550Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.7211980Z with:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.7212240Z   node-version: 24.7.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.7212510Z   always-auth: false
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.7212780Z   check-latest: false
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.7215160Z   token: ***
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.7215410Z env:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.7215670Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.7216090Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.7216530Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.8790140Z Attempting to download 24.7.0...
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.8990810Z (node:4753) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:26.9031580Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:27.8553650Z Acquiring 24.7.0 - arm64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-darwin-arm64.tar.gz
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:28.8019770Z Extracting ...
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:28.8134880Z [command]/usr/bin/tar xz --strip 1 -C /Users/runner/work/_temp/b2afe9e6-7223-4c9a-9f10-e74c203897c3 -f /Users/runner/work/_temp/8baf8181-16b7-4b61-bfcb-a4aeff868a8d
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:30.2600310Z Adding to the cache ...
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:33.4156900Z ##[group]Environment details
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:33.8818380Z node: v24.7.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:33.8848540Z npm: 11.5.1
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:33.8849560Z yarn: 1.22.22
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:33.8851110Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3978810Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3980110Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3980630Z with:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3980890Z   path: ~/.asdf/installs
+phase2-privacy	UNKNOWN STEP	apps/server/deps
+phase2-privacy	UNKNOWN STEP	apps/server/_build
+phase2-privacy	UNKNOWN STEP	node_modules
+phase2-privacy	UNKNOWN STEP	
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3981620Z   key: phase2-macOS-privacy-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3982020Z   enableCrossOsArchive: false
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3982370Z   fail-on-cache-miss: false
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3982630Z   lookup-only: false
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3982990Z   save-always: false
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3983240Z env:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3983590Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3984220Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.3984740Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.5774580Z (node:4921) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.5777420Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.6693830Z Cache hit for: phase2-macOS-privacy-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:34.6770030Z (node:4921) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:35.7510000Z Received 134217728 of 194499448 (69.0%), 122.7 MBs/sec
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:36.2572090Z Received 194499448 of 194499448 (100.0%), 119.7 MBs/sec
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:36.2674830Z Cache Size: ~185 MB (194499448 B)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:36.2778150Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/9f6ddaf1-2cf4-41f8-9c4c-a0eaa0a64923/cache.tzst -P -C /Users/runner/work/keepling/keepling --delay-directory-restore --use-compress-program unzstd
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.7401580Z Cache restored successfully
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8010570Z Cache restored from key: phase2-macOS-privacy-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8277710Z ##[group]Run brew list asdf >/dev/null 2>&1 || brew install asdf
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8278490Z ^[[36;1mbrew list asdf >/dev/null 2>&1 || brew install asdf^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8279050Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8279530Z ^[[36;1mcorepack enable^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8279850Z ^[[36;1mpnpm install --frozen-lockfile^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8280400Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8369470Z shell: /bin/bash -e {0}
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8370970Z env:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8371580Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8373190Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:44.8373740Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:48.0668440Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:48.0848080Z ✔︎ Bottle Manifest asdf (0.20.0)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:48.0849100Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:48.0850050Z asdf
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:48.1343970Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32masdf^[[39m^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:48.4743980Z ✔︎ Bottle asdf (0.20.0)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:48.4765120Z ^[[34m==>^[[0m ^[[1mPouring asdf--0.20.0.arm64_sequoia.bottle.tar.gz^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:48.6166780Z 🍺  /opt/homebrew/Cellar/asdf/0.20.0: 10 files, 4.4MB
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:48.6172970Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:48.6174280Z Bash completion has been installed to:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:48.6175490Z   /opt/homebrew/etc/bash_completion.d
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:51.7034620Z version 29.0.5 of erlang is already installed
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:51.7075670Z version 1.20.2-otp-29 of elixir is already installed
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:52.1448450Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:52.5784800Z ✔︎ Bottle Manifest postgresql@18 (18.6)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:52.5785380Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:52.5795140Z postgresql@18
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:52.6461130Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32mpostgresql@18^[[39m^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:54.0632030Z ✔︎ Bottle postgresql@18 (18.6)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:54.1039910Z ^[[34m==>^[[0m ^[[1mPouring postgresql@18--18.6.arm64_sequoia.bottle.tar.gz^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6395840Z The files belonging to this database system will be owned by user "runner".
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6421750Z This user must also own the server process.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6448400Z 
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6454140Z The database cluster will be initialized with locale "en_US.UTF-8".
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6460170Z The default text search configuration will be set to "english".
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6460720Z 
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6465270Z Data page checksums are enabled.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6465820Z 
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6466280Z fixing permissions on existing directory /opt/homebrew/var/postgresql@18 ... ok
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6475430Z creating subdirectories ... ok
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6475900Z selecting dynamic shared memory implementation ... posix
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6806370Z selecting default "max_connections" ... 100
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.6988400Z selecting default "shared_buffers" ... 128MB
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.7010910Z selecting default time zone ... UTC
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.7023180Z creating configuration files ... ok
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:56.8327830Z running bootstrap script ... ok
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.2331790Z performing post-bootstrap initialization ... ok
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.2436570Z syncing data to disk ... ok
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.2437030Z 
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.2437290Z 
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.2437990Z Success. You can now start the database server using:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.2438300Z 
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.2438850Z     '/opt/homebrew/Cellar/postgresql@18/18.6/bin/pg_ctl' -D '/opt/homebrew/var/postgresql@18' -l logfile start
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.2439340Z 
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.2439690Z initdb: warning: enabling "trust" authentication for local connections
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.2441660Z initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9662840Z 🍺  /opt/homebrew/Cellar/postgresql@18/18.6: 3,873 files, 77.7MB
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9666760Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9667170Z ^[[34m==>^[[0m ^[[1mpostgresql@18^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9667620Z This formula has created a default database cluster with:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9668200Z   initdb --locale=en_US.UTF-8 -E UTF-8 /opt/homebrew/var/postgresql@18
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9668530Z 
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9668870Z When uninstalling, some dead symlinks are left behind so you may want to run:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9669400Z   brew cleanup --prune-prefix
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9669660Z 
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9670020Z To start postgresql@18 now and restart at login:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9670470Z   brew services start postgresql@18
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9671050Z Or, if you don't want/need a background service you can just run:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:57.9671670Z   LC_ALL="en_US.UTF-8" /opt/homebrew/opt/postgresql@18/bin/postgres -D /opt/homebrew/var/postgresql@18
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:58.9052530Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:18:59.2954450Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:00.1482680Z Scope: all 4 workspace projects
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:00.1986750Z Lockfile is up to date, resolution step is skipped
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:00.9733570Z Progress: resolved 0, reused 0, downloaded 1, added 0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:01.5211550Z Packages: +2 -45
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:01.5312960Z ++---------------------------------------------
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:01.9638510Z Progress: resolved 0, reused 0, downloaded 17, added 0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:02.8028760Z Progress: resolved 0, reused 0, downloaded 46, added 2, done
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:02.9571290Z 
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:03.0098240Z Done in 3.1s using pnpm v10.33.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:03.4351450Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:04.3982180Z * creating /Users/runner/.mix/archives/hex-2.5.1
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.0969180Z Resolving Hex dependencies...
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2056720Z Resolution completed in 0.096s
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2190850Z Unchanged:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2191260Z   argon2_elixir 4.1.3
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2200260Z   bandit 1.12.5
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2200590Z   certifi 2.17.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2200970Z   comeonin 5.5.1
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2201330Z   db_connection 2.10.2
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2201640Z   decimal 3.1.1
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2202090Z   dns_cluster 0.2.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2202360Z   ecto 3.14.2
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2202670Z   ecto_sql 3.14.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2202980Z   elixir_make 0.10.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2203970Z   expo 1.1.1
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2204290Z   gettext 1.0.2
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2204600Z   h2 0.12.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2204840Z   hackney 4.7.4
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2205120Z   hammer 7.4.1
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2205410Z   hex_core 0.15.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2205640Z   hpax 1.0.4
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2205940Z   idna 7.1.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2207300Z   jason 1.4.5
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2207580Z   mime 2.0.7
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2207890Z   mimerl 1.5.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2208230Z   optimus 0.6.1
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2208470Z   parse_trans 3.4.2
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2208800Z   phoenix 1.8.13
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2209120Z   phoenix_ecto 4.7.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2209480Z   phoenix_pubsub 2.3.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2209740Z   phoenix_template 1.0.4
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2210120Z   plug 1.20.3
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2210350Z   plug_crypto 2.2.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2210830Z   postgrex 0.22.4
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2211230Z   protobuf 0.16.1
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2211700Z   purl 0.3.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2212140Z   quic 1.8.2
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2212490Z   sbom 0.10.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2212910Z   ssl_verify_fun 1.1.7
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2213300Z   stream_data 1.4.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2213640Z   telemetry 1.4.2
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2214040Z   telemetry_metrics 1.2.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2214520Z   telemetry_poller 1.3.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2214850Z   thousand_island 1.5.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2220140Z   tzdata 1.1.5
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2220670Z   websock 0.5.3
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2220930Z   websock_adapter 0.6.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:05.2221250Z   webtransport 0.4.5
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:06.0732440Z * creating /Users/runner/.mix/elixir/1-20-otp-29/rebar3
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:06.1347180Z All dependencies have been fetched
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:06.1648310Z ##[group]Run set -o pipefail
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:06.1649020Z ^[[36;1mset -o pipefail^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:06.1649910Z ^[[36;1m./tooling/test-phase-2.sh --lane "privacy" | tee "$RUNNER_TEMP/privacy.txt"^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:06.1650880Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/privacy.txt"^[[0m
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:06.1699590Z shell: /bin/bash -e {0}
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:06.1699910Z env:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:06.1700290Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:06.1700830Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:06.1701310Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:09.2078640Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:09.4392440Z lane=privacy status=RUNNING command=mix test telemetry_redaction_test.exs ops_redaction_test.exs && verify-privacy.sh --self-test cases=17 seed=20260901 inputs_sha256=c6edd21e23c46a55d10b4ef943b72e5aea08d99b5e79ddde03b4e4ec6720fa97
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:11.9097290Z lane=privacy status=PASS command=mix test telemetry_redaction_test.exs ops_redaction_test.exs && verify-privacy.sh --self-test cases=17 seed=20260901 elapsed_ms=2471 inputs_sha256=c6edd21e23c46a55d10b4ef943b72e5aea08d99b5e79ddde03b4e4ec6720fa97
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8510050Z Privacy verification passed: artifacts=1 sentinels=7
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8603350Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8604480Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8604840Z with:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8605040Z   name: phase2-privacy-timing
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8605360Z   path: /Users/runner/work/_temp/privacy.txt
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8605660Z   if-no-files-found: error
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8605950Z   retention-days: 14
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8606190Z   compression-level: 6
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8606460Z   overwrite: false
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8606760Z   include-hidden-files: false
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8606980Z env:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8607250Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8607690Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:12.8608120Z ##[endgroup]
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.0164610Z (node:6722) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.0165440Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.0186790Z With the provided path, there will be 1 file uploaded
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.0189080Z Artifact name is valid!
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.0189460Z Root directory input is valid!
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.2255760Z Beginning upload of artifact content to blob storage
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.2278000Z (node:6722) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.2469650Z Uploaded bytes 389
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.2586430Z Finished uploading artifact content to blob storage!
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.2587280Z SHA256 digest of uploaded artifact zip is b5444ad78a7a9a01c46a65f135dd1d2a636a8a47fadf84a796ae4caa496dd903
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.2587840Z Finalizing artifact upload
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.4569640Z Artifact phase2-privacy-timing.zip successfully finalized. Artifact ID 10324622443
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.4570890Z Artifact phase2-privacy-timing has been successfully uploaded! Final size is 389 bytes. Artifact ID is 10324622443
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.4572400Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34780345148/artifacts/10324622443
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.5525940Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.5526920Z Post job cleanup.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.6521090Z Cache hit occurred on the primary key phase2-macOS-privacy-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3, not saving cache.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.6522510Z (node:6727) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.6523350Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.6610120Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.6611050Z Post job cleanup.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.7643270Z (node:6728) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.7644050Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.7733970Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.7734910Z Post job cleanup.
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.8537280Z [command]/opt/homebrew/bin/git version
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.8594080Z git version 2.55.0
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.8612260Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/238ee012-bcba-4689-95be-1104407bee94/.gitconfig'
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.8619050Z Temporarily overriding HOME='/Users/runner/work/_temp/238ee012-bcba-4689-95be-1104407bee94' before making global git config changes
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.8619950Z Adding repository directory to the temporary git global config as a safe directory
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.8623030Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.8688310Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.8748500Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.9414470Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.9459170Z http.https://github.com/.extraheader
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.9465320Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:13.9523060Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:14.0139230Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:14.0189440Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:14.1278280Z Cleaning up orphan processes
+phase2-privacy	UNKNOWN STEP	2026-09-13T20:19:14.9634830Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

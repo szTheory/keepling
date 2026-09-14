@@ -1,0 +1,86 @@
+All required checks passed	UNKNOWN STEP	﻿2026-09-13T20:22:10.6504254Z Current runner version: '2.337.0'
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6528001Z ##[group]Runner Image Provisioner
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6529182Z Hosted Compute Agent
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6529906Z Version: 20260828.587
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6530564Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6531523Z Build Date: 2026-08-28T16:44:25Z
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6532242Z Worker ID: {1925ebf0-259c-4f85-a4a4-15786ffb2db8}
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6533028Z Azure Region: westcentralus
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6533706Z ##[endgroup]
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6535347Z ##[group]Operating System
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6536109Z Ubuntu
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6536673Z 24.04.5
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6537189Z LTS
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6537876Z ##[endgroup]
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6538659Z ##[group]Runner Image
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6539352Z Image: ubuntu-24.04
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6539951Z Version: 20260907.300.1
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6541315Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6542941Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6543998Z ##[endgroup]
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6545155Z ##[group]GITHUB_TOKEN Permissions
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6547670Z Contents: read
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6548312Z Metadata: read
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6549385Z ##[endgroup]
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6551541Z Secret source: Actions
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6552573Z Cache mode: write
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6553593Z Prepare workflow directory
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.6949201Z Prepare all required actions
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7009914Z Complete job name: All required checks passed
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7781418Z ##[group]Run node -e '
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7782259Z ^[[36;1mnode -e '^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7783023Z ^[[36;1m  const needs = JSON.parse(process.env.NEEDS_CONTEXT);^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7783941Z ^[[36;1m  let failed = false;^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7784847Z ^[[36;1m  for (const [job, info] of Object.entries(needs)) {^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7785731Z ^[[36;1m    const result = info.result;^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7786590Z ^[[36;1m    console.log("needs job=" + job + " result=" + result);^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7787445Z ^[[36;1m    if (result !== "success") {^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7788842Z ^[[36;1m      console.error("required job " + job + " did not succeed (result=" + result + ")");^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7789975Z ^[[36;1m      failed = true;^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7790652Z ^[[36;1m    }^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7791217Z ^[[36;1m  }^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7791806Z ^[[36;1m  if (failed) process.exit(1);^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.7792583Z ^[[36;1m'^[[0m
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.8463629Z shell: /usr/bin/bash -e {0}
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.8464858Z env:
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.8465515Z   KEEPLING_PHASE2_SEED: 20260901
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.8466612Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.8470510Z   NEEDS_CONTEXT: {
+All required checks passed	UNKNOWN STEP	  "ci-contract": {
+All required checks passed	UNKNOWN STEP	    "result": "success",
+All required checks passed	UNKNOWN STEP	    "outputs": {}
+All required checks passed	UNKNOWN STEP	  },
+All required checks passed	UNKNOWN STEP	  "repository-integrity": {
+All required checks passed	UNKNOWN STEP	    "result": "success",
+All required checks passed	UNKNOWN STEP	    "outputs": {}
+All required checks passed	UNKNOWN STEP	  },
+All required checks passed	UNKNOWN STEP	  "phase2-linux": {
+All required checks passed	UNKNOWN STEP	    "result": "success",
+All required checks passed	UNKNOWN STEP	    "outputs": {}
+All required checks passed	UNKNOWN STEP	  },
+All required checks passed	UNKNOWN STEP	  "phase2-runtime": {
+All required checks passed	UNKNOWN STEP	    "result": "success",
+All required checks passed	UNKNOWN STEP	    "outputs": {}
+All required checks passed	UNKNOWN STEP	  },
+All required checks passed	UNKNOWN STEP	  "image-compose-deploy": {
+All required checks passed	UNKNOWN STEP	    "result": "success",
+All required checks passed	UNKNOWN STEP	    "outputs": {}
+All required checks passed	UNKNOWN STEP	  },
+All required checks passed	UNKNOWN STEP	  "opentofu-host-fixtures": {
+All required checks passed	UNKNOWN STEP	    "result": "success",
+All required checks passed	UNKNOWN STEP	    "outputs": {}
+All required checks passed	UNKNOWN STEP	  },
+All required checks passed	UNKNOWN STEP	  "export-reader": {
+All required checks passed	UNKNOWN STEP	    "result": "success",
+All required checks passed	UNKNOWN STEP	    "outputs": {}
+All required checks passed	UNKNOWN STEP	  }
+All required checks passed	UNKNOWN STEP	}
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:10.8473310Z ##[endgroup]
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:11.0508817Z needs job=ci-contract result=success
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:11.0510592Z needs job=repository-integrity result=success
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:11.0512091Z needs job=phase2-linux result=success
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:11.0513183Z needs job=phase2-runtime result=success
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:11.0514167Z needs job=image-compose-deploy result=success
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:11.0515047Z needs job=opentofu-host-fixtures result=success
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:11.0515907Z needs job=export-reader result=success
+All required checks passed	UNKNOWN STEP	2026-09-13T20:22:11.0697062Z Cleaning up orphan processes

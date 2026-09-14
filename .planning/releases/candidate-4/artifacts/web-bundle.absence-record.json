@@ -1,0 +1,9 @@
+{
+  "artifactName": "web-bundle",
+  "kind": "static-web-bundle",
+  "produced": false,
+  "revision": "069df06570f7bc65ccb646935fd637dcc83bbd9c",
+  "reason": "No committed workflow job emits a web bundle as a retained release artefact at this revision. The web application is typechecked and linted in the desktop-units job and exercised by the Playwright lanes, but no job runs a production web build and uploads the result, so there are no released web bytes to bind a digest to. Unchanged from candidate-3. The product code at this revision is byte-identical to candidate-3's, so nothing about this absence could have changed between them.",
+  "toClose": "Add a job that runs the production web build and uploads the bundle, then record its digest here.",
+  "owner": "BACKLOG"
+}

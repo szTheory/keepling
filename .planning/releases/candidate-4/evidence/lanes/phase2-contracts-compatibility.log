@@ -1,0 +1,360 @@
+phase2-contracts-compatibility	UNKNOWN STEP	﻿2026-09-13T20:18:21.5222660Z Current runner version: '2.337.0'
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5236550Z ##[group]Runner Image Provisioner
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5237070Z Hosted Compute Agent
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5237450Z Version: 20260828.587
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5237870Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5238350Z Build Date: 2026-08-28T16:44:25Z
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5238790Z Worker ID: {e1288085-865f-444e-ad66-9a1da1f8fa54}
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5239230Z Azure Region: westus
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5239590Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5240400Z ##[group]Operating System
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5240770Z macOS
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5241090Z 15.7.9
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5241410Z 24G830
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5241740Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5242090Z ##[group]Runner Image
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5242480Z Image: macos-15-arm64
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5242850Z Version: 20260907.0337.1
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5243660Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5244690Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5245350Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5246060Z ##[group]GITHUB_TOKEN Permissions
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5247020Z Contents: read
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5247380Z Metadata: read
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5247730Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5248970Z Secret source: Actions
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5249530Z Cache mode: write
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5249950Z Prepare workflow directory
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5494730Z Prepare all required actions
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.5527650Z Getting action download info
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:21.6928460Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.0869390Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.1911460Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.2896350Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5038030Z Complete job name: phase2-contracts-compatibility
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5428360Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5434380Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5435000Z with:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5435330Z   repository: szTheory/keepling
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5437970Z   token: ***
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5438300Z   ssh-strict: true
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5438640Z   ssh-user: git
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5439690Z   persist-credentials: true
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5440170Z   clean: true
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5440520Z   sparse-checkout-cone-mode: true
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5440910Z   fetch-depth: 1
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5441240Z   fetch-tags: false
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5441580Z   show-progress: true
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5441960Z   lfs: false
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5442280Z   submodules: false
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5442620Z   set-safe-directory: true
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5443240Z env:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5443570Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5444110Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.5444660Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7291940Z Syncing repository: szTheory/keepling
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7293420Z ##[group]Getting Git version info
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7294060Z Working directory is '/Users/runner/work/keepling/keepling'
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7294920Z [command]/opt/homebrew/bin/git version
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7731250Z git version 2.55.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7742220Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7747510Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/533ed0d5-4289-46de-b7ef-241e39271507/.gitconfig'
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7753480Z Temporarily overriding HOME='/Users/runner/work/_temp/533ed0d5-4289-46de-b7ef-241e39271507' before making global git config changes
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7754600Z Adding repository directory to the temporary git global config as a safe directory
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7757030Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7849540Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7851690Z ##[group]Initializing the repository
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.7855510Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8036180Z hint: Using 'master' as the name for the initial branch. This default branch name
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8037300Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8038220Z hint: to use in all of your new repositories, which will suppress this warning,
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8039000Z hint: call:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8039380Z hint:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8039820Z hint: 	git config --global init.defaultBranch <name>
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8040330Z hint:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8040840Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8041610Z hint: 'development'. The just-created branch can be renamed via this command:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8042220Z hint:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8042580Z hint: 	git branch -m <name>
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8042990Z hint:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8043510Z hint: Disable this message with "git config set advice.defaultBranchName false"
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8044320Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8048700Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8105490Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8106180Z ##[group]Disabling automatic garbage collection
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8107630Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8154230Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8154940Z ##[group]Setting up auth
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8158850Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.8213110Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.9219050Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.9262650Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.9888500Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:22.9936910Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:23.0868900Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:23.0871720Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:23.0872670Z ##[group]Fetching the repository
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:23.0874800Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +069df06570f7bc65ccb646935fd637dcc83bbd9c:refs/remotes/origin/main
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.5685790Z From https://github.com/szTheory/keepling
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.5686300Z  * [new ref]         069df06570f7bc65ccb646935fd637dcc83bbd9c -> origin/main
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.5688040Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.5688460Z ##[group]Determining the checkout info
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.5689320Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.5693330Z [command]/opt/homebrew/bin/git sparse-checkout disable
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.5759150Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.5811220Z ##[group]Checking out the ref
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.5814040Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8413000Z Switched to a new branch 'main'
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8415350Z branch 'main' set up to track 'origin/main'.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8422350Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8495560Z [command]/opt/homebrew/bin/git log -1 --format=%H
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8545340Z 069df06570f7bc65ccb646935fd637dcc83bbd9c
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8731720Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8733220Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8733560Z with:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8733740Z   node-version: 24.7.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8733940Z   always-auth: false
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8734140Z   check-latest: false
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8736070Z   token: ***
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8736250Z env:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8736440Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8736770Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.8737110Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:24.9983580Z Attempting to download 24.7.0...
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:25.0082180Z (node:5877) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:25.0083590Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:26.0231730Z Acquiring 24.7.0 - arm64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-darwin-arm64.tar.gz
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:26.8284780Z Extracting ...
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:26.8380100Z [command]/usr/bin/tar xz --strip 1 -C /Users/runner/work/_temp/3e7318a5-de8e-48ef-9818-3f0ae00e694f -f /Users/runner/work/_temp/be00264f-0866-4327-9177-7ce5cdc7391f
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:28.2278660Z Adding to the cache ...
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.1971410Z ##[group]Environment details
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.4309020Z node: v24.7.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.4309260Z npm: 11.5.1
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.4309500Z yarn: 1.22.22
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.4309950Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5627660Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5628700Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5628950Z with:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5629170Z   path: ~/.asdf/installs
+phase2-contracts-compatibility	UNKNOWN STEP	apps/server/deps
+phase2-contracts-compatibility	UNKNOWN STEP	apps/server/_build
+phase2-contracts-compatibility	UNKNOWN STEP	node_modules
+phase2-contracts-compatibility	UNKNOWN STEP	
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5629690Z   key: phase2-macOS-contracts-compatibility-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5630120Z   enableCrossOsArchive: false
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5630310Z   fail-on-cache-miss: false
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5630470Z   lookup-only: false
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5630640Z   save-always: false
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5630780Z env:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5630930Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5631220Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.5631500Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.6541100Z (node:6150) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.6541860Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.7210280Z Cache hit for: phase2-macOS-contracts-compatibility-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:30.7271960Z (node:6150) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:31.7791740Z Received 171966464 of 194532178 (88.4%), 163.8 MBs/sec
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:31.9611160Z Received 194532178 of 194532178 (100.0%), 156.6 MBs/sec
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:31.9700940Z Cache Size: ~186 MB (194532178 B)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:31.9702420Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/d3180f7a-02ff-42e6-afc9-de52f9b71069/cache.tzst -P -C /Users/runner/work/keepling/keepling --delay-directory-restore --use-compress-program unzstd
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.4949440Z Cache restored successfully
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5184530Z Cache restored from key: phase2-macOS-contracts-compatibility-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5270810Z ##[group]Run brew list asdf >/dev/null 2>&1 || brew install asdf
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5271200Z ^[[36;1mbrew list asdf >/dev/null 2>&1 || brew install asdf^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5271500Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5271770Z ^[[36;1mcorepack enable^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5271960Z ^[[36;1mpnpm install --frozen-lockfile^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5272340Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5318540Z shell: /bin/bash -e {0}
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5318730Z env:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5318890Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5319210Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:37.5319590Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:40.6133650Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:40.6238060Z ✔︎ Bottle Manifest asdf (0.20.0)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:40.6238700Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:40.6345100Z asdf
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:40.6854570Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32masdf^[[39m^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:41.0814400Z ✔︎ Bottle asdf (0.20.0)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:41.0815030Z ^[[34m==>^[[0m ^[[1mPouring asdf--0.20.0.arm64_sequoia.bottle.tar.gz^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:41.1714440Z 🍺  /opt/homebrew/Cellar/asdf/0.20.0: 10 files, 4.4MB
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:41.1725040Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:41.1725780Z Bash completion has been installed to:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:41.1726100Z   /opt/homebrew/etc/bash_completion.d
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:44.0873310Z version 29.0.5 of erlang is already installed
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:44.0905410Z version 1.20.2-otp-29 of elixir is already installed
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:44.4704500Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:44.8984300Z ✔︎ Bottle Manifest postgresql@18 (18.6)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:44.8985050Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:44.8985480Z postgresql@18
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:44.9569460Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32mpostgresql@18^[[39m^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:46.3099640Z ✔︎ Bottle postgresql@18 (18.6)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:46.3298660Z ^[[34m==>^[[0m ^[[1mPouring postgresql@18--18.6.arm64_sequoia.bottle.tar.gz^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2076410Z The files belonging to this database system will be owned by user "runner".
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2078010Z This user must also own the server process.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2078430Z 
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2078800Z The database cluster will be initialized with locale "en_US.UTF-8".
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2080330Z The default text search configuration will be set to "english".
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2080650Z 
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2080830Z Data page checksums are enabled.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2081020Z 
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2081360Z fixing permissions on existing directory /opt/homebrew/var/postgresql@18 ... ok
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2086570Z creating subdirectories ... ok
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2092480Z selecting dynamic shared memory implementation ... posix
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2433590Z selecting default "max_connections" ... 100
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2589020Z selecting default "shared_buffers" ... 128MB
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2611510Z selecting default time zone ... UTC
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.2620440Z creating configuration files ... ok
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.3888350Z running bootstrap script ... ok
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.7512350Z performing post-bootstrap initialization ... ok
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.7754820Z syncing data to disk ... ok
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.7755820Z 
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.7756040Z 
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.7757010Z Success. You can now start the database server using:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.7757490Z 
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.7757880Z     '/opt/homebrew/Cellar/postgresql@18/18.6/bin/pg_ctl' -D '/opt/homebrew/var/postgresql@18' -l logfile start
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.7758270Z 
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.7758560Z initdb: warning: enabling "trust" authentication for local connections
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:48.7760150Z initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2066380Z 🍺  /opt/homebrew/Cellar/postgresql@18/18.6: 3,873 files, 77.7MB
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2069480Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2069890Z ^[[34m==>^[[0m ^[[1mpostgresql@18^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2071030Z This formula has created a default database cluster with:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2071500Z   initdb --locale=en_US.UTF-8 -E UTF-8 /opt/homebrew/var/postgresql@18
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2071810Z 
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2083490Z When uninstalling, some dead symlinks are left behind so you may want to run:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2083940Z   brew cleanup --prune-prefix
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2084120Z 
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2084400Z To start postgresql@18 now and restart at login:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2084740Z   brew services start postgresql@18
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2085150Z Or, if you don't want/need a background service you can just run:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.2085780Z   LC_ALL="en_US.UTF-8" /opt/homebrew/opt/postgresql@18/bin/postgres -D /opt/homebrew/var/postgresql@18
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.5653590Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:49.7594950Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:50.5118300Z Scope: all 4 workspace projects
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:50.5638970Z Lockfile is up to date, resolution step is skipped
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:51.3731790Z Progress: resolved 0, reused 0, downloaded 1, added 0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:51.7637320Z Packages: +2 -45
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:51.7745070Z ++---------------------------------------------
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:52.3781600Z Progress: resolved 0, reused 0, downloaded 20, added 0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:53.0447710Z Progress: resolved 0, reused 0, downloaded 46, added 2, done
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:53.2050590Z 
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:53.2499090Z Done in 2.9s using pnpm v10.33.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:53.6063500Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:54.4844870Z * creating /Users/runner/.mix/archives/hex-2.5.1
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.1551760Z Resolving Hex dependencies...
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2264640Z Resolution completed in 0.069s
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2411890Z Unchanged:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2412160Z   argon2_elixir 4.1.3
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2417470Z   bandit 1.12.5
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2417750Z   certifi 2.17.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2418120Z   comeonin 5.5.1
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2418340Z   db_connection 2.10.2
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2418600Z   decimal 3.1.1
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2418990Z   dns_cluster 0.2.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2419360Z   ecto 3.14.2
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2419550Z   ecto_sql 3.14.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2419920Z   elixir_make 0.10.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2420110Z   expo 1.1.1
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2420300Z   gettext 1.0.2
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2420460Z   h2 0.12.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2420790Z   hackney 4.7.4
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2421020Z   hammer 7.4.1
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2421190Z   hex_core 0.15.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2421480Z   hpax 1.0.4
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2422210Z   idna 7.1.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2422360Z   jason 1.4.5
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2422540Z   mime 2.0.7
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2422690Z   mimerl 1.5.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2422850Z   optimus 0.6.1
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2423040Z   parse_trans 3.4.2
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2423210Z   phoenix 1.8.13
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2423450Z   phoenix_ecto 4.7.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2423640Z   phoenix_pubsub 2.3.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2423840Z   phoenix_template 1.0.4
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2424060Z   plug 1.20.3
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2424200Z   plug_crypto 2.2.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2424590Z   postgrex 0.22.4
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2424780Z   protobuf 0.16.1
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2424990Z   purl 0.3.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2425350Z   quic 1.8.2
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2425500Z   sbom 0.10.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2425800Z   ssl_verify_fun 1.1.7
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2426030Z   stream_data 1.4.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2426300Z   telemetry 1.4.2
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2426550Z   telemetry_metrics 1.2.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2426770Z   telemetry_poller 1.3.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2427040Z   thousand_island 1.5.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2429000Z   tzdata 1.1.5
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2429190Z   websock 0.5.3
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2429390Z   websock_adapter 0.6.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.2429670Z   webtransport 0.4.5
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.3180980Z * creating /Users/runner/.mix/elixir/1-20-otp-29/rebar3
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.3642260Z All dependencies have been fetched
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.3840090Z ##[group]Run set -o pipefail
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.3840380Z ^[[36;1mset -o pipefail^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.3840790Z ^[[36;1m./tooling/test-phase-2.sh --lane "contracts-compatibility" | tee "$RUNNER_TEMP/contracts-compatibility.txt"^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.3841320Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/contracts-compatibility.txt"^[[0m
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.3877910Z shell: /bin/bash -e {0}
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.3878110Z env:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.3878250Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.3878620Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.3878950Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:18:55.5576010Z lane=contracts-compatibility status=RUNNING command=pnpm contracts:check && ./tooling/test-compatibility.sh cases=30 seed=20260901 inputs_sha256=dfa0a5c186e2763696c5c720bdaa039477ea51eb9d9d1bb7dab188fdeb3a4614
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.6581390Z lane=contracts-compatibility status=PASS command=pnpm contracts:check && ./tooling/test-compatibility.sh cases=30 seed=20260901 elapsed_ms=10101 inputs_sha256=dfa0a5c186e2763696c5c720bdaa039477ea51eb9d9d1bb7dab188fdeb3a4614
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.6953190Z Privacy verification passed: artifacts=1 sentinels=7
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7065670Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7066840Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7067160Z with:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7067340Z   name: phase2-contracts-compatibility-timing
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7067650Z   path: /Users/runner/work/_temp/contracts-compatibility.txt
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7067910Z   if-no-files-found: error
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7068090Z   retention-days: 14
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7068260Z   compression-level: 6
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7068420Z   overwrite: false
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7068590Z   include-hidden-files: false
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7068770Z env:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7068900Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7069210Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.7069520Z ##[endgroup]
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.8316990Z (node:8341) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.8317700Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.8337740Z With the provided path, there will be 1 file uploaded
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.8339930Z Artifact name is valid!
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:05.8340330Z Root directory input is valid!
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.0310500Z (node:8341) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.0313780Z Beginning upload of artifact content to blob storage
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.0533220Z Uploaded bytes 361
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.0662260Z Finished uploading artifact content to blob storage!
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.0662950Z SHA256 digest of uploaded artifact zip is 7042dfc3d0b294e6720d5e0667feb45ada5496100a0b5fe9005578fdd0efa334
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.0663540Z Finalizing artifact upload
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.2887830Z Artifact phase2-contracts-compatibility-timing.zip successfully finalized. Artifact ID 10325450368
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.2896050Z Artifact phase2-contracts-compatibility-timing has been successfully uploaded! Final size is 361 bytes. Artifact ID is 10325450368
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.2930470Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34780345148/artifacts/10325450368
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.3643600Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.3644590Z Post job cleanup.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.4630860Z Cache hit occurred on the primary key phase2-macOS-contracts-compatibility-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3, not saving cache.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.4632160Z (node:8344) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.4632850Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.4710840Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.4711770Z Post job cleanup.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.5738680Z (node:8345) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.5739480Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.5823250Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.5824300Z Post job cleanup.
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.7449500Z [command]/opt/homebrew/bin/git version
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.7506250Z git version 2.55.0
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.7523670Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/642b3ffc-4f71-45b2-960c-13e4ed523389/.gitconfig'
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.7530100Z Temporarily overriding HOME='/Users/runner/work/_temp/642b3ffc-4f71-45b2-960c-13e4ed523389' before making global git config changes
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.7531020Z Adding repository directory to the temporary git global config as a safe directory
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.7533190Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.7585990Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.7635630Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.8304030Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.8351940Z http.https://github.com/.extraheader
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.8358700Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.8413440Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.9037870Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:06.9087290Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:07.0171530Z Cleaning up orphan processes
+phase2-contracts-compatibility	UNKNOWN STEP	2026-09-13T20:19:07.7814280Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
