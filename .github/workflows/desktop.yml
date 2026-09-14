@@ -396,6 +396,27 @@ jobs:
           ditto -x -k "$KEEPLING_CROSS_ADAPTER_ARCHIVE" "$KEEPLING_CROSS_ADAPTER_OUT_DIR"
           test -d "$KEEPLING_CROSS_ADAPTER_OUT_DIR"/*.app
           ls -la "$KEEPLING_CROSS_ADAPTER_OUT_DIR"
+      # apps/ios/Keepling.xcodeproj is GITIGNORED (.gitignore:18) and generated
+      # from the tracked apps/ios/project.yml -- a deliberate Phase 4 decision,
+      # so the project is diffable as YAML instead of as a binary .pbxproj that
+      # cannot be merged. A fresh checkout therefore has no project at all, and
+      # the first CI run of this lane failed exactly there: "xcodebuild: error:
+      # 'apps/ios/Keepling.xcodeproj' does not exist." Both this job's install
+      # build and the driver's own `build-for-testing` resolve that same path,
+      # so generating it once here covers both.
+      #
+      # The version is printed rather than pinned, matching what every other
+      # iOS path in this repository already does (tooling/build-ios-signed.mjs
+      # spawns a bare `xcodegen`). It goes into the log so a future project-shape
+      # drift is attributable to a version rather than a mystery.
+      - name: Generate the gitignored Xcode project from its tracked spec
+        run: |
+          set -eu
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          xcodegen --version
+          xcodegen generate --spec apps/ios/project.yml --project apps/ios
+          test -d apps/ios/Keepling.xcodeproj
+
       # tooling/cross-adapter/legs.mjs refuses the iPhone leg unless a booted
       # simulator already carries the app -- it does not build or install it,
       # by design. The driver then does its OWN `build-for-testing` against
