@@ -1,0 +1,227 @@
+quarterly-host-replacement	Set up job	﻿2026-09-14T16:59:03.4838120Z Current runner version: '2.337.0'
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4861000Z ##[group]Runner Image Provisioner
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4861640Z Hosted Compute Agent
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4862070Z Version: 20260828.587
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4862500Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4863030Z Build Date: 2026-08-28T16:44:25Z
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4863530Z Worker ID: {f6fadf21-2201-4f1d-acc7-f2eedbc6506c}
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4864040Z Azure Region: westus
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4864420Z ##[endgroup]
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4865480Z ##[group]Operating System
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4865950Z macOS
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4866300Z 15.7.9
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4866660Z 24G830
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4867000Z ##[endgroup]
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4867350Z ##[group]Runner Image
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4867730Z Image: macos-15-arm64
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4868100Z Version: 20260907.0337.1
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4869040Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4870280Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4870970Z ##[endgroup]
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4871770Z ##[group]GITHUB_TOKEN Permissions
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4873040Z Contents: read
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4873440Z Metadata: read
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4873820Z ##[endgroup]
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4875530Z Secret source: Actions
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4876170Z Cache mode: write
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.4876670Z Prepare workflow directory
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.5268900Z Prepare all required actions
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.5305550Z Getting action download info
+quarterly-host-replacement	Set up job	2026-09-14T16:59:03.8057520Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+quarterly-host-replacement	Set up job	2026-09-14T16:59:04.0773600Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+quarterly-host-replacement	Set up job	2026-09-14T16:59:04.2893800Z Complete job name: quarterly-host-replacement
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-14T16:59:04.3336660Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3345030Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3345690Z with:
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3346040Z   repository: szTheory/keepling
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3348960Z   token: ***
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3349290Z   ssh-strict: true
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3349630Z   ssh-user: git
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3349970Z   persist-credentials: true
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3350340Z   clean: true
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3350680Z   sparse-checkout-cone-mode: true
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3351080Z   fetch-depth: 1
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3351410Z   fetch-tags: false
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3351750Z   show-progress: true
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3352140Z   lfs: false
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3352490Z   submodules: false
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3352840Z   set-safe-directory: true
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3353400Z env:
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3353740Z   KEEPLING_RESTORE_SEED: 20260901
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3354240Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3354980Z   HCLOUD_TOKEN: ***
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3355480Z   CLOUDFLARE_API_TOKEN: ***
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3355860Z   KEEPLING_LIVE_CHANGE_TRIGGER: 4f59541
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.3356260Z ##[endgroup]
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.7629930Z Syncing repository: szTheory/keepling
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.7631270Z ##[group]Getting Git version info
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.7631870Z Working directory is '/Users/runner/work/keepling/keepling'
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.7632640Z [command]/opt/homebrew/bin/git version
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8147770Z git version 2.55.0
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8162470Z ##[endgroup]
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8172530Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/dd70b99b-baaa-4e05-9ce9-f58e1c1d0dfe/.gitconfig'
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8184720Z Temporarily overriding HOME='/Users/runner/work/_temp/dd70b99b-baaa-4e05-9ce9-f58e1c1d0dfe' before making global git config changes
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8187910Z Adding repository directory to the temporary git global config as a safe directory
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8190530Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8323660Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8327250Z ##[group]Initializing the repository
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8334160Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8612740Z hint: Using 'master' as the name for the initial branch. This default branch name
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8613760Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8614500Z hint: to use in all of your new repositories, which will suppress this warning,
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8616550Z hint: call:
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8616920Z hint:
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8617320Z hint: 	git config --global init.defaultBranch <name>
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8617760Z hint:
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8618200Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8618910Z hint: 'development'. The just-created branch can be renamed via this command:
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8619490Z hint:
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8619840Z hint: 	git branch -m <name>
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8621390Z hint:
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8622100Z hint: Disable this message with "git config set advice.defaultBranchName false"
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8622950Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8626610Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8706990Z ##[endgroup]
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8708960Z ##[group]Disabling automatic garbage collection
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8710620Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8778740Z ##[endgroup]
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8779490Z ##[group]Setting up auth
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8785170Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.8859000Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:04.9973370Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:05.0047450Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:05.0941700Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:05.1007480Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:05.2245970Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:05.2333070Z ##[endgroup]
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:05.2335520Z ##[group]Fetching the repository
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:05.2338650Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4f5954104c839dbec57188607829fdc7b975e0cc:refs/remotes/origin/main
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:06.9302860Z From https://github.com/szTheory/keepling
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:06.9462000Z  * [new ref]         4f5954104c839dbec57188607829fdc7b975e0cc -> origin/main
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:06.9696750Z ##[endgroup]
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:06.9706540Z ##[group]Determining the checkout info
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:06.9707660Z ##[endgroup]
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:06.9708380Z [command]/opt/homebrew/bin/git sparse-checkout disable
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:06.9711360Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:06.9715280Z ##[group]Checking out the ref
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:06.9716610Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:07.1372320Z Switched to a new branch 'main'
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:07.1380410Z branch 'main' set up to track 'origin/main'.
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:07.1387150Z ##[endgroup]
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:07.1473530Z [command]/opt/homebrew/bin/git log -1 --format=%H
+quarterly-host-replacement	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:07.1531190Z 4f5954104c839dbec57188607829fdc7b975e0cc
+quarterly-host-replacement	Run this lane's own declared deterministic command	﻿2026-09-14T16:59:07.1742580Z ##[group]Run set -eu -o pipefail
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.1743700Z ^[[36;1mset -eu -o pipefail^[[0m
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.1745150Z ^[[36;1m./tooling/test-host-replacement-sequence.sh | tee "$RUNNER_TEMP/host-replacement-lane.txt"^[[0m
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.1747180Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/host-replacement-lane.txt"^[[0m
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.1798910Z shell: /bin/bash -e {0}
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.1799770Z env:
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.1800460Z   KEEPLING_RESTORE_SEED: 20260901
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.1801910Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.1804260Z   HCLOUD_TOKEN: ***
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.1805480Z   CLOUDFLARE_API_TOKEN: ***
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.1806310Z   KEEPLING_LIVE_CHANGE_TRIGGER: 4f59541
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.1807170Z ##[endgroup]
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.6341270Z Host replacement sequence regression passed: ordered gates, DNS fence, and teardown guarantee
+quarterly-host-replacement	Run this lane's own declared deterministic command	2026-09-14T16:59:07.6968060Z Privacy verification passed: artifacts=1 sentinels=7
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	﻿2026-09-14T16:59:07.7140280Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7142300Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7142900Z with:
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7143210Z   name: host-replacement-lane
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7143650Z   path: /Users/runner/work/_temp/host-replacement-lane.txt
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7144100Z   if-no-files-found: error
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7144480Z   retention-days: 90
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7144850Z   compression-level: 6
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7145180Z   overwrite: false
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7145520Z   include-hidden-files: false
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7145890Z env:
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7146200Z   KEEPLING_RESTORE_SEED: 20260901
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7146690Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7147610Z   HCLOUD_TOKEN: ***
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7148120Z   CLOUDFLARE_API_TOKEN: ***
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7148510Z   KEEPLING_LIVE_CHANGE_TRIGGER: 4f59541
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.7148900Z ##[endgroup]
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.8668920Z (node:3209) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.8677050Z (Use `node --trace-deprecation ...` to show where the warning was created)
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.8717400Z With the provided path, there will be 1 file uploaded
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.8727760Z Artifact name is valid!
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:07.8730230Z Root directory input is valid!
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.2229020Z Beginning upload of artifact content to blob storage
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.2462700Z (node:3209) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.3813800Z Uploaded bytes 245
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.4216340Z Finished uploading artifact content to blob storage!
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.4218120Z SHA256 digest of uploaded artifact zip is 216df5edbe4677c64ee476f48a8f70645ffa012d0824bb428de21cdcb0c13b1c
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.4220110Z Finalizing artifact upload
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.6526940Z Artifact host-replacement-lane.zip successfully finalized. Artifact ID 10359412067
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.6527830Z Artifact host-replacement-lane has been successfully uploaded! Final size is 245 bytes. Artifact ID is 10359412067
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.6533970Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34871926793/artifacts/10359412067
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	﻿2026-09-14T16:59:08.6611470Z ##[group]Run set -eu
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6611740Z ^[[36;1mset -eu^[[0m
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6611980Z ^[[36;1mevidence="$RUNNER_TEMP/host-replacement.json"^[[0m
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6612300Z ^[[36;1mreason=outer_acceptance_sealed^[[0m
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6612670Z ^[[36;1mtest -n "$KEEPLING_LIVE_CHANGE_TRIGGER" || reason=change_trigger_required^[[0m
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6613230Z ^[[36;1mtest -n "$HCLOUD_TOKEN" && test -n "$CLOUDFLARE_API_TOKEN" || reason=missing_protected_credentials^[[0m
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6614520Z ^[[36;1mjq -n --arg revision "$GITHUB_SHA" --arg reason "$reason" '{version:1,fixture:"host-replacement",result:"NON_PASSING",revision:$revision,reason:$reason,attempts:0,dns_reached:false,lane:"live-host-dns-acceptance",owner:"BACKLOG/999.2",sealed_at:"credentialed_apply"}' >"$evidence"^[[0m
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6615740Z ^[[36;1m./tooling/verify-privacy.sh "$evidence"^[[0m
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6616440Z ^[[36;1mecho 'live-host-dns-acceptance remains NON_PASSING: the billable apply is sealed in code, not merely uncredentialed.'^[[0m
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6617190Z ^[[36;1mexit 1^[[0m
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6664570Z shell: /bin/bash -e {0}
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6664890Z env:
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6665100Z   KEEPLING_RESTORE_SEED: 20260901
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6665420Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6666220Z   HCLOUD_TOKEN: ***
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6666590Z   CLOUDFLARE_API_TOKEN: ***
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6666860Z   KEEPLING_LIVE_CHANGE_TRIGGER: 4f59541
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.6667130Z ##[endgroup]
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.7552250Z Privacy verification passed: artifacts=1 sentinels=7
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.7584870Z live-host-dns-acceptance remains NON_PASSING: the billable apply is sealed in code, not merely uncredentialed.
+quarterly-host-replacement	Record the sealed outer acceptance as explicitly non-passing	2026-09-14T16:59:08.7599980Z ##[error]Process completed with exit code 1.
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	﻿2026-09-14T16:59:08.7721540Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7722960Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7723340Z with:
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7723530Z   name: host-replacement-non-passing
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7723830Z   path: /Users/runner/work/_temp/host-replacement.json
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7724130Z   if-no-files-found: error
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7724330Z   retention-days: 90
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7724530Z   compression-level: 6
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7724720Z   overwrite: false
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7725060Z   include-hidden-files: false
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7725290Z env:
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7725460Z   KEEPLING_RESTORE_SEED: 20260901
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7725780Z   KEEPLING_FLAKE_POLICY: single-attempt; no-retry; teardown-required
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7726420Z   HCLOUD_TOKEN: ***
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7726740Z   CLOUDFLARE_API_TOKEN: ***
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7726970Z   KEEPLING_LIVE_CHANGE_TRIGGER: 4f59541
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.7727220Z ##[endgroup]
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.9194610Z (node:3230) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.9196440Z (Use `node --trace-deprecation ...` to show where the warning was created)
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.9221040Z With the provided path, there will be 1 file uploaded
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.9223660Z Artifact name is valid!
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:08.9224230Z Root directory input is valid!
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:09.2158620Z Beginning upload of artifact content to blob storage
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:09.2268620Z (node:3230) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:09.3536790Z Uploaded bytes 377
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:09.3926560Z Finished uploading artifact content to blob storage!
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:09.3928620Z SHA256 digest of uploaded artifact zip is 781ca4005c3891fb60d0a2bf54beae261d1b46550d6530cb2ec224f115c96eed
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:09.3933370Z Finalizing artifact upload
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:09.6284080Z Artifact host-replacement-non-passing.zip successfully finalized. Artifact ID 10359362808
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:09.6285060Z Artifact host-replacement-non-passing has been successfully uploaded! Final size is 377 bytes. Artifact ID is 10359362808
+quarterly-host-replacement	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:59:09.6290660Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34871926793/artifacts/10359362808
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-14T16:59:09.6488150Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.6489380Z Post job cleanup.
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.7950660Z [command]/opt/homebrew/bin/git version
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.8050970Z git version 2.55.0
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.8266820Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/0ee21d1e-ca9d-403d-8de1-18ed51af7524/.gitconfig'
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.8267600Z Temporarily overriding HOME='/Users/runner/work/_temp/0ee21d1e-ca9d-403d-8de1-18ed51af7524' before making global git config changes
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.8268250Z Adding repository directory to the temporary git global config as a safe directory
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.8268850Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.8269800Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.8290950Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.9057390Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.9109840Z http.https://github.com/.extraheader
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.9117480Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:09.9182900Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:10.0081600Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+quarterly-host-replacement	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:59:10.0142570Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+quarterly-host-replacement	Complete job	﻿2026-09-14T16:59:10.1882810Z Cleaning up orphan processes
+quarterly-host-replacement	Complete job	2026-09-14T16:59:10.5849970Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

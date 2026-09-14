@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "fixture": "host-replacement",
+  "result": "NON_PASSING",
+  "revision": "4f5954104c839dbec57188607829fdc7b975e0cc",
+  "reason": "outer_acceptance_sealed",
+  "attempts": 0,
+  "dns_reached": false,
+  "lane": "live-host-dns-acceptance",
+  "owner": "BACKLOG/999.2",
+  "sealed_at": "credentialed_apply"
+}

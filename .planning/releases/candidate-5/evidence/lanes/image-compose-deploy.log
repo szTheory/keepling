@@ -1,0 +1,221 @@
+image-compose-deploy	Set up job	﻿2026-09-14T16:28:33.9529056Z Current runner version: '2.337.0'
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9551183Z ##[group]Runner Image Provisioner
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9552021Z Hosted Compute Agent
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9552538Z Version: 20260828.587
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9553080Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9553771Z Build Date: 2026-08-28T16:44:25Z
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9554486Z Worker ID: {423758e0-396e-41c0-b45f-8401b397fce8}
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9555173Z Azure Region: westus3
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9555728Z ##[endgroup]
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9556976Z ##[group]Operating System
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9557577Z Ubuntu
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9558074Z 24.04.5
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9558497Z LTS
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9559000Z ##[endgroup]
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9559466Z ##[group]Runner Image
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9560020Z Image: ubuntu-24.04
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9560513Z Version: 20260907.300.1
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9561392Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9563272Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9564410Z ##[endgroup]
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9565382Z ##[group]GITHUB_TOKEN Permissions
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9567308Z Contents: read
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9567828Z Metadata: read
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9568321Z ##[endgroup]
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9570134Z Secret source: Actions
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9570965Z Cache mode: write
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9571646Z Prepare workflow directory
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9904720Z Prepare all required actions
+image-compose-deploy	Set up job	2026-09-14T16:28:33.9946120Z Getting action download info
+image-compose-deploy	Set up job	2026-09-14T16:28:34.2961006Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+image-compose-deploy	Set up job	2026-09-14T16:28:34.4392683Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+image-compose-deploy	Set up job	2026-09-14T16:28:34.5547631Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+image-compose-deploy	Set up job	2026-09-14T16:28:34.8106274Z Complete job name: image-compose-deploy
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-14T16:28:34.8703099Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8710489Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8711236Z with:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8711596Z   repository: szTheory/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8714986Z   token: ***
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8715357Z   ssh-strict: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8715777Z   ssh-user: git
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8716152Z   persist-credentials: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8716554Z   clean: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8716909Z   sparse-checkout-cone-mode: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8717352Z   fetch-depth: 1
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8717699Z   fetch-tags: false
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8718060Z   show-progress: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8718426Z   lfs: false
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8718798Z   submodules: false
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8719158Z   set-safe-directory: true
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8719759Z env:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8720111Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8720684Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8721298Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.8721718Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9569106Z Syncing repository: szTheory/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9570691Z ##[group]Getting Git version info
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9571289Z Working directory is '/home/runner/work/keepling/keepling'
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9572149Z [command]/usr/bin/git version
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9615773Z git version 2.55.0
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9632271Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9645199Z Temporarily overriding HOME='/home/runner/work/_temp/24151845-f8a8-491f-a4d5-63843b20e967' before making global git config changes
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9647340Z Adding repository directory to the temporary git global config as a safe directory
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9650030Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9688542Z Deleting the contents of '/home/runner/work/keepling/keepling'
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9692192Z ##[group]Initializing the repository
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9695710Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9766822Z hint: Using 'master' as the name for the initial branch. This default branch name
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9767797Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9768958Z hint: to use in all of your new repositories, which will suppress this warning,
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9769958Z hint: call:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9770506Z hint:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9771208Z hint: 	git config --global init.defaultBranch <name>
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9772077Z hint:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9772847Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9774470Z hint: 'development'. The just-created branch can be renamed via this command:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9775519Z hint:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9776071Z hint: 	git branch -m <name>
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9776687Z hint:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9777478Z hint: Disable this message with "git config set advice.defaultBranchName false"
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9778832Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9781049Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9819470Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9820149Z ##[group]Disabling automatic garbage collection
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9822656Z [command]/usr/bin/git config --local gc.auto 0
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9849869Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9850492Z ##[group]Setting up auth
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9855331Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:34.9882848Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.0198737Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.0232900Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.0449755Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.0486999Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.0682357Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.0711609Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.0712309Z ##[group]Fetching the repository
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.0719145Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4f5954104c839dbec57188607829fdc7b975e0cc:refs/remotes/origin/main
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.3064871Z From https://github.com/szTheory/keepling
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.3066368Z  * [new ref]         4f5954104c839dbec57188607829fdc7b975e0cc -> origin/main
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.3081376Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.3082351Z ##[group]Determining the checkout info
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.3083383Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.3084484Z [command]/usr/bin/git sparse-checkout disable
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.3113764Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.3138642Z ##[group]Checking out the ref
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.3140880Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.4358204Z Switched to a new branch 'main'
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.4359774Z branch 'main' set up to track 'origin/main'.
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.4372192Z ##[endgroup]
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.4408607Z [command]/usr/bin/git log -1 --format=%H
+image-compose-deploy	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.4428842Z 4f5954104c839dbec57188607829fdc7b975e0cc
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-14T16:28:36.4736307Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.4741283Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.4742655Z with:
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.4743420Z   node-version: 24.7.0
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.4744382Z   always-auth: false
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.4745243Z   check-latest: false
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.4752768Z   token: ***
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.4753569Z env:
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.4754409Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.4755731Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.4757188Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.4758158Z ##[endgroup]
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.5991951Z Attempting to download 24.7.0...
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.6081570Z (node:2025) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.6084189Z (Use `node --trace-deprecation ...` to show where the warning was created)
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:37.5964762Z Acquiring 24.7.0 - x64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-linux-x64.tar.gz
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:38.2285571Z Extracting ...
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:38.2381278Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/b942159a-65a6-4f71-a5a7-15d02f2f24f6 -f /home/runner/work/_temp/3dce3485-603e-43da-93e1-d0348c38db1a
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:39.3505978Z Adding to the cache ...
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:41.4711635Z ##[group]Environment details
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:41.6627073Z node: v24.7.0
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:41.6627588Z npm: 11.5.1
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:41.6627853Z yarn: 1.22.22
+image-compose-deploy	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:41.6628480Z ##[endgroup]
+image-compose-deploy	Install locked JavaScript inputs	﻿2026-09-14T16:28:41.6774489Z ##[group]Run corepack enable && pnpm install --frozen-lockfile
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:41.6774966Z ^[[36;1mcorepack enable && pnpm install --frozen-lockfile^[[0m
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:41.6813010Z shell: /usr/bin/bash -e {0}
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:41.6813255Z env:
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:41.6813438Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:41.6813765Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:41.6814315Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:41.6814539Z ##[endgroup]
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:41.7807174Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:42.5703790Z Scope: all 4 workspace projects
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:42.6133863Z Lockfile is up to date, resolution step is skipped
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:42.7426645Z Packages: +910
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:42.7427317Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:42.8515625Z Progress: resolved 0, reused 0, downloaded 1, added 0
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:43.8506609Z Progress: resolved 0, reused 0, downloaded 65, added 32
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:44.8512518Z Progress: resolved 0, reused 0, downloaded 251, added 228
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:45.8645854Z Progress: resolved 0, reused 0, downloaded 487, added 494
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:46.3342411Z Packages are hard linked from the content-addressable store to the virtual store.
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:46.3368044Z   Content-addressable store is at: /home/runner/.local/share/pnpm/store/v10
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:46.3381436Z   Virtual store is at:             node_modules/.pnpm
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:46.8590031Z Progress: resolved 0, reused 0, downloaded 825, added 849
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:47.1099102Z Progress: resolved 0, reused 0, downloaded 868, added 910, done
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:47.5276239Z 
+image-compose-deploy	Install locked JavaScript inputs	2026-09-14T16:28:47.6109572Z Done in 5.3s using pnpm v10.33.0
+image-compose-deploy	Run exact image, Compose, and deploy lane	﻿2026-09-14T16:28:47.6516919Z ##[group]Run set -o pipefail
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:28:47.6517203Z ^[[36;1mset -o pipefail^[[0m
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:28:47.6517606Z ^[[36;1m./tooling/test-phase-2.sh --lane image-compose-deploy | tee "$RUNNER_TEMP/image-compose-deploy.txt"^[[0m
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:28:47.6518124Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/image-compose-deploy.txt"^[[0m
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:28:47.6552698Z shell: /usr/bin/bash -e {0}
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:28:47.6552913Z env:
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:28:47.6553094Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:28:47.6553419Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:28:47.6553752Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:28:47.6554117Z ##[endgroup]
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:28:47.7437993Z lane=image-compose-deploy status=RUNNING command=./tooling/verify-image.sh && ./tooling/verify-compose.sh && ./tooling/verify-deploy.sh --local cases=3 seed=none inputs_sha256=b66292c73157a26fef8264963c54a478e24e739dacaf869b519266a64b07a883
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:31:16.5688570Z lane=image-compose-deploy status=PASS command=./tooling/verify-image.sh && ./tooling/verify-compose.sh && ./tooling/verify-deploy.sh --local cases=3 seed=none elapsed_ms=148825 inputs_sha256=b66292c73157a26fef8264963c54a478e24e739dacaf869b519266a64b07a883
+image-compose-deploy	Run exact image, Compose, and deploy lane	2026-09-14T16:31:16.5807345Z Privacy verification passed: artifacts=1 sentinels=7
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	﻿2026-09-14T16:31:16.5886416Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5887862Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5888243Z with:
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5888426Z   name: image-compose-deploy-timing
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5888709Z   path: /home/runner/work/_temp/image-compose-deploy.txt
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5888967Z   if-no-files-found: error
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5889154Z   retention-days: 14
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5889329Z   compression-level: 6
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5889504Z   overwrite: false
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5889693Z   include-hidden-files: false
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5889884Z env:
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5890055Z   KEEPLING_PHASE2_SEED: 20260901
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5890351Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5890697Z   KEEPLING_IMAGE_PLATFORM: linux/amd64
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.5890904Z ##[endgroup]
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.7258355Z (node:9063) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.7259052Z (Use `node --trace-deprecation ...` to show where the warning was created)
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.7293617Z With the provided path, there will be 1 file uploaded
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.7297535Z Artifact name is valid!
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:16.7298101Z Root directory input is valid!
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:17.0798071Z Beginning upload of artifact content to blob storage
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:17.0937936Z (node:9063) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:17.2956411Z Uploaded bytes 361
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:17.3515217Z Finished uploading artifact content to blob storage!
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:17.3515926Z SHA256 digest of uploaded artifact zip is 9b4fec4a119d9160b80a76c6c49a1dcb60dd90d0d096cb660cd27328d205ab5d
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:17.3516562Z Finalizing artifact upload
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:17.6204747Z Artifact image-compose-deploy-timing.zip successfully finalized. Artifact ID 10357274603
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:17.6205866Z Artifact image-compose-deploy-timing has been successfully uploaded! Final size is 361 bytes. Artifact ID is 10357274603
+image-compose-deploy	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:31:17.6210302Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34868832053/artifacts/10357274603
+image-compose-deploy	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-14T16:31:17.6357015Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:31:17.6357948Z Post job cleanup.
+image-compose-deploy	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:31:17.7360607Z (node:9076) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+image-compose-deploy	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:31:17.7361311Z (Use `node --trace-deprecation ...` to show where the warning was created)
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-14T16:31:17.7499016Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.7499954Z Post job cleanup.
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8193292Z [command]/usr/bin/git version
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8224580Z git version 2.55.0
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8254122Z Temporarily overriding HOME='/home/runner/work/_temp/4fa2e1ae-29c3-4c4d-ab59-4949fa82b773' before making global git config changes
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8255707Z Adding repository directory to the temporary git global config as a safe directory
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8258600Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8288292Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8315705Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8505012Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8527841Z http.https://github.com/.extraheader
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8535641Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8560521Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8742901Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+image-compose-deploy	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:31:17.8767722Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+image-compose-deploy	Complete job	﻿2026-09-14T16:31:17.9072475Z Cleaning up orphan processes
+image-compose-deploy	Complete job	2026-09-14T16:31:17.9359911Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

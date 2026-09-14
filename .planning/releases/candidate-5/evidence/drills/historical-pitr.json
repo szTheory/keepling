@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "fixture": "historical-pitr",
+  "result": "PASS",
+  "revision": "4f5954104c839dbec57188607829fdc7b975e0cc",
+  "elapsed_seconds": 7,
+  "seed": 20260901,
+  "semantic": "complete"
+}

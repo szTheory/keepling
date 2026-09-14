@@ -1,0 +1,451 @@
+phase2-backup-restore	Set up job	﻿2026-09-14T16:28:34.3750689Z Current runner version: '2.337.0'
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3778997Z ##[group]Runner Image Provisioner
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3780010Z Hosted Compute Agent
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3780922Z Version: 20260828.587
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3781610Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3782416Z Build Date: 2026-08-28T16:44:25Z
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3783188Z Worker ID: {ccac9483-3fc3-4c07-a845-19d2b20212be}
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3783963Z Azure Region: westus
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3784555Z ##[endgroup]
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3786218Z ##[group]Operating System
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3786970Z Ubuntu
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3787583Z 24.04.5
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3788113Z LTS
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3788712Z ##[endgroup]
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3789322Z ##[group]Runner Image
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3790662Z Image: ubuntu-24.04
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3791305Z Version: 20260907.300.1
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3792391Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3794230Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3795321Z ##[endgroup]
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3796409Z ##[group]GITHUB_TOKEN Permissions
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3798701Z Contents: read
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3799352Z Metadata: read
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3799895Z ##[endgroup]
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3802665Z Secret source: Actions
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3803663Z Cache mode: write
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.3804503Z Prepare workflow directory
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.4221934Z Prepare all required actions
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.4272514Z Getting action download info
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.7936491Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+phase2-backup-restore	Set up job	2026-09-14T16:28:34.9293361Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+phase2-backup-restore	Set up job	2026-09-14T16:28:35.0743740Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+phase2-backup-restore	Set up job	2026-09-14T16:28:35.2559716Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+phase2-backup-restore	Set up job	2026-09-14T16:28:35.4750845Z Complete job name: phase2-backup-restore
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-14T16:28:35.5577918Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5588177Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5589235Z with:
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5589736Z   repository: szTheory/keepling
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5594248Z   token: ***
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5594745Z   ssh-strict: true
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5595220Z   ssh-user: git
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5595749Z   persist-credentials: true
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5596281Z   clean: true
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5596767Z   sparse-checkout-cone-mode: true
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5597336Z   fetch-depth: 1
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5597807Z   fetch-tags: false
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5598297Z   show-progress: true
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5598795Z   lfs: false
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5599306Z   submodules: false
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5599812Z   set-safe-directory: true
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5600778Z env:
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5601273Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5602070Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.5602890Z ##[endgroup]
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6605105Z Syncing repository: szTheory/keepling
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6607248Z ##[group]Getting Git version info
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6608120Z Working directory is '/home/runner/work/keepling/keepling'
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6609358Z [command]/usr/bin/git version
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6671415Z git version 2.55.0
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6694527Z ##[endgroup]
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6710789Z Temporarily overriding HOME='/home/runner/work/_temp/2f33faea-2f22-4a44-a2cb-3cdf068533c4' before making global git config changes
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6713129Z Adding repository directory to the temporary git global config as a safe directory
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6716208Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6775457Z Deleting the contents of '/home/runner/work/keepling/keepling'
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6780970Z ##[group]Initializing the repository
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6786812Z [command]/usr/bin/git init /home/runner/work/keepling/keepling
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6921618Z hint: Using 'master' as the name for the initial branch. This default branch name
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6923581Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6925069Z hint: to use in all of your new repositories, which will suppress this warning,
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6926229Z hint: call:
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6927429Z hint:
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6928702Z hint: 	git config --global init.defaultBranch <name>
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6930455Z hint:
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6931846Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6933340Z hint: 'development'. The just-created branch can be renamed via this command:
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6934844Z hint:
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6935594Z hint: 	git branch -m <name>
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6936171Z hint:
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6936887Z hint: Disable this message with "git config set advice.defaultBranchName false"
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6937975Z Initialized empty Git repository in /home/runner/work/keepling/keepling/.git/
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6941658Z [command]/usr/bin/git remote add origin https://github.com/szTheory/keepling
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6993905Z ##[endgroup]
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6994946Z ##[group]Disabling automatic garbage collection
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.6998389Z [command]/usr/bin/git config --local gc.auto 0
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.7032536Z ##[endgroup]
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.7033375Z ##[group]Setting up auth
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.7040478Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.7075903Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.7440569Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.7477731Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.7713290Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.7748149Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.7987321Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.8028424Z ##[endgroup]
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.8029516Z ##[group]Fetching the repository
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:35.8038656Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4f5954104c839dbec57188607829fdc7b975e0cc:refs/remotes/origin/main
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.5474009Z From https://github.com/szTheory/keepling
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.5476371Z  * [new ref]         4f5954104c839dbec57188607829fdc7b975e0cc -> origin/main
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.5481855Z ##[endgroup]
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.5484062Z ##[group]Determining the checkout info
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.5486411Z ##[endgroup]
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.5489418Z [command]/usr/bin/git sparse-checkout disable
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.5543547Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.5576075Z ##[group]Checking out the ref
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.5581135Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.7057665Z Switched to a new branch 'main'
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.7063501Z branch 'main' set up to track 'origin/main'.
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.7078951Z ##[endgroup]
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.7136890Z [command]/usr/bin/git log -1 --format=%H
+phase2-backup-restore	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:36.7153756Z 4f5954104c839dbec57188607829fdc7b975e0cc
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-14T16:28:36.7647210Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.7654609Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.7656328Z with:
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.7657207Z   node-version: 24.7.0
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.7658198Z   always-auth: false
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.7659218Z   check-latest: false
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.7670628Z   token: ***
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.7671546Z env:
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.7672403Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.7674038Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.7675736Z ##[endgroup]
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.9283579Z Attempting to download 24.7.0...
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.9402004Z (node:2264) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:36.9407434Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:37.7240854Z Acquiring 24.7.0 - x64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-linux-x64.tar.gz
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:38.2918453Z Extracting ...
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:38.3054866Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/1902bba2-95ff-44ee-8d1f-fb12f6d46a3f -f /home/runner/work/_temp/570d3957-fce3-4a04-a125-a212fd94389d
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:39.6112676Z Adding to the cache ...
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:41.8267216Z ##[group]Environment details
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.2630448Z node: v24.7.0
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.2631019Z npm: 11.5.1
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.2634321Z yarn: 1.22.22
+phase2-backup-restore	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.2635245Z ##[endgroup]
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-14T16:28:42.3484413Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3485891Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3486261Z with:
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3486580Z   path: ~/.asdf/installs
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/deps
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/_build
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	node_modules
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3487244Z   key: phase2-Linux-backup-restore-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3487813Z   enableCrossOsArchive: false
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3488118Z   fail-on-cache-miss: false
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3488359Z   lookup-only: false
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3488580Z   save-always: false
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3488790Z env:
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3489003Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3489439Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.3489833Z ##[endgroup]
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.4613339Z (node:2310) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.4615020Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.7320032Z Cache hit for: phase2-Linux-backup-restore-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:42.7439386Z (node:2310) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:44.0016662Z Received 0 of 172281393 (0.0%), 0.0 MBs/sec
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:45.0056482Z Received 104857600 of 172281393 (60.9%), 49.9 MBs/sec
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:45.8672332Z Received 172281393 of 172281393 (100.0%), 57.3 MBs/sec
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:45.8674300Z Cache Size: ~164 MB (172281393 B)
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:45.8808816Z [command]/usr/bin/tar -xf /home/runner/work/_temp/ef02d963-e830-4f01-8573-59b51d6f0768/cache.tzst -P -C /home/runner/work/keepling/keepling --use-compress-program unzstd
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:48.0201733Z Cache restored successfully
+phase2-backup-restore	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:48.0367530Z Cache restored from key: phase2-Linux-backup-restore-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-backup-restore	Install asdf	﻿2026-09-14T16:28:48.0494773Z ##[group]Run set -eu
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0495167Z ^[[36;1mset -eu^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0495534Z ^[[36;1m# The cache step above restores ~/.asdf/installs, which CREATES^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0496092Z ^[[36;1m# $HOME/.asdf before this step runs. An unconditional clone then dies^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0496589Z ^[[36;1m# with "destination path already exists and is not an empty^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0497081Z ^[[36;1m# directory" (exit 128) and the lane never reaches any project code.^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0497589Z ^[[36;1m# Clone into a scratch directory and move only the parts that are^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0498112Z ^[[36;1m# missing, so a restored cache and a cold runner both end up with the^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0498509Z ^[[36;1m# same tree.^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0498779Z ^[[36;1mif [ ! -d "$HOME/.asdf/.git" ]; then^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0499094Z ^[[36;1m  scratch="$(mktemp -d)"^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0499553Z ^[[36;1m  git clone https://github.com/asdf-vm/asdf.git "$scratch/asdf" --branch v0.14.1^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0500051Z ^[[36;1m  mkdir -p "$HOME/.asdf"^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0500748Z ^[[36;1m  # `cp -R src/. dst` merges into an existing directory instead of^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0501226Z ^[[36;1m  # nesting, which is what the restored-cache case needs.^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0501629Z ^[[36;1m  cp -R "$scratch/asdf/." "$HOME/.asdf/"^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0501973Z ^[[36;1m  rm -rf "$scratch"^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0502241Z ^[[36;1mfi^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0502506Z ^[[36;1mecho "$HOME/.asdf/bin" >> "$GITHUB_PATH"^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0502886Z ^[[36;1mecho "$HOME/.asdf/shims" >> "$GITHUB_PATH"^[[0m
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0543365Z shell: /usr/bin/bash -e {0}
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0543666Z env:
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0543901Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0544342Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0544765Z ##[endgroup]
+phase2-backup-restore	Install asdf	2026-09-14T16:28:48.0657633Z Cloning into '/tmp/tmp.2dPTeNXvyu/asdf'...
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2101275Z Note: switching to 'f00f759f3d8d405468d0071310a91b8f5a9c3798'.
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2101944Z 
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2102531Z You are in 'detached HEAD' state. You can look around, make experimental
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2103659Z changes and commit them, and you can discard any commits you make in this
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2104661Z state without impacting any branches by switching back to a branch.
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2105035Z 
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2105382Z If you want to create a new branch to retain commits you create, you may
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2106047Z do so (now or later) by using -c with the switch command. Example:
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2106382Z 
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2106554Z   git switch -c <new-branch-name>
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2106776Z 
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2106936Z Or undo this operation with:
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2107148Z 
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2107267Z   git switch -
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2107427Z 
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2107804Z Turn off this advice by setting config variable advice.detachedHead to false
+phase2-backup-restore	Install asdf	2026-09-14T16:28:49.2108217Z 
+phase2-backup-restore	Provision exact repository runtimes	﻿2026-09-14T16:28:49.2535758Z ##[group]Run ./tooling/runtime-preflight.sh --provision
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:49.2536231Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:49.2536758Z ^[[36;1mcorepack enable^[[0m
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:49.2537015Z ^[[36;1mpnpm install --frozen-lockfile^[[0m
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:49.2537509Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:49.2574288Z shell: /usr/bin/bash -e {0}
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:49.2574557Z env:
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:49.2574770Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:49.2575171Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:49.2575597Z ##[endgroup]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:49.3574338Z Cloning into '/home/runner/.asdf/repository'...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:52.7201963Z initializing plugin repository...erlang 29.0.5 is already installed
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:52.7587516Z elixir 1.20.2-otp-29 is already installed
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.5211520Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.5686402Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.5701878Z Get:6 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.5752089Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.5781370Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.5813387Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.6196306Z Get:7 https://apt.postgresql.org/pub/repos/apt noble-pgdg InRelease [189 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.6761662Z Get:8 https://dl.google.com/linux/chrome-stable/deb stable InRelease [2548 B]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.7441947Z Get:9 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [415 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.7571861Z Get:10 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [464 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.8013438Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1263 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.8092031Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [292 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.8111544Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [181 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.8113151Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1691 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.8201314Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [339 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.8232046Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [388 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.8251887Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1544 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.8325725Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [354 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.8347193Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.8625196Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [5772 B]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.9155567Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [12.6 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.9169393Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1007 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.9237039Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [213 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.9245746Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [46.4 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.9250933Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1207 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.9334027Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [242 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.9336702Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [76.3 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.9349548Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1445 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.9432101Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [336 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:53.9938559Z Get:30 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 Packages [835 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:54.1061310Z Get:31 https://dl.google.com/linux/chrome-stable/deb stable/main amd64 Packages [1410 B]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:59.1095310Z Fetched 12.9 MB in 2s (8534 kB/s)
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:28:59.9991732Z Reading package lists...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.0329411Z Reading package lists...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.2641383Z Building dependency tree...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.2650039Z Reading state information...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.4293098Z The following additional packages will be installed:
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.4294925Z   liburing2 postgresql-18-jit postgresql-client-18
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.4301093Z Suggested packages:
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.4301753Z   postgresql-doc-18
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.4584984Z The following NEW packages will be installed:
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.4588763Z   liburing2 postgresql-18 postgresql-18-jit postgresql-client-18
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.4835287Z 0 upgraded, 4 newly installed, 0 to remove and 52 not upgraded.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.4835879Z Need to get 19.6 MB of archives.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.4836334Z After this operation, 71.9 MB of additional disk space will be used.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.4836863Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.5463680Z Get:3 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-client-18 amd64 18.6-1.pgdg24.04+2 [2114 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.5567693Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 liburing2 amd64 2.5-1build1 [21.1 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.5975433Z Get:4 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-18 amd64 18.6-1.pgdg24.04+2 [7577 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:00.6620932Z Get:5 https://apt.postgresql.org/pub/repos/apt noble-pgdg/main amd64 postgresql-18-jit amd64 18.6-1.pgdg24.04+2 [9924 kB]
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.0425693Z Preconfiguring packages ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1007768Z Fetched 19.6 MB in 0s (68.4 MB/s)
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1233452Z Selecting previously unselected package liburing2:amd64.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1541099Z (Reading database ... 
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1541727Z (Reading database ... 5%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1542266Z (Reading database ... 10%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1542804Z (Reading database ... 15%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1543527Z (Reading database ... 20%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1544323Z (Reading database ... 25%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1545036Z (Reading database ... 30%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1546420Z (Reading database ... 35%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1547258Z (Reading database ... 40%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1547833Z (Reading database ... 45%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1548286Z (Reading database ... 50%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.1595817Z (Reading database ... 55%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.2986042Z (Reading database ... 60%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.4948224Z (Reading database ... 65%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.6628311Z (Reading database ... 70%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:01.8400850Z (Reading database ... 75%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.0311698Z (Reading database ... 80%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.2512341Z (Reading database ... 85%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.4503465Z (Reading database ... 90%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.6610829Z (Reading database ... 95%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.6611410Z (Reading database ... 100%
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.6612137Z (Reading database ... 201818 files and directories currently installed.)
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.6657799Z Preparing to unpack .../liburing2_2.5-1build1_amd64.deb ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.6754720Z Unpacking liburing2:amd64 (2.5-1build1) ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.6978806Z Selecting previously unselected package postgresql-client-18.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.7107316Z Preparing to unpack .../postgresql-client-18_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.7116595Z Unpacking postgresql-client-18 (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.9666092Z Selecting previously unselected package postgresql-18.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.9854615Z Preparing to unpack .../postgresql-18_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:02.9910687Z Unpacking postgresql-18 (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:03.4960842Z Selecting previously unselected package postgresql-18-jit.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:03.5097063Z Preparing to unpack .../postgresql-18-jit_18.6-1.pgdg24.04+2_amd64.deb ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:03.5128324Z Unpacking postgresql-18-jit (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:04.1816404Z Setting up postgresql-client-18 (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:04.6017283Z update-alternatives: using /usr/share/postgresql/18/man/man1/psql.1.gz to provide /usr/share/man/man1/psql.1.gz (psql.1.gz) in auto mode
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:04.6394168Z Setting up liburing2:amd64 (2.5-1build1) ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:04.6416981Z Setting up postgresql-18 (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:05.5728905Z Setting up postgresql-18-jit (18.6-1.pgdg24.04+2) ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:05.5757642Z Processing triggers for libc-bin (2.39-0ubuntu8.8) ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:05.6729595Z Processing triggers for postgresql-common (293.pgdg24.04+1) ...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:05.7901545Z Building PostgreSQL dictionaries from installed myspell/hunspell packages...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:05.7953624Z   en_us
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:05.8515884Z Removing obsolete dictionary files:
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:07.1327321Z 
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:07.1328092Z Running kernel seems to be up-to-date.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:07.1328596Z 
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:07.1328918Z No services need to be restarted.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:07.1329289Z 
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:07.1329510Z No containers need to be restarted.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:07.1329769Z 
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:07.1330035Z No user sessions are running outdated binaries.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:07.1330853Z 
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:07.1331294Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:08.7609867Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:08.9201750Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:09.9266660Z Scope: all 4 workspace projects
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:10.0185951Z Lockfile is up to date, resolution step is skipped
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:11.1705222Z Packages: +2 -47
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:11.1706014Z ++-----------------------------------------------
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:11.3845125Z Progress: resolved 0, reused 0, downloaded 1, added 0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:12.3842692Z Progress: resolved 0, reused 0, downloaded 26, added 0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:12.8781804Z Progress: resolved 0, reused 0, downloaded 48, added 2, done
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:13.0484124Z 
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:13.1514676Z Done in 3.5s using pnpm v10.33.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:13.6793180Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:14.4057084Z * creating /home/runner/.mix/archives/hex-2.5.1
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.0025982Z Resolving Hex dependencies...
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1354118Z Resolution completed in 0.128s
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1595019Z Unchanged:
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1595697Z   argon2_elixir 4.1.3
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1606283Z   bandit 1.12.5
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1607263Z   certifi 2.17.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1608229Z   comeonin 5.5.1
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1609252Z   db_connection 2.10.2
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1609837Z   decimal 3.1.1
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1610669Z   dns_cluster 0.2.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1611328Z   ecto 3.14.2
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1611979Z   ecto_sql 3.14.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1612434Z   elixir_make 0.10.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1612914Z   expo 1.1.1
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1613418Z   gettext 1.0.2
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1613922Z   h2 0.12.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1614452Z   hackney 4.7.4
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1615041Z   hammer 7.4.1
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1615762Z   hex_core 0.15.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1616250Z   hpax 1.0.4
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1616700Z   idna 7.1.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1617270Z   jason 1.4.5
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1617674Z   mime 2.0.7
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1618192Z   mimerl 1.5.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1618779Z   optimus 0.6.1
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1619251Z   parse_trans 3.4.2
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1620061Z   phoenix 1.8.13
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1621346Z   phoenix_ecto 4.7.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1622412Z   phoenix_pubsub 2.3.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1624466Z   phoenix_template 1.0.4
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1625152Z   plug 1.20.3
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1625615Z   plug_crypto 2.2.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1626049Z   postgrex 0.22.4
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1626464Z   protobuf 0.16.1
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1626865Z   purl 0.3.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1627259Z   quic 1.8.2
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1627661Z   sbom 0.10.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1628066Z   ssl_verify_fun 1.1.7
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1628521Z   stream_data 1.4.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1628944Z   telemetry 1.4.2
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1629376Z   telemetry_metrics 1.2.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1629854Z   telemetry_poller 1.3.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1630574Z   thousand_island 1.5.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1631004Z   tzdata 1.1.5
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1631374Z   websock 0.5.3
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1631773Z   websock_adapter 0.6.0
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.1632229Z   webtransport 0.4.5
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.2161207Z * creating /home/runner/.mix/elixir/1-20-otp-29/rebar3
+phase2-backup-restore	Provision exact repository runtimes	2026-09-14T16:29:15.2644563Z All dependencies have been fetched
+phase2-backup-restore	Run exact Phase 2 lane	﻿2026-09-14T16:29:15.3002248Z ##[group]Run set -o pipefail
+phase2-backup-restore	Run exact Phase 2 lane	2026-09-14T16:29:15.3002596Z ^[[36;1mset -o pipefail^[[0m
+phase2-backup-restore	Run exact Phase 2 lane	2026-09-14T16:29:15.3003053Z ^[[36;1m./tooling/test-phase-2.sh --lane "backup-restore" | tee "$RUNNER_TEMP/backup-restore.txt"^[[0m
+phase2-backup-restore	Run exact Phase 2 lane	2026-09-14T16:29:15.3003634Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/backup-restore.txt"^[[0m
+phase2-backup-restore	Run exact Phase 2 lane	2026-09-14T16:29:15.3040483Z shell: /usr/bin/bash -e {0}
+phase2-backup-restore	Run exact Phase 2 lane	2026-09-14T16:29:15.3040753Z env:
+phase2-backup-restore	Run exact Phase 2 lane	2026-09-14T16:29:15.3040963Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	Run exact Phase 2 lane	2026-09-14T16:29:15.3041361Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	Run exact Phase 2 lane	2026-09-14T16:29:15.3041865Z ##[endgroup]
+phase2-backup-restore	Run exact Phase 2 lane	2026-09-14T16:29:15.3767983Z lane=backup-restore status=RUNNING command=./tooling/verify-backup.sh and three ./tooling/verify-restore.sh fixtures cases=4 seed=20260901 inputs_sha256=d8a1ae0c06fd36a5daef7c2f88d22dfb8943b3c4f70b0b9b07223de7fa9c9422
+phase2-backup-restore	Run exact Phase 2 lane	2026-09-14T16:29:37.9843682Z lane=backup-restore status=PASS command=./tooling/verify-backup.sh and three ./tooling/verify-restore.sh fixtures cases=4 seed=20260901 elapsed_ms=22607 inputs_sha256=d8a1ae0c06fd36a5daef7c2f88d22dfb8943b3c4f70b0b9b07223de7fa9c9422
+phase2-backup-restore	Run exact Phase 2 lane	2026-09-14T16:29:37.9991086Z Privacy verification passed: artifacts=1 sentinels=7
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	﻿2026-09-14T16:29:38.0056682Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0058117Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0058533Z with:
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0058776Z   name: phase2-backup-restore-timing
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0059125Z   path: /home/runner/work/_temp/backup-restore.txt
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0059475Z   if-no-files-found: error
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0059734Z   retention-days: 14
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0059980Z   compression-level: 6
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0060497Z   overwrite: false
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0060771Z   include-hidden-files: false
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0061032Z env:
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0061248Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0061653Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.0062100Z ##[endgroup]
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.1864621Z (node:8643) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.1866248Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.1913959Z With the provided path, there will be 1 file uploaded
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.1920517Z Artifact name is valid!
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.1921803Z Root directory input is valid!
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.6054216Z Beginning upload of artifact content to blob storage
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.6244280Z (node:8643) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.8818385Z Uploaded bytes 347
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.9538103Z Finished uploading artifact content to blob storage!
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.9539733Z SHA256 digest of uploaded artifact zip is c67c1d81bf92f5e17ada4181cfcafb404291e6323f38a16287ad06e44f17111e
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.9541033Z Finalizing artifact upload
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.2580585Z Artifact phase2-backup-restore-timing.zip successfully finalized. Artifact ID 10358371699
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.2582837Z Artifact phase2-backup-restore-timing has been successfully uploaded! Final size is 347 bytes. Artifact ID is 10358371699
+phase2-backup-restore	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.2589371Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34868832053/artifacts/10358371699
+phase2-backup-restore	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-14T16:29:39.3367977Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:29:39.3369332Z Post job cleanup.
+phase2-backup-restore	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:29:39.4535738Z Cache hit occurred on the primary key phase2-Linux-backup-restore-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3, not saving cache.
+phase2-backup-restore	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:29:39.4538043Z (node:8667) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-backup-restore	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:29:39.4539218Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-backup-restore	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-14T16:29:39.4665156Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:29:39.4666456Z Post job cleanup.
+phase2-backup-restore	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:29:39.6133697Z (node:8675) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-backup-restore	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:29:39.6135741Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-14T16:29:39.6362192Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.6363513Z Post job cleanup.
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7277080Z [command]/usr/bin/git version
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7318983Z git version 2.55.0
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7359391Z Temporarily overriding HOME='/home/runner/work/_temp/50b540fb-11d3-4860-8e02-86440bd2cc50' before making global git config changes
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7361080Z Adding repository directory to the temporary git global config as a safe directory
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7366163Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/keepling/keepling
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7406175Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7443294Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7685474Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7712180Z http.https://github.com/.extraheader
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7723539Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7758111Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.7993589Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-backup-restore	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:39.8029648Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-backup-restore	Complete job	﻿2026-09-14T16:29:39.8424613Z Cleaning up orphan processes
+phase2-backup-restore	Complete job	2026-09-14T16:29:39.8740488Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

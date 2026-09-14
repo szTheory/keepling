@@ -1,0 +1,1 @@
+Host replacement sequence regression passed: ordered gates, DNS fence, and teardown guarantee

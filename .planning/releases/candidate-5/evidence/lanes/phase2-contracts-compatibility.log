@@ -1,0 +1,364 @@
+phase2-contracts-compatibility	Set up job	﻿2026-09-14T16:28:39.1454710Z Current runner version: '2.337.0'
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1475630Z ##[group]Runner Image Provisioner
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1476410Z Hosted Compute Agent
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1476830Z Version: 20260828.587
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1477270Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1477740Z Build Date: 2026-08-28T16:44:25Z
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1478180Z Worker ID: {c73a21cb-2543-4e73-a87a-463d294bfca7}
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1478640Z Azure Region: westus
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1479060Z ##[endgroup]
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1480070Z ##[group]Operating System
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1480510Z macOS
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1480870Z 15.7.9
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1481250Z 24G830
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1481730Z ##[endgroup]
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1482110Z ##[group]Runner Image
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1482560Z Image: macos-15-arm64
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1482990Z Version: 20260907.0337.1
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1483750Z Included Software: https://github.com/actions/runner-images/blob/macos-15-arm64/20260907.0337/images/macos/macos-15-arm64-Readme.md
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1485130Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-15-arm64%2F20260907.0337
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1485820Z ##[endgroup]
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1486570Z ##[group]GITHUB_TOKEN Permissions
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1488040Z Contents: read
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1488410Z Metadata: read
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1488790Z ##[endgroup]
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1490370Z Secret source: Actions
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1490950Z Cache mode: write
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1491540Z Prepare workflow directory
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1813760Z Prepare all required actions
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.1849540Z Getting action download info
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.6051840Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:39.8892200Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:40.0011980Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:40.1857100Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+phase2-contracts-compatibility	Set up job	2026-09-14T16:28:40.4258480Z Complete job name: phase2-contracts-compatibility
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-14T16:28:40.4772430Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4781340Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4782010Z with:
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4782400Z   repository: szTheory/keepling
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4785120Z   token: ***
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4785470Z   ssh-strict: true
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4785860Z   ssh-user: git
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4786360Z   persist-credentials: true
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4786710Z   clean: true
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4787110Z   sparse-checkout-cone-mode: true
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4787500Z   fetch-depth: 1
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4787820Z   fetch-tags: false
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4788140Z   show-progress: true
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4788460Z   lfs: false
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4788800Z   submodules: false
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4789210Z   set-safe-directory: true
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4789720Z env:
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4790040Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4791620Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.4792270Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.8588240Z Syncing repository: szTheory/keepling
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.8589750Z ##[group]Getting Git version info
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.8590370Z Working directory is '/Users/runner/work/keepling/keepling'
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.8591770Z [command]/opt/homebrew/bin/git version
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9114880Z git version 2.55.0
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9126120Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9131200Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/11c58135-7e71-4f30-9d79-d9491d268153/.gitconfig'
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9138670Z Temporarily overriding HOME='/Users/runner/work/_temp/11c58135-7e71-4f30-9d79-d9491d268153' before making global git config changes
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9139740Z Adding repository directory to the temporary git global config as a safe directory
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9142070Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9248910Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9253540Z ##[group]Initializing the repository
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9255670Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9452760Z hint: Using 'master' as the name for the initial branch. This default branch name
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9453820Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9454570Z hint: to use in all of your new repositories, which will suppress this warning,
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9455130Z hint: call:
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9455440Z hint:
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9455930Z hint: 	git config --global init.defaultBranch <name>
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9456430Z hint:
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9456920Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9457600Z hint: 'development'. The just-created branch can be renamed via this command:
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9458150Z hint:
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9458490Z hint: 	git branch -m <name>
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9458850Z hint:
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9459320Z hint: Disable this message with "git config set advice.defaultBranchName false"
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9460130Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9467910Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9536260Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9537010Z ##[group]Disabling automatic garbage collection
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9538510Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9606820Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9607580Z ##[group]Setting up auth
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9609480Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:40.9681450Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:41.0707100Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:41.0764550Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:41.1784150Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:41.1918650Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:41.2952810Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:41.3039440Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:41.3042340Z ##[group]Fetching the repository
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:41.3047090Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4f5954104c839dbec57188607829fdc7b975e0cc:refs/remotes/origin/main
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.0217380Z From https://github.com/szTheory/keepling
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.0234810Z  * [new ref]         4f5954104c839dbec57188607829fdc7b975e0cc -> origin/main
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.0239060Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.0239860Z ##[group]Determining the checkout info
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.0241090Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.0241540Z [command]/opt/homebrew/bin/git sparse-checkout disable
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.0336800Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.0417840Z ##[group]Checking out the ref
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.0425780Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.3312410Z Switched to a new branch 'main'
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.3337770Z branch 'main' set up to track 'origin/main'.
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.3341610Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.3613550Z [command]/opt/homebrew/bin/git log -1 --format=%H
+phase2-contracts-compatibility	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:28:42.3614120Z 4f5954104c839dbec57188607829fdc7b975e0cc
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-14T16:28:42.3952930Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.3954640Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.3954970Z with:
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.3955140Z   node-version: 24.7.0
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.3955340Z   always-auth: false
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.3955530Z   check-latest: false
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.3957590Z   token: ***
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.3957760Z env:
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.3957930Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.3958260Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.3958610Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.5578900Z Attempting to download 24.7.0...
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.5776210Z (node:1196) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:42.5778770Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:43.4492780Z Acquiring 24.7.0 - arm64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-darwin-arm64.tar.gz
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:44.2736610Z Extracting ...
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:44.2883110Z [command]/usr/bin/tar xz --strip 1 -C /Users/runner/work/_temp/29c5fd9f-4a17-42e6-825a-2adaf75f1a23 -f /Users/runner/work/_temp/af69443c-7b94-41dd-b2d0-a095fb4497b1
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:45.7778430Z Adding to the cache ...
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:48.8607750Z ##[group]Environment details
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:49.2824920Z node: v24.7.0
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:49.2827280Z npm: 11.5.1
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:49.2828030Z yarn: 1.22.22
+phase2-contracts-compatibility	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:28:49.2829040Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-14T16:28:49.6512890Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6514460Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6515340Z with:
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6515690Z   path: ~/.asdf/installs
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/deps
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/_build
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	node_modules
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6516350Z   key: phase2-macOS-contracts-compatibility-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6516910Z   enableCrossOsArchive: false
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6517210Z   fail-on-cache-miss: false
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6517410Z   lookup-only: false
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6517810Z   save-always: false
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6518040Z env:
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6518200Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6518730Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.6519110Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.8171440Z (node:1262) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:49.8172980Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:50.0828120Z Cache hit for: phase2-macOS-contracts-compatibility-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:50.0948400Z (node:1262) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:51.3763400Z Received 0 of 194532178 (0.0%), 0.0 MBs/sec
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:52.3788660Z Received 71303168 of 194532178 (36.7%), 33.9 MBs/sec
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:53.3836800Z Received 130023424 of 194532178 (66.8%), 41.2 MBs/sec
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:54.3812350Z Received 169366354 of 194532178 (87.1%), 40.3 MBs/sec
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:54.5803650Z Received 194532178 of 194532178 (100.0%), 44.1 MBs/sec
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:54.5871890Z Cache Size: ~186 MB (194532178 B)
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:28:54.5899780Z [command]/opt/homebrew/bin/gtar -xf /Users/runner/work/_temp/7c9a0033-372f-4a2d-ac26-2a5fe9cd044e/cache.tzst -P -C /Users/runner/work/keepling/keepling --delay-directory-restore --use-compress-program unzstd
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:29:04.1841460Z Cache restored successfully
+phase2-contracts-compatibility	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:29:04.2297590Z Cache restored from key: phase2-macOS-contracts-compatibility-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3
+phase2-contracts-compatibility	Provision exact repository runtimes	﻿2026-09-14T16:29:04.2638320Z ##[group]Run brew list asdf >/dev/null 2>&1 || brew install asdf
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:04.2639480Z ^[[36;1mbrew list asdf >/dev/null 2>&1 || brew install asdf^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:04.2639950Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:04.2640260Z ^[[36;1mcorepack enable^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:04.2640960Z ^[[36;1mpnpm install --frozen-lockfile^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:04.2641540Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:04.2733260Z shell: /bin/bash -e {0}
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:04.2733760Z env:
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:04.2734060Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:04.2735800Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:04.2737030Z ##[endgroup]
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:08.3831230Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:08.4043380Z ✔︎ Bottle Manifest asdf (0.20.0)
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:08.4044310Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:08.4125640Z asdf
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:08.4446170Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32masdf^[[39m^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:08.7739780Z ✔︎ Bottle asdf (0.20.0)
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:08.7767870Z ^[[34m==>^[[0m ^[[1mPouring asdf--0.20.0.arm64_sequoia.bottle.tar.gz^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:08.9095590Z 🍺  /opt/homebrew/Cellar/asdf/0.20.0: 10 files, 4.4MB
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:08.9097170Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:08.9097700Z Bash completion has been installed to:
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:08.9098060Z   /opt/homebrew/etc/bash_completion.d
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:11.5460240Z version 29.0.5 of erlang is already installed
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:11.5506470Z version 1.20.2-otp-29 of elixir is already installed
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:12.0439290Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:12.2853350Z ✔︎ Bottle Manifest postgresql@18 (18.6)
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:12.2855540Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:12.2856150Z postgresql@18
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:12.4175150Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32mpostgresql@18^[[39m^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:13.9384820Z ✔︎ Bottle postgresql@18 (18.6)
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:13.9665070Z ^[[34m==>^[[0m ^[[1mPouring postgresql@18--18.6.arm64_sequoia.bottle.tar.gz^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.8880790Z The files belonging to this database system will be owned by user "runner".
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.8886220Z This user must also own the server process.
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.8887490Z 
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.8888800Z The database cluster will be initialized with locale "en_US.UTF-8".
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.8890480Z The default text search configuration will be set to "english".
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.8891160Z 
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.8891760Z Data page checksums are enabled.
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.8900960Z 
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.8902080Z fixing permissions on existing directory /opt/homebrew/var/postgresql@18 ... ok
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.8903560Z creating subdirectories ... ok
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.8904260Z selecting dynamic shared memory implementation ... posix
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.9340850Z selecting default "max_connections" ... 100
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.9575100Z selecting default "shared_buffers" ... 128MB
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.9622000Z selecting default time zone ... UTC
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:16.9635940Z creating configuration files ... ok
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:17.1024400Z running bootstrap script ... ok
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:17.5226170Z performing post-bootstrap initialization ... ok
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:17.5339960Z syncing data to disk ... ok
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:17.5361440Z 
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:17.5361510Z 
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:17.5362090Z Success. You can now start the database server using:
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:17.5362520Z 
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:17.5363010Z     '/opt/homebrew/Cellar/postgresql@18/18.6/bin/pg_ctl' -D '/opt/homebrew/var/postgresql@18' -l logfile start
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:17.5363470Z 
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:17.5363730Z initdb: warning: enabling "trust" authentication for local connections
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:17.5364690Z initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0756580Z 🍺  /opt/homebrew/Cellar/postgresql@18/18.6: 3,873 files, 77.7MB
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0759200Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0760400Z ^[[34m==>^[[0m ^[[1mpostgresql@18^[[0m
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0761590Z This formula has created a default database cluster with:
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0762830Z   initdb --locale=en_US.UTF-8 -E UTF-8 /opt/homebrew/var/postgresql@18
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0763730Z 
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0764570Z When uninstalling, some dead symlinks are left behind so you may want to run:
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0765690Z   brew cleanup --prune-prefix
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0766280Z 
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0767020Z To start postgresql@18 now and restart at login:
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0768160Z   brew services start postgresql@18
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0769430Z Or, if you don't want/need a background service you can just run:
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.0771290Z   LC_ALL="en_US.UTF-8" /opt/homebrew/opt/postgresql@18/bin/postgres -D /opt/homebrew/var/postgresql@18
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.6138110Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:18.8088910Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:19.7859310Z Scope: all 4 workspace projects
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:19.8514360Z Lockfile is up to date, resolution step is skipped
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:20.6136250Z Progress: resolved 0, reused 0, downloaded 1, added 0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:21.1440060Z Packages: +2 -45
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:21.1647140Z ++---------------------------------------------
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:21.6174380Z Progress: resolved 0, reused 0, downloaded 15, added 0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:22.6195640Z Progress: resolved 0, reused 0, downloaded 45, added 0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:22.7424960Z Progress: resolved 0, reused 0, downloaded 46, added 2, done
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:22.9543390Z 
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:23.0448320Z Done in 3.5s using pnpm v10.33.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:23.6627400Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:24.7620410Z * creating /Users/runner/.mix/archives/hex-2.5.1
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.1261060Z Resolving Hex dependencies...
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2327430Z Resolution completed in 0.103s
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2511110Z Unchanged:
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2513080Z   argon2_elixir 4.1.3
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2520680Z   bandit 1.12.5
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2521020Z   certifi 2.17.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2521240Z   comeonin 5.5.1
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2521630Z   db_connection 2.10.2
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2522040Z   decimal 3.1.1
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2522350Z   dns_cluster 0.2.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2522650Z   ecto 3.14.2
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2522900Z   ecto_sql 3.14.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2524100Z   elixir_make 0.10.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2524450Z   expo 1.1.1
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2525670Z   gettext 1.0.2
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2526630Z   h2 0.12.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2527260Z   hackney 4.7.4
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2527950Z   hammer 7.4.1
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2528630Z   hex_core 0.15.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2529230Z   hpax 1.0.4
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2529810Z   idna 7.1.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2530560Z   jason 1.4.5
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2531570Z   mime 2.0.7
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2532330Z   mimerl 1.5.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2532770Z   optimus 0.6.1
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2533140Z   parse_trans 3.4.2
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2533620Z   phoenix 1.8.13
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2533990Z   phoenix_ecto 4.7.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2534360Z   phoenix_pubsub 2.3.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2534760Z   phoenix_template 1.0.4
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2535180Z   plug 1.20.3
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2535540Z   plug_crypto 2.2.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2535920Z   postgrex 0.22.4
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2537050Z   protobuf 0.16.1
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2537460Z   purl 0.3.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2537870Z   quic 1.8.2
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2538230Z   sbom 0.10.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2538660Z   ssl_verify_fun 1.1.7
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2539040Z   stream_data 1.4.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2539490Z   telemetry 1.4.2
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2539900Z   telemetry_metrics 1.2.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2540340Z   telemetry_poller 1.3.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2545780Z   thousand_island 1.5.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2546020Z   tzdata 1.1.5
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2546300Z   websock 0.5.3
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2546590Z   websock_adapter 0.6.0
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.2546820Z   webtransport 0.4.5
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.3611550Z * creating /Users/runner/.mix/elixir/1-20-otp-29/rebar3
+phase2-contracts-compatibility	Provision exact repository runtimes	2026-09-14T16:29:25.4290980Z All dependencies have been fetched
+phase2-contracts-compatibility	Run exact Phase 2 lane	﻿2026-09-14T16:29:25.4775630Z ##[group]Run set -o pipefail
+phase2-contracts-compatibility	Run exact Phase 2 lane	2026-09-14T16:29:25.4776010Z ^[[36;1mset -o pipefail^[[0m
+phase2-contracts-compatibility	Run exact Phase 2 lane	2026-09-14T16:29:25.4776570Z ^[[36;1m./tooling/test-phase-2.sh --lane "contracts-compatibility" | tee "$RUNNER_TEMP/contracts-compatibility.txt"^[[0m
+phase2-contracts-compatibility	Run exact Phase 2 lane	2026-09-14T16:29:25.4777240Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/contracts-compatibility.txt"^[[0m
+phase2-contracts-compatibility	Run exact Phase 2 lane	2026-09-14T16:29:25.4939390Z shell: /bin/bash -e {0}
+phase2-contracts-compatibility	Run exact Phase 2 lane	2026-09-14T16:29:25.4939750Z env:
+phase2-contracts-compatibility	Run exact Phase 2 lane	2026-09-14T16:29:25.4940090Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	Run exact Phase 2 lane	2026-09-14T16:29:25.4940480Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	Run exact Phase 2 lane	2026-09-14T16:29:25.4940920Z ##[endgroup]
+phase2-contracts-compatibility	Run exact Phase 2 lane	2026-09-14T16:29:25.7121580Z lane=contracts-compatibility status=RUNNING command=pnpm contracts:check && ./tooling/test-compatibility.sh cases=30 seed=20260901 inputs_sha256=dfa0a5c186e2763696c5c720bdaa039477ea51eb9d9d1bb7dab188fdeb3a4614
+phase2-contracts-compatibility	Run exact Phase 2 lane	2026-09-14T16:29:38.3847910Z lane=contracts-compatibility status=PASS command=pnpm contracts:check && ./tooling/test-compatibility.sh cases=30 seed=20260901 elapsed_ms=12671 inputs_sha256=dfa0a5c186e2763696c5c720bdaa039477ea51eb9d9d1bb7dab188fdeb3a4614
+phase2-contracts-compatibility	Run exact Phase 2 lane	2026-09-14T16:29:38.4461160Z Privacy verification passed: artifacts=1 sentinels=7
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	﻿2026-09-14T16:29:38.4735630Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4736870Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4737200Z with:
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4737400Z   name: phase2-contracts-compatibility-timing
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4737720Z   path: /Users/runner/work/_temp/contracts-compatibility.txt
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4738000Z   if-no-files-found: error
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4738210Z   retention-days: 14
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4738380Z   compression-level: 6
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4738650Z   overwrite: false
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4738990Z   include-hidden-files: false
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4739210Z env:
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4739500Z   KEEPLING_PHASE2_SEED: 20260901
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4739900Z   KEEPLING_FLAKE_POLICY: no-retry; quarantine-requires-owner-issue-expiry
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.4740910Z ##[endgroup]
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.7586190Z (node:3063) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.7664610Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.7672180Z With the provided path, there will be 1 file uploaded
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.7673820Z Artifact name is valid!
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:38.7674730Z Root directory input is valid!
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.2063170Z Beginning upload of artifact content to blob storage
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.2176230Z (node:3063) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.4956400Z Uploaded bytes 362
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.5697340Z Finished uploading artifact content to blob storage!
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.5699680Z SHA256 digest of uploaded artifact zip is 9b7142d6b13a982727f729764d9c37d496fc1a86066a40e546763ce81ae96549
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.5704130Z Finalizing artifact upload
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.8669460Z Artifact phase2-contracts-compatibility-timing.zip successfully finalized. Artifact ID 10358086251
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.8673690Z Artifact phase2-contracts-compatibility-timing has been successfully uploaded! Final size is 362 bytes. Artifact ID is 10358086251
+phase2-contracts-compatibility	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:29:39.8676400Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34868832053/artifacts/10358086251
+phase2-contracts-compatibility	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-14T16:29:40.0250720Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:29:40.0252230Z Post job cleanup.
+phase2-contracts-compatibility	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:29:40.1888480Z Cache hit occurred on the primary key phase2-macOS-contracts-compatibility-45b3b35ef45f5d65ae586b2b25dfb93049c099ec9870f23270bda4b35fe975d3, not saving cache.
+phase2-contracts-compatibility	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:29:40.1891360Z (node:3070) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-contracts-compatibility	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:29:40.1892180Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-contracts-compatibility	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-14T16:29:40.2043650Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:29:40.2044970Z Post job cleanup.
+phase2-contracts-compatibility	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:29:40.5006600Z (node:3071) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+phase2-contracts-compatibility	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:29:40.5007490Z (Use `node --trace-deprecation ...` to show where the warning was created)
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-14T16:29:40.5105860Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.5106850Z Post job cleanup.
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.6106780Z [command]/opt/homebrew/bin/git version
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.6184750Z git version 2.55.0
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.6232930Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/5fbeb14c-c798-49fc-9bc7-04ef8dcb313f/.gitconfig'
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.6242450Z Temporarily overriding HOME='/Users/runner/work/_temp/5fbeb14c-c798-49fc-9bc7-04ef8dcb313f' before making global git config changes
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.6244460Z Adding repository directory to the temporary git global config as a safe directory
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.6248410Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.6329340Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.6401840Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.7357250Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.7423450Z http.https://github.com/.extraheader
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.7432540Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.7534130Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.8613420Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+phase2-contracts-compatibility	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:29:40.8690270Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+phase2-contracts-compatibility	Complete job	﻿2026-09-14T16:29:41.0034990Z Cleaning up orphan processes
+phase2-contracts-compatibility	Complete job	2026-09-14T16:29:41.2703060Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

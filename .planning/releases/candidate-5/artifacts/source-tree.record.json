@@ -1,0 +1,12 @@
+{
+  "artifactName": "source-tree",
+  "kind": "git-tree",
+  "produced": true,
+  "revision": "4f5954104c839dbec57188607829fdc7b975e0cc",
+  "gitTreeSha1": "c8440d95ae2456b147e1e413eeebfc576d8f63bb",
+  "what": "The exact source tree every continuous-integration run checked out at this revision, named by its git tree object. It exists as an artefact entry because several lanes -- the governance lanes and the Phase 2 lanes -- run against SOURCE, not against a built artefact, and binding them to the packaged application's digest would claim they tested bytes they never opened.",
+  "alsoTheProvenanceSubjectSource": "The SLSA provenance attestation for this revision's archive records resolvedDependencies[0].digest.gitCommit = 4f5954104c839dbec57188607829fdc7b975e0cc, which is the commit whose tree this record names.",
+  "relationshipToCandidate4": "The PRODUCT CODE is byte-identical to candidate-4's and to candidate-3's. The package manifest's inputDigestSha256 is 713dd01d1aa87f6340be17444cab299e1fbcfab80d46b893ce350a62803e639d at ALL THREE revisions. Everything that changed between 069df06 and this revision is continuous-integration configuration and planning documents: .github/workflows/desktop.yml, .github/workflows/recovery-drills.yml, and files under .planning/. NOTHING under apps/ or packages/ moved.",
+  "whatIsNewHereIsWIRING": "This candidate is not a claim that the software improved. It is a claim that lanes which always passed are now OBSERVED to pass by continuous integration, because committed jobs finally run their own declared commands. The lanes changed state; the code did not.",
+  "verifyWith": "git rev-parse 4f5954104c839dbec57188607829fdc7b975e0cc^{tree}"
+}

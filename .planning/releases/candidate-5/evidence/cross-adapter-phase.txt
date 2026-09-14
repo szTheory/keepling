@@ -1,0 +1,23 @@
+CROSS_ADAPTER_RUN_START run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 legs=electron,iphone,web-api,mcp
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=electron scenario=capture_one_task result_code=ok conflict_shape=none activity_fact=task_captured final_revision=1
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=electron scenario=complete_task result_code=ok conflict_shape=none activity_fact=task_completed final_revision=2
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=electron scenario=reopen_task result_code=ok conflict_shape=none activity_fact=task_reopened final_revision=3
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=electron scenario=update_stale_expected_revision result_code=refused:task_lifecycle_conflict conflict_shape=task_lifecycle_conflict activity_fact=task_reopened final_revision=3
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=iphone scenario=capture_one_task result_code=ok conflict_shape=none activity_fact=task_captured final_revision=1
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=iphone scenario=complete_task result_code=ok conflict_shape=none activity_fact=task_completed final_revision=2
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=iphone scenario=reopen_task result_code=ok conflict_shape=none activity_fact=task_reopened final_revision=3
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=iphone scenario=update_stale_expected_revision result_code=refused:task_lifecycle_conflict conflict_shape=task_lifecycle_conflict activity_fact=task_reopened final_revision=3
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=web-api scenario=capture_one_task result_code=ok conflict_shape=none activity_fact=task_captured final_revision=1
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=web-api scenario=complete_task result_code=ok conflict_shape=none activity_fact=task_completed final_revision=2
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=web-api scenario=reopen_task result_code=ok conflict_shape=none activity_fact=task_reopened final_revision=3
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=web-api scenario=update_stale_expected_revision result_code=refused:task_lifecycle_conflict conflict_shape=task_lifecycle_conflict activity_fact=task_reopened final_revision=3
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=mcp scenario=capture_one_task result_code=ok conflict_shape=none activity_fact=task_captured final_revision=1
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=mcp scenario=complete_task result_code=ok conflict_shape=none activity_fact=task_completed final_revision=2
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=mcp scenario=reopen_task result_code=ok conflict_shape=none activity_fact=task_reopened final_revision=3
+CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=mcp scenario=update_stale_expected_revision result_code=refused:task_lifecycle_conflict conflict_shape=task_lifecycle_conflict activity_fact=task_reopened final_revision=3
+
+CROSS_ADAPTER_SUMMARY run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 legs_total=4 legs_ran=4 legs_blocked=0 legs_failed=0 scenarios_per_leg=4 comparison_ok=true
+  PASS leg=electron scenarios=4 duration_ms=14606
+  PASS leg=iphone scenarios=4 duration_ms=307427
+  PASS leg=web-api scenarios=4 duration_ms=566
+  PASS leg=mcp scenarios=4 duration_ms=467

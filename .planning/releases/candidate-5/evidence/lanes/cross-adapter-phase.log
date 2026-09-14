@@ -1,0 +1,739 @@
+cross-adapter-phase	Set up job	﻿2026-09-14T16:32:25.0763820Z Current runner version: '2.337.0'
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0781210Z ##[group]Runner Image Provisioner
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0781780Z Hosted Compute Agent
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0782160Z Version: 20260828.587
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0782580Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0783060Z Build Date: 2026-08-28T16:44:25Z
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0783520Z Worker ID: {50ca147e-44d6-4d57-96ab-b8dd3f866ef2}
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0783990Z Azure Region: westus
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0784360Z ##[endgroup]
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0785410Z ##[group]Operating System
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0785830Z macOS
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0786170Z 26.6.2
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0786500Z 25G83
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0786840Z ##[endgroup]
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0787200Z ##[group]Runner Image
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0787590Z Image: macos-26-arm64
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0787970Z Version: 20260907.0351.1
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0788720Z Included Software: https://github.com/actions/runner-images/blob/macos-26-arm64/20260907.0351/images/macos/macos-26-arm64-Readme.md
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0789890Z Image Release: https://github.com/actions/runner-images/releases/tag/macos-26-arm64%2F20260907.0351
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0790600Z ##[endgroup]
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0791370Z ##[group]GITHUB_TOKEN Permissions
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0792470Z Contents: read
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0792850Z Metadata: read
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0793260Z ##[endgroup]
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0794590Z Secret source: Actions
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0795170Z Cache mode: write
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.0795630Z Prepare workflow directory
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.1086350Z Prepare all required actions
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.1128260Z Getting action download info
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.2708300Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.5357980Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.7445400Z Download action repository 'actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809' (SHA:0400d5f644dc74513175e3cd8d07132dd4860809)
+cross-adapter-phase	Set up job	2026-09-14T16:32:25.8459300Z Download action repository 'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093' (SHA:d3f86a106a0bac45b974a628896c90dbdf5c8093)
+cross-adapter-phase	Set up job	2026-09-14T16:32:26.8230100Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+cross-adapter-phase	Set up job	2026-09-14T16:32:27.0650070Z Complete job name: cross-adapter-phase
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-14T16:32:27.1232150Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1239350Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1239970Z with:
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1240310Z   repository: szTheory/keepling
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1243270Z   token: ***
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1243570Z   ssh-strict: true
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1243880Z   ssh-user: git
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1244190Z   persist-credentials: true
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1244530Z   clean: true
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1244850Z   sparse-checkout-cone-mode: true
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1245220Z   fetch-depth: 1
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1245530Z   fetch-tags: false
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1245850Z   show-progress: true
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1246190Z   lfs: false
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1246520Z   submodules: false
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1246830Z   set-safe-directory: true
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1247380Z env:
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1247780Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.1248250Z ##[endgroup]
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.5751420Z Syncing repository: szTheory/keepling
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.5753190Z ##[group]Getting Git version info
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.5754020Z Working directory is '/Users/runner/work/keepling/keepling'
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.5755860Z [command]/opt/homebrew/bin/git version
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6393330Z git version 2.55.0
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6411010Z ##[endgroup]
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6421680Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/57716501-e6e3-40f9-83e2-d0f50f2143d4/.gitconfig'
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6427800Z Temporarily overriding HOME='/Users/runner/work/_temp/57716501-e6e3-40f9-83e2-d0f50f2143d4' before making global git config changes
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6429030Z Adding repository directory to the temporary git global config as a safe directory
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6435130Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6568120Z Deleting the contents of '/Users/runner/work/keepling/keepling'
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6571020Z ##[group]Initializing the repository
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6574090Z [command]/opt/homebrew/bin/git init /Users/runner/work/keepling/keepling
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6841450Z hint: Using 'master' as the name for the initial branch. This default branch name
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6861990Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6886130Z hint: to use in all of your new repositories, which will suppress this warning,
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6890700Z hint: call:
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6891320Z hint:
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6891870Z hint: 	git config --global init.defaultBranch <name>
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6893470Z hint:
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6894100Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6894910Z hint: 'development'. The just-created branch can be renamed via this command:
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6895580Z hint:
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6895900Z hint: 	git branch -m <name>
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6896290Z hint:
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6896780Z hint: Disable this message with "git config set advice.defaultBranchName false"
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6897570Z Initialized empty Git repository in /Users/runner/work/keepling/keepling/.git/
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6899130Z [command]/opt/homebrew/bin/git remote add origin https://github.com/szTheory/keepling
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6948590Z ##[endgroup]
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6950490Z ##[group]Disabling automatic garbage collection
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.6952190Z [command]/opt/homebrew/bin/git config --local gc.auto 0
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.7024890Z ##[endgroup]
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.7025940Z ##[group]Setting up auth
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.7033090Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.7098980Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.8196800Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.8280910Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.9594290Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:27.9903880Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:28.2030170Z [command]/opt/homebrew/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:28.2138450Z ##[endgroup]
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:28.2140760Z ##[group]Fetching the repository
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:28.2144950Z [command]/opt/homebrew/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +4f5954104c839dbec57188607829fdc7b975e0cc:refs/remotes/origin/main
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:29.8725450Z From https://github.com/szTheory/keepling
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:29.8827140Z  * [new ref]         4f5954104c839dbec57188607829fdc7b975e0cc -> origin/main
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:29.9139440Z ##[endgroup]
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:29.9201980Z ##[group]Determining the checkout info
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:29.9203520Z ##[endgroup]
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:29.9204650Z [command]/opt/homebrew/bin/git sparse-checkout disable
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:29.9211180Z [command]/opt/homebrew/bin/git config --local --unset-all extensions.worktreeConfig
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:29.9212580Z ##[group]Checking out the ref
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:29.9213200Z [command]/opt/homebrew/bin/git checkout --progress --force -B main refs/remotes/origin/main
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:30.1573540Z Switched to a new branch 'main'
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:30.1577140Z branch 'main' set up to track 'origin/main'.
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:30.1583770Z ##[endgroup]
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:30.1705130Z [command]/opt/homebrew/bin/git log -1 --format=%H
+cross-adapter-phase	Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:32:30.1798470Z 4f5954104c839dbec57188607829fdc7b975e0cc
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	﻿2026-09-14T16:32:30.1969730Z ##[group]Run set -eu
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1970090Z ^[[36;1mset -eu^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1970470Z ^[[36;1mrequired=$(sed -n '1s|^// swift-tools-version:[[:space:]]*||p' apps/ios/Package.swift)^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1970850Z ^[[36;1mtest -n "$required"^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1971240Z ^[[36;1minstalled=$(swift --version 2>&1 | sed -n 's/.*Apple Swift version \([0-9][0-9.]*\).*/\1/p' | head -1)^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1971670Z ^[[36;1mtest -n "$installed"^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1972070Z ^[[36;1mecho "apps/ios/Package.swift requires Swift $required; this runner has $installed"^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1972480Z ^[[36;1mxcodebuild -version^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1972680Z ^[[36;1mnode -e '^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1972970Z ^[[36;1m  const required = process.argv[1].split(".").map(Number);^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1973330Z ^[[36;1m  const installed = process.argv[2].split(".").map(Number);^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1973660Z ^[[36;1m  for (let i = 0; i < required.length; i += 1) {^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1973960Z ^[[36;1m    const a = installed[i] ?? 0;^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1974240Z ^[[36;1m    const b = required[i];^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1974460Z ^[[36;1m    if (a > b) break;^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1974690Z ^[[36;1m    if (a < b) {^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1975240Z ^[[36;1m      console.error("this runner image cannot build apps/ios: Swift " + process.argv[2] + " is below the required " + process.argv[1]);^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1975820Z ^[[36;1m      process.exit(1);^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1976130Z ^[[36;1m    }^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1976330Z ^[[36;1m  }^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.1976550Z ^[[36;1m' "$required" "$installed"^[[0m
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.2016620Z shell: /bin/bash -e {0}
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.2016900Z env:
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.2017140Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:30.2017530Z ##[endgroup]
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:33.3870330Z apps/ios/Package.swift requires Swift 6.3; this runner has 6.3.3
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:33.4610020Z Xcode 26.6
+cross-adapter-phase	Assert the Swift toolchain satisfies apps/ios/Package.swift	2026-09-14T16:32:33.7232740Z Build version 17F113
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-14T16:32:33.7323310Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.7324910Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.7325210Z with:
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.7325360Z   node-version: 24.7.0
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.7325650Z   always-auth: false
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.7325910Z   check-latest: false
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.7328100Z   token: ***
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.7328340Z env:
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.7328610Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.7328940Z ##[endgroup]
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.9264910Z Attempting to download 24.7.0...
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.9426320Z (node:2379) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:33.9432950Z (Use `node --trace-deprecation ...` to show where the warning was created)
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:35.0201200Z Acquiring 24.7.0 - arm64 from https://github.com/actions/node-versions/releases/download/24.7.0-17283839804/node-24.7.0-darwin-arm64.tar.gz
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:35.7961140Z Extracting ...
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:35.8150640Z [command]/usr/bin/tar xz --strip 1 -C /Users/runner/work/_temp/e4db12f5-c9bd-4bba-91ba-6f97624a7bdc -f /Users/runner/work/_temp/eee7741f-8a34-4b96-ba3b-f17328867f51
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:36.8908190Z Adding to the cache ...
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:39.7310890Z ##[group]Environment details
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:40.1558500Z node: v24.7.0
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:40.1641350Z npm: 11.5.1
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:40.1650010Z yarn: 1.22.22
+cross-adapter-phase	Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:32:40.1673240Z ##[endgroup]
+cross-adapter-phase	Install locked JavaScript inputs	﻿2026-09-14T16:32:40.1829790Z ##[group]Run corepack enable && pnpm install --frozen-lockfile
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:40.1830390Z ^[[36;1mcorepack enable && pnpm install --frozen-lockfile^[[0m
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:40.1880050Z shell: /bin/bash -e {0}
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:40.1880370Z env:
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:40.1880690Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:40.1881120Z ##[endgroup]
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:40.3821600Z ! Corepack is about to download https://registry.npmjs.org/pnpm/-/pnpm-10.33.0.tgz
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:41.1913630Z Scope: all 4 workspace projects
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:41.2234730Z Lockfile is up to date, resolution step is skipped
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:41.3198620Z Packages: +912
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:41.3199540Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:41.4494210Z Progress: resolved 0, reused 0, downloaded 1, added 0
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:42.4527300Z Progress: resolved 0, reused 0, downloaded 27, added 4
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:43.4559680Z Progress: resolved 0, reused 0, downloaded 76, added 23
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:44.4538970Z Progress: resolved 0, reused 0, downloaded 117, added 38
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:45.4552080Z Progress: resolved 0, reused 0, downloaded 212, added 74
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:46.4664190Z Progress: resolved 0, reused 0, downloaded 357, added 132
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:47.4569150Z Progress: resolved 0, reused 0, downloaded 425, added 154
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:48.4682400Z Progress: resolved 0, reused 0, downloaded 523, added 197
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:48.7739890Z Packages are cloned from the content-addressable store to the virtual store.
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:48.7741040Z   Content-addressable store is at: /Users/runner/Library/pnpm/store/v10
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:48.7742030Z   Virtual store is at:             node_modules/.pnpm
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:49.4643330Z Progress: resolved 0, reused 0, downloaded 647, added 246
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:50.4657670Z Progress: resolved 0, reused 0, downloaded 792, added 324
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:51.4651680Z Progress: resolved 0, reused 0, downloaded 823, added 336
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:52.4723100Z Progress: resolved 0, reused 0, downloaded 870, added 636
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:53.2148320Z Progress: resolved 0, reused 0, downloaded 870, added 912, done
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:53.3798980Z 
+cross-adapter-phase	Install locked JavaScript inputs	2026-09-14T16:32:53.4952810Z Done in 12.5s using pnpm v10.33.0
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-14T16:32:53.9862260Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:53.9863710Z ##[group]Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:53.9864130Z with:
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:53.9864420Z   path: ~/.asdf/installs
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/deps
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	apps/server/_build
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:53.9865210Z   key: cross-adapter-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:53.9865760Z   enableCrossOsArchive: false
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:53.9866140Z   fail-on-cache-miss: false
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:53.9866470Z   lookup-only: false
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:53.9866800Z   save-always: false
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:53.9867100Z env:
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:53.9867520Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:53.9867960Z ##[endgroup]
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:54.1248070Z (node:2720) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:54.1259370Z (Use `node --trace-deprecation ...` to show where the warning was created)
+cross-adapter-phase	Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:32:54.2209990Z Cache not found for input keys: cross-adapter-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	﻿2026-09-14T16:32:54.2295220Z ##[group]Run set -eu
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:54.2295670Z ^[[36;1mset -eu^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:54.2295960Z ^[[36;1mbrew list asdf >/dev/null 2>&1 || brew install asdf^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:54.2296340Z ^[[36;1m./tooling/runtime-preflight.sh --provision^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:54.2296790Z ^[[36;1m./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:54.2509210Z shell: /bin/bash -e {0}
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:54.2509760Z env:
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:54.2510330Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:54.2511170Z ##[endgroup]
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:57.4978020Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:57.5057000Z ✔︎ Bottle Manifest asdf (0.20.0)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:57.5058510Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:57.5058990Z asdf
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:57.5658800Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32masdf^[[39m^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:57.8742380Z ✔︎ Bottle asdf (0.20.0)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:57.8761230Z ^[[34m==>^[[0m ^[[1mPouring asdf--0.20.0.arm64_tahoe.bottle.tar.gz^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:58.0640650Z 🍺  /opt/homebrew/Cellar/asdf/0.20.0: 10 files, 4.4MB
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:58.0642190Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:58.0642540Z Bash completion has been installed to:
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:32:58.0642830Z   /opt/homebrew/etc/bash_completion.d
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:01.3257620Z Downloading kerl...
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:01.3469090Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:01.3493820Z                                  Dload  Upload   Total   Spent    Left  Speed
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:01.3494270Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:01.3738130Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:01.3756030Z 100 84548  100 84548    0     0  3059k      0 --:--:-- --:--:-- --:--:-- 3175k
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:02.6070000Z [asdf-erlang] ⚠️ Warning: fop is optional and not installed. Please install it using 'brew install fop'.
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:03.2904540Z [asdf-erlang] ⚠️ Warning: unixodbc is optional and not installed. Please install it using 'brew install unixodbc'.
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:03.9790400Z [asdf-erlang] ⚠️ Warning: wxmac is optional and not installed. You can install it using 'brew install --build-from-source wxmac'.
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:03.9791600Z [asdf-erlang] ⚠️ Note: wxmac is required for building Erlang/OTP with a working :observer
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:04.0204560Z [asdf-erlang] 🛟 Added unixodbc to KERL_CONFIGURE_OPTIONS:  --with-odbc=/opt/homebrew/opt/unixodbc
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:04.0357730Z [asdf-erlang] 🛟 No CC found. Setting CC to: /usr/bin/clang -I/opt/homebrew/opt/unixodbc/include
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:04.0505050Z [asdf-erlang] 🛟 No LDFLAGS found. Setting LDFLAGS to: -L/opt/homebrew/opt/unixodbc/lib
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:04.0837860Z [asdf-erlang] 🛟 Added openssl to KERL_CONFIGURE_OPTIONS:  --with-ssl=/opt/homebrew/opt/openssl@3
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:04.1137020Z [asdf-erlang] 🛟 OpenJDK has been added to PATH for this terminal session: /opt/homebrew/opt/openjdk/bin
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:04.1138040Z [asdf-erlang] Please ensure this is included in your shell's dot files (.zshrc, .bashrc, etc.)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:04.1192280Z [asdf-erlang] 📦 Building with KERL_CONFIGURE_OPTIONS=  --with-odbc=/opt/homebrew/opt/unixodbc  --with-ssl=/opt/homebrew/opt/openssl@3
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:04.2095470Z [asdf-erlang] ❄️ No kerl installation to cleanup for asdf_29.0.5
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:04.3340540Z [asdf-erlang] ❄️ No kerl build to cleanup for asdf_29.0.5
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:59.0396650Z APPLICATIONS INFORMATION (See: /Users/runner/.asdf/plugins/erlang/kerl-home/builds/asdf_29.0.5/otp_build_29.0.5.log)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:59.0402170Z  * odbc           : ODBC library - header check failed
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:59.0402980Z  * wx             : wxWidgets was not compiled with --enable-webview or wxWebView developer package is not installed, wxWebView will NOT be available
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:59.0403610Z  *         wxWidgets must be installed on your system.
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:59.0404320Z  *         Please check that wx-config is in path, the directory
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:59.0410590Z  *         where wxWidgets libraries are installed (returned by
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:59.0421620Z  *         'wx-config --libs' or 'wx-config --static --libs' command)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:59.0422190Z  *         is in LD_LIBRARY_PATH or equivalent variable and
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:59.0422610Z  *         wxWidgets version is 3.0.2 or above.
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:33:59.0422840Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:19.0418120Z 👷🏼 kerl install asdf_29.0.5 /Users/runner/.asdf/installs/erlang/29.0.5
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:45.3837700Z 🧹 Cleanup kerl build asdf_29.0.5
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:46.3791690Z 🔗 Linking app executables /Users/runner/.asdf/installs/erlang/29.0.5
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:46.4144290Z 👍 Installed erlang 29.0.5
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:46.4365810Z ==> Checking whether specified Elixir release exists...
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:46.4944120Z ==> Downloading 1.20.2-otp-29 to /Users/runner/.asdf/downloads/elixir/1.20.2-otp-29/elixir-precompiled-1.20.2-otp-29.zip
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:46.5040050Z   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:46.5041550Z                                  Dload  Upload   Total   Spent    Left  Speed
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:46.5041950Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:46.6090220Z   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:46.6193730Z 100 8423k  100 8423k    0     0  78.2M      0 --:--:-- --:--:-- --:--:-- 78.3M
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:46.6194350Z ==> Copying release into place
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:47.6787280Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:48.1270160Z ✔︎ Bottle Manifest postgresql@18 (18.6)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:48.1270990Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:48.1334230Z postgresql@18
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:48.2243940Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32mpostgresql@18^[[39m^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:49.3878010Z ✔︎ Bottle postgresql@18 (18.6)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:49.4127350Z ^[[34m==>^[[0m ^[[1mPouring postgresql@18--18.6.arm64_tahoe.bottle.tar.gz^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.7771010Z The files belonging to this database system will be owned by user "runner".
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.7774630Z This user must also own the server process.
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.7774850Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.7776370Z The database cluster will be initialized with locale "en_US.UTF-8".
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.7777080Z The default text search configuration will be set to "english".
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.7778160Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.7778480Z Data page checksums are enabled.
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.7778870Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.7779370Z fixing permissions on existing directory /opt/homebrew/var/postgresql@18 ... ok
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.7782340Z creating subdirectories ... ok
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.7783690Z selecting dynamic shared memory implementation ... posix
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.8147330Z selecting default "max_connections" ... 100
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.8328690Z selecting default "shared_buffers" ... 128MB
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.8351020Z selecting default time zone ... UTC
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.8360510Z creating configuration files ... ok
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:52.9572270Z running bootstrap script ... ok
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.3779100Z performing post-bootstrap initialization ... ok
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.3888570Z syncing data to disk ... ok
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.3892530Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.3892730Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.3893250Z Success. You can now start the database server using:
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.3893570Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.3893950Z     '/opt/homebrew/Cellar/postgresql@18/18.6/bin/pg_ctl' -D '/opt/homebrew/var/postgresql@18' -l logfile start
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.3894370Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.3894840Z initdb: warning: enabling "trust" authentication for local connections
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.4035380Z initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9193060Z 🍺  /opt/homebrew/Cellar/postgresql@18/18.6: 3,873 files, 77.7MB
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9195560Z ^[[32m==>^[[0m ^[[1mCaveats^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9196190Z ^[[34m==>^[[0m ^[[1mpostgresql@18^[[0m
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9201810Z This formula has created a default database cluster with:
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9202410Z   initdb --locale=en_US.UTF-8 -E UTF-8 /opt/homebrew/var/postgresql@18
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9202720Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9203080Z When uninstalling, some dead symlinks are left behind so you may want to run:
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9203560Z   brew cleanup --prune-prefix
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9203710Z 
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9203940Z To start postgresql@18 now and restart at login:
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9204360Z   brew services start postgresql@18
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9204820Z Or, if you don't want/need a background service you can just run:
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:53.9205490Z   LC_ALL="en_US.UTF-8" /opt/homebrew/opt/postgresql@18/bin/postgres -D /opt/homebrew/var/postgresql@18
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:54.3560550Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:54.9764360Z Runtime preflight passed: Elixir 1.20.2, OTP 29.0.5, PostgreSQL 18.6
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:55.7195970Z * creating /Users/runner/.mix/archives/hex-2.5.1
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.1058820Z Resolving Hex dependencies...
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.2991010Z Resolution completed in 0.188s
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3110160Z Unchanged:
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3110730Z   argon2_elixir 4.1.3
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3117410Z   bandit 1.12.5
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3117820Z   certifi 2.17.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3118350Z   comeonin 5.5.1
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3118680Z   db_connection 2.10.2
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3119050Z   decimal 3.1.1
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3119290Z   dns_cluster 0.2.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3119620Z   ecto 3.14.2
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3119960Z   ecto_sql 3.14.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3120280Z   elixir_make 0.10.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3120560Z   expo 1.1.1
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3120750Z   gettext 1.0.2
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3121020Z   h2 0.12.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3121220Z   hackney 4.7.4
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3121790Z   hammer 7.4.1
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3122310Z   hex_core 0.15.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3123370Z   hpax 1.0.4
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3123860Z   idna 7.1.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3124080Z   jason 1.4.5
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3124410Z   mime 2.0.7
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3124750Z   mimerl 1.5.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3124970Z   optimus 0.6.1
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3125270Z   parse_trans 3.4.2
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3125490Z   phoenix 1.8.13
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3125990Z   phoenix_ecto 4.7.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3126400Z   phoenix_pubsub 2.3.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3155400Z   phoenix_template 1.0.4
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3155640Z   plug 1.20.3
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3155930Z   plug_crypto 2.2.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3156260Z   postgrex 0.22.4
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3156700Z   protobuf 0.16.1
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3156960Z   purl 0.3.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3157240Z   quic 1.8.2
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3157480Z   sbom 0.10.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3157680Z   ssl_verify_fun 1.1.7
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3157920Z   stream_data 1.4.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3158080Z   telemetry 1.4.2
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3158280Z   telemetry_metrics 1.2.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3158460Z   telemetry_poller 1.3.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3158640Z   thousand_island 1.5.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3158810Z   tzdata 1.1.5
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3158950Z   websock 0.5.3
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3159280Z   websock_adapter 0.6.0
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3159560Z   webtransport 0.4.5
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.3203160Z * Getting phoenix (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.9501930Z * Getting phoenix_ecto (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.9584070Z * Getting ecto_sql (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:57.9863860Z * Getting postgrex (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.0164020Z * Getting telemetry_metrics (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.0243220Z * Getting telemetry_poller (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.0820930Z * creating /Users/runner/.mix/elixir/1-20-otp-29/rebar3
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.0838660Z * Getting gettext (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.1095010Z * Getting jason (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.1191660Z * Getting dns_cluster (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.1254150Z * Getting bandit (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.1498500Z * Getting argon2_elixir (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.1671020Z * Getting tzdata (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.1952690Z * Getting hammer (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.2051180Z * Getting stream_data (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.2258300Z * Getting sbom (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.6802110Z * Getting hex_core (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.6985180Z * Getting optimus (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.7082580Z * Getting protobuf (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.7309650Z * Getting purl (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.7424800Z * Getting hackney (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.7704270Z * Getting certifi (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.7790400Z * Getting h2 (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.7920110Z * Getting idna (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.8073530Z * Getting mimerl (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.8142620Z * Getting parse_trans (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.8359050Z * Getting ssl_verify_fun (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.8433580Z * Getting webtransport (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.8579410Z * Getting quic (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.8938380Z * Getting comeonin (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.8993550Z * Getting elixir_make (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.9072860Z * Getting hpax (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.9131970Z * Getting plug (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.9351970Z * Getting telemetry (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.9433600Z * Getting thousand_island (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.9550870Z * Getting websock (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.9601040Z * Getting mime (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.9651890Z * Getting plug_crypto (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.9734690Z * Getting expo (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:58.9889990Z * Getting db_connection (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:59.1394510Z * Getting decimal (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:35:59.3868280Z * Getting ecto (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:36:00.0116450Z * Getting phoenix_pubsub (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:36:00.0242270Z * Getting phoenix_template (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:36:00.0302580Z * Getting websock_adapter (Hex package)
+cross-adapter-phase	Provision the exact pinned Elixir and PostgreSQL runtimes	2026-09-14T16:36:00.0366330Z You have added/upgraded packages you could sponsor, run `mix hex.sponsor` to learn more
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	﻿2026-09-14T16:36:00.1156860Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.1161660Z ##[group]Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.1162100Z with:
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.1162300Z   name: keepling-desktop-package
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.1162670Z   path: /Users/runner/work/_temp/keepling-desktop-package
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.1163000Z   merge-multiple: false
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.1163240Z   repository: szTheory/keepling
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.1163500Z   run-id: 34868832072
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.1163690Z env:
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.1163970Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.1164300Z ##[endgroup]
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.5826150Z Downloading single artifact
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.6012530Z (node:35707) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.6014710Z (Use `node --trace-deprecation ...` to show where the warning was created)
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.6745540Z Preparing to download the following artifacts:
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.6746430Z - keepling-desktop-package (ID: 10357728609, Size: 260101376, Expected Digest: sha256:d0e2a7018cf172c1ba59dd7e3697e864403f6ab1764561d3056774cfbc19dd7b)
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.8006550Z Redirecting to blob download url: https://productionresultssa19.blob.core.windows.net/actions-results/0d60392e-87cb-4546-9618-954de746316a/workflow-job-run-a8f1608d-3898-5a4e-9925-de5655cbd8d3/artifacts/d673bfa41ddf059217fd82e3d6ea2d41bfb7cc9b5796cb68d3af55bc077e78ee.zip
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.8007940Z Starting download of artifact to: /Users/runner/work/_temp/keepling-desktop-package
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:00.8985450Z (node:35707) [DEP0005] DeprecationWarning: Buffer() is deprecated due to security and usability issues. Please use the Buffer.alloc(), Buffer.allocUnsafe(), or Buffer.from() methods instead.
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:05.0232980Z SHA256 digest of downloaded artifact is d0e2a7018cf172c1ba59dd7e3697e864403f6ab1764561d3056774cfbc19dd7b
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:05.0332330Z Artifact download completed successfully.
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:05.0432700Z Total of 1 artifact(s) downloaded
+cross-adapter-phase	Run actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093	2026-09-14T16:36:05.0500850Z Download artifact has finished successfully
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	﻿2026-09-14T16:36:05.0582550Z ##[group]Run set -eu
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0583030Z ^[[36;1mset -eu^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0583330Z ^[[36;1martifact_root="$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}"^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0583690Z ^[[36;1mchmod -R u+x "$artifact_root"^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0584000Z ^[[36;1mnode -e "^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0584310Z ^[[36;1m  const { createHash } = require('node:crypto');^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0584590Z ^[[36;1m  const fs = require('node:fs');^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0584860Z ^[[36;1m  const path = require('node:path');^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0585190Z ^[[36;1m  const root = process.argv[1];^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0585630Z ^[[36;1m  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'package-manifest.json'), 'utf8'));^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0586220Z ^[[36;1m  const archive = path.join(root, path.basename(manifest.archivePath));^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0586750Z ^[[36;1m  const actual = createHash('sha256').update(fs.readFileSync(archive)).digest('hex');^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0587220Z ^[[36;1m  if (actual !== manifest.archiveDigestSha256) {^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0587960Z ^[[36;1m    console.error('downloaded archive digest ' + actual + ' does not match the recorded ' + manifest.archiveDigestSha256);^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0588440Z ^[[36;1m    process.exit(1);^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0588630Z ^[[36;1m  }^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0589130Z ^[[36;1m  const outDir = 'apps/desktop/out/Keepling-' + manifest.platform + '-' + manifest.architecture;^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0589810Z ^[[36;1m  fs.appendFileSync(process.env.GITHUB_ENV, 'KEEPLING_CROSS_ADAPTER_ARCHIVE=' + archive + '\\n');^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0590390Z ^[[36;1m  fs.appendFileSync(process.env.GITHUB_ENV, 'KEEPLING_CROSS_ADAPTER_OUT_DIR=' + outDir + '\\n');^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0590970Z ^[[36;1m  console.log('archive digest verified against the build job record; expanding into ' + outDir);^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.0591380Z ^[[36;1m" "$artifact_root"^[[0m
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.1924920Z shell: /bin/bash -e {0}
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.1925200Z env:
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.1925460Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.1925770Z ##[endgroup]
+cross-adapter-phase	Expand the exact downloaded package into the driver's layout	2026-09-14T16:36:05.5581030Z archive digest verified against the build job record; expanding into apps/desktop/out/Keepling-darwin-arm64
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	﻿2026-09-14T16:36:05.5684250Z ##[group]Run set -eu
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:05.5684480Z ^[[36;1mset -eu^[[0m
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:05.5684680Z ^[[36;1mmkdir -p "$KEEPLING_CROSS_ADAPTER_OUT_DIR"^[[0m
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:05.5685040Z ^[[36;1mditto -x -k "$KEEPLING_CROSS_ADAPTER_ARCHIVE" "$KEEPLING_CROSS_ADAPTER_OUT_DIR"^[[0m
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:05.5685430Z ^[[36;1mtest -d "$KEEPLING_CROSS_ADAPTER_OUT_DIR"/*.app^[[0m
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:05.5685730Z ^[[36;1mls -la "$KEEPLING_CROSS_ADAPTER_OUT_DIR"^[[0m
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:05.5719760Z shell: /bin/bash -e {0}
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:05.5719970Z env:
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:05.5720170Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:05.5720620Z   KEEPLING_CROSS_ADAPTER_ARCHIVE: /Users/runner/work/_temp/keepling-desktop-package/Keepling.ditto.zip
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:05.5721090Z   KEEPLING_CROSS_ADAPTER_OUT_DIR: apps/desktop/out/Keepling-darwin-arm64
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:05.5721720Z ##[endgroup]
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:06.3780340Z total 0
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:06.3787990Z drwxr-xr-x  3 runner  staff  96 Sep 14 16:36 .
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:06.3788690Z drwxr-xr-x  3 runner  staff  96 Sep 14 16:36 ..
+cross-adapter-phase	Place the verified bytes where the electron driver resolves them	2026-09-14T16:36:06.3790080Z drwxr-xr-x  3 runner  staff  96 Sep 14 16:30 Keepling.app
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	﻿2026-09-14T16:36:06.3825820Z ##[group]Run set -eu
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:06.3826080Z ^[[36;1mset -eu^[[0m
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:06.3826380Z ^[[36;1mbrew list xcodegen >/dev/null 2>&1 || brew install xcodegen^[[0m
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:06.3826700Z ^[[36;1mxcodegen --version^[[0m
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:06.3839470Z ^[[36;1mxcodegen generate --spec apps/ios/project.yml --project apps/ios^[[0m
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:06.3839910Z ^[[36;1mtest -d apps/ios/Keepling.xcodeproj^[[0m
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:06.3881470Z shell: /bin/bash -e {0}
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:06.3882190Z env:
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:06.3882550Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:06.3883270Z   KEEPLING_CROSS_ADAPTER_ARCHIVE: /Users/runner/work/_temp/keepling-desktop-package/Keepling.ditto.zip
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:06.3883950Z   KEEPLING_CROSS_ADAPTER_OUT_DIR: apps/desktop/out/Keepling-darwin-arm64
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:06.3884280Z ##[endgroup]
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.0417940Z ^[[32m==>^[[0m ^[[1mDownloading bottle manifests^[[0m
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.0512880Z ✔︎ Bottle Manifest xcodegen (2.46.0)
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.0514420Z ^[[34m==>^[[0m ^[[1mWould install 1 formula:^[[0m
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.0514880Z xcodegen
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.0537890Z ^[[32m==>^[[0m ^[[1mFetching downloads for: ^[[32mxcodegen^[[39m^[[0m
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.4020250Z ✔︎ Bottle xcodegen (2.46.0)
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.4395390Z ^[[34m==>^[[0m ^[[1mPouring xcodegen--2.46.0.arm64_tahoe.bottle.1.tar.gz^[[0m
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.5753300Z 🍺  /opt/homebrew/Cellar/xcodegen/2.46.0: 38 files, 7.4MB
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.5933340Z Version: 2.46.0
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.6107120Z ⚙️  Generating plists...
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.6113060Z ⚙️  Generating project...
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.6335390Z ⚙️  Writing project...
+cross-adapter-phase	Generate the gitignored Xcode project from its tracked spec	2026-09-14T16:36:08.6453190Z Created project at /Users/runner/work/keepling/keepling/apps/ios/Keepling.xcodeproj
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	﻿2026-09-14T16:36:08.6491850Z ##[group]Run set -eu
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6492170Z ^[[36;1mset -eu^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6492410Z ^[[36;1mudid=$(xcrun simctl list devices available --json |^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6492770Z ^[[36;1m  node -e "^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6493040Z ^[[36;1m    let d=''; process.stdin.on('data',c=>d+=c).on('end',()=>{^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6493420Z ^[[36;1m      const runtimes = JSON.parse(d).devices;^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6493980Z ^[[36;1m      const names = Object.keys(runtimes).filter(k => k.includes('iOS')).sort().reverse();^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6494460Z ^[[36;1m      for (const runtime of names) {^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6494930Z ^[[36;1m        const match = runtimes[runtime].find(x => x.isAvailable && /^iPhone /.test(x.name));^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6495540Z ^[[36;1m        if (match) { console.error('selected ' + match.name + ' on ' + runtime); console.log(match.udid); return; }^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6495970Z ^[[36;1m      }^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6496290Z ^[[36;1m      console.error('no available iPhone simulator on this runner'); process.exit(1);^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6496680Z ^[[36;1m    });")^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6496880Z ^[[36;1mtest -n "$udid"^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6497120Z ^[[36;1mxcrun simctl boot "$udid" || true^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6497400Z ^[[36;1mxcrun simctl bootstatus "$udid" -b^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6497650Z ^[[36;1mxcodebuild build \^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6497880Z ^[[36;1m  -project apps/ios/Keepling.xcodeproj \^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6498150Z ^[[36;1m  -scheme Keepling \^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6498400Z ^[[36;1m  -destination "platform=iOS Simulator,id=$udid" \^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6498700Z ^[[36;1m  -destination-timeout 300 \^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6499060Z ^[[36;1m  -derivedDataPath .artifacts/ios/DerivedData-cross-adapter-ci \^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6499430Z ^[[36;1m  CODE_SIGNING_ALLOWED=NO >/dev/null^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6504070Z ^[[36;1mapp=$(find .artifacts/ios/DerivedData-cross-adapter-ci/Build/Products -maxdepth 2 -name 'Keepling.app' -print -quit)^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6504810Z ^[[36;1mtest -n "$app" || { echo 'no simulator Keepling.app was produced'; exit 1; }^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6505170Z ^[[36;1mxcrun simctl install "$udid" "$app"^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6505490Z ^[[36;1mxcrun simctl listapps "$udid" | grep -qi keepling^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6505960Z ^[[36;1mecho "KEEPLING_CROSS_ADAPTER_IOS_DESTINATION=platform=iOS Simulator,id=$udid" >> "$GITHUB_ENV"^[[0m
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6548390Z shell: /bin/bash -e {0}
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6548650Z env:
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6548920Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6549570Z   KEEPLING_CROSS_ADAPTER_ARCHIVE: /Users/runner/work/_temp/keepling-desktop-package/Keepling.ditto.zip
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6550140Z   KEEPLING_CROSS_ADAPTER_OUT_DIR: apps/desktop/out/Keepling-darwin-arm64
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:08.6550450Z ##[endgroup]
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:11.4177360Z selected iPhone 17 Pro on com.apple.CoreSimulator.SimRuntime.iOS-26-5
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:56.6958380Z Monitoring boot status for iPhone 17 Pro (22452A91-4697-4369-8812-53ADB77EB73B).
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:56.6965100Z [2026-09-14 16:36:56 +0000] Status=2, isTerminal=NO, Elapsed=00:44.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:56.6966230Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:56.6973240Z 		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:56.6987390Z 		Migration Elapsed:00:38 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:56.6987620Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:57.7200960Z [2026-09-14 16:36:57 +0000] Status=2, isTerminal=NO, Elapsed=00:45.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:57.7308440Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:57.7579540Z 		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:57.7581230Z 		Migration Elapsed:00:39 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:57.7683420Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:58.6676060Z [2026-09-14 16:36:58 +0000] Status=2, isTerminal=NO, Elapsed=00:46.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:58.6677610Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:58.6678550Z 		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:58.6770780Z 		Migration Elapsed:00:40 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:58.6771150Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:59.8558650Z [2026-09-14 16:36:59 +0000] Status=2, isTerminal=NO, Elapsed=00:47.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:59.8752770Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:59.9547120Z 		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:36:59.9548220Z 		Migration Elapsed:00:41 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:00.0368770Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:00.6931860Z [2026-09-14 16:37:00 +0000] Status=2, isTerminal=NO, Elapsed=00:48.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:00.7172910Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:00.7320180Z 		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:00.7544300Z 		Migration Elapsed:00:42 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:00.7671030Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:01.7082850Z [2026-09-14 16:37:01 +0000] Status=2, isTerminal=NO, Elapsed=00:49.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:01.7865600Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:01.8701300Z 		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:01.9515140Z 		Migration Elapsed:00:43 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:02.0361630Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:02.8101380Z [2026-09-14 16:37:02 +0000] Status=2, isTerminal=NO, Elapsed=00:50.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:02.8103890Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:02.8240480Z 		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:02.8378750Z 		Migration Elapsed:00:44 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:02.8484340Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:03.7235980Z [2026-09-14 16:37:03 +0000] Status=2, isTerminal=NO, Elapsed=00:51.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:03.7338280Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:03.8170480Z 		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:03.8171380Z 		Migration Elapsed:00:45 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:03.8171590Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:04.6398650Z [2026-09-14 16:37:04 +0000] Status=2, isTerminal=NO, Elapsed=00:52.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:04.6421700Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:04.6422340Z 		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:04.6422840Z 		Migration Elapsed:00:46 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:04.6422980Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:05.6275270Z [2026-09-14 16:37:05 +0000] Status=2, isTerminal=NO, Elapsed=00:53.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:05.6407110Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:05.6424620Z 		Reason:Running plugin com.apple.-0LaunchServicesMigrator (00LaunchServicesMigrator.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:05.6439060Z 		Migration Elapsed:00:47 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:05.6449170Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:09.9998300Z [2026-09-14 16:37:09 +0000] Status=2, isTerminal=NO, Elapsed=00:57.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:10.0806190Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:10.1625200Z 		Reason:Running plugin com.apple.securityd.KeychainMigrator (KeychainMigrator.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:10.3283800Z 		Migration Elapsed:00:48 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:10.3285310Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:10.6555990Z [2026-09-14 16:37:10 +0000] Status=2, isTerminal=NO, Elapsed=00:58.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:10.7351100Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:10.8170390Z 		Reason:Running plugin com.apple.managedconfiguration.migrator (MCProfile.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:10.8980750Z 		Migration Elapsed:00:51 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:10.9868890Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:13.1924790Z [2026-09-14 16:37:13 +0000] Status=2, isTerminal=NO, Elapsed=01:00.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:13.1926320Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:13.2738050Z 		Reason:Running plugin com.apple.managedconfiguration.migrator (MCProfile.migrator, user-agnostic)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:13.3550390Z 		Migration Elapsed:00:52 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:13.4369540Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:13.5193900Z [2026-09-14 16:37:13 +0000] Status=2, isTerminal=NO, Elapsed=01:00.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:13.8533960Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:13.9610730Z 		Reason:Running plugin com.apple.appleaccount.mergebuddyprovisioningresponse.migrator (MergeBuddyProvisioningResponse.migrator)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:14.1352090Z 		Migration Elapsed:00:54 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:14.2183380Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:15.3226590Z [2026-09-14 16:37:15 +0000] Status=2, isTerminal=NO, Elapsed=01:02.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:15.4043150Z 	Waiting on Data Migration
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:15.4865160Z 		Reason:Running plugin com.apple.locationd.migrator (CoreLocationMigrator.migrator)
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:15.5745590Z 		Migration Elapsed:00:55 seconds
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:15.6595420Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:16.6379540Z [2026-09-14 16:37:16 +0000] Status=4, isTerminal=NO, Elapsed=01:03.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:16.7185660Z 	Waiting on System App
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:16.7358960Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:17.1182100Z [2026-09-14 16:37:17 +0000] Status=4, isTerminal=NO, Elapsed=01:04.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:17.2886960Z 	Waiting on System App
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:17.2888810Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:17.6714280Z [2026-09-14 16:37:17 +0000] Status=4, isTerminal=NO, Elapsed=01:04.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:17.6715220Z 	Waiting on System App
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:17.7581460Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:18.8703570Z [2026-09-14 16:37:18 +0000] Status=4, isTerminal=NO, Elapsed=01:06.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:18.9543640Z 	Waiting on System App
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:19.1063750Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:19.5265530Z [2026-09-14 16:37:19 +0000] Status=4, isTerminal=NO, Elapsed=01:06.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:19.6075800Z 	Waiting on System App
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:19.6076290Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:20.0983600Z [2026-09-14 16:37:20 +0000] Status=4, isTerminal=NO, Elapsed=01:07.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:20.1790440Z 	Waiting on System App
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:20.2601530Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:20.7502670Z [2026-09-14 16:37:20 +0000] Status=4, isTerminal=NO, Elapsed=01:08.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:20.8324670Z 	Waiting on System App
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:20.9144810Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:23.8466650Z [2026-09-14 16:37:23 +0000] Status=4, isTerminal=NO, Elapsed=01:10.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:24.0137600Z 	Waiting on System App
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:24.5195130Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:30.0424290Z [2026-09-14 16:37:29 +0000] Status=4294967295, isTerminal=YES, Elapsed=01:17.
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:30.2829270Z 	Finished
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:37:30.6112620Z 
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:39:53.8237200Z --- xcodebuild: WARNING: Using the first of multiple matching destinations:
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:39:53.8243340Z { platform:iOS Simulator, arch:arm64, id:22452A91-4697-4369-8812-53ADB77EB73B, OS:26.5, name:iPhone 17 Pro }
+cross-adapter-phase	Boot a simulator and install the app the iPhone leg requires	2026-09-14T16:39:53.8259350Z { platform:iOS Simulator, arch:x86_64, id:22452A91-4697-4369-8812-53ADB77EB73B, OS:26.5, name:iPhone 17 Pro }
+cross-adapter-phase	Run all four adapter legs against one real server revision	﻿2026-09-14T16:41:38.2539950Z ##[group]Run set -o pipefail
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:41:38.2575940Z ^[[36;1mset -o pipefail^[[0m
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:41:38.2578010Z ^[[36;1mnode tooling/verify-cross-adapter-phase.mjs | tee "$RUNNER_TEMP/cross-adapter-phase.txt"^[[0m
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:41:38.2643180Z ^[[36;1m./tooling/verify-privacy.sh "$RUNNER_TEMP/cross-adapter-phase.txt"^[[0m
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:41:38.5492040Z shell: /bin/bash -e {0}
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:41:38.5492550Z env:
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:41:38.5492970Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:41:38.5493860Z   KEEPLING_CROSS_ADAPTER_ARCHIVE: /Users/runner/work/_temp/keepling-desktop-package/Keepling.ditto.zip
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:41:38.5494670Z   KEEPLING_CROSS_ADAPTER_OUT_DIR: apps/desktop/out/Keepling-darwin-arm64
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:41:38.5495460Z   KEEPLING_CROSS_ADAPTER_IOS_DESTINATION: platform=iOS Simulator,id=22452A91-4697-4369-8812-53ADB77EB73B
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:41:38.5495960Z ##[endgroup]
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:41:39.7315350Z CROSS_ADAPTER_RUN_START run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 legs=electron,iphone,web-api,mcp
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:43:13.3986390Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=electron scenario=capture_one_task result_code=ok conflict_shape=none activity_fact=task_captured final_revision=1
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:43:13.3990190Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=electron scenario=complete_task result_code=ok conflict_shape=none activity_fact=task_completed final_revision=2
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:43:13.3991970Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=electron scenario=reopen_task result_code=ok conflict_shape=none activity_fact=task_reopened final_revision=3
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:43:13.3993990Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=electron scenario=update_stale_expected_revision result_code=refused:task_lifecycle_conflict conflict_shape=task_lifecycle_conflict activity_fact=task_reopened final_revision=3
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:20.8259540Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=iphone scenario=capture_one_task result_code=ok conflict_shape=none activity_fact=task_captured final_revision=1
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:20.8303760Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=iphone scenario=complete_task result_code=ok conflict_shape=none activity_fact=task_completed final_revision=2
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:20.8486780Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=iphone scenario=reopen_task result_code=ok conflict_shape=none activity_fact=task_reopened final_revision=3
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:20.8694440Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=iphone scenario=update_stale_expected_revision result_code=refused:task_lifecycle_conflict conflict_shape=task_lifecycle_conflict activity_fact=task_reopened final_revision=3
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:21.3869080Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=web-api scenario=capture_one_task result_code=ok conflict_shape=none activity_fact=task_captured final_revision=1
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:21.4036800Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=web-api scenario=complete_task result_code=ok conflict_shape=none activity_fact=task_completed final_revision=2
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:21.4048660Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=web-api scenario=reopen_task result_code=ok conflict_shape=none activity_fact=task_reopened final_revision=3
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:21.4057580Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=web-api scenario=update_stale_expected_revision result_code=refused:task_lifecycle_conflict conflict_shape=task_lifecycle_conflict activity_fact=task_reopened final_revision=3
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:21.8502320Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=mcp scenario=capture_one_task result_code=ok conflict_shape=none activity_fact=task_captured final_revision=1
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:21.8517230Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=mcp scenario=complete_task result_code=ok conflict_shape=none activity_fact=task_completed final_revision=2
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:21.8519450Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=mcp scenario=reopen_task result_code=ok conflict_shape=none activity_fact=task_reopened final_revision=3
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:21.8522140Z CROSS_ADAPTER_SCENARIO run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 leg=mcp scenario=update_stale_expected_revision result_code=refused:task_lifecycle_conflict conflict_shape=task_lifecycle_conflict activity_fact=task_reopened final_revision=3
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:22.9743720Z 
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:22.9745920Z CROSS_ADAPTER_SUMMARY run_id=f02c52e2-2d29-4b69-bcfa-c60b1633a629 input_digest=aac4b40de3039a71 legs_total=4 legs_ran=4 legs_blocked=0 legs_failed=0 scenarios_per_leg=4 comparison_ok=true
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:22.9747390Z   PASS leg=electron scenarios=4 duration_ms=14606
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:22.9748030Z   PASS leg=iphone scenarios=4 duration_ms=307427
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:22.9748990Z   PASS leg=web-api scenarios=4 duration_ms=566
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:22.9749430Z   PASS leg=mcp scenarios=4 duration_ms=467
+cross-adapter-phase	Run all four adapter legs against one real server revision	2026-09-14T16:48:23.2817460Z Privacy verification passed: artifacts=1 sentinels=7
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	﻿2026-09-14T16:48:23.3827580Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3832160Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3834110Z with:
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3834910Z   name: cross-adapter-phase-evidence
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3835840Z   path: /Users/runner/work/_temp/cross-adapter-phase.txt
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3836540Z   if-no-files-found: error
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3836830Z   retention-days: 90
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3837250Z   compression-level: 6
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3837700Z   overwrite: false
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3838850Z   include-hidden-files: false
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3844450Z env:
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3845060Z   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3846400Z   KEEPLING_CROSS_ADAPTER_ARCHIVE: /Users/runner/work/_temp/keepling-desktop-package/Keepling.ditto.zip
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3847650Z   KEEPLING_CROSS_ADAPTER_OUT_DIR: apps/desktop/out/Keepling-darwin-arm64
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3849180Z   KEEPLING_CROSS_ADAPTER_IOS_DESTINATION: platform=iOS Simulator,id=22452A91-4697-4369-8812-53ADB77EB73B
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:23.3850090Z ##[endgroup]
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:24.8069850Z (node:70182) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:24.8138170Z (Use `node --trace-deprecation ...` to show where the warning was created)
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:24.8308420Z With the provided path, there will be 1 file uploaded
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:24.8316270Z Artifact name is valid!
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:24.8317720Z Root directory input is valid!
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:25.1980830Z (node:70182) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:25.2169450Z Beginning upload of artifact content to blob storage
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:25.2656260Z Uploaded bytes 628
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:25.2854450Z Finished uploading artifact content to blob storage!
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:25.2855780Z SHA256 digest of uploaded artifact zip is 6e9fffee6967dd76135012db65650563af9daa3ea6fdb1579230a1b334beaefc
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:25.2875270Z Finalizing artifact upload
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:25.5088210Z Artifact cross-adapter-phase-evidence.zip successfully finalized. Artifact ID 10358314960
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:25.5098400Z Artifact cross-adapter-phase-evidence has been successfully uploaded! Final size is 628 bytes. Artifact ID is 10358314960
+cross-adapter-phase	Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02	2026-09-14T16:48:25.5099750Z Artifact download URL: https://github.com/szTheory/keepling/actions/runs/34868832072/artifacts/10358314960
+cross-adapter-phase	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	﻿2026-09-14T16:48:26.2711430Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+cross-adapter-phase	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:48:26.2714760Z Post job cleanup.
+cross-adapter-phase	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:48:26.5565460Z (node:70401) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+cross-adapter-phase	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:48:26.5566950Z (Use `node --trace-deprecation ...` to show where the warning was created)
+cross-adapter-phase	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:48:26.6558720Z [command]/opt/homebrew/bin/gtar --posix -cf cache.tzst --exclude cache.tzst -P -C /Users/runner/work/keepling/keepling --files-from manifest.txt --delay-directory-restore --use-compress-program zstdmt
+cross-adapter-phase	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:48:33.0785120Z (node:70401) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+cross-adapter-phase	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:48:34.0726030Z Sent 50528256 of 77982448 (64.8%), 48.1 MBs/sec
+cross-adapter-phase	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:48:35.0749630Z Sent 77982448 of 77982448 (100.0%), 37.1 MBs/sec
+cross-adapter-phase	Post Run actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809	2026-09-14T16:48:35.3503680Z Cache saved with key: cross-adapter-macOS-b64baa56e0ddc791bb7f6084868bfc400318216624a22f148f82dc313f3f1ab1
+cross-adapter-phase	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	﻿2026-09-14T16:48:35.4772600Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+cross-adapter-phase	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:48:35.4774020Z Post job cleanup.
+cross-adapter-phase	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:48:35.8503900Z (node:70484) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+cross-adapter-phase	Post Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020	2026-09-14T16:48:35.8512300Z (Use `node --trace-deprecation ...` to show where the warning was created)
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	﻿2026-09-14T16:48:35.8931340Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:35.8935680Z Post job cleanup.
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.0841340Z [command]/opt/homebrew/bin/git version
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.1923830Z git version 2.55.0
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.2037640Z Copying '/Users/runner/.gitconfig' to '/Users/runner/work/_temp/f0b25160-df0d-4cf4-b47e-b5dede09022a/.gitconfig'
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.2043900Z Temporarily overriding HOME='/Users/runner/work/_temp/f0b25160-df0d-4cf4-b47e-b5dede09022a' before making global git config changes
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.2044670Z Adding repository directory to the temporary git global config as a safe directory
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.2045430Z [command]/opt/homebrew/bin/git config --global --add safe.directory /Users/runner/work/keepling/keepling
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.2359250Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp core\.sshCommand
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.2505290Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.5220450Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.5265500Z http.https://github.com/.extraheader
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.5398940Z [command]/opt/homebrew/bin/git config --local --unset-all http.https://github.com/.extraheader
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.5561920Z [command]/opt/homebrew/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.7651170Z [command]/opt/homebrew/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+cross-adapter-phase	Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5	2026-09-14T16:48:36.7757500Z [command]/opt/homebrew/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+cross-adapter-phase	Complete job	﻿2026-09-14T16:48:37.0574820Z Cleaning up orphan processes
+cross-adapter-phase	Complete job	2026-09-14T16:48:38.1784620Z Terminate orphan process: pid (69701) (DTServiceHub)
+cross-adapter-phase	Complete job	2026-09-14T16:49:05.0745620Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
