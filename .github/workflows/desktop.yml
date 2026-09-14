@@ -332,10 +332,47 @@ jobs:
   # this lane does not use one.
   cross-adapter-phase:
     needs: [desktop-package]
-    runs-on: macos-15
+    # macos-26, NOT macos-15 like every other job in this file, and the reason
+    # is a hard toolchain floor rather than a preference. apps/ios/Package.swift
+    # declares `// swift-tools-version: 6.3`, and the macos-15 image's default
+    # Xcode ships Swift 6.1: the second CI run of this lane failed with
+    # "package 'ios' is using Swift tools version 6.3.0 but the installed
+    # version is 6.1.0". D-06 already mandates the Xcode 26.6 floor this
+    # package was written against. macos-26 is GA and arm64, which also matches
+    # the darwin-arm64 package the electron leg drives.
+    runs-on: macos-26
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      # Assert the floor rather than assume the image holds it. A runner image
+      # bumping or rolling back its default Xcode is outside this repository's
+      # control, and the failure it produces otherwise -- a package-resolution
+      # error thirteen minutes into the job -- names the symptom and not the
+      # cause. This reads the requirement out of apps/ios/Package.swift itself,
+      # so the check cannot drift away from the thing it is checking.
+      - name: Assert the Swift toolchain satisfies apps/ios/Package.swift
+        run: |
+          set -eu
+          required=$(sed -n '1s|^// swift-tools-version:[[:space:]]*||p' apps/ios/Package.swift)
+          test -n "$required"
+          installed=$(swift --version 2>&1 | sed -n 's/.*Apple Swift version \([0-9][0-9.]*\).*/\1/p' | head -1)
+          test -n "$installed"
+          echo "apps/ios/Package.swift requires Swift $required; this runner has $installed"
+          xcodebuild -version
+          node -e '
+            const required = process.argv[1].split(".").map(Number);
+            const installed = process.argv[2].split(".").map(Number);
+            for (let i = 0; i < required.length; i += 1) {
+              const a = installed[i] ?? 0;
+              const b = required[i];
+              if (a > b) break;
+              if (a < b) {
+                console.error("this runner image cannot build apps/ios: Swift " + process.argv[2] + " is below the required " + process.argv[1]);
+                process.exit(1);
+              }
+            }
+          ' "$required" "$installed"
+
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24.7.0
