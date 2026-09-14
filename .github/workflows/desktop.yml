@@ -307,13 +307,151 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
+  # SRV-02's completion lane, and the only unchecked requirement box in this
+  # phase that is actually closable. Its own disclosure names the closing
+  # command: "wire `node tooling/verify-cross-adapter-phase.mjs` into a
+  # committed workflow job ... then restore this box when the lane PASSES in
+  # the release manifest." The lane has existed and passed locally since
+  # 06-05, across all four legs, byte-identically. It reported BLOCKED for one
+  # reason only: no committed job invoked it (window 83).
+  #
+  # IT LIVES HERE, NOT IN repository-integrity.yml, BECAUSE OF WHERE ITS BYTES
+  # COME FROM. The electron leg drives a PACKAGED application, and this
+  # workflow's own rule is absolute: "Test jobs NEVER rebuild and NEVER invoke
+  # `pnpm package:desktop` -- they only download the exact bytes
+  # `desktop-package` produced." A cross-adapter job that packaged its own
+  # Electron build would be binding a cross-client proof to locally built
+  # bytes, which is the exact loophole this repository forbids. So it `needs`
+  # desktop-package, downloads that artifact, re-verifies
+  # archiveDigestSha256 before expanding, and drives what came down the wire.
+  #
+  # The iOS leg needs no credential at all. apps/ios/Signing.xcconfig states
+  # it in its own words: "Simulator builds and the whole simulator test suite
+  # need no team, so a fresh clone builds and tests green with no signing
+  # setup at all." Only physical-device builds need the local team file, and
+  # this lane does not use one.
+  cross-adapter-phase:
+    needs: [desktop-package]
+    runs-on: macos-15
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Install locked JavaScript inputs
+        run: corepack enable && pnpm install --frozen-lockfile
+      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: |
+            ~/.asdf/installs
+            apps/server/deps
+            apps/server/_build
+          key: cross-adapter-${{ runner.os }}-${{ hashFiles('tooling/runtime-versions.env', 'apps/server/mix.lock') }}
+      - name: Provision the exact pinned Elixir and PostgreSQL runtimes
+        run: |
+          set -eu
+          brew list asdf >/dev/null 2>&1 || brew install asdf
+          ./tooling/runtime-preflight.sh --provision
+          ./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: ${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+          path: ${{ runner.temp }}/${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+      # Expand the DOWNLOADED archive into the layout
+      # tooling/cross-adapter/electron-driver.mjs resolves
+      # (`apps/desktop/out/<platform>/*.app/Contents/MacOS/<name>`), after
+      # re-verifying the digest the build job recorded. The digest check is
+      # the whole point: without it this step would be trusting a transport
+      # artifact, and the electron leg would be proving something about bytes
+      # nobody vouched for. `ditto -x -k` is the matching expansion for the
+      # `ditto -c -k --keepParent` archive package-desktop.mjs writes, and it
+      # is what tooling/smoke-desktop-packaged.mjs already uses.
+      - name: Expand the exact downloaded package into the driver's layout
+        run: |
+          set -eu
+          artifact_root="$RUNNER_TEMP/${KEEPLING_DESKTOP_ARTIFACT_ROOT}"
+          chmod -R u+x "$artifact_root"
+          node -e "
+            const { createHash } = require('node:crypto');
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const root = process.argv[1];
+            const manifest = JSON.parse(fs.readFileSync(path.join(root, 'package-manifest.json'), 'utf8'));
+            const archive = path.join(root, path.basename(manifest.archivePath));
+            const actual = createHash('sha256').update(fs.readFileSync(archive)).digest('hex');
+            if (actual !== manifest.archiveDigestSha256) {
+              console.error('downloaded archive digest ' + actual + ' does not match the recorded ' + manifest.archiveDigestSha256);
+              process.exit(1);
+            }
+            const outDir = 'apps/desktop/out/Keepling-' + manifest.platform + '-' + manifest.architecture;
+            fs.appendFileSync(process.env.GITHUB_ENV, 'KEEPLING_CROSS_ADAPTER_ARCHIVE=' + archive + '\\n');
+            fs.appendFileSync(process.env.GITHUB_ENV, 'KEEPLING_CROSS_ADAPTER_OUT_DIR=' + outDir + '\\n');
+            console.log('archive digest verified against the build job record; expanding into ' + outDir);
+          " "$artifact_root"
+      - name: Place the verified bytes where the electron driver resolves them
+        run: |
+          set -eu
+          mkdir -p "$KEEPLING_CROSS_ADAPTER_OUT_DIR"
+          ditto -x -k "$KEEPLING_CROSS_ADAPTER_ARCHIVE" "$KEEPLING_CROSS_ADAPTER_OUT_DIR"
+          test -d "$KEEPLING_CROSS_ADAPTER_OUT_DIR"/*.app
+          ls -la "$KEEPLING_CROSS_ADAPTER_OUT_DIR"
+      # tooling/cross-adapter/legs.mjs refuses the iPhone leg unless a booted
+      # simulator already carries the app -- it does not build or install it,
+      # by design. The driver then does its OWN `build-for-testing` against
+      # the same destination, so this step exists purely to satisfy that
+      # precondition with a real installed application rather than a stub.
+      - name: Boot a simulator and install the app the iPhone leg requires
+        run: |
+          set -eu
+          device=$(xcrun simctl list devices available --json |
+            node -e "
+              let d=''; process.stdin.on('data',c=>d+=c).on('end',()=>{
+                const runtimes = JSON.parse(d).devices;
+                const names = Object.keys(runtimes).filter(k => k.includes('iOS')).sort().reverse();
+                for (const runtime of names) {
+                  const match = runtimes[runtime].find(x => x.isAvailable && /^iPhone /.test(x.name));
+                  if (match) { console.log(match.udid + '\t' + match.name); return; }
+                }
+                console.error('no available iPhone simulator on this runner'); process.exit(1);
+              });")
+          udid=${device%%	*}
+          name=${device##*	}
+          echo "booting $name ($udid)"
+          xcrun simctl boot "$udid" || true
+          xcrun simctl bootstatus "$udid" -b
+          xcodebuild build \
+            -project apps/ios/Keepling.xcodeproj \
+            -scheme Keepling \
+            -destination "platform=iOS Simulator,id=$udid" \
+            -destination-timeout 300 \
+            -derivedDataPath .artifacts/ios/DerivedData-cross-adapter-ci \
+            CODE_SIGNING_ALLOWED=NO >/dev/null
+          app=$(find .artifacts/ios/DerivedData-cross-adapter-ci/Build/Products -maxdepth 2 -name 'Keepling.app' -print -quit)
+          test -n "$app" || { echo 'no simulator Keepling.app was produced'; exit 1; }
+          xcrun simctl install "$udid" "$app"
+          xcrun simctl listapps "$udid" | grep -qi keepling
+          echo "KEEPLING_CROSS_ADAPTER_IOS_DESTINATION=platform=iOS Simulator,id=$udid" >> "$GITHUB_ENV"
+      - name: Run all four adapter legs against one real server revision
+        run: |
+          set -o pipefail
+          node tooling/verify-cross-adapter-phase.mjs | tee "$RUNNER_TEMP/cross-adapter-phase.txt"
+          ./tooling/verify-privacy.sh "$RUNNER_TEMP/cross-adapter-phase.txt"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: cross-adapter-phase-evidence
+          path: ${{ runner.temp }}/cross-adapter-phase.txt
+          if-no-files-found: error
+          retention-days: 90
+
   # Promotion is the exclusive, single-writer step: it accepts ONLY the
   # digest `desktop-package` recorded, and ONLY after every required lane
   # above has passed. `package-desktop.mjs --promote` refuses a second
   # promotion attempt for the same digest and refuses a manifest missing any
   # required digest field.
   desktop-promote:
-    needs: [desktop-units, desktop-package, desktop-packaged, desktop-e2e, desktop-macos-integration]
+    needs: [desktop-units, desktop-package, desktop-packaged, desktop-e2e, desktop-macos-integration, cross-adapter-phase]
     runs-on: macos-15
     timeout-minutes: 20
     # D-22/T-06-10-03: id-token/attestations are granted at JOB level only,

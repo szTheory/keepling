@@ -398,12 +398,12 @@
     {
       "lane": "cross-adapter-phase",
       "command": "node tooling/verify-cross-adapter-phase.mjs",
-      "workflow": null,
-      "job": null,
+      "workflow": "desktop.yml",
+      "job": "cross-adapter-phase",
       "authority": "ci",
       "physicalBlocker": null,
-      "ciWiring": "unwired",
-      "wiringBlocker": "D-14 names this lane required on pull request and main, and no committed workflow job invokes it today.",
+      "ciWiring": "wired",
+      "wiringBlocker": null,
       "requiresSecrets": false,
       "owner": "backlog"
     },

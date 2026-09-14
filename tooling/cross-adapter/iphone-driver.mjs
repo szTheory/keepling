@@ -196,7 +196,14 @@ const toOutcome = (result) => {
  * long-lived process to close, unlike the Electron leg's launched app).
  */
 export async function createIphoneAdapter({ origin, sessionCookie }) {
-  const destination = 'platform=iOS Simulator,name=iPhone 17,OS=latest'
+  // A hosted runner's Xcode carries whatever simulators that image ships,
+  // which is not guaranteed to include any particular device NAME. The CI job
+  // that wires this lane boots a real device and passes its UDID here, so the
+  // lane binds to a simulator that provably exists rather than to a name that
+  // may not. The default is unchanged, so a local run behaves exactly as
+  // before; this is a widening, not a substitution -- the destination is still
+  // always a real booted simulator, never a fixture.
+  const destination = process.env.KEEPLING_CROSS_ADAPTER_IOS_DESTINATION ?? 'platform=iOS Simulator,name=iPhone 17,OS=latest'
   const installationId = `cross-adapter-iphone-${randomUUID()}`
   const accessToken = await issueIphoneDeviceGrant(origin, sessionCookie, installationId)
   const xctestrun = await buildForTesting(destination)
