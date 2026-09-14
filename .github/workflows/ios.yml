@@ -1,0 +1,146 @@
+name: iOS simulator evidence
+
+# D-14 names the iOS simulator lanes required on main (macOS). Window 102
+# recorded why they were not wired: the ios-simulator inventory entry declared
+# `node tooling/verify-ios-phase.mjs`, the WHOLE gate, which includes the
+# device and server-driven-device lanes that the separately inventoried
+# ios-device entry owns and that need a physically present, unlocked iPhone.
+# As declared, the command could not exit zero on any hosted runner, so wiring
+# a job would have produced a permanently red lane rather than a newly green
+# one. The command below is the CORRECTED one, and it is the exact string
+# tooling/release-lanes.json records for the lane -- a gate whose wired command
+# and inventoried command can drift is the defect window 102 exists to record.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios-simulator:
+    # macos-26, NOT macos-15, for the same hard toolchain floor the
+    # cross-adapter job documents: apps/ios/Package.swift declares
+    # `// swift-tools-version: 6.3` and the macos-15 image's default Xcode
+    # ships Swift 6.1. D-06 already mandates the Xcode 26.6 floor.
+    runs-on: macos-26
+    # Window 102 measured the accessibility lane alone at 44 minutes locally,
+    # and this job runs it plus twenty-odd siblings plus a second invocation
+    # for server-driven-sim. 50 would have timed out on the one lane that was
+    # already known to be slow.
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      # Assert the floor rather than assume the image holds it, reading the
+      # requirement out of apps/ios/Package.swift so the check cannot drift
+      # away from the thing it is checking. Same rationale, same code as the
+      # cross-adapter job in desktop.yml.
+      - name: Assert the Swift toolchain satisfies apps/ios/Package.swift
+        run: |
+          set -eu
+          required=$(sed -n '1s|^// swift-tools-version:[[:space:]]*||p' apps/ios/Package.swift)
+          test -n "$required"
+          installed=$(swift --version 2>&1 | sed -n 's/.*Apple Swift version \([0-9][0-9.]*\).*/\1/p' | head -1)
+          test -n "$installed"
+          echo "apps/ios/Package.swift requires Swift $required; this runner has $installed"
+          xcodebuild -version
+          node -e '
+            const required = process.argv[1].split(".").map(Number);
+            const installed = process.argv[2].split(".").map(Number);
+            for (let i = 0; i < required.length; i += 1) {
+              const a = installed[i] ?? 0;
+              const b = required[i];
+              if (a > b) break;
+              if (a < b) {
+                console.error("this runner image cannot build apps/ios: Swift " + process.argv[2] + " is below the required " + process.argv[1]);
+                process.exit(1);
+              }
+            }
+          ' "$required" "$installed"
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Install locked JavaScript inputs
+        run: corepack enable && pnpm install --frozen-lockfile
+
+      - uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: |
+            ~/.asdf/installs
+            apps/server/deps
+            apps/server/_build
+          key: ios-simulator-${{ runner.os }}-${{ hashFiles('tooling/runtime-versions.env', 'apps/server/mix.lock') }}
+      # The server-driven-sim lane drives tooling/ios-device/server-driven-run.mjs,
+      # which boots a disposable server and asserts the client meets real 401
+      # and 409 refusals. That needs the pinned Elixir and PostgreSQL, not just
+      # a simulator.
+      - name: Provision the exact pinned Elixir and PostgreSQL runtimes
+        run: |
+          set -eu
+          brew list asdf >/dev/null 2>&1 || brew install asdf
+          ./tooling/runtime-preflight.sh --provision
+          ./tooling/runtime-preflight.sh --exec -- sh -c 'cd apps/server && mix deps.get --check-locked'
+
+      # apps/ios/Keepling.xcodeproj is GITIGNORED and generated from the
+      # tracked apps/ios/project.yml, so a fresh checkout has no project at
+      # all and every xcodebuild lane would fail with "does not exist".
+      - name: Generate the gitignored Xcode project from its tracked spec
+        run: |
+          set -eu
+          brew list xcodegen >/dev/null 2>&1 || brew install xcodegen
+          xcodegen --version
+          xcodegen generate --spec apps/ios/project.yml --project apps/ios
+          test -d apps/ios/Keepling.xcodeproj
+
+      # The lanes hardcode `-destination platform=iOS Simulator,name=iPhone 17,OS=latest`.
+      # If the image ever stops carrying that device the lanes fail deep inside
+      # xcodebuild with a destination error; this states the requirement up
+      # front and names it, and boots the device so the first lane does not pay
+      # the boot cost inside its own timing.
+      - name: Assert and boot the simulator the lanes name
+        run: |
+          set -eu
+          xcrun simctl list devices available | tee /tmp/simctl-devices.txt
+          grep -q 'iPhone 17' /tmp/simctl-devices.txt || {
+            echo 'this runner image carries no "iPhone 17" simulator, which every iOS lane names as its destination'
+            exit 1
+          }
+          udid=$(xcrun simctl list devices available --json |
+            node -e "
+              let d=''; process.stdin.on('data',c=>d+=c).on('end',()=>{
+                const runtimes = JSON.parse(d).devices;
+                const names = Object.keys(runtimes).filter(k => k.includes('iOS')).sort().reverse();
+                for (const runtime of names) {
+                  const match = runtimes[runtime].find(x => x.isAvailable && x.name === 'iPhone 17');
+                  if (match) { console.error('booting ' + match.name + ' on ' + runtime); console.log(match.udid); return; }
+                }
+                console.error('no available iPhone 17 simulator on this runner'); process.exit(1);
+              });")
+          test -n "$udid"
+          xcrun simctl boot "$udid" || true
+          xcrun simctl bootstatus "$udid" -b
+
+      # Exactly the command tooling/release-lanes.json declares for the
+      # ios-simulator lane. The two exclusions are the device lanes that the
+      # ios-device entry owns; both print an EXCLUDED line and are counted in
+      # the summary's `excluded=` field, so this run is legible AS narrowed.
+      - name: Run the iOS phase gate, less the lanes a physical handset owns
+        run: |
+          set -o pipefail
+          node tooling/verify-ios-phase.mjs --exclude-lane device --exclude-lane server-driven-device \
+            | tee "$RUNNER_TEMP/ios-simulator.txt"
+          node tooling/verify-ios-phase.mjs --lane server-driven-sim \
+            | tee -a "$RUNNER_TEMP/ios-simulator.txt"
+          ./tooling/verify-privacy.sh "$RUNNER_TEMP/ios-simulator.txt"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: ios-simulator-evidence
+          path: ${{ runner.temp }}/ios-simulator.txt
+          if-no-files-found: error
+          retention-days: 90

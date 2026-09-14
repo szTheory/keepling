@@ -343,7 +343,28 @@ jobs:
   # need no team, so a fresh clone builds and tests green with no signing
   # setup at all." Only physical-device builds need the local team file, and
   # this lane does not use one.
-  cross-adapter-phase:
+  # WIDENED 2026-09-14 (window 102) FROM `cross-adapter-phase` TO THE WHOLE MCP
+  # GATE, and the rename is the honest part: this job no longer runs only the
+  # cross-adapter lane. `tooling/release-lanes.json` carried a second unwired
+  # entry, mcp-phase-non-model, whose corrected command is the MCP gate less
+  # the one lane a paid model credential owns -- and that gate's cross-adapter
+  # lane shells out to `verify-cross-adapter-phase.mjs`, the exact script this
+  # job already ran. Wiring it as a separate job would have re-downloaded the
+  # package, re-run xcodegen, rebuilt the simulator app and driven all four
+  # legs a second time, ~28 minutes to produce bytes identical to this job's.
+  #
+  # Running the gate instead of the bare script ADDS four lanes (adversarial,
+  # deterministic, protocol, simulated-client) to setup that was already paid
+  # for, and keeps `--exclude-lane` closed to exactly the one entry that owns
+  # its evidence elsewhere. The alternative -- declaring cross-adapter
+  # excludable too -- was rejected: the exclusion map is small on purpose, and
+  # the cheapest way to turn a red gate green must not be to grow it.
+  #
+  # The cross-adapter-phase inventory entry still owns its lane's evidence,
+  # which is produced inside this job: the gate streams the lane's own
+  # CROSS_ADAPTER_SUMMARY and CROSS_ADAPTER_SCENARIO lines into the same
+  # artifact, so nothing that entry vouched for stopped being recorded.
+  mcp-phase-non-model:
     needs: [desktop-package]
     # macos-26, NOT macos-15 like every other job in this file, and the reason
     # is a hard toolchain floor rather than a preference. apps/ios/Package.swift
@@ -354,7 +375,9 @@ jobs:
     # package was written against. macos-26 is GA and arm64, which also matches
     # the darwin-arm64 package the electron leg drives.
     runs-on: macos-26
-    timeout-minutes: 75
+    # 75 covered the four legs alone; the gate adds an ExUnit lane and three
+    # live-server lanes on top of the same setup.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       # Assert the floor rather than assume the image holds it. A runner image
@@ -501,16 +524,20 @@ jobs:
           xcrun simctl install "$udid" "$app"
           xcrun simctl listapps "$udid" | grep -qi keepling
           echo "KEEPLING_CROSS_ADAPTER_IOS_DESTINATION=platform=iOS Simulator,id=$udid" >> "$GITHUB_ENV"
-      - name: Run all four adapter legs against one real server revision
+      # Exactly the command tooling/release-lanes.json declares for the
+      # mcp-phase-non-model lane -- not a variant of it. A gate whose wired
+      # command and inventoried command can drift is the defect window 102
+      # exists to record.
+      - name: Run the MCP phase gate, less the lane a paid credential owns
         run: |
           set -o pipefail
-          node tooling/verify-cross-adapter-phase.mjs | tee "$RUNNER_TEMP/cross-adapter-phase.txt"
-          ./tooling/verify-privacy.sh "$RUNNER_TEMP/cross-adapter-phase.txt"
+          node tooling/verify-mcp-phase.mjs --exclude-lane representative-model | tee "$RUNNER_TEMP/mcp-phase-non-model.txt"
+          ./tooling/verify-privacy.sh "$RUNNER_TEMP/mcp-phase-non-model.txt"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
-          name: cross-adapter-phase-evidence
-          path: ${{ runner.temp }}/cross-adapter-phase.txt
+          name: mcp-phase-non-model-evidence
+          path: ${{ runner.temp }}/mcp-phase-non-model.txt
           if-no-files-found: error
           retention-days: 90
 
@@ -520,7 +547,7 @@ jobs:
   # promotion attempt for the same digest and refuses a manifest missing any
   # required digest field.
   desktop-promote:
-    needs: [desktop-units, desktop-package, desktop-packaged, desktop-e2e, desktop-macos-integration, cross-adapter-phase]
+    needs: [desktop-units, desktop-package, desktop-packaged, desktop-e2e, desktop-macos-integration, mcp-phase-non-model]
     runs-on: macos-15
     timeout-minutes: 20
     # D-22/T-06-10-03: id-token/attestations are granted at JOB level only,
