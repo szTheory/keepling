@@ -404,20 +404,18 @@ jobs:
       - name: Boot a simulator and install the app the iPhone leg requires
         run: |
           set -eu
-          device=$(xcrun simctl list devices available --json |
+          udid=$(xcrun simctl list devices available --json |
             node -e "
               let d=''; process.stdin.on('data',c=>d+=c).on('end',()=>{
                 const runtimes = JSON.parse(d).devices;
                 const names = Object.keys(runtimes).filter(k => k.includes('iOS')).sort().reverse();
                 for (const runtime of names) {
                   const match = runtimes[runtime].find(x => x.isAvailable && /^iPhone /.test(x.name));
-                  if (match) { console.log(match.udid + '\t' + match.name); return; }
+                  if (match) { console.error('selected ' + match.name + ' on ' + runtime); console.log(match.udid); return; }
                 }
                 console.error('no available iPhone simulator on this runner'); process.exit(1);
               });")
-          udid=${device%%	*}
-          name=${device##*	}
-          echo "booting $name ($udid)"
+          test -n "$udid"
           xcrun simctl boot "$udid" || true
           xcrun simctl bootstatus "$udid" -b
           xcodebuild build \
