@@ -286,11 +286,72 @@ const phase5RequirementIds = () => {
   return [...ids].sort()
 }
 
+/**
+ * The CLOSED set of gate lanes `--exclude-lane` may remove, each mapped to
+ * the `tooling/release-lanes.json` entry that OWNS that lane's evidence.
+ *
+ * This exists because the release inventory already splits this gate in two:
+ * `mcp-phase-non-model` is the evidence a hosted runner can produce, and
+ * `mcp-representative-model` is the paid-credential lane, inventoried
+ * separately WITH its own honest blocker. Before this flag the
+ * `mcp-phase-non-model` entry's declared command was the whole gate, so it
+ * necessarily ran a lane another entry owns and could never be green --
+ * `.planning/WINDOWS.md` row 102.
+ *
+ * WHY A CLOSED MAP AND NOT A FREE-FORM FLAG. An exclusion that can name any
+ * lane is a loophole generator: the cheapest way to make a red gate green
+ * becomes excluding whatever failed. Here a lane may be excluded ONLY if
+ * some other release-inventory entry is on record as owning its evidence,
+ * and that entry is verified to exist at run time. Excluding a lane
+ * therefore cannot make evidence disappear from the closed inventory; it can
+ * only move it to the entry that already carried it.
+ */
+const EXCLUDABLE_LANES = { 'representative-model': 'mcp-representative-model' }
+
 const runAsCli = async () => {
   const requestedLane = (() => {
     const flagIndex = process.argv.indexOf('--lane')
     return flagIndex === -1 ? null : process.argv[flagIndex + 1]
   })()
+
+  const excludedLanes = (() => {
+    const names = []
+    for (let i = 0; i < process.argv.length; i += 1) {
+      if (process.argv[i] === '--exclude-lane') names.push(process.argv[i + 1])
+    }
+    return names
+  })()
+
+  for (const name of excludedLanes) {
+    if (name === undefined) {
+      console.error('MCP phase gate failed: --exclude-lane was given with no lane name')
+      process.exit(1)
+    }
+    const owner = EXCLUDABLE_LANES[name]
+    if (owner === undefined) {
+      console.error(
+        `MCP phase gate failed: lane "${name}" is not excludable. Only lanes whose evidence another ` +
+          `tooling/release-lanes.json entry owns may be excluded: ${Object.keys(EXCLUDABLE_LANES).join(', ') || '(none)'}.`,
+      )
+      process.exit(1)
+    }
+    let inventory
+    try {
+      inventory = JSON.parse(readFileSync(join(repositoryRoot, 'tooling', 'release-lanes.json'), 'utf8'))
+    } catch (error) {
+      console.error(`MCP phase gate failed: could not read tooling/release-lanes.json: ${String(error)}`)
+      process.exit(1)
+    }
+    const entries = Array.isArray(inventory) ? inventory : inventory.lanes
+    if (!entries?.some((entry) => entry.lane === owner)) {
+      console.error(
+        `MCP phase gate failed: lane "${name}" is declared excludable because release lane "${owner}" owns its ` +
+          'evidence, but no such entry exists in tooling/release-lanes.json. Excluding it would drop the evidence ' +
+          'from the closed inventory entirely.',
+      )
+      process.exit(1)
+    }
+  }
 
   const requirementsMode = process.argv.includes('--requirements')
 
@@ -357,6 +418,12 @@ const runAsCli = async () => {
   for (const file of laneFiles) {
     const laneName = file.replace(/\.mjs$/, '')
     if (requestedLane !== null && requestedLane !== laneName) continue
+    if (excludedLanes.includes(laneName)) {
+      // Reported, never silently dropped: a narrowed run must be legible AS
+      // narrowed, both here and in the summary's `excluded=` count.
+      console.log(`EXCLUDED ${laneName} evidence_owned_by=${EXCLUDABLE_LANES[laneName]}`)
+      continue
+    }
     let laneModule
     try {
       // eslint-disable-next-line no-await-in-loop
@@ -387,7 +454,7 @@ const runAsCli = async () => {
   // BLOCKED is disclosed missing evidence, FAIL is a defect. Counting
   // `!passed` here reported a failure that had not occurred.
   const failedCount = results.filter((r) => !r.passed && !r.blocked).length
-  console.log(`MCP phase gate summary: lanes=${results.length} failed=${failedCount} blocked=${blockedCount} run_id=${RUN_ID}`)
+  console.log(`MCP phase gate summary: lanes=${results.length} failed=${failedCount} blocked=${blockedCount} excluded=${excludedLanes.length} run_id=${RUN_ID}`)
   for (const result of results) {
     const word = result.passed ? 'PASS' : result.blocked ? 'BLOCKED' : 'FAIL'
     console.log(`  ${word} ${result.name} cases=${result.cases} duration_ms=${result.durationMs} input_digest=${result.inputDigest}`)

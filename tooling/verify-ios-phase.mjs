@@ -250,6 +250,65 @@ const requestedLane = (() => {
   return flagIndex === -1 ? null : process.argv[flagIndex + 1]
 })()
 
+/**
+ * The CLOSED set of gate lanes `--exclude-lane` may remove, each mapped to
+ * the `tooling/release-lanes.json` entry that OWNS that lane's evidence.
+ * The same map and the same reasoning live in `tooling/verify-mcp-phase.mjs`;
+ * `.planning/WINDOWS.md` row 102 records what it fixes. In short: the
+ * `ios-simulator` inventory entry's declared command was the WHOLE gate, so
+ * it necessarily ran the two physical-iPhone lanes that the separately
+ * inventoried `ios-device` entry already owns, and could therefore never be
+ * green on any runner, hosted or local.
+ *
+ * WHY A CLOSED MAP AND NOT A FREE-FORM FLAG. An exclusion that can name any
+ * lane is a loophole generator -- the cheapest way to make a red gate green
+ * becomes excluding whatever failed. A lane may be excluded ONLY if another
+ * release-inventory entry is on record as owning its evidence, and that
+ * entry's existence is verified at run time, so an exclusion can never
+ * remove evidence from the closed inventory. It can only leave it with the
+ * entry that already carried it.
+ */
+const EXCLUDABLE_LANES = { device: 'ios-device', 'server-driven-device': 'ios-device' }
+
+const excludedLanes = (() => {
+  const names = []
+  for (let i = 0; i < process.argv.length; i += 1) {
+    if (process.argv[i] === '--exclude-lane') names.push(process.argv[i + 1])
+  }
+  return names
+})()
+
+for (const name of excludedLanes) {
+  if (name === undefined) {
+    console.error('iOS phase gate failed: --exclude-lane was given with no lane name')
+    process.exit(1)
+  }
+  const owner = EXCLUDABLE_LANES[name]
+  if (owner === undefined) {
+    console.error(
+      `iOS phase gate failed: lane "${name}" is not excludable. Only lanes whose evidence another ` +
+        `tooling/release-lanes.json entry owns may be excluded: ${Object.keys(EXCLUDABLE_LANES).join(', ') || '(none)'}.`,
+    )
+    process.exit(1)
+  }
+  let inventory
+  try {
+    inventory = JSON.parse(readFileSync(join(repositoryRoot, 'tooling', 'release-lanes.json'), 'utf8'))
+  } catch (error) {
+    console.error(`iOS phase gate failed: could not read tooling/release-lanes.json: ${String(error)}`)
+    process.exit(1)
+  }
+  const entries = Array.isArray(inventory) ? inventory : inventory.lanes
+  if (!entries?.some((entry) => entry.lane === owner)) {
+    console.error(
+      `iOS phase gate failed: lane "${name}" is declared excludable because release lane "${owner}" owns its ` +
+        'evidence, but no such entry exists in tooling/release-lanes.json. Excluding it would drop the evidence ' +
+        'from the closed inventory entirely.',
+    )
+    process.exit(1)
+  }
+}
+
 const requirementsMode = process.argv.includes('--requirements')
 
 let laneFiles
@@ -316,6 +375,12 @@ if (requirementsMode) {
 for (const file of laneFiles) {
   const laneName = file.replace(/\.mjs$/, '')
   if (requestedLane !== null && requestedLane !== laneName) continue
+  if (excludedLanes.includes(laneName)) {
+    // Reported, never silently dropped: a narrowed run must be legible AS
+    // narrowed, both here and in the summary's `excluded=` count.
+    console.log(`EXCLUDED ${laneName} evidence_owned_by=${EXCLUDABLE_LANES[laneName]}`)
+    continue
+  }
   let laneModule
   try {
     // eslint-disable-next-line no-await-in-loop
@@ -341,7 +406,7 @@ if (requestedLane !== null && results.length === 0) {
 
 const blockedCount = results.filter((r) => r.blocked).length
 console.log('')
-console.log(`iOS phase gate summary: lanes=${results.length} failed=${results.filter((r) => !r.passed).length} blocked=${blockedCount}`)
+console.log(`iOS phase gate summary: lanes=${results.length} failed=${results.filter((r) => !r.passed && !r.blocked).length} blocked=${blockedCount} excluded=${excludedLanes.length}`)
 for (const result of results) {
   const word = result.passed ? 'PASS' : result.blocked ? 'BLOCKED' : 'FAIL'
   console.log(`  ${word} ${result.name} cases=${result.cases} duration_ms=${result.durationMs}`)

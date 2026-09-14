@@ -385,13 +385,13 @@
     },
     {
       "lane": "mcp-phase-non-model",
-      "command": "node tooling/verify-mcp-phase.mjs",
+      "command": "node tooling/verify-mcp-phase.mjs --exclude-lane representative-model",
       "workflow": null,
       "job": null,
       "authority": "ci",
       "physicalBlocker": null,
       "ciWiring": "unwired",
-      "wiringBlocker": "D-14 names this lane required on pull request and main, and no committed workflow job invokes it today.",
+      "wiringBlocker": "D-14 names this lane required on pull request and main, and no committed workflow job invokes it today. Its command was CORRECTED 2026-09-14 (window 102): it previously ran the whole MCP gate, including the representative-model lane that the separately inventoried mcp-representative-model entry owns and that needs a paid model credential -- so the command this entry declared could never exit zero anywhere, and the requiresSecrets=false recorded here was true of the lane's SCOPE but false of its COMMAND.",
       "requiresSecrets": false,
       "owner": "backlog"
     },
@@ -409,13 +409,13 @@
     },
     {
       "lane": "ios-simulator",
-      "command": "node tooling/verify-ios-phase.mjs && node tooling/verify-ios-phase.mjs --lane server-driven-sim",
+      "command": "node tooling/verify-ios-phase.mjs --exclude-lane device --exclude-lane server-driven-device && node tooling/verify-ios-phase.mjs --lane server-driven-sim",
       "workflow": null,
       "job": null,
       "authority": "ci",
       "physicalBlocker": null,
       "ciWiring": "unwired",
-      "wiringBlocker": "D-14 names the iOS simulator lanes required on main (macOS), and no committed workflow job invokes them today.",
+      "wiringBlocker": "D-14 names the iOS simulator lanes required on main (macOS), and no committed workflow job invokes them today. The command was CORRECTED 2026-09-14 (window 102): it previously ran the whole iOS gate, including the device and server-driven-device lanes that the separately inventoried ios-device entry owns and that need a physically present, unlocked iPhone -- so the command this entry declared could never exit zero on any runner, and the physicalBlocker=null recorded here was true of the lane's SCOPE but false of its COMMAND.",
       "requiresSecrets": false,
       "owner": "backlog"
     },
