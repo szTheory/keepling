@@ -140,16 +140,60 @@ jobs:
       KEEPLING_LIVE_CHANGE_TRIGGER: ${{ inputs.change_trigger }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-      - name: Preserve deferred outer acceptance as explicitly non-passing
+      # TWO DIFFERENT CLAIMS LIVE IN THIS JOB, AND THEY MUST NOT BE CONFUSED.
+      #
+      # `quarterly-host-replacement` is a lane in tooling/release-lanes.json
+      # whose declared command is ./tooling/test-host-replacement-sequence.sh
+      # and whose `requiresSecrets` is false. It is the deterministic ordering
+      # contract: gates run in order, a semantic failure never reaches DNS, and
+      # teardown is guaranteed. It needs no credential and no provider. Until
+      # this step existed the lane was BLOCKED for one reason only -- this job
+      # exited before running the lane's own declared command, so a lane that
+      # passes everywhere reported BLOCKED everywhere (window 83).
+      #
+      # `live-host-dns-acceptance` is a DIFFERENT lane, `requiresSecrets: true`,
+      # and it is the one DATA-03 and OPS-02 depend on. It is NOT wired here and
+      # is not wired anywhere, deliberately: see the step below.
+      - name: Run this lane's own declared deterministic command
+        run: |
+          set -eu -o pipefail
+          ./tooling/test-host-replacement-sequence.sh | tee "$RUNNER_TEMP/host-replacement-lane.txt"
+          ./tooling/verify-privacy.sh "$RUNNER_TEMP/host-replacement-lane.txt"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: host-replacement-lane
+          path: ${{ runner.temp }}/host-replacement-lane.txt
+          if-no-files-found: error
+          retention-days: 90
+      # THIS STEP MUST KEEP FAILING, AND THE JOB MUST KEEP REPORTING RED.
+      #
+      # DATA-03 and OPS-02 both state the rule in their own disclosures: the
+      # credentialed live Hetzner/DNS cutover "must exist, must never report
+      # green without fresh outer evidence, and is EXPECTED to be non-passing,
+      # so that no skip is ever counted as evidence." A green job here would be
+      # the exact vacuity those boxes were unchecked to avoid.
+      #
+      # The reason is now specific instead of generic. Credentials are no longer
+      # the first thing missing: HCLOUD_TOKEN and CLOUDFLARE_API_TOKEN are
+      # provisioned in this environment, and three of the remaining five inputs
+      # have known 1Password items. The binding constraint is in the code --
+      # `credentialed_apply` in tooling/verify-host-replacement.sh ends in an
+      # unconditional `die`, sealed until the billable benchmark checkpoint is
+      # approved by the owner. Uploading the last credentials would not move
+      # this one line. So the evidence names the seal first and the missing
+      # inputs second, in the order they actually bind.
+      - name: Record the sealed outer acceptance as explicitly non-passing
+        if: always()
         run: |
           set -eu
           evidence="$RUNNER_TEMP/host-replacement.json"
-          reason=change_trigger_required
-          test -n "$HCLOUD_TOKEN" && test -n "$CLOUDFLARE_API_TOKEN" || reason=missing_protected_credentials
+          reason=outer_acceptance_sealed
           test -n "$KEEPLING_LIVE_CHANGE_TRIGGER" || reason=change_trigger_required
-          jq -n --arg revision "$GITHUB_SHA" --arg reason "$reason" '{version:1,fixture:"host-replacement",result:"NON_PASSING",revision:$revision,reason:$reason,attempts:0,dns_reached:false}' >"$evidence"
+          test -n "$HCLOUD_TOKEN" && test -n "$CLOUDFLARE_API_TOKEN" || reason=missing_protected_credentials
+          jq -n --arg revision "$GITHUB_SHA" --arg reason "$reason" '{version:1,fixture:"host-replacement",result:"NON_PASSING",revision:$revision,reason:$reason,attempts:0,dns_reached:false,lane:"live-host-dns-acceptance",owner:"BACKLOG/999.2",sealed_at:"credentialed_apply"}' >"$evidence"
           ./tooling/verify-privacy.sh "$evidence"
-          echo 'Plan 02-09 corrected restore/runtime plus DNS rollback acceptance remains NON_PASSING.'
+          echo 'live-host-dns-acceptance remains NON_PASSING: the billable apply is sealed in code, not merely uncredentialed.'
           exit 1
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
