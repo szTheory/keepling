@@ -87,12 +87,50 @@ const MAX_LANE_OUTPUT_BYTES = 64 * 1024 * 1024
  * the first wired CI run printed for all 20 failing lanes and why none of
  * them could be diagnosed from CI at all.
  */
+const FAILURE_SIGNAL = /\.swift:\d+:\s*(error|warning: .*failed)|Assertion Failure|XCTAssert\w*\s+failed|^Failing tests:|error: .*(cannot|could not|no such|not found)/
+
+/**
+ * MEASURED DEFECT this repairs: a head/tail-only excerpt loses the assertion
+ * when the lane is a UI lane. XCUITest writes a per-interaction activity log
+ * -- thousands of `t = 161.95s Find the "add-task-button" Button` lines -- so
+ * the `.swift:NN: error:` that names the actual failure sits in the omitted
+ * MIDDLE while the head holds the xcodebuild invocation and the tail holds the
+ * `Failing tests:` summary. Measured on CI run 34897943904: `accessibility`
+ * and `overflow-longtext` reported WHICH test failed and not one word of why,
+ * while the non-UI lanes in the same artifact carried their full assertion
+ * text. Widening the window is the wrong fix -- it would pull in tens of
+ * thousands of activity lines to reach one of them -- so the signal lines are
+ * retained by MATCH, wherever they fall, and the surrounding bulk is still cut.
+ */
 const excerpt = (text) => {
   const lines = text.trim().split('\n')
   if (lines.length <= 300) return lines.join('\n')
-  const head = lines.slice(0, 100)
-  const tail = lines.slice(-200)
-  return [...head, `--- ${lines.length - 300} line(s) omitted ---`, ...tail].join('\n')
+
+  const keep = new Set()
+  for (let i = 0; i < 100; i += 1) keep.add(i)
+  for (let i = Math.max(0, lines.length - 200); i < lines.length; i += 1) keep.add(i)
+
+  // Capped so a lane that fails every case cannot reinstate the whole log,
+  // which is the bloat this function exists to prevent.
+  let signals = 0
+  for (let i = 0; i < lines.length && signals < 200; i += 1) {
+    if (!keep.has(i) && FAILURE_SIGNAL.test(lines[i])) {
+      keep.add(i)
+      signals += 1
+    }
+  }
+
+  const out = []
+  let previous = -1
+  for (const index of [...keep].sort((a, b) => a - b)) {
+    const gap = index - previous - 1
+    if (gap > 0) out.push(`--- ${gap} line(s) omitted ---`)
+    out.push(lines[index])
+    previous = index
+  }
+  const trailing = lines.length - previous - 1
+  if (trailing > 0) out.push(`--- ${trailing} line(s) omitted ---`)
+  return out.join('\n')
 }
 
 /**
