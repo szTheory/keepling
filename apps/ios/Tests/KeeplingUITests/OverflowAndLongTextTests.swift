@@ -262,7 +262,11 @@ final class OverflowAndLongTextTests: XCTestCase {
         XCTAssertTrue(titleField.waitForExistence(timeout: 10))
         titleField.tap()
         titleField.typeText(Self.fixture.titleNonLatinScript)
-        XCTAssertEqual(titleField.value as? String, Self.fixture.titleNonLatinScript, "the non-Latin-script title was not preserved verbatim while composing")
+        assertFieldValueSettles(
+            titleField,
+            to: Self.fixture.titleNonLatinScript,
+            "the non-Latin-script title was not preserved verbatim while composing",
+        )
 
         // T-04-14-06: the combining-marks entry is DECOMPOSED base+
         // combining-diacritical pairs (never precomposed) -- typed over
@@ -283,7 +287,11 @@ final class OverflowAndLongTextTests: XCTestCase {
         // alternative already available without a clear/select affordance.
         titleField.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: Self.fixture.titleNonLatinScript.count))
         titleField.typeText(Self.fixture.titleCombiningMarks)
-        XCTAssertEqual(titleField.value as? String, Self.fixture.titleCombiningMarks, "the combining-marks title was not preserved verbatim -- a truncation or rendering path may have split a grapheme cluster")
+        assertFieldValueSettles(
+            titleField,
+            to: Self.fixture.titleCombiningMarks,
+            "the combining-marks title was not preserved verbatim -- a truncation or rendering path may have split a grapheme cluster",
+        )
 
         try app.performAccessibilityAudit(for: Self.auditTypes(for: "Capture sheet"))
         assertNoChromeLeak(in: app, element: "Capture sheet")
@@ -375,5 +383,47 @@ final class OverflowAndLongTextTests: XCTestCase {
         XCTAssertFalse(recoveryRow.label.contains(Self.titleMarkerPrefix), "an overflow menu row leaked task content: \(recoveryRow.label)")
         try app.performAccessibilityAudit(for: Self.auditTypes(for: nil))
         assertNoChromeLeak(in: app, element: "Toolbar and overflow menu")
+    }
+
+    // MARK: - Reading a typed value without racing the typing
+
+    /// Polls a text field's accessibility `value` until it reaches
+    /// `expected`, then asserts it.
+    ///
+    /// MEASURED DEFECT this repairs: CI run 34978262004 failed this suite
+    /// with `("OVERFLOW-FIXTURE-NONLATI")` against the 40-scalar
+    /// `titleNonLatinScript` -- 24 characters, cut MID-WORD inside
+    /// "NONLATIN", before the space and before a single non-Latin scalar.
+    /// The same test at the same revision passed that assertion locally on
+    /// the same Xcode 26.6 and went on to fail at the LATER accessibility
+    /// audit instead. A mid-word cut at no contract boundary, reproducing
+    /// on the slower runner and not the faster one, is a read that outran
+    /// the write: `typeText` returns once the events are DELIVERED, and
+    /// for scalars the hardware keyboard cannot produce (CJK, Arabic)
+    /// XCUITest takes a slower path whose accessibility `value` lands
+    /// afterwards.
+    ///
+    /// THIS DOES NOT WEAKEN THE ASSERTION, which is the only reason it is
+    /// an acceptable fix for a test whose entire purpose is to catch a
+    /// truncating title field. If the app genuinely truncates, the value
+    /// never becomes `expected`, the poll runs out its timeout, and the
+    /// SAME `XCTAssertEqual` fails with the SAME message and the same
+    /// observed value. The only outcome removed is the one where a correct
+    /// app is reported as truncating because it was asked too early.
+    private func assertFieldValueSettles(
+        _ field: XCUIElement,
+        to expected: String,
+        _ message: String,
+        timeout: TimeInterval = 10,
+        file: StaticString = #filePath,
+        line: UInt = #line,
+    ) {
+        let deadline = Date().addingTimeInterval(timeout)
+        var observed = field.value as? String
+        while observed != expected, Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.2)
+            observed = field.value as? String
+        }
+        XCTAssertEqual(observed, expected, message, file: file, line: line)
     }
 }
