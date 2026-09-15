@@ -310,29 +310,46 @@ const REQUIREMENT_LANES = {
 }
 
 /**
- * Reads this phase's requirement ids straight from the Phase 5 row of
- * `.planning/REQUIREMENTS.md`'s Traceability table, rather than
- * hard-coding them, so a requirement later added to that row without a
- * mapped lane fails `--requirements` instead of silently passing. Mirrors
- * `verify-ios-phase.mjs`'s `phase4RequirementIds` exactly, one phase over.
+ * Reads this phase's requirement ids straight from the Phase 5 ROWS of
+ * `.planning/REQUIREMENTS.md`'s Traceability table, rather than hard-coding
+ * them, so a requirement later added to that table without a mapped lane
+ * fails `--requirements` instead of silently passing.
+ *
+ * MEASURED DEFECT this repairs: this read `.find(...)`, singular, on the
+ * premise that one row lists every id the phase owns. The table is shaped
+ * the other way -- ONE ROW PER REQUIREMENT, each naming its id in the first
+ * cell and `Phase 5` in the second (6 such rows today). `find`
+ * therefore returned the MCP-01 row and nothing else, so `--requirements`
+ * failed with "REQUIREMENT_LANES declares id(s) absent from the Phase 5
+ * row: MCP-02, MCP-03, MCP-04, MCP-05, SRV-02" -- naming as absent the very ids the table devotes a
+ * row each to. REQUIREMENT_LANES was right; the reader was wrong. Found
+ * while closing window 102; no committed workflow job invokes
+ * `--requirements`, which is why a broken id reader survived this long.
+ *
+ * The `&& line.includes('MCP')` guard the single-row version carried is
+ * dropped deliberately: it happened to hold only because every Phase 5
+ * row's PROSE mentions MCP, and it would exclude a future requirement
+ * whose row does not. A row assigned to Phase 5 belongs to Phase 5.
  */
 const phase5RequirementIds = () => {
   const requirementsPath = join(repositoryRoot, '.planning', 'REQUIREMENTS.md')
   const text = readFileSync(requirementsPath, 'utf8')
-  const row = text.split('\n').find((line) => line.includes('| Phase 5 |') && line.includes('MCP'))
-  if (!row) throw new Error('no Phase 5 row found in .planning/REQUIREMENTS.md Traceability table')
+  const rows = text.split('\n').filter((line) => line.includes('| Phase 5 |'))
+  if (rows.length === 0) throw new Error('no Phase 5 row found in .planning/REQUIREMENTS.md Traceability table')
   // Only the row's FIRST cell names requirement ids; later cells are prose
   // that may cite other id-shaped tokens (decision ids, etc).
-  const idCell = row.split('|')[1] ?? ''
   const ids = new Set()
-  for (const match of idCell.matchAll(/([A-Z]+)-(\d+)\.\.(\d+)/g)) {
-    const [, prefix, start, end] = match
-    for (let n = Number(start); n <= Number(end); n += 1) ids.add(`${prefix}-${String(n).padStart(2, '0')}`)
+  for (const row of rows) {
+    const idCell = row.split('|')[1] ?? ''
+    for (const match of idCell.matchAll(/([A-Z]+)-(\d+)\.\.(\d+)/g)) {
+      const [, prefix, start, end] = match
+      for (let n = Number(start); n <= Number(end); n += 1) ids.add(`${prefix}-${String(n).padStart(2, '0')}`)
+    }
+    for (const match of idCell.matchAll(/\b([A-Z]+-\d+)\b/g)) {
+      if (!/\.\.$/.test(idCell.slice(0, match.index))) ids.add(match[1])
+    }
   }
-  for (const match of idCell.matchAll(/\b([A-Z]+-\d+)\b/g)) {
-    if (!/\.\.$/.test(idCell.slice(0, match.index))) ids.add(match[1])
-  }
-  if (ids.size === 0) throw new Error('Phase 5 row named no requirement ids')
+  if (ids.size === 0) throw new Error('Phase 5 rows named no requirement ids')
   return [...ids].sort()
 }
 
