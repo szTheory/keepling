@@ -460,6 +460,25 @@ one:
 | Conflict resolver | `testConflictResolverRendersTheMaximumLengthTitleAndNotesWithoutClipping` | same test — this run surfaced and fixed a real unbounded-height overflow bug (`ConflictResolverSection`'s `.fixedSize(vertical: true)` title diff, ~2300pt tall before an explicit `.lineLimit(6)`) |
 | Toolbar and overflow menu | `testToolbarAndOverflowMenuRenderWithoutClippingAndWithoutLeakingTaskContent` | same test — also the system-chrome content-leak check |
 
+**Disclosed narrowing, capture sheet, `.dynamicType` only.** The capture
+sheet's composing test audits with `.textClipped` and `.hitRegion` but not
+`.dynamicType`. This extends 04-14-SUMMARY.md's finding #7 -- that
+`performAccessibilityAudit` THROWS an audit-ENGINE error ("Dynamic Type
+font sizes are [partially] unsupported") rather than reporting a
+per-element finding, on a screen rendering adversarial-length content at
+the largest accessibility content-size category, reproducing identically
+whether the content is one unbroken token or word-broken. 04-14 scoped
+that narrowing to screens rendering the 512-scalar title, because the
+capture sheet's 40/48-scalar entries measured clean at the time. CI runs
+34978262004 and 34987665525 throw it at 48 scalars on hosted `macos-26`,
+where four consecutive local runs of the same revision on the same Xcode
+26.6 do not -- so the boundary is an engine limit that moves with the
+machine rather than a clean scalar threshold. An app layout defect would
+not vary by runner. The clipping claim the test is named for is still
+audited (`.textClipped` stays on), and `AccessibilityAuditTests` continues
+to audit this same screen with `.dynamicType` ENABLED at ordinary content
+lengths.
+
 This table lists eight elements, each proven for both its clipping/overlap
 truth and its long-text/composition truth — the sixteen considerations
 04-UI-SPEC.md names. Whether each mapped test's passing constitutes full

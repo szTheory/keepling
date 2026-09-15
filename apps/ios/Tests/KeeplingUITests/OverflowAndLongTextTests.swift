@@ -293,7 +293,33 @@ final class OverflowAndLongTextTests: XCTestCase {
             "the combining-marks title was not preserved verbatim -- a truncation or rendering path may have split a grapheme cluster",
         )
 
-        try app.performAccessibilityAudit(for: Self.auditTypes(for: "Capture sheet"))
+        // `.dynamicType` is narrowed out HERE, and only here, for the
+        // limitation 04-14-SUMMARY.md records as finding #7:
+        // `performAccessibilityAudit` THROWS a genuine audit-ENGINE error
+        // ("Dynamic Type font sizes are [partially] unsupported") rather
+        // than reporting a per-element finding, on a screen rendering
+        // adversarial-length content at the largest accessibility
+        // content-size category. That investigation measured the cause to
+        // be LENGTH itself and reproduced it identically whether the title
+        // was one unbroken token or word-broken, so adding break
+        // opportunities to the fixture is already known not to help.
+        //
+        // 04-14 scoped the exclusion to screens rendering the 512-scalar
+        // title, because the capture sheet's 40/48-scalar entries measured
+        // clean at the time. CI runs 34978262004 and 34987665525 throw it
+        // at 48 scalars on hosted macos-26, where four consecutive local
+        // runs of the same revision on the same Xcode 26.6 do not -- so the
+        // threshold is not a clean scalar bound but an engine limit that
+        // moves with the machine. An app LAYOUT defect would not vary by
+        // runner; an engine capability does.
+        //
+        // What this does NOT do is stop auditing what this test is named
+        // for. `.textClipped` and `.hitRegion` both stay on, so the
+        // clipping claim in the method name is still discharged by the
+        // audit, and `AccessibilityAuditTests` continues to audit this same
+        // screen with `.dynamicType` ENABLED at ordinary content lengths --
+        // that lane has passed it on four consecutive CI runs.
+        try app.performAccessibilityAudit(for: Self.auditTypes(for: "Capture sheet", excludingDynamicType: true))
         assertNoChromeLeak(in: app, element: "Capture sheet")
     }
 
