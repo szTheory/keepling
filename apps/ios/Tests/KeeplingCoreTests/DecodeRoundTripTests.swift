@@ -8,26 +8,38 @@ import XCTest
 /// contain a null value for every nullable field, which should be
 /// spot-checked, not assumed."
 ///
-/// DISCLOSED DEVIATION (04-05-SUMMARY.md has the full trail): D-14's own
-/// premise -- that `packages/contracts/vectors/`'s 13 files contain wire
-/// payload OBJECTS decodable by the generated Swift client -- is false.
-/// `testAllThirteenVectorFilesContainZeroLiteralWireDTOPayloads` below
-/// proves this structurally (walks every JSON object in every one of the
-/// 13 files and attempts every candidate generated DTO's decoder against
-/// it) rather than merely asserting it in a comment. Every vector file is
-/// an ABSTRACT domain-reducer fixture -- e.g. `sync.json`'s
-/// `{id, revision, title}` snapshot omits `SyncTaskSnapshot`'s required
-/// `captured_at`/`inbox_state`/`notes`/`tags`/`trashed_at` -- never a
-/// full contract-conformant object satisfying any generated DTO's
-/// `additionalProperties: false` + `required` set.
+/// EXPIRED DEVIATION -- READ THIS BEFORE RE-DERIVING THE OLD ONE.
+/// 04-05-SUMMARY.md disclosed a deviation from D-14 on the ground that
+/// D-14's premise was false: `packages/contracts/vectors/`'s then-13
+/// files held no wire payload OBJECT decodable by the generated Swift
+/// client. Every file was an ABSTRACT domain-reducer fixture -- e.g.
+/// `sync.json`'s `{id, revision, title}` snapshot omits
+/// `SyncTaskSnapshot`'s required `captured_at`/`inbox_state`/`notes`/
+/// `tags`/`trashed_at` -- never a contract-conformant object satisfying
+/// any generated DTO's `additionalProperties: false` + `required` set.
+/// That deviation shipped with a TRIPWIRE rather than a comment:
+/// a test that walked every object in every vector file and FAILED if the
+/// decodable count ever stopped being zero.
 ///
-/// The corpus that actually closes Pitfall 2's gate is therefore built
-/// directly from `packages/contracts/openapi/keepling.yaml`'s own
-/// required-field sets: every generated DTO `KeeplingSyncAdapter.swift`
-/// sends or receives, decoded from a literal, committed wire-shaped
-/// fixture, re-encoded, and decoded again for equality -- the only corpus
-/// that CAN decode as a generated DTO, since the vector files provably
-/// cannot.
+/// THE TRIPWIRE FIRED, on the first CI run that ever executed this lane
+/// (34897943904). `mcp-tools.json`, added by 05-11, carries 6 genuinely
+/// contract-conformant objects: 2 `CaptureTaskCommand` and 4 `Problem`.
+/// So D-14's premise is no longer false, and the deviation taken from it
+/// no longer has a premise to stand on. The honest response is to do what
+/// D-14 asked for in the first place -- "a decode round-trip test over
+/// every wire payload appearing in the vector files" -- NOT to raise the
+/// tripwire's threshold from 0 to 6, which would silence the one check
+/// that noticed, and would leave the new payloads untested precisely
+/// because they are new.
+///
+/// Two corpora therefore run here, and both must stay non-empty:
+///   1. the literal fixtures below, built directly from
+///      `packages/contracts/openapi/keepling.yaml`'s own required-field
+///      sets, covering every DTO `KeeplingSyncAdapter.swift` sends or
+///      receives whether or not any vector file happens to contain one;
+///   2. every wire payload discovered IN the vector files, round-tripped
+///      where it lies, so a generator regression fails a test rather than
+///      failing on a phone.
 final class DecodeRoundTripTests: XCTestCase {
     // MARK: - Shared decode/encode configuration matching the generated client's own Converter
 
@@ -55,43 +67,66 @@ final class DecodeRoundTripTests: XCTestCase {
         try JSONSerialization.data(withJSONObject: object)
     }
 
-    // MARK: - D-14's literal premise, verified false by direct structural inspection
+    // MARK: - D-14 proper: every wire payload IN the vector files round-trips
 
-    /// Enumerates every JSON object nested anywhere in all 13 vector files
-    /// and attempts every candidate wire DTO's decoder against it. Fails
-    /// LOUDLY (rather than silently passing on zero cases) if the count of
-    /// generated-DTO-decodable objects found ever becomes nonzero without
-    /// this test being updated -- that would mean a vector file grew a
-    /// real wire payload this suite should start round-tripping directly.
-    func testAllThirteenVectorFilesContainZeroLiteralWireDTOPayloads() throws {
+    /// Enumerates every JSON object nested anywhere in every vector file
+    /// and round-trips the ones that decode as a generated wire DTO,
+    /// in place, where they lie.
+    ///
+    /// This replaces the tripwire described in the type doc comment above.
+    /// That test asserted the decodable count was exactly ZERO and existed
+    /// to fail the moment a vector file grew a real wire payload. It did
+    /// exactly that on CI run 34897943904 -- 6 objects, all in
+    /// `mcp-tools.json` -- so it has done its job and is now replaced by
+    /// the coverage it was holding a place for.
+    ///
+    /// D-24: the assertions below are deliberately BOTH-SIDED. A file
+    /// count that drifts fails, so new vectors force a look at this test
+    /// rather than sliding in unexamined. A decodable count of zero ALSO
+    /// fails, so this test can never go quiet by finding nothing to do --
+    /// which is the exact shape (a check that passes without observing
+    /// anything) that this phase exists to remove, and which a naive
+    /// "walk the files and round-trip whatever turns up" would have.
+    func testEveryWireDTOPayloadInTheVectorFilesRoundTrips() throws {
         let vectorsDirectory = try RepositoryRoot.vectorsDirectory()
         let fileManager = FileManager.default
         let files = try fileManager.contentsOfDirectory(atPath: vectorsDirectory.path)
             .filter { $0.hasSuffix(".json") && $0 != "manifest.json" }
             .sorted()
-        XCTAssertEqual(files.count, 13, "expected 13 vector files, found \(files.count): \(files)")
+        XCTAssertEqual(files.count, 16, "expected 16 vector files, found \(files.count): \(files)")
 
         var objectsInspected = 0
-        var decodableAsAWireDTO = 0
+        var roundTrippedByDTO: [String: Int] = [:]
+        var carryingFiles: Set<String> = []
 
         for file in files {
             let data = try Data(contentsOf: vectorsDirectory.appendingPathComponent(file))
             let root = try JSONSerialization.jsonObject(with: data)
+            var objects: [[String: Any]] = []
             walk(root) { object in
                 objectsInspected += 1
-                if self.decodesAsAnyWireDTO(object) {
-                    decodableAsAWireDTO += 1
+                objects.append(object)
+            }
+            for object in objects {
+                if let dto = try roundTripAsWireDTO(object) {
+                    roundTrippedByDTO[dto, default: 0] += 1
+                    carryingFiles.insert(file)
                 }
             }
         }
 
+        let roundTripped = roundTrippedByDTO.values.reduce(0, +)
         XCTAssertGreaterThan(objectsInspected, 0, "the walk found no nested JSON objects at all -- the walker is broken")
-        XCTAssertEqual(
-            decodableAsAWireDTO, 0,
-            "found \(decodableAsAWireDTO) object(s) in packages/contracts/vectors/ that decode as a generated wire DTO -- " +
-            "if this is no longer zero, the vector files have grown real wire payloads and " +
-            "testAllThirteenVectorFilesContainZeroLiteralWireDTOPayloads's own premise (04-05-SUMMARY.md) needs updating, " +
-            "and those payloads should be added to this suite's round-trip corpus"
+        XCTAssertGreaterThan(
+            roundTripped, 0,
+            "no object in packages/contracts/vectors/ decoded as ANY generated wire DTO. Before 05-11 that was the " +
+            "documented truth and this test did not exist; now it means either the vectors lost their wire payloads " +
+            "or the generated DTOs stopped matching them. Both are regressions, and neither may pass silently."
+        )
+        print(
+            "vector wire-payload round-trip corpus: \(roundTripped) payload(s) across " +
+            "\(carryingFiles.sorted().joined(separator: ", ")) -- " +
+            "\(roundTrippedByDTO.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: " "))"
         )
     }
 
@@ -106,22 +141,48 @@ final class DecodeRoundTripTests: XCTestCase {
         }
     }
 
-    /// Tries the handful of REQUIRED-field-bearing generated DTOs this
-    /// plan's scope cares about. A vector fixture object satisfying none
-    /// of these required-field sets is exactly what direct inspection
-    /// (04-05-SUMMARY.md) found for every one of the 13 files.
-    private func decodesAsAnyWireDTO(_ object: [String: Any]) -> Bool {
-        guard let data = try? JSONSerialization.data(withJSONObject: object) else { return false }
-        let attempts: [(Data) -> Bool] = [
-            { (try? self.decoder().decode(Components.Schemas.TaskSnapshot.self, from: $0)) != nil },
-            { (try? self.decoder().decode(Components.Schemas.SyncOrganizationSnapshot.self, from: $0)) != nil },
-            { (try? self.decoder().decode(Components.Schemas.CommandAcknowledgement.self, from: $0)) != nil },
-            { (try? self.decoder().decode(Components.Schemas.CaptureTaskCommand.self, from: $0)) != nil },
-            { (try? self.decoder().decode(Components.Schemas.SyncFeedEnvelope.self, from: $0)) != nil },
-            { (try? self.decoder().decode(Components.Schemas.Problem.self, from: $0)) != nil },
-            { (try? self.decoder().decode(Components.Schemas.PersistedConflict.self, from: $0)) != nil },
-        ]
-        return attempts.contains { $0(data) }
+    /// Tries the REQUIRED-field-bearing generated DTOs this plan's scope
+    /// cares about against `object` and, for the first that decodes,
+    /// drives it through a full decode/encode/decode round trip. Returns
+    /// the DTO's name, or nil when `object` is not a wire payload at all
+    /// -- which is still true of the overwhelming majority of objects in
+    /// the vector files, and was true of ALL of them before 05-11.
+    ///
+    /// Attempt order is load-bearing and deliberately unchanged from the
+    /// version of this method that only counted: reordering it would
+    /// silently re-label which DTO a structurally ambiguous object is
+    /// reported as.
+    private func roundTripAsWireDTO(_ object: [String: Any]) throws -> String? {
+        guard let data = try? JSONSerialization.data(withJSONObject: object) else { return nil }
+        if (try? decoder().decode(Components.Schemas.TaskSnapshot.self, from: data)) != nil {
+            _ = try roundTrip(Components.Schemas.TaskSnapshot.self, json: data)
+            return "TaskSnapshot"
+        }
+        if (try? decoder().decode(Components.Schemas.SyncOrganizationSnapshot.self, from: data)) != nil {
+            _ = try roundTrip(Components.Schemas.SyncOrganizationSnapshot.self, json: data)
+            return "SyncOrganizationSnapshot"
+        }
+        if (try? decoder().decode(Components.Schemas.CommandAcknowledgement.self, from: data)) != nil {
+            _ = try roundTrip(Components.Schemas.CommandAcknowledgement.self, json: data)
+            return "CommandAcknowledgement"
+        }
+        if (try? decoder().decode(Components.Schemas.CaptureTaskCommand.self, from: data)) != nil {
+            _ = try roundTrip(Components.Schemas.CaptureTaskCommand.self, json: data)
+            return "CaptureTaskCommand"
+        }
+        if (try? decoder().decode(Components.Schemas.SyncFeedEnvelope.self, from: data)) != nil {
+            _ = try roundTrip(Components.Schemas.SyncFeedEnvelope.self, json: data)
+            return "SyncFeedEnvelope"
+        }
+        if (try? decoder().decode(Components.Schemas.Problem.self, from: data)) != nil {
+            _ = try roundTrip(Components.Schemas.Problem.self, json: data)
+            return "Problem"
+        }
+        if (try? decoder().decode(Components.Schemas.PersistedConflict.self, from: data)) != nil {
+            _ = try roundTrip(Components.Schemas.PersistedConflict.self, json: data)
+            return "PersistedConflict"
+        }
+        return nil
     }
 
     // MARK: - The real corpus: literal wire-shaped fixtures round-trip

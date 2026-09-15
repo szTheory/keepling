@@ -2,10 +2,13 @@
  * decode-roundtrip lane (04-05-PLAN.md Task 1): runs `DecodeRoundTripTests`
  * -- decode/round-trip proof over every wire-shaped fixture this plan's
  * scope reaches, plus the committed `Fixtures/nullable-coverage.json`
- * explicit-null corpus and the structural proof that the 13 files under
- * `packages/contracts/vectors/` contain zero literal wire-DTO payloads
- * (04-05-SUMMARY.md discloses why the corpus lives in this test file's own
- * fixtures rather than the vectors directory).
+ * explicit-null corpus, and a round trip of every wire payload found IN
+ * `packages/contracts/vectors/` itself. That last part used to be the
+ * opposite assertion -- a tripwire proving the vector files contained ZERO
+ * literal wire-DTO payloads, which was true when 04-05-SUMMARY.md disclosed
+ * it. 05-11's `mcp-tools.json` made it false, the tripwire fired on the
+ * first CI run that ever executed this lane, and the test now performs the
+ * coverage it was holding a place for.
  */
 export default function decodeRoundtripLane({ repositoryRoot, xcodebuildSummary }) {
   return {

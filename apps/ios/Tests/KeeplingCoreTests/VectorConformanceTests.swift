@@ -33,8 +33,9 @@ final class VectorConformanceTests: XCTestCase {
 
     /// Files this Swift harness is responsible for driving through
     /// `SyncReducer` -- the sync-state-machine-schema-bound subset of the
-    /// 13 vector files, not all 13 (see the type doc comment and the
-    /// manifest for why).
+    /// vector files, not all of them (see the type doc comment and the
+    /// manifest for why). The subset is selected by `$schema` below, not
+    /// by this list; this list is the expected RESULT of that selection.
     private static let drivenFileNames: Set<String> = ["sync.json"]
 
     func testAllSyncStateMachineVectorFilesAreDrivenWithStructuralCaseCoverage() throws {
@@ -44,7 +45,13 @@ final class VectorConformanceTests: XCTestCase {
             .filter { $0.hasSuffix(".json") && $0 != "manifest.json" }
             .sorted()
 
-        XCTAssertEqual(allJSONFiles.count, 13, "expected 13 vector files, found \(allJSONFiles.count): \(allJSONFiles)")
+        // Bumped 13 -> 16 when CI run 34897943904 first executed this lane and
+        // found the vectors 05-11 (mcp-injection, mcp-tools) and 06-08
+        // (export-golden) had added. The hardcoded count is the POINT: a new
+        // vector file must force someone to decide whether it is a
+        // sync-state-machine vector this harness has to drive, and silently
+        // accepting any count would remove the only thing that asks.
+        XCTAssertEqual(allJSONFiles.count, 16, "expected 16 vector files, found \(allJSONFiles.count): \(allJSONFiles)")
 
         var executedFiles: [String] = []
         var totalExecutedCases = 0
