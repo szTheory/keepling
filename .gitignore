@@ -33,6 +33,7 @@ apps/ios/Signing.local.xcconfig
 
 .env
 .env.local
+.envrc
 
 # 06-10 Task 2: apps/desktop/build/ holds the COMMITTED macOS entitlement
 # plists. The blanket `build/` rule above (meant for generated output) would
