@@ -4,10 +4,10 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Phase 2 credential materialization and safe credentialed preflight passed; await explicit live-rehearsal arm gate
-last_updated: "2026-09-19T18:10:00.000Z"
+stopped_at: Phase 2 recovery-source adapter seam is verified; remaining live-runner stages are transfer/runtime semantics, DNS rollback propagation, and owned teardown before a separately protected rehearsal
+last_updated: "2026-09-19T21:00:00.000Z"
 last_activity: 2026-09-19
-last_activity_desc: Phase 2 credential boundary materialized and safe credentialed preflight passed
+last_activity_desc: Verified independent B2/R2 recovery-source adapters and required no-secret CI fixture lane
 state_head: 5250e252420b9f5d650c041e02db961efa79298b
 progress:
   total_phases: 6
@@ -285,6 +285,7 @@ Progress: [█████████░] 94%
 | 260831-wfy | Resolve Phase 1 API coverage gate and shift all feasible human UAT into deterministic integration and end-to-end automation | 2026-08-31 | beeb6cb | Verified | [260831-wfy-resolve-phase-1-api-coverage-gate-and-sh](./quick/260831-wfy-resolve-phase-1-api-coverage-gate-and-sh/) |
 | 260919-j6i | Automate Phase 2 credential materialization from existing 1Password items and make the remaining owner inputs explicit | 2026-09-19 | 6389b02 | Verified | [260919-j6i-automate-phase-2-credential-materializat](./quick/260919-j6i-automate-phase-2-credential-materializat/) |
 | 260919-k8v | Automate Phase 2 live host-replacement readiness diagnosis | 2026-09-19 | 957831c | Verified | [260919-k8v-implement-a-guarded-phase-2-live-host-re](./quick/260919-k8v-implement-a-guarded-phase-2-live-host-re/) |
+| 260919-mm3 | Implement hermetic independent B2 and R2 recovery-source adapters for Phase 2 live host replacement | 2026-09-19 | 6ec10a9 | Verified | [260919-mm3-implement-hermetic-independent-b2-and-r2](./quick/260919-mm3-implement-hermetic-independent-b2-and-r2/) |
 
 ## Next Action
 
