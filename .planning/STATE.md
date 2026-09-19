@@ -4,11 +4,11 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Forensic investigation complete; next work is KPL-02 plan 02-09 credential templates and toolchain repair
-last_updated: "2026-09-19T15:15:54.208Z"
+stopped_at: Safe Phase 2 preparation is committed; await external credential/account setup before credentialed preflight
+last_updated: "2026-09-19T15:32:12.477Z"
 last_activity: 2026-09-19
 last_activity_desc: Phase 02 execution started
-state_head: 92da4b9a5050495fab260de21226d390ef823fd9
+state_head: 5250e252420b9f5d650c041e02db961efa79298b
 progress:
   total_phases: 6
   completed_phases: 4
@@ -296,7 +296,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 ## Session
 
 **Last session:** 2026-09-19T14:18:43.582Z
-**Stopped at:** Forensic investigation complete; next work is KPL-02 plan 02-09 credential templates and toolchain repair
+**Stopped at:** Safe Phase 2 preparation is committed; await external credential/account setup before credentialed preflight
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** .planning/forensics/report-20260919-141752.md
 
