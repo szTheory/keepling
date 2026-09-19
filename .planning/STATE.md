@@ -4,8 +4,8 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Safe Phase 2 preparation is committed; await external credential/account setup before credentialed preflight
-last_updated: "2026-09-19T15:32:12.477Z"
+stopped_at: Plan 02-09 safe preparation is summarized as HALTED; await external credential/account setup before credentialed preflight
+last_updated: "2026-09-19T17:02:24.735Z"
 last_activity: 2026-09-19
 last_activity_desc: Phase 02 execution started
 state_head: 5250e252420b9f5d650c041e02db961efa79298b
@@ -29,7 +29,7 @@ See: `.planning/PROJECT.md` (updated 2026-08-31)
 ## Current Position
 
 Phase: 02 (Synchronization and Replaceable Server) — EXECUTING
-Plan: 1 of 11
+Plan: 9 of 11 (halted at blocking-human credential checkpoint)
 Total Plans in Phase: 11
 Status: Executing Phase 02
 Last activity: 2026-09-19 — Phase 02 execution started
@@ -296,7 +296,7 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 ## Session
 
 **Last session:** 2026-09-19T14:18:43.582Z
-**Stopped at:** Safe Phase 2 preparation is committed; await external credential/account setup before credentialed preflight
+**Stopped at:** Plan 02-09 safe preparation is summarized as HALTED; await external credential/account setup before credentialed preflight
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** .planning/forensics/report-20260919-141752.md
 
