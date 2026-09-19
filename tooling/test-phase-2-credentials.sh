@@ -96,4 +96,21 @@ done
 printf '%s\n' "$runner_source" | grep -Fqx '  ./tooling/verify-host-replacement.sh --credentialed' >/dev/null || {
   echo "live acceptance does not invoke the credentialed verifier" >&2; exit 1
 }
+runner_source=$(cat "$repository_root/tooling/test-phase-2.sh")
+for required_input in \
+  KEEPLING_HETZNER_CREDENTIAL_FILE \
+  KEEPLING_CLOUDFLARE_DNS_CREDENTIAL_FILE \
+  KEEPLING_SSH_PUBLIC_KEY_FILE \
+  KEEPLING_BACKUP_PRIMARY_CREDENTIAL_FILE \
+  KEEPLING_BACKUP_MIRROR_CREDENTIAL_FILE \
+  KEEPLING_BACKUP_CIPHER_FILE \
+  KEEPLING_TOFU_STATE_CREDENTIAL_FILE \
+  KEEPLING_LIVE_CHANGE_TRIGGER; do
+  printf '%s\n' "$runner_source" | grep -F "$required_input" >/dev/null || {
+    echo "live acceptance input contract omits $required_input" >&2; exit 1
+  }
+done
+printf '%s\n' "$runner_source" | grep -Fqx '  ./tooling/verify-host-replacement.sh --credentialed' >/dev/null || {
+  echo "live acceptance does not invoke the credentialed verifier" >&2; exit 1
+}
 echo "Phase 2 credential fixtures passed: valid, malformed, path-boundary, redaction, and backend construction cases"
