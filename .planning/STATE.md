@@ -32,8 +32,8 @@ Phase: 02 (Synchronization and Replaceable Server) — EXECUTING
 Plan: 9 of 11 (halted at blocking-human credential checkpoint)
 Total Plans in Phase: 11
 Status: Executing Phase 02
-Last activity: 2026-09-19 — Completed quick task 260919-u9k: Resolve Phase 2 regression-gate findings
-Last Activity Description: The Hetzner preflight keeps bearer authorization out of curl argv with hermetic cleanup proof; KNOWN-LIMITATIONS.md was regenerated from the ledger and pnpm test:phase-1 passes.
+Last activity: 2026-09-19 — Completed quick task 260919-uvl: Contain Phase 2 Hetzner token environment
+Last Activity Description: HCLOUD_TOKEN is shell-local, direct and helper curl children reject even an empty inherited export, and the hermetic containment proof passes.
 Progress: [█████████░] 94%
 
 ## Accumulated Context
@@ -288,6 +288,7 @@ Progress: [█████████░] 94%
 | 260919-mm3 | Implement hermetic independent B2 and R2 recovery-source adapters for Phase 2 live host replacement | 2026-09-19 | 6ec10a9 | Verified | [260919-mm3-implement-hermetic-independent-b2-and-r2](./quick/260919-mm3-implement-hermetic-independent-b2-and-r2/) |
 | 260919-nnm | Implement hermetic trusted transfer and remote restore/runtime/semantic adapters for Phase 2 host replacement | 2026-09-19 | 7a90718 | Verified | [260919-nnm-implement-hermetic-trusted-transfer-and-](./quick/260919-nnm-implement-hermetic-trusted-transfer-and-/) |
 | 260919-u9k | Resolve Phase 2 regression-gate findings | 2026-09-19 | 7722d06 | Verified | [260919-u9k-resolve-phase-2-regression-gate-findings](./quick/260919-u9k-resolve-phase-2-regression-gate-findings/) |
+| 260919-uvl | Contain Phase 2 Hetzner token environment | 2026-09-19 | 0b6404f | Verified | [260919-uvl-resolve-phase-2-review-blocker-prevent-h](./quick/260919-uvl-resolve-phase-2-review-blocker-prevent-h/) |
 
 ## Next Action
 
