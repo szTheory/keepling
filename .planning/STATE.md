@@ -32,8 +32,8 @@ Phase: 02 (Synchronization and Replaceable Server) — EXECUTING
 Plan: 9 of 11 (halted at blocking-human credential checkpoint)
 Total Plans in Phase: 11
 Status: Executing Phase 02
-Last activity: 2026-09-19 — Completed quick task 260919-nnm: Implement hermetic trusted transfer and remote restore/runtime/semantic adapters for Phase 2 host replacement
-Last Activity Description: The credentialed boundary now shares the named-trigger and dual-arm gate, and a no-network readiness command identifies the five remaining live-adapter contracts before any provider or DNS action.
+Last activity: 2026-09-19 — Completed quick task 260919-u9k: Resolve Phase 2 regression-gate findings
+Last Activity Description: The Hetzner preflight keeps bearer authorization out of curl argv with hermetic cleanup proof; KNOWN-LIMITATIONS.md was regenerated from the ledger and pnpm test:phase-1 passes.
 Progress: [█████████░] 94%
 
 ## Accumulated Context
@@ -287,6 +287,7 @@ Progress: [█████████░] 94%
 | 260919-k8v | Automate Phase 2 live host-replacement readiness diagnosis | 2026-09-19 | 957831c | Verified | [260919-k8v-implement-a-guarded-phase-2-live-host-re](./quick/260919-k8v-implement-a-guarded-phase-2-live-host-re/) |
 | 260919-mm3 | Implement hermetic independent B2 and R2 recovery-source adapters for Phase 2 live host replacement | 2026-09-19 | 6ec10a9 | Verified | [260919-mm3-implement-hermetic-independent-b2-and-r2](./quick/260919-mm3-implement-hermetic-independent-b2-and-r2/) |
 | 260919-nnm | Implement hermetic trusted transfer and remote restore/runtime/semantic adapters for Phase 2 host replacement | 2026-09-19 | 7a90718 | Verified | [260919-nnm-implement-hermetic-trusted-transfer-and-](./quick/260919-nnm-implement-hermetic-trusted-transfer-and-/) |
+| 260919-u9k | Resolve Phase 2 regression-gate findings | 2026-09-19 | 7722d06 | Verified | [260919-u9k-resolve-phase-2-regression-gate-findings](./quick/260919-u9k-resolve-phase-2-regression-gate-findings/) |
 
 ## Next Action
 
