@@ -45,6 +45,7 @@ import {
   readlinkSync,
   rmSync,
   symlinkSync,
+  unlinkSync,
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -55,6 +56,7 @@ import { spawnSync } from 'node:child_process'
 const repositoryRoot = resolve(import.meta.dirname, '..')
 const desktopRoot = join(repositoryRoot, 'apps', 'desktop')
 const reportPath = join(desktopRoot, 'out', 'reproducibility-report.json')
+const locatorPath = join(tmpdir(), `keepling-desktop-latest-manifest-${sha256(repositoryRoot).slice(0, 16)}.txt`)
 
 const fail = (message) => {
   console.error(`Package reproducibility check failed: ${message}`)
@@ -308,6 +310,17 @@ const packageOnce = (buildNumber) => {
 const runBuilds = (buildCount) => {
   if (buildCount < 2) fail(`--builds must be at least 2 to prove reproducibility, got ${buildCount}`)
   refuseIfDirty()
+
+  // `package-desktop` updates the shared "latest manifest" locator on every
+  // invocation. These builds are intentionally unsigned comparator inputs,
+  // not the signed artifact selected by package-once. Preserve the caller's
+  // selection even if this process exits through `fail`, so subsequent smoke
+  // and physical-evidence lanes remain bound to package-once's artifact.
+  const priorLocator = existsSync(locatorPath) ? readFileSync(locatorPath) : null
+  process.on('exit', () => {
+    if (priorLocator === null) unlinkSync(locatorPath, { force: true })
+    else writeFileSync(locatorPath, priorLocator)
+  })
 
   const builds = []
   for (let i = 1; i <= buildCount; i += 1) {
