@@ -117,6 +117,12 @@ export default {
           // `tooling/package-desktop.mjs` fails the build when signing was
           // expected and the resulting bundle is not Developer ID signed.
           identityValidation: false,
+          // A timestamped CMS signature is intentionally non-deterministic,
+          // which makes the exact pre-staple package digest unusable as a
+          // reproducibility proof. Notarization remains a separately opted-in
+          // release step in package-desktop.mjs; local/CI reproducibility
+          // builds must instead sign the same code directory identically.
+          timestamp: 'none',
           optionsForFile: (filePath: string) => {
             const isMainApplicationBundle = filePath.endsWith('.app') && !filePath.includes('Helper')
             return {
