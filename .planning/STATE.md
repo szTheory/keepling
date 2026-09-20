@@ -32,8 +32,8 @@ Phase: 02 (Synchronization and Replaceable Server) — EXECUTING
 Plan: 9 of 11 (halted at blocking-human credential checkpoint)
 Total Plans in Phase: 11
 Status: Executing Phase 02
-Last activity: 2026-09-19 — Completed quick task 260919-w3m: Strengthen Phase 2 curl authorization fixture
-Last Activity Description: The hermetic fake curl proves both protected calls receive the exact fixture-derived authorization header while retaining value-free diagnostics and artifacts.
+Last activity: 2026-09-19 — Completed quick task 260919-wkt: Reject unsafe Phase 2 Hetzner curl tokens
+Last Activity Description: A strict whole-string token allowlist blocks curl-config injection before workspace or curl creation, with four hermetic malformed-token cases.
 Progress: [█████████░] 94%
 
 ## Accumulated Context
@@ -290,6 +290,7 @@ Progress: [█████████░] 94%
 | 260919-u9k | Resolve Phase 2 regression-gate findings | 2026-09-19 | 7722d06 | Verified | [260919-u9k-resolve-phase-2-regression-gate-findings](./quick/260919-u9k-resolve-phase-2-regression-gate-findings/) |
 | 260919-uvl | Contain Phase 2 Hetzner token environment | 2026-09-19 | 0b6404f | Verified | [260919-uvl-resolve-phase-2-review-blocker-prevent-h](./quick/260919-uvl-resolve-phase-2-review-blocker-prevent-h/) |
 | 260919-w3m | Strengthen Phase 2 curl authorization fixture | 2026-09-19 | a05bff4 | Verified | [260919-w3m-strengthen-the-phase-2-hermetic-curl-fix](./quick/260919-w3m-strengthen-the-phase-2-hermetic-curl-fix/) |
+| 260919-wkt | Reject unsafe Phase 2 Hetzner curl tokens | 2026-09-19 | 9d01d89 | Verified | [260919-wkt-fix-phase-2-curl-configuration-injection](./quick/260919-wkt-fix-phase-2-curl-configuration-injection/) |
 
 ## Next Action
 
