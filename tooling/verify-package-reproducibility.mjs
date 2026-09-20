@@ -56,7 +56,6 @@ import { spawnSync } from 'node:child_process'
 const repositoryRoot = resolve(import.meta.dirname, '..')
 const desktopRoot = join(repositoryRoot, 'apps', 'desktop')
 const reportPath = join(desktopRoot, 'out', 'reproducibility-report.json')
-const locatorPath = join(tmpdir(), `keepling-desktop-latest-manifest-${sha256(repositoryRoot).slice(0, 16)}.txt`)
 
 const fail = (message) => {
   console.error(`Package reproducibility check failed: ${message}`)
@@ -73,6 +72,7 @@ const fail = (message) => {
 // ---------------------------------------------------------------------------
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
+const locatorPath = join(tmpdir(), `keepling-desktop-latest-manifest-${sha256(repositoryRoot).slice(0, 16)}.txt`)
 
 /** Walks a directory tree into a flat map of relativePath -> entry descriptor. */
 const walkTree = (root) => {
