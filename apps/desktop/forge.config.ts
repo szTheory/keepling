@@ -120,10 +120,6 @@ export default {
           optionsForFile: (filePath: string) => {
             const isMainApplicationBundle = filePath.endsWith('.app') && !filePath.includes('Helper')
             return {
-              // @electron/osx-sign applies timestamp configuration per file.
-              // A timestamped CMS signature changes across separate package
-              // runs; notarization remains the separate opt-in release step.
-              timestamp: 'none',
               // Notarization requires the hardened runtime. It is enabled for
               // the main bundle and for every nested helper alike.
               hardenedRuntime: true,
