@@ -4,11 +4,11 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Phase 2 recovery-source adapter seam is verified; remaining live-runner stages are transfer/runtime semantics, DNS rollback propagation, and owned teardown before a separately protected rehearsal
-last_updated: "2026-09-19T21:00:00.000Z"
+stopped_at: "Completed quick task 260919-w3m: exact private curl-header fixture proof"
+last_updated: "2026-09-20T03:14:22.028Z"
 last_activity: 2026-09-19
 last_activity_desc: Verified independent B2/R2 recovery-source adapters and required no-secret CI fixture lane
-state_head: 5250e252420b9f5d650c041e02db961efa79298b
+state_head: a05bff49206ea734909f87f8bccd7863b9bd78fa
 progress:
   total_phases: 6
   completed_phases: 4
@@ -32,8 +32,8 @@ Phase: 02 (Synchronization and Replaceable Server) — EXECUTING
 Plan: 9 of 11 (halted at blocking-human credential checkpoint)
 Total Plans in Phase: 11
 Status: Executing Phase 02
-Last activity: 2026-09-19 — Completed quick task 260919-uvl: Contain Phase 2 Hetzner token environment
-Last Activity Description: HCLOUD_TOKEN is shell-local, direct and helper curl children reject even an empty inherited export, and the hermetic containment proof passes.
+Last activity: 2026-09-19 — Completed quick task 260919-w3m: Strengthen Phase 2 curl authorization fixture
+Last Activity Description: The hermetic fake curl proves both protected calls receive the exact fixture-derived authorization header while retaining value-free diagnostics and artifacts.
 Progress: [█████████░] 94%
 
 ## Accumulated Context
@@ -289,6 +289,7 @@ Progress: [█████████░] 94%
 | 260919-nnm | Implement hermetic trusted transfer and remote restore/runtime/semantic adapters for Phase 2 host replacement | 2026-09-19 | 7a90718 | Verified | [260919-nnm-implement-hermetic-trusted-transfer-and-](./quick/260919-nnm-implement-hermetic-trusted-transfer-and-/) |
 | 260919-u9k | Resolve Phase 2 regression-gate findings | 2026-09-19 | 7722d06 | Verified | [260919-u9k-resolve-phase-2-regression-gate-findings](./quick/260919-u9k-resolve-phase-2-regression-gate-findings/) |
 | 260919-uvl | Contain Phase 2 Hetzner token environment | 2026-09-19 | 0b6404f | Verified | [260919-uvl-resolve-phase-2-review-blocker-prevent-h](./quick/260919-uvl-resolve-phase-2-review-blocker-prevent-h/) |
+| 260919-w3m | Strengthen Phase 2 curl authorization fixture | 2026-09-19 | a05bff4 | Verified | [260919-w3m-strengthen-the-phase-2-hermetic-curl-fix](./quick/260919-w3m-strengthen-the-phase-2-hermetic-curl-fix/) |
 
 ## Next Action
 
@@ -301,10 +302,10 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-19T14:18:43.582Z
-**Stopped at:** Phase 2 credential materialization and safe credentialed preflight passed; the live arm gate is authorized, but the new no-network readiness diagnosis proves five source adapters remain to be implemented before a real rehearsal can safely run.
+**Last session:** 2026-09-20T03:14:21.846Z
+**Stopped at:** Completed quick task 260919-w3m: exact private curl-header fixture proof
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
-**Resume file:** .planning/forensics/report-20260919-141752.md
+**Resume file:** None
 
 ## Performance Metrics
 
