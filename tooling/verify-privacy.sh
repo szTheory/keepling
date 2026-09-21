@@ -365,7 +365,7 @@ EOF
   scan_paths "$proxy_output" >/dev/null
   docker logs "$fixture" >"$fixture_output" 2>&1 || die "could not inspect fixture traffic"
   https_requests=$(grep -c '"uri":"/fixture' "$fixture_output" || true)
-  [ "$https_requests" -eq 2 ] || die "fixture did not observe exactly one authenticated HTTPS request"
+  [ "$https_requests" -eq 1 ] || die "fixture did not observe exactly one authenticated HTTPS request"
 
   http_headers="$boundary_root/http-headers"
   http_status=$(curl -sS --connect-timeout 3 -D "$http_headers" -o /dev/null -w '%{http_code}' \
