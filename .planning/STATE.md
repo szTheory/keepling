@@ -292,6 +292,7 @@ Progress: [█████████░] 94%
 | 260919-w3m | Strengthen Phase 2 curl authorization fixture | 2026-09-19 | a05bff4 | Verified | [260919-w3m-strengthen-the-phase-2-hermetic-curl-fix](./quick/260919-w3m-strengthen-the-phase-2-hermetic-curl-fix/) |
 | 260919-wkt | Reject unsafe Phase 2 Hetzner curl tokens | 2026-09-19 | 9d01d89 | Verified | [260919-wkt-fix-phase-2-curl-configuration-injection](./quick/260919-wkt-fix-phase-2-curl-configuration-injection/) |
 | 260920-c0s | Fix the Phase 2 malformed-token readiness fixture so every quote, backslash, embedded-newline, and trailing-newline case runs independently before sealing Phase 2. | 2026-09-20 | ee5f653 | Verified | [260920-c0s-fix-the-phase-2-malformed-token-readines](./quick/260920-c0s-fix-the-phase-2-malformed-token-readines/) |
+| 260922-8sz | Wire a guarded Phase 2 live replacement orchestration bundle | 2026-09-22 | 1dab387 | Verified | [260922-8sz-wire-phase-2-live-orchestration](./quick/260922-8sz-wire-phase-2-live-orchestration/) |
 
 ## Next Action
 
