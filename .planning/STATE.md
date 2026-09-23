@@ -4,15 +4,15 @@ milestone: v1.0
 current_phase: 02
 current_phase_name: Synchronization and Replaceable Server
 status: executing
-stopped_at: Completed KPL-02-13-PLAN.md
-last_updated: "2026-09-21T02:52:16.914Z"
-last_activity: 2026-09-20
-last_activity_desc: Phase KPL-02 planning complete — 15 plans ready
-state_head: a58022c0331acca40eb984b9778a6fab60727c1c
+stopped_at: "Completed quick task 260919-w3m: exact private curl-header fixture proof"
+last_updated: "2026-09-20T03:14:22.028Z"
+last_activity: 2026-09-19
+last_activity_desc: Verified independent B2/R2 recovery-source adapters and required no-secret CI fixture lane
+state_head: a05bff49206ea734909f87f8bccd7863b9bd78fa
 progress:
   total_phases: 6
   completed_phases: 4
-  total_plans: 15
+  total_plans: 110
   completed_plans: 108
 milestone_name: milestone
 ---
@@ -24,16 +24,16 @@ milestone_name: milestone
 See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 **Core value:** Jon can trust Keepling as his daily task system on Mac and iPhone: capture is immediate, accepted changes are never silently lost or overwritten, and both human and agent actions remain inspectable and recoverable.  
-**Current focus:** Phase KPL-02 — Synchronization and Replaceable Server
+**Current focus:** Phase 02 — Synchronization and Replaceable Server
 
 ## Current Position
 
-Phase: KPL-02 (Synchronization and Replaceable Server) — READY TO EXECUTE
-Plan: 3 of 11
-Total Plans in Phase: 15
-Status: Executing Phase KPL-02
-Last activity: 2026-09-20 — Phase KPL-02 execution resumed (wave continue)
-Last Activity Description: Phase KPL-02 planning complete — 15 plans ready
+Phase: 02 (Synchronization and Replaceable Server) — EXECUTING
+Plan: 9 of 11 (halted at blocking-human credential checkpoint)
+Total Plans in Phase: 11
+Status: Executing Phase 02
+Last activity: 2026-09-20 — Verified quick task 260920-c0s: Fix the Phase 2 malformed-token readiness fixture so every quote, backslash, embedded-newline, and trailing-newline case runs independently before sealing Phase 2.
+Last Activity Description: The hermetic readiness fixture separately accounts for all four malformed-token forms; its focused proof and registered 13-check Phase 2 lane both pass.
 Progress: [█████████░] 94%
 
 ## Accumulated Context
@@ -260,10 +260,6 @@ Progress: [█████████░] 94%
 - [Phase 06]: 06-11: SECURITY.md's supported-version table renders from apps/server/config/config.exs's live :compatibility map, not the compatibility_test.exs fixture named in the plan's read_first -- the live config is what actually matches D-29's pre-release honesty line.
 - [Phase 06]: 06-12: the trust oracle's server-side entity digest is computed inside Postgres via sha256(), never letting plaintext task content leave the database for that source
 - [Phase 06]: 06-12: the chaos corpus's ten operators are fully wired (list/seed/digest/dry-run) but real two-client harness composition is disclosed as open follow-on integration, mirroring the project's existing physical-device-lane precedent
-- [Phase 02]: Caddy application diagnostics have no request-detail access log; hostile HTTPS traffic is checked against actual proxy output.
-- [Phase 02]: Public HTTP is redirect-only and Compose application checks use HTTPS exclusively.
-- [Phase 02]: The Phase 2 privacy lane includes producer redaction, Caddy boundary, and private Compose proof.
-- [Phase 02]: Fixed seed 20260901 was used for both named evidence lanes; no source change was needed because their existing fail-closed contracts passed fresh.
 
 ### Retained Research
 
@@ -297,7 +293,6 @@ Progress: [█████████░] 94%
 | 260919-wkt | Reject unsafe Phase 2 Hetzner curl tokens | 2026-09-19 | 9d01d89 | Verified | [260919-wkt-fix-phase-2-curl-configuration-injection](./quick/260919-wkt-fix-phase-2-curl-configuration-injection/) |
 | 260920-c0s | Fix the Phase 2 malformed-token readiness fixture so every quote, backslash, embedded-newline, and trailing-newline case runs independently before sealing Phase 2. | 2026-09-20 | ee5f653 | Verified | [260920-c0s-fix-phase-2-malformed-token-readines](./quick/260920-c0s-fix-the-phase-2-malformed-token-readines/) |
 | 260922-8sz | Wire a guarded Phase 2 live replacement orchestration bundle | 2026-09-22 | 1dab387 | Verified | [260922-8sz-wire-phase-2-live-orchestration](./quick/260922-8sz-wire-phase-2-live-orchestration/) |
-| 260922-9qf | Shift left Phase 2 live-replacement setup | 2026-09-22 | 77cccd3 | Verified | [260922-9qf-shift-left-phase-2-live-replacement-setu](./quick/260922-9qf-shift-left-phase-2-live-replacement-setu/) |
 | 260922-r7k | Further shift left Phase 2 live replacement handoff | 2026-09-22 | 9c97dc8 | Verified | [260922-r7k-further-shift-left-phase-2-live-handoff](./quick/260922-r7k-further-shift-left-phase-2-live-handoff/) |
 
 ## Next Action
@@ -311,8 +306,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-21T02:52:14.451Z
-**Stopped at:** Completed KPL-02-13-PLAN.md
+**Last session:** 2026-09-20T03:14:21.846Z
+**Stopped at:** Completed quick task 260919-w3m: exact private curl-header fixture proof
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
@@ -412,8 +407,6 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 | Phase KPL-06 P11 | 50min | 4 tasks | 13 files |
 | Phase KPL-06 P12 | ~140min | 3 tasks | 19 files |
 | Phase KPL-06 P10 | 4h 10m | 4 tasks | 8 files |
-| Phase KPL-02-synchronization-and-replaceable-server P12 | 5min | 2 tasks | 4 files |
-| Phase KPL-02-synchronization-and-replaceable-server P13 | 14min | 2 tasks | 1 files |
 
 ### Blockers
 
