@@ -293,6 +293,7 @@ Progress: [█████████░] 94%
 | 260919-wkt | Reject unsafe Phase 2 Hetzner curl tokens | 2026-09-19 | 9d01d89 | Verified | [260919-wkt-fix-phase-2-curl-configuration-injection](./quick/260919-wkt-fix-phase-2-curl-configuration-injection/) |
 | 260920-c0s | Fix the Phase 2 malformed-token readiness fixture so every quote, backslash, embedded-newline, and trailing-newline case runs independently before sealing Phase 2. | 2026-09-20 | ee5f653 | Verified | [260920-c0s-fix-phase-2-malformed-token-readines](./quick/260920-c0s-fix-the-phase-2-malformed-token-readines/) |
 | 260922-8sz | Wire a guarded Phase 2 live replacement orchestration bundle | 2026-09-22 | 1dab387 | Verified | [260922-8sz-wire-phase-2-live-orchestration](./quick/260922-8sz-wire-phase-2-live-orchestration/) |
+| 260924-j2k | Resume KPL-02 Plan 02-16 privacy verification | 2026-09-24 | 1c8bd71 | Verified | [260924-j2k-resume-kpl-02-plan-02-16-now-that-docker](./quick/260924-j2k-resume-kpl-02-plan-02-16-now-that-docker/) |
 | 260922-r7k | Further shift left Phase 2 live replacement handoff | 2026-09-22 | 9c97dc8 | Verified | [260922-r7k-further-shift-left-phase-2-live-handoff](./quick/260922-r7k-further-shift-left-phase-2-live-handoff/) |
 
 ## Next Action
