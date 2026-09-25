@@ -179,7 +179,6 @@ for (const marker of [
 for (const marker of [
   'cron: "15 5 * * *"',
   'cron: "45 5 * * 0"',
-  'cron: "30 6 1 1,4,7,10 *"',
   "environment: recovery-protected",
   "environment: recovery-live",
   "missing_protected_credentials",
@@ -192,6 +191,15 @@ for (const marker of [
   "verify-privacy.sh",
 ]) {
   if (!recoveryWorkflow.includes(marker)) fail(`recovery workflow omits ${marker}`);
+}
+
+if (recoveryWorkflow.includes('cron: "30 6 1 1,4,7,10 *"')) {
+  fail('recovery workflow must not schedule the sealed host-replacement gate');
+}
+if (!recoveryWorkflow.includes(
+  "if: github.event_name == 'workflow_dispatch' && inputs.drill == 'host-replacement'",
+)) {
+  fail('host-replacement gate must require an explicit workflow dispatch');
 }
 
 console.log(
