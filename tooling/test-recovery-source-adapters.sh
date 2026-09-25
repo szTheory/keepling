@@ -1,6 +1,19 @@
 #!/usr/bin/env sh
 # Hermetic boundary/ledger regression for isolated recovery-source adapters.
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd); cd "$repository_root"
 root=$(mktemp -d "${TMPDIR:-/tmp}/keepling-recovery-source.XXXXXX")
 trap 'rm -rf -- "$root"' EXIT HUP INT TERM
@@ -82,7 +95,7 @@ success() {
   kind=$1 label=$2; make_case "$kind" "$label"; base="$root/$label"; run_adapter "$kind" "$base" || { cat "$base/output" >&2; die "$label failed"; }
   ledger_is "$base" 'head get package-manifest archive archive archive decrypt cipher publish publish'
   cmp -s "$base/plain" "$base/workspace/recovery.dump" || die "$label changed dump bytes"
-  [ "$(stat -f '%Lp' "$base/workspace/recovery.dump")" = 600 ] && [ "$(stat -f '%Lp' "$base/workspace/recovery.provenance.json")" = 600 ] || die "$label artifact mode"
+  [ "$(portable_stat '%Lp' "$base/workspace/recovery.dump")" = 600 ] && [ "$(portable_stat '%Lp' "$base/workspace/recovery.provenance.json")" = 600 ] || die "$label artifact mode"
   jq -e --arg kind "$kind" '(keys|sort)==["ciphertext_bytes","ciphertext_sha256","plaintext_bytes","plaintext_sha256","source_kind","verification","version"] and .source_kind==$kind and .verification=={head:true,get:true,package_manifest:true,decrypt:true,plaintext:true}' "$base/workspace/recovery.provenance.json" >/dev/null || die "$label provenance contract"
   ! grep -Eq 'fixture-secret|package.tar.gz|fixture-backup-1|verified-recovery-dump' "$base/output" "$base/workspace/recovery.provenance.json" || die "$label leaked private input"
 }

@@ -1,5 +1,18 @@
 #!/usr/bin/env sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 
 # A deliberately narrow, operator-invoked handoff.  All paths and executables
 # are supplied by the caller so this adapter has no DNS, provider, or SSH
@@ -9,7 +22,7 @@ die() { printf '%s\n' "TRUSTED_TRANSFER_FAILED_STAGE=$1" >&2; exit "${2:-40}"; }
 operation=${1:-full}
 [ "$#" -le 1 ] || die usage
 case "$operation" in full|bootstrap|image-transfer|restore|runtime|semantic) ;; *) die usage;; esac
-mode_of() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
+mode_of() { portable_stat '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
 outside_repo() { case "$1" in "$repository_root"|"$repository_root"/*) return 1;; *) return 0;; esac; }
 absolute_regular_private() {
   case "$1" in /*) ;; *) return 1;; esac

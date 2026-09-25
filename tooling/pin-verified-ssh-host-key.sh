@@ -1,5 +1,18 @@
 #!/usr/bin/env sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 umask 077
 
 die() { printf '%s\n' 'Candidate host-key pin refused' >&2; exit 1; }
@@ -11,7 +24,7 @@ printf '%s' "$expected" | grep -Eq '^SHA256:[A-Za-z0-9+/]{43}$' || die
 case "$known_hosts" in /*) ;; *) die;; esac
 case "$known_hosts" in "$repository_root"|"$repository_root"/*) die;; esac
 [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] || die
-mode=$(stat -f '%Lp' "$known_hosts" 2>/dev/null || stat -c '%a' "$known_hosts")
+mode=$(portable_stat '%Lp' "$known_hosts" 2>/dev/null || stat -c '%a' "$known_hosts")
 [ "$mode" = 600 ] && [ ! -s "$known_hosts" ] || die
 
 directory=$(CDPATH='' cd -P "$(dirname "$known_hosts")" && pwd) || die

@@ -1,5 +1,18 @@
 #!/usr/bin/env sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
@@ -23,7 +36,7 @@ expect_pass() {
   name=$1 input=$2 counts=$3
   output="$fixture_root/$name-output.json"
   ./tooling/verify-host-replacement.sh --normalize-provider-output "$input" "$counts" "$output" "$run_id" >/dev/null
-  [ "$(stat -f '%Lp' "$output" 2>/dev/null || stat -c '%a' "$output")" = 600 ] || die "$name output is not owner-only"
+  [ "$(portable_stat '%Lp' "$output" 2>/dev/null || stat -c '%a' "$output")" = 600 ] || die "$name output is not owner-only"
   jq -e '.version==1 and (.resources|length)==6 and ([.resources[]] | all(type=="string" and test("^[1-9][0-9]*$")))' "$output" >/dev/null || die "$name normalization is invalid"
   at_sign=$(printf '\100')
   forbidden_pattern="replacement-host|192[.]0[.]2[.]40|${at_sign}|to""ken|/pri""vate/|/Us""ers/"

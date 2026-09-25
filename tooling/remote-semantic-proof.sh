@@ -1,5 +1,18 @@
 #!/bin/sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 
 emit() { printf '%s\n' "$1"; }
 fail() { emit "REMOTE_SEMANTIC_FAILED_STAGE=$1"; exit "${2:-50}"; }
@@ -9,7 +22,7 @@ fail() { emit "REMOTE_SEMANTIC_FAILED_STAGE=$1"; exit "${2:-50}"; }
 if [ "${KEEPLING_REMOTE_SEMANTIC_BOUNDARY_TEST:-}" = yes ]; then
   credential=${KEEPLING_REMOTE_RECOVERY_CREDENTIAL:-}
   [ -n "$credential" ] && [ -f "$credential" ] && [ ! -L "$credential" ] && \
-    [ "$(stat -f '%Lp' "$credential" 2>/dev/null || stat -c '%a' "$credential")" = 600 ] || fail credential
+    [ "$(portable_stat '%Lp' "$credential" 2>/dev/null || stat -c '%a' "$credential")" = 600 ] || fail credential
   runner=${KEEPLING_REMOTE_SEMANTIC_RUNNER:-}
   case "$runner" in /*) [ -x "$runner" ] || fail boundary ;; *) fail boundary ;; esac
   output=$(mktemp "${TMPDIR:-/tmp}/keepling-semantic.XXXXXX") || fail boundary

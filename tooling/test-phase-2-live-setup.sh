@@ -1,5 +1,18 @@
 #!/usr/bin/env sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 fixture=$(mktemp -d "${TMPDIR:-/tmp}/keepling-live-setup.XXXXXX")
 trap 'rm -rf -- "$fixture"' EXIT HUP INT TERM
@@ -43,7 +56,7 @@ pid=$!; sleep 1; set +e
 PATH="$fixture/bin:$PATH" SSH_AUTH_SOCK="$fixture/agent.sock" KEEPLING_ALLOW_BILLABLE_APPLY=yes KEEPLING_SEQUENCE_DNS_RUNNER=/injected "$root/tooling/phase-2-live-setup.sh" --directory "$fixture/boundary" --candidate-selection "$fixture/candidate.json" --recovery-selection "$fixture/recovery.json" --admin-source-cidrs "$fixture/boundary/admin-source-cidrs.txt" --server-image-selection "$fixture/boundary/server-image.json" --login-credential "$fixture/boundary/login-credential" --ssh-known-hosts "$fixture/boundary/known-hosts" prepare >"$fixture/out" 2>"$fixture/err"; status=$?
 set -e; kill "$pid" 2>/dev/null || true
 [ "$status" = 3 ] || die 'prepare did not retain exit-3 live fence'; grep -Fqx 'phase2-live-setup status=prepared result=ready' "$fixture/out" || die 'prepare lacked result'; ! grep -E 'FixtureIdentity|image.tar|/injected' "$fixture/out" "$fixture/err" >/dev/null || die 'private fixture data leaked'
-run=$(find "$fixture/boundary/runs" -mindepth 1 -maxdepth 1 -type d -print); [ "$(stat -f '%Lp' "$run" 2>/dev/null || stat -c '%a' "$run")" = 700 ] || die 'run directory mode'; [ ! -e "$run/workspace" ] || die 'workspace created'; bundle=$run/orchestration.env; [ "$(stat -f '%Lp' "$bundle" 2>/dev/null || stat -c '%a' "$bundle")" = 600 ] || die 'bundle mode'; "$root/tooling/phase-2-live-orchestration.sh" --validate "$bundle" >/dev/null || die 'bundle invalid'; ! grep -Eq 'COMMAND=|ALLOW_|CHANGE_TRIGGER|/injected' "$bundle" || die 'bundle retained authority'
+run=$(find "$fixture/boundary/runs" -mindepth 1 -maxdepth 1 -type d -print); [ "$(portable_stat '%Lp' "$run" 2>/dev/null || stat -c '%a' "$run")" = 700 ] || die 'run directory mode'; [ ! -e "$run/workspace" ] || die 'workspace created'; bundle=$run/orchestration.env; [ "$(portable_stat '%Lp' "$bundle" 2>/dev/null || stat -c '%a' "$bundle")" = 600 ] || die 'bundle mode'; "$root/tooling/phase-2-live-orchestration.sh" --validate "$bundle" >/dev/null || die 'bundle invalid'; ! grep -Eq 'COMMAND=|ALLOW_|CHANGE_TRIGGER|/injected' "$bundle" || die 'bundle retained authority'
 python3 - "$root" <<'PY' || die 'cloud-init did not install exact source-owned probe bytes'
 import base64, hashlib, pathlib, re, sys
 root=pathlib.Path(sys.argv[1])

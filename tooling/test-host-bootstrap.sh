@@ -1,5 +1,18 @@
 #!/usr/bin/env sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
@@ -103,7 +116,7 @@ execute_case() (
   [ "$(cat "$scenario/teardown-count")" = "$expected_teardown" ] || die "$(basename "$scenario") violated exactly-once teardown"
   [ ! -e "$scenario/dns-called" ] || die "$(basename "$scenario") reached DNS from the bootstrap gate"
   [ -r "$scenario/evidence.json" ] || die "$(basename "$scenario") omitted bounded evidence"
-  [ "$(stat -f '%Lp' "$scenario/evidence.json")" = 600 ] || die "$(basename "$scenario") evidence is not owner-only"
+  [ "$(portable_stat '%Lp' "$scenario/evidence.json")" = 600 ] || die "$(basename "$scenario") evidence is not owner-only"
   [ "$(wc -c <"$scenario/evidence.json" | tr -d ' ')" -le 8192 ] || die "$(basename "$scenario") evidence is unbounded"
   if grep -Eq 'SENSITIVE_FIXTURE_VALUE|PRIVATE_IDENTIFIER_FIXTURE|redacted fixture classification' "$scenario/evidence.json"; then
     die "$(basename "$scenario") retained raw diagnostic detail"
@@ -263,7 +276,7 @@ chmod 600 "$effect_tree/var/lib/keepling/bootstrap-complete.json"
 printf '%s\n' '#!/usr/bin/env sh' 'exit 0' >"$fixture_root/systemctl"
 printf '%s\n' '#!/usr/bin/env sh' 'printf "%s\n" "cloud-init 25.1.4"' >"$fixture_root/cloud-init"
 chmod 700 "$fixture_root/systemctl" "$fixture_root/cloud-init"
-effect_owner=$(stat -f '%Su:%Sg' "$effect_tree/var/lib/keepling/bootstrap-complete.json" 2>/dev/null ||
+effect_owner=$(portable_stat '%Su:%Sg' "$effect_tree/var/lib/keepling/bootstrap-complete.json" 2>/dev/null ||
   stat -c '%U:%G' "$effect_tree/var/lib/keepling/bootstrap-complete.json" 2>/dev/null) ||
   die "fixture owner/group could not be derived portably"
 KEEPLING_EFFECT_TEST_MODE=yes KEEPLING_EFFECT_ROOT="$effect_tree" KEEPLING_EFFECT_EXPECTED_OWNER="$effect_owner" \
@@ -312,8 +325,8 @@ KEEPLING_BUNDLE_IMAGE_SOURCE="$fixture_root/bundle-sources/image" KEEPLING_BUNDL
 find "$fixture_root/bundle" -mindepth 1 -maxdepth 1 -type f -exec basename {} \; | sort >"$fixture_root/bundle-actual"
 printf '%s\n' Caddyfile compose-override.yml compose.yml image.tar.gz new-login-credential recovery.dump recovery.provenance.json remote-prepare.sh >"$fixture_root/bundle-expected"
 cmp -s "$fixture_root/bundle-expected" "$fixture_root/bundle-actual" || die "bundle basenames are not canonical"
-[ "$(stat -f '%Lp' "$fixture_root/bundle/new-login-credential")" = 600 ] || die "bundle exposed credential"
-[ "$(stat -f '%Lp' "$fixture_root/bundle/remote-prepare.sh")" = 700 ] || die "bundle runner mode is wrong"
+[ "$(portable_stat '%Lp' "$fixture_root/bundle/new-login-credential")" = 600 ] || die "bundle exposed credential"
+[ "$(portable_stat '%Lp' "$fixture_root/bundle/remote-prepare.sh")" = 700 ] || die "bundle runner mode is wrong"
 jq -e '.version == 1 and .complete == true and (.files | length) == 8 and ([.files[].sha256] | all(test("^[0-9a-f]{64}$")))' "$fixture_root/bundle-manifest.json" >/dev/null || die "bundle manifest is incomplete"
 if grep -Fq "$fixture_root" "$fixture_root/bundle-manifest.json"; then die "bundle manifest retained private paths"; fi
 

@@ -2,11 +2,24 @@
 # Local-only recovery package validation.  Adapters decode provider documents and
 # perform their read-only boundary calls; this file never selects a provider.
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 umask 077
 
 recovery_die() { echo "Recovery source failed: $1" >&2; exit 1; }
 recovery_sha256() { shasum -a 256 "$1" | awk '{print $1}'; }
-recovery_mode() { stat -f '%Lp' "$1"; }
+recovery_mode() { portable_stat '%Lp' "$1"; }
 
 recovery_external_file() {
   name=$1 path=$2 repository_root=$3

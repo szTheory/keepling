@@ -1,5 +1,18 @@
 #!/usr/bin/env sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 fixture=$(mktemp -d "${TMPDIR:-/tmp}/keepling-phase2-materialize.XXXXXX")
@@ -44,7 +57,7 @@ sh -c "$common --write --directory '$fixture/output' --ssh-public-key '$fixture/
 ! grep -E 'fixture-(token|secret|cipher|access)' "$fixture/write.out"
 for file in hetzner.json cloudflare-dns.json b2-primary.json r2-mirror.json b2-tofu-state.json replacement-run.pub backup-cipher.key env.sh; do
   [ -f "$fixture/output/$file" ] || { echo "missing materialized $file" >&2; exit 1; }
-  case "$(stat -f '%Lp' "$fixture/output/$file" 2>/dev/null || stat -c '%a' "$fixture/output/$file")" in 600) ;; *) echo "unsafe mode on $file" >&2; exit 1 ;; esac
+  case "$(portable_stat '%Lp' "$fixture/output/$file" 2>/dev/null || stat -c '%a' "$fixture/output/$file")" in 600) ;; *) echo "unsafe mode on $file" >&2; exit 1 ;; esac
 done
 jq -e '.version == 1 and .bucket == "primary-bucket" and .region == "us-west-004"' "$fixture/output/b2-primary.json" >/dev/null
 jq -e '.version == 1 and .key == "keepling/phase-2/terraform.tfstate"' "$fixture/output/b2-tofu-state.json" >/dev/null

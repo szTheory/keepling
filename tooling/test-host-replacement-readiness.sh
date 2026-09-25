@@ -1,5 +1,18 @@
 #!/usr/bin/env sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
@@ -145,6 +158,7 @@ credentialed_fixture() {
   cat >"$fixture/bin/curl" <<'EOF'
 #!/usr/bin/env sh
 set -eu
+portable_stat() { case "$(uname -s)" in Darwin) stat -f "$1" "$2" ;; *) case "$1" in %Lp) stat -c '%a' "$2" ;; %u) stat -c '%u' "$2" ;; esac ;; esac; }
 
 record=$KEEPLING_FAKE_CURL_RECORD
 : >"$KEEPLING_FAKE_CURL_MARKER"
@@ -159,8 +173,8 @@ if [ "$has_config" = true ]; then
     url=$6
     case "$config" in "$KEEPLING_EXPECTED_PREFLIGHT_TMP"/keepling-replacement-preflight.*/curl.conf) ;; *) exit 91 ;; esac
     [ -f "$config" ] && [ ! -L "$config" ] || exit 92
-    [ "$(stat -f '%Lp' "$config")" = 600 ] || exit 93
-    [ "$(stat -f '%u' "$config")" = "$(id -u)" ] || exit 94
+    [ "$(portable_stat '%Lp' "$config")" = 600 ] || exit 93
+    [ "$(portable_stat '%u' "$config")" = "$(id -u)" ] || exit 94
     [ "${KEEPLING_EXPECTED_HCLOUD_TOKEN+x}" = x ] || exit 95
     expected_token=$KEEPLING_EXPECTED_HCLOUD_TOKEN
     [ -n "$expected_token" ] || exit 95

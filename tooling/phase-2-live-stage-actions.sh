@@ -1,13 +1,26 @@
 #!/usr/bin/env sh
 # Run-bound action boundary for the seven repository-owned replacement stages.
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 umask 077
 
 script_path=$0
 if [ -L "$script_path" ]; then script_path=$(readlink "$script_path"); fi
 repository_root=$(CDPATH='' cd -P "$(dirname "$script_path")/.." && pwd)
 die() { printf '%s\n' "Phase 2 live stage failed: stage=$stage result=refused reason=$1" >&2; exit 1; }
-mode_of() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
+mode_of() { portable_stat '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
 outside_repo() { case "$1" in "$repository_root"|"$repository_root"/*) return 1;; *) return 0;; esac; }
 read_value() { awk -F= -v key="$1" '$1 == key {if (++n != 1) exit 2; print substr($0,length(key)+2)} END {if (n != 1) exit 1}' "$2"; }
 valid_private() {

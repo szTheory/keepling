@@ -2,11 +2,24 @@
 # Validate a disposable local deploy-verification capture and make a private
 # run handoff. This is deliberately distinct from B2/R2 recovery provenance.
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 umask 077
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 die() { printf '%s\n' "synthetic recovery refused: $1" >&2; exit 2; }
-mode_of() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
+mode_of() { portable_stat '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
 outside_repo() { case "$1" in "$repository_root"|"$repository_root"/*) return 1;; *) return 0;; esac; }
 private_directory() {
   [ -d "$1" ] && [ ! -L "$1" ] || return 1

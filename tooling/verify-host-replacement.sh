@@ -1,5 +1,18 @@
 #!/usr/bin/env sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
@@ -558,7 +571,7 @@ stage_candidate_bundle() {
   for name in Caddyfile compose-override.yml compose.yml image.tar.gz new-login-credential recovery.dump recovery.provenance.json remote-prepare.sh; do
     file="$destination/$name"
     sha256=$(shasum -a 256 "$file" | awk '{print $1}')
-    mode=$(stat -f '%Lp' "$file" 2>/dev/null || stat -c '%a' "$file")
+    mode=$(portable_stat '%Lp' "$file" 2>/dev/null || stat -c '%a' "$file")
     size=$(wc -c <"$file" | tr -d ' ')
     files_json=$(printf '%s' "$files_json" | jq \
       --arg name "$name" --arg sha256 "$sha256" --arg mode "$mode" --argjson size "$size" \
