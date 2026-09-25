@@ -88,7 +88,7 @@ cleanup_deploy_proof() {
 
 wait_for_ready() {
   attempt=0
-  until curl -fsS "$base_url/health/ready" 2>/dev/null | jq -e '.status == "ready"' >/dev/null 2>&1; do
+  until curl_local -kfsS "$base_url/health/ready" 2>/dev/null | jq -e '.status == "ready"' >/dev/null 2>&1; do
     attempt=$((attempt + 1))
     [ "$attempt" -lt 60 ] || die "deployment did not recover semantic readiness"
     sleep 1
@@ -116,8 +116,8 @@ deploy_exact_digest() {
   project="keepling-deploy-$$"
   http_port=$((58500 + $$ % 200))
   https_port=$((58700 + $$ % 200))
-  base_url="http://127.0.0.1:$http_port"
-  origin_url="https://127.0.0.1:$http_port"
+  base_url="https://localhost:$https_port"
+  origin_url=$base_url
   cookie_jar="$proof_root/cookies"
   trap cleanup_deploy_proof EXIT HUP INT TERM
 
@@ -139,7 +139,7 @@ deploy_exact_digest() {
 
   export KEEPLING_SERVER_IMAGE="$image_id"
   export KEEPLING_SERVER_DIGEST="$image_id"
-  export KEEPLING_HOST=127.0.0.1
+  export KEEPLING_HOST=localhost
   export KEEPLING_POSTGRES_DATA_DIR="$proof_root/postgres"
   export KEEPLING_CADDY_DATA_DIR="$proof_root/caddy-data"
   export KEEPLING_CADDY_CONFIG_DIR="$proof_root/caddy-config"
@@ -149,6 +149,7 @@ deploy_exact_digest() {
   export KEEPLING_OPERATOR_TOKEN_FILE="$proof_root/secrets/operator-token"
   export KEEPLING_HTTP_BIND="127.0.0.1:$http_port"
   export KEEPLING_HTTPS_BIND="127.0.0.1:$https_port"
+  curl_local() { curl --resolve "localhost:$https_port:127.0.0.1" "$@"; }
 
   rendered=$(compose_run config)
   printf '%s\n' "$rendered" | grep -F "image: $image_id" >/dev/null || die "promotion did not render the exact tested image"
@@ -166,7 +167,7 @@ deploy_exact_digest() {
 
   compose_run stop db >/dev/null
   attempt=0
-  until [ "$(curl -s -o /dev/null -w '%{http_code}' "$base_url/health/ready" 2>/dev/null || true)" = 503 ]; do
+  until [ "$(curl_local -ks -o /dev/null -w '%{http_code}' "$base_url/health/ready" 2>/dev/null || true)" = 503 ]; do
     attempt=$((attempt + 1)); [ "$attempt" -lt 30 ] || die "dependency outage did not surface as 503"; sleep 1
   done
   compose_run start db >/dev/null
@@ -182,7 +183,7 @@ prove_interrupted_retry() {
 
   compose_run stop app >/dev/null
   interrupted_headers="$proof_root/interrupted-headers"
-  interrupted_status=$(curl -s -D "$interrupted_headers" -o /dev/null -w '%{http_code}' \
+  interrupted_status=$(curl_local -ks -D "$interrupted_headers" -o /dev/null -w '%{http_code}' \
     -H "Cookie: $session_cookie" -H "Origin: $origin_url" -H "x-csrf-token: $csrf_token" -H 'content-type: application/json' \
     --data-binary "$edit_body" "$base_url/api/v1/commands/edit-task")
   [ "$interrupted_status" = 503 ] || die "interrupted mutation returned $interrupted_status instead of 503"
@@ -190,18 +191,18 @@ prove_interrupted_retry() {
 
   compose_run up -d --no-deps app >/dev/null
   wait_for_ready
-  edit_response=$(curl -fsS -H "Cookie: $session_cookie" -H "Origin: $origin_url" -H "x-csrf-token: $csrf_token" -H 'content-type: application/json' \
+  edit_response=$(curl_local -kfsS -H "Cookie: $session_cookie" -H "Origin: $origin_url" -H "x-csrf-token: $csrf_token" -H 'content-type: application/json' \
     --data-binary "$edit_body" "$base_url/api/v1/commands/edit-task")
   printf '%s' "$edit_response" | jq -e '.outcome == "accepted" and .revision == 2 and .undo.handle != null' >/dev/null || die "exact retry did not accept the edit"
 
-  replay_response=$(curl -fsS -H "Cookie: $session_cookie" -H "Origin: $origin_url" -H "x-csrf-token: $csrf_token" -H 'content-type: application/json' \
+  replay_response=$(curl_local -kfsS -H "Cookie: $session_cookie" -H "Origin: $origin_url" -H "x-csrf-token: $csrf_token" -H 'content-type: application/json' \
     --data-binary "$edit_body" "$base_url/api/v1/commands/edit-task")
   [ "$(printf '%s' "$edit_response" | jq -S .)" = "$(printf '%s' "$replay_response" | jq -S .)" ] || die "exact retry did not return the stable receipt"
 
   undo_handle=$(printf '%s' "$edit_response" | jq -r '.undo.handle')
   undo_mutation=$(uuidgen | tr '[:upper:]' '[:lower:]')
   undo_body=$(jq -cn --arg handle "$undo_handle" --arg mutation_id "$undo_mutation" '{version:1,handle:$handle,mutation_id:$mutation_id}')
-  undo_response=$(curl -fsS -H "Cookie: $session_cookie" -H "Origin: $origin_url" -H "x-csrf-token: $csrf_token" -H 'content-type: application/json' \
+  undo_response=$(curl_local -kfsS -H "Cookie: $session_cookie" -H "Origin: $origin_url" -H "x-csrf-token: $csrf_token" -H 'content-type: application/json' \
     --data-binary "$undo_body" "$base_url/api/v1/commands/undo-task")
   printf '%s' "$undo_response" | jq -e '.outcome == "accepted" and .revision == 3 and .snapshot.title == "Deploy proof task"' >/dev/null || die "undo smoke did not restore the original task"
 }
@@ -213,10 +214,10 @@ prove_user_smoke() {
 
   recovery_login_credential=$(openssl rand -hex 32)
   setup_body=$(jq -cn --arg token "$setup_token" --arg password "$recovery_login_credential" '{version:1,token:$token,password:$password,timezone:"America/New_York"}')
-  curl -fsS -H 'content-type: application/json' --data-binary "$setup_body" "$base_url/api/v1/setup" | jq -e '.status == "setup_complete"' >/dev/null || die "user setup smoke failed"
+  curl_local -kfsS -H 'content-type: application/json' --data-binary "$setup_body" "$base_url/api/v1/setup" | jq -e '.status == "setup_complete"' >/dev/null || die "user setup smoke failed"
 
   login_body=$(jq -cn --arg password "$recovery_login_credential" '{version:1,client_kind:"web",label:"Deploy proof",password:$password}')
-  login_response=$(curl -fsS -c "$cookie_jar" -H "Origin: $origin_url" -H 'content-type: application/json' \
+  login_response=$(curl_local -kfsS -c "$cookie_jar" -H "Origin: $origin_url" -H 'content-type: application/json' \
     --data-binary "$login_body" "$base_url/api/v1/login")
   csrf_token=$(printf '%s' "$login_response" | jq -r '.csrf_token // empty')
   [ -n "$csrf_token" ] || die "login smoke did not return CSRF state"
@@ -226,11 +227,11 @@ prove_user_smoke() {
   task_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
   capture_mutation=$(uuidgen | tr '[:upper:]' '[:lower:]')
   capture_body=$(jq -cn --arg mutation_id "$capture_mutation" --arg task_id "$task_id" '{version:1,mutation_id:$mutation_id,task_id:$task_id,title:"Deploy proof task"}')
-  capture_response=$(curl -fsS -H "Cookie: $session_cookie" -H "Origin: $origin_url" -H "x-csrf-token: $csrf_token" -H 'content-type: application/json' \
+  capture_response=$(curl_local -kfsS -H "Cookie: $session_cookie" -H "Origin: $origin_url" -H "x-csrf-token: $csrf_token" -H 'content-type: application/json' \
     --data-binary "$capture_body" "$base_url/api/v1/commands/capture-task")
   printf '%s' "$capture_response" | jq -e '.outcome == "accepted" and .revision == 1' >/dev/null || die "write smoke did not capture a task"
 
-  curl -fsS -H "Cookie: $session_cookie" "$base_url/api/v1/tasks/$task_id" | jq -e '.id == $id and .title == "Deploy proof task"' --arg id "$task_id" >/dev/null || die "read smoke did not return the captured task"
+  curl_local -kfsS -H "Cookie: $session_cookie" "$base_url/api/v1/tasks/$task_id" | jq -e '.id == $id and .title == "Deploy proof task"' --arg id "$task_id" >/dev/null || die "read smoke did not return the captured task"
 }
 
 capture_recovery_package() {

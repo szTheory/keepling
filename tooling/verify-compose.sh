@@ -19,6 +19,7 @@ case "$image_id" in sha256:?????????????????????????????????????????????????????
 proof_root=$(mktemp -d "${TMPDIR:-/tmp}/keepling-compose-proof.XXXXXX")
 project="keepling-proof-$$"
 http_port=$((58000 + $$ % 500))
+https_port=$((http_port + 1))
 compose='docker compose -f infra/compose/compose.yml'
 
 cleanup() {
@@ -77,7 +78,7 @@ export KEEPLING_DATABASE_URL_FILE="$proof_root/secrets/database-url"
 export KEEPLING_SECRET_KEY_BASE_FILE="$proof_root/secrets/secret-key-base"
 export KEEPLING_OPERATOR_TOKEN_FILE="$proof_root/secrets/operator-token"
 export KEEPLING_HTTP_BIND="127.0.0.1:$http_port"
-export KEEPLING_HTTPS_BIND="127.0.0.1:$((http_port + 1))"
+export KEEPLING_HTTPS_BIND="127.0.0.1:$https_port"
 
 rendered=$($compose -p "$project" config)
 printf '%s\n' "$rendered" | grep -Eq 'published: "?5432"?' && die "PostgreSQL port 5432 is published"
@@ -86,8 +87,13 @@ printf '%s\n' "$rendered" | grep -F "$image_id" >/dev/null || die "app does not 
 
 $compose -p "$project" up -d --wait
 
+http_headers=$(mktemp "${TMPDIR:-/tmp}/keepling-compose-http-headers.XXXXXX")
+http_status=$(curl -sS -D "$http_headers" -o /dev/null -w '%{http_code}' "http://127.0.0.1:$http_port/health/ready" || true)
+case "$http_status" in 301|302|307|308) ;; *) die "public HTTP did not redirect to HTTPS" ;; esac
+rm -f -- "$http_headers"
+
 attempt=0
-until curl -fsS "http://127.0.0.1:$http_port/health/ready" 2>/dev/null | jq -e '.status == "ready"' >/dev/null 2>&1; do
+until curl -kfsS --resolve "localhost:$https_port:127.0.0.1" "https://localhost:$https_port/health/ready" 2>/dev/null | jq -e '.status == "ready"' >/dev/null 2>&1; do
   attempt=$((attempt + 1)); [ "$attempt" -lt 60 ] || die "edge did not reach semantic readiness"; sleep 1
 done
 
@@ -97,7 +103,7 @@ case "$migration_count" in ''|*[!0-9]*|0) die "migrations did not persist" ;; es
 $compose -p "$project" stop app >/dev/null
 retry_headers=$(mktemp "${TMPDIR:-/tmp}/keepling-compose-headers.XXXXXX")
 set +e
-http_status=$(curl -sS -D "$retry_headers" -o /dev/null -w '%{http_code}' "http://127.0.0.1:$http_port/health/ready")
+http_status=$(curl -ksS --resolve "localhost:$https_port:127.0.0.1" -D "$retry_headers" -o /dev/null -w '%{http_code}' "https://localhost:$https_port/health/ready")
 set -e
 [ "$http_status" = 503 ] || die "edge returned $http_status during app replacement, expected 503"
 grep -Eiq '^Retry-After: 2' "$retry_headers" || die "edge omitted bounded Retry-After guidance"
@@ -105,7 +111,7 @@ rm -f -- "$retry_headers"
 
 $compose -p "$project" up -d --no-deps app
 attempt=0
-until curl -fsS "http://127.0.0.1:$http_port/health/ready" 2>/dev/null | jq -e '.status == "ready"' >/dev/null 2>&1; do
+until curl -kfsS --resolve "localhost:$https_port:127.0.0.1" "https://localhost:$https_port/health/ready" 2>/dev/null | jq -e '.status == "ready"' >/dev/null 2>&1; do
   attempt=$((attempt + 1)); [ "$attempt" -lt 60 ] || die "app recreation did not recover readiness"; sleep 1
 done
 
@@ -114,7 +120,7 @@ surviving_count=$($compose -p "$project" exec -T db psql -U keepling -d keepling
 
 $compose -p "$project" stop db >/dev/null
 attempt=0
-until [ "$(curl -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1:$http_port/health/ready" 2>/dev/null || true)" = 503 ]; do
+until [ "$(curl -ksS --resolve "localhost:$https_port:127.0.0.1" -o /dev/null -w '%{http_code}' "https://localhost:$https_port/health/ready" 2>/dev/null || true)" = 503 ]; do
   attempt=$((attempt + 1)); [ "$attempt" -lt 30 ] || die "database outage did not become a stable edge 503"; sleep 1
 done
 $compose -p "$project" start db >/dev/null

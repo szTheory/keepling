@@ -9,9 +9,11 @@ terraform {
   }
 
   # Supply bucket, key, region, endpoint, and credentials at init time from the
-  # operator environment/private backend config. They are deliberately absent
-  # from tracked source. The object store must enforce encryption, versioning,
-  # and retention; use_lockfile serializes the one owned replacement run.
+  # operator environment/private backend config. The backend adapter renders
+  # quoted HCL and the R2 compatibility flags (auto region, path-style, no STS
+  # validation/checksum) required by Cloudflare's S3 API. Values stay out of
+  # tracked source. The bucket must enforce encryption, versioning, and
+  # retention; use_lockfile serializes the one owned replacement run.
   backend "s3" {
     encrypt      = true
     use_lockfile = true

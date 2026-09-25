@@ -288,27 +288,33 @@ active_line=$(grep -n 'systemctl is-active --quiet docker.service' infra/tofu/he
 sentinel_line=$(grep -n 'mv -f.*bootstrap-complete.json' infra/tofu/hetzner/cloud-init.yml | cut -d: -f1)
 [ "$docker_line" -lt "$active_line" ] && [ "$active_line" -lt "$sentinel_line" ] || die "sentinel is not ordered after Docker verification"
 if ! grep -F 'root:root:755' infra/tofu/hetzner/cloud-init.yml >/dev/null ||
+  ! grep -Fx '  - jq' infra/tofu/hetzner/cloud-init.yml >/dev/null ||
   ! grep -F 'root:root:700' infra/tofu/hetzner/cloud-init.yml >/dev/null ||
-  ! grep -F 'chmod 0600' infra/tofu/hetzner/cloud-init.yml >/dev/null; then
+  ! grep -F 'chmod 0600' infra/tofu/hetzner/cloud-init.yml >/dev/null ||
+  ! grep -F 'Keepling SSH host fingerprint: %s' infra/tofu/hetzner/cloud-init.yml >/dev/null ||
+  ! grep -F 'systemctl restart getty@tty1.service' infra/tofu/hetzner/cloud-init.yml >/dev/null ||
+  ! grep -F '/usr/local/sbin/keepling-show-host-key-fingerprint' infra/tofu/hetzner/cloud-init.yml >/dev/null; then
   die "cloud-config does not enforce exact effect modes"
 fi
 
 mkdir "$fixture_root/bundle-sources" "$fixture_root/bundle"
 printf image >"$fixture_root/bundle-sources/image"; printf dump >"$fixture_root/bundle-sources/dump"
+printf provenance >"$fixture_root/bundle-sources/provenance"
 printf credential >"$fixture_root/bundle-sources/credential"; printf compose >"$fixture_root/bundle-sources/compose"
 printf caddy >"$fixture_root/bundle-sources/caddy"; printf override >"$fixture_root/bundle-sources/override"
 printf '#!/bin/sh' >"$fixture_root/bundle-sources/runner"
 KEEPLING_BUNDLE_IMAGE_SOURCE="$fixture_root/bundle-sources/image" KEEPLING_BUNDLE_RECOVERY_SOURCE="$fixture_root/bundle-sources/dump" \
+  KEEPLING_BUNDLE_PROVENANCE_SOURCE="$fixture_root/bundle-sources/provenance" \
   KEEPLING_BUNDLE_LOGIN_CREDENTIAL_SOURCE="$fixture_root/bundle-sources/credential" KEEPLING_BUNDLE_COMPOSE_SOURCE="$fixture_root/bundle-sources/compose" \
   KEEPLING_BUNDLE_CADDY_SOURCE="$fixture_root/bundle-sources/caddy" KEEPLING_BUNDLE_OVERRIDE_SOURCE="$fixture_root/bundle-sources/override" \
   KEEPLING_BUNDLE_RUNNER_SOURCE="$fixture_root/bundle-sources/runner" KEEPLING_BUNDLE_DESTINATION="$fixture_root/bundle" \
   KEEPLING_BUNDLE_MANIFEST_FILE="$fixture_root/bundle-manifest.json" ./tooling/verify-host-replacement.sh --stage-bundle >/dev/null
 find "$fixture_root/bundle" -mindepth 1 -maxdepth 1 -type f -exec basename {} \; | sort >"$fixture_root/bundle-actual"
-printf '%s\n' Caddyfile compose-override.yml compose.yml image.tar.gz new-login-credential recovery.dump remote-prepare.sh >"$fixture_root/bundle-expected"
+printf '%s\n' Caddyfile compose-override.yml compose.yml image.tar.gz new-login-credential recovery.dump recovery.provenance.json remote-prepare.sh >"$fixture_root/bundle-expected"
 cmp -s "$fixture_root/bundle-expected" "$fixture_root/bundle-actual" || die "bundle basenames are not canonical"
 [ "$(stat -f '%Lp' "$fixture_root/bundle/new-login-credential")" = 600 ] || die "bundle exposed credential"
 [ "$(stat -f '%Lp' "$fixture_root/bundle/remote-prepare.sh")" = 700 ] || die "bundle runner mode is wrong"
-jq -e '.version == 1 and .complete == true and (.files | length) == 7 and ([.files[].sha256] | all(test("^[0-9a-f]{64}$")))' "$fixture_root/bundle-manifest.json" >/dev/null || die "bundle manifest is incomplete"
+jq -e '.version == 1 and .complete == true and (.files | length) == 8 and ([.files[].sha256] | all(test("^[0-9a-f]{64}$")))' "$fixture_root/bundle-manifest.json" >/dev/null || die "bundle manifest is incomplete"
 if grep -Fq "$fixture_root" "$fixture_root/bundle-manifest.json"; then die "bundle manifest retained private paths"; fi
 
 echo "Host bootstrap regression passed: cloud-init and Keepling effects are independently fail-closed, redacted, DNS-safe, and teardown-first"

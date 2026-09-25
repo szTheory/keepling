@@ -55,6 +55,26 @@ if printf '%s' "$runtime_host" | grep -F '..' >/dev/null; then exit "$failure_co
 printf '%s' "$tested_manifest_digest" | grep -Eq '^sha256:[0-9a-f]{64}$' || exit "$failure_code"
 
 stage() { failure_stage=$1; failure_code=$2; }
+validate_recovery_provenance() {
+  [ "${KEEPLING_REMOTE_PREPARE_PROVENANCE_REQUIRED:-}" = yes ] || return 0
+  dump=/root/recovery.dump provenance=/root/recovery.provenance.json
+  [ -f "$dump" ] && [ -f "$provenance" ] && [ ! -L "$dump" ] && [ ! -L "$provenance" ] || return 1
+  jq -e '
+    type == "object" and .version == 1 and
+    if .source_kind == "synthetic-rehearsal" then
+      (keys|sort)==["plaintext_bytes","plaintext_sha256","source_kind","verification","version"] and
+      (.plaintext_sha256|type == "string" and test("^[0-9a-f]{64}$")) and
+      (.plaintext_bytes|type == "number" and . > 0 and floor == .) and
+      (.verification|type == "object" and (keys|sort)==["local_capture","local_restore","synthetic"] and .local_capture == true and .local_restore == true and .synthetic == true)
+    else
+      (.source_kind == "b2-primary" or .source_kind == "r2-mirror") and
+      (.plaintext_sha256|type == "string" and test("^[0-9a-f]{64}$")) and
+      (.plaintext_bytes|type == "number" and . >= 0 and floor == .) and
+      (.verification|.head == true and .get == true and .package_manifest == true and .decrypt == true and .plaintext == true)
+    end
+  ' "$provenance" >/dev/null 2>&1 || return 1
+  [ "$(shasum -a 256 "$dump" | awk '{print $1}')" = "$(jq -r .plaintext_sha256 "$provenance")" ] && [ "$(wc -c <"$dump" | tr -d ' ')" = "$(jq -r .plaintext_bytes "$provenance")" ]
+}
 id_shape() { if [ -z "$1" ]; then printf empty; elif printf '%s' "$1" | grep -Eq '^sha256:[0-9a-f]{64}$'; then printf sha256-64; else printf other; fi; }
 revision_value_shape() { if [ -z "$1" ]; then printf empty; elif printf '%s' "$1" | grep -Eq '^[0-9a-f]{7,64}$'; then printf hex-7-64; else printf other; fi; }
 architecture_value_shape() { if [ -z "$1" ]; then printf empty; elif [ "$1" = amd64 ]; then printf amd64; else printf other; fi; }
@@ -128,6 +148,9 @@ if [ "${KEEPLING_REMOTE_PREPARE_DOCKER_BOUNDARY_TEST:-}" = yes ]; then
   printf '%s\n' 'REMOTE_PREPARE_STAGE=ready' >&3
   exit 0
 fi
+
+stage provenance 39
+validate_recovery_provenance || exit "$failure_code"
 
 if [ "${KEEPLING_REMOTE_PREPARE_TEST_MODE:-}" = yes ]; then
   if [ "${KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ID+x}" = x ]; then observed_test_id=$KEEPLING_REMOTE_PREPARE_TEST_OBSERVED_ID; else observed_test_id=$expected_config_image_id; fi
