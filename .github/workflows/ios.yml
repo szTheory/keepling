@@ -16,6 +16,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -26,11 +30,9 @@ jobs:
     # `// swift-tools-version: 6.3` and the macos-15 image's default Xcode
     # ships Swift 6.1. D-06 already mandates the Xcode 26.6 floor.
     runs-on: macos-26
-    # Window 102 measured the accessibility lane alone at 44 minutes locally,
-    # and this job runs it plus twenty-odd siblings plus a second invocation
-    # for server-driven-sim. 50 would have timed out on the one lane that was
-    # already known to be slow.
-    timeout-minutes: 150
+    # Recent hosted attempts took 72–78 minutes. Keep a 22-minute margin while
+    # returning the account-wide macOS slot sooner if the simulator hangs.
+    timeout-minutes: 100
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
@@ -143,10 +145,34 @@ jobs:
             | tee -a "$RUNNER_TEMP/ios-simulator.txt"
           ./tooling/verify-privacy.sh "$RUNNER_TEMP/ios-simulator.txt"
 
+      # xcodebuild prints the result-bundle path in its output, but the phase
+      # gate emits only a bounded excerpt on failure. Preserve the referenced
+      # bundles while this runner still has them so XCTest issue details and
+      # attachments remain available in the same artifact as the verdicts.
+      - name: Preserve XCTest result bundles from failed lanes
+        if: always()
+        run: |
+          set -eu
+          evidence="$RUNNER_TEMP/ios-simulator.txt"
+          results="$RUNNER_TEMP/failed-xcode-results"
+          mkdir -p "$results"
+          [ -f "$evidence" ] || exit 0
+          while IFS= read -r bundle; do
+            if [ -d "$bundle" ]; then
+              ditto "$bundle" "$results/$(basename "$bundle")"
+              echo "Preserved failed XCTest result bundle: $(basename "$bundle")"
+            else
+              echo "::warning::XCTest result bundle referenced in the failure log is missing: $bundle"
+            fi
+          done < <(grep -Eo "$HOME/Library/Developer/Xcode/DerivedData/[^[:space:]]+\\.xcresult" "$evidence" || true)
+
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: ios-simulator-evidence
-          path: ${{ runner.temp }}/ios-simulator.txt
+          path: |
+            ${{ runner.temp }}/ios-simulator.txt
+            ${{ runner.temp }}/failed-xcode-results
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 90
