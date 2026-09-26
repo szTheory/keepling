@@ -1,9 +1,23 @@
 #!/usr/bin/env sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
 TOFU_BIN=${TOFU_BIN:-}
+. "$repository_root/tooling/phase-2-credentials.sh"
 
 die() {
   echo "Host replacement verification failed: $*" >&2
@@ -15,9 +29,7 @@ require_command() {
 }
 
 require_credentials() {
-  [ -n "${HCLOUD_TOKEN:-}" ] || die "HCLOUD_TOKEN is missing"
-  [ -n "${KEEPLING_DNS_ZONE_ID:-}" ] || die "KEEPLING_DNS_ZONE_ID is missing"
-  [ -n "${KEEPLING_DNS_RECORD_NAME:-}" ] || die "KEEPLING_DNS_RECORD_NAME is missing"
+  phase2_credentials_load_transient || die "external JSON credential references are invalid"
   require_credential_file() {
     variable=$1
     path=$2
@@ -528,13 +540,14 @@ stage_candidate_bundle() {
 
   image_source=${KEEPLING_BUNDLE_IMAGE_SOURCE:-}
   recovery_source=${KEEPLING_BUNDLE_RECOVERY_SOURCE:-}
+  provenance_source=${KEEPLING_BUNDLE_PROVENANCE_SOURCE:-}
   credential_source=${KEEPLING_BUNDLE_LOGIN_CREDENTIAL_SOURCE:-}
   compose_source=${KEEPLING_BUNDLE_COMPOSE_SOURCE:-}
   caddy_source=${KEEPLING_BUNDLE_CADDY_SOURCE:-}
   override_source=${KEEPLING_BUNDLE_OVERRIDE_SOURCE:-}
   runner_source=${KEEPLING_BUNDLE_RUNNER_SOURCE:-}
   for source_file in \
-    "$image_source" "$recovery_source" "$credential_source" \
+    "$image_source" "$recovery_source" "$provenance_source" "$credential_source" \
     "$compose_source" "$caddy_source" "$override_source" "$runner_source"; do
     [ -f "$source_file" ] && [ -r "$source_file" ] || die "candidate bundle source is unreadable"
   done
@@ -542,28 +555,29 @@ stage_candidate_bundle() {
   umask 077
   install -m 0600 "$image_source" "$destination/image.tar.gz"
   install -m 0600 "$recovery_source" "$destination/recovery.dump"
+  install -m 0600 "$provenance_source" "$destination/recovery.provenance.json"
   install -m 0600 "$credential_source" "$destination/new-login-credential"
   install -m 0600 "$compose_source" "$destination/compose.yml"
   install -m 0600 "$caddy_source" "$destination/Caddyfile"
   install -m 0600 "$override_source" "$destination/compose-override.yml"
   install -m 0700 "$runner_source" "$destination/remote-prepare.sh"
 
-  [ "$(find "$destination" -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d ' ')" -eq 7 ] ||
+  [ "$(find "$destination" -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d ' ')" -eq 8 ] ||
     die "candidate bundle is incomplete"
 
   manifest_tmp=$(mktemp "$(dirname "$manifest_file")/.candidate-bundle-manifest.XXXXXX")
   trap 'rm -f -- "$manifest_tmp"' EXIT HUP INT TERM
   files_json='[]'
-  for name in Caddyfile compose-override.yml compose.yml image.tar.gz new-login-credential recovery.dump remote-prepare.sh; do
+  for name in Caddyfile compose-override.yml compose.yml image.tar.gz new-login-credential recovery.dump recovery.provenance.json remote-prepare.sh; do
     file="$destination/$name"
     sha256=$(shasum -a 256 "$file" | awk '{print $1}')
-    mode=$(stat -f '%Lp' "$file" 2>/dev/null || stat -c '%a' "$file")
+    mode=$(portable_stat '%Lp' "$file" 2>/dev/null || stat -c '%a' "$file")
     size=$(wc -c <"$file" | tr -d ' ')
     files_json=$(printf '%s' "$files_json" | jq \
       --arg name "$name" --arg sha256 "$sha256" --arg mode "$mode" --argjson size "$size" \
       '. + [{name:$name,sha256:$sha256,mode:$mode,size:$size}]')
   done
-  printf '%s' "$files_json" | jq '{version:1,complete:(length == 7),files:.}' >"$manifest_tmp"
+  printf '%s' "$files_json" | jq '{version:1,complete:(length == 8),files:.}' >"$manifest_tmp"
   chmod 600 "$manifest_tmp"
   mv "$manifest_tmp" "$manifest_file"
   manifest_tmp=
@@ -973,7 +987,19 @@ verify_candidate_sequence() (
   }
   trap cleanup_sequence EXIT HUP INT TERM
 
-  "$bootstrap_runner"
+  if "$bootstrap_runner"; then
+    :
+  else
+    bootstrap_status=$?
+    if [ "$bootstrap_status" -eq 75 ] &&
+      "$repository_root/tooling/phase-2-live-orchestration.sh" --validate-host-trust-pending "${KEEPLING_LIVE_ORCHESTRATION_FILE:-}" >/dev/null 2>&1; then
+      trap - EXIT HUP INT TERM
+      echo "Host replacement sequence paused: verify candidate SSH identity out of band, then resume the same run"
+      exit 75
+    fi
+    [ "$bootstrap_status" -ne 75 ] || bootstrap_status=1
+    exit "$bootstrap_status"
+  fi
   "$image_runner"
   "$restore_runner"
   "$runtime_runner"
@@ -1017,7 +1043,7 @@ verify_cloud_init_preflight() (
   if ! grep -F 'systemctl enable --now docker.service' "$rendered" >/dev/null ||
     ! grep -F 'systemctl is-active --quiet docker.service' "$rendered" >/dev/null ||
     ! grep -F '/var/lib/keepling/bootstrap-complete.json' "$rendered" >/dev/null ||
-    ! grep -F '{"version":1,"status":"complete"}' "$rendered" >/dev/null; then
+    ! grep -F '{"version":1,"status":"complete","runtime_probe_sha256":' "$rendered" >/dev/null; then
     die "rendered cloud-config is missing the Keepling completion contract"
   fi
   "$schema_bin" schema --config-file "$rendered" >/dev/null ||
@@ -1057,10 +1083,12 @@ dry_run() {
   ./tooling/test-host-bootstrap.sh >/dev/null
   ./tooling/test-host-bootstrap-diagnostics.sh >/dev/null
   ./tooling/test-provider-ownership.sh >/dev/null
+  ./tooling/test-live-lifecycle-adapters.sh >/dev/null
   ./tooling/test-plan-shape-contract.sh >/dev/null
   ./tooling/test-resolved-plan-contract.sh >/dev/null
   ./tooling/test-image-archive-contract.sh >/dev/null
   ./tooling/test-remote-prepare-observability.sh >/dev/null
+  ./tooling/test-pin-verified-ssh-host-key.sh >/dev/null
   ./tooling/test-host-replacement-sequence.sh >/dev/null
   verify_selection
   verify_state_contract
@@ -1069,14 +1097,18 @@ dry_run() {
 
 credentialed_preflight() {
   require_credentials
+  trap 'phase2_credentials_cleanup_transient' EXIT HUP INT TERM
   verify_selection
   verify_network_graph_contract
   workspace=$(mktemp -d "${TMPDIR:-/tmp}/keepling-replacement-preflight.XXXXXX")
-  trap 'rm -rf -- "$workspace"' EXIT HUP INT TERM
+  trap 'phase2_credentials_cleanup_transient; rm -rf -- "$workspace"' EXIT HUP INT TERM
   chmod 700 "$workspace"
+  curl_config="$workspace/curl.conf"
+  umask 077
+  printf 'header = "Authorization: Bearer %s"\n' "$HCLOUD_TOKEN" >"$curl_config"
 
   catalog=$(curl --silent --show-error --fail \
-    --header "Authorization: Bearer $HCLOUD_TOKEN" \
+    --config "$curl_config" \
     'https://api.hetzner.cloud/v1/server_types?per_page=50')
   selected_type=$(jq -r '.server_type' infra/tofu/hetzner/selection.json)
   printf '%s' "$catalog" | jq -e --arg selected "$selected_type" \
@@ -1084,30 +1116,186 @@ credentialed_preflight() {
     die "selected x86 catalog entry is unavailable"
 
   resources=$(curl --silent --show-error --fail \
-    --header "Authorization: Bearer $HCLOUD_TOKEN" \
+    --config "$curl_config" \
     'https://api.hetzner.cloud/v1/servers?per_page=50')
   printf '%s' "$resources" | jq -e '.servers | length == 0' >/dev/null ||
     die "provider project is not empty; replacement ownership would be ambiguous"
+  rm -f -- "$curl_config"
 
   ./infra/dns/cloudflare.sh capture "$workspace/original-dns.json" >/dev/null
   jq -e '.content == "192.0.2.1" and .proxied == false and .ttl == 300' "$workspace/original-dns.json" >/dev/null ||
     die "safe pending-zone baseline changed"
 
+  phase2_credentials_cleanup_transient
+  trap - EXIT HUP INT TERM
+  rm -rf -- "$workspace"
   echo "Host replacement credentialed preflight passed: authority is readable, provider project is empty, catalog candidate exists, and exact DNS rollback state is capturable"
 }
 
-credentialed_apply() {
-  require_credentials
+require_credentialed_arm() {
   [ "${KEEPLING_ALLOW_BILLABLE_APPLY:-}" = yes ] ||
     die "billable provisioning requires KEEPLING_ALLOW_BILLABLE_APPLY=yes after an explicit checkpoint"
   [ "${KEEPLING_ALLOW_LIVE_DNS_MUTATION:-}" = yes ] ||
     die "DNS mutation requires KEEPLING_ALLOW_LIVE_DNS_MUTATION=yes after an explicit checkpoint"
-  jq -e '.status == "benchmark-verified" and .benchmark.projected_restore_seconds <= .acceptance_limits.maximum_full_host_seconds' \
-    infra/tofu/hetzner/selection.json >/dev/null ||
-    die "billable apply is refused until a disposable candidate records a passing storage/restore benchmark"
+  case "${KEEPLING_LIVE_CHANGE_TRIGGER:-}" in
+    [a-z0-9][a-z0-9._-][a-z0-9._-][a-z0-9._-][a-z0-9._-][a-z0-9._-][a-z0-9._-][a-z0-9._-]* ) ;;
+    *) die "a bounded named KEEPLING_LIVE_CHANGE_TRIGGER is required before credentialed execution" ;;
+  esac
+}
+
+bind_live_orchestration_bundle() {
+  allow_existing_workspace=${1:-no}
+  bundle=${KEEPLING_LIVE_ORCHESTRATION_FILE:-}
+  [ -n "$bundle" ] || die "a private KEEPLING_LIVE_ORCHESTRATION_FILE is required"
+  if [ "$allow_existing_workspace" = yes ]; then
+    ./tooling/phase-2-live-orchestration.sh --validate "$bundle" yes >/dev/null || die "private orchestration bundle validation failed"
+  else
+    ./tooling/phase-2-live-orchestration.sh --validate "$bundle" >/dev/null ||
+    die "private orchestration bundle validation failed"
+  fi
+  for stage in bootstrap image restore runtime semantic dns teardown; do
+    exact_runner="$repository_root/tooling/phase-2-live-runners/$stage"
+    case "$stage" in
+      bootstrap) ambient_runner=${KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER:-} ;;
+      image) ambient_runner=${KEEPLING_SEQUENCE_IMAGE_RUNNER:-} ;;
+      restore) ambient_runner=${KEEPLING_SEQUENCE_RESTORE_RUNNER:-} ;;
+      runtime) ambient_runner=${KEEPLING_SEQUENCE_RUNTIME_RUNNER:-} ;;
+      semantic) ambient_runner=${KEEPLING_SEQUENCE_SEMANTIC_RUNNER:-} ;;
+      dns) ambient_runner=${KEEPLING_SEQUENCE_DNS_RUNNER:-} ;;
+      teardown) ambient_runner=${KEEPLING_SEQUENCE_TEARDOWN_RUNNER:-} ;;
+    esac
+    [ -z "$ambient_runner" ] || [ "$ambient_runner" = "$exact_runner" ] ||
+      die "ambient sequence runner override refused"
+  done
+  KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER="$repository_root/tooling/phase-2-live-runners/bootstrap"
+  KEEPLING_SEQUENCE_IMAGE_RUNNER="$repository_root/tooling/phase-2-live-runners/image"
+  KEEPLING_SEQUENCE_RESTORE_RUNNER="$repository_root/tooling/phase-2-live-runners/restore"
+  KEEPLING_SEQUENCE_RUNTIME_RUNNER="$repository_root/tooling/phase-2-live-runners/runtime"
+  KEEPLING_SEQUENCE_SEMANTIC_RUNNER="$repository_root/tooling/phase-2-live-runners/semantic"
+  KEEPLING_SEQUENCE_DNS_RUNNER="$repository_root/tooling/phase-2-live-runners/dns"
+  KEEPLING_SEQUENCE_TEARDOWN_RUNNER="$repository_root/tooling/phase-2-live-runners/teardown"
+  export KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER KEEPLING_SEQUENCE_IMAGE_RUNNER
+  export KEEPLING_SEQUENCE_RESTORE_RUNNER KEEPLING_SEQUENCE_RUNTIME_RUNNER
+  export KEEPLING_SEQUENCE_SEMANTIC_RUNNER KEEPLING_SEQUENCE_DNS_RUNNER
+  export KEEPLING_SEQUENCE_TEARDOWN_RUNNER
+  export KEEPLING_LIVE_ORCHESTRATION_FILE="$bundle"
+}
+
+live_lifecycle_registry() {
+  [ -x ./tooling/remote-prepare-host.sh ] &&
+    printf '%s\n' 'bootstrap|remote-bootstrap|ready' ||
+    printf '%s\n' 'bootstrap|remote-bootstrap|missing'
+  [ -x ./tooling/transfer-trusted-candidate.sh ] &&
+    printf '%s\n' 'image|exact-archive-transfer|ready' ||
+    printf '%s\n' 'image|exact-archive-transfer|missing'
+  [ -x ./tooling/recovery-source-b2.sh ] &&
+    printf '%s\n' 'primary-restore|b2-primary-fetch-and-verify|ready' ||
+    printf '%s\n' 'primary-restore|b2-primary-fetch-and-verify|missing'
+  [ -x ./tooling/recovery-source-r2.sh ] &&
+    printf '%s\n' 'mirror-restore|r2-mirror-fetch-and-verify|ready' ||
+    printf '%s\n' 'mirror-restore|r2-mirror-fetch-and-verify|missing'
+  [ -x ./tooling/remote-runtime-probe.sh ] &&
+    printf '%s\n' 'runtime|remote-runtime-readiness|ready' ||
+    printf '%s\n' 'runtime|remote-runtime-readiness|missing'
+  [ -x ./tooling/remote-semantic-proof.sh ] &&
+    printf '%s\n' 'semantic|remote-login-read-write-undo|ready' ||
+    printf '%s\n' 'semantic|remote-login-read-write-undo|missing'
+  [ -x ./infra/dns/cloudflare.sh ] && [ -x ./infra/dns/probe-propagation.sh ] &&
+    printf '%s\n' 'dns|cloudflare-propagation-and-rollback|ready' ||
+    printf '%s\n' 'dns|cloudflare-propagation-and-rollback|missing'
+  [ -x ./tooling/destroy-owned-provider.sh ] &&
+    printf '%s\n' 'teardown|exact-owned-provider-destroy|ready' ||
+    printf '%s\n' 'teardown|exact-owned-provider-destroy|missing'
+}
+
+# Source adapters are necessary but not sufficient: credentialed execution
+# invokes seven caller-selected runners. Keep that distinction explicit at
+# readiness time so an armed run is never labelled attempted with missing local
+# orchestration.
+live_sequence_registry() {
+  for stage in bootstrap image restore runtime semantic dns teardown; do
+    case "$stage" in
+      bootstrap) runner=${KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER:-} ;;
+      image) runner=${KEEPLING_SEQUENCE_IMAGE_RUNNER:-} ;;
+      restore) runner=${KEEPLING_SEQUENCE_RESTORE_RUNNER:-} ;;
+      runtime) runner=${KEEPLING_SEQUENCE_RUNTIME_RUNNER:-} ;;
+      semantic) runner=${KEEPLING_SEQUENCE_SEMANTIC_RUNNER:-} ;;
+      dns) runner=${KEEPLING_SEQUENCE_DNS_RUNNER:-} ;;
+      teardown) runner=${KEEPLING_SEQUENCE_TEARDOWN_RUNNER:-} ;;
+    esac
+    if [ -x "$runner" ]; then
+      printf '%s\n' "sequence-$stage|credentialed-sequence-runner|ready"
+    else
+      printf '%s\n' "sequence-$stage|credentialed-sequence-runner|missing"
+    fi
+  done
+}
+
+validate_live_lifecycle_registry() {
+  registry_file=$1
+  [ -r "$registry_file" ] || die "live lifecycle registry is unreadable"
+  expected_registry=$(live_lifecycle_registry)
+  actual_registry=$(cat "$registry_file")
+  [ "$actual_registry" = "$expected_registry" ] ||
+    die "live lifecycle registry is incomplete, duplicated, or unknown"
+}
+
+live_readiness() {
+  require_credentialed_arm
+  registry=$(mktemp "${TMPDIR:-/tmp}/keepling-live-lifecycle.XXXXXX")
+  trap 'rm -f -- "$registry"' EXIT HUP INT TERM
+  live_lifecycle_registry >"$registry"
+  validate_live_lifecycle_registry "$registry"
+  missing=
+  while IFS='|' read -r stage contract state; do
+    printf '%s\n' "Host replacement readiness: stage=$stage status=$state contract=$contract"
+    [ "$state" = ready ] || missing="${missing:+$missing,}$stage"
+  done <"$registry"
+
+  sequence_registry=$(mktemp "${TMPDIR:-/tmp}/keepling-live-sequence.XXXXXX")
+  trap 'rm -f -- "$registry" "$sequence_registry"' EXIT HUP INT TERM
+  live_sequence_registry >"$sequence_registry"
+  while IFS='|' read -r stage contract state; do
+    printf '%s\n' "Host replacement readiness: stage=$stage status=$state contract=$contract"
+    [ "$state" = ready ] || missing="${missing:+$missing,}$stage"
+  done <"$sequence_registry"
+
+  [ -z "$missing" ] || die "live runner readiness is incomplete; missing stages=$missing"
+  echo "Host replacement readiness passed: every live lifecycle contract is executable"
+}
+
+credentialed_apply() {
+  credentialed_mode=${1:-run}
+  require_credentialed_arm
+  [ "${KEEPLING_ALLOW_PROVIDER_DESTROY:-}" = yes ] ||
+    die "exact-owned destroy requires KEEPLING_ALLOW_PROVIDER_DESTROY=yes after an explicit checkpoint"
+  case "$credentialed_mode" in run) bind_live_orchestration_bundle;; *) bind_live_orchestration_bundle yes;; esac
+  require_credentials
+  trap 'phase2_credentials_cleanup_transient' EXIT HUP INT TERM
+  if [ "$credentialed_mode" != abort-host-trust ]; then
+    jq -e '.status == "benchmark-verified" and (.benchmark.projected_restore_seconds | type == "number") and .benchmark.projected_restore_seconds <= .acceptance_limits.maximum_full_host_seconds' \
+      infra/tofu/hetzner/selection.json >/dev/null ||
+      die "billable apply is refused until a disposable candidate records a passing storage/restore benchmark"
+  fi
   [ -r "${KEEPLING_TOFU_STATE_CREDENTIAL_FILE:-}" ] ||
     die "separately scoped mutable OpenTofu state authority is required"
-  die "credentialed apply is intentionally sealed until the billable benchmark checkpoint is approved"
+  case "$credentialed_mode" in
+    run)
+      live_readiness
+      verify_candidate_sequence
+      ;;
+    resume-host-trust)
+      [ -n "${KEEPLING_HOST_KEY_FINGERPRINT:-}" ] || { [ -r /dev/tty ] && [ -t 0 ]; } || die 'host-key resume needs a terminal prompt or KEEPLING_HOST_KEY_FINGERPRINT'
+      export KEEPLING_RESUME_HOST_TRUST=yes
+      live_readiness
+      verify_candidate_sequence
+      ;;
+    abort-host-trust)
+      ./tooling/phase-2-live-orchestration.sh --validate-host-trust-pending "$KEEPLING_LIVE_ORCHESTRATION_FILE" >/dev/null || die 'pending host-trust checkpoint is invalid; exact-owned abort is refused'
+      "$KEEPLING_SEQUENCE_TEARDOWN_RUNNER"
+      ;;
+    *) die 'unknown credentialed operation' ;;
+  esac
 }
 
 for command in curl jq; do require_command "$command"; done
@@ -1140,12 +1328,17 @@ case "${1:-}" in
     resolve_image_archive_contract "$2" "$3"
     ;;
   --candidate-sequence) [ "$#" -eq 1 ] || die "usage: $0 --candidate-sequence"; verify_candidate_sequence ;;
+  --live-readiness) [ "$#" -eq 1 ] || die "usage: $0 --live-readiness"; live_readiness ;;
+  --print-live-registry) [ "$#" -eq 1 ] || die "usage: $0 --print-live-registry"; live_lifecycle_registry ;;
+  --validate-live-registry) [ "$#" -eq 2 ] || die "usage: $0 --validate-live-registry REGISTRY"; validate_live_lifecycle_registry "$2" ;;
   --credentialed)
     case "${2:-}" in
       --preflight) [ "$#" -eq 2 ] || die "usage: $0 --credentialed --preflight"; credentialed_preflight ;;
-      '') credentialed_apply ;;
-      *) die "usage: $0 --credentialed [--preflight]" ;;
+      '') [ "$#" -eq 1 ] || die "usage: $0 --credentialed [--preflight|--resume-host-trust|--abort-host-trust]"; credentialed_apply ;;
+      --resume-host-trust) [ "$#" -eq 2 ] || die "usage: $0 --credentialed --resume-host-trust"; credentialed_apply resume-host-trust ;;
+      --abort-host-trust) [ "$#" -eq 2 ] || die "usage: $0 --credentialed --abort-host-trust"; credentialed_apply abort-host-trust ;;
+      *) die "usage: $0 --credentialed [--preflight|--resume-host-trust|--abort-host-trust]" ;;
     esac
     ;;
-  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID | --validate-plan-shape PLAN_JSON | --plan-shape-self-test | --validate-state-addresses STATE_LIST | --resolve-plan-architecture PLAN OUTPUT | --resolve-image-archive ARCHIVE OUTPUT | --candidate-sequence | --credentialed [--preflight]" ;;
+  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID | --validate-plan-shape PLAN_JSON | --plan-shape-self-test | --validate-state-addresses STATE_LIST | --resolve-plan-architecture PLAN OUTPUT | --resolve-image-archive ARCHIVE OUTPUT | --candidate-sequence | --live-readiness | --print-live-registry | --validate-live-registry REGISTRY | --credentialed [--preflight|--resume-host-trust|--abort-host-trust]" ;;
 esac

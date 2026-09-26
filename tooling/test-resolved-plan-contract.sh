@@ -1,5 +1,18 @@
 #!/usr/bin/env sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
@@ -15,7 +28,7 @@ jq -e 'has("target_architecture") | not' "$tfvars" >/dev/null || die "default-om
 
 resolved=$fixture_root/resolved.json
 ./tooling/verify-host-replacement.sh --resolve-plan-architecture "$valid_plan" "$resolved" >/dev/null
-[ "$(stat -f '%Lp' "$resolved" 2>/dev/null || stat -c '%a' "$resolved")" = 600 ] || die "resolved output is not owner-only"
+[ "$(portable_stat '%Lp' "$resolved" 2>/dev/null || stat -c '%a' "$resolved")" = 600 ] || die "resolved output is not owner-only"
 [ "$(jq -r '.target_architecture' "$resolved")" = x86_64 ] || die "evaluated default was not preserved"
 jq -e 'keys == ["target_architecture","version"] and .version == 1' "$resolved" >/dev/null || die "resolved output is not minimal"
 
@@ -32,7 +45,7 @@ chmod 700 "$effect_root/etc/keepling/secrets" "$effect_root/etc/keepling/recover
 chmod 755 "$effect_root/srv/keepling" "$effect_root/usr/local/sbin/keepling-bootstrap" "$fixture_root/systemctl" "$fixture_root/cloud-init"
 chmod 600 "$effect_root/var/lib/keepling/bootstrap-complete.json"
 chmod 644 "$effect_root/etc/keepling/release.env"
-effect_owner=$(stat -f '%Su:%Sg' "$effect_root" 2>/dev/null || stat -c '%U:%G' "$effect_root")
+effect_owner=$(portable_stat '%Su:%Sg' "$effect_root" 2>/dev/null || stat -c '%U:%G' "$effect_root")
 KEEPLING_EXPECTED_OCI_DIGEST=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
 KEEPLING_EXPECTED_ARCHITECTURE=$(jq -er '.target_architecture' "$resolved") \
 KEEPLING_EFFECT_TEST_MODE=yes KEEPLING_EFFECT_ROOT="$effect_root" \

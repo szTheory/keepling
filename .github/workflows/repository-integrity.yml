@@ -150,8 +150,10 @@ jobs:
 
   phase2-runtime:
     name: phase2-${{ matrix.lane }}
-    runs-on: macos-15
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      KEEPLING_IMAGE_PLATFORM: linux/amd64
     strategy:
       fail-fast: false
       matrix:
@@ -169,9 +171,19 @@ jobs:
             apps/server/_build
             node_modules
           key: phase2-${{ runner.os }}-${{ matrix.lane }}-${{ hashFiles('tooling/runtime-versions.env', 'apps/server/mix.lock', 'pnpm-lock.yaml') }}
+      - name: Install asdf
+        run: |
+          if [ ! -d "$HOME/.asdf/.git" ]; then
+            scratch="$(mktemp -d)"
+            git clone https://github.com/asdf-vm/asdf.git "$scratch/asdf" --branch v0.14.1
+            mkdir -p "$HOME/.asdf"
+            cp -R "$scratch/asdf/." "$HOME/.asdf/"
+            rm -rf "$scratch"
+          fi
+          echo "$HOME/.asdf/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.asdf/shims" >> "$GITHUB_PATH"
       - name: Provision exact repository runtimes
         run: |
-          brew list asdf >/dev/null 2>&1 || brew install asdf
           ./tooling/runtime-preflight.sh --provision
           corepack enable
           pnpm install --frozen-lockfile

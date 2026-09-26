@@ -15,8 +15,8 @@ list_lanes() {
   echo "contracts-compatibility    generated contracts and current/previous skew matrix"
   echo "image-compose-deploy       disposable OCI, Compose, migration, and retry proof"
   echo "backup-restore             backup policy and three isolated restore fixtures"
-  echo "opentofu-host-fixtures     pinned provider graph and hermetic live-boundary regressions"
-  echo "privacy                    producer redaction tests and aggregate hostile scan"
+  echo "opentofu-host-fixtures     pinned provider graph and sealed generated-bundle regressions"
+  echo "privacy                    producer redaction, Caddy boundary, and private-Compose proof"
   echo "live-host-dns-acceptance   credentialed outer acceptance; runs only with every input present"
 }
 
@@ -139,19 +139,31 @@ lane_backup_restore() {
   KEEPLING_RESTORE_SEED="$phase_seed" ./tooling/verify-restore.sh --fixture historical-pitr
 }
 lane_opentofu_host_fixtures() {
+  ./tooling/test-phase-2-credentials.sh
+  ./tooling/test-phase-2-live-setup.sh
+  ./tooling/test-prepare-synthetic-recovery.sh
+  ./infra/dns/cloudflare.sh self-test
   ./tooling/test-host-bootstrap.sh
   ./tooling/test-host-bootstrap-diagnostics.sh
   ./tooling/test-provider-ownership.sh
+  ./tooling/test-live-lifecycle-adapters.sh
   ./tooling/test-plan-shape-contract.sh
   ./tooling/test-resolved-plan-contract.sh
   ./tooling/test-image-archive-contract.sh
   ./tooling/test-remote-prepare-observability.sh
+  ./tooling/test-host-replacement-readiness.sh
   ./tooling/test-host-replacement-sequence.sh
+  ./tooling/test-phase-2-live-orchestration.sh
+  ./tooling/test-pin-verified-ssh-host-key.sh
+  ./tooling/test-recovery-source-adapters.sh
+  ./tooling/test-trusted-transfer-remote-adapters.sh
 }
 lane_privacy() {
   MIX_ENV=test ./tooling/runtime-preflight.sh --exec -- sh -c \
     'cd apps/server && mix test --seed "$1" test/keepling/telemetry_redaction_test.exs test/keepling/ops_redaction_test.exs' sh "$phase_seed"
   ./tooling/verify-privacy.sh --self-test
+  ./tooling/verify-privacy.sh --caddy-boundary
+  ./tooling/verify-compose.sh
 }
 
 report_deferred_live_acceptance() {
@@ -172,14 +184,21 @@ report_deferred_live_acceptance() {
 # change trigger is in this list deliberately: a real host replacement mutates
 # live DNS and provisions real infrastructure, so it must never run as a side
 # effect of a schedule -- only as a reviewed, named act.
-live_acceptance_inputs="HCLOUD_TOKEN
-CLOUDFLARE_API_TOKEN_FILE
-KEEPLING_DNS_ZONE_ID
-KEEPLING_DNS_RECORD_NAME
+live_acceptance_inputs="KEEPLING_HETZNER_CREDENTIAL_FILE
+KEEPLING_CLOUDFLARE_DNS_CREDENTIAL_FILE
 KEEPLING_SSH_PUBLIC_KEY_FILE
 KEEPLING_BACKUP_PRIMARY_CREDENTIAL_FILE
 KEEPLING_BACKUP_MIRROR_CREDENTIAL_FILE
 KEEPLING_BACKUP_CIPHER_FILE
+KEEPLING_TOFU_STATE_CREDENTIAL_FILE
+KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER
+KEEPLING_SEQUENCE_IMAGE_RUNNER
+KEEPLING_SEQUENCE_RESTORE_RUNNER
+KEEPLING_SEQUENCE_RUNTIME_RUNNER
+KEEPLING_SEQUENCE_SEMANTIC_RUNNER
+KEEPLING_SEQUENCE_DNS_RUNNER
+KEEPLING_SEQUENCE_TEARDOWN_RUNNER
+KEEPLING_LIVE_ORCHESTRATION_FILE
 KEEPLING_LIVE_CHANGE_TRIGGER"
 
 # THE ANTI-LOOPHOLE RULE FOR THIS LANE: absence of any input is NON_PASSING,
@@ -202,7 +221,8 @@ lane_live_host_dns_acceptance() {
   fi
 
   printf '%s\n' "lane=live-host-dns-acceptance LIVE_ACCEPTANCE_STATUS=ATTEMPTED trigger=$KEEPLING_LIVE_CHANGE_TRIGGER"
-  ./tooling/verify-host-replacement.sh
+  ./tooling/verify-host-replacement.sh --live-readiness
+  ./tooling/verify-host-replacement.sh --credentialed
 }
 
 run_lanes() {
@@ -256,15 +276,15 @@ run_lanes() {
   esac
   case "$selected_lane" in
     all | opentofu-host-fixtures)
-      run_lane opentofu-host-fixtures "$phase_seed" 8 \
-        'infra/tofu/hetzner/versions.tf,infra/tofu/hetzner/.terraform.lock.hcl,infra/tofu/hetzner/replace_host.tftest.hcl,tooling/verify-host-replacement.sh,tooling/test-image-archive-contract.sh,tooling/test-remote-prepare-observability.sh' \
-        'eight hermetic OpenTofu/bootstrap/archive/teardown/DNS-fence fixture commands' lane_opentofu_host_fixtures ;;
+      run_lane opentofu-host-fixtures "$phase_seed" 18 \
+        'infra/tofu/hetzner/versions.tf,infra/tofu/hetzner/.terraform.lock.hcl,infra/tofu/hetzner/main.tf,infra/tofu/hetzner/cloud-init.yml,infra/tofu/hetzner/replace_host.tftest.hcl,infra/credentials/templates/phase-2-live-orchestration.env.example,infra/dns/cloudflare.sh,tooling/phase-2-credentials.sh,tooling/phase-2-tofu-state.sh,tooling/phase-2-live-setup.sh,tooling/phase-2-live-stage-actions.sh,tooling/verify-host-replacement.sh,tooling/verify-deploy.sh,tooling/export-verified-image-archive.sh,tooling/phase-2-live-orchestration-env.sh,tooling/phase-2-live-orchestration.sh,tooling/phase-2-live-runners/bootstrap,tooling/phase-2-live-runners/image,tooling/phase-2-live-runners/restore,tooling/phase-2-live-runners/runtime,tooling/phase-2-live-runners/semantic,tooling/phase-2-live-runners/dns,tooling/phase-2-live-runners/teardown,tooling/transfer-trusted-candidate.sh,tooling/remote-prepare-host.sh,tooling/remote-runtime-probe.sh,tooling/remote-semantic-proof.sh,tooling/prepare-synthetic-recovery.sh,tooling/test-prepare-synthetic-recovery.sh,tooling/test-phase-2-live-setup.sh,tooling/test-image-archive-contract.sh,tooling/test-remote-prepare-observability.sh,tooling/test-host-replacement-readiness.sh,tooling/test-host-replacement-sequence.sh,tooling/test-phase-2-live-orchestration.sh,tooling/test-trusted-transfer-remote-adapters.sh,tooling/recovery-source-common.sh,tooling/recovery-source-b2.sh,tooling/recovery-source-r2.sh,tooling/test-recovery-source-adapters.sh,tooling/test-phase-2.sh' \
+        'eighteen hermetic credential-boundary, sealed-bundle, synthetic-recovery, isolated-DNS-adapter, OpenTofu, archive, remote-proof, teardown, and recovery-source fixture checks' lane_opentofu_host_fixtures ;;
   esac
   case "$selected_lane" in
     all | privacy)
-      run_lane privacy "$phase_seed" "$((privacy_cases + 10))" \
-        'packages/contracts/vectors/redaction.json,apps/server/test/keepling/telemetry_redaction_test.exs,apps/server/test/keepling/ops_redaction_test.exs,tooling/verify-privacy.sh' \
-        'mix test telemetry_redaction_test.exs ops_redaction_test.exs && verify-privacy.sh --self-test' lane_privacy ;;
+      run_lane privacy "$phase_seed" "$((privacy_cases + 15))" \
+        'packages/contracts/vectors/redaction.json,apps/server/test/keepling/telemetry_redaction_test.exs,apps/server/test/keepling/ops_redaction_test.exs,infra/caddy/Caddyfile,infra/compose/compose.yml,tooling/verify-privacy.sh,tooling/verify-compose.sh' \
+        'mix test telemetry_redaction_test.exs ops_redaction_test.exs && verify-privacy.sh --self-test --caddy-boundary && verify-compose.sh' lane_privacy ;;
   esac
 
   if [ "$selected_lane" = all ]; then

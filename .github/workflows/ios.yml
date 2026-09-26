@@ -16,6 +16,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -26,11 +30,9 @@ jobs:
     # `// swift-tools-version: 6.3` and the macos-15 image's default Xcode
     # ships Swift 6.1. D-06 already mandates the Xcode 26.6 floor.
     runs-on: macos-26
-    # Window 102 measured the accessibility lane alone at 44 minutes locally,
-    # and this job runs it plus twenty-odd siblings plus a second invocation
-    # for server-driven-sim. 50 would have timed out on the one lane that was
-    # already known to be slow.
-    timeout-minutes: 150
+    # Recent hosted attempts took 72–78 minutes. Keep a 22-minute margin while
+    # returning the account-wide macOS slot sooner if the simulator hangs.
+    timeout-minutes: 100
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
@@ -143,10 +145,73 @@ jobs:
             | tee -a "$RUNNER_TEMP/ios-simulator.txt"
           ./tooling/verify-privacy.sh "$RUNNER_TEMP/ios-simulator.txt"
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      # The iOS phase runner extracts text-only test results immediately. Keep
+      # any remaining .xcresult local to the runner because bundles can contain
+      # screenshots; this step extracts a text report from leftovers and never
+      # includes the bundle itself in the artifact.
+      - name: Extract XCTest reports from leftover result bundles
         if: always()
+        run: |
+          set -eu
+          evidence="$RUNNER_TEMP/ios-simulator.txt"
+          results="$RUNNER_TEMP/failed-xcode-results"
+          mkdir -p "$results"
+          extract_report() {
+            bundle="$1"
+            report="$results/$(basename "$bundle" .xcresult)-tests.json"
+            xcrun xcresulttool get test-results summary --path "$bundle" |
+              jq '{testFailures: ([.testFailures // []] | flatten | map({testName, targetName, failureText}))}' > "$report"
+            node -e '
+              const fs = require("node:fs");
+              const report = fs.readFileSync(process.argv[1], "utf8");
+              const patterns = [/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i, /\b\d{3}-\d{2}-\d{4}\b/, /\b(?:password|secret|access[_ -]?token)\s*[:=]\s*\S+/i];
+              if (patterns.some((pattern) => pattern.test(report))) process.exit(1);
+            ' "$report"
+            rm -rf "$bundle"
+            echo "Extracted text-only XCTest report: $(basename "$report")"
+          }
+          [ -f "$evidence" ] || exit 0
+          while IFS= read -r bundle; do
+            if [ -d "$bundle" ]; then
+              extract_report "$bundle"
+            else
+              echo "::warning::XCTest result bundle referenced in the failure log is missing: $bundle"
+            fi
+          done < <(grep -Eo "$HOME/Library/Developer/Xcode/DerivedData/[^[:space:]]+\\.xcresult" "$evidence" || true)
+
+      - name: Check uploaded iOS diagnostics for privacy sentinels
+        id: ios_diagnostics_privacy
+        if: always()
+        run: |
+          mkdir -p "$RUNNER_TEMP/failed-xcode-results"
+          ./tooling/verify-privacy.sh "$RUNNER_TEMP/ios-simulator.txt" "$RUNNER_TEMP/failed-xcode-results"
+          node -e '
+            const fs = require("node:fs");
+            const path = require("node:path");
+            const files = [];
+            const visit = (entry) => {
+              if (fs.statSync(entry).isDirectory()) fs.readdirSync(entry).forEach((name) => visit(path.join(entry, name)));
+              else files.push(entry);
+            };
+            process.argv.slice(1).forEach(visit);
+            const patterns = [/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i, /\b\d{3}-\d{2}-\d{4}\b/, /\b(?:password|secret|access[_ -]?token)\s*[:=]\s*\S+/i];
+            for (const file of files) {
+              const contents = fs.readFileSync(file, "utf8");
+              if (patterns.some((pattern) => pattern.test(contents))) {
+                console.error("Privacy pattern found in an iOS diagnostic artifact; upload blocked");
+                process.exit(1);
+              }
+            }
+            console.log(`PII pattern scan passed: files=${files.length}`);
+          ' "$RUNNER_TEMP/ios-simulator.txt" "$RUNNER_TEMP/failed-xcode-results"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always() && steps.ios_diagnostics_privacy.outcome == 'success'
         with:
           name: ios-simulator-evidence
-          path: ${{ runner.temp }}/ios-simulator.txt
+          path: |
+            ${{ runner.temp }}/ios-simulator.txt
+            ${{ runner.temp }}/failed-xcode-results
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 90

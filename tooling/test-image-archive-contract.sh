@@ -1,5 +1,18 @@
 #!/usr/bin/env sh
 set -eu
+portable_stat() {
+  format=$1; path=$2
+  case "$(uname -s)" in
+    Darwin) stat -f "$format" "$path" ;;
+    *)
+      case "$format" in
+        %Lp) stat -c '%a' "$path" ;;
+        %Su:%Sg) stat -c '%U:%G' "$path" ;;
+        %u) stat -c '%u' "$path" ;;
+        *) stat -c "$format" "$path" ;;
+      esac ;;
+  esac
+}
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
@@ -54,9 +67,26 @@ PY
 
 contract=$fixture_root/archive-contract.json
 ./tooling/verify-host-replacement.sh --resolve-image-archive "$fixture_root/good.tar.gz" "$contract" >/dev/null
-[ "$(stat -f '%Lp' "$contract" 2>/dev/null || stat -c '%a' "$contract")" = 600 ] || die "archive contract is not owner-only"
+[ "$(portable_stat '%Lp' "$contract" 2>/dev/null || stat -c '%a' "$contract")" = 600 ] || die "archive contract is not owner-only"
 jq -e 'keys == ["architecture","archive_sha256","config_image_id","manifest_digest","os","revision","rootfs_diff_ids","version"] and .version == 2 and .architecture == "amd64" and .os == "linux" and (.archive_sha256 | test("^[0-9a-f]{64}$")) and (.config_image_id | test("^sha256:[0-9a-f]{64}$")) and (.manifest_digest | test("^sha256:[0-9a-f]{64}$")) and (.revision | test("^[0-9a-f]{7,64}$")) and (.rootfs_diff_ids | length == 2) and all(.rootfs_diff_ids[]; test("^sha256:[0-9a-f]{64}$"))' "$contract" >/dev/null || die "archive contract is not minimal and valid"
 ./tooling/verify-host-replacement.sh --resolve-image-archive "$fixture_root/absent-platform.tar.gz" "$fixture_root/absent-platform.json" >/dev/null || die "config-bound platform without an index hint was rejected"
+
+mkdir "$fixture_root/bin"
+cat >"$fixture_root/bin/docker" <<'EOF'
+#!/usr/bin/env sh
+set -eu
+case "$1" in
+  image) printf '%s\n' 'amd64 linux' ;;
+  save) cp "$MOCK_DOCKER_SAVE_SOURCE" "$4" ;;
+  *) exit 2 ;;
+esac
+EOF
+chmod 700 "$fixture_root/bin/docker"
+gzip -dc "$fixture_root/good.tar.gz" >"$fixture_root/docker-save.tar"
+PATH="$fixture_root/bin:$PATH" MOCK_DOCKER_SAVE_SOURCE="$fixture_root/docker-save.tar" \
+  ./tooling/export-verified-image-archive.sh keepling-server:plan-02-09-amd64 "$fixture_root/exported.tar.gz" >/dev/null || die "verified image exporter rejected an exact Docker-save fixture"
+[ "$(portable_stat '%Lp' "$fixture_root/exported.tar.gz" 2>/dev/null || stat -c '%a' "$fixture_root/exported.tar.gz")" = 600 ] || die "exported candidate archive is not private"
+./tooling/verify-host-replacement.sh --resolve-image-archive "$fixture_root/exported.tar.gz" "$fixture_root/exported-contract.json" >/dev/null || die "exported archive does not bind Docker and OCI views"
 
 expect_fail() {
   name=$1; output=$fixture_root/$name-output.json
