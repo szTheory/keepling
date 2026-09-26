@@ -190,7 +190,15 @@ const runLane = ({ command, args, cwd, env, name, parse, trackedInputPaths }) =>
       if (report.status !== 0 || report.error) {
         throw new Error(report.error?.message ?? report.stderr ?? `xcrun exited ${report.status}`)
       }
+      const summaryReport = spawnSync('xcrun', ['xcresulttool', 'get', 'test-results', 'summary', '--path', resultBundlePath], {
+        encoding: 'utf8',
+        maxBuffer: MAX_LANE_OUTPUT_BYTES,
+      })
+      if (summaryReport.status !== 0 || summaryReport.error) {
+        throw new Error(summaryReport.error?.message ?? summaryReport.stderr ?? `xcrun summary exited ${summaryReport.status}`)
+      }
       const project = JSON.parse(report.stdout)
+      const summary = JSON.parse(summaryReport.stdout)
       const sanitizeNode = (node) => ({
         nodeType: node.nodeType,
         name: node.name,
@@ -198,7 +206,17 @@ const runLane = ({ command, args, cwd, env, name, parse, trackedInputPaths }) =>
         ...(node.durationInSeconds !== undefined ? { durationInSeconds: node.durationInSeconds } : {}),
         ...(node.children ? { children: node.children.map(sanitizeNode) } : {}),
       })
-      const sanitized = JSON.stringify({ testNodes: project.testNodes.map(sanitizeNode) }, null, 2)
+      const testFailures = Array.isArray(summary.testFailures)
+        ? summary.testFailures
+        : summary.testFailures ? [summary.testFailures] : []
+      const sanitized = JSON.stringify({
+        testNodes: project.testNodes.map(sanitizeNode),
+        testFailures: testFailures.map((failure) => ({
+          testName: failure.testName,
+          targetName: failure.targetName,
+          failureText: failure.failureText,
+        })),
+      }, null, 2)
       const piiPatterns = [
         /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
         /\b\d{3}-\d{2}-\d{4}\b/,
