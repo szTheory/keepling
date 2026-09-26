@@ -23,9 +23,10 @@
  * overall run (exit code stays non-zero) so this command can never report
  * green while required physical-device evidence is missing.
  */
-import { createHash } from 'node:crypto'
-import { readFileSync, readdirSync } from 'node:fs'
+import { randomUUID, createHash } from 'node:crypto'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { tmpdir } from 'node:os'
 import process from 'node:process'
 import { spawnSync } from 'node:child_process'
 
@@ -78,6 +79,13 @@ const inputDigestFor = (paths) => {
  * truncated one because it takes the other lanes' results with it.
  */
 const MAX_LANE_OUTPUT_BYTES = 64 * 1024 * 1024
+
+// Give each XCTest invocation an explicit bundle location. Relying on
+// DerivedData's default Logs/Test path proved insufficient: a later lane can
+// remove or replace that bundle before the workflow's post-gate step runs.
+const RESULT_ROOT = join(process.env.RUNNER_TEMP ?? tmpdir(), 'keepling-xcode-results')
+const RESULT_RUN_ID = randomUUID()
+const FAILED_RESULT_ROOT = join(process.env.RUNNER_TEMP ?? tmpdir(), 'failed-xcode-results')
 
 /**
  * Row 99's prescription -- "the cause of a failure is almost always near the
@@ -143,7 +151,11 @@ const excerpt = (text) => {
  */
 const runLane = ({ command, args, cwd, env, name, parse, trackedInputPaths }) => {
   const startedAt = Date.now()
-  const result = spawnSync(command, args, {
+  const isXcodeTest = command === 'xcodebuild' && args.includes('test')
+  const resultBundlePath = isXcodeTest ? join(RESULT_ROOT, `${RESULT_RUN_ID}-${name}.xcresult`) : null
+  if (resultBundlePath) mkdirSync(RESULT_ROOT, { recursive: true })
+  const laneArgs = resultBundlePath ? [...args, '-resultBundlePath', resultBundlePath] : args
+  const result = spawnSync(command, laneArgs, {
     cwd: cwd ?? repositoryRoot,
     encoding: 'utf8',
     env: { ...process.env, ...env },
@@ -164,6 +176,47 @@ const runLane = ({ command, args, cwd, env, name, parse, trackedInputPaths }) =>
 
   const exitedCleanly = result.status === 0 && !result.error
   const passed = exitedCleanly && parseError === null && Number.isFinite(cases) && cases > 0
+
+  // Extract text-only XCTest summaries before the next lane starts. Keep the
+  // .xcresult local to the runner because it can contain screenshots; only
+  // the test report JSON is eligible for the workflow artifact.
+  if (!passed && resultBundlePath && existsSync(resultBundlePath)) {
+    try {
+      mkdirSync(FAILED_RESULT_ROOT, { recursive: true })
+      const report = spawnSync('xcrun', ['xcresulttool', 'get', 'test-results', 'tests', '--path', resultBundlePath], {
+        encoding: 'utf8',
+        maxBuffer: MAX_LANE_OUTPUT_BYTES,
+      })
+      if (report.status !== 0 || report.error) {
+        throw new Error(report.error?.message ?? report.stderr ?? `xcrun exited ${report.status}`)
+      }
+      const project = JSON.parse(report.stdout)
+      const sanitizeNode = (node) => ({
+        nodeType: node.nodeType,
+        name: node.name,
+        ...(node.result ? { result: node.result } : {}),
+        ...(node.durationInSeconds !== undefined ? { durationInSeconds: node.durationInSeconds } : {}),
+        ...(node.children ? { children: node.children.map(sanitizeNode) } : {}),
+      })
+      const sanitized = JSON.stringify({ testNodes: project.testNodes.map(sanitizeNode) }, null, 2)
+      const piiPatterns = [
+        /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i,
+        /\b\d{3}-\d{2}-\d{4}\b/,
+        /\b(?:password|secret|access[_ -]?token)\s*[:=]\s*\S+/i,
+      ]
+      if (piiPatterns.some((pattern) => pattern.test(sanitized))) {
+        throw new Error('sanitized XCTest report matched a privacy scan pattern; report withheld')
+      }
+      const reportPath = join(FAILED_RESULT_ROOT, `${RESULT_RUN_ID}-${name}-tests.json`)
+      writeFileSync(reportPath, sanitized, { mode: 0o600 })
+      console.error(`Extracted text-only XCTest test report: ${reportPath}`)
+    } catch (error) {
+      console.error(`iOS phase gate failed: ${name}: could not extract XCTest test report: ${String(error.message ?? error)}`)
+    }
+  }
+  if (resultBundlePath && existsSync(resultBundlePath)) {
+    rmSync(resultBundlePath, { recursive: true, force: true })
+  }
 
   // A parse error prefixed "BLOCKED:" is a genuine, disclosed inability to
   // run (missing hardware/credentials/prior-plan evidence -- e.g. the
