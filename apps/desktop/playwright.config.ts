@@ -98,6 +98,11 @@ export default defineConfig({
       name: 'packaged',
       testMatch: ['packaged/**/*.spec.ts'],
     },
+    {
+      name: 'packaged-upgrade',
+      testMatch: ['packaged-upgrade/**/*.spec.ts'],
+      timeout: 180_000,
+    },
     /**
      * The real-stack lane is its OWN project, and its specs live in their own
      * directory rather than in `packaged/`, deliberately.
