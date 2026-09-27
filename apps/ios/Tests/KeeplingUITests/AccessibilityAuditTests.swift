@@ -59,6 +59,18 @@ final class AccessibilityAuditTests: XCTestCase {
             diagnostic,
             "AUDIT-ISSUE|screen=Discard draft dialog|audit=contrast|elementType=button|frame=10,21,30,41"
         )
+
+        let systemElementDiagnostic = Self.auditDiagnostic(
+            screenName: "Discard draft dialog",
+            auditType: .sufficientElementDescription,
+            elementType: .other,
+            frame: CGRect(x: 0, y: 539, width: 134, height: 44)
+        )
+        XCTAssertEqual(
+            systemElementDiagnostic,
+            "AUDIT-ISSUE|screen=Discard draft dialog|audit=sufficientElementDescription|elementType=other|frame=0,539,134,44"
+        )
+        XCTAssertEqual(XCUIElement.ElementType(rawValue: 1), .other)
     }
 
     private static func auditDiagnostic(
@@ -67,9 +79,15 @@ final class AccessibilityAuditTests: XCTestCase {
         elementType: XCUIElement.ElementType?,
         frame: CGRect?
     ) -> String {
-        let elementName = elementType.map { String(describing: $0) } ?? "none"
+        let elementName = elementType.map { elementTypeName($0) } ?? "none"
         let frameName = frame.map(frameSummary) ?? "none"
         return "AUDIT-ISSUE|screen=\(screenName)|audit=\(auditTypeName(auditType))|elementType=\(elementName)|frame=\(frameName)"
+    }
+
+    private static func elementTypeName(_ type: XCUIElement.ElementType) -> String {
+        if type == .button { return "button" }
+        if type == .other { return "other" }
+        return "type-\(type.rawValue)"
     }
 
     private static func auditTypeName(_ type: XCUIAccessibilityAuditType) -> String {
@@ -148,7 +166,13 @@ final class AccessibilityAuditTests: XCTestCase {
         // this is OS-owned chrome this app's code does not draw and
         // cannot restyle, unlike every other disclosed exclusion above
         // (all of which stayed within SwiftUI's own accessibility tree).
-        "Discard draft dialog": [.dynamicType, .elementDetection],
+        // This fixture opens the confirmation dialog while the title field
+        // remains focused. CI run 36288569989 reported three equal-width
+        // generic `Other` elements in the on-screen QuickType suggestion row
+        // failing only sufficientElementDescription. Like the keyboard
+        // finding below, these are system-owned; keep the exclusion to that
+        // one audit type and this one screen.
+        "Discard draft dialog": [.dynamicType, .elementDetection, .sufficientElementDescription],
         // "Discard changes dialog" is reached from the task-detail editor
         // WHILE its title field is still focused, so the system keyboard's
         // QuickType prediction bar is still on screen underneath the
