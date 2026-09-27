@@ -29,34 +29,85 @@ final class AccessibilityAuditTests: XCTestCase {
             screenshot.name = "screen-\(screen.name)"
             screenshot.lifetime = .keepAlways
             add(screenshot)
-            // A custom issueHandler that HANDLES every issue (returns
-            // `true`) lets this test format its own failure message with
-            // the screen name and every finding's own `detailedDescription`
-            // -- XCTFail's default handler reports only a bare
-            // `compactDescription` ("Contrast failed") with no indication
-            // of which screen or element, which is not actionable release
-            // evidence.
+            // Handle each finding so the assertion below can retain a useful
+            // diagnostic. It includes only static screen/audit metadata, the
+            // XCUI element type, and rounded geometry. Labels, identifiers,
+            // detailed descriptions, and screenshots never enter CI text.
             var issues: [String] = []
             try app.performAccessibilityAudit(for: Self.auditTypes(for: screen.name)) { issue in
-                // `detailedDescription` alone can come back as a bare
-                // "Contrast failed for element" with the element half
-                // empty -- which is what a device run produced against
-                // Inbox, leaving nothing to act on. The element's own
-                // identifier, label and frame are appended so a failure
-                // names the control rather than merely its screen.
-                let element = issue.element
-                let identity = [
-                    element?.identifier.isEmpty == false ? "identifier=\(element!.identifier)" : nil,
-                    element?.label.isEmpty == false ? "label=\(element!.label)" : nil,
-                    element.map { "type=\($0.elementType.rawValue) frame=\($0.frame)" },
-                ]
-                .compactMap { $0 }
-                .joined(separator: " ")
-                issues.append(identity.isEmpty ? issue.detailedDescription : "\(issue.detailedDescription) [\(identity)]")
+                issues.append(Self.auditDiagnostic(
+                    screenName: screen.name,
+                    auditType: issue.auditType,
+                    elementType: issue.element?.elementType,
+                    frame: issue.element?.frame
+                ))
                 return true
             }
             XCTAssertTrue(issues.isEmpty, "\(screen.name) failed the accessibility audit:\n\(issues.joined(separator: "\n---\n"))")
         }
+    }
+
+    func testAuditIssueDiagnosticUsesOnlyStableMetadata() {
+        let diagnostic = Self.auditDiagnostic(
+            screenName: "Discard draft dialog",
+            auditType: .contrast,
+            elementType: .button,
+            frame: CGRect(x: 10.4, y: 20.6, width: 30.2, height: 40.8)
+        )
+
+        XCTAssertEqual(
+            diagnostic,
+            "AUDIT-ISSUE|screen=Discard draft dialog|audit=contrast|elementType=button|frame=10,21,30,41"
+        )
+
+        let systemElementDiagnostic = Self.auditDiagnostic(
+            screenName: "Discard draft dialog",
+            auditType: .sufficientElementDescription,
+            elementType: .other,
+            frame: CGRect(x: 0, y: 539, width: 134, height: 44)
+        )
+        XCTAssertEqual(
+            systemElementDiagnostic,
+            "AUDIT-ISSUE|screen=Discard draft dialog|audit=sufficientElementDescription|elementType=other|frame=0,539,134,44"
+        )
+        XCTAssertEqual(XCUIElement.ElementType(rawValue: 1), .other)
+    }
+
+    private static func auditDiagnostic(
+        screenName: String,
+        auditType: XCUIAccessibilityAuditType,
+        elementType: XCUIElement.ElementType?,
+        frame: CGRect?
+    ) -> String {
+        let elementName = elementType.map { elementTypeName($0) } ?? "none"
+        let frameName = frame.map(frameSummary) ?? "none"
+        return "AUDIT-ISSUE|screen=\(screenName)|audit=\(auditTypeName(auditType))|elementType=\(elementName)|frame=\(frameName)"
+    }
+
+    private static func elementTypeName(_ type: XCUIElement.ElementType) -> String {
+        if type == .button { return "button" }
+        if type == .other { return "other" }
+        return "type-\(type.rawValue)"
+    }
+
+    private static func auditTypeName(_ type: XCUIAccessibilityAuditType) -> String {
+        if type == .contrast { return "contrast" }
+        if type == .dynamicType { return "dynamicType" }
+        if type == .textClipped { return "textClipped" }
+        if type == .hitRegion { return "hitRegion" }
+        if type == .elementDetection { return "elementDetection" }
+        if type == .sufficientElementDescription { return "sufficientElementDescription" }
+        if type == .trait { return "trait" }
+        return "unknown"
+    }
+
+    private static func frameSummary(_ frame: CGRect) -> String {
+        [frame.origin.x, frame.origin.y, frame.width, frame.height]
+            .map { coordinate in
+                guard coordinate.isFinite, abs(coordinate) <= 100_000 else { return "unknown" }
+                return String(Int(coordinate.rounded()))
+            }
+            .joined(separator: ",")
     }
 
     /// The seven audit types for every screen, with a small number of
@@ -115,7 +166,13 @@ final class AccessibilityAuditTests: XCTestCase {
         // this is OS-owned chrome this app's code does not draw and
         // cannot restyle, unlike every other disclosed exclusion above
         // (all of which stayed within SwiftUI's own accessibility tree).
-        "Discard draft dialog": [.dynamicType, .elementDetection],
+        // This fixture opens the confirmation dialog while the title field
+        // remains focused. CI run 36288569989 reported three equal-width
+        // generic `Other` elements in the on-screen QuickType suggestion row
+        // failing only sufficientElementDescription. Like the keyboard
+        // finding below, these are system-owned; keep the exclusion to that
+        // one audit type and this one screen.
+        "Discard draft dialog": [.dynamicType, .elementDetection, .sufficientElementDescription],
         // "Discard changes dialog" is reached from the task-detail editor
         // WHILE its title field is still focused, so the system keyboard's
         // QuickType prediction bar is still on screen underneath the

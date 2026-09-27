@@ -16,6 +16,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -26,11 +30,9 @@ jobs:
     # `// swift-tools-version: 6.3` and the macos-15 image's default Xcode
     # ships Swift 6.1. D-06 already mandates the Xcode 26.6 floor.
     runs-on: macos-26
-    # Window 102 measured the accessibility lane alone at 44 minutes locally,
-    # and this job runs it plus twenty-odd siblings plus a second invocation
-    # for server-driven-sim. 50 would have timed out on the one lane that was
-    # already known to be slow.
-    timeout-minutes: 150
+    # Recent hosted attempts took 72–78 minutes. Keep a 22-minute margin while
+    # returning the account-wide macOS slot sooner if the simulator hangs.
+    timeout-minutes: 100
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 

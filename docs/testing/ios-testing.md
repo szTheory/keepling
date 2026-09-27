@@ -361,7 +361,12 @@ most likely to break it (row removal, sheet dismissal).
   draw and cannot restyle). "Discard changes dialog" additionally
   surfaces a `TUIPredictionViewCell` finding — the system keyboard's
   QuickType prediction bar, still visible from the just-dismissed text
-  field, a private UIKit class outside app code's reach.
+  field, a private UIKit class outside app code's reach. On 2026-09-27,
+  CI run `36288569989` found the same keyboard-owned condition while the
+  "Discard draft dialog" fixture left its title field focused: three equal
+  134-point `Other` elements at the QuickType row's position failed only
+  `sufficientElementDescription`. That single audit type is now excluded
+  for this screen alone; the other configured audit types remain active.
 - **"Discard changes dialog" is excluded from the largest-accessibility-
   category full-inventory sweep** (`DynamicTypeSnapshotTests
   .disclosedFromLargestSizeSweep`) specifically — measured directly
