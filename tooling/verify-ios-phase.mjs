@@ -87,7 +87,7 @@ const MAX_LANE_OUTPUT_BYTES = 64 * 1024 * 1024
  * the first wired CI run printed for all 20 failing lanes and why none of
  * them could be diagnosed from CI at all.
  */
-const FAILURE_SIGNAL = /\.swift:\d+:\s*(error|warning: .*failed)|Assertion Failure|XCTAssert\w*\s+failed|^Failing tests:|error: .*(cannot|could not|no such|not found)/
+const FAILURE_SIGNAL = /\.swift:\d+:\s*(error|warning: .*failed)|Assertion Failure|XCTAssert\w*\s+failed|AUDIT-ISSUE\||^Failing tests:|error: .*(cannot|could not|no such|not found)/
 
 /**
  * MEASURED DEFECT this repairs: a head/tail-only excerpt loses the assertion
