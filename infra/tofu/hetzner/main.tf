@@ -100,6 +100,7 @@ resource "hcloud_server" "replacement" {
   ssh_keys    = [hcloud_ssh_key.replacement.id]
   labels      = local.ownership_labels
   user_data = templatefile("${path.module}/cloud-init.yml", {
+    replacement_run_id    = var.replacement_run_id
     tested_oci_digest     = var.tested_oci_digest
     architecture          = var.target_architecture
     runtime_probe_base64  = base64encode(file("${path.module}/../../../tooling/remote-runtime-probe.sh"))

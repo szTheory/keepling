@@ -2,6 +2,26 @@
 
 This is the one external-account setup batch for the final Hetzner replacement rehearsal. It deliberately creates no resources by itself and does not prove backup or restore health.
 
+## Current host-trust gate (2026-09-27)
+
+Plan 02-17's one authorized run is consumed and NON_PASSING. The supplied
+Hetzner console fingerprint did not match the candidate's SSH ED25519 key;
+SSH, restore, and DNS were not reached. Exact-owned teardown passed and provider
+absence was proven. The cause of the mismatch is unresolved. Do not reuse the
+run, candidate, or its authorization, and do not retry with another transcription
+or a repeated console read. The banner's repeat handling is now deterministic,
+but that does not explain the earlier mismatch.
+
+Any later live attempt requires a separate reviewed plan and a fresh explicit
+owner checkpoint naming its exact run, tested source/image/recovery bundle,
+provider and billable apply, independent host-trust approval and SSH, synthetic
+credentialed restore, run-owned DNS actions, and exact-owned teardown. Before
+that plan can propose a run, the owner must identify the exact candidate in the
+independent Hetzner console and establish through independently reviewed
+provenance that the displayed fingerprint is the current ED25519 key served by
+that candidate. A matching string or a second transcription alone is not this
+provenance. This document does not authorize or start another external attempt.
+
 ## Isolated synthetic rehearsal
 
 The approved KPL-02 cloud rehearsal uses only a fresh synthetic database made
@@ -133,9 +153,57 @@ KEEPLING_ALLOW_LIVE_DNS_MUTATION=yes \
 The command passes only when all eight source contracts and all seven concrete
 sequence-runner paths are executable, including bounded authoritative/recursive
 DNS propagation plus rollback and exact-owned provider teardown. It still does
-not prove a live rehearsal. The credentialed entry point additionally requires
-a numeric passing restore benchmark; it cannot report success without executing
-the full bootstrap-through-teardown chain.
+not prove a live rehearsal and does not satisfy the separate-plan and fresh
+exact-run authorization gate above. The credentialed entry point additionally
+requires a numeric passing restore benchmark; it cannot report success without
+executing the full bootstrap-through-teardown chain.
+
+## CI-tested candidate image
+
+The `image-compose-deploy` job publishes the `phase2-verified-image` artifact
+only after the exact image, Compose, and deploy lane passes. It contains the
+OCI/Docker archive, its machine-verified contract, and a run-binding record
+with the workflow run/attempt, source revision, archive SHA-256, and OCI
+manifest digest. The build fails closed unless the checked-out source equals
+`GITHUB_SHA`, and the exported image contract names that same revision.
+
+For the later local preparation, use only this artifact from the exact
+completed-success workflow run and attempt. The matching image lane must also
+have passed. Do not substitute `image-compose-deploy-timing` or an archive from
+another run. Download and revalidate the artifact outside the checkout:
+
+```sh
+image_dir=$(mktemp -d /private/tmp/phase2-ci-image.XXXXXX)
+chmod 700 "$image_dir"
+gh run download "$run_id" --repo szTheory/keepling \
+  --name phase2-verified-image --dir "$image_dir"
+chmod 600 "$image_dir"/*
+attempt=$(jq -r .run_attempt "$image_dir/run-binding.json")
+gh api "repos/szTheory/keepling/actions/runs/$run_id" | \
+  jq -e --arg run_id "$run_id" --arg attempt "$attempt" \
+    '(.id|tostring) == $run_id and (.run_attempt|tostring) == $attempt and .status == "completed" and .conclusion == "success" and .name == "Repository integrity and Phase 2 evidence"' >/dev/null
+./tooling/verify-host-replacement.sh --resolve-image-archive \
+  "$image_dir/keepling-server-amd64.tar.gz" "$image_dir/local-image-contract.json"
+jq -e --arg run_id "$run_id" --arg attempt "$attempt" \
+  --slurpfile ci "$image_dir/image-contract.json" \
+  --slurpfile binding "$image_dir/run-binding.json" \
+  '.revision == $ci[0].revision and .revision == $binding[0].source_revision and
+   .archive_sha256 == $ci[0].archive_sha256 and .archive_sha256 == $binding[0].archive_sha256 and
+   .manifest_digest == $ci[0].manifest_digest and .manifest_digest == $binding[0].image_manifest_digest and
+   $ci[0].version == 2 and $binding[0].version == 1 and
+   ($binding[0] | keys | sort) == ["archive_sha256","image_manifest_digest","run_attempt","run_id","source_revision","version"] and
+   ($binding[0].source_revision | test("^[0-9a-f]{40}$")) and
+   $binding[0].run_id == $run_id and $binding[0].run_attempt == $attempt' \
+  "$image_dir/local-image-contract.json" >/dev/null
+jq --arg archive "$image_dir/keepling-server-amd64.tar.gz" \
+  '. + {image_archive:$archive,version:1}' "$image_dir/image-contract.json" \
+  > "$image_dir/candidate-selection.json"
+chmod 600 "$image_dir/candidate-selection.json"
+```
+
+The resulting candidate selection is run-bound, archive-verified, and already
+shaped for `phase-2-live-setup.sh`. Keep the directory private and outside the
+repository. This read-only artifact step is still not provider/DNS approval.
 
 ## Private orchestration bundle
 
@@ -178,11 +246,14 @@ KEEPLING_LIVE_ORCHESTRATION_FILE='/private/keepling/phase-2/<run>/orchestration.
   ./tooling/verify-host-replacement.sh --credentialed
 ```
 
-The command automates until the new VM's SSH identity needs independent
-verification. It then exits with status `75`, preserving the candidate and a
-private run-bound checkpoint. Cloud-init prints the SHA256 fingerprint on the
-Hetzner VNC console login screen. Read or copy that banner value; do not log in
-to the VM or run a command there.
+Only execute this example after the separate reviewed plan and fresh exact-run
+authorization described above. The command automates until the new VM's SSH
+identity needs independent verification. It then exits with status `75`,
+preserving the candidate and a private run-bound checkpoint. Cloud-init prints
+the SHA256 fingerprint on the Hetzner VNC console login screen. Establish that
+the banner belongs to the exact candidate and its current ED25519 key under the
+reviewed trust-provenance procedure; do not log in to the VM or run a command
+there.
 
 Re-run the same armed command with `--resume-host-trust`:
 
@@ -211,6 +282,24 @@ second teardown attempt for the same workspace. Keep generated evidence in the
 private workspace; do not commit it or any private configuration path. Local
 fixtures prove dispatch refusal and mocked ordering only; they do not prove a
 replacement, restore, DNS rehearsal, or cleanup.
+
+If sequence cleanup fails during read-only ownership/state preflight, first
+restore access to the private provider and state credentials, then run the
+same-run recovery path with billable and exact-destroy approval:
+
+```sh
+KEEPLING_ALLOW_BILLABLE_APPLY=yes \
+KEEPLING_ALLOW_PROVIDER_DESTROY=yes \
+KEEPLING_LIVE_CHANGE_TRIGGER='approved-recovery-name' \
+KEEPLING_LIVE_ORCHESTRATION_FILE='/private/keepling/phase-2/<run>/orchestration.env' \
+  ./tooling/phase-2-live-orchestration.sh recover-teardown
+```
+
+This path re-reads exact ownership and state and cannot provision a candidate
+or reach DNS. It refuses once `.teardown-destroy-started` exists or teardown
+evidence has been written. OpenTofu initialization diagnostics stay in the
+mode-0600 private workspace. Do not delete a fence or retry after destructive
+start; preserve the workspace for a separately reviewed recovery.
 
 Plan 02-09, DATA-03, and OPS-02 remain open. Materialized credentials, a safe
 setup result, and read-only provider preflight are preparation evidence only;

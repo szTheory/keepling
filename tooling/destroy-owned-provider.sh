@@ -21,6 +21,14 @@ case "$inventory:$evidence_file" in
 esac
 evidence_directory=$(dirname "$evidence_file")
 [ -d "$evidence_directory" ] || die "teardown evidence directory is missing"
+progress_file="$evidence_directory/.teardown-progress.log"
+if [ -e "$progress_file" ] || [ -L "$progress_file" ]; then
+  [ -f "$progress_file" ] && [ ! -L "$progress_file" ] && [ "$(stat -f '%Lp' "$progress_file" 2>/dev/null || stat -c '%a' "$progress_file")" = 600 ] || die "private teardown progress record is unsafe"
+else
+  (umask 077; : >"$progress_file"; chmod 600 "$progress_file") || die "private teardown progress record could not be created"
+fi
+record_progress() { printf 'step=%s\n' "$1" >>"$progress_file" || die "private teardown progress could not be updated"; }
+record_progress attempt-start
 
 validate_inventory() {
   jq -e --arg run_id "$expected_run_id" '
@@ -48,20 +56,34 @@ state_before=$workspace/state-before
 state_after=$workspace/state-after
 counts_after=$workspace/counts-after.json
 
-"$ownership_probe" "$inventory" "$expected_run_id" "$observed" >/dev/null 2>&1 || die "provider ownership re-read failed"
+record_progress ownership-reread-start
+"$ownership_probe" "$inventory" "$expected_run_id" "$observed" || { record_progress ownership-reread-failed; die "provider ownership re-read failed"; }
+record_progress ownership-reread-passed
 validate_inventory "$observed" || die "provider ownership re-read is incomplete or mismatched"
 [ "$(jq -S . "$inventory")" = "$(jq -S . "$observed")" ] || die "provider ownership re-read does not match retained exact identities"
-"$state_probe" "$state_before" >/dev/null 2>&1 || die "provider state preflight failed"
-./tooling/verify-host-replacement.sh --validate-state-addresses "$state_before" >/dev/null || die "provider state does not contain the exact owned graph"
+record_progress state-preflight-start
+"$state_probe" "$state_before" || { record_progress state-preflight-failed; die "provider state preflight failed"; }
+record_progress state-preflight-passed
+./tooling/verify-host-replacement.sh --validate-state-addresses "$state_before" >/dev/null || { record_progress state-graph-failed; die "provider state does not contain the exact owned graph"; }
+record_progress state-graph-passed
 
-"$destroy_runner" "$inventory" "$expected_run_id" >/dev/null 2>&1 || die "provider destroy runner failed"
-"$state_probe" "$state_after" >/dev/null 2>&1 || die "provider state absence probe failed"
+destroy_started="$evidence_directory/.teardown-destroy-started"
+[ ! -e "$destroy_started" ] || die "provider destruction was already started"
+
+record_progress destroy-runner-start
+KEEPLING_PROVIDER_DESTROY_FENCE_FILE="$evidence_directory/.teardown-destroy-started" \
+  "$destroy_runner" "$inventory" "$expected_run_id" >/dev/null 2>&1 || { record_progress destroy-runner-failed; die "provider destroy runner failed"; }
+record_progress destroy-runner-passed
+"$state_probe" "$state_after" || { record_progress state-absence-failed; die "provider state absence probe failed"; }
+record_progress state-absence-passed
 [ ! -s "$state_after" ] || die "provider state retained resources after destroy"
-"$absence_probe" "$expected_run_id" "$counts_after" >/dev/null 2>&1 || die "provider absence probe failed"
+record_progress provider-absence-start
+"$absence_probe" "$expected_run_id" "$counts_after" || { record_progress provider-absence-failed; die "provider absence probe failed"; }
 jq -e '
   keys == ["firewalls","networks","primary_ips","servers","ssh_keys","volumes"] and
   ([.servers,.volumes,.primary_ips,.networks,.firewalls,.ssh_keys] | all(. == 0))
-' "$counts_after" >/dev/null 2>&1 || die "provider absence proof retained or ambiguously counted resources"
+' "$counts_after" >/dev/null 2>&1 || { record_progress provider-absence-failed; die "provider absence proof retained or ambiguously counted resources"; }
+record_progress provider-absence-passed
 
 evidence_tmp=$(mktemp "$evidence_directory/.provider-teardown.XXXXXX")
 chmod 600 "$evidence_tmp"

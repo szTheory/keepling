@@ -64,8 +64,52 @@ write_files:
     content: |
       #!/bin/sh
       set -eu
-      fingerprint=$(ssh-keygen -E sha256 -lf /etc/ssh/ssh_host_ed25519_key.pub | awk '{print $2}')
-      printf '\nKeepling SSH host fingerprint: %s\n' "$fingerprint" >> /etc/issue
+      issue_file=/etc/issue
+      key_file=/etc/ssh/ssh_host_ed25519_key.pub
+      run_id='${replacement_run_id}'
+      issue_tmp=$(mktemp "$${issue_file}.keepling.XXXXXX") || exit 1
+      trap 'rm -f -- "$issue_tmp"' EXIT HUP INT TERM
+      if [ -f "$issue_file" ]; then
+        awk '!/^Keepling SSH host fingerprint: / && !/^Keepling replacement run: / {print}' "$issue_file" >"$issue_tmp" || exit 1
+      else
+        : >"$issue_tmp"
+      fi
+
+      fingerprint=
+      case "$run_id" in
+        ''|*[!a-z0-9-]*|[!a-z0-9]*) run_id= ;;
+      esac
+      [ "$${#run_id}" -ge 8 ] && [ "$${#run_id}" -le 40 ] || run_id=
+      if [ -r "$key_file" ] && [ "$(awk 'NR == 1 {print $1}' "$key_file")" = ssh-ed25519 ]; then
+        details=$(ssh-keygen -E sha256 -lf "$key_file" 2>/dev/null || true)
+        fingerprint=$(printf '%s\n' "$details" | awk '
+          NF >= 4 && $NF == "(ED25519)" && length($2) == 50 &&
+          substr($2, 1, 7) == "SHA256:" && substr($2, 8) ~ /^[A-Za-z0-9+\/]+$/ {
+            fingerprint = $2
+            count++
+          }
+          END { if (count == 1) print fingerprint; else exit 1 }
+        ' 2>/dev/null || true)
+      fi
+
+      if [ -z "$fingerprint" ] || [ -z "$run_id" ]; then
+        chown root:root "$issue_tmp"
+        chmod 0644 "$issue_tmp"
+        mv -f "$issue_tmp" "$issue_file"
+        issue_tmp=
+        trap - EXIT HUP INT TERM
+        systemctl restart getty@tty1.service
+        printf '%s\n' 'Keepling SSH host fingerprint unavailable' >&2
+        exit 1
+      fi
+
+      printf '\nKeepling SSH host fingerprint: %s\n' "$fingerprint" >>"$issue_tmp"
+      printf 'Keepling replacement run: %s\n' "$run_id" >>"$issue_tmp"
+      chown root:root "$issue_tmp"
+      chmod 0644 "$issue_tmp"
+      mv -f "$issue_tmp" "$issue_file"
+      issue_tmp=
+      trap - EXIT HUP INT TERM
       systemctl restart getty@tty1.service
 
 runcmd:

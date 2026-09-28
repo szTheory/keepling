@@ -1,18 +1,5 @@
 #!/usr/bin/env sh
 set -eu
-portable_stat() {
-  format=$1; path=$2
-  case "$(uname -s)" in
-    Darwin) stat -f "$format" "$path" ;;
-    *)
-      case "$format" in
-        %Lp) stat -c '%a' "$path" ;;
-        %Su:%Sg) stat -c '%U:%G' "$path" ;;
-        %u) stat -c '%u' "$path" ;;
-        *) stat -c "$format" "$path" ;;
-      esac ;;
-  esac
-}
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
@@ -116,7 +103,7 @@ execute_case() (
   [ "$(cat "$scenario/teardown-count")" = "$expected_teardown" ] || die "$(basename "$scenario") violated exactly-once teardown"
   [ ! -e "$scenario/dns-called" ] || die "$(basename "$scenario") reached DNS from the bootstrap gate"
   [ -r "$scenario/evidence.json" ] || die "$(basename "$scenario") omitted bounded evidence"
-  [ "$(portable_stat '%Lp' "$scenario/evidence.json")" = 600 ] || die "$(basename "$scenario") evidence is not owner-only"
+  [ "$(stat -f '%Lp' "$scenario/evidence.json")" = 600 ] || die "$(basename "$scenario") evidence is not owner-only"
   [ "$(wc -c <"$scenario/evidence.json" | tr -d ' ')" -le 8192 ] || die "$(basename "$scenario") evidence is unbounded"
   if grep -Eq 'SENSITIVE_FIXTURE_VALUE|PRIVATE_IDENTIFIER_FIXTURE|redacted fixture classification' "$scenario/evidence.json"; then
     die "$(basename "$scenario") retained raw diagnostic detail"
@@ -276,7 +263,7 @@ chmod 600 "$effect_tree/var/lib/keepling/bootstrap-complete.json"
 printf '%s\n' '#!/usr/bin/env sh' 'exit 0' >"$fixture_root/systemctl"
 printf '%s\n' '#!/usr/bin/env sh' 'printf "%s\n" "cloud-init 25.1.4"' >"$fixture_root/cloud-init"
 chmod 700 "$fixture_root/systemctl" "$fixture_root/cloud-init"
-effect_owner=$(portable_stat '%Su:%Sg' "$effect_tree/var/lib/keepling/bootstrap-complete.json" 2>/dev/null ||
+effect_owner=$(stat -f '%Su:%Sg' "$effect_tree/var/lib/keepling/bootstrap-complete.json" 2>/dev/null ||
   stat -c '%U:%G' "$effect_tree/var/lib/keepling/bootstrap-complete.json" 2>/dev/null) ||
   die "fixture owner/group could not be derived portably"
 KEEPLING_EFFECT_TEST_MODE=yes KEEPLING_EFFECT_ROOT="$effect_tree" KEEPLING_EFFECT_EXPECTED_OWNER="$effect_owner" \
@@ -310,6 +297,84 @@ if ! grep -F 'root:root:755' infra/tofu/hetzner/cloud-init.yml >/dev/null ||
   die "cloud-config does not enforce exact effect modes"
 fi
 
+display_source="$fixture_root/show-host-key.source"
+display_script="$fixture_root/show-host-key"
+awk '
+  /^  - path: \/usr\/local\/sbin\/keepling-show-host-key-fingerprint$/ { in_entry=1; next }
+  in_entry && /^    content: \|$/ { in_script=1; next }
+  in_script && (/^      / || /^$/) {
+    if (/^      /) sub(/^      /, "")
+    print
+    next
+  }
+  in_script { exit }
+' infra/tofu/hetzner/cloud-init.yml >"$display_source"
+[ -s "$display_source" ] || die "cloud-init display helper could not be extracted"
+sed -e "s|/etc/ssh/ssh_host_ed25519_key.pub|$fixture_root/host.pub|g" \
+  -e "s|/etc/issue|$fixture_root/issue|g" \
+  -e 's|\$\${|${|g' \
+  -e 's|${replacement_run_id}|hosttrust1|g' \
+  -e 's/chown root:root/:/' "$display_source" >"$display_script"
+chmod 700 "$display_script"
+mkdir -m 700 "$fixture_root/display-bin" "$fixture_root/host-key-bin" "$fixture_root/host-trust"
+cat >"$fixture_root/display-bin/systemctl" <<'EOF'
+#!/usr/bin/env sh
+set -eu
+printf '%s\n' "$*" >>"$FIXTURE_SYSTEMCTL_LOG"
+EOF
+cat >"$fixture_root/host-key-bin/ssh-keyscan" <<'EOF'
+#!/usr/bin/env sh
+set -eu
+printf '%s %s %s\n' "$FIXTURE_SCAN_IP" ssh-ed25519 "$FIXTURE_SCAN_KEY"
+EOF
+chmod 700 "$fixture_root/display-bin/systemctl" "$fixture_root/host-key-bin/ssh-keyscan"
+printf '%s\n' 'Welcome to the fixture host.' 'Keep this unrelated line.' \
+  'Keepling SSH host fingerprint: SHA256:stale' \
+  'Keepling SSH host fingerprint: SHA256:duplicate' \
+  'Keepling replacement run: stale-run' 'Keepling replacement run: duplicate-run' >"$fixture_root/issue"
+ssh-keygen -q -t ed25519 -N '' -f "$fixture_root/display-key-one"
+cp "$fixture_root/display-key-one.pub" "$fixture_root/host.pub"
+first_fingerprint=$(ssh-keygen -lf "$fixture_root/host.pub" -E sha256 | awk '{print $2}')
+if FIXTURE_SYSTEMCTL_LOG="$fixture_root/getty-restarts" PATH="$fixture_root/display-bin:$PATH" \
+  "$display_script" >"$fixture_root/display-one.output" 2>&1; then :; else die "valid first display key was rejected"; fi
+[ "$(grep -c '^Keepling SSH host fingerprint: ' "$fixture_root/issue")" = 1 ] || die "first display did not leave exactly one owned line"
+[ "$(grep -c '^Keepling replacement run: ' "$fixture_root/issue")" = 1 ] || die "first display did not leave exactly one run marker"
+grep -Fx "Keepling SSH host fingerprint: $first_fingerprint" "$fixture_root/issue" >/dev/null || die "first display did not use the derived ED25519 fingerprint"
+grep -Fx 'Keepling replacement run: hosttrust1' "$fixture_root/issue" >/dev/null || die "first display did not use the source-provided run ID"
+grep -Fx 'Welcome to the fixture host.' "$fixture_root/issue" >/dev/null &&
+  grep -Fx 'Keep this unrelated line.' "$fixture_root/issue" >/dev/null || die "first display damaged unrelated issue text"
+if grep -F "$first_fingerprint" "$fixture_root/display-one.output" >/dev/null; then die "display helper wrote the fingerprint to command output"; fi
+
+ssh-keygen -q -t ed25519 -N '' -f "$fixture_root/display-key-two"
+cp "$fixture_root/display-key-two.pub" "$fixture_root/host.pub"
+second_fingerprint=$(ssh-keygen -lf "$fixture_root/host.pub" -E sha256 | awk '{print $2}')
+if FIXTURE_SYSTEMCTL_LOG="$fixture_root/getty-restarts" PATH="$fixture_root/display-bin:$PATH" \
+  "$display_script" >"$fixture_root/display-two.output" 2>&1; then :; else die "valid changed display key was rejected"; fi
+[ "$(grep -c '^Keepling SSH host fingerprint: ' "$fixture_root/issue")" = 1 ] || die "changed display retained duplicate owned lines"
+[ "$(grep -c '^Keepling replacement run: ' "$fixture_root/issue")" = 1 ] || die "changed display retained duplicate run markers"
+grep -Fx "Keepling SSH host fingerprint: $second_fingerprint" "$fixture_root/issue" >/dev/null || die "changed display retained a stale fingerprint"
+if grep -F "$first_fingerprint" "$fixture_root/issue" >/dev/null; then die "changed display retained the prior key"; fi
+grep -Fx 'Welcome to the fixture host.' "$fixture_root/issue" >/dev/null &&
+  grep -Fx 'Keep this unrelated line.' "$fixture_root/issue" >/dev/null || die "changed display damaged unrelated issue text"
+: >"$fixture_root/host-trust/known_hosts"
+chmod 600 "$fixture_root/host-trust/known_hosts"
+FIXTURE_SCAN_IP=192.0.2.22 FIXTURE_SCAN_KEY="$(awk '{print $2}' "$fixture_root/host.pub")" \
+  PATH="$fixture_root/host-key-bin:$PATH" ./tooling/pin-verified-ssh-host-key.sh 192.0.2.22 "$second_fingerprint" \
+  "$fixture_root/host-trust/known_hosts" >"$fixture_root/display-to-pin.output" 2>&1 || die "derived display fingerprint did not pin its independent scan"
+grep -F '192.0.2.22 ssh-ed25519 ' "$fixture_root/host-trust/known_hosts" >/dev/null || die "display-to-pin fixture omitted the exact candidate"
+
+rm -f "$fixture_root/host.pub"
+if FIXTURE_SYSTEMCTL_LOG="$fixture_root/getty-restarts" PATH="$fixture_root/display-bin:$PATH" \
+  "$display_script" >"$fixture_root/display-missing.output" 2>&1; then die "missing host key was displayed"; fi
+if grep -q '^Keepling SSH host fingerprint: ' "$fixture_root/issue"; then die "missing key retained a stale banner"; fi
+if grep -q '^Keepling replacement run: ' "$fixture_root/issue"; then die "missing key retained a stale run marker"; fi
+if grep -F "$second_fingerprint" "$fixture_root/display-missing.output" >/dev/null; then die "missing-key diagnostics disclosed the prior fingerprint"; fi
+printf '%s\n' 'ssh-rsa malformed-fixture' >"$fixture_root/host.pub"
+if FIXTURE_SYSTEMCTL_LOG="$fixture_root/getty-restarts" PATH="$fixture_root/display-bin:$PATH" \
+  "$display_script" >"$fixture_root/display-malformed.output" 2>&1; then die "malformed host key was displayed"; fi
+if grep -q '^Keepling SSH host fingerprint: ' "$fixture_root/issue"; then die "malformed key retained a stale banner"; fi
+[ "$(wc -l <"$fixture_root/getty-restarts" | tr -d '[:space:]')" = 4 ] || die "console was not refreshed after each fixture attempt"
+
 mkdir "$fixture_root/bundle-sources" "$fixture_root/bundle"
 printf image >"$fixture_root/bundle-sources/image"; printf dump >"$fixture_root/bundle-sources/dump"
 printf provenance >"$fixture_root/bundle-sources/provenance"
@@ -325,8 +390,8 @@ KEEPLING_BUNDLE_IMAGE_SOURCE="$fixture_root/bundle-sources/image" KEEPLING_BUNDL
 find "$fixture_root/bundle" -mindepth 1 -maxdepth 1 -type f -exec basename {} \; | sort >"$fixture_root/bundle-actual"
 printf '%s\n' Caddyfile compose-override.yml compose.yml image.tar.gz new-login-credential recovery.dump recovery.provenance.json remote-prepare.sh >"$fixture_root/bundle-expected"
 cmp -s "$fixture_root/bundle-expected" "$fixture_root/bundle-actual" || die "bundle basenames are not canonical"
-[ "$(portable_stat '%Lp' "$fixture_root/bundle/new-login-credential")" = 600 ] || die "bundle exposed credential"
-[ "$(portable_stat '%Lp' "$fixture_root/bundle/remote-prepare.sh")" = 700 ] || die "bundle runner mode is wrong"
+[ "$(stat -f '%Lp' "$fixture_root/bundle/new-login-credential")" = 600 ] || die "bundle exposed credential"
+[ "$(stat -f '%Lp' "$fixture_root/bundle/remote-prepare.sh")" = 700 ] || die "bundle runner mode is wrong"
 jq -e '.version == 1 and .complete == true and (.files | length) == 8 and ([.files[].sha256] | all(test("^[0-9a-f]{64}$")))' "$fixture_root/bundle-manifest.json" >/dev/null || die "bundle manifest is incomplete"
 if grep -Fq "$fixture_root" "$fixture_root/bundle-manifest.json"; then die "bundle manifest retained private paths"; fi
 

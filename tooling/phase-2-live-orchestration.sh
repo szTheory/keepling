@@ -1,22 +1,9 @@
 #!/usr/bin/env sh
 # Generated orchestration is closed data and is never sourced.
 set -eu
-portable_stat() {
-  format=$1; path=$2
-  case "$(uname -s)" in
-    Darwin) stat -f "$format" "$path" ;;
-    *)
-      case "$format" in
-        %Lp) stat -c '%a' "$path" ;;
-        %Su:%Sg) stat -c '%U:%G' "$path" ;;
-        %u) stat -c '%u' "$path" ;;
-        *) stat -c "$format" "$path" ;;
-      esac ;;
-  esac
-}
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 die() { printf '%s\n' "Phase 2 live orchestration refused: $*" >&2; exit 2; }
-mode_of() { portable_stat '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
+mode_of() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
 outside_repo() { case "$1" in "$repository_root"|"$repository_root"/*) return 1;; *) return 0;; esac; }
 private_file() {
   [ -f "$1" ] && [ ! -L "$1" ] && [ "$(mode_of "$1")" = 600 ] || return 1
@@ -47,14 +34,17 @@ validate() {
   for ref in IMAGE_ARCHIVE_FILE IMAGE_CONTRACT_FILE CANDIDATE_SELECTION_FILE RECOVERY_SELECTION_FILE SERVER_IMAGE_SELECTION_FILE ADMIN_SOURCE_CIDRS_FILE LOGIN_CREDENTIAL_FILE BACKUP_CIPHER_FILE HETZNER_CREDENTIAL_FILE CLOUDFLARE_CREDENTIAL_FILE PRIMARY_BACKUP_CREDENTIAL_FILE MIRROR_BACKUP_CREDENTIAL_FILE TOFU_STATE_CREDENTIAL_FILE SSH_PUBLIC_KEY_FILE SSH_KNOWN_HOSTS_FILE RECOVERY_DUMP_FILE RECOVERY_PROVENANCE_FILE; do value=$(read_value "$ref" "$config") || die "$ref is required exactly once"; private_file "$value" || die "$ref must be a private external regular file"; done
   for stage in bootstrap image restore runtime semantic dns teardown; do name=$(printf '%s_RUNNER' "$(printf '%s' "$stage" | tr '[:lower:]' '[:upper:]')"); value=$(read_value "$name" "$config") || die "$name is required exactly once"; [ "$value" = "$repository_root/tooling/phase-2-live-runners/$stage" ] || die "$name must be the exact repository-owned runner"; done
 }
-require_arm() {
-  [ "${KEEPLING_ALLOW_BILLABLE_APPLY:-}" = yes ] || die 'billable approval is required'
-  [ "${KEEPLING_ALLOW_LIVE_DNS_MUTATION:-}" = yes ] || die 'DNS approval is required'
-  [ "${KEEPLING_ALLOW_PROVIDER_DESTROY:-}" = yes ] || die 'owned-destroy approval is required'
+require_trigger() {
   case "${KEEPLING_LIVE_CHANGE_TRIGGER:-}" in
     [a-z0-9][a-z0-9._-][a-z0-9._-][a-z0-9._-][a-z0-9._-][a-z0-9._-][a-z0-9._-][a-z0-9._-]*) ;;
     *) die 'a bounded named change trigger is required' ;;
   esac
+}
+require_arm() {
+  [ "${KEEPLING_ALLOW_BILLABLE_APPLY:-}" = yes ] || die 'billable approval is required'
+  [ "${KEEPLING_ALLOW_LIVE_DNS_MUTATION:-}" = yes ] || die 'DNS approval is required'
+  [ "${KEEPLING_ALLOW_PROVIDER_DESTROY:-}" = yes ] || die 'owned-destroy approval is required'
+  require_trigger
 }
 [ "$#" -ge 1 ] || die 'usage: phase-2-live-orchestration.sh --validate PRIVATE_BUNDLE | --validate-host-trust-pending PRIVATE_BUNDLE | STAGE'
 if [ "$1" = --validate ]; then [ "$#" -ge 2 ] && [ "$#" -le 3 ] || die 'usage: phase-2-live-orchestration.sh --validate PRIVATE_BUNDLE [existing-workspace]'; validate "$2" "${3:-no}"; printf '%s\n' 'phase2-live-orchestration status=bundle-validation result=passed'; exit 0; fi
@@ -83,8 +73,14 @@ if [ "$1" = --validate ]; then [ "$#" -ge 2 ] && [ "$#" -le 3 ] || die 'usage: p
   exit 0
 }
 [ "$#" -eq 1 ] || die 'usage: phase-2-live-orchestration.sh --validate PRIVATE_BUNDLE | STAGE'
-case "$1" in bootstrap|image|restore|runtime|semantic|dns|teardown) ;; *) die 'unknown stage';; esac
-require_arm
+case "$1" in bootstrap|image|restore|runtime|semantic|dns|teardown|recover-teardown) ;; *) die 'unknown stage';; esac
+if [ "$1" = recover-teardown ]; then
+  [ "${KEEPLING_ALLOW_BILLABLE_APPLY:-}" = yes ] || die 'billable approval is required'
+  [ "${KEEPLING_ALLOW_PROVIDER_DESTROY:-}" = yes ] || die 'owned-destroy approval is required'
+  require_trigger
+else
+  require_arm
+fi
 bundle=${KEEPLING_LIVE_ORCHESTRATION_FILE:-}
 if [ "$1" = bootstrap ]; then
   bootstrap_workspace=$(read_value WORKSPACE "$bundle") || die 'WORKSPACE is required exactly once'
@@ -94,9 +90,11 @@ else
 fi
 workspace=$(read_value WORKSPACE "$bundle")
 stage=$1
-runner_name=$(printf '%s_RUNNER' "$(printf '%s' "$stage" | tr '[:lower:]' '[:upper:]')")
+runner_stage=$stage
+[ "$stage" != recover-teardown ] || runner_stage=teardown
+runner_name=$(printf '%s_RUNNER' "$(printf '%s' "$runner_stage" | tr '[:lower:]' '[:upper:]')")
 runner_value=$(read_value "$runner_name" "$bundle")
-[ "$runner_value" = "$repository_root/tooling/phase-2-live-runners/$stage" ] || die 'stage runner is not repository-owned'
+[ "$runner_value" = "$repository_root/tooling/phase-2-live-runners/$runner_stage" ] || die 'stage runner is not repository-owned'
 case "$stage" in
   bootstrap) ambient_value=${KEEPLING_SEQUENCE_BOOTSTRAP_RUNNER:-} ;;
   image) ambient_value=${KEEPLING_SEQUENCE_IMAGE_RUNNER:-} ;;
@@ -105,6 +103,7 @@ case "$stage" in
   semantic) ambient_value=${KEEPLING_SEQUENCE_SEMANTIC_RUNNER:-} ;;
   dns) ambient_value=${KEEPLING_SEQUENCE_DNS_RUNNER:-} ;;
   teardown) ambient_value=${KEEPLING_SEQUENCE_TEARDOWN_RUNNER:-} ;;
+  recover-teardown) ambient_value=${KEEPLING_SEQUENCE_TEARDOWN_RUNNER:-} ;;
 esac
 [ -z "$ambient_value" ] || [ "$ambient_value" = "$runner_value" ] || die 'ambient stage runner override refused'
 
@@ -117,7 +116,7 @@ case "$stage" in
   image|restore|runtime|semantic|dns)
     [ -f "$workspace/.stage-bootstrap.complete" ] || die 'bootstrap completion proof is required'
     ;;
-  teardown)
+  teardown|recover-teardown)
     ;;
 esac
 run_id=$(read_value RUN_ID "$bundle")

@@ -40,6 +40,12 @@ armed() {
   KEEPLING_LIVE_CHANGE_TRIGGER=fixture-run KEEPLING_LIVE_STAGE_FIXTURE=yes \
   KEEPLING_STAGE_FIXTURE_LEDGER="$fixture/stages" "$root/tooling/phase-2-live-runners/$2"
 }
+recover_teardown() {
+  env KEEPLING_LIVE_ORCHESTRATION_FILE="$1" KEEPLING_ALLOW_BILLABLE_APPLY=yes \
+    KEEPLING_ALLOW_PROVIDER_DESTROY=yes KEEPLING_LIVE_CHANGE_TRIGGER=fixture-recovery \
+    KEEPLING_LIVE_STAGE_FIXTURE=yes KEEPLING_STAGE_FIXTURE_LEDGER="$fixture/stages" \
+    "$root/tooling/phase-2-live-orchestration.sh" recover-teardown
+}
 
 bundle="$private/orchestration.env" workspace="$private/workspace" run_id=replace-20260922-deadbeef
 write_bundle "$bundle" "$run_id" "$workspace"
@@ -52,8 +58,61 @@ printf 'bootstrap %s %s %s\nimage %s %s %s\nrestore %s %s %s\nruntime %s %s %s\n
   "$run_id" "$workspace" "$digest" "$run_id" "$workspace" "$digest" "$run_id" "$workspace" "$digest" \
   "$run_id" "$workspace" "$digest" "$run_id" "$workspace" "$digest" "$run_id" "$workspace" "$digest" \
   "$run_id" "$workspace" "$digest" >"$fixture/expected"
-cmp -s "$fixture/expected" "$fixture/stages" || die 'stage order, run, workspace, or digest changed'
+cmp -s "$fixture/expected" "$fixture/stages" || { diff -u "$fixture/expected" "$fixture/stages" >&2 || true; die 'stage order, run, workspace, or digest changed'; }
 
+# Recovery is available only after a teardown invocation failed before any
+# provider destroy command could start. It does not require DNS authority.
+recovery_workspace="$private/recovery-workspace" recovery_bundle="$private/recovery.env"
+write_bundle "$recovery_bundle" replace-20260922-recovery "$recovery_workspace"
+armed "$recovery_bundle" bootstrap >/dev/null 2>&1 || die 'recovery fixture bootstrap failed'
+if recover_teardown "$recovery_bundle" >"$fixture/output" 2>&1; then die 'recovery without a prior teardown attempt was accepted'; fi
+if KEEPLING_LIVE_ORCHESTRATION_FILE="$recovery_bundle" KEEPLING_ALLOW_BILLABLE_APPLY=yes \
+  KEEPLING_ALLOW_LIVE_DNS_MUTATION=yes KEEPLING_ALLOW_PROVIDER_DESTROY=yes \
+  KEEPLING_LIVE_CHANGE_TRIGGER=fixture-run KEEPLING_LIVE_STAGE_FIXTURE=yes \
+  KEEPLING_STAGE_FIXTURE_LEDGER="$fixture/stages" KEEPLING_STAGE_FIXTURE_FAIL_AT=teardown \
+  "$root/tooling/phase-2-live-runners/teardown" >"$fixture/output" 2>&1; then
+  die 'injected preflight failure at teardown was accepted'
+fi
+[ -d "$recovery_workspace/.teardown-attempted" ] || die 'failed teardown did not retain its attempt record'
+[ ! -e "$recovery_workspace/.teardown-destroy-started" ] || die 'fixture reached the destructive boundary'
+[ -L "$recovery_workspace/provider-adapters/keepling-provider-destroy" ] || die 'fixture did not retain its exact adapter link'
+recover_teardown "$recovery_bundle" >"$fixture/output" 2>&1 || { cat "$fixture/output" >&2; die 'safe preflight recovery was refused with exact retained adapters'; }
+grep -Fx 'stage=recover-teardown result=passed' "$fixture/output" >/dev/null || die 'recovery output was not explicit'
+if recover_teardown "$recovery_bundle" >"$fixture/output" 2>&1; then die 'completed recovery was accepted twice'; fi
+
+mismatch_workspace="$private/mismatch-workspace" mismatch_bundle="$private/mismatch.env"
+write_bundle "$mismatch_bundle" replace-20260922-mismatch "$mismatch_workspace"
+armed "$mismatch_bundle" bootstrap >/dev/null 2>&1 || die 'mismatched-adapter fixture bootstrap failed'
+if KEEPLING_LIVE_ORCHESTRATION_FILE="$mismatch_bundle" KEEPLING_ALLOW_BILLABLE_APPLY=yes \
+  KEEPLING_ALLOW_LIVE_DNS_MUTATION=yes KEEPLING_ALLOW_PROVIDER_DESTROY=yes \
+  KEEPLING_LIVE_CHANGE_TRIGGER=fixture-run KEEPLING_LIVE_STAGE_FIXTURE=yes \
+  KEEPLING_STAGE_FIXTURE_LEDGER="$fixture/stages" KEEPLING_STAGE_FIXTURE_FAIL_AT=teardown \
+  "$root/tooling/phase-2-live-runners/teardown" >"$fixture/output" 2>&1; then
+  die 'mismatched-adapter preflight fixture unexpectedly passed'
+fi
+rm "$mismatch_workspace/provider-adapters/keepling-provider-ownership" \
+  "$mismatch_workspace/provider-adapters/keepling-provider-state" \
+  "$mismatch_workspace/provider-adapters/keepling-provider-destroy" \
+  "$mismatch_workspace/provider-adapters/keepling-provider-absence"
+rmdir "$mismatch_workspace/provider-adapters"
+mkdir -m 700 "$mismatch_workspace/provider-adapters"
+ln -s "$root/tooling/phase-2-live-runners/teardown" "$mismatch_workspace/provider-adapters/keepling-provider-destroy"
+if recover_teardown "$mismatch_bundle" >"$fixture/output" 2>&1; then die 'recovery accepted a substituted provider adapter'; fi
+[ ! -e "$mismatch_workspace/.teardown-destroy-started" ] || die 'mismatched adapter consumed the destructive fence'
+[ ! -e "$mismatch_workspace/.stage-recover-teardown.complete" ] || die 'mismatched adapter produced completion evidence'
+
+fenced_workspace="$private/fenced-workspace" fenced_bundle="$private/fenced.env"
+write_bundle "$fenced_bundle" replace-20260922-fenced "$fenced_workspace"
+armed "$fenced_bundle" bootstrap >/dev/null 2>&1 || die 'fenced recovery bootstrap failed'
+if KEEPLING_LIVE_ORCHESTRATION_FILE="$fenced_bundle" KEEPLING_ALLOW_BILLABLE_APPLY=yes \
+  KEEPLING_ALLOW_LIVE_DNS_MUTATION=yes KEEPLING_ALLOW_PROVIDER_DESTROY=yes \
+  KEEPLING_LIVE_CHANGE_TRIGGER=fixture-run KEEPLING_LIVE_STAGE_FIXTURE=yes \
+  KEEPLING_STAGE_FIXTURE_LEDGER="$fixture/stages" KEEPLING_STAGE_FIXTURE_FAIL_AT=teardown \
+  "$root/tooling/phase-2-live-runners/teardown" >"$fixture/output" 2>&1; then
+  die 'fenced teardown failure fixture unexpectedly passed'
+fi
+mkdir -m 700 "$fenced_workspace/.teardown-destroy-started"
+if recover_teardown "$fenced_bundle" >"$fixture/output" 2>&1; then die 'recovery after destructive start was accepted'; fi
 if armed "$bundle" image >"$fixture/output" 2>&1; then die 'duplicate stage call was accepted'; fi
 if armed "$bundle" teardown >"$fixture/output" 2>&1; then die 'duplicate teardown attempt was accepted'; fi
 
@@ -100,5 +159,11 @@ done
 sed 's/^IMAGE_DIGEST=.*/IMAGE_DIGEST=mutable/' "$bundle" >"$private/malformed.env"; chmod 600 "$private/malformed.env"
 if "$root/tooling/phase-2-live-orchestration.sh" --validate "$private/malformed.env" >/dev/null 2>&1; then die 'mutable digest accepted'; fi
 if [ -s "$KEEPLING_EXTERNAL_CALL_LEDGER" ]; then die 'a fixture reached an external command boundary'; fi
+for workflow in ios desktop; do
+  path="$root/.github/workflows/$workflow.yml"
+  grep -F 'group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}' "$path" >/dev/null || die "$workflow workflow has no PR-scoped concurrency group"
+  grep -F 'cancel-in-progress: ${{ github.event_name == '\''pull_request'\'' }}' "$path" >/dev/null || die "$workflow workflow cancels non-PR work"
+done
+grep -Fx '    timeout-minutes: 100' "$root/.github/workflows/ios.yml" >/dev/null || die 'iOS simulator timeout is not 100 minutes'
 if grep -E 'credential|task|\.invalid|/Users/|/tmp/' "$fixture/output" >/dev/null 2>&1; then cat "$fixture/output" >&2; die 'private fixture data escaped into stage output'; fi
-printf '%s\n' 'Phase 2 live orchestration fixtures passed: seven run-bound stage actions, failure fences, and external-call ledger remained hermetic'
+printf '%s\n' 'Phase 2 live orchestration fixtures passed: seven run-bound stage actions plus pre-destroy recovery, CI concurrency policy, and external-call ledger remained hermetic'

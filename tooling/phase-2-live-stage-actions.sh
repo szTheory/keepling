@@ -1,26 +1,13 @@
 #!/usr/bin/env sh
 # Run-bound action boundary for the seven repository-owned replacement stages.
 set -eu
-portable_stat() {
-  format=$1; path=$2
-  case "$(uname -s)" in
-    Darwin) stat -f "$format" "$path" ;;
-    *)
-      case "$format" in
-        %Lp) stat -c '%a' "$path" ;;
-        %Su:%Sg) stat -c '%U:%G' "$path" ;;
-        %u) stat -c '%u' "$path" ;;
-        *) stat -c "$format" "$path" ;;
-      esac ;;
-  esac
-}
 umask 077
 
 script_path=$0
 if [ -L "$script_path" ]; then script_path=$(readlink "$script_path"); fi
 repository_root=$(CDPATH='' cd -P "$(dirname "$script_path")/.." && pwd)
 die() { printf '%s\n' "Phase 2 live stage failed: stage=$stage result=refused reason=$1" >&2; exit 1; }
-mode_of() { portable_stat '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
+mode_of() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
 outside_repo() { case "$1" in "$repository_root"|"$repository_root"/*) return 1;; *) return 0;; esac; }
 read_value() { awk -F= -v key="$1" '$1 == key {if (++n != 1) exit 2; print substr($0,length(key)+2)} END {if (n != 1) exit 1}' "$2"; }
 valid_private() {
@@ -57,6 +44,30 @@ load_bundle_credentials() {
   trap 'phase2_credentials_cleanup_transient' EXIT HUP INT TERM
 }
 
+ensure_provider_adapters() {
+  adapter_dir="$workspace/provider-adapters"
+  if [ -L "$adapter_dir" ]; then
+    die 'provider adapter directory cannot be a symlink'
+  elif [ -e "$adapter_dir" ]; then
+    [ -d "$adapter_dir" ] && [ "$(mode_of "$adapter_dir")" = 700 ] || die 'provider adapter directory is unsafe'
+  else
+    mkdir -m 700 "$adapter_dir" || die 'provider adapter directory could not be created'
+  fi
+  unexpected=$(find "$adapter_dir" -mindepth 1 -maxdepth 1 \
+    ! -name keepling-provider-ownership ! -name keepling-provider-state \
+    ! -name keepling-provider-destroy ! -name keepling-provider-absence -print -quit)
+  [ -z "$unexpected" ] || die 'provider adapter directory contains an unexpected entry'
+  for name in keepling-provider-ownership keepling-provider-state keepling-provider-destroy keepling-provider-absence; do
+    link="$adapter_dir/$name"
+    target="$repository_root/tooling/phase-2-live-stage-actions.sh"
+    if [ -e "$link" ] || [ -L "$link" ]; then
+      [ -L "$link" ] && [ "$(readlink "$link")" = "$target" ] || die 'provider adapter link is not repository-owned'
+    else
+      ln -s "$target" "$link" || die 'provider adapter link could not be created'
+    fi
+  done
+}
+
 readiness_adapter() {
   stage=teardown
   bundle=${KEEPLING_LIVE_ORCHESTRATION_FILE:-}
@@ -84,7 +95,12 @@ readiness_adapter() {
     >"$tf_data/variables.tfvars.json" || die 'private provider variables could not be written'
   chmod 600 "$tf_data/variables.tfvars.json"
   "$repository_root/tooling/phase-2-tofu-state.sh" render-init-config "$tf_data/backend.hcl" >/dev/null 2>&1 || die 'private provider backend could not be configured'
-  run_tofu init -input=false -reconfigure -lockfile=readonly -plugin-dir="$provider_dir" -backend-config="$tf_data/backend.hcl" >/dev/null 2>&1 || die 'isolated provider state initialization failed'
+  if ! run_tofu init -input=false -reconfigure -lockfile=readonly -plugin-dir="$provider_dir" -backend-config="$tf_data/backend.hcl" >"$tf_data/init.stdout" 2>"$tf_data/init.stderr"; then
+    diagnostics="$workspace/.provider-adapter-init.log"
+    [ ! -L "$diagnostics" ] || die 'private provider diagnostics path is unsafe'
+    (umask 077; printf 'adapter=%s initialization failed\n' "${KEEPLING_PROVIDER_ADAPTER_OPERATION:-unknown}" >>"$diagnostics"; cat "$tf_data/init.stderr" >>"$diagnostics"; chmod 600 "$diagnostics") || die 'private provider diagnostics could not be retained'
+    die 'isolated provider state initialization failed; inspect the private workspace diagnostics file'
+  fi
   [ "$(readlink "$0")" = "$repository_root/tooling/phase-2-live-stage-actions.sh" ] || die 'provider adapter entry is invalid'
   case "${KEEPLING_PROVIDER_ADAPTER_OPERATION:-}" in
     ownership)
@@ -110,6 +126,10 @@ readiness_adapter() {
       ;;
     destroy)
       [ "$#" -eq 2 ] || die 'destroy adapter arguments are invalid'
+      destroy_fence="$workspace/.teardown-destroy-started"
+      [ "${KEEPLING_PROVIDER_DESTROY_FENCE_FILE:-}" = "$destroy_fence" ] || die 'provider destroy fence binding is invalid'
+      [ ! -e "$destroy_fence" ] || die 'provider destruction already started; recovery is fenced'
+      (umask 077 && mkdir -m 700 "$destroy_fence") || die 'provider destruction fence could not be persisted'
       run_tofu destroy -auto-approve -input=false -var-file="$tf_data/variables.tfvars.json" >/dev/null 2>&1 || die 'provider state destroy failed'
       ;;
     absence)
@@ -142,7 +162,7 @@ esac
 
 [ "$#" -eq 5 ] || { stage=unknown; die 'stage interface requires five arguments'; }
 stage=$1 run_id=$2 workspace=$3 digest=$4 bundle=$5
-case "$stage" in bootstrap|image|restore|runtime|semantic|dns|teardown) ;; *) die 'unknown stage';; esac
+case "$stage" in bootstrap|image|restore|runtime|semantic|dns|teardown|recover-teardown) ;; *) die 'unknown stage';; esac
 printf '%s' "$run_id" | grep -Eq '^[a-z0-9][a-z0-9-]{7,39}$' || die 'invalid run binding'
 printf '%s' "$digest" | grep -Eq '^sha256:[0-9a-f]{64}$' || die 'invalid digest binding'
 case "$workspace:$bundle" in /*:/*) ;; *) die 'private absolute inputs required';; esac
@@ -194,21 +214,86 @@ marker_matches() {
     grep -Fx "STAGE_OUTPUT=.stage-$prev.output" "$1" >/dev/null &&
     [ "$(shasum -a 256 "$workspace/.stage-$prev.output" | awk '{print $1}')" = "$(read_value STAGE_OUTPUT_SHA256 "$1")" ]
 }
+validate_host_trust_checkpoint() {
+  [ -f "$host_trust_pending" ] && [ ! -L "$host_trust_pending" ] && [ "$(mode_of "$host_trust_pending")" = 600 ] || die 'host-trust-checkpoint-unavailable'
+  [ ! -e "$host_trust_verified" ] || die 'host-trust-already-verified'
+  [ "$(read_value RUN_ID "$host_trust_pending")" = "$run_id" ] || die 'host-trust-run-binding-invalid'
+  [ "$(read_value WORKSPACE "$host_trust_pending")" = "$workspace" ] || die 'host-trust-workspace-binding-invalid'
+  [ "$(read_value IMAGE_DIGEST "$host_trust_pending")" = "$digest" ] || die 'host-trust-image-binding-invalid'
+  [ "$(read_value BUNDLE_SHA256 "$host_trust_pending")" = "$bundle_sha" ] || die 'host-trust-bundle-binding-invalid'
+  server_id=$(read_value SERVER_ID "$host_trust_pending")
+  server_name=$(read_value SERVER_NAME "$host_trust_pending")
+  bootstrap_ip=$(read_value IP "$host_trust_pending")
+  printf '%s' "$bootstrap_ip" | awk -F. 'NF==4 {for(i=1;i<=4;i++) if($i !~ /^[0-9]+$/ || $i>255) exit 1; exit 0} {exit 1}' || die 'host-trust-address-invalid'
+  [ -n "$server_id" ] && [ -n "$server_name" ] || die 'host-trust-identity-invalid'
+  [ -f "$workspace/provider-inventory.json" ] && [ ! -L "$workspace/provider-inventory.json" ] && [ "$(mode_of "$workspace/provider-inventory.json")" = 600 ] || die 'host-trust-inventory-unavailable'
+  [ "$(jq -er '.resources.server_id' "$workspace/provider-inventory.json")" = "$server_id" ] || die 'host-trust-server-binding-invalid'
+  [ -f "$workspace/candidate-ip.txt" ] && [ ! -L "$workspace/candidate-ip.txt" ] && [ "$(mode_of "$workspace/candidate-ip.txt")" = 600 ] || die 'host-trust-candidate-proof-unavailable'
+  [ "$(cat "$workspace/candidate-ip.txt")" = "$bootstrap_ip" ] || die 'host-trust-address-binding-invalid'
+}
+require_console_run_marker() {
+  expected_marker=$(read_value RUN_ID "$host_trust_pending") || die 'host-trust-run-binding-invalid'
+  supplied_marker=${KEEPLING_CONSOLE_RUN_MARKER:-}
+  if [ -z "$supplied_marker" ] && [ -r /dev/tty ]; then
+    if ! { printf 'Confirm the exact console run marker shown below (%s): ' "$expected_marker" >/dev/tty && IFS= read -r supplied_marker </dev/tty; }; then
+      die 'console-run-marker-mismatch'
+    fi
+  fi
+  [ "$supplied_marker" = "$expected_marker" ] || die 'console-run-marker-mismatch'
+}
+pin_candidate_host_key() {
+  supplied_fingerprint=$1 candidate_ip=$2 pinned_known_hosts=$3
+  pin_output="$workspace/.host-trust-result.$$"
+  [ ! -e "$pin_output" ] && [ ! -L "$pin_output" ] || die 'host-trust-result-path-unsafe'
+  (umask 077; : >"$pin_output"; chmod 600 "$pin_output") || die 'host-trust-result-unavailable'
+  if "$repository_root/tooling/pin-verified-ssh-host-key.sh" "$candidate_ip" "$supplied_fingerprint" "$pinned_known_hosts" >"$pin_output" 2>&1; then
+    if [ "$(cat "$pin_output")" != 'host-trust result=verified' ]; then
+      rm -f -- "$pin_output"
+      die 'host-trust-helper-invalid-result'
+    fi
+    rm -f -- "$pin_output"
+    return 0
+  fi
+  pin_reason=$(awk 'NR==1 && NF==3 && $1=="host-trust" && $2=="result=refused" && $3 ~ /^reason=[a-z-]+$/ {sub(/^reason=/, "", $3); reason=$3; count++} END {if (NR==1 && count==1) print reason; else exit 1}' "$pin_output" 2>/dev/null) || pin_reason=helper-failure
+  rm -f -- "$pin_output"
+  case "$pin_reason" in
+    invalid-invocation|invalid-candidate-address|invalid-expected-fingerprint|unsafe-known-hosts|scan-unavailable|scan-ambiguous|scan-invalid-key|fingerprint-mismatch|pin-write-failed) ;;
+    *) pin_reason=helper-failure ;;
+  esac
+  die "host-trust-$pin_reason"
+}
 if [ -n "$prev" ]; then marker_matches "$workspace/.stage-$prev.complete" || die "preceding $prev proof is absent or mismatched"; fi
 [ ! -e "$marker" ] || die 'stage was already completed'
 
 if [ "$stage" = teardown ]; then
   [ ! -e "$workspace/.teardown-attempted" ] || die 'teardown was already attempted'
   (umask 077 && mkdir -m 700 "$workspace/.teardown-attempted") || die 'teardown fence could not be persisted'
+elif [ "$stage" = recover-teardown ]; then
+  [ -d "$workspace/.teardown-attempted" ] && [ ! -L "$workspace/.teardown-attempted" ] || die 'no prior teardown attempt is recorded'
+  [ ! -e "$workspace/.teardown-destroy-started" ] || die 'provider destruction already started; recovery is fenced'
+  [ ! -e "$workspace/teardown-evidence.json" ] || die 'teardown evidence already exists'
 fi
 
 # Fixture mode deliberately performs no external operation. The stage wrappers,
 # run binding, ordering, and atomic records are the subject of hermetic tests.
 if [ "${KEEPLING_LIVE_STAGE_FIXTURE:-}" = yes ]; then
   [ -n "${KEEPLING_STAGE_FIXTURE_LEDGER:-}" ] || die 'fixture ledger is required'
+  case "$stage" in teardown|recover-teardown) ensure_provider_adapters ;; esac
   case "$KEEPLING_STAGE_FIXTURE_LEDGER" in /*) ;; *) die 'fixture ledger must be absolute';; esac
   outside_repo "$KEEPLING_STAGE_FIXTURE_LEDGER" || die 'fixture ledger must be external'
   [ -f "$KEEPLING_STAGE_FIXTURE_LEDGER" ] && [ ! -L "$KEEPLING_STAGE_FIXTURE_LEDGER" ] || die 'fixture ledger is unavailable'
+  if [ "$stage" = bootstrap ] && [ "${KEEPLING_RESUME_HOST_TRUST:-}" = yes ]; then
+    validate_host_trust_checkpoint
+    require_console_run_marker
+    supplied=${KEEPLING_HOST_KEY_FINGERPRINT:-}
+    known_hosts=$(read_value SSH_KNOWN_HOSTS_FILE "$bundle") || die 'host-trust-known-hosts-binding-invalid'
+    [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ "$(mode_of "$known_hosts")" = 600 ] || die 'host-trust-known-hosts-invalid'
+    [ ! -s "$known_hosts" ] || die 'host-trust-known-hosts-not-empty'
+    pin_candidate_host_key "$supplied" "$bootstrap_ip" "$known_hosts"
+    printf '%s\n' 'host-trust result=verified' >>"$KEEPLING_STAGE_FIXTURE_LEDGER"
+    printf '%s\n' 'stage=bootstrap result=fixture-host-trust-verified'
+    exit 0
+  fi
   printf 'result=fixture stage=%s\n' "$stage" >"$artifact"; chmod 600 "$artifact"
   printf '%s %s %s %s\n' "$stage" "$run_id" "$workspace" "$digest" >>"$KEEPLING_STAGE_FIXTURE_LEDGER"
   [ "${KEEPLING_STAGE_FIXTURE_FAIL_AT:-}" != "$stage" ] || { printf '%s\n' "stage=$stage result=failed"; exit 1; }
@@ -232,7 +317,13 @@ init_tofu() {
   [ "$(mode_of "$TF_DATA_DIR")" = 700 ] || die 'private OpenTofu data directory permissions are invalid'
   state_config="$workspace/backend.hcl"
   if [ ! -e "$state_config" ]; then "$repository_root/tooling/phase-2-tofu-state.sh" render-init-config "$state_config" >/dev/null 2>&1 || die 'private state backend could not be configured'; fi
-  run_tofu init -reconfigure -lockfile=readonly -plugin-dir="$provider_dir" -backend-config="$state_config" >/dev/null 2>&1 || die 'isolated OpenTofu backend initialization failed'
+  init_log="$workspace/.tofu-init-$stage.log"
+  [ ! -L "$init_log" ] || die 'private OpenTofu diagnostics path is unsafe'
+  if ! run_tofu init -reconfigure -lockfile=readonly -plugin-dir="$provider_dir" -backend-config="$state_config" >"$workspace/.tofu-init-$stage.stdout" 2>"$init_log"; then
+    chmod 600 "$init_log" "$workspace/.tofu-init-$stage.stdout"
+    die "isolated OpenTofu backend initialization failed; inspect private diagnostics for stage $stage"
+  fi
+  chmod 600 "$init_log" "$workspace/.tofu-init-$stage.stdout"
 }
 write_tfvars() {
   selection_file="$repository_root/infra/tofu/hetzner/selection.json"
@@ -264,19 +355,7 @@ pause_for_host_trust() {
   printf '%s\n' 'Resume with: tooling/verify-host-replacement.sh --credentialed --resume-host-trust'
 }
 resume_host_trust() {
-  [ -f "$host_trust_pending" ] && [ ! -L "$host_trust_pending" ] && [ "$(mode_of "$host_trust_pending")" = 600 ] || die 'host trust checkpoint is unavailable'
-  [ ! -e "$host_trust_verified" ] || die 'host trust is already verified'
-  [ "$(awk -F= '$1=="RUN_ID" {print substr($0,index($0,"=")+1)}' "$host_trust_pending")" = "$run_id" ] || die 'host trust checkpoint run binding is invalid'
-  [ "$(awk -F= '$1=="WORKSPACE" {print substr($0,index($0,"=")+1)}' "$host_trust_pending")" = "$workspace" ] || die 'host trust checkpoint workspace binding is invalid'
-  [ "$(awk -F= '$1=="IMAGE_DIGEST" {print substr($0,index($0,"=")+1)}' "$host_trust_pending")" = "$digest" ] || die 'host trust checkpoint image binding is invalid'
-  [ "$(awk -F= '$1=="BUNDLE_SHA256" {print substr($0,index($0,"=")+1)}' "$host_trust_pending")" = "$bundle_sha" ] || die 'host trust checkpoint bundle binding is invalid'
-  server_id=$(awk -F= '$1=="SERVER_ID" {print substr($0,index($0,"=")+1)}' "$host_trust_pending")
-  server_name=$(awk -F= '$1=="SERVER_NAME" {print substr($0,index($0,"=")+1)}' "$host_trust_pending")
-  bootstrap_ip=$(awk -F= '$1=="IP" {print substr($0,index($0,"=")+1)}' "$host_trust_pending")
-  printf '%s' "$bootstrap_ip" | awk -F. 'NF==4 {for(i=1;i<=4;i++) if($i !~ /^[0-9]+$/ || $i>255) exit 1; exit 0} {exit 1}' || die 'host trust checkpoint address is invalid'
-  [ -n "$server_id" ] && [ -n "$server_name" ] || die 'host trust checkpoint identity is invalid'
-  [ "$(jq -er '.resources.server_id' "$workspace/provider-inventory.json")" = "$server_id" ] || die 'host trust checkpoint server id does not match retained ownership'
-  [ "$(cat "$workspace/candidate-ip.txt")" = "$bootstrap_ip" ] || die 'host trust checkpoint address does not match retained candidate proof'
+  validate_host_trust_checkpoint
 
   # Refresh through the configured provider state and ensure the candidate did
   # not change while the run was paused.
@@ -298,16 +377,16 @@ resume_host_trust() {
     die 'candidate identity changed while the run was paused'
   rm -f -- "$current_identity"
 
+  require_console_run_marker
   supplied=${KEEPLING_HOST_KEY_FINGERPRINT:-}
   if [ -z "$supplied" ] && [ -r /dev/tty ]; then
     printf '%s' 'Enter the SHA256 fingerprint verified in the Hetzner VNC console: ' >/dev/tty
     IFS= read -r supplied </dev/tty || die 'host fingerprint input was not received'
   fi
-  printf '%s' "$supplied" | grep -Eq '^SHA256:[A-Za-z0-9+/]{43}$' || die 'a valid console-verified SHA256 fingerprint is required'
   known_hosts=$(read_value SSH_KNOWN_HOSTS_FILE "$bundle")
   [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ "$(mode_of "$known_hosts")" = 600 ] || die 'private known-hosts file is invalid'
   [ ! -s "$known_hosts" ] || die 'known-hosts file changed while host trust was paused'
-  "$repository_root/tooling/pin-verified-ssh-host-key.sh" "$bootstrap_ip" "$supplied" "$known_hosts" >/dev/null || die 'candidate SSH host fingerprint did not match the Hetzner VNC fingerprint'
+  pin_candidate_host_key "$supplied" "$bootstrap_ip" "$known_hosts"
   offered=$supplied
   trusted_sha=$(shasum -a 256 "$known_hosts" | awk '{print $1}')
   printf 'version=1\nRUN_ID=%s\nWORKSPACE=%s\nIMAGE_DIGEST=%s\nBUNDLE_SHA256=%s\nSERVER_ID=%s\nIP=%s\nFINGERPRINT=%s\nKNOWN_HOSTS_SHA256=%s\n' \
@@ -359,7 +438,8 @@ case "$stage" in
         bootstrap_ip=$(awk -F= '$1=="IP" {print $2}' "$host_trust_pending")
         printf '%s\n' 'phase2-live status=paused reason=host-key-verification-required'
         printf 'candidate server: %s (%s)\n' "$server_name" "$bootstrap_ip"
-        printf '%s\n' 'The SSH fingerprint is displayed on the Hetzner VNC login screen; VM login is not required.'
+        printf 'Expected console run marker: %s\n' "$run_id"
+        printf '%s\n' 'The SSH fingerprint and run marker are displayed on the exact candidate Hetzner VNC login screen; VM login is not required.'
         printf '%s\n' 'Resume with: tooling/verify-host-replacement.sh --credentialed --resume-host-trust'
         exit 75
       fi
@@ -467,20 +547,17 @@ case "$stage" in
     jq -e 'keys==["cutover_propagated","elapsed_seconds","https_readiness","result","rollback_propagated","temporary_record_deleted","version"] and .version==1 and .result=="PASS" and .cutover_propagated==true and .rollback_propagated==true and .https_readiness==true and .temporary_record_deleted==true' "$dns_evidence" >/dev/null 2>&1 || die 'DNS evidence did not prove isolated cutover, readiness, rollback, and deletion'
     printf '%s\n' 'result=passed proof=cutover-and-rollback-propagated' >"$artifact"; chmod 600 "$artifact"; complete_stage
     ;;
-  teardown)
+  teardown|recover-teardown)
     teardown_evidence="$workspace/teardown-evidence.json"
     if [ ! -s "$workspace/provider-inventory.json" ]; then
       [ ! -e "$workspace/.apply-started" ] || die 'partial provider apply has no exact retained inventory; no broad destroy was attempted'
       printf '{"version":1,"result":"NO_RESOURCE","provider_mutation":false}\n' >"$teardown_evidence"; chmod 600 "$teardown_evidence"
     else
-      adapter_dir="$workspace/provider-adapters"; mkdir -m 700 "$adapter_dir"
-      ln -s "$repository_root/tooling/phase-2-live-stage-actions.sh" "$adapter_dir/keepling-provider-ownership"
-      ln -s "$repository_root/tooling/phase-2-live-stage-actions.sh" "$adapter_dir/keepling-provider-state"
-      ln -s "$repository_root/tooling/phase-2-live-stage-actions.sh" "$adapter_dir/keepling-provider-destroy"
-      ln -s "$repository_root/tooling/phase-2-live-stage-actions.sh" "$adapter_dir/keepling-provider-absence"
+      ensure_provider_adapters
+      adapter_dir="$workspace/provider-adapters"
       KEEPLING_PROVIDER_OWNERSHIP_PROBE="$adapter_dir/keepling-provider-ownership" KEEPLING_PROVIDER_STATE_PROBE="$adapter_dir/keepling-provider-state" \
       KEEPLING_PROVIDER_DESTROY_RUNNER="$adapter_dir/keepling-provider-destroy" KEEPLING_PROVIDER_ABSENCE_PROBE="$adapter_dir/keepling-provider-absence" \
-        "$repository_root/tooling/destroy-owned-provider.sh" "$workspace/provider-inventory.json" "$run_id" "$teardown_evidence" >/dev/null 2>&1 || die 'exact-owned teardown or absence proof failed'
+        "$repository_root/tooling/destroy-owned-provider.sh" "$workspace/provider-inventory.json" "$run_id" "$teardown_evidence" || die 'exact-owned teardown or absence proof failed'
     fi
     jq -e '(.result=="NO_RESOURCE" and .provider_mutation==false) or (.result=="PASS" and .ownership_reread==true and .state_destroyed==true and .provider_absence==true)' "$teardown_evidence" >/dev/null 2>&1 || die 'teardown evidence is incomplete'
     printf '%s\n' 'result=passed proof=single-attempt-owned-teardown' >"$artifact"; chmod 600 "$artifact"; complete_stage
