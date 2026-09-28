@@ -45,6 +45,7 @@ jobs:
     timeout-minutes: 20
     outputs:
       application-digest: ${{ steps.package.outputs.application-digest }}
+      signing-available: ${{ steps.signing.outputs.available }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -149,7 +150,10 @@ jobs:
   desktop-packaged:
     needs: [desktop-package]
     runs-on: macos-15
-    timeout-minutes: 20
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -183,10 +187,116 @@ jobs:
             // copiedApplicationPath/executablePath are left as recorded.
             const archiveName = path.basename(manifest.archivePath);
             manifest.archivePath = path.join(root, archiveName);
+            if (manifest.stapledArchivePath) {
+              manifest.stapledArchivePath = path.join(root, path.basename(manifest.stapledArchivePath));
+            }
+            manifest.stapledApplicationPath = null;
             fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
             console.log(manifestPath);
           " "$artifact_root" | tee "$RUNNER_TEMP/rebase.txt"
           echo "manifest-path=$artifact_root/package-manifest.json" >> "$GITHUB_OUTPUT"
+      - name: Require signing for main-branch upgrade evidence
+        if: github.event_name == 'push'
+        env:
+          SIGNING_AVAILABLE: ${{ needs.desktop-package.outputs.signing-available }}
+        run: |
+          if [ "$SIGNING_AVAILABLE" != "true" ]; then
+            echo "::error title=Signed upgrade evidence unavailable::Main-branch desktop checks require the configured Developer ID signing secrets; refusing to treat an unsigned build as KPL-03 Test 13 evidence."
+            exit 1
+          fi
+      - name: Select the previous successful main package build
+        id: previous
+        if: github.event_name == 'push'
+        env:
+          CURRENT_SOURCE_REVISION: ${{ github.sha }}
+          GITHUB_API_URL: ${{ github.api_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs'
+
+          const [owner, repository] = (process.env.GITHUB_REPOSITORY ?? '').split('/')
+          if (!owner || !repository || !process.env.GITHUB_TOKEN) {
+            throw new Error('repository or workflow token is unavailable for prior-run lookup')
+          }
+          const apiBase = (process.env.GITHUB_API_URL ?? '').replace(/\/+$/, '')
+          if (!apiBase) throw new Error('GitHub API base URL is unavailable for prior-run lookup')
+          const endpoint = new URL(
+            `repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/actions/workflows/desktop.yml/runs`,
+            `${apiBase}/`,
+          )
+          endpoint.searchParams.set('branch', 'main')
+          endpoint.searchParams.set('event', 'push')
+          endpoint.searchParams.set('exclude_pull_requests', 'true')
+          endpoint.searchParams.set('per_page', '100')
+          endpoint.searchParams.set('status', 'success')
+
+          const response = await fetch(endpoint, {
+            headers: {
+              Accept: 'application/vnd.github+json',
+              Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+              'X-GitHub-Api-Version': '2026-03-10',
+            },
+          })
+          if (!response.ok) throw new Error('GitHub API prior-run lookup failed')
+          const body = await response.json()
+          const previous = body.workflow_runs?.find(
+            (run) => run.head_sha !== process.env.CURRENT_SOURCE_REVISION,
+          )
+          if (!previous || !/^\d+$/.test(String(previous.id)) || !/^[0-9a-f]{40}$/i.test(previous.head_sha ?? '')) {
+            throw new Error('no previous successful main package run is available for signed upgrade evidence')
+          }
+          appendFileSync(
+            process.env.GITHUB_OUTPUT,
+            `run-id=${previous.id}\nhead-sha=${previous.head_sha}\n`,
+          )
+          NODE
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        if: github.event_name == 'push'
+        with:
+          name: ${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}
+          path: ${{ runner.temp }}/keepling-desktop-previous-package
+          run-id: ${{ steps.previous.outputs.run-id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Rebase the previous signed package manifest
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          artifact_root="$RUNNER_TEMP/keepling-desktop-previous-package"
+          chmod -R u+x "$artifact_root"
+          node -e '
+            const fs = require("node:fs");
+            const path = require("node:path");
+            const root = process.argv[1];
+            const manifestPath = path.join(root, "package-manifest.json");
+            const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+            manifest.archivePath = path.join(root, path.basename(manifest.archivePath));
+            manifest.stapledArchivePath = manifest.stapledArchivePath
+              ? path.join(root, path.basename(manifest.stapledArchivePath))
+              : null;
+            manifest.stapledApplicationPath = null;
+            fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
+          ' "$artifact_root"
+      - name: Prove credential and namespace continuity across signed packaged builds
+        if: github.event_name == 'push'
+        env:
+          CURRENT_SOURCE_REVISION: ${{ github.sha }}
+          PREVIOUS_SOURCE_REVISION: ${{ steps.previous.outputs.head-sha }}
+        run: |
+          set -o pipefail
+          node tooling/verify-desktop-upgrade-continuity.mjs \
+            --previous-manifest "$RUNNER_TEMP/keepling-desktop-previous-package/package-manifest.json" \
+            --current-manifest "${{ steps.rebase.outputs.manifest-path }}" \
+            | tee "$RUNNER_TEMP/kpl03-upgrade-continuity.txt"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ always() && github.event_name == 'push' && needs.desktop-package.outputs.signing-available == 'true' }}
+        with:
+          name: kpl03-signed-upgrade-continuity
+          path: ${{ runner.temp }}/kpl03-upgrade-continuity.txt
+          if-no-files-found: ignore
+          retention-days: 90
       - name: Run every packaged Playwright spec against the exact downloaded bytes
         run: node tooling/smoke-desktop-packaged.mjs --manifest "${{ steps.rebase.outputs.manifest-path }}"
 

@@ -78,17 +78,23 @@ const requiredWorkflowPath = path.join(
   repositoryRoot,
   ".github/workflows/repository-integrity.yml",
 );
+const desktopWorkflowPath = path.join(
+  repositoryRoot,
+  ".github/workflows/desktop.yml",
+);
 const recoveryWorkflowPath = path.join(
   repositoryRoot,
   ".github/workflows/recovery-drills.yml",
 );
 let requiredWorkflow;
+let desktopWorkflow;
 let recoveryWorkflow;
 try {
   requiredWorkflow = readFileSync(requiredWorkflowPath, "utf8");
+  desktopWorkflow = readFileSync(desktopWorkflowPath, "utf8");
   recoveryWorkflow = readFileSync(recoveryWorkflowPath, "utf8");
 } catch {
-  fail("required or scheduled workflow is missing");
+  fail("required, desktop, or scheduled workflow is missing");
 }
 
 for (const lane of requiredLanes.slice(0, -1)) {
@@ -163,6 +169,36 @@ for (const [name, source] of [
   }
 }
 
+const imageArtifactJob = jobBlocks.find((block) => /^\n? {2}image-compose-deploy:/.test(block));
+if (!imageArtifactJob) fail("required workflow is missing the image-compose-deploy job");
+for (const marker of [
+  "KEEPLING_IMAGE_TAG: keepling-server:plan-02-09-amd64",
+  "Export exact tested Phase 2 image and contract",
+  "source_revision=$(git rev-parse HEAD)",
+  "[ \"$source_revision\" = \"$GITHUB_SHA\" ]",
+  "export-verified-image-archive.sh",
+  "--resolve-image-archive",
+  "[ \"$archive_bytes\" -le 1073741824 ]",
+  "image_manifest_digest",
+  "run_attempt",
+  "name: phase2-verified-image",
+  "image-contract.json",
+  "run-binding.json",
+  "if-no-files-found: error",
+  "retention-days: 14",
+  "compression-level: 0",
+]) {
+  if (!imageArtifactJob.includes(marker)) {
+    fail(`image CI artifact job omits exact tested-image binding marker: ${marker}`);
+  }
+}
+const imageTestIndex = imageArtifactJob.indexOf("Run exact image, Compose, and deploy lane");
+const exportImageIndex = imageArtifactJob.indexOf("Export exact tested Phase 2 image and contract");
+const uploadImageIndex = imageArtifactJob.indexOf("name: phase2-verified-image");
+if (!(imageTestIndex >= 0 && imageTestIndex < exportImageIndex && exportImageIndex < uploadImageIndex)) {
+  fail("verified image artifact must be exported and uploaded only after the exact image lane");
+}
+
 for (const marker of [
   "tooling/runtime-versions.env",
   "apps/server/mix.lock",
@@ -193,6 +229,84 @@ for (const marker of [
   if (!recoveryWorkflow.includes(marker)) fail(`recovery workflow omits ${marker}`);
 }
 
+for (const marker of [
+  "signing-available: ${{ steps.signing.outputs.available }}",
+  "Require signing for main-branch upgrade evidence",
+  "Select the previous successful main package build",
+  "id: previous\n        if: github.event_name == 'push'",
+  "actions/workflows/desktop.yml/runs",
+  "const apiBase = (process.env.GITHUB_API_URL ?? '').replace(/\\/+$/, '')",
+  "endpoint.searchParams.set('branch', 'main')",
+  "endpoint.searchParams.set('event', 'push')",
+  "endpoint.searchParams.set('exclude_pull_requests', 'true')",
+  "endpoint.searchParams.set('status', 'success')",
+  "run.head_sha !== process.env.CURRENT_SOURCE_REVISION",
+  "Authorization: `Bearer ${process.env.GITHUB_TOKEN}`",
+  "X-GitHub-Api-Version': '2026-03-10'",
+  "run-id: ${{ steps.previous.outputs.run-id }}",
+  "Prove credential and namespace continuity across signed packaged builds",
+  "node tooling/verify-desktop-upgrade-continuity.mjs",
+  "name: kpl03-signed-upgrade-continuity",
+  "actions: read",
+]) {
+  if (!desktopWorkflow.includes(marker)) {
+    fail(`desktop workflow omits signed-upgrade continuity contract marker: ${marker}`);
+  }
+}
+if (!desktopWorkflow.includes("if: github.event_name == 'push'")) {
+  fail("signed-upgrade continuity must be restricted to main pushes where signing secrets are available");
+}
+if (!/desktop-promote:\n\s+needs: \[[^\]]*desktop-packaged/.test(desktopWorkflow)) {
+  fail("desktop promotion must remain gated on the packaged job that runs upgrade continuity");
+}
+
+const upgradeRunnerPath = path.join(repositoryRoot, "tooling/verify-desktop-upgrade-continuity.mjs");
+const upgradeTestPath = path.join(repositoryRoot, "apps/desktop/test/packaged-upgrade/continuity.spec.ts");
+let upgradeRunner;
+let upgradeTest;
+try {
+  upgradeRunner = readFileSync(upgradeRunnerPath, "utf8");
+  upgradeTest = readFileSync(upgradeTestPath, "utf8");
+} catch {
+  fail("signed-upgrade continuity runner or packaged test is missing");
+}
+for (const marker of [
+  "developerIdSigned !== true",
+  'status !== \'Accepted\'',
+  "stapled !== true",
+  "stapledArchiveDigestSha256",
+  "stapler",
+  "codesign",
+  "spctl",
+  "previous.designatedRequirement !== current.designatedRequirement",
+  "KEEPLING_PREVIOUS_PACKAGE_MANIFEST",
+]) {
+  if (!upgradeRunner.includes(marker)) {
+    fail(`signed-upgrade runner omits fail-closed package evidence marker: ${marker}`);
+  }
+}
+for (const marker of [
+  "synthetic:access:kpl03-upgrade",
+  "synthetic:refresh:kpl03-upgrade",
+  "BrowserDelegatedAuthorization",
+  "KeeplingSyncAdapter",
+  "const serverResponse =",
+  "handleCallback",
+  "outcome.kind !== 'authorized'",
+  "server_instance",
+  "__keeplingTestCredentials",
+  "activateNamespace",
+  "readNamespaceBinding",
+  "encryptedCredential.includes",
+]) {
+  if (!upgradeTest.includes(marker)) {
+    fail(`packaged-upgrade test omits continuity/privacy marker: ${marker}`);
+  }
+}
+if (upgradeTest.includes("secrets.")) {
+  fail("packaged-upgrade test must not read or depend on real credential secrets");
+}
+
 if (recoveryWorkflow.includes('cron: "30 6 1 1,4,7,10 *"')) {
   fail('recovery workflow must not schedule the sealed host-replacement gate');
 }
@@ -203,5 +317,5 @@ if (!recoveryWorkflow.includes(
 }
 
 console.log(
-  `CI contract passed: lanes=${requiredLanes.length} pins=full-sha caches=exact scheduled=non-vacuous privacy_self_test=passed`,
+  `CI contract passed: lanes=${requiredLanes.length} pins=full-sha caches=exact scheduled=non-vacuous desktop_upgrade=main-only privacy_self_test=passed`,
 );
