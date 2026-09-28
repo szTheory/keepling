@@ -1,5 +1,11 @@
 #!/usr/bin/env sh
 set -eu
+file_mode() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    *) stat -c '%a' "$1" ;;
+  esac
+}
 root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 fixture=$(mktemp -d "${TMPDIR:-/tmp}/keepling-synthetic-recovery-test.XXXXXX")
 chmod 700 "$fixture"
@@ -27,7 +33,7 @@ mkdir -m 700 "$fixture/handoff"
 jq -e '(keys|sort)==["dump_file","provenance_file","rehearsal_login_credential_file","source_kind","version"] and .source_kind=="synthetic-rehearsal" and .version==1' "$fixture/handoff/recovery-selection.json" >/dev/null || die 'selection schema is invalid'
 jq -e '(keys|sort)==["plaintext_bytes","plaintext_sha256","source_kind","verification","version"] and .source_kind=="synthetic-rehearsal" and .verification=={local_capture:true,local_restore:true,synthetic:true}' "$fixture/handoff/recovery.provenance.json" >/dev/null || die 'synthetic provenance claims are invalid'
 [ "$(sha "$fixture/handoff/recovery.dump")" = "$(sha "$fixture/source/recovery.dump")" ] || die 'dump changed in handoff'
-[ "$(stat -f '%Lp' "$fixture/handoff/rehearsal-login-credential")" = 600 ] || die 'login credential is not private'
+[ "$(file_mode "$fixture/handoff/rehearsal-login-credential")" = 600 ] || die 'login credential is not private'
 
 mkdir -m 700 "$fixture/bad-handoff"
 printf x >>"$fixture/source/recovery.dump"

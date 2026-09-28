@@ -1,5 +1,11 @@
 #!/usr/bin/env sh
 set -eu
+file_mode() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    *) stat -c '%a' "$1" ;;
+  esac
+}
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
 die() { printf 'Host-key pin regression failed: %s\n' "$1" >&2; exit 1; }
@@ -106,6 +112,6 @@ if FIXTURE_SCAN_IP=192.0.2.22 FIXTURE_SCAN_KEY="$key_blob" PATH="$root/fixture-b
 fi
 grep -Fx 'host-trust result=refused reason=unsafe-known-hosts' "$root/preexisting/output" >/dev/null || die 'unsafe file did not return a closed reason'
 grep -Fx '192.0.2.22 ssh-ed25519 preexisting' "$root/preexisting/known_hosts" >/dev/null || die 'unsafe known-hosts refusal changed the original file'
-[ "$(stat -f '%Lp' "$root/valid/known_hosts" 2>/dev/null || stat -c '%a' "$root/valid/known_hosts")" = 600 ] || die 'successful pin changed the required mode'
+[ "$(file_mode "$root/valid/known_hosts")" = 600 ] || die 'successful pin changed the required mode'
 
 echo 'Host-key pin regression passed: closed match, invalid input, unavailable/ambiguous scan, mismatch, and write-once refusal'

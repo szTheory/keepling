@@ -4,7 +4,12 @@ set -eu
 umask 077
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 die() { printf '%s\n' "phase-2-live-setup: $*" >&2; exit 2; }
-mode_of() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
+mode_of() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    *) stat -c '%a' "$1" ;;
+  esac
+}
 outside_repo() { case "$1" in "$repository_root"|"$repository_root"/*) return 1;; *) return 0;; esac; }
 private_file() {
   [ -f "$1" ] && [ ! -L "$1" ] && [ "$(mode_of "$1")" = 600 ] || return 1

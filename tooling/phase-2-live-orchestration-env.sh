@@ -27,7 +27,7 @@ case "$KEEPLING_LIVE_ORCHESTRATION_FILE" in
   "$_keepling_live_root"|"$_keepling_live_root"/*) printf '%s\n' 'Phase 2 live orchestration file must remain outside the repository' >&2; exit 2 ;;
 esac
 [ -f "$KEEPLING_LIVE_ORCHESTRATION_FILE" ] && [ ! -L "$KEEPLING_LIVE_ORCHESTRATION_FILE" ] || { printf '%s\n' 'Phase 2 live orchestration file is unavailable' >&2; exit 2; }
-_keepling_live_mode=$(portable_stat '%Lp' "$KEEPLING_LIVE_ORCHESTRATION_FILE" 2>/dev/null || stat -c '%a' "$KEEPLING_LIVE_ORCHESTRATION_FILE")
+_keepling_live_mode=$(portable_stat '%Lp' "$KEEPLING_LIVE_ORCHESTRATION_FILE")
 [ "$_keepling_live_mode" = 600 ] || { printf '%s\n' 'Phase 2 live orchestration file must have mode 0600' >&2; exit 2; }
 for _keepling_live_stage in bootstrap image restore runtime semantic dns teardown; do
   _keepling_live_name=$(printf '%s' "$_keepling_live_stage" | tr '[:lower:]' '[:upper:]')

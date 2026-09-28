@@ -15,6 +15,13 @@ require_command() {
   command -v "$1" >/dev/null 2>&1 || die "required command '$1' is unavailable"
 }
 
+mode_of() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    *) stat -c '%a' "$1" ;;
+  esac
+}
+
 require_credentials() {
   phase2_credentials_load_transient || die "external JSON credential references are invalid"
   require_credential_file() {
@@ -558,7 +565,7 @@ stage_candidate_bundle() {
   for name in Caddyfile compose-override.yml compose.yml image.tar.gz new-login-credential recovery.dump recovery.provenance.json remote-prepare.sh; do
     file="$destination/$name"
     sha256=$(shasum -a 256 "$file" | awk '{print $1}')
-    mode=$(stat -f '%Lp' "$file" 2>/dev/null || stat -c '%a' "$file")
+    mode=$(mode_of "$file")
     size=$(wc -c <"$file" | tr -d ' ')
     files_json=$(printf '%s' "$files_json" | jq \
       --arg name "$name" --arg sha256 "$sha256" --arg mode "$mode" --argjson size "$size" \

@@ -1,5 +1,11 @@
 #!/usr/bin/env sh
 set -eu
+file_mode() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    *) stat -c '%a' "$1" ;;
+  esac
+}
 
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
@@ -272,7 +278,7 @@ teardown_env() {
 }
 teardown_env ./tooling/destroy-owned-provider.sh "$fixture_root/inventory.json" "$run_id" "$fixture_root/teardown-evidence.json" >/dev/null
 [ -d "$fixture_root/.teardown-destroy-started" ] || die "provider destroy boundary was not fenced"
-[ "$(stat -f '%Lp' "$fixture_root/.teardown-progress.log" 2>/dev/null || stat -c '%a' "$fixture_root/.teardown-progress.log")" = 600 ] || die "teardown progress record was not private"
+[ "$(file_mode "$fixture_root/.teardown-progress.log")" = 600 ] || die "teardown progress record was not private"
 grep -Fx 'step=provider-absence-passed' "$fixture_root/.teardown-progress.log" >/dev/null || die "teardown progress did not record the final proof"
 grep -Eq "$run_id|192[.]0[.]2|token" "$fixture_root/.teardown-progress.log" && die "teardown progress retained private identity or credential context"
 [ "$(wc -l <"$fixture_root/destroy-count" | tr -d ' ')" -eq 1 ] || die "exact-owned teardown did not destroy exactly once"

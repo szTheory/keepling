@@ -3,6 +3,12 @@ set -eu
 umask 077
 
 refuse() { printf 'host-trust result=refused reason=%s\n' "$1" >&2; exit 1; }
+mode_of() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    *) stat -c '%a' "$1" ;;
+  esac
+}
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 [ "$#" -eq 3 ] || refuse invalid-invocation
 ip=$1 expected=$2 known_hosts=$3
@@ -11,7 +17,7 @@ printf '%s' "$expected" | grep -Eq '^SHA256:[A-Za-z0-9+/]{43}$' || refuse invali
 case "$known_hosts" in /*) ;; *) refuse unsafe-known-hosts;; esac
 case "$known_hosts" in "$repository_root"|"$repository_root"/*) refuse unsafe-known-hosts;; esac
 [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] || refuse unsafe-known-hosts
-mode=$(stat -f '%Lp' "$known_hosts" 2>/dev/null || stat -c '%a' "$known_hosts") || refuse unsafe-known-hosts
+mode=$(mode_of "$known_hosts") || refuse unsafe-known-hosts
 [ "$mode" = 600 ] && [ ! -s "$known_hosts" ] || refuse unsafe-known-hosts
 
 directory=$(CDPATH='' cd -P "$(dirname "$known_hosts")" 2>/dev/null && pwd) || refuse unsafe-known-hosts
@@ -58,7 +64,7 @@ offered=$(ssh-keygen -lf "$candidate" -E sha256 2>/dev/null | awk '
 
 cp "$candidate" "$staged" || refuse pin-write-failed
 chmod 600 "$staged" || refuse pin-write-failed
-[ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ "$(stat -f '%Lp' "$known_hosts" 2>/dev/null || stat -c '%a' "$known_hosts")" = 600 ] && [ ! -s "$known_hosts" ] || refuse unsafe-known-hosts
+[ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ "$(mode_of "$known_hosts")" = 600 ] && [ ! -s "$known_hosts" ] || refuse unsafe-known-hosts
 mv "$staged" "$known_hosts" || refuse pin-write-failed
 trap 'rm -f -- "$candidate" "$scanned"' EXIT HUP INT TERM
 printf '%s\n' 'host-trust result=verified'

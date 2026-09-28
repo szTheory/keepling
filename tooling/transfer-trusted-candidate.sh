@@ -9,7 +9,12 @@ die() { printf '%s\n' "TRUSTED_TRANSFER_FAILED_STAGE=$1" >&2; exit "${2:-40}"; }
 operation=${1:-full}
 [ "$#" -le 1 ] || die usage
 case "$operation" in full|bootstrap|image-transfer|restore|runtime|semantic) ;; *) die usage;; esac
-mode_of() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
+mode_of() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    *) stat -c '%a' "$1" ;;
+  esac
+}
 outside_repo() { case "$1" in "$repository_root"|"$repository_root"/*) return 1;; *) return 0;; esac; }
 absolute_regular_private() {
   case "$1" in /*) ;; *) return 1;; esac

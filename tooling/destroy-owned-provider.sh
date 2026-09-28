@@ -4,6 +4,12 @@ set -eu
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
 die() { echo "Exact-owned provider teardown failed: $*" >&2; exit 1; }
+mode_of() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    *) stat -c '%a' "$1" ;;
+  esac
+}
 
 [ "$#" -eq 3 ] || die "usage: $0 INVENTORY EXPECTED_RUN_ID EVIDENCE_FILE"
 inventory=$1
@@ -23,7 +29,7 @@ evidence_directory=$(dirname "$evidence_file")
 [ -d "$evidence_directory" ] || die "teardown evidence directory is missing"
 progress_file="$evidence_directory/.teardown-progress.log"
 if [ -e "$progress_file" ] || [ -L "$progress_file" ]; then
-  [ -f "$progress_file" ] && [ ! -L "$progress_file" ] && [ "$(stat -f '%Lp' "$progress_file" 2>/dev/null || stat -c '%a' "$progress_file")" = 600 ] || die "private teardown progress record is unsafe"
+  [ -f "$progress_file" ] && [ ! -L "$progress_file" ] && [ "$(mode_of "$progress_file")" = 600 ] || die "private teardown progress record is unsafe"
 else
   (umask 077; : >"$progress_file"; chmod 600 "$progress_file") || die "private teardown progress record could not be created"
 fi
