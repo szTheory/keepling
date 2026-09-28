@@ -150,8 +150,10 @@ jobs:
 
   phase2-runtime:
     name: phase2-${{ matrix.lane }}
-    runs-on: macos-15
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
+    env:
+      KEEPLING_IMAGE_PLATFORM: linux/amd64
     strategy:
       fail-fast: false
       matrix:
@@ -169,9 +171,19 @@ jobs:
             apps/server/_build
             node_modules
           key: phase2-${{ runner.os }}-${{ matrix.lane }}-${{ hashFiles('tooling/runtime-versions.env', 'apps/server/mix.lock', 'pnpm-lock.yaml') }}
+      - name: Install asdf
+        run: |
+          if [ ! -d "$HOME/.asdf/.git" ]; then
+            scratch="$(mktemp -d)"
+            git clone https://github.com/asdf-vm/asdf.git "$scratch/asdf" --branch v0.14.1
+            mkdir -p "$HOME/.asdf"
+            cp -R "$scratch/asdf/." "$HOME/.asdf/"
+            rm -rf "$scratch"
+          fi
+          echo "$HOME/.asdf/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.asdf/shims" >> "$GITHUB_PATH"
       - name: Provision exact repository runtimes
         run: |
-          brew list asdf >/dev/null 2>&1 || brew install asdf
           ./tooling/runtime-preflight.sh --provision
           corepack enable
           pnpm install --frozen-lockfile
@@ -193,6 +205,7 @@ jobs:
     timeout-minutes: 30
     env:
       KEEPLING_IMAGE_PLATFORM: linux/amd64
+      KEEPLING_IMAGE_TAG: keepling-server:plan-02-09-amd64
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -205,6 +218,40 @@ jobs:
           set -o pipefail
           ./tooling/test-phase-2.sh --lane image-compose-deploy | tee "$RUNNER_TEMP/image-compose-deploy.txt"
           ./tooling/verify-privacy.sh "$RUNNER_TEMP/image-compose-deploy.txt"
+      - name: Export exact tested Phase 2 image and contract
+        run: |
+          set -eu
+          source_revision=$(git rev-parse HEAD)
+          [ "$source_revision" = "$GITHUB_SHA" ] || { echo "::error::checked-out source revision does not match this workflow event"; exit 1; }
+          output="$RUNNER_TEMP/phase2-verified-image"
+          mkdir -m 700 "$output"
+          archive="$output/keepling-server-amd64.tar.gz"
+          contract="$output/image-contract.json"
+          binding="$output/run-binding.json"
+          ./tooling/export-verified-image-archive.sh "$KEEPLING_IMAGE_TAG" "$archive"
+          ./tooling/verify-host-replacement.sh --resolve-image-archive "$archive" "$contract" >/dev/null
+          jq -e --arg revision "$source_revision" '.version == 2 and .revision == $revision and .architecture == "amd64" and .os == "linux" and (.archive_sha256 | test("^[0-9a-f]{64}$")) and (.manifest_digest | test("^sha256:[0-9a-f]{64}$")) and (.rootfs_diff_ids | type == "array" and length > 0)' "$contract" >/dev/null
+          archive_bytes=$(stat -c '%s' "$archive")
+          [ "$archive_bytes" -gt 0 ] && [ "$archive_bytes" -le 1073741824 ] || { echo "::error::verified image archive is outside the 1 GiB artifact limit"; exit 1; }
+          jq -n \
+            --arg run_id "$GITHUB_RUN_ID" \
+            --arg run_attempt "$GITHUB_RUN_ATTEMPT" \
+            --arg source_revision "$source_revision" \
+            --arg archive_sha256 "$(jq -r .archive_sha256 "$contract")" \
+            --arg image_manifest_digest "$(jq -r .manifest_digest "$contract")" \
+            '{version:1,run_id:$run_id,run_attempt:$run_attempt,source_revision:$source_revision,archive_sha256:$archive_sha256,image_manifest_digest:$image_manifest_digest}' \
+            > "$binding"
+          chmod 600 "$binding"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: phase2-verified-image
+          path: |
+            ${{ runner.temp }}/phase2-verified-image/keepling-server-amd64.tar.gz
+            ${{ runner.temp }}/phase2-verified-image/image-contract.json
+            ${{ runner.temp }}/phase2-verified-image/run-binding.json
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: image-compose-deploy-timing

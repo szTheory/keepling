@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+exec "$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)/phase-2-live-orchestration.sh" runtime

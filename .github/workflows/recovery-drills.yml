@@ -4,7 +4,6 @@ on:
   schedule:
     - cron: "15 5 * * *"
     - cron: "45 5 * * 0"
-    - cron: "30 6 1 1,4,7,10 *"
   workflow_dispatch:
     inputs:
       drill:
@@ -130,7 +129,7 @@ jobs:
           retention-days: 90
 
   quarterly-host-replacement:
-    if: github.event.schedule == '30 6 1 1,4,7,10 *' || (github.event_name == 'workflow_dispatch' && inputs.drill == 'host-replacement')
+    if: github.event_name == 'workflow_dispatch' && inputs.drill == 'host-replacement'
     environment: recovery-live
     runs-on: macos-15
     timeout-minutes: 20

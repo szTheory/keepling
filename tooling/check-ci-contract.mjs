@@ -169,6 +169,36 @@ for (const [name, source] of [
   }
 }
 
+const imageArtifactJob = jobBlocks.find((block) => /^\n? {2}image-compose-deploy:/.test(block));
+if (!imageArtifactJob) fail("required workflow is missing the image-compose-deploy job");
+for (const marker of [
+  "KEEPLING_IMAGE_TAG: keepling-server:plan-02-09-amd64",
+  "Export exact tested Phase 2 image and contract",
+  "source_revision=$(git rev-parse HEAD)",
+  "[ \"$source_revision\" = \"$GITHUB_SHA\" ]",
+  "export-verified-image-archive.sh",
+  "--resolve-image-archive",
+  "[ \"$archive_bytes\" -le 1073741824 ]",
+  "image_manifest_digest",
+  "run_attempt",
+  "name: phase2-verified-image",
+  "image-contract.json",
+  "run-binding.json",
+  "if-no-files-found: error",
+  "retention-days: 14",
+  "compression-level: 0",
+]) {
+  if (!imageArtifactJob.includes(marker)) {
+    fail(`image CI artifact job omits exact tested-image binding marker: ${marker}`);
+  }
+}
+const imageTestIndex = imageArtifactJob.indexOf("Run exact image, Compose, and deploy lane");
+const exportImageIndex = imageArtifactJob.indexOf("Export exact tested Phase 2 image and contract");
+const uploadImageIndex = imageArtifactJob.indexOf("name: phase2-verified-image");
+if (!(imageTestIndex >= 0 && imageTestIndex < exportImageIndex && exportImageIndex < uploadImageIndex)) {
+  fail("verified image artifact must be exported and uploaded only after the exact image lane");
+}
+
 for (const marker of [
   "tooling/runtime-versions.env",
   "apps/server/mix.lock",
@@ -185,7 +215,6 @@ for (const marker of [
 for (const marker of [
   'cron: "15 5 * * *"',
   'cron: "45 5 * * 0"',
-  'cron: "30 6 1 1,4,7,10 *"',
   "environment: recovery-protected",
   "environment: recovery-live",
   "missing_protected_credentials",
@@ -276,6 +305,15 @@ for (const marker of [
 }
 if (upgradeTest.includes("secrets.")) {
   fail("packaged-upgrade test must not read or depend on real credential secrets");
+}
+
+if (recoveryWorkflow.includes('cron: "30 6 1 1,4,7,10 *"')) {
+  fail('recovery workflow must not schedule the sealed host-replacement gate');
+}
+if (!recoveryWorkflow.includes(
+  "if: github.event_name == 'workflow_dispatch' && inputs.drill == 'host-replacement'",
+)) {
+  fail('host-replacement gate must require an explicit workflow dispatch');
 }
 
 console.log(

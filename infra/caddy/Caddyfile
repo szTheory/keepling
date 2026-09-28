@@ -4,11 +4,6 @@
 }
 
 (keepling_proxy) {
-	log {
-		output stdout
-		format json
-	}
-
 	reverse_proxy app:4000 {
 		header_up X-Forwarded-Proto https
 	}
@@ -20,7 +15,7 @@
 }
 
 :80 {
-	import keepling_proxy
+	redir https://{host}{uri} permanent
 }
 
 https://{$KEEPLING_HOST:localhost} {
