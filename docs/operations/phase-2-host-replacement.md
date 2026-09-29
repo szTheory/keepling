@@ -38,6 +38,33 @@ then deletes and verifies absence of that exact run-owned record. It does not
 edit the existing configured A record. The cloud replacement is manual-only;
 daily and weekly disposable backup restore checks remain in CI.
 
+## Plan 02-19 live attempt (2026-09-28)
+
+The separately authorized single attempt is consumed and NON_PASSING. The
+credentialed lane passed runner readiness but refused at bootstrap because the
+pinned OpenTofu executable was unavailable in the invocation environment; it
+stopped before provider apply. Exact run-labeled post-attempt queries found no
+server, volume, primary IP, network, firewall, or SSH key. Automatic cleanup
+recorded `NO_RESOURCE`; there was nothing to destroy. Candidate-console trust,
+SSH, restore and epoch, candidate runtime, semantic proof, RPO/RTO, and DNS
+cutover/rollback/deletion were not reached. Do not retry this run or reuse its
+authorization. Any new attempt requires a separately reviewed run and fresh
+approval, with the pinned OpenTofu executable and provider plugin directory
+available to that execution environment. DATA-03, OPS-02, and OPS-03 remain
+open.
+
+## Plan 02-20 preparation disposition (2026-09-29)
+
+The same-invocation host-trust continuation was superseded by the explicit
+pause, separate resume, and abort checkpoint retained in this branch. This
+follow-on adds the pinned OpenTofu/provider preflight and its sanitized local
+regression; that regression passes without making provider, SSH, or DNS calls.
+Plan 02-20 remains `NOT_STARTED` / `NON_PASSING` for live acceptance: no fresh
+run or private bundle was prepared, no approval was requested, and no live
+provider, SSH, restore, or DNS action occurred. DATA-03, OPS-02, and OPS-03
+remain open. Do not treat the earlier artifact or any consumed run approval as
+authority for a future attempt.
+
 ## Local secret boundary
 
 Keep all five JSON documents and two separate key files outside the checkout, for example in `~/.config/keepling/phase-2/`, mode `0600` (directories `0700`). Copy the non-secret shapes from `infra/credentials/templates/`; never copy a completed document into the repository.
