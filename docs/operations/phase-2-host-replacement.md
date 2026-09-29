@@ -2,6 +2,42 @@
 
 This is the one external-account setup batch for the final Hetzner replacement rehearsal. It deliberately creates no resources by itself and does not prove backup or restore health.
 
+## Developer image-verification loop
+
+On Apple Silicon, use the local Docker engine's native ARM64 image for the fast
+inner loop:
+
+```sh
+buildx_config=$(mktemp -d "${TMPDIR:-/tmp}/keepling-buildx.XXXXXX")
+chmod 700 "$buildx_config"
+BUILDX_CONFIG="$buildx_config" KEEPLING_IMAGE_PLATFORM=linux/arm64 \
+  ./tooling/test-phase-2.sh --lane image-compose-deploy
+```
+
+This checks local image build, Compose, readiness, and deployment behavior. A
+pass is development feedback for that source tree; it does not prove the
+`linux/amd64` image or close Plan 02-20 Gate B. In particular, do not treat an
+Apple Silicon x86 emulator or VM as native x86 evidence. The private Buildx
+config keeps builder metadata writes outside the repository and avoids the
+Docker Desktop default-config permission failure seen on this host.
+
+The pull-request `image-compose-deploy` job in
+`.github/workflows/repository-integrity.yml` uses a standard GitHub-hosted
+`ubuntu-24.04` x86_64 runner and sets `KEEPLING_IMAGE_PLATFORM=linux/amd64`.
+That is the preferred target-architecture lane; no maintained local x86 VM or
+persistent self-hosted runner is needed. Its current build/Compose/deploy pass
+does not by itself close Gate B because it does not export and reload the final
+archive or prove recovery from the exact deployed image.
+
+For Gate B, one future source-owned x64 job must bind a single checked-out
+revision through one image build, final archive export, removal and reload,
+archive identity validation, deployment using the reloaded image, and matching
+synthetic capture and restore. Keep the archive, dump, rehearsal credential,
+and raw logs in runner temporary storage; upload only a privacy-checked,
+sanitized result. Do not give this job provider, SSH, remote-backup, DNS, or
+teardown credentials. This synthetic CI proof remains separate from live host
+replacement acceptance.
+
 ## Current host-trust gate (2026-09-27)
 
 Plan 02-17's one authorized run is consumed and NON_PASSING. The supplied
