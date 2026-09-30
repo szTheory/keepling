@@ -31,6 +31,7 @@ manifest_digest=sha256:222222222222222222222222222222222222222222222222222222222
 rootfs_id=sha256:3333333333333333333333333333333333333333333333333333333333333333
 export FIXTURE_ROOT=$fixture FIXTURE_BASELINE_SHA=$baseline_sha FIXTURE_SOURCE_SHA=$source_sha
 export REAL_GIT=$real_git
+export FIXTURE_REAL_PRIVACY=$root/tooling/verify-privacy.sh
 export FIXTURE_CONFIG_ID=$config_id FIXTURE_MANIFEST_DIGEST=$manifest_digest FIXTURE_ROOTFS_ID=$rootfs_id
 export KEEPLING_IMAGE_PLATFORM=linux/amd64 KEEPLING_IMAGE_TAG=keepling-server:plan-02-09-amd64
 export RUNNER_TEMP=$runner_temp KEEPLING_GATE_B_TEST_HOOK_DIR=$hook
@@ -112,7 +113,7 @@ cat >"$hook/verify-privacy.sh" <<'MOCK'
 #!/usr/bin/env sh
 set -eu
 [ "${FIXTURE_PRIVACY:-ok}" = ok ] || exit 33
-jq -e '.status=="CI_ROUTE_READY" and .synthetic_recovery==true' "$1" >/dev/null
+"$FIXTURE_REAL_PRIVACY" "$1"
 MOCK
 cat >"$fixture/mock-bin/docker" <<'MOCK'
 #!/usr/bin/env sh
