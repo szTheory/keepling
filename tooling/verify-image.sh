@@ -40,7 +40,22 @@ cleanup() {
 }
 trap cleanup EXIT HUP INT TERM
 
-docker buildx build \
+build_context=${KEEPLING_BUILD_CONTEXT_ARCHIVE:-}
+if [ -n "$build_context" ]; then
+  [ -f "$build_context" ] && [ ! -L "$build_context" ] && [ -r "$build_context" ] || die "immutable build context archive is unavailable"
+  docker buildx build \
+    --no-cache \
+    --platform "$image_platform" \
+    --load \
+    --metadata-file "$metadata_file" \
+    --build-arg "KEEPLING_BUILD_ERL_FLAGS=$emulation_erl_flags" \
+    --build-arg "OCI_REVISION=$revision" \
+    --tag "$image_tag" \
+    --file infra/images/server/Dockerfile \
+    - <"$build_context"
+else
+  docker buildx build \
+  --no-cache \
   --platform "$image_platform" \
   --load \
   --metadata-file "$metadata_file" \
@@ -48,7 +63,8 @@ docker buildx build \
   --build-arg "OCI_REVISION=$revision" \
   --tag "$image_tag" \
   --file infra/images/server/Dockerfile \
-  .
+    .
+fi
 
 manifest_digest=$(jq -r '."containerimage.digest" // empty' "$metadata_file")
 case "$manifest_digest" in sha256:????????????????????????????????????????????????????????????????) ;; *) die "build did not return an immutable manifest digest" ;; esac

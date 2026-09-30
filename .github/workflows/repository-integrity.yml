@@ -60,6 +60,22 @@ jobs:
           assert_refused tooling/fixtures/release-manifest.local-unattested.json 'nothing local may bind to locally built bytes'
           assert_refused tooling/fixtures/release-manifest.not-produced-artifact.json 'a lane cannot have tested bytes that were never built'
           assert_refused tooling/fixtures/release-manifest.dangling-evidence.json 'a digest naming nothing proves nothing'
+          # A blocked release record must fail without a contradictory PASSED summary.
+          blocked_output="$(node tooling/verify-release.mjs --manifest .planning/releases/candidate-5/release-manifest.json --offline 2>&1)" && {
+            echo 'verify-release accepted the retained blocked candidate-5 manifest' >&2
+            printf '%s\n' "$blocked_output" >&2
+            exit 1
+          }
+          printf '%s\n' "$blocked_output" | grep -Fq 'verification did not pass; see the lane and artifact failures above' || {
+            echo 'verify-release did not clearly identify its expected non-passing verdict' >&2
+            printf '%s\n' "$blocked_output" >&2
+            exit 1
+          }
+          if printf '%s\n' "$blocked_output" | grep -Fq 'verification did not pass (PASSED)'; then
+            echo 'verify-release contradicted its non-zero exit by reporting PASSED' >&2
+            printf '%s\n' "$blocked_output" >&2
+            exit 1
+          fi
           echo 'release-verifier guards intact: vanished-lane=refused local-unattested=refused not-produced-artifact=refused dangling-evidence=refused'
       - name: Report the committed release evidence that exists at this revision
         run: |
@@ -200,7 +216,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  image-compose-deploy:
+  phase2-verified-image:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -256,6 +272,23 @@ jobs:
         with:
           name: image-compose-deploy-timing
           path: ${{ runner.temp }}/image-compose-deploy.txt
+          if-no-files-found: error
+          retention-days: 14
+
+
+  image-compose-deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      KEEPLING_IMAGE_PLATFORM: linux/amd64
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Run source-bound native x64 image, reload, deploy, and synthetic recovery proof
+        run: ./tooling/verify-phase-2-gate-b.sh "$RUNNER_TEMP/phase-2-gate-b.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: phase-2-gate-b-route-evidence
+          path: ${{ runner.temp }}/phase-2-gate-b.json
           if-no-files-found: error
           retention-days: 14
 
@@ -315,7 +348,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     needs:
-      [ci-contract, repository-integrity, phase2-linux, phase2-runtime, image-compose-deploy, opentofu-host-fixtures, export-reader]
+      [ci-contract, repository-integrity, phase2-linux, phase2-runtime, phase2-verified-image, image-compose-deploy, opentofu-host-fixtures, export-reader]
     if: always()
     steps:
       - name: Assert every required dependency succeeded

@@ -19,6 +19,7 @@ csrf_token=
 task_id=
 recovery_output=
 recovery_login_credential=
+deployed_image_id_file=${KEEPLING_DEPLOYED_IMAGE_ID_FILE:-}
 
 compose_run() {
   docker compose -f infra/compose/compose.yml -p "$project" "$@"
@@ -101,9 +102,16 @@ deploy_exact_digest() {
   done
 
   image_tag=${KEEPLING_IMAGE_TAG:-keepling-server:plan-02-07}
-  docker image inspect "$image_tag" >/dev/null 2>&1 || ./tooling/verify-image.sh
+  expected_image_id=${KEEPLING_EXPECTED_IMAGE_ID:-}
+  if [ -n "$expected_image_id" ]; then
+    require_exact_digest "$expected_image_id" || die "expected image ID is not immutable"
+    docker image inspect "$image_tag" >/dev/null 2>&1 || die "expected reloaded image is absent; refusing to rebuild"
+  else
+    docker image inspect "$image_tag" >/dev/null 2>&1 || ./tooling/verify-image.sh
+  fi
   image_id=$(docker image inspect "$image_tag" --format '{{.Id}}')
   require_exact_digest "$image_id" || die "local promotion input is mutable"
+  [ -z "$expected_image_id" ] || [ "$image_id" = "$expected_image_id" ] || die "promoted image ID does not match the archive-loaded expectation"
   image_architecture=$(docker image inspect "$image_tag" --format '{{.Architecture}}')
   engine_architecture=$(docker info --format '{{.Architecture}}')
   KEEPLING_RUNTIME_ERL_FLAGS=
@@ -162,6 +170,18 @@ deploy_exact_digest() {
   caddy_before=$(compose_run ps -q caddy)
   compose_run up -d --no-deps --force-recreate app >/dev/null
   wait_for_ready
+  app_container=$(compose_run ps -q app)
+  [ -n "$app_container" ] || die "running Compose app container is unavailable"
+  running_image_id=$(docker inspect "$app_container" --format '{{.Image}}')
+  [ "$running_image_id" = "$image_id" ] || die "running Compose app image ID differs from the promoted image"
+  if [ -n "$deployed_image_id_file" ]; then
+    case "$deployed_image_id_file" in /*) ;; *) die "deployed image ID path must be absolute";; esac
+    case "$deployed_image_id_file" in "$repository_root"|"$repository_root"/*) die "deployed image ID path must remain outside the repository";; esac
+    [ ! -e "$deployed_image_id_file" ] || die "deployed image ID path already exists"
+    [ -d "$(dirname "$deployed_image_id_file")" ] || die "deployed image ID directory is unavailable"
+    (umask 077; printf '%s\n' "$running_image_id" >"$deployed_image_id_file")
+    chmod 600 "$deployed_image_id_file"
+  fi
   caddy_after=$(compose_run ps -q caddy)
   [ "$caddy_before" = "$caddy_after" ] || die "app promotion recreated the public edge"
 
