@@ -30,9 +30,10 @@ jobs:
     # `// swift-tools-version: 6.3` and the macos-15 image's default Xcode
     # ships Swift 6.1. D-06 already mandates the Xcode 26.6 floor.
     runs-on: macos-26
-    # Recent hosted attempts took 72–78 minutes. Keep a 22-minute margin while
-    # returning the account-wide macOS slot sooner if the simulator hangs.
-    timeout-minutes: 100
+    # The hosted run passed the 22-lane phase gate, then hit the 100-minute cap
+    # during the final standalone server-driven-sim lane. Allow 20 more minutes
+    # for that lane to finish.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
 
