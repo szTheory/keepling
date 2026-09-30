@@ -8,6 +8,13 @@ trap 'rm -rf -- "$fixture"' EXIT HUP INT TERM
 inputs='{"version":1,"dns_zone_id":"fixture-zone","dns_record_name":"tasks.example.invalid","b2_primary_endpoint":"https://s3.us-west-004.backblazeb2.com","b2_primary_region":"us-west-004","b2_primary_bucket":"fixture-bucket","server_image_id":"12345","admin_source_cidrs":["192.0.2.10/32"],"candidate_source":"rebuilt-archive","recovery_source":"same-run-synthetic-capture","login_source":"same-run-synthetic-capture"}'
 identity='ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFixturePublicIdentity keepling-fixture'
 target=$fixture/private
+mode_of() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    Linux) stat -c '%a' "$1" ;;
+    *) return 1 ;;
+  esac
+}
 run_materializer() {
   env -i PATH="$PATH" HOME="$HOME" TMPDIR="${TMPDIR:-/tmp}" \
     HCLOUD_TOKEN='fixture-hcloud-token-123456789' CLOUDFLARE_API_TOKEN='FixtureSentinelCloudflareToken' \
@@ -30,7 +37,7 @@ else
   exit 1
 fi
 
-[ "$(stat -f '%Lp' "$target" 2>/dev/null || stat -c '%a' "$target")" = 700 ] || { echo 'not ok - private directory mode'; exit 1; }
+[ "$(mode_of "$target")" = 700 ] || { echo 'not ok - private directory mode'; exit 1; }
 expected='export KEEPLING_HETZNER_CREDENTIAL_FILE="'"$target"'/hetzner.json"
 export KEEPLING_CLOUDFLARE_DNS_CREDENTIAL_FILE="'"$target"'/cloudflare-dns.json"
 export KEEPLING_BACKUP_PRIMARY_CREDENTIAL_FILE="'"$target"'/b2-primary.json"
@@ -40,7 +47,7 @@ export KEEPLING_SSH_PUBLIC_KEY_FILE="'"$target"'/replacement-run.pub"
 export KEEPLING_BACKUP_CIPHER_FILE="'"$target"'/backup-cipher.key"'
 [ "$(cat "$target/env.sh")" = "$expected" ] || { echo 'not ok - exact seven-line environment manifest'; exit 1; }
 [ "$(find "$target" -maxdepth 1 -type f | wc -l | tr -d ' ')" = 8 ] || { echo 'not ok - exact private file inventory'; exit 1; }
-for f in "$target"/*; do [ ! -L "$f" ] && [ "$(stat -f '%Lp' "$f" 2>/dev/null || stat -c '%a' "$f")" = 600 ] || { echo 'not ok - private regular file mode'; exit 1; }; done
+for f in "$target"/*; do [ ! -L "$f" ] && [ "$(mode_of "$f")" = 600 ] || { echo 'not ok - private regular file mode'; exit 1; }; done
 jq -e '(keys|sort)==["token","version"] and .version==1' "$target/hetzner.json" >/dev/null
 jq -e '(keys|sort)==["api_token","record_name","version","zone_id"] and .zone_id=="fixture-zone" and .record_name=="tasks.example.invalid"' "$target/cloudflare-dns.json" >/dev/null
 jq -e '(keys|sort)==["access_key_id","bucket","endpoint","region","secret_access_key","version"] and .endpoint=="https://s3.us-west-004.backblazeb2.com" and .region=="us-west-004" and .bucket=="fixture-bucket"' "$target/b2-primary.json" >/dev/null

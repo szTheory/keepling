@@ -9,7 +9,13 @@ cd "$repository_root"
 
 die() { printf '%s\n' "Gate B route refused: $1" >&2; exit 2; }
 command_required() { command -v "$1" >/dev/null 2>&1 || die "required command '$1' is unavailable"; }
-mode_of() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
+mode_of() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    Linux) stat -c '%a' "$1" ;;
+    *) printf '%s\n' 'unsupported operating system for stat mode lookup' >&2; return 1 ;;
+  esac
+}
 sha256_file() {
   if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{print $1}'
   else shasum -a 256 "$1" | awk '{print $1}'; fi

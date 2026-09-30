@@ -12,6 +12,14 @@ refuse() {
   exit 1
 }
 
+mode_of() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    Linux) stat -c '%a' "$1" ;;
+    *) printf '%s\n' 'unsupported operating system for stat mode lookup' >&2; return 1 ;;
+  esac
+}
+
 validate_authorization() {
   [ -n "${KEEPLING_AUTHORIZATION_JSON:-}" ] || refuse authorization-missing
   [ -n "${KEEPLING_AUTHORIZATION_SHA256:-}" ] || refuse authorization-digest-missing
@@ -224,7 +232,7 @@ known_hosts=${KEEPLING_KNOWN_HOSTS_FILE:-}
 case "$known_hosts" in /*) ;; *) refuse known-hosts-unavailable;; esac
 case "$known_hosts" in "$root"|"$root"/*) refuse known-hosts-in-repository;; esac
 [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ ! -s "$known_hosts" ] || refuse known-hosts-not-empty
-known_mode=$(stat -f '%Lp' "$known_hosts" 2>/dev/null || stat -c '%a' "$known_hosts") || refuse known-hosts-mode-invalid
+known_mode=$(mode_of "$known_hosts") || refuse known-hosts-mode-invalid
 [ "$known_mode" = 600 ] || refuse known-hosts-mode-invalid
 env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" TOFU_BIN="${TOFU_BIN:-}" \
   "$root/tooling/verify-host-replacement.sh" --dry-run >/dev/null 2>&1 || refuse local-dry-run-failed
@@ -277,7 +285,7 @@ known_hosts=${KEEPLING_KNOWN_HOSTS_FILE:-}
 case "$known_hosts" in /*) ;; *) refuse known-hosts-unavailable;; esac
 case "$known_hosts" in "$root"|"$root"/*) refuse known-hosts-in-repository;; esac
 [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ ! -s "$known_hosts" ] || refuse known-hosts-not-empty
-known_mode=$(stat -f '%Lp' "$known_hosts" 2>/dev/null || stat -c '%a' "$known_hosts") || refuse known-hosts-mode-invalid
+known_mode=$(mode_of "$known_hosts") || refuse known-hosts-mode-invalid
 [ "$known_mode" = 600 ] || refuse known-hosts-mode-invalid
 
 # Create one isolated in-memory agent only after fresh authorization and the
@@ -390,7 +398,7 @@ env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" KEEPLING_IMAGE_TAG="$imag
   sh "$root/tooling/verify-deploy.sh" --local --recovery-output "$recovery_capture" >>"$raw_log" 2>&1 || refuse same-run-deploy-capture-failed
 private_file() {
   [ -f "$1" ] && [ ! -L "$1" ] || return 1
-  mode=$(stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1") || return 1
+  mode=$(mode_of "$1") || return 1
   [ "$mode" = 600 ] || return 1
   parent=$(CDPATH='' cd -P "$(dirname "$1")" 2>/dev/null && pwd) || return 1
   case "$parent/$(basename "$1")" in "$root"|"$root"/*) return 1;; esac

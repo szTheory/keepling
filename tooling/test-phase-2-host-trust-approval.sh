@@ -7,6 +7,13 @@ waiter=$root/tooling/wait-for-phase-2-host-trust.sh
 [ -f "$workflow" ] && [ -x "$approver" ] && [ -x "$waiter" ] || { printf '%s\n' 'not ok - host-trust workflow and helpers must exist and be executable'; exit 1; }
 fixture=$(mktemp -d "${TMPDIR:-/tmp}/keepling-host-trust-test.XXXXXX")
 chmod 700 "$fixture"
+mode_of() {
+  case "$(uname -s)" in
+    Darwin) stat -f '%Lp' "$1" ;;
+    Linux) stat -c '%a' "$1" ;;
+    *) return 1 ;;
+  esac
+}
 trap 'rm -rf -- "$fixture"' EXIT HUP INT TERM
 ledger=$fixture/external-calls
 : >"$ledger"
@@ -43,7 +50,7 @@ grep -F -- '--signal-output' "$waiter" >/dev/null || {
 }
 run_wait --verify-signal "$fixture/signal.json" --signal-output "$fixture/accepted-signal.json" >"$fixture/out" 2>"$fixture/err" || { cat "$fixture/out" "$fixture/err" >&2; exit 1; }
 grep -Fqx 'host-trust status=verified signal=single-use' "$fixture/out" || { cat "$fixture/out" >&2; exit 1; }
-[ "$(stat -f '%Lp' "$fixture/accepted-signal.json" 2>/dev/null || stat -c '%a' "$fixture/accepted-signal.json")" = 600 ] || { printf '%s\n' 'not ok - accepted signal must be private'; exit 1; }
+[ "$(mode_of "$fixture/accepted-signal.json")" = 600 ] || { printf '%s\n' 'not ok - accepted signal must be private'; exit 1; }
 python3 - "$fixture/signal.json" "$fixture/accepted-signal.json" <<'PY' || { printf '%s\n' 'not ok - waiter did not retain the validated sanitized signal'; exit 1; }
 import json,sys
 source,target=map(lambda p:json.load(open(p,encoding="utf-8")),sys.argv[1:])

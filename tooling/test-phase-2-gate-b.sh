@@ -26,11 +26,12 @@ git -C "$root" archive --format=tar HEAD >"$fixture/baseline.tar"
 baseline_sha=$(sha_file "$fixture/baseline.tar")
 source_sha=$(git -C "$root" rev-parse HEAD)
 real_git=$(command -v git)
+real_stat=$(command -v stat)
 config_id=sha256:1111111111111111111111111111111111111111111111111111111111111111
 manifest_digest=sha256:2222222222222222222222222222222222222222222222222222222222222222
 rootfs_id=sha256:3333333333333333333333333333333333333333333333333333333333333333
 export FIXTURE_ROOT=$fixture FIXTURE_BASELINE_SHA=$baseline_sha FIXTURE_SOURCE_SHA=$source_sha
-export REAL_GIT=$real_git
+export REAL_GIT=$real_git REAL_STAT=$real_stat
 export FIXTURE_REAL_PRIVACY=$root/tooling/verify-privacy.sh
 export FIXTURE_CONFIG_ID=$config_id FIXTURE_MANIFEST_DIGEST=$manifest_digest FIXTURE_ROOTFS_ID=$rootfs_id
 export KEEPLING_IMAGE_PLATFORM=linux/amd64 KEEPLING_IMAGE_TAG=keepling-server:plan-02-09-amd64
@@ -62,7 +63,7 @@ cat >"$hook/export-image.sh" <<'MOCK'
 set -eu
 [ "$1" = keepling-server:plan-02-09-amd64 ] || exit 28
 printf 'mock final image archive\n' >"$2"
-chmod 600 "$2"
+chmod "${FIXTURE_ARCHIVE_MODE:-600}" "$2"
 MOCK
 cat >"$hook/resolve-archive.sh" <<'MOCK'
 #!/usr/bin/env sh
@@ -163,7 +164,17 @@ fi
 MOCK
 cat >"$fixture/mock-bin/uname" <<'MOCK'
 #!/usr/bin/env sh
-printf '%s\n' x86_64
+case "${1:-}" in
+  -s) printf '%s\n' Linux ;;
+  -m) printf '%s\n' x86_64 ;;
+  *) exit 1 ;;
+esac
+MOCK
+cat >"$fixture/mock-bin/stat" <<'MOCK'
+#!/usr/bin/env sh
+set -eu
+[ "$1" = -c ] && [ "$2" = '%a' ] || exit 40
+exec "$REAL_STAT" -f '%Lp' "$3"
 MOCK
 for protected_tool in ssh tofu terraform hcloud cloudflare curl gh; do
   cat >"$fixture/mock-bin/$protected_tool" <<'MOCK'
@@ -201,6 +212,7 @@ run_case() {
 
 run_case positive pass
 [ "$(sha_file "$fixture/baseline.tar")" = "$baseline_sha" ] || die 'build inputs changed the immutable Git archive digest'
+run_case broad-archive-mode fail FIXTURE_ARCHIVE_MODE=644
 run_case bad-revision fail FIXTURE_BAD_CONTRACT=revision
 run_case missing-revision fail FIXTURE_BAD_CONTRACT=missing-revision
 run_case bad-archive fail FIXTURE_BAD_CONTRACT=archive
@@ -224,13 +236,17 @@ run_case missing-context-sha fail FIXTURE_CONTEXT_SHA_MODE=missing
 # Host architecture must fail before any image/export/deploy hook runs.
 cat >"$fixture/mock-bin/uname" <<'MOCK'
 #!/usr/bin/env sh
-printf '%s\n' aarch64
+case "${1:-}" in
+  -s) printf '%s\n' Linux ;;
+  -m) printf '%s\n' aarch64 ;;
+  *) exit 1 ;;
+esac
 MOCK
 chmod 700 "$fixture/mock-bin/uname"
 run_case wrong-host fail
 rm "$fixture/mock-bin/uname"
 
-[ "$(cat "$fixture/build-count")" -eq 15 ] || die 'unexpected number of image builds occurred in cases reaching the image verifier'
+[ "$(cat "$fixture/build-count")" -eq 16 ] || die 'unexpected number of image builds occurred in cases reaching the image verifier'
 [ "$(sha_file "$fixture/baseline.tar")" = "$baseline_sha" ] || die 'fixture inputs changed the immutable context digest'
 [ ! -s "$fixture/external-call-ledger" ] || die 'fixture recorded a forbidden external action'
-printf '%s\n' 'Gate B route fixtures passed: cases=21 positive=1 refused=20 external_calls=0'
+printf '%s\n' 'Gate B route fixtures passed: cases=22 positive=1 refused=21 external_calls=0'
