@@ -182,6 +182,13 @@ assert.equal(result.artifact_id, 4567);
 assert.equal(result.artifact_name, artifactName);
 assert.equal(result.platform, "linux/amd64");
 assert.equal(result.synthetic_recovery, true);
+assert.deepEqual(Object.keys(result).sort(), [
+  "archive_sha256", "artifact_digest", "artifact_id", "artifact_name", "artifact_zip_sha256",
+  "config_image_id", "context_tar_sha256", "deployed_image_id", "manifest_digest", "platform",
+  "repository", "required_jobs", "rootfs_diff_ids_sha256", "run_attempt", "run_id",
+  "source_commit_sha", "source_tree_sha", "status", "synthetic_recovery", "version", "workflow_path",
+].sort());
+assert.equal(result.required_jobs.length, 11);
 assert.deepEqual(ledger, [
   "GET run",
   "GET workflow",
@@ -223,6 +230,15 @@ const refusals = [
   ["artifact content tree mismatch", (s) => { const p = makeProof(); p.source_tree_sha = "9".repeat(40); s.artifactZip = zipOne("phase-2-gate-b.json", JSON.stringify(p)); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
   ["emulated image platform", (s) => { const p = makeProof(); p.platform = "linux/arm64"; s.artifactZip = zipOne("phase-2-gate-b.json", JSON.stringify(p)); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
   ["mismatched deployed image", (s) => { const p = makeProof(); p.deployed_image_id = `sha256:${"9".repeat(64)}`; s.artifactZip = zipOne("phase-2-gate-b.json", JSON.stringify(p)); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
+  ["missing context tar identity", (s) => { const p = makeProof(); p.context_tar_sha256 = ""; s.artifactZip = zipOne("phase-2-gate-b.json", JSON.stringify(p)); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
+  ["missing final archive identity", (s) => { const p = makeProof(); p.archive_sha256 = ""; s.artifactZip = zipOne("phase-2-gate-b.json", JSON.stringify(p)); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
+  ["missing OCI manifest identity", (s) => { const p = makeProof(); p.manifest_digest = "sha256:bad"; s.artifactZip = zipOne("phase-2-gate-b.json", JSON.stringify(p)); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
+  ["missing config identity", (s) => { const p = makeProof(); p.config_image_id = "sha256:bad"; s.artifactZip = zipOne("phase-2-gate-b.json", JSON.stringify(p)); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
+  ["missing rootfs identity", (s) => { const p = makeProof(); p.rootfs_diff_ids_sha256 = ""; s.artifactZip = zipOne("phase-2-gate-b.json", JSON.stringify(p)); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
+  ["route-ready label cannot claim acceptance", (s) => { const p = makeProof(); p.status = "GATE_B_PASSED"; s.artifactZip = zipOne("phase-2-gate-b.json", JSON.stringify(p)); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
+  ["ZIP path traversal", (s) => { s.artifactZip = zipOne("../phase-2-gate-b.json", JSON.stringify(makeProof())); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
+  ["multiple ZIP entries", (s) => { s.artifactZip = Buffer.from(s.artifactZip); s.artifactZip.writeUInt16LE(2, 8); s.artifactZip.writeUInt16LE(2, 10); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; }],
+  ["invalid proof JSON", (s) => { s.artifactZip = zipOne("phase-2-gate-b.json", "{not-json"); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
   ["missing synthetic recovery", (s) => { const p = makeProof(); p.synthetic_recovery = false; s.artifactZip = zipOne("phase-2-gate-b.json", JSON.stringify(p)); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
   ["unrecognized schema key", (s) => { const p = { ...makeProof(), task_title: "private title" }; s.artifactZip = zipOne("phase-2-gate-b.json", JSON.stringify(p)); s.artifacts.artifacts[0].digest = `sha256:${sha256(s.artifactZip)}`; s.artifacts.artifacts[0].size_in_bytes = s.artifactZip.length; }],
   ["incomplete artifact listing", (s) => { s.artifacts.total_count += 1; }],
@@ -240,5 +256,10 @@ await assert.rejects(
   undefined,
   "caller expected-source mismatch must refuse",
 );
+await assert.rejects(
+  () => verify(makeBase(), "13de7df" + "0".repeat(33)),
+  undefined,
+  "consumed Plan 02-20 source must refuse",
+);
 
-console.log(`phase-2-ci-provenance fixtures passed: positive=1 refused=${refusals.length + 1} external_calls=0`);
+console.log(`phase-2-ci-provenance fixtures passed: positive=1 refused=${refusals.length + 2} external_calls=0`);
