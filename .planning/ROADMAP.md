@@ -455,10 +455,10 @@ attempted now.
 **Source phase:** 2
 **Deferred at:** 2026-09-10 during /gsd-progress --next advancement to Phase 5
 **Blocked on:** Live credentials only the owner can supply — `HCLOUD_TOKEN`, `CLOUDFLARE_API_TOKEN_FILE` + zone/record, and the primary/mirror backup credential and cipher files. This is a paid, single-attempt outer acceptance test, not a debugging loop.
-**Standing rule (reconciled 2026-09-19):** Plan 02-09 has a `status: halted` safe-resume summary for its already-committed local preparation. It contains no completion claim. Fresh outer-boundary evidence is still required before it may be re-summarized as complete; schedules, skips, and missing credentials never count as green evidence.
+**Standing rule (from `.planning/phases/KPL-02-synchronization-and-replaceable-server/deferred-items.md`):** Plan 02-09 must not gain a SUMMARY.md or a completion claim until fresh outer-boundary evidence exists. Schedules, skips, and missing credentials never count as green evidence.
 **Plans:**
 
-- [ ] 02-09: Provision and credentialedly rehearse full Hetzner host replacement and DNS cutover (halted after safe local preparation; credentialed outer acceptance not executed)
+- [ ] 02-09: Provision and credentialedly rehearse full Hetzner host replacement and DNS cutover (planned, never executed — no SUMMARY.md by design)
 
 **Already recorded in:** `.planning/STATE.md` (Accumulated Context), `.planning/REQUIREMENTS.md` (traceability — DATA-03, OPS-02), and the phase-2 `deferred-items.md`.
 

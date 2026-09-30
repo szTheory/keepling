@@ -1,14 +1,14 @@
 ---
-gsd_state_version: "1.0"
+gsd_state_version: 1.0
 milestone: v1.0
-current_phase: 02
-current_phase_name: Synchronization and Replaceable Server
+current_phase: 06
+current_phase_name: Portability and Trust Release
 status: executing
-stopped_at: "Completed quick task 260919-w3m: exact private curl-header fixture proof"
-last_updated: "2026-09-20T03:14:22.028Z"
-last_activity: 2026-09-19
-last_activity_desc: Verified independent B2/R2 recovery-source adapters and required no-secret CI fixture lane
-state_head: a05bff49206ea734909f87f8bccd7863b9bd78fa
+stopped_at: Completed 06-10-PLAN.md (all four tasks)
+last_updated: "2026-09-12T01:56:05.261Z"
+last_activity: 2026-09-11
+last_activity_desc: Phase KPL-06 execution started
+state_head: c7a74cee903d3b8f31b3c57b5e90f2f05c7c3448
 progress:
   total_phases: 6
   completed_phases: 4
@@ -24,16 +24,16 @@ milestone_name: milestone
 See: `.planning/PROJECT.md` (updated 2026-08-31)
 
 **Core value:** Jon can trust Keepling as his daily task system on Mac and iPhone: capture is immediate, accepted changes are never silently lost or overwritten, and both human and agent actions remain inspectable and recoverable.  
-**Current focus:** Phase 02 — Synchronization and Replaceable Server
+**Current focus:** Phase KPL-06 — Portability and Trust Release
 
 ## Current Position
 
-Phase: 02 (Synchronization and Replaceable Server) — EXECUTING
-Plan: 9 of 11 (halted at blocking-human credential checkpoint)
-Total Plans in Phase: 11
-Status: Executing Phase 02
-Last activity: 2026-09-20 — Verified quick task 260920-c0s: Fix the Phase 2 malformed-token readiness fixture so every quote, backslash, embedded-newline, and trailing-newline case runs independently before sealing Phase 2.
-Last Activity Description: The hermetic readiness fixture separately accounts for all four malformed-token forms; its focused proof and registered 13-check Phase 2 lane both pass.
+Phase: KPL-06 (Portability and Trust Release) — EXECUTING
+Plan: 13 of 13
+Total Plans in Phase: 13
+Status: Executing Phase KPL-06
+Last activity: 2026-09-11 — Phase KPL-06 execution started
+Last Activity Description: Phase KPL-06 execution started
 Progress: [█████████░] 94%
 
 ## Accumulated Context
@@ -283,18 +283,6 @@ Progress: [█████████░] 94%
 | # | Description | Date | Commit | Status | Directory |
 |---|-------------|------|--------|--------|-----------|
 | 260831-wfy | Resolve Phase 1 API coverage gate and shift all feasible human UAT into deterministic integration and end-to-end automation | 2026-08-31 | beeb6cb | Verified | [260831-wfy-resolve-phase-1-api-coverage-gate-and-sh](./quick/260831-wfy-resolve-phase-1-api-coverage-gate-and-sh/) |
-| 260919-j6i | Automate Phase 2 credential materialization from existing 1Password items and make the remaining owner inputs explicit | 2026-09-19 | 6389b02 | Verified | [260919-j6i-automate-phase-2-credential-materializat](./quick/260919-j6i-automate-phase-2-credential-materializat/) |
-| 260919-k8v | Automate Phase 2 live host-replacement readiness diagnosis | 2026-09-19 | 957831c | Verified | [260919-k8v-implement-a-guarded-phase-2-live-host-re](./quick/260919-k8v-implement-a-guarded-phase-2-live-host-re/) |
-| 260919-mm3 | Implement hermetic independent B2 and R2 recovery-source adapters for Phase 2 live host replacement | 2026-09-19 | 6ec10a9 | Verified | [260919-mm3-implement-hermetic-independent-b2-and-r2](./quick/260919-mm3-implement-hermetic-independent-b2-and-r2/) |
-| 260919-nnm | Implement hermetic trusted transfer and remote restore/runtime/semantic adapters for Phase 2 host replacement | 2026-09-19 | 7a90718 | Verified | [260919-nnm-implement-hermetic-trusted-transfer-and-](./quick/260919-nnm-implement-hermetic-trusted-transfer-and-/) |
-| 260919-u9k | Resolve Phase 2 regression-gate findings | 2026-09-19 | 7722d06 | Verified | [260919-u9k-resolve-phase-2-regression-gate-findings](./quick/260919-u9k-resolve-phase-2-regression-gate-findings/) |
-| 260919-uvl | Contain Phase 2 Hetzner token environment | 2026-09-19 | 0b6404f | Verified | [260919-uvl-resolve-phase-2-review-blocker-prevent-h](./quick/260919-uvl-resolve-phase-2-review-blocker-prevent-h/) |
-| 260919-w3m | Strengthen Phase 2 curl authorization fixture | 2026-09-19 | a05bff4 | Verified | [260919-w3m-strengthen-the-phase-2-hermetic-curl-fix](./quick/260919-w3m-strengthen-the-phase-2-hermetic-curl-fix/) |
-| 260919-wkt | Reject unsafe Phase 2 Hetzner curl tokens | 2026-09-19 | 9d01d89 | Verified | [260919-wkt-fix-phase-2-curl-configuration-injection](./quick/260919-wkt-fix-phase-2-curl-configuration-injection/) |
-| 260920-c0s | Fix the Phase 2 malformed-token readiness fixture so every quote, backslash, embedded-newline, and trailing-newline case runs independently before sealing Phase 2. | 2026-09-20 | ee5f653 | Verified | [260920-c0s-fix-phase-2-malformed-token-readines](./quick/260920-c0s-fix-the-phase-2-malformed-token-readines/) |
-| 260922-8sz | Wire a guarded Phase 2 live replacement orchestration bundle | 2026-09-22 | 1dab387 | Verified | [260922-8sz-wire-phase-2-live-orchestration](./quick/260922-8sz-wire-phase-2-live-orchestration/) |
-| 260924-j2k | Resume KPL-02 Plan 02-16 privacy verification | 2026-09-24 | 1c8bd71 | Verified | [260924-j2k-resume-kpl-02-plan-02-16-now-that-docker](./quick/260924-j2k-resume-kpl-02-plan-02-16-now-that-docker/) |
-| 260922-r7k | Further shift left Phase 2 live replacement handoff | 2026-09-22 | 9c97dc8 | Verified | [260922-r7k-further-shift-left-phase-2-live-handoff](./quick/260922-r7k-further-shift-left-phase-2-live-handoff/) |
 
 ## Next Action
 
@@ -307,8 +295,8 @@ CLOSED by 03-22: O-38, O-41, O-42, and the (a) half of O-31. Still open and rele
 
 ## Session
 
-**Last session:** 2026-09-20T03:14:21.846Z
-**Stopped at:** Completed quick task 260919-w3m: exact private curl-header fixture proof
+**Last session:** 2026-09-12T01:56:05.059Z
+**Stopped at:** Completed 06-10-PLAN.md (all four tasks)
 **Previous session:** 2026-09-04T03:10:00.000Z — Completed 03-21-PLAN.md (O-36 closed with both halves; O-37 filed, decided as D-49 and closed; O-34 closed — the packaged app exchanged real bytes with real Phoenix on real PostgreSQL, settled=2, exact-bytes retry proven against what the server received, server-derived origin http://localhost:4102 differing from the client-configured 127.0.0.1:4103; three real client/server disagreements found and fixed; O-39 and O-40 newly filed; desktop phase gate lanes=10 failed=0)
 **Resume file:** None
 
