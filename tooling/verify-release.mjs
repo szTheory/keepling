@@ -220,7 +220,6 @@ if (!Array.isArray(inventoryLanes) || inventoryLanes.length === 0) {
 const inventoryByLane = new Map(inventoryLanes.map((entry) => [entry.lane, entry]))
 
 let overallFailed = false
-let overallVerdict = VERDICTS.PASSED
 
 const artifacts = Array.isArray(manifest.artifacts) ? manifest.artifacts : []
 if (artifacts.length === 0) {
@@ -240,7 +239,6 @@ for (const artifact of artifacts) {
   if (!existsSync(artifactAbsolutePath)) {
     fail(`artifact missing on disk: ${artifact.artifactPath}`)
     overallFailed = true
-    overallVerdict = VERDICTS.INCOMPLETE
     continue
   }
   const recomputed = hashArtifact(artifactAbsolutePath)
@@ -371,7 +369,7 @@ for (const lane of manifestLanes) {
 }
 
 if (overallFailed) {
-  fail(`revision ${manifest.revision?.sha ?? 'unknown'} verification did not pass (${overallVerdict})`)
+  fail(`revision ${manifest.revision?.sha ?? 'unknown'} verification did not pass; see the lane and artifact failures above`)
   process.exit(1)
 }
 
