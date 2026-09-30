@@ -279,29 +279,36 @@ capture_recovery_package() {
   chmod 600 "$recovery_output/recovery-manifest.json"
 }
 
+recovery_fixture_login() {
+  # Compose's entrypoint loads DATABASE_URL from a secret before release config
+  # is evaluated. Override that secret for this one disposable restore process.
+  # Stdin preserves the host credential's 0600 mode across differing Linux UIDs.
+  KEEPLING_DATABASE_URL_FILE="$proof_root/secrets/recovery-database-url" \
+    compose_run run --rm -T --no-deps \
+    -e "KEEPLING_REHEARSAL_DATABASE=$restored_database" \
+    app eval '
+      database = System.fetch_env!("KEEPLING_REHEARSAL_DATABASE")
+      {:ok, _} = Application.ensure_all_started(:keepling)
+      %{rows: [[^database]]} = Ecto.Adapters.SQL.query!(Keepling.Repo, "SELECT current_database()", [])
+      credential = IO.read(:stdio, :eof)
+      {:ok, _session} = Keepling.Accounts.login(credential)
+    ' >/dev/null
+}
+
 prove_recovery_login_fixture() {
   [ -n "$recovery_output" ] || return 0
   restored_database=keepling_recovery_proof
+  printf '%s' "ecto://keepling:deploy-proof-postgres-password@db:5432/$restored_database" \
+    >"$proof_root/secrets/recovery-database-url"
+  # Same synthetic, disposable connection fixture as the source URL above.
+  chmod 0444 "$proof_root/secrets/recovery-database-url"
   compose_run exec -T db dropdb --if-exists -U keepling "$restored_database" >/dev/null
   compose_run exec -T db createdb -U keepling -O keepling "$restored_database" >/dev/null
   compose_run exec -T db pg_restore -U keepling -d "$restored_database" \
     --no-owner --no-privileges --exit-on-error <"$recovery_output/recovery.dump"
-  compose_run run --rm -T --no-deps \
-    -e "DATABASE_URL=ecto://keepling:deploy-proof-postgres-password@db:5432/$restored_database" \
-    -v "$recovery_output/rehearsal-login-credential:/run/keepling-rehearsal-login-credential:ro" \
-    app eval '
-      {:ok, _} = Application.ensure_all_started(:keepling)
-      credential = File.read!("/run/keepling-rehearsal-login-credential")
-      {:ok, _session} = Keepling.Accounts.login(credential)
-    ' >/dev/null
-  if compose_run run --rm -T --no-deps \
-    -e "DATABASE_URL=ecto://keepling:deploy-proof-postgres-password@db:5432/$restored_database" \
-    -v "$recovery_output/rehearsal-login-credential:/run/keepling-rehearsal-login-credential:ro" \
-    app eval '
-      {:ok, _} = Application.ensure_all_started(:keepling)
-      wrong_credential = File.read!("/run/keepling-rehearsal-login-credential") <> "-wrong"
-      {:ok, _session} = Keepling.Accounts.login(wrong_credential)
-    ' >/dev/null 2>&1; then
+  recovery_fixture_login <"$recovery_output/rehearsal-login-credential"
+  if { cat "$recovery_output/rehearsal-login-credential"; printf '%s' '-wrong'; } |
+    recovery_fixture_login >/dev/null 2>&1; then
     die "restored database accepted a credential that was not used by the proven setup"
   fi
   compose_run exec -T db dropdb --if-exists -U keepling "$restored_database" >/dev/null
