@@ -17,6 +17,7 @@ digest=$(printf '%064d' 0 | tr 0 a)
 nonce=$(printf '%032d' 0 | tr 0 b)
 fingerprint_digest=$(printf '%064d' 0 | tr 0 c)
 fingerprint='SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+parent_source_sha=0123456789abcdef0123456789abcdef01234567
 
 python3 - "$fixture/signal.json" "$now" "$digest" "$nonce" "$fingerprint_digest" <<'PY'
 import json, sys
@@ -32,6 +33,7 @@ run_wait() {
     PHASE2_PARENT_RUN_ID=777 PHASE2_PARENT_RUN_ATTEMPT=1 PHASE2_LOGICAL_RUN_DIGEST="$digest" \
     PHASE2_CHALLENGE_NONCE="$nonce" PHASE2_OWNER_ACTOR=jon \
     PHASE2_CURRENT_FINGERPRINT_SHA256="$fingerprint_digest" PHASE2_TRUST_DEADLINE="$deadline" \
+    PHASE2_PARENT_SOURCE_SHA="$parent_source_sha" \
     KEEPLING_TEST_EXTERNAL_CALL_LEDGER="$ledger" sh "$waiter" "$@"
 }
 
@@ -114,6 +116,7 @@ checks={
  "local helper disables fingerprint echo and hashes locally": "stty -echo" in a and "shasum -a 256" in a and "gh workflow run phase-2-host-trust-approval.yml" in a,
  "waiter is bounded and checks one-time binding": "signal-timeout" in v and "signal-replay-or-ambiguous" in v and "expires_at" in v and "marker_confirmed" in v,
  "waiter hands only the validated sanitized signal to the same job": "--signal-output" in v and "signal-output-invalid" in v and "fingerprint_sha256" in v,
+ "waiter binds the signal workflow to the same protected parent source": "parent_source_sha" in v and 'GITHUB_SHA") != expected["parent_source_sha"]' in v,
 }
 for name,ok in checks.items(): print(("ok" if ok else "not ok")+" - "+name)
 if not all(checks.values()): raise SystemExit(1)

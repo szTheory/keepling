@@ -4,14 +4,22 @@ umask 077
 
 root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 mode=${1:-}
-case "$mode" in --verify-signal|--verify-signal-set|--wait) ;; *) printf '%s\n' 'usage: wait-for-phase-2-host-trust.sh --verify-signal FILE | --verify-signal-set FILE | --wait' >&2; exit 2;; esac
+case "$mode" in --verify-signal|--verify-signal-set|--wait) ;; *) printf '%s\n' 'usage: wait-for-phase-2-host-trust.sh --verify-signal FILE [--signal-output FILE] | --verify-signal-set FILE [--signal-output FILE] | --wait --signal-output FILE' >&2; exit 2;; esac
 shift
-case "$mode" in
-  --verify-signal|--verify-signal-set) [ "$#" -eq 1 ] || exit 2; signal_file=$1 ;;
-  --wait) [ "$#" -eq 0 ] || exit 2; signal_file= ;;
-esac
+signal_file=
+signal_output=
+case "$mode" in --verify-signal|--verify-signal-set) [ "$#" -ge 1 ] || exit 2; signal_file=$1; shift;; esac
+while [ "$#" -gt 0 ]; do
+  [ "$#" -ge 2 ] || exit 2
+  case "$1" in
+    --signal-output) [ -z "$signal_output" ] || exit 2; signal_output=$2 ;;
+    *) exit 2 ;;
+  esac
+  shift 2
+done
+[ "$mode" != --wait ] || [ -n "$signal_output" ] || exit 2
 
-python3 - "$mode" "$signal_file" "$root" <<'PY'
+python3 - "$mode" "$signal_file" "$root" "$signal_output" <<'PY'
 import hashlib
 import json
 import os
@@ -25,7 +33,7 @@ import zipfile
 import io
 from pathlib import Path
 
-mode, signal_path, repository_root = sys.argv[1:]
+mode, signal_path, repository_root, signal_output_path = sys.argv[1:]
 
 class Refusal(Exception):
     def __init__(self, code):
@@ -43,6 +51,7 @@ def expected_environment():
         "owner_actor": os.environ.get("PHASE2_OWNER_ACTOR", ""),
         "fingerprint_sha256": os.environ.get("PHASE2_CURRENT_FINGERPRINT_SHA256", ""),
         "deadline": os.environ.get("PHASE2_TRUST_DEADLINE", ""),
+        "parent_source_sha": os.environ.get("PHASE2_PARENT_SOURCE_SHA", ""),
     }
     if not re.fullmatch(r"[1-9][0-9]{0,15}", values["parent_run_id"]): refuse("parent-run-invalid")
     if values["parent_run_attempt"] != "1": refuse("parent-attempt-invalid")
@@ -51,6 +60,7 @@ def expected_environment():
     if not re.fullmatch(r"[A-Za-z0-9-]{1,39}", values["owner_actor"]): refuse("owner-actor-invalid")
     if not re.fullmatch(r"[0-9a-f]{64}", values["fingerprint_sha256"]): refuse("fingerprint-digest-invalid")
     if not re.fullmatch(r"[0-9]{10}", values["deadline"]): refuse("deadline-invalid")
+    if not re.fullmatch(r"[0-9a-f]{40}", values["parent_source_sha"]): refuse("parent-source-invalid")
     values["parent_run_id"] = int(values["parent_run_id"])
     values["parent_run_attempt"] = 1
     values["deadline"] = int(values["deadline"])
@@ -148,6 +158,13 @@ def wait_for_signal(expected):
     repository = os.environ.get("GITHUB_REPOSITORY", "")
     token = os.environ.get("GITHUB_TOKEN", "")
     if not re.fullmatch(r"[-A-Za-z0-9_.]+/[-A-Za-z0-9_.]+", repository) or not token: refuse("github-reader-unavailable")
+    if (os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch" or
+        os.environ.get("GITHUB_REF") != "refs/heads/main" or
+        os.environ.get("GITHUB_RUN_ID") != str(expected["parent_run_id"]) or
+        os.environ.get("GITHUB_RUN_ATTEMPT") != "1" or
+        os.environ.get("GITHUB_ACTOR") != expected["owner_actor"] or
+        os.environ.get("GITHUB_SHA") != expected["parent_source_sha"]):
+        refuse("parent-workflow-binding-invalid")
     base = f"https://api.github.com/repos/{repository}/actions/workflows/phase-2-host-trust-approval.yml/runs"
     prefix = f"phase2-host-trust-parent-{expected['parent_run_id']}-attempt-1-digest-{expected['logical_run_digest']}-signal-"
     while int(time.time()) < expected["deadline"]:
@@ -184,9 +201,11 @@ def wait_for_signal(expected):
             head_repository = run.get("head_repository")
             if not isinstance(repository_identity, dict) or repository_identity.get("full_name") != repository: refuse("signal-run-repository-invalid")
             if not isinstance(head_repository, dict) or head_repository.get("full_name") != repository: refuse("signal-run-head-repository-invalid")
-            if not re.fullmatch(r"[0-9a-f]{40}", run.get("head_sha", "")): refuse("signal-run-source-invalid")
+            if run.get("head_sha") != expected["parent_source_sha"]: refuse("signal-run-source-invalid")
             artifact_run = artifact.get("workflow_run")
-            if not isinstance(artifact_run, dict) or artifact_run.get("id") != run.get("id"): refuse("signal-artifact-parent-mismatch")
+            if (not isinstance(artifact_run, dict) or artifact_run.get("id") != run.get("id") or
+                artifact_run.get("run_attempt", 1) != 1 or artifact_run.get("head_sha", run.get("head_sha")) != expected["parent_source_sha"]):
+                refuse("signal-artifact-parent-mismatch")
             signal = download_signal(repository, artifact, token)
             return validate_signal(signal, expected)
         time.sleep(min(10, max(1, expected["deadline"] - int(time.time()))))
@@ -195,10 +214,36 @@ def wait_for_signal(expected):
 try:
     expected = expected_environment()
     if mode == "--wait":
-        wait_for_signal(expected)
+        signal = wait_for_signal(expected)
     else:
         signal = read_fixture(signal_path, mode)
         validate_signal(signal, expected)
+    if signal_output_path:
+        target = Path(signal_output_path)
+        if not target.is_absolute() or target.is_symlink() or target.exists(): refuse("signal-output-invalid")
+        parent = target.parent
+        if not parent.is_dir() or parent.is_symlink() or (parent.stat().st_mode & 0o077): refuse("signal-output-invalid")
+        try:
+            if Path(repository_root) in target.resolve().parents: refuse("signal-output-invalid")
+        except OSError:
+            refuse("signal-output-invalid")
+        descriptor = None
+        try:
+            descriptor = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(descriptor, "w", encoding="utf-8") as output:
+                descriptor = None
+                json.dump(signal, output, sort_keys=True, separators=(",", ":"))
+                output.write("\n")
+                output.flush()
+                os.fsync(output.fileno())
+        except Exception:
+            if descriptor is not None:
+                os.close(descriptor)
+            try:
+                target.unlink()
+            except OSError:
+                pass
+            refuse("signal-output-write-failed")
     print("host-trust status=verified signal=single-use")
 except Refusal as error:
     print(f"host-trust status=NON_PASSING reason={error.code}", file=sys.stderr)
