@@ -1,0 +1,60 @@
+name: Phase 2 protected acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      authorization_json:
+        description: Complete fresh exact-run authorization JSON (authorization-json).
+        required: true
+        type: string
+      authorization_sha256:
+        description: SHA-256 digest of the exact authorization-json bytes (authorization-sha256).
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: phase-2-protected-${{ github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  protected-acceptance:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    environment:
+      name: phase-2-protected-environment
+    steps:
+      - name: Check out the exact authorized source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run the protected same-job acceptance runner
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          KEEPLING_AUTHORIZATION_JSON: ${{ inputs.authorization_json }}
+          KEEPLING_AUTHORIZATION_SHA256: ${{ inputs.authorization_sha256 }}
+          KEEPLING_KNOWN_HOSTS_FILE: ${{ runner.temp }}/phase-2-known-hosts
+          HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          KEEPLING_BACKUP_PRIMARY_ACCESS_KEY: ${{ secrets.KEEPLING_BACKUP_PRIMARY_ACCESS_KEY }}
+          KEEPLING_BACKUP_PRIMARY_SECRET_KEY: ${{ secrets.KEEPLING_BACKUP_PRIMARY_SECRET_KEY }}
+        run: |
+          umask 077
+          install -m 600 /dev/null "$RUNNER_TEMP/phase-2-known-hosts"
+          ./tooling/run-phase-2-protected-acceptance.sh --run
+
+      - name: Upload sanitized protected status after private cleanup
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: phase-2-protected-status-${{ github.run_id }}
+          path: ${{ runner.temp }}/phase-2-protected-status.json
+          if-no-files-found: warn
+          retention-days: 1
