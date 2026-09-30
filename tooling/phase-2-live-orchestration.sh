@@ -62,14 +62,47 @@ if [ "$1" = --validate ]; then [ "$#" -ge 2 ] && [ "$#" -le 3 ] || die 'usage: p
   digest=$(read_value IMAGE_DIGEST "$config")
   checkpoint="$workspace/.host-trust.pending"
   private_file "$checkpoint" || die 'host trust checkpoint must be private and mode 0600'
-  [ "$(wc -l <"$checkpoint" | tr -d '[:space:]')" = 8 ] || die 'host trust checkpoint schema is invalid'
+  checkpoint_lines=$(wc -l <"$checkpoint" | tr -d '[:space:]')
+  checkpoint_fields=$(awk -F= '{print $1}' "$checkpoint" | sort | tr '\n' ' ' | sed 's/ $//')
+  local_fields='BUNDLE_SHA256 IMAGE_DIGEST IP RUN_ID SERVER_ID SERVER_NAME WORKSPACE version'
+  hosted_fields='AUTHORIZATION_SHA256 BUNDLE_SHA256 CHALLENGE_NONCE CONSOLE_RUN_MARKER IMAGE_DIGEST IP LOGICAL_RUN_DIGEST OWNER_ACTOR PARENT_RUN_ATTEMPT PARENT_RUN_ID PARENT_SOURCE_SHA RUN_ID SERVER_ID SERVER_NAME TRUST_DEADLINE WORKSPACE version'
+  case "$checkpoint_lines:$checkpoint_fields" in
+    "8:$local_fields") hosted_checkpoint=no ;;
+    "17:$hosted_fields") hosted_checkpoint=yes ;;
+    *) die 'host trust checkpoint schema is invalid' ;;
+  esac
   grep -Eqv '^(version|[A-Z0-9_]+)=[A-Za-z0-9_./:@+-]+$' "$checkpoint" && die 'host trust checkpoint syntax is invalid'
-  [ "$(awk -F= '{print $1}' "$checkpoint" | sort | tr '\n' ' ' | sed 's/ $//')" = 'BUNDLE_SHA256 IMAGE_DIGEST IP RUN_ID SERVER_ID SERVER_NAME WORKSPACE version' ] || die 'host trust checkpoint fields are not closed'
   [ "$(read_value version "$checkpoint")" = 1 ] &&
     [ "$(read_value RUN_ID "$checkpoint")" = "$run_id" ] &&
     [ "$(read_value WORKSPACE "$checkpoint")" = "$workspace" ] &&
     [ "$(read_value IMAGE_DIGEST "$checkpoint")" = "$digest" ] &&
     [ "$(read_value BUNDLE_SHA256 "$checkpoint")" = "$(shasum -a 256 "$config" | awk '{print $1}')" ] || die 'host trust checkpoint binding is invalid'
+  if [ "$hosted_checkpoint" = yes ]; then
+    parent_run_id=$(read_value PARENT_RUN_ID "$checkpoint")
+    parent_attempt=$(read_value PARENT_RUN_ATTEMPT "$checkpoint")
+    logical_digest=$(read_value LOGICAL_RUN_DIGEST "$checkpoint")
+    authorization_digest=$(read_value AUTHORIZATION_SHA256 "$checkpoint")
+    challenge_nonce=$(read_value CHALLENGE_NONCE "$checkpoint")
+    owner_actor=$(read_value OWNER_ACTOR "$checkpoint")
+    parent_source_sha=$(read_value PARENT_SOURCE_SHA "$checkpoint")
+    trust_deadline=$(read_value TRUST_DEADLINE "$checkpoint")
+    console_marker=$(read_value CONSOLE_RUN_MARKER "$checkpoint")
+    printf '%s' "$parent_run_id" | grep -Eq '^[1-9][0-9]{0,15}$' || die 'host trust parent run identity is invalid'
+    [ "$parent_attempt" = 1 ] || die 'host trust parent attempt is invalid'
+    printf '%s' "$logical_digest" | grep -Eq '^[0-9a-f]{64}$' || die 'host trust logical digest is invalid'
+    [ "$authorization_digest" = "$logical_digest" ] || die 'host trust authorization digest is inconsistent'
+    printf '%s' "$challenge_nonce" | grep -Eq '^[0-9a-f]{32}$' || die 'host trust challenge nonce is invalid'
+    printf '%s' "$owner_actor" | grep -Eq '^[A-Za-z0-9-]{1,39}$' || die 'host trust owner actor is invalid'
+    printf '%s' "$parent_source_sha" | grep -Eq '^[0-9a-f]{40}$' || die 'host trust source SHA is invalid'
+    printf '%s' "$trust_deadline" | grep -Eq '^[0-9]{10}$' || die 'host trust deadline is invalid'
+    [ "$trust_deadline" -gt "$(date +%s)" ] && [ "$trust_deadline" -le "$(($(date +%s) + 900))" ] || die 'host trust deadline is expired or unbounded'
+    [ "$console_marker" = "$run_id" ] || die 'host trust console marker is inconsistent'
+    [ "${GITHUB_ACTIONS:-}" = true ] && [ "${GITHUB_EVENT_NAME:-}" = workflow_dispatch ] &&
+      [ "${GITHUB_REF:-}" = refs/heads/main ] && [ "${GITHUB_RUN_ID:-}" = "$parent_run_id" ] &&
+      [ "${GITHUB_RUN_ATTEMPT:-}" = 1 ] && [ "${GITHUB_ACTOR:-}" = "$owner_actor" ] &&
+      [ "${GITHUB_SHA:-}" = "$parent_source_sha" ] &&
+      [ "${KEEPLING_AUTHORIZATION_SHA256:-}" = "$authorization_digest" ] || die 'host trust parent workflow binding is invalid'
+  fi
   printf '%s' "$(read_value SERVER_ID "$checkpoint")" | grep -Eq '^[1-9][0-9]*$' || die 'host trust server identity is invalid'
   printf '%s' "$(read_value IP "$checkpoint")" | awk -F. 'NF==4 {for(i=1;i<=4;i++) if($i !~ /^[0-9]+$/ || $i>255) exit 1; exit 0} {exit 1}' || die 'host trust address is invalid'
   [ -n "$(read_value SERVER_NAME "$checkpoint")" ] || die 'host trust server name is invalid'

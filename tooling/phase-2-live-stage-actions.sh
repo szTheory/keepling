@@ -7,12 +7,7 @@ script_path=$0
 if [ -L "$script_path" ]; then script_path=$(readlink "$script_path"); fi
 repository_root=$(CDPATH='' cd -P "$(dirname "$script_path")/.." && pwd)
 die() { printf '%s\n' "Phase 2 live stage failed: stage=$stage result=refused reason=$1" >&2; exit 1; }
-mode_of() {
-  case "$(uname -s)" in
-    Darwin) stat -f '%Lp' "$1" ;;
-    *) stat -c '%a' "$1" ;;
-  esac
-}
+mode_of() { stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1"; }
 outside_repo() { case "$1" in "$repository_root"|"$repository_root"/*) return 1;; *) return 0;; esac; }
 read_value() { awk -F= -v key="$1" '$1 == key {if (++n != 1) exit 2; print substr($0,length(key)+2)} END {if (n != 1) exit 1}' "$2"; }
 valid_private() {
@@ -222,6 +217,7 @@ marker_matches() {
 validate_host_trust_checkpoint() {
   [ -f "$host_trust_pending" ] && [ ! -L "$host_trust_pending" ] && [ "$(mode_of "$host_trust_pending")" = 600 ] || die 'host-trust-checkpoint-unavailable'
   [ ! -e "$host_trust_verified" ] || die 'host-trust-already-verified'
+  "$repository_root/tooling/phase-2-live-orchestration.sh" --validate-host-trust-pending "$bundle" >/dev/null 2>&1 || die 'host-trust-parent-binding-invalid'
   [ "$(read_value RUN_ID "$host_trust_pending")" = "$run_id" ] || die 'host-trust-run-binding-invalid'
   [ "$(read_value WORKSPACE "$host_trust_pending")" = "$workspace" ] || die 'host-trust-workspace-binding-invalid'
   [ "$(read_value IMAGE_DIGEST "$host_trust_pending")" = "$digest" ] || die 'host-trust-image-binding-invalid'
@@ -267,6 +263,50 @@ pin_candidate_host_key() {
   esac
   die "host-trust-$pin_reason"
 }
+scan_and_pin_approved_host_key() {
+  known_hosts=$(read_value SSH_KNOWN_HOSTS_FILE "$bundle")
+  [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ "$(mode_of "$known_hosts")" = 600 ] || die 'private known-hosts file is invalid'
+  [ ! -s "$known_hosts" ] || die 'known-hosts file changed while host trust was paused'
+  current_scan="$workspace/.host-trust-current-scan.$$"
+  current_key="$workspace/.host-trust-current-key.$$"
+  [ ! -e "$current_scan" ] && [ ! -L "$current_scan" ] && [ ! -e "$current_key" ] && [ ! -L "$current_key" ] || die 'host-trust-scan-path-unsafe'
+  if ! ssh-keyscan -T 5 -t ed25519 "$bootstrap_ip" >"$current_scan" 2>/dev/null; then
+    rm -f -- "$current_scan"
+    die 'host-trust-current-key-unavailable'
+  fi
+  chmod 600 "$current_scan"
+  awk -v ip="$bootstrap_ip" 'NF==3 && $1==ip && $2=="ssh-ed25519" {print; count++} END {if (count!=1) exit 1}' "$current_scan" >"$current_key" || {
+    rm -f -- "$current_scan" "$current_key"
+    die 'host-trust-current-key-invalid'
+  }
+  chmod 600 "$current_key"
+  offered=$(ssh-keygen -lf "$current_key" -E sha256 2>/dev/null | awk '
+    NF >= 4 && $NF == "(ED25519)" && length($2) == 50 && substr($2,1,7) == "SHA256:" && substr($2,8) ~ /^[A-Za-z0-9+\/]+$/ {print $2; count++}
+    END {if (count!=1) exit 1}
+  ') || { rm -f -- "$current_scan" "$current_key"; die 'host-trust-current-key-invalid'; }
+  rm -f -- "$current_scan" "$current_key"
+  current_fingerprint_digest=$(printf '%s' "$offered" | shasum -a 256 | awk '{print $1}') || die 'host-trust-current-key-invalid'
+  [ "$current_fingerprint_digest" = "$approved_fingerprint_digest" ] || die 'host-trust-fingerprint-mismatch'
+  pin_candidate_host_key "$offered" "$bootstrap_ip" "$known_hosts"
+}
+persist_verified_host_trust() {
+  trusted_sha=$(shasum -a 256 "$known_hosts" | awk '{print $1}')
+  parent_run_id=$(read_value PARENT_RUN_ID "$host_trust_pending")
+  parent_attempt=$(read_value PARENT_RUN_ATTEMPT "$host_trust_pending")
+  logical_digest=$(read_value LOGICAL_RUN_DIGEST "$host_trust_pending")
+  challenge_nonce=$(read_value CHALLENGE_NONCE "$host_trust_pending")
+  owner_actor=$(read_value OWNER_ACTOR "$host_trust_pending")
+  parent_source_sha=$(read_value PARENT_SOURCE_SHA "$host_trust_pending")
+  trust_deadline=$(read_value TRUST_DEADLINE "$host_trust_pending")
+  authorization_digest=$(read_value AUTHORIZATION_SHA256 "$host_trust_pending")
+  printf 'version=1\nRUN_ID=%s\nWORKSPACE=%s\nIMAGE_DIGEST=%s\nBUNDLE_SHA256=%s\nSERVER_ID=%s\nIP=%s\nPARENT_RUN_ID=%s\nPARENT_RUN_ATTEMPT=%s\nLOGICAL_RUN_DIGEST=%s\nCHALLENGE_NONCE=%s\nOWNER_ACTOR=%s\nPARENT_SOURCE_SHA=%s\nAUTHORIZATION_SHA256=%s\nTRUST_DEADLINE=%s\nCONSOLE_RUN_MARKER=%s\nFINGERPRINT_SHA256=%s\nKNOWN_HOSTS_SHA256=%s\n' \
+    "$run_id" "$workspace" "$digest" "$bundle_sha" "$server_id" "$bootstrap_ip" "$parent_run_id" "$parent_attempt" \
+    "$logical_digest" "$challenge_nonce" "$owner_actor" "$parent_source_sha" "$authorization_digest" "$trust_deadline" \
+    "$run_id" "$approved_fingerprint_digest" "$trusted_sha" >"$host_trust_verified.tmp.$$"
+  chmod 600 "$host_trust_verified.tmp.$$"
+  mv "$host_trust_verified.tmp.$$" "$host_trust_verified"
+  rm -f -- "$host_trust_pending" "$signal_file"
+}
 if [ -n "$prev" ]; then marker_matches "$workspace/.stage-$prev.complete" || die "preceding $prev proof is absent or mismatched"; fi
 [ ! -e "$marker" ] || die 'stage was already completed'
 
@@ -279,6 +319,38 @@ elif [ "$stage" = recover-teardown ]; then
   [ ! -e "$workspace/teardown-evidence.json" ] || die 'teardown evidence already exists'
 fi
 
+# Define this before fixture dispatch because the hermetic resume path invokes it
+# before execution reaches the live-operation function definitions below.
+validate_host_trust_signal() {
+  validate_host_trust_checkpoint
+  signal_file=${KEEPLING_HOST_TRUST_SIGNAL_FILE:-$workspace/.host-trust.signal.json}
+  valid_private "$signal_file" || die 'host-trust-signal-unavailable'
+  signal_output="$workspace/.host-trust-signal-validation.$$"
+  [ ! -e "$signal_output" ] && [ ! -L "$signal_output" ] || die 'host-trust-signal-validation-path-unsafe'
+  parent_run_id=$(read_value PARENT_RUN_ID "$host_trust_pending")
+  parent_attempt=$(read_value PARENT_RUN_ATTEMPT "$host_trust_pending")
+  logical_digest=$(read_value LOGICAL_RUN_DIGEST "$host_trust_pending")
+  challenge_nonce=$(read_value CHALLENGE_NONCE "$host_trust_pending")
+  owner_actor=$(read_value OWNER_ACTOR "$host_trust_pending")
+  trust_deadline=$(read_value TRUST_DEADLINE "$host_trust_pending")
+  parent_source_sha=$(read_value PARENT_SOURCE_SHA "$host_trust_pending")
+  if ! PHASE2_PARENT_RUN_ID="$parent_run_id" PHASE2_PARENT_RUN_ATTEMPT="$parent_attempt" \
+    PHASE2_LOGICAL_RUN_DIGEST="$logical_digest" PHASE2_CHALLENGE_NONCE="$challenge_nonce" \
+    PHASE2_OWNER_ACTOR="$owner_actor" PHASE2_TRUST_DEADLINE="$trust_deadline" \
+    PHASE2_PARENT_SOURCE_SHA="$parent_source_sha" PHASE2_CURRENT_FINGERPRINT_SHA256= \
+    "$repository_root/tooling/wait-for-phase-2-host-trust.sh" --verify-signal "$signal_file" \
+    >"$signal_output" 2>&1; then
+    rm -f -- "$signal_output"
+    die 'host-trust-signal-refused'
+  fi
+  [ "$(cat "$signal_output")" = 'host-trust status=verified signal=single-use' ] || {
+    rm -f -- "$signal_output"
+    die 'host-trust-signal-validation-invalid'
+  }
+  rm -f -- "$signal_output"
+  approved_fingerprint_digest=$(jq -er '.fingerprint_sha256|select(test("^[0-9a-f]{64}$"))' "$signal_file") || die 'host-trust-signal-fingerprint-invalid'
+}
+
 # Fixture mode deliberately performs no external operation. The stage wrappers,
 # run binding, ordering, and atomic records are the subject of hermetic tests.
 if [ "${KEEPLING_LIVE_STAGE_FIXTURE:-}" = yes ]; then
@@ -289,12 +361,22 @@ if [ "${KEEPLING_LIVE_STAGE_FIXTURE:-}" = yes ]; then
   [ -f "$KEEPLING_STAGE_FIXTURE_LEDGER" ] && [ ! -L "$KEEPLING_STAGE_FIXTURE_LEDGER" ] || die 'fixture ledger is unavailable'
   if [ "$stage" = bootstrap ] && [ "${KEEPLING_RESUME_HOST_TRUST:-}" = yes ]; then
     validate_host_trust_checkpoint
-    require_console_run_marker
-    supplied=${KEEPLING_HOST_KEY_FINGERPRINT:-}
-    known_hosts=$(read_value SSH_KNOWN_HOSTS_FILE "$bundle") || die 'host-trust-known-hosts-binding-invalid'
-    [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ "$(mode_of "$known_hosts")" = 600 ] || die 'host-trust-known-hosts-invalid'
-    [ ! -s "$known_hosts" ] || die 'host-trust-known-hosts-not-empty'
-    pin_candidate_host_key "$supplied" "$bootstrap_ip" "$known_hosts"
+    if [ -n "${KEEPLING_HOST_TRUST_SIGNAL_FILE:-}" ]; then
+      [ -f "$workspace/.host-trust.signal.json" ] || die 'fixture-host-trust-signal-required'
+      validate_host_trust_signal
+      known_hosts=$(read_value SSH_KNOWN_HOSTS_FILE "$bundle") || die 'host-trust-known-hosts-binding-invalid'
+      [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ "$(mode_of "$known_hosts")" = 600 ] || die 'host-trust-known-hosts-invalid'
+      [ ! -s "$known_hosts" ] || die 'host-trust-known-hosts-not-empty'
+      scan_and_pin_approved_host_key
+      persist_verified_host_trust
+    else
+      require_console_run_marker
+      known_hosts=$(read_value SSH_KNOWN_HOSTS_FILE "$bundle") || die 'host-trust-known-hosts-binding-invalid'
+      [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ "$(mode_of "$known_hosts")" = 600 ] || die 'host-trust-known-hosts-invalid'
+      [ ! -s "$known_hosts" ] || die 'host-trust-known-hosts-not-empty'
+      supplied=${KEEPLING_HOST_KEY_FINGERPRINT:-}
+      pin_candidate_host_key "$supplied" "$bootstrap_ip" "$known_hosts"
+    fi
     printf '%s\n' 'host-trust result=verified' >>"$KEEPLING_STAGE_FIXTURE_LEDGER"
     printf '%s\n' 'stage=bootstrap result=fixture-host-trust-verified'
     exit 0
@@ -307,6 +389,22 @@ if [ "${KEEPLING_LIVE_STAGE_FIXTURE:-}" = yes ]; then
   (umask 077; record_body >"$tmp"; chmod 600 "$tmp"; mv "$tmp" "$marker") || { rm -f -- "$tmp"; die 'atomic stage record failed'; }
   printf '%s\n' "stage=$stage result=passed"
   exit 0
+fi
+
+require_protected_parent() {
+  [ "${GITHUB_ACTIONS:-}" = true ] && [ "${GITHUB_EVENT_NAME:-}" = workflow_dispatch ] &&
+    [ "${GITHUB_REF:-}" = refs/heads/main ] && [ "${GITHUB_RUN_ATTEMPT:-}" = 1 ] ||
+    die 'protected-parent-workflow-required'
+  printf '%s' "${GITHUB_RUN_ID:-}" | grep -Eq '^[1-9][0-9]{0,15}$' || die 'protected-parent-run-invalid'
+  printf '%s' "${GITHUB_ACTOR:-}" | grep -Eq '^[A-Za-z0-9-]{1,39}$' || die 'protected-parent-actor-invalid'
+  printf '%s' "${GITHUB_SHA:-}" | grep -Eq '^[0-9a-f]{40}$' || die 'protected-parent-source-invalid'
+  printf '%s' "${KEEPLING_AUTHORIZATION_SHA256:-}" | grep -Eq '^[0-9a-f]{64}$' || die 'protected-parent-authorization-invalid'
+  [ "${GITHUB_SHA:-}" = "$(python3 -c 'import json,os; print(json.loads(os.environ["KEEPLING_AUTHORIZATION_JSON"])["source"]["commit_sha"])' 2>/dev/null)" ] || die 'protected-parent-authorization-source-mismatch'
+}
+
+if [ "$stage" = bootstrap ] && [ ! -e "$host_trust_pending" ] &&
+  [ "${KEEPLING_PROTECTED_HOST_TRUST_SIGNAL:-}" = yes ]; then
+  require_protected_parent
 fi
 
 # Live operations are selected in source, never from bundle data or ambient
@@ -350,17 +448,45 @@ complete_stage() {
 }
 
 pause_for_host_trust() {
-  printf 'version=1\nRUN_ID=%s\nWORKSPACE=%s\nIMAGE_DIGEST=%s\nBUNDLE_SHA256=%s\nSERVER_ID=%s\nSERVER_NAME=%s\nIP=%s\n' \
-    "$run_id" "$workspace" "$digest" "$bundle_sha" "$server_id" "$server_name" "$bootstrap_ip" >"$host_trust_pending.tmp.$$"
-  chmod 600 "$host_trust_pending.tmp.$$"
-  mv "$host_trust_pending.tmp.$$" "$host_trust_pending"
-  printf '%s\n' 'phase2-live status=paused reason=host-key-verification-required'
-  printf 'candidate server: %s (%s)\n' "$server_name" "$bootstrap_ip"
-  printf '%s\n' 'In the Hetzner VNC console run: ssh-keygen -E sha256 -lf /etc/ssh/ssh_host_ed25519_key.pub'
-  printf '%s\n' 'Resume with: tooling/verify-host-replacement.sh --credentialed --resume-host-trust'
+  if [ "${KEEPLING_PROTECTED_HOST_TRUST_SIGNAL:-}" = yes ]; then
+    parent_run_id=${GITHUB_RUN_ID:-}
+    parent_attempt=${GITHUB_RUN_ATTEMPT:-}
+    logical_digest=${KEEPLING_AUTHORIZATION_SHA256:-}
+    challenge_nonce=$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n') || die 'host-trust-challenge-unavailable'
+    trust_deadline=$(($(date +%s) + 900))
+    owner_actor=${GITHUB_ACTOR:-}
+    parent_source_sha=${GITHUB_SHA:-}
+    [ "${#challenge_nonce}" -eq 32 ] || die 'host-trust-challenge-unavailable'
+    printf 'version=1\nRUN_ID=%s\nWORKSPACE=%s\nIMAGE_DIGEST=%s\nBUNDLE_SHA256=%s\nSERVER_ID=%s\nSERVER_NAME=%s\nIP=%s\nPARENT_RUN_ID=%s\nPARENT_RUN_ATTEMPT=%s\nLOGICAL_RUN_DIGEST=%s\nAUTHORIZATION_SHA256=%s\nCHALLENGE_NONCE=%s\nOWNER_ACTOR=%s\nPARENT_SOURCE_SHA=%s\nTRUST_DEADLINE=%s\nCONSOLE_RUN_MARKER=%s\n' \
+      "$run_id" "$workspace" "$digest" "$bundle_sha" "$server_id" "$server_name" "$bootstrap_ip" \
+      "$parent_run_id" "$parent_attempt" "$logical_digest" "$logical_digest" "$challenge_nonce" \
+      "$owner_actor" "$parent_source_sha" "$trust_deadline" "$run_id" >"$host_trust_pending.tmp.$$"
+    chmod 600 "$host_trust_pending.tmp.$$"
+    mv "$host_trust_pending.tmp.$$" "$host_trust_pending"
+    printf '%s\n' 'phase2-live status=paused reason=host-key-verification-required'
+    printf 'phase2-live trust-challenge parent_run_id=%s parent_attempt=1 source_sha=%s logical_run_digest=%s nonce=%s owner_actor=%s deadline=%s\n' \
+      "$parent_run_id" "$parent_source_sha" "$logical_digest" "$challenge_nonce" "$owner_actor" "$trust_deadline"
+    printf 'phase2-live console-marker run_id=%s\n' "$run_id"
+    printf '%s\n' 'In the Hetzner VNC console run: ssh-keygen -E sha256 -lf /etc/ssh/ssh_host_ed25519_key.pub'
+    printf '%s\n' 'The protected acceptance job waits up to 900 seconds for its one-time owner signal and verifies the current ED25519 key before SSH.'
+  else
+    printf 'version=1\nRUN_ID=%s\nWORKSPACE=%s\nIMAGE_DIGEST=%s\nBUNDLE_SHA256=%s\nSERVER_ID=%s\nSERVER_NAME=%s\nIP=%s\n' \
+      "$run_id" "$workspace" "$digest" "$bundle_sha" "$server_id" "$server_name" "$bootstrap_ip" >"$host_trust_pending.tmp.$$"
+    chmod 600 "$host_trust_pending.tmp.$$"
+    mv "$host_trust_pending.tmp.$$" "$host_trust_pending"
+    printf '%s\n' 'phase2-live status=paused reason=host-key-verification-required'
+    printf 'candidate server: %s (%s)\n' "$server_name" "$bootstrap_ip"
+    printf '%s\n' 'In the Hetzner VNC console run: ssh-keygen -E sha256 -lf /etc/ssh/ssh_host_ed25519_key.pub'
+    printf '%s\n' 'Resume with: tooling/verify-host-replacement.sh --credentialed --resume-host-trust'
+  fi
 }
+
 resume_host_trust() {
-  validate_host_trust_checkpoint
+  if [ -n "${KEEPLING_HOST_TRUST_SIGNAL_FILE:-}" ]; then
+    validate_host_trust_signal
+  else
+    validate_host_trust_checkpoint
+  fi
 
   # Refresh through the configured provider state and ensure the candidate did
   # not change while the run was paused.
@@ -382,23 +508,27 @@ resume_host_trust() {
     die 'candidate identity changed while the run was paused'
   rm -f -- "$current_identity"
 
-  require_console_run_marker
-  supplied=${KEEPLING_HOST_KEY_FINGERPRINT:-}
-  if [ -z "$supplied" ] && [ -r /dev/tty ]; then
-    printf '%s' 'Enter the SHA256 fingerprint verified in the Hetzner VNC console: ' >/dev/tty
-    IFS= read -r supplied </dev/tty || die 'host fingerprint input was not received'
+  if [ -n "${KEEPLING_HOST_TRUST_SIGNAL_FILE:-}" ]; then
+    scan_and_pin_approved_host_key
+    persist_verified_host_trust
+  else
+    require_console_run_marker
+    supplied=${KEEPLING_HOST_KEY_FINGERPRINT:-}
+    if [ -z "$supplied" ] && [ -r /dev/tty ]; then
+      printf '%s' 'Enter the SHA256 fingerprint verified in the Hetzner VNC console: ' >/dev/tty
+      IFS= read -r supplied </dev/tty || die 'host fingerprint input was not received'
+    fi
+    known_hosts=$(read_value SSH_KNOWN_HOSTS_FILE "$bundle")
+    [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ "$(mode_of "$known_hosts")" = 600 ] || die 'private known-hosts file is invalid'
+    [ ! -s "$known_hosts" ] || die 'known-hosts file changed while host trust was paused'
+    pin_candidate_host_key "$supplied" "$bootstrap_ip" "$known_hosts"
+    trusted_sha=$(shasum -a 256 "$known_hosts" | awk '{print $1}')
+    printf 'version=1\nRUN_ID=%s\nWORKSPACE=%s\nIMAGE_DIGEST=%s\nBUNDLE_SHA256=%s\nSERVER_ID=%s\nIP=%s\nFINGERPRINT=%s\nKNOWN_HOSTS_SHA256=%s\n' \
+      "$run_id" "$workspace" "$digest" "$bundle_sha" "$server_id" "$bootstrap_ip" "$supplied" "$trusted_sha" >"$host_trust_verified.tmp.$$"
+    chmod 600 "$host_trust_verified.tmp.$$"
+    mv "$host_trust_verified.tmp.$$" "$host_trust_verified"
+    rm -f -- "$host_trust_pending"
   fi
-  known_hosts=$(read_value SSH_KNOWN_HOSTS_FILE "$bundle")
-  [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ "$(mode_of "$known_hosts")" = 600 ] || die 'private known-hosts file is invalid'
-  [ ! -s "$known_hosts" ] || die 'known-hosts file changed while host trust was paused'
-  pin_candidate_host_key "$supplied" "$bootstrap_ip" "$known_hosts"
-  offered=$supplied
-  trusted_sha=$(shasum -a 256 "$known_hosts" | awk '{print $1}')
-  printf 'version=1\nRUN_ID=%s\nWORKSPACE=%s\nIMAGE_DIGEST=%s\nBUNDLE_SHA256=%s\nSERVER_ID=%s\nIP=%s\nFINGERPRINT=%s\nKNOWN_HOSTS_SHA256=%s\n' \
-    "$run_id" "$workspace" "$digest" "$bundle_sha" "$server_id" "$bootstrap_ip" "$offered" "$trusted_sha" >"$host_trust_verified.tmp.$$"
-  chmod 600 "$host_trust_verified.tmp.$$"
-  mv "$host_trust_verified.tmp.$$" "$host_trust_verified"
-  rm -f -- "$host_trust_pending"
 }
 require_host_trust() {
   [ -f "$host_trust_verified" ] && [ ! -L "$host_trust_verified" ] && [ "$(mode_of "$host_trust_verified")" = 600 ] || die 'verified candidate host identity is absent'
@@ -407,6 +537,15 @@ require_host_trust() {
   [ "$(awk -F= '$1=="RUN_ID" {print $2}' "$host_trust_verified")" = "$run_id" ] || die 'verified host identity run binding is invalid'
   [ "$(awk -F= '$1=="WORKSPACE" {print substr($0,index($0,"=")+1)}' "$host_trust_verified")" = "$workspace" ] || die 'verified host identity workspace binding is invalid'
   [ "$(awk -F= '$1=="BUNDLE_SHA256" {print $2}' "$host_trust_verified")" = "$bundle_sha" ] || die 'verified host identity bundle binding is invalid'
+  if [ -n "$(awk -F= '$1=="PARENT_RUN_ID" {print $2}' "$host_trust_verified")" ]; then
+    [ "$(awk -F= '$1=="PARENT_RUN_ID" {print $2}' "$host_trust_verified")" = "${GITHUB_RUN_ID:-}" ] &&
+      [ "$(awk -F= '$1=="PARENT_RUN_ATTEMPT" {print $2}' "$host_trust_verified")" = 1 ] &&
+      [ "$(awk -F= '$1=="LOGICAL_RUN_DIGEST" {print $2}' "$host_trust_verified")" = "${KEEPLING_AUTHORIZATION_SHA256:-}" ] &&
+      [ "$(awk -F= '$1=="PARENT_SOURCE_SHA" {print $2}' "$host_trust_verified")" = "${GITHUB_SHA:-}" ] &&
+      [ "$(awk -F= '$1=="OWNER_ACTOR" {print $2}' "$host_trust_verified")" = "${GITHUB_ACTOR:-}" ] || die 'verified host identity parent binding is invalid'
+    [ "$(awk -F= '$1=="CONSOLE_RUN_MARKER" {print $2}' "$host_trust_verified")" = "$run_id" ] || die 'verified console marker binding is invalid'
+    printf '%s' "$(awk -F= '$1=="FINGERPRINT_SHA256" {print $2}' "$host_trust_verified")" | grep -Eq '^[0-9a-f]{64}$' || die 'verified host fingerprint digest is invalid'
+  fi
   [ -n "$expected" ] && [ "$(shasum -a 256 "$known_hosts" | awk '{print $1}')" = "$expected" ] || die 'verified candidate host identity changed'
   [ "$(awk -F= '$1=="IP" {print $2}' "$host_trust_verified")" = "$(cat "$workspace/candidate-ip.txt")" ] || die 'verified host identity address changed'
   [ -n "$(ssh-keygen -F "$(cat "$workspace/candidate-ip.txt")" -f "$known_hosts" 2>/dev/null)" ] || die 'verified candidate host key is not pinned to its address'
@@ -445,7 +584,11 @@ case "$stage" in
         printf 'candidate server: %s (%s)\n' "$server_name" "$bootstrap_ip"
         printf 'Expected console run marker: %s\n' "$run_id"
         printf '%s\n' 'The SSH fingerprint and run marker are displayed on the exact candidate Hetzner VNC login screen; VM login is not required.'
-        printf '%s\n' 'Resume with: tooling/verify-host-replacement.sh --credentialed --resume-host-trust'
+        if [ "${KEEPLING_PROTECTED_HOST_TRUST_SIGNAL:-}" = yes ]; then
+          printf '%s\n' 'The protected acceptance job waits for its one-time owner signal before checking the current fingerprint and continuing.'
+        else
+          printf '%s\n' 'Resume with: tooling/verify-host-replacement.sh --credentialed --resume-host-trust'
+        fi
         exit 75
       fi
     fi

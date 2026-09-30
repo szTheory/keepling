@@ -58,7 +58,7 @@ def expected_environment():
     if not re.fullmatch(r"[0-9a-f]{64}", values["logical_run_digest"]): refuse("logical-digest-invalid")
     if not re.fullmatch(r"[0-9a-f]{32}", values["challenge_nonce"]): refuse("challenge-nonce-invalid")
     if not re.fullmatch(r"[A-Za-z0-9-]{1,39}", values["owner_actor"]): refuse("owner-actor-invalid")
-    if not re.fullmatch(r"[0-9a-f]{64}", values["fingerprint_sha256"]): refuse("fingerprint-digest-invalid")
+    if values["fingerprint_sha256"] and not re.fullmatch(r"[0-9a-f]{64}", values["fingerprint_sha256"]): refuse("fingerprint-digest-invalid")
     if not re.fullmatch(r"[0-9]{10}", values["deadline"]): refuse("deadline-invalid")
     if not re.fullmatch(r"[0-9a-f]{40}", values["parent_source_sha"]): refuse("parent-source-invalid")
     values["parent_run_id"] = int(values["parent_run_id"])
@@ -75,7 +75,9 @@ def validate_signal(signal, expected, now=None):
     if signal.get("version") != 1 or isinstance(signal.get("version"), bool): refuse("signal-version-invalid")
     for field in ("parent_run_id", "parent_run_attempt", "issued_at", "expires_at"):
         if not isinstance(signal.get(field), int) or isinstance(signal.get(field), bool): refuse("signal-time-invalid")
+    if not isinstance(signal.get("fingerprint_sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", signal["fingerprint_sha256"]): refuse("signal-fingerprint-invalid")
     for field in ("parent_run_id", "parent_run_attempt", "logical_run_digest", "challenge_nonce", "owner_actor", "fingerprint_sha256"):
+        if field == "fingerprint_sha256" and not expected[field]: continue
         if signal.get(field) != expected[field]: refuse("signal-binding-mismatch")
     if signal.get("marker_confirmed") is not True: refuse("marker-not-confirmed")
     if signal["issued_at"] > expected["deadline"] or signal["issued_at"] > now + 300: refuse("signal-issued-after-deadline")
