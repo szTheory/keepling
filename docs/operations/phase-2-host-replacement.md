@@ -101,6 +101,16 @@ provider, SSH, restore, or DNS action occurred. DATA-03, OPS-02, and OPS-03
 remain open. Do not treat the earlier artifact or any consumed run approval as
 authority for a future attempt.
 
+## Protected hosted input contract (Plan 02-28)
+
+The protected workflow accepts four required dispatch fields: `authorization_json`, `authorization_sha256`, `hosted_inputs_json`, and `hosted_inputs_sha256`. Compute each SHA-256 over the exact UTF-8 bytes entered, with no newline added. `authorization_json.hosted_inputs_sha256` must equal the hosted-input digest; its selection must also agree with the closed input object. Any edit after review requires a fresh authorization. The job runs only from `main` after the `phase-2-protected-environment` reviewer gate.
+
+The closed hosted object contains `version: 1`, `dns_zone_id`, `dns_record_name`, sorted canonical `admin_source_cidrs`, string `server_image_id`, `candidate_source: "rebuilt-archive"`, `recovery_source: "same-run-synthetic-capture"`, `login_source: "same-run-synthetic-capture"`, and explicit `b2_primary_endpoint`, `b2_primary_region`, and `b2_primary_bucket`. The authorization separately pins the measured `nbg1` / `cx33` / 160 GB choice and matching server image, exact source/archive identities, SSH-agent public-key digest, actor, run, attempt, freshness window, and full action-class list.
+
+Configure these environment secrets before requesting a run: `HCLOUD_TOKEN`, `CLOUDFLARE_API_TOKEN`, `KEEPLING_BACKUP_PRIMARY_ACCESS_KEY`, `KEEPLING_BACKUP_PRIMARY_SECRET_KEY`, `KEEPLING_BACKUP_MIRROR_ACCESS_KEY`, `KEEPLING_BACKUP_MIRROR_SECRET_KEY`, `KEEPLING_BACKUP_MIRROR_ENDPOINT`, `KEEPLING_BACKUP_MIRROR_REGION`, `KEEPLING_BACKUP_MIRROR_BUCKET`, `KEEPLING_TOFU_STATE_ACCESS_KEY`, `KEEPLING_TOFU_STATE_SECRET_KEY`, `KEEPLING_TOFU_STATE_ENDPOINT`, `KEEPLING_TOFU_STATE_REGION`, `KEEPLING_TOFU_STATE_BUCKET`, `KEEPLING_BACKUP_CIPHER_PASSPHRASE`, and the disposable-run `KEEPLING_SSH_PRIVATE_KEY`. Never put secret values in dispatch inputs. The runner starts one private agent after authorization, requires exactly one ED25519 identity matching the authorized fingerprint, and writes only its public identity to the private setup directory.
+
+The materializer creates an external mode-0700 directory with five mode-0600 provider credential JSON files, `replacement-run.pub`, `backup-cipher.key`, and the exact seven-line `env.sh` consumed by setup. The same job binds candidate selection to its rebuilt archive, generates and validates a synthetic deploy/recovery capture, and prepares the orchestration bundle. Diagnostics remain private and are deleted by the same-job cleanup trap. Uploaded status is sanitized and emitted only after private cleanup; refusal status contains a bounded reason and does not include secret values, raw identifiers, or private paths. Local fixture success is preparation evidence only. DATA-03, OPS-02, and OPS-03 remain non-passing pending Plans 02-25 through 02-27 and their human-gated live evidence.
+
 ## Local secret boundary
 
 Keep all five JSON documents and two separate key files outside the checkout, for example in `~/.config/keepling/phase-2/`, mode `0600` (directories `0700`). Copy the non-secret shapes from `infra/credentials/templates/`; never copy a completed document into the repository.

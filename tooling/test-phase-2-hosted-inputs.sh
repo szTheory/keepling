@@ -83,3 +83,22 @@ invalid=${inputs%\}}',"unexpected":"value"}'
 if run_materializer "$invalid" >"$fixture/out" 2>"$fixture/err"; then echo 'not ok - extra hosted input key must refuse'; exit 1; fi
 [ ! -e "$target" ] || { echo 'not ok - invalid hosted inputs created private state'; exit 1; }
 printf '%s\n' 'ok - extra hosted input key refused before private state'
+
+if run_materializer '{malformed' >"$fixture/out" 2>"$fixture/err"; then echo 'not ok - malformed hosted JSON must refuse'; exit 1; fi
+[ ! -e "$target" ] || { echo 'not ok - malformed JSON created private state'; exit 1; }
+printf '%s\n' 'ok - malformed hosted JSON refused before private state'
+
+if env -i PATH="$PATH" HOME="$HOME" TMPDIR="${TMPDIR:-/tmp}" \
+  HCLOUD_TOKEN='fixture-hcloud-token-123456789' CLOUDFLARE_API_TOKEN='FixtureSentinelCloudflareToken' \
+  KEEPLING_BACKUP_PRIMARY_ACCESS_KEY='FixturePrimaryAccess' KEEPLING_BACKUP_PRIMARY_SECRET_KEY='FixturePrimarySecret' \
+  KEEPLING_HOSTED_B2_PRIMARY_ENDPOINT='https://s3.us-west-004.backblazeb2.com' KEEPLING_HOSTED_B2_PRIMARY_REGION='us-west-004' KEEPLING_HOSTED_B2_PRIMARY_BUCKET='fixture-bucket' \
+  KEEPLING_BACKUP_MIRROR_ACCESS_KEY='FixtureMirrorAccess' KEEPLING_BACKUP_MIRROR_SECRET_KEY='FixtureMirrorSecret' \
+  KEEPLING_BACKUP_MIRROR_ENDPOINT='https://fixture.r2.example.invalid' KEEPLING_BACKUP_MIRROR_REGION='auto' KEEPLING_BACKUP_MIRROR_BUCKET='fixture-mirror' \
+  KEEPLING_TOFU_STATE_ACCESS_KEY='FixtureStateAccess' KEEPLING_TOFU_STATE_SECRET_KEY='FixtureStateSecret' \
+  KEEPLING_TOFU_STATE_ENDPOINT='https://fixture.state.example.invalid' KEEPLING_TOFU_STATE_REGION='us-east-1' KEEPLING_TOFU_STATE_BUCKET='fixture-state' \
+  KEEPLING_BACKUP_CIPHER_PASSPHRASE='FixtureSentinelCipherValue' \
+  sh "$materializer" --directory "$root/.phase-2-hosted-inputs-forbidden" --inputs-json "$inputs" --ssh-public-identity "$identity" >"$fixture/out" 2>"$fixture/err"; then
+  echo 'not ok - in-repository destination must refuse'; exit 1
+fi
+[ ! -e "$root/.phase-2-hosted-inputs-forbidden" ] || { echo 'not ok - in-repository path created'; exit 1; }
+printf '%s\n' 'ok - in-repository destination refused before private state'
