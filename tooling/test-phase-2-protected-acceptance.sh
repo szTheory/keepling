@@ -53,10 +53,12 @@ authorization_sha=$(printf '%s' "$authorization" | shasum -a 256 | awk '{print $
 
 run_check() {
   mode=$1 ref=$2 revision=$3 attempt=$4 payload=$5 digest=$6
+  hosted_payload=${7:-$hosted}
+  hosted_digest=${8:-$hosted_sha}
   env -i PATH="$PATH" HOME="$HOME" TMPDIR="${TMPDIR:-/tmp}" \
     GITHUB_EVENT_NAME=workflow_dispatch GITHUB_REF="$ref" GITHUB_SHA="$revision" GITHUB_ACTOR=jon \
     GITHUB_REPOSITORY=keepling/keepling GITHUB_RUN_ID=777 GITHUB_RUN_ATTEMPT="$attempt" RUNNER_TEMP="$fixture/runner-temp" \
-    KEEPLING_HOSTED_INPUTS_JSON="$hosted" KEEPLING_HOSTED_INPUTS_SHA256="$hosted_sha" \
+    KEEPLING_HOSTED_INPUTS_JSON="$hosted_payload" KEEPLING_HOSTED_INPUTS_SHA256="$hosted_digest" \
     KEEPLING_AUTHORIZATION_JSON="$payload" KEEPLING_AUTHORIZATION_SHA256="$digest" \
     KEEPLING_TEST_EXTERNAL_CALL_LEDGER="$ledger" \
     sh "$runner" "$mode" >"$fixture/out" 2>"$fixture/err"
@@ -72,7 +74,8 @@ printf '%s\n' 'ok - complete fresh exact-source authorization validates without 
 
 expect_refusal() {
   label=$1 ref=$2 revision=$3 attempt=$4 payload=$5 digest=$6
-  if run_check --validate-inputs "$ref" "$revision" "$attempt" "$payload" "$digest"; then
+  shift 6
+  if run_check --validate-inputs "$ref" "$revision" "$attempt" "$payload" "$digest" "$@"; then
     printf 'not ok - %s must be refused\n' "$label"; exit 1
   fi
   grep -Eq '^phase2-protected status=NON_PASSING reason=[a-z0-9-]+$' "$fixture/err" || { printf 'not ok - %s returned an unbounded diagnostic\n' "$label"; cat "$fixture/err" >&2; exit 1; }
@@ -85,6 +88,17 @@ expect_refusal "non-main dispatch" refs/heads/feature/test "$source_sha" 1 "$aut
 expect_refusal "source SHA mismatch" refs/heads/main "$tree_sha" 1 "$authorization" "$authorization_sha"
 expect_refusal "replayed attempt" refs/heads/main "$source_sha" 2 "$authorization" "$authorization_sha"
 expect_refusal "changed authorization digest" refs/heads/main "$source_sha" 1 "$authorization" "$(printf '%064d' 0 | tr 0 c)"
+changed_inputs=$(printf '%s' "$hosted" | sed 's/12345/54321/')
+changed_inputs_sha=$(printf '%s' "$changed_inputs" | shasum -a 256 | awk '{print $1}')
+expect_refusal "changed hosted input bytes" refs/heads/main "$source_sha" 1 "$authorization" "$authorization_sha" "$changed_inputs" "$changed_inputs_sha"
+changed_selection_auth=$(python3 - "$fixture/authorization.json" "$changed_inputs_sha" <<'PY'
+import json,sys
+value=json.load(open(sys.argv[1])); value["hosted_inputs_sha256"]=sys.argv[2]
+print(json.dumps(value,sort_keys=True,separators=(",",":")))
+PY
+)
+changed_selection_auth_sha=$(printf '%s' "$changed_selection_auth" | shasum -a 256 | awk '{print $1}')
+expect_refusal "authorization selection differs from bound image input" refs/heads/main "$source_sha" 1 "$changed_selection_auth" "$changed_selection_auth_sha" "$changed_inputs" "$changed_inputs_sha"
 stale=$(python3 - "$fixture/authorization.json" <<'PY'
 import json, sys
 document=json.load(open(sys.argv[1])); document["issued_at"]-=86401

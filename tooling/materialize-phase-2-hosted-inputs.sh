@@ -19,11 +19,12 @@ done
 [ -n "$directory" ] && [ -n "$inputs_json" ] && [ -n "$identity" ] || die inputs-missing
 case "$directory" in /*) ;; *) die directory-invalid;; esac
 case "$directory" in "$root"|"$root"/*) die directory-in-repository;; esac
+case "$directory" in *[!A-Za-z0-9_./:+-]*) die directory-invalid;; esac
 [ ! -e "$directory" ] && [ ! -L "$directory" ] || die directory-already-exists
 
 # Keep the secret-bearing child environment deliberately narrow. Python parses
 # the closed contract and writes files with O_EXCL and fixed permissions.
-env -i PATH="$PATH" LC_ALL=C TARGET_DIRECTORY="$directory" HOSTED_INPUTS_JSON="$inputs_json" \
+env -i PATH="$PATH" LC_ALL=C TARGET_DIRECTORY="$directory" REPOSITORY_ROOT="$root" HOSTED_INPUTS_JSON="$inputs_json" \
   SSH_PUBLIC_IDENTITY="$identity" \
   HCLOUD_TOKEN="${HCLOUD_TOKEN:-}" CLOUDFLARE_API_TOKEN="${CLOUDFLARE_API_TOKEN:-}" \
   PRIMARY_ACCESS="${KEEPLING_BACKUP_PRIMARY_ACCESS_KEY:-}" PRIMARY_SECRET="${KEEPLING_BACKUP_PRIMARY_SECRET_KEY:-}" \
@@ -36,7 +37,7 @@ env -i PATH="$PATH" LC_ALL=C TARGET_DIRECTORY="$directory" HOSTED_INPUTS_JSON="$
 import ipaddress, json, os, re, secrets, stat
 
 target = os.environ["TARGET_DIRECTORY"]
-root = os.path.realpath(os.path.join(os.path.dirname(__file__), "..")) if "__file__" in globals() else None
+root = os.path.realpath(os.environ["REPOSITORY_ROOT"])
 def fail(): raise SystemExit(1)
 def text(name, pattern=None, maximum=4096):
     value=os.environ.get(name, "")
@@ -47,6 +48,9 @@ def endpoint(name):
     value=text(name, r"https://[A-Za-z0-9.-]+(?::[0-9]{1,5})?")
     return value
 try:
+    if not re.fullmatch(r"/[A-Za-z0-9_./:+-]+",target): fail()
+    parent=os.path.realpath(os.path.dirname(target))
+    if parent==root or parent.startswith(root+os.sep): fail()
     raw=os.environ["HOSTED_INPUTS_JSON"]
     if len(raw)>16384: fail()
     def no_dupes(pairs):
@@ -63,7 +67,7 @@ try:
     if not isinstance(inputs["dns_record_name"],str) or not re.fullmatch(r"(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}",inputs["dns_record_name"]): fail()
     if not isinstance(inputs["server_image_id"],str) or not re.fullmatch(r"[1-9][0-9]{0,19}",inputs["server_image_id"]): fail()
     cidrs=inputs["admin_source_cidrs"]
-    if not isinstance(cidrs,list) or not 1<=len(cidrs)<=32 or len(set(cidrs))!=len(cidrs): fail()
+    if not isinstance(cidrs,list) or not 1<=len(cidrs)<=32 or len(set(cidrs))!=len(cidrs) or cidrs!=sorted(cidrs): fail()
     for cidr in cidrs:
         if not isinstance(cidr,str) or str(ipaddress.ip_network(cidr,strict=True))!=cidr or ipaddress.ip_network(cidr,strict=True).prefixlen==0: fail()
     primary_endpoint=text("PRIMARY_ENDPOINT")

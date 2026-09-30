@@ -25,6 +25,7 @@ run_materializer() {
 if run_materializer "$inputs" >"$fixture/out" 2>"$fixture/err"; then
   test -x "$materializer" || { printf '%s\n' 'not ok - the hosted materializer must accept the exact clean-runner input contract'; exit 1; }
 else
+  cat "$fixture/out" "$fixture/err"
   printf '%s\n' 'not ok - the hosted materializer must accept the exact clean-runner input contract'
   exit 1
 fi
@@ -49,15 +50,33 @@ jq -e '.key=="keepling/phase-2/terraform.tfstate"' "$target/b2-tofu-state.json" 
 if grep -E 'FixtureSentinel|FixturePrimary|FixtureMirror|FixtureState|fixture-hcloud-token' "$fixture/out" "$fixture/err" "$target/env.sh" "$target/replacement-run.pub"; then echo 'not ok - secret sentinel escaped'; exit 1; fi
 printf '%s\n' 'ok - exact private hosted input bundle materialized with no secret output'
 
-env -i PATH="$PATH" KEEPLING_HETZNER_CREDENTIAL_FILE="$target/hetzner.json" \
-  KEEPLING_CLOUDFLARE_DNS_CREDENTIAL_FILE="$target/cloudflare-dns.json" \
-  KEEPLING_BACKUP_PRIMARY_CREDENTIAL_FILE="$target/b2-primary.json" \
-  KEEPLING_BACKUP_MIRROR_CREDENTIAL_FILE="$target/r2-mirror.json" \
-  KEEPLING_TOFU_STATE_CREDENTIAL_FILE="$target/b2-tofu-state.json" \
-  KEEPLING_SSH_PUBLIC_KEY_FILE="$target/replacement-run.pub" KEEPLING_BACKUP_CIPHER_FILE="$target/backup-cipher.key" \
-  sh "$root/tooling/phase-2-credentials.sh" doctor >"$fixture/setup-out" 2>"$fixture/setup-err" || { echo 'not ok - existing credential checker rejected the bundle'; exit 1; }
-! grep -E 'FixtureSentinel|FixturePrimary|FixtureMirror|FixtureState|fixture-hcloud-token' "$fixture/setup-out" "$fixture/setup-err" >/dev/null || { echo 'not ok - credential checker exposed fixture secret'; exit 1; }
-printf '%s\n' 'ok - existing credential checker accepts exact bundle without secret output'
+# Run the real setup checker in an isolated source mirror. Only its local
+# toolchain and provider dry-run adapters are stubbed; credential/schema/path
+# checks and code-3 non-passing status remain the production implementations.
+mirror=$fixture/repo
+mkdir -p "$mirror/tooling" "$fixture/bin" "$fixture/plugins"; chmod 700 "$mirror" "$mirror/tooling" "$fixture/bin" "$fixture/plugins"
+for script in phase-2-live-setup.sh phase-2-credentials.sh phase-2-tofu-state.sh phase-2-toolchain-doctor.sh; do cp "$root/tooling/$script" "$mirror/tooling/$script"; done
+cat >"$mirror/tooling/verify-host-replacement.sh" <<'SH'
+#!/usr/bin/env sh
+case "${1:-}" in --dry-run) exit 0;; --print-live-registry) printf '%s\n' 'phase2-registry status=fixture'; exit 0;; *) exit 1;; esac
+SH
+chmod 700 "$mirror/tooling/verify-host-replacement.sh"
+printf '%s\n' '#!/usr/bin/env sh' 'if [ "${1:-}" = version ] && [ "${2:-}" = -json ]; then echo "{\"terraform_version\":\"1.12.6\"}"; elif [ "${1:-}" = version ]; then echo "OpenTofu v1.12.6"; else exit 0; fi' >"$fixture/bin/tofu"
+printf '%s\n' '#!/usr/bin/env sh' 'if [ "${1:-}" = --version ]; then echo fixture-cloud-init-schema-1.0; else exit 0; fi' >"$fixture/bin/cloud-init-schema"
+printf '%s\n' '#!/usr/bin/env sh' 'exit 0' >"$fixture/plugins/terraform-provider-hcloud_v1.68.0"
+chmod 700 "$fixture/bin/tofu" "$fixture/bin/cloud-init-schema" "$fixture/plugins/terraform-provider-hcloud_v1.68.0"
+set +e
+env -i PATH="$fixture/bin:$PATH" HOME="$HOME" TMPDIR="${TMPDIR:-/tmp}" TOFU_BIN="$fixture/bin/tofu" \
+  CLOUD_INIT_SCHEMA_BIN="$fixture/bin/cloud-init-schema" CLOUD_INIT_SCHEMA_VERSION=fixture-cloud-init-schema-1.0 \
+  HCLOUD_PROVIDER_PLUGIN_DIR="$fixture/plugins" \
+  sh "$mirror/tooling/phase-2-live-setup.sh" --directory "$target" check >"$fixture/setup-out" 2>"$fixture/setup-err"
+setup_status=$?
+set -e
+[ "$setup_status" -eq 3 ] || { printf 'not ok - existing setup checker returned code %s\n' "$setup_status"; cat "$fixture/setup-out" "$fixture/setup-err"; exit 1; }
+grep -Fq 'phase2-live-setup status=local-check result=passed' "$fixture/setup-out" || { echo 'not ok - setup checker rejected materialized credentials'; exit 1; }
+grep -Fq 'phase2-live-setup status=remaining-inputs result=required code=3' "$fixture/setup-out" || { echo 'not ok - setup checker lost documented remaining-inputs fence'; exit 1; }
+! grep -E 'FixtureSentinel|FixturePrimary|FixtureMirror|FixtureState|fixture-hcloud-token' "$fixture/setup-out" "$fixture/setup-err" >/dev/null || { echo 'not ok - setup checker exposed fixture secret'; exit 1; }
+printf '%s\n' 'ok - real setup checker accepts exact bundle and remains non-passing at code 3 with isolated pinned-tool fixtures'
 
 rm -rf -- "$target"
 invalid=${inputs%\}}',"unexpected":"value"}'

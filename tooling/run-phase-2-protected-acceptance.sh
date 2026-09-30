@@ -37,8 +37,14 @@ def fail():
     raise SystemExit(1)
 
 payload = os.environ.get("KEEPLING_AUTHORIZATION_JSON", "")
+def no_duplicates(pairs):
+    result={}
+    for key,item in pairs:
+        if key in result: fail()
+        result[key]=item
+    return result
 try:
-    value = json.loads(payload)
+    value = json.loads(payload, object_pairs_hook=no_duplicates)
 except Exception:
     fail()
 if not isinstance(value, dict) or set(value) != {
@@ -236,6 +242,22 @@ trap_reason=protected-sequence-incomplete
 finish() {
   exit_code=$?
   trap - EXIT HUP INT TERM
+  # A failed run gets at most one exact-owned provider teardown, and only when
+  # the persisted apply fence proves a candidate may exist. A started destroy
+  # is never retried after an uncertain result.
+  if [ "$exit_code" -ne 0 ] && [ -n "${bundle:-}" ] && [ -f "$bundle" ] && [ ! -L "$bundle" ]; then
+    cleanup_workspace=$(awk -F= '$1=="WORKSPACE" {print substr($0,index($0,"=")+1)}' "$bundle")
+    if [ -d "$cleanup_workspace" ] && [ -e "$cleanup_workspace/.apply-started" ] && \
+      [ ! -e "$cleanup_workspace/.teardown-attempted" ] && [ ! -e "$cleanup_workspace/.teardown-destroy-started" ] && \
+      [ ! -e "$cleanup_workspace/.stage-teardown.complete" ]; then
+      cleanup_trigger=$(python3 -c 'import json,os; print(json.loads(os.environ["KEEPLING_AUTHORIZATION_JSON"])["change_trigger"])' 2>/dev/null || true)
+      env -i PATH="$PATH" HOME="$HOME" TMPDIR="${RUNNER_TEMP:-/tmp}" \
+        KEEPLING_LIVE_ORCHESTRATION_FILE="$bundle" KEEPLING_LIVE_CHANGE_TRIGGER="$cleanup_trigger" \
+        KEEPLING_ALLOW_BILLABLE_APPLY=yes KEEPLING_ALLOW_PROVIDER_DESTROY=yes \
+        TOFU_BIN="${TOFU_BIN:-}" HCLOUD_PROVIDER_PLUGIN_DIR="${HCLOUD_PROVIDER_PLUGIN_DIR:-}" \
+        sh "$root/tooling/phase-2-live-orchestration.sh" teardown >>"${raw_log:-/dev/null}" 2>&1 || true
+    fi
+  fi
   if [ -n "${SSH_AGENT_PID:-}" ]; then SSH_AUTH_SOCK=${SSH_AUTH_SOCK:-} SSH_AGENT_PID=$SSH_AGENT_PID ssh-agent -k >/dev/null 2>&1 || true; fi
   docker image rm -f "$image_tag" >/dev/null 2>&1 || true
   rm -rf -- "$private_root"
@@ -292,13 +314,7 @@ unset HCLOUD_TOKEN CLOUDFLARE_API_TOKEN KEEPLING_BACKUP_PRIMARY_ACCESS_KEY KEEPL
   KEEPLING_BACKUP_MIRROR_ACCESS_KEY KEEPLING_BACKUP_MIRROR_SECRET_KEY KEEPLING_BACKUP_MIRROR_ENDPOINT \
   KEEPLING_BACKUP_MIRROR_REGION KEEPLING_BACKUP_MIRROR_BUCKET KEEPLING_TOFU_STATE_ACCESS_KEY \
   KEEPLING_TOFU_STATE_SECRET_KEY KEEPLING_TOFU_STATE_ENDPOINT KEEPLING_TOFU_STATE_REGION \
-  KEEPLING_TOFU_STATE_BUCKET KEEPLING_BACKUP_CIPHER_PASSPHRASE KEEPLING_HOSTED_INPUTS_JSON
-setup_output=$private_root/setup-check.log
-setup_status=0
-env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" \
-  "$root/tooling/phase-2-live-setup.sh" --directory "$credential_dir" check >"$setup_output" 2>&1 || setup_status=$?
-[ "$setup_status" -eq 3 ] || refuse private-input-setup-check-failed
-grep -Fq 'phase2-live-setup status=local-check result=passed' "$setup_output" || refuse private-input-setup-check-failed
+  KEEPLING_TOFU_STATE_BUCKET KEEPLING_BACKUP_CIPHER_PASSPHRASE
 
 context_archive=$private_root/source-context.tar
 image_archive=$private_root/image.tar.gz
@@ -348,7 +364,161 @@ loaded_id=$(env -i PATH="$PATH" HOME="$HOME" docker image inspect "$image_tag" -
 expected_id=$(python3 -c 'import json,os; print(json.loads(os.environ["KEEPLING_AUTHORIZATION_JSON"])["source"]["config_image_id"])')
 [ "$loaded_id" = "$expected_id" ] || refuse reloaded-image-mismatch
 
-# Plan 02-24 extends this base with candidate creation, the bounded trust wait,
-# continuation, and exact-owned cleanup. Never turn route-ready evidence into a
-# live acceptance claim from this preparation runner.
-refuse protected-sequence-incomplete
+# Gate C: repeat the exact-byte and owner-selection binding after the immutable
+# image was exported, removed, and reloaded.
+validate_authorization
+
+candidate_selection=$private_root/candidate-selection.json
+recovery_capture=$private_root/recovery-capture
+recovery_handoff=$private_root/recovery-handoff
+server_image=$private_root/server-image.json
+admin_cidrs=$private_root/admin-source-cidrs.txt
+mkdir -m 700 "$recovery_capture" "$recovery_handoff"
+jq --arg image "$image_archive" '.version=1 | . + {image_archive:$image}' "$archive_contract" >"$candidate_selection" || refuse candidate-selection-write-failed
+chmod 600 "$candidate_selection"
+server_image_id=$(printf '%s' "$KEEPLING_HOSTED_INPUTS_JSON" | jq -er '.server_image_id') || refuse hosted-inputs-invalid
+jq -n --arg id "$server_image_id" '{version:1,os:"ubuntu-24.04",image_id:$id}' >"$server_image" || refuse server-image-selection-write-failed
+chmod 600 "$server_image"
+printf '%s' "$KEEPLING_HOSTED_INPUTS_JSON" | jq -er '.admin_source_cidrs[]' >"$admin_cidrs" || refuse admin-cidrs-selection-write-failed
+chmod 600 "$admin_cidrs"
+
+# Build a fresh synthetic recovery/login capture only from the exact image that
+# was exported, removed, and reloaded in this job.
+deployed_image_id=$private_root/deployed-image-id
+env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" KEEPLING_IMAGE_TAG="$image_tag" \
+  KEEPLING_EXPECTED_IMAGE_ID="$loaded_id" KEEPLING_DEPLOYED_IMAGE_ID_FILE="$deployed_image_id" \
+  sh "$root/tooling/verify-deploy.sh" --local --recovery-output "$recovery_capture" >>"$raw_log" 2>&1 || refuse same-run-deploy-capture-failed
+private_file() {
+  [ -f "$1" ] && [ ! -L "$1" ] || return 1
+  mode=$(stat -f '%Lp' "$1" 2>/dev/null || stat -c '%a' "$1") || return 1
+  [ "$mode" = 600 ] || return 1
+  parent=$(CDPATH='' cd -P "$(dirname "$1")" 2>/dev/null && pwd) || return 1
+  case "$parent/$(basename "$1")" in "$root"|"$root"/*) return 1;; esac
+}
+private_file "$deployed_image_id" || refuse same-run-deployed-image-proof-unavailable
+[ "$(cat "$deployed_image_id")" = "$loaded_id" ] || refuse same-run-deployed-image-mismatch
+sh "$root/tooling/prepare-synthetic-recovery.sh" "$recovery_capture" "$recovery_handoff" >>"$raw_log" 2>&1 || refuse same-run-recovery-handoff-failed
+chmod 600 "$recovery_handoff"/* || refuse same-run-recovery-mode-invalid
+recovery_selection=$recovery_handoff/recovery-selection.json
+login_credential=$recovery_handoff/rehearsal-login-credential
+recovery_dump=$recovery_handoff/recovery.dump
+recovery_provenance=$recovery_handoff/recovery.provenance.json
+private_file "$candidate_selection" && private_file "$server_image" && private_file "$admin_cidrs" && \
+  private_file "$recovery_selection" && private_file "$login_credential" && private_file "$recovery_dump" && private_file "$recovery_provenance" || refuse generated-selection-private-boundary-invalid
+
+setup_output=$private_root/setup-prepare.log
+setup_status=0
+env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" SSH_AUTH_SOCK="$SSH_AUTH_SOCK" \
+  "$root/tooling/phase-2-live-setup.sh" --directory "$credential_dir" \
+  --candidate-selection "$candidate_selection" --recovery-selection "$recovery_selection" \
+  --server-image-selection "$server_image" --admin-source-cidrs "$admin_cidrs" \
+  --login-credential "$login_credential" --ssh-known-hosts "$known_hosts" prepare >"$setup_output" 2>&1 || setup_status=$?
+[ "$setup_status" -eq 3 ] || refuse private-input-setup-prepare-failed
+grep -Fq 'phase2-live-setup status=prepared result=ready' "$setup_output" || refuse private-input-bundle-not-prepared
+grep -Fq 'phase2-live-setup status=remaining-inputs result=required code=3' "$setup_output" || refuse private-input-remaining-fence-missing
+
+run_directories=$(find "$credential_dir/runs" -mindepth 1 -maxdepth 1 -type d -print)
+[ "$(printf '%s\n' "$run_directories" | awk 'NF {count++} END {print count+0}')" -eq 1 ] || refuse prepared-run-directory-ambiguous
+run_directory=$run_directories
+bundle=$run_directory/orchestration.env
+private_file "$bundle" || refuse generated-orchestration-bundle-unavailable
+env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" \
+  sh "$root/tooling/phase-2-live-orchestration.sh" --validate "$bundle" >"$private_root/bundle-validation.log" 2>&1 || refuse generated-orchestration-bundle-invalid
+
+# Validate every handoff path and content identity against the authorization,
+# rebuilt archive, and same-run capture before permitting the first apply.
+env -i PATH="$PATH" LC_ALL=C KEEPLING_AUTHORIZATION_JSON="$KEEPLING_AUTHORIZATION_JSON" \
+  KEEPLING_HOSTED_INPUTS_JSON="$KEEPLING_HOSTED_INPUTS_JSON" BUNDLE_FILE="$bundle" \
+  CANDIDATE_FILE="$candidate_selection" RECOVERY_FILE="$recovery_selection" SERVER_IMAGE_FILE="$server_image" \
+  ADMIN_CIDRS_FILE="$admin_cidrs" LOGIN_FILE="$login_credential" IMAGE_ARCHIVE="$image_archive" \
+  RECOVERY_DUMP="$recovery_dump" RECOVERY_PROVENANCE="$recovery_provenance" python3 - <<'PY' || refuse generated-input-binding-mismatch
+import hashlib,json,os
+def read_bundle(path):
+    rows={}
+    for line in open(path,encoding="utf-8"):
+        key,sep,value=line.rstrip("\n").partition("=")
+        if not sep or key in rows: raise ValueError("closed bundle")
+        rows[key]=value
+    return rows
+bundle=read_bundle(os.environ["BUNDLE_FILE"])
+approval=json.loads(os.environ["KEEPLING_AUTHORIZATION_JSON"])
+inputs=json.loads(os.environ["KEEPLING_HOSTED_INPUTS_JSON"])
+candidate=json.load(open(os.environ["CANDIDATE_FILE"],encoding="utf-8"))
+recovery=json.load(open(os.environ["RECOVERY_FILE"],encoding="utf-8"))
+provenance=json.load(open(os.environ["RECOVERY_PROVENANCE"],encoding="utf-8"))
+server_image=json.load(open(os.environ["SERVER_IMAGE_FILE"],encoding="utf-8"))
+def sha(path):
+    digest=hashlib.sha256()
+    with open(path,"rb") as stream:
+        for block in iter(lambda:stream.read(1024*1024),b""): digest.update(block)
+    return digest.hexdigest()
+auth=approval["selection"]
+if auth["server_image_id"]!=int(server_image["image_id"]) or str(server_image["image_id"])!=inputs["server_image_id"]: raise SystemExit(1)
+for key in ("dns_zone_id","dns_record_name","candidate_source","recovery_source","login_source","admin_source_cidrs"):
+    if auth[key]!=inputs[key]: raise SystemExit(1)
+if bundle.get("CANDIDATE_SELECTION_FILE")!=os.environ["CANDIDATE_FILE"] or bundle.get("RECOVERY_SELECTION_FILE")!=os.environ["RECOVERY_FILE"]: raise SystemExit(1)
+if bundle.get("SERVER_IMAGE_SELECTION_FILE")!=os.environ["SERVER_IMAGE_FILE"] or bundle.get("ADMIN_SOURCE_CIDRS_FILE")!=os.environ["ADMIN_CIDRS_FILE"] or bundle.get("LOGIN_CREDENTIAL_FILE")!=os.environ["LOGIN_FILE"]: raise SystemExit(1)
+if bundle.get("IMAGE_ARCHIVE_FILE")!=os.environ["IMAGE_ARCHIVE"] or candidate.get("image_archive")!=os.environ["IMAGE_ARCHIVE"]: raise SystemExit(1)
+if candidate.get("archive_sha256")!=approval["source"]["archive_sha256"] or candidate.get("manifest_digest")!=approval["source"]["manifest_digest"] or candidate.get("config_image_id")!=approval["source"]["config_image_id"]: raise SystemExit(1)
+if bundle.get("RECOVERY_DUMP_FILE")!=os.environ["RECOVERY_DUMP"] or bundle.get("RECOVERY_PROVENANCE_FILE")!=os.environ["RECOVERY_PROVENANCE"]: raise SystemExit(1)
+if recovery.get("source_kind")!="synthetic-rehearsal" or recovery.get("dump_file")!=os.environ["RECOVERY_DUMP"] or recovery.get("provenance_file")!=os.environ["RECOVERY_PROVENANCE"]: raise SystemExit(1)
+if recovery.get("rehearsal_login_credential_file")!=os.environ["LOGIN_FILE"] or bundle.get("LOGIN_CREDENTIAL_FILE")!=recovery["rehearsal_login_credential_file"]: raise SystemExit(1)
+if provenance.get("source_kind")!="synthetic-rehearsal" or provenance.get("verification")!={"local_capture":True,"local_restore":True,"synthetic":True}: raise SystemExit(1)
+if provenance.get("plaintext_sha256")!=sha(os.environ["RECOVERY_DUMP"]) or provenance.get("plaintext_bytes")!=os.path.getsize(os.environ["RECOVERY_DUMP"]): raise SystemExit(1)
+if not bundle.get("DNS_TEST_RECORD_NAME","" ).endswith("."+inputs["dns_record_name"]): raise SystemExit(1)
+if sha(os.environ["IMAGE_ARCHIVE"])!=approval["source"]["archive_sha256"]: raise SystemExit(1)
+with open(os.environ["ADMIN_CIDRS_FILE"],encoding="ascii") as stream:
+    if stream.read().splitlines()!=inputs["admin_source_cidrs"]: raise SystemExit(1)
+PY
+
+# This second digest/selection check is the last gate before any provider action.
+validate_authorization
+
+bundle_sha=$(shasum -a 256 "$bundle" | awk '{print $1}') || refuse generated-orchestration-bundle-digest-unavailable
+source_sha=$GITHUB_SHA
+agent_digest=$identity_digest
+change_trigger=$(python3 -c 'import json,os; print(json.loads(os.environ["KEEPLING_AUTHORIZATION_JSON"])["change_trigger"])')
+signal_file=$private_root/host-trust-signal.json
+run_orchestration() {
+  stage_name=$1
+  resume_signal=${2:-}
+  env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" SSH_AUTH_SOCK="$SSH_AUTH_SOCK" SSH_AGENT_PID="$SSH_AGENT_PID" \
+    GITHUB_TOKEN="${GITHUB_TOKEN:-}" GITHUB_REPOSITORY="$GITHUB_REPOSITORY" GITHUB_EVENT_NAME="$GITHUB_EVENT_NAME" \
+    GITHUB_REF="$GITHUB_REF" GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" GITHUB_ACTOR="$GITHUB_ACTOR" \
+    KEEPLING_AUTHORIZATION_SHA256="$KEEPLING_AUTHORIZATION_SHA256" KEEPLING_HOSTED_INPUTS_SHA256="$KEEPLING_HOSTED_INPUTS_SHA256" \
+    KEEPLING_APPROVED_SOURCE_SHA="$source_sha" KEEPLING_APPROVED_SSH_KEY_SHA256="$agent_digest" \
+    KEEPLING_APPROVED_BUNDLE_SHA256="$bundle_sha" KEEPLING_LIVE_CHANGE_TRIGGER="$change_trigger" \
+    KEEPLING_ALLOW_BILLABLE_APPLY=yes KEEPLING_ALLOW_LIVE_DNS_MUTATION=yes KEEPLING_ALLOW_PROVIDER_DESTROY=yes \
+    KEEPLING_LIVE_ORCHESTRATION_FILE="$bundle" KEEPLING_HOSTED_INPUTS_JSON="$KEEPLING_HOSTED_INPUTS_JSON" \
+    KEEPLING_RESUME_HOST_TRUST="$resume_signal" KEEPLING_HOST_TRUST_SIGNAL_FILE="$signal_file" \
+    KEEPLING_KNOWN_HOSTS_FILE="$known_hosts" TOFU_BIN="${TOFU_BIN:-}" CLOUD_INIT_SCHEMA_BIN="${CLOUD_INIT_SCHEMA_BIN:-}" \
+    CLOUD_INIT_SCHEMA_VERSION="${CLOUD_INIT_SCHEMA_VERSION:-}" HCLOUD_PROVIDER_PLUGIN_DIR="${HCLOUD_PROVIDER_PLUGIN_DIR:-}" \
+    sh "$root/tooling/phase-2-live-orchestration.sh" "$stage_name" >>"$raw_log" 2>&1
+}
+
+# One run-bound lifecycle: bootstrap pauses for the owner trust gate, then the
+# existing same-job signal wait permits one resume before later exact stages.
+bootstrap_status=0
+run_orchestration bootstrap || bootstrap_status=$?
+[ "$bootstrap_status" -eq 75 ] || refuse candidate-bootstrap-did-not-pause-at-host-trust
+pending=$run_directory/workspace/.host-trust.pending
+private_file "$pending" || refuse host-trust-checkpoint-unavailable
+env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" GITHUB_TOKEN="${GITHUB_TOKEN:-}" GITHUB_REPOSITORY="$GITHUB_REPOSITORY" \
+  GITHUB_EVENT_NAME="$GITHUB_EVENT_NAME" GITHUB_REF="$GITHUB_REF" GITHUB_SHA="$GITHUB_SHA" GITHUB_RUN_ID="$GITHUB_RUN_ID" \
+  GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" GITHUB_ACTOR="$GITHUB_ACTOR" \
+  PHASE2_PARENT_RUN_ID="$(awk -F= '$1=="PARENT_RUN_ID" {print $2}' "$pending")" \
+  PHASE2_PARENT_RUN_ATTEMPT="$(awk -F= '$1=="PARENT_RUN_ATTEMPT" {print $2}' "$pending")" \
+  PHASE2_LOGICAL_RUN_DIGEST="$(awk -F= '$1=="LOGICAL_RUN_DIGEST" {print $2}' "$pending")" \
+  PHASE2_CHALLENGE_NONCE="$(awk -F= '$1=="CHALLENGE_NONCE" {print $2}' "$pending")" \
+  PHASE2_OWNER_ACTOR="$(awk -F= '$1=="OWNER_ACTOR" {print $2}' "$pending")" \
+  PHASE2_TRUST_DEADLINE="$(awk -F= '$1=="TRUST_DEADLINE" {print $2}' "$pending")" \
+  PHASE2_PARENT_SOURCE_SHA="$(awk -F= '$1=="PARENT_SOURCE_SHA" {print $2}' "$pending")" \
+  sh "$root/tooling/wait-for-phase-2-host-trust.sh" --wait --signal-output "$signal_file" >"$private_root/host-trust-wait.log" 2>&1 || refuse host-trust-owner-signal-unavailable
+grep -Fq 'host-trust status=verified signal=single-use' "$private_root/host-trust-wait.log" || refuse host-trust-owner-signal-invalid
+run_orchestration bootstrap yes || refuse candidate-host-trust-resume-failed
+for stage_name in image restore runtime semantic dns teardown; do
+  run_orchestration "$stage_name" || refuse "${stage_name}-stage-failed"
+done
+trap_status=PASS
+trap_reason=all-authorized-stages-passed
+printf '%s\n' 'phase2-protected status=PASS result=acceptance-sequence-complete'
