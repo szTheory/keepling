@@ -67,3 +67,8 @@ verification:
 - Replacing the verifier with its HEAD bytes reproduced exit 1 plus `(PASSED)`; restoring the fix produced exit 1 plus the truthful generic non-pass summary.
 - `node tooling/check-ci-contract.mjs` passed; repository integrity and all 13 governance assertions passed; `git diff --check` passed.
 - No live attestation, deployment, provider, DNS, or release operation was performed.
+
+## Prevention
+
+- Why not caught earlier: the summary verdict was tracked separately from the authoritative failure flag, so blocked lanes could exit non-zero while the display state remained `PASSED`.
+- Guard: `.github/workflows/repository-integrity.yml` asserts the retained candidate-5 manifest prints the generic non-pass summary and rejects the contradictory `(PASSED)` text.
