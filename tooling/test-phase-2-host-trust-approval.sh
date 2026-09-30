@@ -35,8 +35,18 @@ run_wait() {
     KEEPLING_TEST_EXTERNAL_CALL_LEDGER="$ledger" sh "$waiter" "$@"
 }
 
-run_wait --verify-signal "$fixture/signal.json" >"$fixture/out" 2>"$fixture/err" || { cat "$fixture/out" "$fixture/err" >&2; exit 1; }
+grep -F -- '--signal-output' "$waiter" >/dev/null || {
+  printf '%s\n' 'TAP version 13' 'not ok 1 - waiter returns a validated signal for same-job continuation' '# tests 1' '# pass 0' '# fail 1'
+  exit 1
+}
+run_wait --verify-signal "$fixture/signal.json" --signal-output "$fixture/accepted-signal.json" >"$fixture/out" 2>"$fixture/err" || { cat "$fixture/out" "$fixture/err" >&2; exit 1; }
 grep -Fqx 'host-trust status=verified signal=single-use' "$fixture/out" || { cat "$fixture/out" >&2; exit 1; }
+[ "$(stat -f '%Lp' "$fixture/accepted-signal.json" 2>/dev/null || stat -c '%a' "$fixture/accepted-signal.json")" = 600 ] || { printf '%s\n' 'not ok - accepted signal must be private'; exit 1; }
+python3 - "$fixture/signal.json" "$fixture/accepted-signal.json" <<'PY' || { printf '%s\n' 'not ok - waiter did not retain the validated sanitized signal'; exit 1; }
+import json,sys
+source,target=map(lambda p:json.load(open(p,encoding="utf-8")),sys.argv[1:])
+assert source==target and set(target)=={"version","parent_run_id","parent_run_attempt","logical_run_digest","challenge_nonce","owner_actor","marker_confirmed","fingerprint_sha256","issued_at","expires_at"}
+PY
 printf '%s\n' 'ok - exact fresh owner signal validates without API calls'
 
 mutate_and_refuse() {
@@ -53,10 +63,11 @@ else: value[field]=raw
 json.dump(value,open(target,"w"),sort_keys=True,separators=(",",":"))
 PY
   chmod 600 "$fixture/mutated.json"
-  if run_wait --verify-signal "$fixture/mutated.json" >"$fixture/out" 2>"$fixture/err"; then
+  if run_wait --verify-signal "$fixture/mutated.json" --signal-output "$fixture/refused-signal.json" >"$fixture/out" 2>"$fixture/err"; then
     printf 'not ok - %s must be refused\n' "$label"; exit 1
   fi
   grep -Eq '^host-trust status=NON_PASSING reason=[a-z0-9-]+$' "$fixture/err" || { cat "$fixture/err" >&2; exit 1; }
+  [ ! -e "$fixture/refused-signal.json" ] || { printf 'not ok - %s wrote a rejected signal\n' "$label"; exit 1; }
   printf 'ok - %s refused\n' "$label"
 }
 
@@ -102,6 +113,7 @@ checks={
  "single sanitized signal artifact": "phase-2-host-trust-signal.json" in w and "actions/upload-artifact@" in w and "image.tar" not in w,
  "local helper disables fingerprint echo and hashes locally": "stty -echo" in a and "shasum -a 256" in a and "gh workflow run phase-2-host-trust-approval.yml" in a,
  "waiter is bounded and checks one-time binding": "signal-timeout" in v and "signal-replay-or-ambiguous" in v and "expires_at" in v and "marker_confirmed" in v,
+ "waiter hands only the validated sanitized signal to the same job": "--signal-output" in v and "signal-output-invalid" in v and "fingerprint_sha256" in v,
 }
 for name,ok in checks.items(): print(("ok" if ok else "not ok")+" - "+name)
 if not all(checks.values()): raise SystemExit(1)
