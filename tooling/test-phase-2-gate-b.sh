@@ -25,10 +25,12 @@ sha_file() { shasum -a 256 "$1" | awk '{print $1}'; }
 git -C "$root" archive --format=tar HEAD >"$fixture/baseline.tar"
 baseline_sha=$(sha_file "$fixture/baseline.tar")
 source_sha=$(git -C "$root" rev-parse HEAD)
+real_git=$(command -v git)
 config_id=sha256:1111111111111111111111111111111111111111111111111111111111111111
 manifest_digest=sha256:2222222222222222222222222222222222222222222222222222222222222222
 rootfs_id=sha256:3333333333333333333333333333333333333333333333333333333333333333
 export FIXTURE_ROOT=$fixture FIXTURE_BASELINE_SHA=$baseline_sha FIXTURE_SOURCE_SHA=$source_sha
+export REAL_GIT=$real_git
 export FIXTURE_CONFIG_ID=$config_id FIXTURE_MANIFEST_DIGEST=$manifest_digest FIXTURE_ROOTFS_ID=$rootfs_id
 export KEEPLING_IMAGE_PLATFORM=linux/amd64 KEEPLING_IMAGE_TAG=keepling-server:plan-02-09-amd64
 export RUNNER_TEMP=$runner_temp KEEPLING_GATE_B_TEST_HOOK_DIR=$hook
@@ -68,13 +70,26 @@ set -eu
 archive_sha=$(shasum -a 256 "$2" | awk '{print $1}')
 revision=$FIXTURE_SOURCE_SHA
 case "${FIXTURE_BAD_CONTRACT:-}" in
+  missing-revision) revision=;;
   revision) revision=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa;;
+  missing-archive) archive_sha=;;
   archive) archive_sha=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa;;
+  config) :;;
+  rootfs) :;;
+  platform) :;;
 esac
-jq -n --arg sha "$archive_sha" --arg revision "$revision" --arg config "$FIXTURE_CONFIG_ID" \
-  --arg manifest "$FIXTURE_MANIFEST_DIGEST" --arg rootfs "$FIXTURE_ROOTFS_ID" \
+jq_config=$FIXTURE_CONFIG_ID
+jq_rootfs=$FIXTURE_ROOTFS_ID
+jq_arch=amd64
+case "${FIXTURE_BAD_CONTRACT:-}" in
+  config) jq_config=sha256:5555555555555555555555555555555555555555555555555555555555555555;;
+  rootfs) jq_rootfs=sha256:6666666666666666666666666666666666666666666666666666666666666666;;
+  platform) jq_arch=arm64;;
+esac
+jq -n --arg sha "$archive_sha" --arg revision "$revision" --arg config "$jq_config" \
+  --arg manifest "$FIXTURE_MANIFEST_DIGEST" --arg rootfs "$jq_rootfs" --arg arch "$jq_arch" \
   '{version:2,archive_sha256:$sha,config_image_id:$config,manifest_digest:$manifest,revision:$revision,
-    architecture:"amd64",os:"linux",rootfs_diff_ids:[$rootfs]}' >"$3"
+    architecture:$arch,os:"linux",rootfs_diff_ids:[$rootfs]}' >"$3"
 chmod 600 "$3"
 MOCK
 cat >"$hook/verify-deploy.sh" <<'MOCK'
@@ -114,13 +129,36 @@ case "$1:$2" in
   image:inspect)
     case "$5" in
       '{{.Id}}') printf '%s\n' "$FIXTURE_CONFIG_ID" ;;
-      '{{.Os}}/{{.Architecture}}') printf '%s\n' linux/amd64 ;;
-      *org.opencontainers.image.revision*) printf '%s\n' "$FIXTURE_SOURCE_SHA" ;;
-      '{{json .RootFS.Layers}}') printf '["%s"]\n' "$FIXTURE_ROOTFS_ID" ;;
+      '{{.Os}}/{{.Architecture}}') printf '%s\n' "${FIXTURE_DOCKER_PLATFORM:-linux/amd64}" ;;
+      *org.opencontainers.image.revision*) printf '%s\n' "${FIXTURE_DOCKER_REVISION:-$FIXTURE_SOURCE_SHA}" ;;
+      '{{json .RootFS.Layers}}') printf '["%s"]\n' "${FIXTURE_DOCKER_ROOTFS_ID:-$FIXTURE_ROOTFS_ID}" ;;
       *) exit 34 ;;
     esac ;;
   *) exit 35 ;;
 esac
+MOCK
+cat >"$fixture/mock-bin/git" <<'MOCK'
+#!/usr/bin/env sh
+set -eu
+case "${FIXTURE_GIT_MODE:-}:$1:${2:-}" in
+  source:rev-parse:HEAD|tree:rev-parse:HEAD\^\{tree\}) exit 0 ;;
+  missing-commit:cat-file:-e) exit 1 ;;
+  archive:archive:*) exit 1 ;;
+esac
+exec "$REAL_GIT" "$@"
+MOCK
+cat >"$fixture/mock-bin/sha256sum" <<'MOCK'
+#!/usr/bin/env sh
+set -eu
+if [ "$#" -gt 0 ]; then
+  for value do file=$value; done
+  case "${FIXTURE_CONTEXT_SHA_MODE:-}:$file" in
+    missing:*git-tree-context.tar) printf '%s\n' invalid-sha ;;
+    *) shasum -a 256 "$file" ;;
+  esac
+else
+  shasum -a 256
+fi
 MOCK
 cat >"$fixture/mock-bin/uname" <<'MOCK'
 #!/usr/bin/env sh
@@ -163,11 +201,24 @@ run_case() {
 run_case positive pass
 [ "$(sha_file "$fixture/baseline.tar")" = "$baseline_sha" ] || die 'build inputs changed the immutable Git archive digest'
 run_case bad-revision fail FIXTURE_BAD_CONTRACT=revision
+run_case missing-revision fail FIXTURE_BAD_CONTRACT=missing-revision
 run_case bad-archive fail FIXTURE_BAD_CONTRACT=archive
+run_case missing-archive-checksum fail FIXTURE_BAD_CONTRACT=missing-archive
+run_case bad-config fail FIXTURE_BAD_CONTRACT=config
+run_case bad-rootfs fail FIXTURE_BAD_CONTRACT=rootfs
+run_case bad-archive-platform fail FIXTURE_BAD_CONTRACT=platform
 run_case bad-deployed-id fail FIXTURE_DEPLOYED_ID=sha256:4444444444444444444444444444444444444444444444444444444444444444
 run_case bad-recovery fail FIXTURE_RECOVERY=semantic
 run_case missing-recovery fail FIXTURE_RECOVERY=missing
 run_case privacy-refusal fail FIXTURE_PRIVACY=refuse
+run_case wrong-reloaded-label fail FIXTURE_DOCKER_REVISION=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+run_case wrong-reloaded-platform fail FIXTURE_DOCKER_PLATFORM=linux/arm64
+run_case wrong-reloaded-rootfs fail FIXTURE_DOCKER_ROOTFS_ID=sha256:7777777777777777777777777777777777777777777777777777777777777777
+run_case missing-source-sha fail FIXTURE_GIT_MODE=source
+run_case missing-tree-sha fail FIXTURE_GIT_MODE=tree
+run_case missing-commit fail FIXTURE_GIT_MODE=missing-commit
+run_case missing-context-archive fail FIXTURE_GIT_MODE=archive
+run_case missing-context-sha fail FIXTURE_CONTEXT_SHA_MODE=missing
 
 # Host architecture must fail before any image/export/deploy hook runs.
 cat >"$fixture/mock-bin/uname" <<'MOCK'
@@ -178,7 +229,7 @@ chmod 700 "$fixture/mock-bin/uname"
 run_case wrong-host fail
 rm "$fixture/mock-bin/uname"
 
-[ "$(cat "$fixture/build-count")" -eq 7 ] || die 'unexpected number of image builds occurred in cases reaching the image verifier'
+[ "$(cat "$fixture/build-count")" -eq 15 ] || die 'unexpected number of image builds occurred in cases reaching the image verifier'
 [ "$(sha_file "$fixture/baseline.tar")" = "$baseline_sha" ] || die 'fixture inputs changed the immutable context digest'
 [ ! -s "$fixture/external-call-ledger" ] || die 'fixture recorded a forbidden external action'
-printf '%s\n' 'Gate B route fixtures passed: cases=8 positive=1 refused=7 external_calls=0'
+printf '%s\n' 'Gate B route fixtures passed: cases=21 positive=1 refused=20 external_calls=0'
