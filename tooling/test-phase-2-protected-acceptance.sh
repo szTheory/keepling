@@ -15,9 +15,11 @@ sha2=$(printf '%064d' 0 | tr 0 b)
 source_sha=$(printf '%040d' 0 | tr 0 a)
 tree_sha=$(printf '%040d' 0 | tr 0 b)
 now=$(date +%s)
-python3 - "$fixture/authorization.json" "$source_sha" "$tree_sha" "$sha" "$sha2" "$now" <<'PY'
+hosted='{"version":1,"dns_zone_id":"fixture-zone","dns_record_name":"tasks.example.invalid","server_image_id":"12345","admin_source_cidrs":["192.0.2.10/32"],"candidate_source":"rebuilt-archive","recovery_source":"same-run-synthetic-capture","login_source":"same-run-synthetic-capture","b2_primary_endpoint":"https://s3.us-west-004.backblazeb2.com","b2_primary_region":"us-west-004","b2_primary_bucket":"fixture-bucket"}'
+hosted_sha=$(printf '%s' "$hosted" | shasum -a 256 | awk '{print $1}')
+python3 - "$fixture/authorization.json" "$source_sha" "$tree_sha" "$sha" "$sha2" "$now" "$hosted_sha" <<'PY'
 import json, sys
-path, source, tree, a, b, now = sys.argv[1:]
+path, source, tree, a, b, now, hosted_sha = sys.argv[1:]
 actions = [
     "provider-apply", "provider-inventory", "console-marker", "current-ed25519-host-key",
     "ssh-bootstrap", "image-transfer", "credentialed-restore", "sync-epoch",
@@ -36,9 +38,10 @@ document = {
         "archive_sha256": b, "manifest_digest": "sha256:" + a, "config_image_id": "sha256:" + b,
         "deployed_image_id": "sha256:" + b, "rootfs_diff_ids_sha256": a, "synthetic_recovery": True,
     },
-    "selection": {"location": "nbg1", "server_type": "cx33", "server_image_id": 12345, "data_volume_gb": 160, "ssh_agent_fingerprint_sha256": a},
+    "selection": {"location": "nbg1", "server_type": "cx33", "server_image_id": 12345, "data_volume_gb": 160, "ssh_agent_fingerprint_sha256": a, "dns_zone_id":"fixture-zone", "dns_record_name":"tasks.example.invalid", "admin_source_cidrs":["192.0.2.10/32"], "candidate_source":"rebuilt-archive", "recovery_source":"same-run-synthetic-capture", "login_source":"same-run-synthetic-capture"},
     "limits": {"max_cost_usd": 50, "rpo_seconds": 300, "rto_seconds": 14400},
     "action_classes": actions,
+    "hosted_inputs_sha256": hosted_sha,
 }
 with open(path, "w", encoding="utf-8") as output:
     json.dump(document, output, sort_keys=True, separators=(",", ":"))
@@ -53,6 +56,7 @@ run_check() {
   env -i PATH="$PATH" HOME="$HOME" TMPDIR="${TMPDIR:-/tmp}" \
     GITHUB_EVENT_NAME=workflow_dispatch GITHUB_REF="$ref" GITHUB_SHA="$revision" GITHUB_ACTOR=jon \
     GITHUB_REPOSITORY=keepling/keepling GITHUB_RUN_ID=777 GITHUB_RUN_ATTEMPT="$attempt" RUNNER_TEMP="$fixture/runner-temp" \
+    KEEPLING_HOSTED_INPUTS_JSON="$hosted" KEEPLING_HOSTED_INPUTS_SHA256="$hosted_sha" \
     KEEPLING_AUTHORIZATION_JSON="$payload" KEEPLING_AUTHORIZATION_SHA256="$digest" \
     KEEPLING_TEST_EXTERNAL_CALL_LEDGER="$ledger" \
     sh "$runner" "$mode" >"$fixture/out" 2>"$fixture/err"

@@ -11,6 +11,14 @@ on:
         description: SHA-256 digest of the exact authorization-json bytes (authorization-sha256).
         required: true
         type: string
+      hosted_inputs_json:
+        description: Closed reviewed non-secret selection object (hosted-inputs-json).
+        required: true
+        type: string
+      hosted_inputs_sha256:
+        description: SHA-256 digest of the exact hosted-inputs-json bytes (hosted-inputs-sha256).
+        required: true
+        type: string
 
 permissions:
   actions: read
@@ -40,6 +48,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           KEEPLING_AUTHORIZATION_JSON: ${{ inputs.authorization_json }}
           KEEPLING_AUTHORIZATION_SHA256: ${{ inputs.authorization_sha256 }}
+          KEEPLING_HOSTED_INPUTS_JSON: ${{ inputs.hosted_inputs_json }}
+          KEEPLING_HOSTED_INPUTS_SHA256: ${{ inputs.hosted_inputs_sha256 }}
           KEEPLING_KNOWN_HOSTS_FILE: ${{ runner.temp }}/phase-2-known-hosts
           HCLOUD_TOKEN: ${{ secrets.HCLOUD_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -56,6 +66,7 @@ jobs:
           KEEPLING_TOFU_STATE_REGION: ${{ secrets.KEEPLING_TOFU_STATE_REGION }}
           KEEPLING_TOFU_STATE_BUCKET: ${{ secrets.KEEPLING_TOFU_STATE_BUCKET }}
           KEEPLING_BACKUP_CIPHER_PASSPHRASE: ${{ secrets.KEEPLING_BACKUP_CIPHER_PASSPHRASE }}
+          KEEPLING_SSH_PRIVATE_KEY: ${{ secrets.KEEPLING_SSH_PRIVATE_KEY }}
         run: |
           umask 077
           install -m 600 /dev/null "$RUNNER_TEMP/phase-2-known-hosts"

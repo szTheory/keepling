@@ -19,13 +19,19 @@ validate_authorization() {
   printf '%s' "$KEEPLING_AUTHORIZATION_SHA256" | grep -Eq '^[0-9a-f]{64}$' || refuse authorization-digest-invalid
   actual_digest=$(printf '%s' "$KEEPLING_AUTHORIZATION_JSON" | shasum -a 256 | awk '{print $1}') || refuse authorization-digest-invalid
   [ "$actual_digest" = "$KEEPLING_AUTHORIZATION_SHA256" ] || refuse authorization-digest-mismatch
+  [ -n "${KEEPLING_HOSTED_INPUTS_JSON:-}" ] || refuse hosted-inputs-missing
+  [ -n "${KEEPLING_HOSTED_INPUTS_SHA256:-}" ] || refuse hosted-inputs-digest-missing
+  [ "${#KEEPLING_HOSTED_INPUTS_JSON}" -le 16384 ] || refuse hosted-inputs-too-large
+  printf '%s' "$KEEPLING_HOSTED_INPUTS_SHA256" | grep -Eq '^[0-9a-f]{64}$' || refuse hosted-inputs-digest-invalid
+  hosted_digest=$(printf '%s' "$KEEPLING_HOSTED_INPUTS_JSON" | shasum -a 256 | awk '{print $1}') || refuse hosted-inputs-digest-invalid
+  [ "$hosted_digest" = "$KEEPLING_HOSTED_INPUTS_SHA256" ] || refuse hosted-inputs-digest-mismatch
 
-  env -i PATH="$PATH" LC_ALL=C KEEPLING_AUTHORIZATION_JSON="$KEEPLING_AUTHORIZATION_JSON" \
+  env -i PATH="$PATH" LC_ALL=C KEEPLING_AUTHORIZATION_JSON="$KEEPLING_AUTHORIZATION_JSON" KEEPLING_HOSTED_INPUTS_JSON="$KEEPLING_HOSTED_INPUTS_JSON" KEEPLING_HOSTED_INPUTS_SHA256="$KEEPLING_HOSTED_INPUTS_SHA256" \
     GITHUB_ACTOR="${GITHUB_ACTOR:-}" GITHUB_EVENT_NAME="${GITHUB_EVENT_NAME:-}" \
     GITHUB_REF="${GITHUB_REF:-}" GITHUB_SHA="${GITHUB_SHA:-}" \
     GITHUB_RUN_ID="${GITHUB_RUN_ID:-}" GITHUB_RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT:-}" \
     GITHUB_REPOSITORY="${GITHUB_REPOSITORY:-}" python3 - <<'PY' || refuse authorization-invalid
-import datetime, json, math, os, re, time
+import datetime, hashlib, json, math, os, re, time
 
 def fail():
     raise SystemExit(1)
@@ -37,7 +43,7 @@ except Exception:
     fail()
 if not isinstance(value, dict) or set(value) != {
     "version", "logical_run_id", "owner_actor", "issued_at", "change_trigger",
-    "upstream", "source", "selection", "limits", "action_classes",
+    "upstream", "source", "selection", "limits", "action_classes", "hosted_inputs_sha256",
 }:
     fail()
 if value["version"] != 1 or not isinstance(value["version"], int) or isinstance(value["version"], bool): fail()
@@ -68,10 +74,14 @@ for key in ("manifest_digest", "config_image_id", "deployed_image_id"):
 if source["platform"] != "linux/amd64" or source["synthetic_recovery"] is not True or source["config_image_id"] != source["deployed_image_id"]: fail()
 
 selection = value["selection"]
-if not isinstance(selection, dict) or set(selection) != {"location", "server_type", "server_image_id", "data_volume_gb", "ssh_agent_fingerprint_sha256"}: fail()
+if not isinstance(selection, dict) or set(selection) != {"location", "server_type", "server_image_id", "data_volume_gb", "ssh_agent_fingerprint_sha256", "dns_zone_id", "dns_record_name", "admin_source_cidrs", "candidate_source", "recovery_source", "login_source"}: fail()
 if selection["location"] != "nbg1" or selection["server_type"] != "cx33": fail()
 if not isinstance(selection["server_image_id"], int) or isinstance(selection["server_image_id"], bool) or selection["server_image_id"] <= 0: fail()
 if selection["data_volume_gb"] != 160 or not isinstance(selection["data_volume_gb"], int) or isinstance(selection["data_volume_gb"], bool): fail()
+try:
+    catalog=json.load(open("infra/tofu/hetzner/selection.json",encoding="utf-8"))
+    if (catalog.get("location"),catalog.get("server_type"),catalog.get("data_volume_gb")) != (selection["location"],selection["server_type"],selection["data_volume_gb"]): fail()
+except Exception: fail()
 if not isinstance(selection["ssh_agent_fingerprint_sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", selection["ssh_agent_fingerprint_sha256"]): fail()
 
 limits = value["limits"]
@@ -87,6 +97,37 @@ expected_actions = [
     "rollback-propagation", "sentinel-deletion-absence", "exact-owned-teardown-provider-absence",
 ]
 if value["action_classes"] != expected_actions: fail()
+if not isinstance(value["hosted_inputs_sha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", value["hosted_inputs_sha256"]): fail()
+inputs_raw=os.environ.get("KEEPLING_HOSTED_INPUTS_JSON", "")
+if hashlib.sha256(inputs_raw.encode()).hexdigest() != value["hosted_inputs_sha256"] or os.environ.get("KEEPLING_HOSTED_INPUTS_SHA256") != value["hosted_inputs_sha256"]: fail()
+def no_duplicates(pairs):
+    result={}
+    for key,item in pairs:
+        if key in result: fail()
+        result[key]=item
+    return result
+try: inputs=json.loads(inputs_raw, object_pairs_hook=no_duplicates)
+except Exception: fail()
+input_keys={"version","dns_zone_id","dns_record_name","server_image_id","admin_source_cidrs","candidate_source","recovery_source","login_source","b2_primary_endpoint","b2_primary_region","b2_primary_bucket"}
+if not isinstance(inputs,dict) or set(inputs)!=input_keys or inputs["version"] != 1 or isinstance(inputs["version"],bool): fail()
+if inputs["candidate_source"]!="rebuilt-archive" or inputs["recovery_source"]!="same-run-synthetic-capture" or inputs["login_source"]!="same-run-synthetic-capture": fail()
+if not isinstance(inputs["dns_zone_id"],str) or not re.fullmatch(r"[A-Za-z0-9_-]{1,128}",inputs["dns_zone_id"]): fail()
+if not isinstance(inputs["dns_record_name"],str) or not re.fullmatch(r"(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}",inputs["dns_record_name"]): fail()
+if not isinstance(inputs["server_image_id"],str) or not re.fullmatch(r"[1-9][0-9]{0,19}",inputs["server_image_id"]): fail()
+if not isinstance(inputs["admin_source_cidrs"],list) or not 1<=len(inputs["admin_source_cidrs"])<=32: fail()
+try:
+    import ipaddress
+    if len(set(inputs["admin_source_cidrs"])) != len(inputs["admin_source_cidrs"]): fail()
+    for cidr in inputs["admin_source_cidrs"]:
+        network=ipaddress.ip_network(cidr,strict=True)
+        if str(network)!=cidr or network.prefixlen==0: fail()
+except Exception: fail()
+selection=value["selection"]
+if not isinstance(selection,dict) or set(selection)!={"location","server_type","server_image_id","data_volume_gb","ssh_agent_fingerprint_sha256","dns_zone_id","dns_record_name","admin_source_cidrs","candidate_source","recovery_source","login_source"}: fail()
+if selection["server_image_id"] != int(inputs["server_image_id"]): fail()
+for key in ("dns_zone_id","dns_record_name","candidate_source","recovery_source","login_source"):
+    if selection[key] != inputs[key]: fail()
+if selection["admin_source_cidrs"] != inputs["admin_source_cidrs"]: fail()
 if os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch" or os.environ.get("GITHUB_REF") != "refs/heads/main": fail()
 if os.environ.get("GITHUB_SHA") != source["commit_sha"]: fail()
 if os.environ.get("GITHUB_RUN_ATTEMPT") != "1": fail()
@@ -142,6 +183,7 @@ git ls-tree -r "$sha256" | awk '$1 == "160000" { found=1 } END { exit found ? 1 
 runner_temp=${RUNNER_TEMP:-}
 case "$runner_temp" in /*) ;; *) refuse runner-temp-unavailable;; esac
 [ -d "$runner_temp" ] && [ ! -L "$runner_temp" ] || refuse runner-temp-unavailable
+runner_temp=$(CDPATH='' cd -P "$runner_temp" && pwd) || refuse runner-temp-unavailable
 case "$runner_temp" in "$root"|"$root"/*) refuse runner-temp-in-repository;; esac
 
 provenance_dir=$(mktemp -d "$runner_temp/phase2-provenance.XXXXXX") || refuse provenance-temp-unavailable
@@ -161,18 +203,13 @@ unset GITHUB_TOKEN
 
 # Only map-backed secret names are accepted here. Secret contents are never
 # printed and are not passed to image build, export, or reload processes.
-mapped_secret_names='HCLOUD_TOKEN CLOUDFLARE_API_TOKEN KEEPLING_BACKUP_PRIMARY_ACCESS_KEY KEEPLING_BACKUP_PRIMARY_SECRET_KEY KEEPLING_BACKUP_MIRROR_ACCESS_KEY KEEPLING_BACKUP_MIRROR_SECRET_KEY KEEPLING_BACKUP_MIRROR_ENDPOINT KEEPLING_BACKUP_MIRROR_REGION KEEPLING_BACKUP_MIRROR_BUCKET KEEPLING_TOFU_STATE_ACCESS_KEY KEEPLING_TOFU_STATE_SECRET_KEY KEEPLING_TOFU_STATE_ENDPOINT KEEPLING_TOFU_STATE_REGION KEEPLING_TOFU_STATE_BUCKET KEEPLING_BACKUP_CIPHER_PASSPHRASE'
+mapped_secret_names='HCLOUD_TOKEN CLOUDFLARE_API_TOKEN KEEPLING_BACKUP_PRIMARY_ACCESS_KEY KEEPLING_BACKUP_PRIMARY_SECRET_KEY KEEPLING_BACKUP_MIRROR_ACCESS_KEY KEEPLING_BACKUP_MIRROR_SECRET_KEY KEEPLING_BACKUP_MIRROR_ENDPOINT KEEPLING_BACKUP_MIRROR_REGION KEEPLING_BACKUP_MIRROR_BUCKET KEEPLING_TOFU_STATE_ACCESS_KEY KEEPLING_TOFU_STATE_SECRET_KEY KEEPLING_TOFU_STATE_ENDPOINT KEEPLING_TOFU_STATE_REGION KEEPLING_TOFU_STATE_BUCKET KEEPLING_BACKUP_CIPHER_PASSPHRASE KEEPLING_SSH_PRIVATE_KEY'
 for name in $mapped_secret_names; do
   eval "value=\${$name:-}"
   [ -n "$value" ] || refuse mapped-credential-missing
   [ "${#value}" -le 4096 ] || refuse mapped-credential-invalid
 done
 printf '%s' "$HCLOUD_TOKEN" | grep -Eq '^[A-Za-z0-9_-]{16,512}$' || refuse mapped-credential-invalid
-unset HCLOUD_TOKEN CLOUDFLARE_API_TOKEN KEEPLING_BACKUP_PRIMARY_ACCESS_KEY KEEPLING_BACKUP_PRIMARY_SECRET_KEY \
-  KEEPLING_BACKUP_MIRROR_ACCESS_KEY KEEPLING_BACKUP_MIRROR_SECRET_KEY KEEPLING_BACKUP_MIRROR_ENDPOINT \
-  KEEPLING_BACKUP_MIRROR_REGION KEEPLING_BACKUP_MIRROR_BUCKET KEEPLING_TOFU_STATE_ACCESS_KEY \
-  KEEPLING_TOFU_STATE_SECRET_KEY KEEPLING_TOFU_STATE_ENDPOINT KEEPLING_TOFU_STATE_REGION \
-  KEEPLING_TOFU_STATE_BUCKET KEEPLING_BACKUP_CIPHER_PASSPHRASE
 
 # Until all externally stored credential references and current selectors are
 # supplied by the protected environment, stop before allocating provider state.
@@ -183,28 +220,13 @@ case "$known_hosts" in "$root"|"$root"/*) refuse known-hosts-in-repository;; esa
 [ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ ! -s "$known_hosts" ] || refuse known-hosts-not-empty
 known_mode=$(stat -f '%Lp' "$known_hosts" 2>/dev/null || stat -c '%a' "$known_hosts") || refuse known-hosts-mode-invalid
 [ "$known_mode" = 600 ] || refuse known-hosts-mode-invalid
-[ -S "${SSH_AUTH_SOCK:-}" ] || refuse ssh-agent-unavailable
-ssh_identity=$(env -i PATH="$PATH" SSH_AUTH_SOCK="$SSH_AUTH_SOCK" ssh-add -L 2>/dev/null | awk 'NF >= 2 { print $1 " " $2 }') || refuse ssh-agent-identity-unavailable
-[ "$(printf '%s\n' "$ssh_identity" | awk 'NF { count++ } END { print count+0 }')" -eq 1 ] || refuse ssh-agent-identity-ambiguous
-printf '%s\n' "$ssh_identity" | grep -Eq '^ssh-ed25519 [A-Za-z0-9+/=]+$' || refuse ssh-agent-identity-invalid
-identity_digest=$(printf '%s' "$ssh_identity" | shasum -a 256 | awk '{print $1}') || refuse ssh-agent-identity-invalid
-expected_identity_digest=$(python3 -c 'import json,os; print(json.loads(os.environ["KEEPLING_AUTHORIZATION_JSON"])["selection"]["ssh_agent_fingerprint_sha256"])')
-[ "$identity_digest" = "$expected_identity_digest" ] || refuse ssh-agent-identity-mismatch
-
 env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" TOFU_BIN="${TOFU_BIN:-}" \
   "$root/tooling/verify-host-replacement.sh" --dry-run >/dev/null 2>&1 || refuse local-dry-run-failed
 env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" TOFU_BIN="${TOFU_BIN:-}" \
   CLOUD_INIT_SCHEMA_BIN="${CLOUD_INIT_SCHEMA_BIN:-}" CLOUD_INIT_SCHEMA_VERSION="${CLOUD_INIT_SCHEMA_VERSION:-}" \
   HCLOUD_PROVIDER_PLUGIN_DIR="${HCLOUD_PROVIDER_PLUGIN_DIR:-}" \
   "$root/tooling/phase-2-toolchain-doctor.sh" >/dev/null 2>&1 || refuse pinned-toolchain-unavailable
-if ! env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" \
-  "$root/tooling/phase-2-live-setup.sh" remaining-inputs >/dev/null 2>&1; then
-  refuse protected-inputs-incomplete
-fi
-
-# The private directory and trap are established only after input, provenance,
-# credential-shape, host-key, local dry-run, and toolchain gates pass. The
-# archive stays in this directory for the same-job trust wait and continuation.
+# Register cleanup before creating the private agent or materializing secrets.
 private_root=$(mktemp -d "$runner_temp/keepling-phase-2-protected.XXXXXX") || refuse private-run-directory-unavailable
 chmod 700 "$private_root"
 image_tag=keepling-server:plan-02-09-amd64
@@ -214,6 +236,7 @@ trap_reason=protected-sequence-incomplete
 finish() {
   exit_code=$?
   trap - EXIT HUP INT TERM
+  if [ -n "${SSH_AGENT_PID:-}" ]; then SSH_AUTH_SOCK=${SSH_AUTH_SOCK:-} SSH_AGENT_PID=$SSH_AGENT_PID ssh-agent -k >/dev/null 2>&1 || true; fi
   docker image rm -f "$image_tag" >/dev/null 2>&1 || true
   rm -rf -- "$private_root"
   python3 - "$status_file" "$trap_status" "$trap_reason" <<'PY'
@@ -227,6 +250,55 @@ PY
   exit "$exit_code"
 }
 trap finish EXIT HUP INT TERM
+
+known_hosts=${KEEPLING_KNOWN_HOSTS_FILE:-}
+case "$known_hosts" in /*) ;; *) refuse known-hosts-unavailable;; esac
+case "$known_hosts" in "$root"|"$root"/*) refuse known-hosts-in-repository;; esac
+[ -f "$known_hosts" ] && [ ! -L "$known_hosts" ] && [ ! -s "$known_hosts" ] || refuse known-hosts-not-empty
+known_mode=$(stat -f '%Lp' "$known_hosts" 2>/dev/null || stat -c '%a' "$known_hosts") || refuse known-hosts-mode-invalid
+[ "$known_mode" = 600 ] || refuse known-hosts-mode-invalid
+
+# Create one isolated in-memory agent only after fresh authorization and the
+# protected GitHub environment gate. The private key is piped directly to ssh-add.
+agent_socket=$private_root/ssh-agent.sock
+eval "$(ssh-agent -a "$agent_socket" -s 2>/dev/null)" >/dev/null || refuse ssh-agent-unavailable
+[ -S "$SSH_AUTH_SOCK" ] || refuse ssh-agent-unavailable
+printf '%s\n' "$KEEPLING_SSH_PRIVATE_KEY" | ssh-add - >/dev/null 2>&1 || refuse ssh-agent-identity-unavailable
+unset KEEPLING_SSH_PRIVATE_KEY
+ssh_identity=$(env -i PATH="$PATH" SSH_AUTH_SOCK="$SSH_AUTH_SOCK" ssh-add -L 2>/dev/null | awk 'NF >= 2 { print $1 " " $2 }') || refuse ssh-agent-identity-unavailable
+[ "$(printf '%s\n' "$ssh_identity" | awk 'NF { count++ } END { print count+0 }')" -eq 1 ] || refuse ssh-agent-identity-ambiguous
+printf '%s\n' "$ssh_identity" | grep -Eq '^ssh-ed25519 [A-Za-z0-9+/=]+( [A-Za-z0-9_.@+-]+)?$' || refuse ssh-agent-identity-invalid
+identity_digest=$(printf '%s' "$ssh_identity" | awk '{print $1 " " $2}' | shasum -a 256 | awk '{print $1}') || refuse ssh-agent-identity-invalid
+expected_identity_digest=$(python3 -c 'import json,os; print(json.loads(os.environ["KEEPLING_AUTHORIZATION_JSON"])["selection"]["ssh_agent_fingerprint_sha256"])')
+[ "$identity_digest" = "$expected_identity_digest" ] || refuse ssh-agent-identity-mismatch
+
+credential_dir=$private_root/credentials
+primary_endpoint=$(printf '%s' "$KEEPLING_HOSTED_INPUTS_JSON" | jq -er '.b2_primary_endpoint') || refuse hosted-inputs-invalid
+primary_region=$(printf '%s' "$KEEPLING_HOSTED_INPUTS_JSON" | jq -er '.b2_primary_region') || refuse hosted-inputs-invalid
+primary_bucket=$(printf '%s' "$KEEPLING_HOSTED_INPUTS_JSON" | jq -er '.b2_primary_bucket') || refuse hosted-inputs-invalid
+env -i PATH="$PATH" LC_ALL=C KEEPLING_HOSTED_INPUTS_JSON="$KEEPLING_HOSTED_INPUTS_JSON" \
+  KEEPLING_SSH_PUBLIC_IDENTITY="$ssh_identity" HCLOUD_TOKEN="$HCLOUD_TOKEN" \
+  CLOUDFLARE_API_TOKEN="$CLOUDFLARE_API_TOKEN" \
+  KEEPLING_BACKUP_PRIMARY_ACCESS_KEY="$KEEPLING_BACKUP_PRIMARY_ACCESS_KEY" KEEPLING_BACKUP_PRIMARY_SECRET_KEY="$KEEPLING_BACKUP_PRIMARY_SECRET_KEY" \
+  KEEPLING_HOSTED_B2_PRIMARY_ENDPOINT="$primary_endpoint" KEEPLING_HOSTED_B2_PRIMARY_REGION="$primary_region" KEEPLING_HOSTED_B2_PRIMARY_BUCKET="$primary_bucket" \
+  KEEPLING_BACKUP_MIRROR_ACCESS_KEY="$KEEPLING_BACKUP_MIRROR_ACCESS_KEY" KEEPLING_BACKUP_MIRROR_SECRET_KEY="$KEEPLING_BACKUP_MIRROR_SECRET_KEY" \
+  KEEPLING_BACKUP_MIRROR_ENDPOINT="$KEEPLING_BACKUP_MIRROR_ENDPOINT" KEEPLING_BACKUP_MIRROR_REGION="$KEEPLING_BACKUP_MIRROR_REGION" KEEPLING_BACKUP_MIRROR_BUCKET="$KEEPLING_BACKUP_MIRROR_BUCKET" \
+  KEEPLING_TOFU_STATE_ACCESS_KEY="$KEEPLING_TOFU_STATE_ACCESS_KEY" KEEPLING_TOFU_STATE_SECRET_KEY="$KEEPLING_TOFU_STATE_SECRET_KEY" \
+  KEEPLING_TOFU_STATE_ENDPOINT="$KEEPLING_TOFU_STATE_ENDPOINT" KEEPLING_TOFU_STATE_REGION="$KEEPLING_TOFU_STATE_REGION" KEEPLING_TOFU_STATE_BUCKET="$KEEPLING_TOFU_STATE_BUCKET" \
+  KEEPLING_BACKUP_CIPHER_PASSPHRASE="$KEEPLING_BACKUP_CIPHER_PASSPHRASE" \
+  sh "$root/tooling/materialize-phase-2-hosted-inputs.sh" --directory "$credential_dir" \
+    --inputs-json "$KEEPLING_HOSTED_INPUTS_JSON" --ssh-public-identity "$ssh_identity" >/dev/null 2>&1 || refuse hosted-input-materialization-failed
+unset HCLOUD_TOKEN CLOUDFLARE_API_TOKEN KEEPLING_BACKUP_PRIMARY_ACCESS_KEY KEEPLING_BACKUP_PRIMARY_SECRET_KEY \
+  KEEPLING_BACKUP_MIRROR_ACCESS_KEY KEEPLING_BACKUP_MIRROR_SECRET_KEY KEEPLING_BACKUP_MIRROR_ENDPOINT \
+  KEEPLING_BACKUP_MIRROR_REGION KEEPLING_BACKUP_MIRROR_BUCKET KEEPLING_TOFU_STATE_ACCESS_KEY \
+  KEEPLING_TOFU_STATE_SECRET_KEY KEEPLING_TOFU_STATE_ENDPOINT KEEPLING_TOFU_STATE_REGION \
+  KEEPLING_TOFU_STATE_BUCKET KEEPLING_BACKUP_CIPHER_PASSPHRASE KEEPLING_HOSTED_INPUTS_JSON
+setup_output=$private_root/setup-check.log
+setup_status=0
+env -i PATH="$PATH" HOME="$HOME" TMPDIR="$runner_temp" \
+  "$root/tooling/phase-2-live-setup.sh" --directory "$credential_dir" check >"$setup_output" 2>&1 || setup_status=$?
+[ "$setup_status" -eq 3 ] || refuse private-input-setup-check-failed
+grep -Fq 'phase2-live-setup status=local-check result=passed' "$setup_output" || refuse private-input-setup-check-failed
 
 context_archive=$private_root/source-context.tar
 image_archive=$private_root/image.tar.gz
