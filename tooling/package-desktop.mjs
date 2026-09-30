@@ -256,6 +256,12 @@ const architecture = process.arch
 const locatorName = `keepling-desktop-latest-manifest-${sha256(repositoryRoot).slice(0, 16)}.txt`
 const locatorPath = join(tmpdir(), locatorName)
 
+// Resolve the expected signing mode before considering a reusable artifact.
+// A pre-sign reproducibility build deliberately records an unsigned manifest;
+// it has the same source/input digest as a normal build but is NOT an
+// acceptable substitute for the signed package-once artifact.
+const expectedSigningIdentity = resolveSigningIdentity()
+
 /**
  * O-40/VERIFICATION.md Gap 1: `verify-desktop-phase.mjs`'s `package-once`
  * lane used to manufacture a NEW `applicationDigestSha256` on every gate
@@ -313,6 +319,8 @@ if (process.argv.includes('--reuse-if-unchanged')) {
         refuseReuse('tracked-input digest has changed since the prior manifest')
       } else if (candidate.sourceRevision !== sourceRevision) {
         refuseReuse('source revision has changed since the prior manifest')
+      } else if (Boolean(candidate.codeSigning?.developerIdSigned) !== Boolean(expectedSigningIdentity)) {
+        refuseReuse('the prior artifact signing state does not match this invocation')
       } else if (typeof candidate.copiedApplicationPath !== 'string' || !existsSync(candidate.copiedApplicationPath)) {
         refuseReuse(`the prior artifact no longer exists at ${candidate.copiedApplicationPath}`)
       } else if (typeof candidate.executablePath !== 'string' || !existsSync(candidate.executablePath)) {
@@ -363,7 +371,7 @@ const startedAt = Date.now()
  * whole-keychain verb (which would decrypt every unrelated identity present)
  * is ever used.
  */
-const resolveSigningIdentity = () => {
+function resolveSigningIdentity() {
   if (process.platform !== 'darwin') return null
   if (process.env.KEEPLING_MACOS_SKIP_SIGNING === '1') return null
   const override = process.env.KEEPLING_MACOS_SIGNING_IDENTITY
@@ -379,7 +387,7 @@ const resolveSigningIdentity = () => {
   return fingerprints[0]
 }
 
-const signingIdentity = resolveSigningIdentity()
+const signingIdentity = expectedSigningIdentity
 console.log(`Desktop package signing: ${signingIdentity ? 'Developer ID identity resolved' : 'no Developer ID identity -- this build will be UNSIGNED'}`)
 
 run('pnpm', ['run', 'build'])

@@ -144,9 +144,99 @@ for (const block of jobBlocks) {
 }
 if (!foundAggregator) fail(`required workflow is missing the ${AGGREGATOR_JOB_NAME} aggregator job`);
 
+function gateBJobBlock(workflow) {
+  const start = workflow.indexOf("\n  image-compose-deploy:\n");
+  if (start < 0) return "";
+  const rest = workflow.slice(start);
+  const nextJob = rest.slice(1).search(/\n  [A-Za-z0-9_-]+:\n/);
+  return nextJob < 0 ? rest : rest.slice(0, nextJob + 1);
+}
+
+function gateBWorkflowProblem(workflow) {
+  const block = gateBJobBlock(workflow);
+  if (!block) return "required image-compose-deploy job is missing";
+  for (const marker of [
+    "runs-on: ubuntu-24.04",
+    "KEEPLING_IMAGE_PLATFORM: linux/amd64",
+    'tooling/verify-phase-2-gate-b.sh "$RUNNER_TEMP/phase-2-gate-b.json"',
+    "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+    "name: phase-2-gate-b-route-evidence",
+    "path: ${{ runner.temp }}/phase-2-gate-b.json",
+    "if-no-files-found: error",
+  ]) {
+    if (!block.includes(marker)) return `image-compose-deploy omits required Gate B route marker: ${marker}`;
+  }
+  if (!workflow.includes("permissions:\n  contents: read")) {
+    return "repository-integrity workflow must grant only read-only contents permission";
+  }
+  if (/actions\/cache|\bcache\s*:|--cache(?:-from|-to)?\b/.test(block)) {
+    return "image-compose-deploy must not restore or write build caches";
+  }
+  if (/secrets\.|(?:^|\s)(?:ssh|tofu|terraform|hcloud|cloudflare)(?:\s|$)/i.test(block)) {
+    return "image-compose-deploy must not access protected credentials or infrastructure";
+  }
+  if (/^\s{4}(?:if|continue-on-error)\s*:/m.test(block)) {
+    return "image-compose-deploy must not be skipped or ignore a failed route";
+  }
+  const uploads = block.match(/uses: actions\/upload-artifact@/g) ?? [];
+  if (uploads.length !== 1) return "image-compose-deploy must upload exactly one sanitized artifact";
+  const paths = block.match(/^\s+path:\s*(.*)$/gm) ?? [];
+  if (paths.length !== 1 || !paths[0].includes("${{ runner.temp }}/phase-2-gate-b.json")) {
+    return "image-compose-deploy upload path must be the single sanitized result file";
+  }
+  if (/\*|\.\.\/|(?:archive|dump|credential|manifest|log)/i.test(paths[0])) {
+    return "image-compose-deploy upload path can select private material";
+  }
+  if (!/all-required-passed:[\s\S]*?needs:[\s\S]*?image-compose-deploy/.test(workflow)) {
+    return "all-required-passed must continue requiring image-compose-deploy";
+  }
+  return "";
+}
+
+const gateBJobProblem = gateBWorkflowProblem(requiredWorkflow);
+if (gateBJobProblem) fail(gateBJobProblem);
+
+const withoutGateBInvocation = requiredWorkflow.replace(
+  'tooling/verify-phase-2-gate-b.sh "$RUNNER_TEMP/phase-2-gate-b.json"',
+  "echo route omitted",
+);
+if (!gateBWorkflowProblem(withoutGateBInvocation).includes("omits required Gate B route marker")) {
+  fail("Gate B workflow mutation self-test did not reject a missing route invocation");
+}
+const widenedGateBUpload = requiredWorkflow.replace(
+  "path: ${{ runner.temp }}/phase-2-gate-b.json",
+  "path: ${{ runner.temp }}/**",
+);
+if (!gateBWorkflowProblem(widenedGateBUpload).includes("omits required Gate B route marker")) {
+  fail("Gate B workflow mutation self-test did not reject an expanded artifact path");
+}
+
+const gateBScriptPath = executable("tooling/verify-phase-2-gate-b.sh");
+const gateBScript = readFileSync(gateBScriptPath, "utf8");
+for (const marker of [
+  "git archive --format=tar",
+  "HEAD^{tree}",
+  "KEEPLING_BUILD_CONTEXT_ARCHIVE",
+  "KEEPLING_EXPECTED_IMAGE_ID",
+  "CI_ROUTE_READY",
+  "source_commit_sha",
+  "source_tree_sha",
+  "context_tar_sha256",
+  "archive_sha256",
+  "manifest_digest",
+  "config_image_id",
+  "deployed_image_id",
+  "rootfs_diff_ids_sha256",
+  "synthetic_recovery",
+  "verify-privacy.sh",
+]) {
+  if (!gateBScript.includes(marker)) fail(`Gate B chain omits source/archive/deploy/privacy evidence marker: ${marker}`);
+}
+if (gateBScript.includes("GATE_B_PASSED")) fail("local route readiness must not be labelled as passed Gate B acceptance");
+
 // Caching stays available to test-only lanes; an artifact-producing job
 // restoring a cache could serve stale bytes as if they were freshly built.
-const ARTIFACT_PRODUCING_JOB_NAMES = ["ci-contract", "image-compose-deploy"];
+const ARTIFACT_PRODUCING_JOB_NAMES = ["ci-contract", "image-compose-deploy", "phase2-verified-image"];
 for (const block of jobBlocks) {
   const jobNameMatch = block.match(/^\n? {2}([A-Za-z0-9_-]+):/);
   const jobName = jobNameMatch ? jobNameMatch[1] : "unknown";
@@ -169,8 +259,8 @@ for (const [name, source] of [
   }
 }
 
-const imageArtifactJob = jobBlocks.find((block) => /^\n? {2}image-compose-deploy:/.test(block));
-if (!imageArtifactJob) fail("required workflow is missing the image-compose-deploy job");
+const imageArtifactJob = jobBlocks.find((block) => /^\n? {2}phase2-verified-image:/.test(block));
+if (!imageArtifactJob) fail("required workflow is missing the phase2-verified-image job");
 for (const marker of [
   "KEEPLING_IMAGE_TAG: keepling-server:plan-02-09-amd64",
   "Export exact tested Phase 2 image and contract",
@@ -197,6 +287,9 @@ const exportImageIndex = imageArtifactJob.indexOf("Export exact tested Phase 2 i
 const uploadImageIndex = imageArtifactJob.indexOf("name: phase2-verified-image");
 if (!(imageTestIndex >= 0 && imageTestIndex < exportImageIndex && exportImageIndex < uploadImageIndex)) {
   fail("verified image artifact must be exported and uploaded only after the exact image lane");
+}
+if (!/all-required-passed:[\s\S]*?needs:[\s\S]*?phase2-verified-image/.test(requiredWorkflow)) {
+  fail("all-required-passed must continue requiring phase2-verified-image");
 }
 
 for (const marker of [

@@ -19,6 +19,7 @@ csrf_token=
 task_id=
 recovery_output=
 recovery_login_credential=
+deployed_image_id_file=${KEEPLING_DEPLOYED_IMAGE_ID_FILE:-}
 
 compose_run() {
   docker compose -f infra/compose/compose.yml -p "$project" "$@"
@@ -101,9 +102,16 @@ deploy_exact_digest() {
   done
 
   image_tag=${KEEPLING_IMAGE_TAG:-keepling-server:plan-02-07}
-  docker image inspect "$image_tag" >/dev/null 2>&1 || ./tooling/verify-image.sh
+  expected_image_id=${KEEPLING_EXPECTED_IMAGE_ID:-}
+  if [ -n "$expected_image_id" ]; then
+    require_exact_digest "$expected_image_id" || die "expected image ID is not immutable"
+    docker image inspect "$image_tag" >/dev/null 2>&1 || die "expected reloaded image is absent; refusing to rebuild"
+  else
+    docker image inspect "$image_tag" >/dev/null 2>&1 || ./tooling/verify-image.sh
+  fi
   image_id=$(docker image inspect "$image_tag" --format '{{.Id}}')
   require_exact_digest "$image_id" || die "local promotion input is mutable"
+  [ -z "$expected_image_id" ] || [ "$image_id" = "$expected_image_id" ] || die "promoted image ID does not match the archive-loaded expectation"
   image_architecture=$(docker image inspect "$image_tag" --format '{{.Architecture}}')
   engine_architecture=$(docker info --format '{{.Architecture}}')
   KEEPLING_RUNTIME_ERL_FLAGS=
@@ -162,6 +170,18 @@ deploy_exact_digest() {
   caddy_before=$(compose_run ps -q caddy)
   compose_run up -d --no-deps --force-recreate app >/dev/null
   wait_for_ready
+  app_container=$(compose_run ps -q app)
+  [ -n "$app_container" ] || die "running Compose app container is unavailable"
+  running_image_id=$(docker inspect "$app_container" --format '{{.Image}}')
+  [ "$running_image_id" = "$image_id" ] || die "running Compose app image ID differs from the promoted image"
+  if [ -n "$deployed_image_id_file" ]; then
+    case "$deployed_image_id_file" in /*) ;; *) die "deployed image ID path must be absolute";; esac
+    case "$deployed_image_id_file" in "$repository_root"|"$repository_root"/*) die "deployed image ID path must remain outside the repository";; esac
+    [ ! -e "$deployed_image_id_file" ] || die "deployed image ID path already exists"
+    [ -d "$(dirname "$deployed_image_id_file")" ] || die "deployed image ID directory is unavailable"
+    (umask 077; printf '%s\n' "$running_image_id" >"$deployed_image_id_file")
+    chmod 600 "$deployed_image_id_file"
+  fi
   caddy_after=$(compose_run ps -q caddy)
   [ "$caddy_before" = "$caddy_after" ] || die "app promotion recreated the public edge"
 
@@ -259,29 +279,36 @@ capture_recovery_package() {
   chmod 600 "$recovery_output/recovery-manifest.json"
 }
 
+recovery_fixture_login() {
+  # Compose's entrypoint loads DATABASE_URL from a secret before release config
+  # is evaluated. Override that secret for this one disposable restore process.
+  # Stdin preserves the host credential's 0600 mode across differing Linux UIDs.
+  KEEPLING_DATABASE_URL_FILE="$proof_root/secrets/recovery-database-url" \
+    compose_run run --rm -T --no-deps \
+    -e "KEEPLING_REHEARSAL_DATABASE=$restored_database" \
+    app eval '
+      database = System.fetch_env!("KEEPLING_REHEARSAL_DATABASE")
+      {:ok, _} = Application.ensure_all_started(:keepling)
+      %{rows: [[^database]]} = Ecto.Adapters.SQL.query!(Keepling.Repo, "SELECT current_database()", [])
+      credential = IO.read(:stdio, :eof)
+      {:ok, _session} = Keepling.Accounts.login(credential)
+    ' >/dev/null
+}
+
 prove_recovery_login_fixture() {
   [ -n "$recovery_output" ] || return 0
   restored_database=keepling_recovery_proof
+  printf '%s' "ecto://keepling:deploy-proof-postgres-password@db:5432/$restored_database" \
+    >"$proof_root/secrets/recovery-database-url"
+  # Same synthetic, disposable connection fixture as the source URL above.
+  chmod 0444 "$proof_root/secrets/recovery-database-url"
   compose_run exec -T db dropdb --if-exists -U keepling "$restored_database" >/dev/null
   compose_run exec -T db createdb -U keepling -O keepling "$restored_database" >/dev/null
   compose_run exec -T db pg_restore -U keepling -d "$restored_database" \
     --no-owner --no-privileges --exit-on-error <"$recovery_output/recovery.dump"
-  compose_run run --rm -T --no-deps \
-    -e "DATABASE_URL=ecto://keepling:deploy-proof-postgres-password@db:5432/$restored_database" \
-    -v "$recovery_output/rehearsal-login-credential:/run/keepling-rehearsal-login-credential:ro" \
-    app eval '
-      {:ok, _} = Application.ensure_all_started(:keepling)
-      credential = File.read!("/run/keepling-rehearsal-login-credential")
-      {:ok, _session} = Keepling.Accounts.login(credential)
-    ' >/dev/null
-  if compose_run run --rm -T --no-deps \
-    -e "DATABASE_URL=ecto://keepling:deploy-proof-postgres-password@db:5432/$restored_database" \
-    -v "$recovery_output/rehearsal-login-credential:/run/keepling-rehearsal-login-credential:ro" \
-    app eval '
-      {:ok, _} = Application.ensure_all_started(:keepling)
-      wrong_credential = File.read!("/run/keepling-rehearsal-login-credential") <> "-wrong"
-      {:ok, _session} = Keepling.Accounts.login(wrong_credential)
-    ' >/dev/null 2>&1; then
+  recovery_fixture_login <"$recovery_output/rehearsal-login-credential"
+  if { cat "$recovery_output/rehearsal-login-credential"; printf '%s' '-wrong'; } |
+    recovery_fixture_login >/dev/null 2>&1; then
     die "restored database accepted a credential that was not used by the proven setup"
   fi
   compose_run exec -T db dropdb --if-exists -U keepling "$restored_database" >/dev/null

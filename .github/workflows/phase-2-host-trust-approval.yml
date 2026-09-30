@@ -1,0 +1,104 @@
+name: Phase 2 host trust approval signal
+
+on:
+  workflow_dispatch:
+    inputs:
+      parent_run_id:
+        description: Exact protected parent workflow run ID.
+        required: true
+        type: string
+      parent_run_attempt:
+        description: Exact protected parent attempt; only attempt 1 is accepted.
+        required: true
+        type: string
+      logical_run_digest:
+        description: SHA-256 digest of the approved logical run.
+        required: true
+        type: string
+      challenge_nonce:
+        description: Candidate-specific 128-bit challenge nonce.
+        required: true
+        type: string
+      owner_actor:
+        description: Original owner actor for the protected parent run.
+        required: true
+        type: string
+      marker_confirmed:
+        description: Confirm that the authenticated console marker matches the displayed challenge.
+        required: true
+        type: boolean
+      fingerprint_sha256:
+        description: Local SHA-256 digest of the current ED25519 fingerprint; never the raw fingerprint.
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  publish-sanitized-signal:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - name: Validate and write the one-time sanitized signal
+        env:
+          INPUT_PARENT_RUN_ID: ${{ inputs.parent_run_id }}
+          INPUT_PARENT_RUN_ATTEMPT: ${{ inputs.parent_run_attempt }}
+          INPUT_LOGICAL_RUN_DIGEST: ${{ inputs.logical_run_digest }}
+          INPUT_CHALLENGE_NONCE: ${{ inputs.challenge_nonce }}
+          INPUT_OWNER_ACTOR: ${{ inputs.owner_actor }}
+          INPUT_MARKER_CONFIRMED: ${{ inputs.marker_confirmed }}
+          INPUT_FINGERPRINT_SHA256: ${{ inputs.fingerprint_sha256 }}
+          SIGNAL_FILE: ${{ runner.temp }}/phase-2-host-trust-signal.json
+        run: |
+          umask 077
+          python3 - <<'PY'
+          import json, os, re, time
+          def need(condition):
+              if not condition:
+                  raise SystemExit("host-trust status=NON_PASSING reason=invalid-signal-input")
+          parent = os.environ.get("INPUT_PARENT_RUN_ID", "")
+          attempt = os.environ.get("INPUT_PARENT_RUN_ATTEMPT", "")
+          digest = os.environ.get("INPUT_LOGICAL_RUN_DIGEST", "")
+          nonce = os.environ.get("INPUT_CHALLENGE_NONCE", "")
+          actor = os.environ.get("INPUT_OWNER_ACTOR", "")
+          marker = os.environ.get("INPUT_MARKER_CONFIRMED", "")
+          fingerprint = os.environ.get("INPUT_FINGERPRINT_SHA256", "")
+          need(os.environ.get("GITHUB_REF") == "refs/heads/main")
+          need(os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch")
+          need(parent.isdigit() and int(parent) > 0 and attempt == "1")
+          need(re.fullmatch(r"[0-9a-f]{64}", digest) is not None)
+          need(re.fullmatch(r"[0-9a-f]{32}", nonce) is not None)
+          need(re.fullmatch(r"[A-Za-z0-9-]{1,39}", actor) is not None)
+          need(actor == os.environ.get("GITHUB_ACTOR"))
+          need(marker == "true")
+          need(re.fullmatch(r"[0-9a-f]{64}", fingerprint) is not None)
+          issued = int(time.time())
+          signal = {
+              "version": 1,
+              "parent_run_id": int(parent),
+              "parent_run_attempt": 1,
+              "logical_run_digest": digest,
+              "challenge_nonce": nonce,
+              "owner_actor": actor,
+              "marker_confirmed": True,
+              "fingerprint_sha256": fingerprint,
+              "issued_at": issued,
+              "expires_at": issued + 900,
+          }
+          with open(os.environ["SIGNAL_FILE"], "x", encoding="utf-8") as output:
+              json.dump(signal, output, sort_keys=True, separators=(",", ":"))
+              output.write("\n")
+          os.chmod(os.environ["SIGNAL_FILE"], 0o600)
+          print("host-trust status=signal-ready")
+          PY
+
+      - name: Publish only the sanitized one-time signal
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: phase2-host-trust-parent-${{ inputs.parent_run_id }}-attempt-${{ inputs.parent_run_attempt }}-digest-${{ inputs.logical_run_digest }}-signal-${{ github.run_id }}
+          path: ${{ runner.temp }}/phase-2-host-trust-signal.json
+          if-no-files-found: error
+          retention-days: 1

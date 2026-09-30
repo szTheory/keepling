@@ -4,6 +4,16 @@ Resolved debug sessions. Used by `gsd-debugger` to surface known-pattern hypothe
 
 ---
 
+## gate-b-private-deploy-proof — Native Linux credential ownership and restored database selection
+- **Date:** 2026-09-30
+- **Error patterns:** image-compose-deploy, private verification step failed, verify-deploy.sh, mode 0600, restored_login
+- **Root cause(s):** Host-owned mode-0600 credential was unreadable by the release UID on Linux; independently Compose replaced the restored database URL with its source secret before release runtime configuration loaded.
+- **Fix:** Stream the private credential through stdin; select a disposable database_url secret before startup; assert current_database() before positive and negative authentication checks.
+- **Files changed:** tooling/verify-deploy.sh
+- **Why not caught:** Docker Desktop masked native Linux ownership behavior, and the previous restored-login assertion did not verify the connected database. Native Linux image-compose-deploy caught the ownership failure.
+- **Recurrence guard:** tooling/verify-deploy.sh recovery_fixture_login and prove_recovery_login_fixture enforce restored database identity, preserve credential mode via stdin, and check both valid and invalid credentials. Local proof passed; parent independently confirmed native Linux image-compose-deploy, phase2-verified-image, phase2-privacy, and all required checks passed after push of 4dd7e3c.
+---
+
 ## visual-overflow-1024 — Recovery wrappers disabled the compact Inbox grid selector
 - **Date:** 2026-08-31
 - **Error patterns:** UI-BACKSTOP-OVERFLOW, scrollWidth 1064, clientWidth 1024, horizontal overflow, 1024px breakpoint

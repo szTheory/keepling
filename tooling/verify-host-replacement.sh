@@ -1045,20 +1045,31 @@ verify_cloud_init_preflight() (
 )
 
 verify_pinned_tofu() {
-  require_pinned_executable "OpenTofu" "$TOFU_BIN"
-  [ "$($TOFU_BIN version -json | jq -r '.terraform_version')" = "1.12.6" ] ||
+  case "$TOFU_BIN" in
+    /*) [ -f "$TOFU_BIN" ] && [ -x "$TOFU_BIN" ] && [ ! -L "$TOFU_BIN" ] || die "OpenTofu pinned executable is unavailable or unsafe" ;;
+    *) die "OpenTofu must be an explicit absolute executable path" ;;
+  esac
+  [ "${#TOFU_BIN}" -le 1024 ] || die "OpenTofu executable path is too long"
+  [ "$("$TOFU_BIN" version -json | jq -r '.terraform_version')" = "1.12.6" ] ||
     die "OpenTofu 1.12.6 is required"
   provider_dir=${HCLOUD_PROVIDER_PLUGIN_DIR:-}
   case "$provider_dir" in
-    /*) [ -d "$provider_dir" ] || die "pinned provider plugin directory is unavailable" ;;
+    /*) [ -d "$provider_dir" ] && [ ! -L "$provider_dir" ] || die "pinned provider plugin directory is unavailable or unsafe" ;;
     *) die "HCLOUD_PROVIDER_PLUGIN_DIR must be an explicit absolute directory" ;;
   esac
+  [ "${#provider_dir}" -le 1024 ] || die "provider plugin directory path is too long"
   configured_provider_version=$(awk '/source  = "hetznercloud\/hcloud"/{found=1; next} found && /version = "= [0-9.]+"/{gsub(/[^0-9.]/, "", $0); print; exit}' infra/tofu/hetzner/versions.tf)
   locked_provider_version=$(awk '/provider "registry.opentofu.org\/hetznercloud\/hcloud"/{found=1; next} found && /version/{gsub(/[^0-9.]/, "", $0); print; exit}' infra/tofu/hetzner/.terraform.lock.hcl)
   [ -n "$configured_provider_version" ] && [ "$configured_provider_version" = "$locked_provider_version" ] ||
     die "tracked hcloud provider constraint and lock resolution disagree"
-  find "$provider_dir" -type f -name "terraform-provider-hcloud_v${configured_provider_version}*" -perm -111 -print -quit |
-    grep -q . || die "the tracked pinned hcloud provider is unavailable"
+  provider_binary=$(find "$provider_dir" -type f -name "terraform-provider-hcloud_v${configured_provider_version}*" -exec test -x {} \; -print -quit)
+  [ -n "$provider_binary" ] && [ -f "$provider_binary" ] && [ -x "$provider_binary" ] && [ ! -L "$provider_binary" ] ||
+    die "the tracked pinned hcloud provider is unavailable"
+}
+
+toolchain_preflight() {
+  verify_pinned_tofu
+  echo "Host replacement toolchain preflight passed: pinned OpenTofu 1.12.6 and locked hcloud ${configured_provider_version} are available"
 }
 
 dry_run() {
@@ -1260,6 +1271,7 @@ live_readiness() {
 
 credentialed_apply() {
   credentialed_mode=${1:-run}
+  toolchain_preflight
   require_credentialed_arm
   [ "${KEEPLING_ALLOW_PROVIDER_DESTROY:-}" = yes ] ||
     die "exact-owned destroy requires KEEPLING_ALLOW_PROVIDER_DESTROY=yes after an explicit checkpoint"
@@ -1325,6 +1337,7 @@ case "${1:-}" in
   --live-readiness) [ "$#" -eq 1 ] || die "usage: $0 --live-readiness"; live_readiness ;;
   --print-live-registry) [ "$#" -eq 1 ] || die "usage: $0 --print-live-registry"; live_lifecycle_registry ;;
   --validate-live-registry) [ "$#" -eq 2 ] || die "usage: $0 --validate-live-registry REGISTRY"; validate_live_lifecycle_registry "$2" ;;
+  --toolchain-preflight) [ "$#" -eq 1 ] || die "usage: $0 --toolchain-preflight"; toolchain_preflight ;;
   --credentialed)
     case "${2:-}" in
       --preflight) [ "$#" -eq 2 ] || die "usage: $0 --credentialed --preflight"; credentialed_preflight ;;
@@ -1334,5 +1347,5 @@ case "${1:-}" in
       *) die "usage: $0 --credentialed [--preflight|--resume-host-trust|--abort-host-trust]" ;;
     esac
     ;;
-  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID | --validate-plan-shape PLAN_JSON | --plan-shape-self-test | --validate-state-addresses STATE_LIST | --resolve-plan-architecture PLAN OUTPUT | --resolve-image-archive ARCHIVE OUTPUT | --candidate-sequence | --live-readiness | --print-live-registry | --validate-live-registry REGISTRY | --credentialed [--preflight|--resume-host-trust|--abort-host-trust]" ;;
+  *) die "usage: $0 --dry-run | --cloud-init-preflight | --state-self-test | --bootstrap-gate | --stage-bundle | --normalize-provider-output INPUT COUNTS OUTPUT EXPECTED_RUN_ID | --validate-plan-shape PLAN_JSON | --plan-shape-self-test | --validate-state-addresses STATE_LIST | --resolve-plan-architecture PLAN OUTPUT | --resolve-image-archive ARCHIVE OUTPUT | --candidate-sequence | --live-readiness | --print-live-registry | --validate-live-registry REGISTRY | --toolchain-preflight | --credentialed [--preflight|--resume-host-trust|--abort-host-trust]" ;;
 esac

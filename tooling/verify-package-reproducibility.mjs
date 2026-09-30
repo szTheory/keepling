@@ -2,8 +2,8 @@
 
 /**
  * O-40 / QUAL-03 / MAC-05 (06-02 Task 3 wording correction): proves (or
- * disproves) that packaging the desktop app produces byte-identical output
- * across SEPARATE `pnpm package:desktop` invocations, ON ONE MACHINE, AT
+ * disproves) that deterministic, pre-sign desktop packaging produces
+ * byte-identical output across SEPARATE `pnpm package:desktop` invocations, ON ONE MACHINE, AT
  * ONE REVISION. That is the entire scope of the claim this lane measures --
  * it is a single-machine, single-revision nondeterminism canary, NOT a
  * cross-machine or cross-revision reproducibility guarantee. Describing the
@@ -23,6 +23,13 @@
  * No dependency is added: node:crypto, node:fs, node:path, node:child_process
  * and node:os only. The `@electron/asar` CLI used to descend into `.asar`
  * archives is already present in the desktop toolchain, not newly added.
+ *
+ * Developer ID signatures are intentionally excluded from this comparison:
+ * signing is cryptographic and can mutate embedded signature layout across
+ * equivalent separate invocations. The normal `package-once` lane still
+ * packages with the local signing identity, verifies that signed result, and
+ * binds every packaged/runtime check to its exact digest. This lane tests the
+ * reproducible inputs to that signing boundary rather than weakening it.
  */
 
 import { createHash } from 'node:crypto'
@@ -38,6 +45,7 @@ import {
   readlinkSync,
   rmSync,
   symlinkSync,
+  unlinkSync,
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -64,6 +72,7 @@ const fail = (message) => {
 // ---------------------------------------------------------------------------
 
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex')
+const locatorPath = join(tmpdir(), `keepling-desktop-latest-manifest-${sha256(repositoryRoot).slice(0, 16)}.txt`)
 
 /** Walks a directory tree into a flat map of relativePath -> entry descriptor. */
 const walkTree = (root) => {
@@ -278,7 +287,11 @@ const refuseIfDirty = () => {
 }
 
 const packageOnce = (buildNumber) => {
-  const result = spawnSync('pnpm', ['package:desktop'], { cwd: repositoryRoot, encoding: 'utf8' })
+  const result = spawnSync('pnpm', ['package:desktop'], {
+    cwd: repositoryRoot,
+    encoding: 'utf8',
+    env: { ...process.env, KEEPLING_MACOS_SKIP_SIGNING: '1' },
+  })
   if (result.status !== 0 || result.error) {
     fail(`build ${buildNumber} (pnpm package:desktop) exited ${result.status ?? 'without status'}${result.stderr ? `: ${result.stderr.trim().slice(-2000)}` : ''}`)
   }
@@ -297,6 +310,17 @@ const packageOnce = (buildNumber) => {
 const runBuilds = (buildCount) => {
   if (buildCount < 2) fail(`--builds must be at least 2 to prove reproducibility, got ${buildCount}`)
   refuseIfDirty()
+
+  // `package-desktop` updates the shared "latest manifest" locator on every
+  // invocation. These builds are intentionally unsigned comparator inputs,
+  // not the signed artifact selected by package-once. Preserve the caller's
+  // selection even if this process exits through `fail`, so subsequent smoke
+  // and physical-evidence lanes remain bound to package-once's artifact.
+  const priorLocator = existsSync(locatorPath) ? readFileSync(locatorPath) : null
+  process.on('exit', () => {
+    if (priorLocator === null) unlinkSync(locatorPath, { force: true })
+    else writeFileSync(locatorPath, priorLocator)
+  })
 
   const builds = []
   for (let i = 1; i <= buildCount; i += 1) {

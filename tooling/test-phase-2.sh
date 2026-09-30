@@ -153,6 +153,7 @@ lane_opentofu_host_fixtures() {
   ./tooling/test-remote-prepare-observability.sh
   ./tooling/test-host-replacement-readiness.sh
   ./tooling/test-host-replacement-sequence.sh
+  ./tooling/test-live-invocation-toolchain.sh
   ./tooling/test-phase-2-live-orchestration.sh
   ./tooling/test-pin-verified-ssh-host-key.sh
   ./tooling/test-recovery-source-adapters.sh
@@ -199,6 +200,8 @@ KEEPLING_SEQUENCE_SEMANTIC_RUNNER
 KEEPLING_SEQUENCE_DNS_RUNNER
 KEEPLING_SEQUENCE_TEARDOWN_RUNNER
 KEEPLING_LIVE_ORCHESTRATION_FILE
+TOFU_BIN
+HCLOUD_PROVIDER_PLUGIN_DIR
 KEEPLING_LIVE_CHANGE_TRIGGER"
 
 # THE ANTI-LOOPHOLE RULE FOR THIS LANE: absence of any input is NON_PASSING,
@@ -220,6 +223,7 @@ lane_live_host_dns_acceptance() {
     return 3
   fi
 
+  ./tooling/verify-host-replacement.sh --toolchain-preflight
   printf '%s\n' "lane=live-host-dns-acceptance LIVE_ACCEPTANCE_STATUS=ATTEMPTED trigger=$KEEPLING_LIVE_CHANGE_TRIGGER"
   ./tooling/verify-host-replacement.sh --live-readiness
   ./tooling/verify-host-replacement.sh --credentialed
@@ -276,9 +280,9 @@ run_lanes() {
   esac
   case "$selected_lane" in
     all | opentofu-host-fixtures)
-      run_lane opentofu-host-fixtures "$phase_seed" 18 \
-        '.github/workflows/ios.yml,.github/workflows/desktop.yml,infra/tofu/hetzner/versions.tf,infra/tofu/hetzner/.terraform.lock.hcl,infra/tofu/hetzner/main.tf,infra/tofu/hetzner/cloud-init.yml,infra/tofu/hetzner/replace_host.tftest.hcl,infra/credentials/templates/phase-2-live-orchestration.env.example,infra/dns/cloudflare.sh,tooling/phase-2-credentials.sh,tooling/phase-2-tofu-state.sh,tooling/phase-2-live-setup.sh,tooling/phase-2-live-stage-actions.sh,tooling/pin-verified-ssh-host-key.sh,tooling/destroy-owned-provider.sh,tooling/verify-host-replacement.sh,tooling/verify-deploy.sh,tooling/export-verified-image-archive.sh,tooling/phase-2-live-orchestration-env.sh,tooling/phase-2-live-orchestration.sh,tooling/phase-2-live-runners/bootstrap,tooling/phase-2-live-runners/image,tooling/phase-2-live-runners/restore,tooling/phase-2-live-runners/runtime,tooling/phase-2-live-runners/semantic,tooling/phase-2-live-runners/dns,tooling/phase-2-live-runners/teardown,tooling/transfer-trusted-candidate.sh,tooling/remote-prepare-host.sh,tooling/remote-runtime-probe.sh,tooling/remote-semantic-proof.sh,tooling/prepare-synthetic-recovery.sh,tooling/test-prepare-synthetic-recovery.sh,tooling/test-phase-2-live-setup.sh,tooling/test-image-archive-contract.sh,tooling/test-remote-prepare-observability.sh,tooling/test-host-replacement-readiness.sh,tooling/test-host-replacement-sequence.sh,tooling/test-live-lifecycle-adapters.sh,tooling/test-phase-2-live-orchestration.sh,tooling/test-pin-verified-ssh-host-key.sh,tooling/test-trusted-transfer-remote-adapters.sh,tooling/recovery-source-common.sh,tooling/recovery-source-b2.sh,tooling/recovery-source-r2.sh,tooling/test-recovery-source-adapters.sh,tooling/test-phase-2.sh' \
-        'eighteen hermetic credential-boundary, sealed-bundle, synthetic-recovery, isolated-DNS-adapter, OpenTofu, archive, remote-proof, teardown, and recovery-source fixture checks' lane_opentofu_host_fixtures ;;
+      run_lane opentofu-host-fixtures "$phase_seed" 19 \
+        '.github/workflows/ios.yml,.github/workflows/desktop.yml,infra/tofu/hetzner/versions.tf,infra/tofu/hetzner/.terraform.lock.hcl,infra/tofu/hetzner/main.tf,infra/tofu/hetzner/cloud-init.yml,infra/tofu/hetzner/replace_host.tftest.hcl,infra/credentials/templates/phase-2-live-orchestration.env.example,infra/dns/cloudflare.sh,tooling/phase-2-credentials.sh,tooling/phase-2-tofu-state.sh,tooling/phase-2-live-setup.sh,tooling/phase-2-live-stage-actions.sh,tooling/pin-verified-ssh-host-key.sh,tooling/destroy-owned-provider.sh,tooling/verify-host-replacement.sh,tooling/verify-deploy.sh,tooling/export-verified-image-archive.sh,tooling/phase-2-live-orchestration-env.sh,tooling/phase-2-live-orchestration.sh,tooling/phase-2-live-runners/bootstrap,tooling/phase-2-live-runners/image,tooling/phase-2-live-runners/restore,tooling/phase-2-live-runners/runtime,tooling/phase-2-live-runners/semantic,tooling/phase-2-live-runners/dns,tooling/phase-2-live-runners/teardown,tooling/transfer-trusted-candidate.sh,tooling/remote-prepare-host.sh,tooling/remote-runtime-probe.sh,tooling/remote-semantic-proof.sh,tooling/prepare-synthetic-recovery.sh,tooling/test-prepare-synthetic-recovery.sh,tooling/test-phase-2-live-setup.sh,tooling/test-image-archive-contract.sh,tooling/test-remote-prepare-observability.sh,tooling/test-host-replacement-readiness.sh,tooling/test-host-replacement-sequence.sh,tooling/test-live-invocation-toolchain.sh,tooling/test-live-lifecycle-adapters.sh,tooling/test-phase-2-live-orchestration.sh,tooling/test-pin-verified-ssh-host-key.sh,tooling/test-trusted-transfer-remote-adapters.sh,tooling/recovery-source-common.sh,tooling/recovery-source-b2.sh,tooling/recovery-source-r2.sh,tooling/test-recovery-source-adapters.sh,tooling/test-phase-2.sh' \
+        'nineteen hermetic credential-boundary, sealed-bundle, synthetic-recovery, isolated-DNS-adapter, OpenTofu, archive, remote-proof, teardown, recovery-source, and pinned live-invocation toolchain fixture checks' lane_opentofu_host_fixtures ;;
   esac
   case "$selected_lane" in
     all | privacy)
