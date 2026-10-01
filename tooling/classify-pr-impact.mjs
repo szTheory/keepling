@@ -33,6 +33,7 @@ function runSelfTest() {
     ["prompt template", [".planning/knowledge/templates/PROJECT-DNA-FANOUT.prompt.txt"], true],
     ["mixed rename includes source", ["docs/new.md", "apps/server/lib/task.ex"], false],
     ["workflow", [".github/workflows/desktop.yml"], false],
+    ["Dependabot policy", [".github/dependabot.yml"], false],
     ["tooling", ["tooling/check-ci-contract.mjs"], false],
     ["release evidence", [".planning/releases/candidate-5/README.md"], false],
     ["unknown extension", ["docs/reference.json"], false],

@@ -59,13 +59,23 @@ jobs:
       - name: Lint GitHub Actions workflows, expressions, and embedded shell
         run: actionlint -color
       - name: Verify committed CI contract and lane inventory
-        run: node tooling/check-ci-contract.mjs && ./tooling/test-phase-2.sh --list
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tooling/check-ci-contract.mjs
+          ./tooling/test-phase-2.sh --list
       - name: Verify read-only Phase 2 environment preflight contract
         run: |
           bash -n tooling/check-phase-2-environment.sh tooling/test-phase-2-environment-preflight.sh
           node --check tooling/check-phase-2-environment.mjs
           node --check tooling/test-phase-2-environment-preflight.mjs
           ./tooling/test-phase-2-environment-preflight.sh
+      - name: Validate bounded Dependabot update policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          ruby tooling/check-dependabot-config.rb --self-test
+          ruby tooling/check-dependabot-config.rb
       # The release manifest for a revision is NOT written here. This job knows
       # the result of exactly one lane -- its own -- so any manifest it could
       # fabricate would name a single lane and omit the rest, and an omitted
