@@ -280,6 +280,34 @@ function dependabotPolicyWorkflowProblem(workflow) {
   }
   if (!Array.isArray(job.steps)) return "ci-contract job steps must be a sequence";
 
+  const checkerStepIndexes = job.steps.flatMap((step, index) =>
+    isObject(step) && step.name === "Verify committed CI contract and lane inventory" ? [index] : [],
+  );
+  if (checkerStepIndexes.length !== 1) {
+    return "ci-contract must contain exactly one unconditional contract-check step";
+  }
+  const checkerStepIndex = checkerStepIndexes[0];
+  const checkerStep = job.steps[checkerStepIndex];
+  if (Object.hasOwn(checkerStep, "if")) return "ci-contract checker step must run unconditionally";
+  if (Object.hasOwn(checkerStep, "continue-on-error")) {
+    return "ci-contract checker step must propagate command failures";
+  }
+  if (!hasExactKeys(checkerStep, ["name", "shell", "run"])) {
+    return "ci-contract checker step must keep only its name, shell, and run properties";
+  }
+  if (checkerStep.shell !== "bash" || typeof checkerStep.run !== "string") {
+    return "ci-contract checker step must use Bash with a literal shell script";
+  }
+  const checkerCommands = checkerStep.run.trimEnd().split(/\r?\n/).map((line) => line.trimEnd());
+  const requiredCheckerCommands = [
+    "set -euo pipefail",
+    "node tooling/check-ci-contract.mjs",
+    "./tooling/test-phase-2.sh --list",
+  ];
+  if (JSON.stringify(checkerCommands) !== JSON.stringify(requiredCheckerCommands)) {
+    return "ci-contract checker step must run only the exact fail-fast contract command sequence";
+  }
+
   const policyStepIndexes = job.steps.flatMap((step, index) =>
     isObject(step) && step.name === "Validate bounded Dependabot update policy" ? [index] : [],
   );
@@ -287,6 +315,9 @@ function dependabotPolicyWorkflowProblem(workflow) {
     return "ci-contract must contain exactly one Dependabot policy step";
   }
   const policyStepIndex = policyStepIndexes[0];
+  if (checkerStepIndex >= policyStepIndex) {
+    return "ci-contract checker step must precede Dependabot policy validation";
+  }
   for (const priorStep of job.steps.slice(0, policyStepIndex)) {
     if (isObject(priorStep) && typeof priorStep.run === "string" && priorStep.run.includes("GITHUB_ENV")) {
       return "earlier ci-contract scripts must not write inherited environment variables";
@@ -386,6 +417,34 @@ const conditionalCiContractJob = requiredWorkflow.replace(
 );
 if (!dependabotPolicyWorkflowProblem(conditionalCiContractJob).includes("run unconditionally")) {
   fail("Dependabot policy mutation self-test did not reject a conditional ci-contract job");
+}
+const conditionalCiContractChecker = requiredWorkflow.replace(
+  "      - name: Verify committed CI contract and lane inventory\n        shell: bash\n",
+  "      - name: Verify committed CI contract and lane inventory\n        if: false\n        shell: bash\n",
+);
+if (!dependabotPolicyWorkflowProblem(conditionalCiContractChecker).includes("checker step must run unconditionally")) {
+  fail("Dependabot policy mutation self-test did not reject a conditional checker step");
+}
+const nonBlockingCiContractChecker = requiredWorkflow.replace(
+  "      - name: Verify committed CI contract and lane inventory\n        shell: bash\n",
+  "      - name: Verify committed CI contract and lane inventory\n        continue-on-error: true\n        shell: bash\n",
+);
+if (!dependabotPolicyWorkflowProblem(nonBlockingCiContractChecker).includes("checker step must propagate")) {
+  fail("Dependabot policy mutation self-test did not reject a non-blocking checker step");
+}
+const duplicateCiContractChecker = requiredWorkflow.replace(
+  "      # The release manifest for a revision is NOT written here.",
+  "      - name: Verify committed CI contract and lane inventory\n        shell: bash\n        run: |\n          set -euo pipefail\n          node tooling/check-ci-contract.mjs\n          ./tooling/test-phase-2.sh --list\n      # The release manifest for a revision is NOT written here.",
+);
+if (!dependabotPolicyWorkflowProblem(duplicateCiContractChecker).includes("exactly one unconditional contract-check")) {
+  fail("Dependabot policy mutation self-test did not reject duplicate checker steps");
+}
+const ignoredCiContractCheckerFailure = requiredWorkflow.replace(
+  "          node tooling/check-ci-contract.mjs\n",
+  "          node tooling/check-ci-contract.mjs || true\n",
+);
+if (!dependabotPolicyWorkflowProblem(ignoredCiContractCheckerFailure).includes("exact fail-fast contract")) {
+  fail("Dependabot policy mutation self-test did not reject ignored checker failures");
 }
 const shellStartupHookWorkflow = requiredWorkflow.replace(
   "env:\n",

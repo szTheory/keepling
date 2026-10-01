@@ -59,7 +59,11 @@ jobs:
       - name: Lint GitHub Actions workflows, expressions, and embedded shell
         run: actionlint -color
       - name: Verify committed CI contract and lane inventory
-        run: node tooling/check-ci-contract.mjs && ./tooling/test-phase-2.sh --list
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tooling/check-ci-contract.mjs
+          ./tooling/test-phase-2.sh --list
       - name: Verify read-only Phase 2 environment preflight contract
         run: |
           bash -n tooling/check-phase-2-environment.sh tooling/test-phase-2-environment-preflight.sh
