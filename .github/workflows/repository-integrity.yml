@@ -69,6 +69,7 @@ jobs:
       - name: Validate bounded Dependabot update policy
         shell: bash
         run: |
+          set -euo pipefail
           ruby tooling/check-dependabot-config.rb --self-test
           ruby tooling/check-dependabot-config.rb
       # The release manifest for a revision is NOT written here. This job knows

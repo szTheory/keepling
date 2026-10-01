@@ -192,63 +192,126 @@ function workflowJobBlock(workflow, name) {
   return nextJob < 0 ? rest : rest.slice(0, nextJob + 1);
 }
 
-function workflowNamedStepBlocks(workflow, jobName, stepName) {
-  const job = workflowJobBlock(workflow, jobName);
-  if (!job) return [];
-  const lines = job.split(/\r?\n/);
-  const blocks = [];
-  for (let start = 0; start < lines.length; start += 1) {
-    const match = lines[start].match(/^ {6}- name: (.*)$/);
-    if (!match || match[1].trim() !== stepName) continue;
-    let end = start + 1;
-    while (end < lines.length && !/^ {6}- /.test(lines[end])) end += 1;
-    blocks.push(lines.slice(start, end).join("\n"));
+const readCiContractJobScript = String.raw`
+require "json"
+require "psych"
+require "yaml"
+
+def reject_duplicate_mapping_keys(node)
+  return if node.nil?
+
+  if node.is_a?(Psych::Nodes::Mapping)
+    seen = {}
+    node.children.each_slice(2) do |key_node, value_node|
+      if key_node.is_a?(Psych::Nodes::Scalar)
+        key = key_node.value
+        raise "duplicate workflow mapping key #{key.inspect}" if seen.key?(key)
+        seen[key] = true
+      end
+      reject_duplicate_mapping_keys(key_node)
+      reject_duplicate_mapping_keys(value_node)
+    end
+    return
+  end
+
+  Array(node.children).each { |child| reject_duplicate_mapping_keys(child) } if node.respond_to?(:children)
+end
+
+begin
+  source = STDIN.read
+  tree = Psych.parse_stream(source)
+  raise "expected exactly one workflow YAML document" unless tree.children.length == 1
+  reject_duplicate_mapping_keys(tree)
+  workflow = YAML.safe_load(source, permitted_classes: [], permitted_symbols: [], aliases: false)
+  puts JSON.generate({
+    job: workflow.fetch("jobs").fetch("ci-contract"),
+    workflow_env: workflow.fetch("env", {}),
+  })
+rescue StandardError => error
+  warn error.message
+  exit 1
+end
+`;
+
+function parseCiContractJob(workflow) {
+  const parsed = spawnSync("ruby", ["-e", readCiContractJobScript], {
+    cwd: repositoryRoot,
+    input: workflow,
+    encoding: "utf8",
+  });
+  if (parsed.status !== 0) {
+    return { problem: `workflow YAML parse failed: ${parsed.stderr || parsed.stdout}` };
   }
-  return blocks;
+  try {
+    const result = JSON.parse(parsed.stdout);
+    return { job: result.job, workflowEnv: result.workflow_env };
+  } catch {
+    return { problem: "workflow YAML parser returned invalid ci-contract data" };
+  }
 }
 
-function workflowStepRunLines(stepBlock) {
-  if (!stepBlock) return [];
-  const lines = stepBlock.split(/\r?\n/);
-  const runStart = lines.findIndex((line) => /^ {8}run:\s*\|\s*$/.test(line));
-  if (runStart < 0) return [];
-  const commands = [];
-  for (const line of lines.slice(runStart + 1)) {
-    if (!line.trim()) continue;
-    if (!/^ {10}\S/.test(line)) break;
-    commands.push(line.slice(10).trimEnd());
-  }
-  return commands;
+function isObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasExactKeys(value, expected) {
+  if (!isObject(value)) return false;
+  const keys = Object.keys(value);
+  return keys.length === expected.length && expected.every((key) => Object.hasOwn(value, key));
 }
 
 function dependabotPolicyWorkflowProblem(workflow) {
-  const job = workflowJobBlock(workflow, "ci-contract");
-  if (!job) return "ci-contract job is missing";
-  if (/^ {4}continue-on-error\s*:/m.test(job)) {
+  const parsed = parseCiContractJob(workflow);
+  if (parsed.problem) return parsed.problem;
+  const unsafeWorkflowEnvKeys = ["BASH_ENV", "NODE_OPTIONS", "PATH", "RUBYLIB", "RUBYOPT"];
+  if (!isObject(parsed.workflowEnv)) return "workflow env must be a mapping";
+  const unsafeEnv = unsafeWorkflowEnvKeys.filter((key) => Object.hasOwn(parsed.workflowEnv, key));
+  if (unsafeEnv.length > 0) {
+    return `workflow env must not set shell/runtime startup hooks: ${unsafeEnv.join(", ")}`;
+  }
+  const job = parsed.job;
+  if (!isObject(job)) return "ci-contract job must be a mapping";
+  if (Object.hasOwn(job, "if")) return "ci-contract job must run unconditionally";
+  if (Object.hasOwn(job, "continue-on-error")) {
     return "ci-contract job must propagate policy-check failures";
   }
+  if (!hasExactKeys(job, ["runs-on", "timeout-minutes", "steps"])) {
+    return "ci-contract job must keep its minimal blocking job properties";
+  }
+  if (!Array.isArray(job.steps)) return "ci-contract job steps must be a sequence";
 
-  const steps = workflowNamedStepBlocks(
-    workflow,
-    "ci-contract",
-    "Validate bounded Dependabot update policy",
+  const policyStepIndexes = job.steps.flatMap((step, index) =>
+    isObject(step) && step.name === "Validate bounded Dependabot update policy" ? [index] : [],
   );
-  if (steps.length !== 1) return "ci-contract must contain exactly one Dependabot policy step";
-  const [step] = steps;
-  if (/^ {8}if\s*:/m.test(step)) return "Dependabot policy step must run unconditionally";
-  if (/^ {8}continue-on-error\s*:/m.test(step)) {
+  if (policyStepIndexes.length !== 1) {
+    return "ci-contract must contain exactly one Dependabot policy step";
+  }
+  const policyStepIndex = policyStepIndexes[0];
+  for (const priorStep of job.steps.slice(0, policyStepIndex)) {
+    if (isObject(priorStep) && typeof priorStep.run === "string" && priorStep.run.includes("GITHUB_ENV")) {
+      return "earlier ci-contract scripts must not write inherited environment variables";
+    }
+  }
+  const step = job.steps[policyStepIndex];
+  if (!isObject(step)) return "Dependabot policy step must be a mapping";
+  if (Object.hasOwn(step, "if")) return "Dependabot policy step must run unconditionally";
+  if (Object.hasOwn(step, "continue-on-error")) {
     return "Dependabot policy step must propagate command failures";
   }
-  if (!/^ {8}shell:\s*bash\s*$/m.test(step)) {
-    return "Dependabot policy step must use bash failure propagation";
+  if (!hasExactKeys(step, ["name", "shell", "run"])) {
+    return "Dependabot policy step must keep only its name, shell, and run properties";
   }
+  if (step.shell !== "bash") return "Dependabot policy step must use bash failure propagation";
+  if (typeof step.run !== "string") return "Dependabot policy step must use a literal shell script";
 
-  const commands = workflowStepRunLines(step);
-  for (const command of [
+  const commands = step.run.trimEnd().split(/\r?\n/).map((line) => line.trimEnd());
+  const requiredCommands = [
+    "set -euo pipefail",
     "ruby tooling/check-dependabot-config.rb --self-test",
     "ruby tooling/check-dependabot-config.rb",
-  ]) {
-    if (!commands.includes(command)) return `ci-contract must execute ${command} in its Dependabot policy step`;
+  ];
+  if (JSON.stringify(commands) !== JSON.stringify(requiredCommands)) {
+    return "Dependabot policy step must run only the exact fail-fast validation command sequence";
   }
   return "";
 }
@@ -256,49 +319,131 @@ function dependabotPolicyWorkflowProblem(workflow) {
 const dependabotPolicyProblem = dependabotPolicyWorkflowProblem(requiredWorkflow);
 if (dependabotPolicyProblem) fail(dependabotPolicyProblem);
 
+const quotedDependabotPolicyStep = requiredWorkflow
+  .replace(
+    "      - name: Validate bounded Dependabot update policy\n",
+    '      - "name": "Validate bounded Dependabot update policy"\n',
+  )
+  .replace("        shell: bash\n", '        "shell": "bash"\n')
+  .replace("        run: |\n", '        "run": |\n');
+if (dependabotPolicyWorkflowProblem(quotedDependabotPolicyStep)) {
+  fail("Dependabot policy workflow contract must accept quoted YAML keys and step names");
+}
+
 const commentOnlyDependabotStep = [
   "jobs:",
   "  ci-contract:",
+  "    runs-on: ubuntu-24.04",
+  "    timeout-minutes: 3",
   "    steps:",
+  "      - run: echo unrelated",
   "      # - name: Validate bounded Dependabot update policy",
   "      #   run: |",
   "      #     ruby tooling/check-dependabot-config.rb --self-test",
 ].join("\n");
-if (workflowNamedStepBlocks(
-  commentOnlyDependabotStep,
-  "ci-contract",
-  "Validate bounded Dependabot update policy",
-).length !== 0) {
+if (!dependabotPolicyWorkflowProblem(commentOnlyDependabotStep).includes("exactly one")) {
   fail("Dependabot policy workflow contract must ignore comments");
 }
 
 const conditionalDependabotPolicyStep = requiredWorkflow.replace(
   "      - name: Validate bounded Dependabot update policy\n        shell: bash\n",
-  "      - name: Validate bounded Dependabot update policy\n        if: false\n        shell: bash\n",
+  "      - name: Validate bounded Dependabot update policy\n        \"if\": false\n        shell: bash\n",
 );
 if (!dependabotPolicyWorkflowProblem(conditionalDependabotPolicyStep).includes("unconditionally")) {
   fail("Dependabot policy mutation self-test did not reject a conditional step");
 }
+const escapedConditionalDependabotPolicyStep = requiredWorkflow.replace(
+  "      - name: Validate bounded Dependabot update policy\n",
+  "      - name: Validate bounded Dependabot update policy\n        \"i\\u0066\": false\n",
+);
+if (!dependabotPolicyWorkflowProblem(escapedConditionalDependabotPolicyStep).includes("unconditionally")) {
+  fail("Dependabot policy mutation self-test did not reject an escaped conditional key");
+}
 const nonBlockingDependabotPolicyStep = requiredWorkflow.replace(
   "      - name: Validate bounded Dependabot update policy\n        shell: bash\n",
-  "      - name: Validate bounded Dependabot update policy\n        continue-on-error: true\n        shell: bash\n",
+  "      - name: Validate bounded Dependabot update policy\n        'continue-on-error': true\n        shell: bash\n",
 );
 if (!dependabotPolicyWorkflowProblem(nonBlockingDependabotPolicyStep).includes("propagate command failures")) {
   fail("Dependabot policy mutation self-test did not reject continue-on-error");
 }
 const nonBlockingCiContractJob = requiredWorkflow.replace(
   "  ci-contract:\n",
-  "  ci-contract:\n    continue-on-error: true\n",
+  "  ci-contract:\n    \"continue-on-error\": true\n",
 );
 if (!dependabotPolicyWorkflowProblem(nonBlockingCiContractJob).includes("propagate policy-check failures")) {
   fail("Dependabot policy mutation self-test did not reject a non-blocking ci-contract job");
 }
+const escapedNonBlockingCiContractJob = requiredWorkflow.replace(
+  "  ci-contract:\n",
+  "  ci-contract:\n    \"continue\\u002don-error\": true\n",
+);
+if (!dependabotPolicyWorkflowProblem(escapedNonBlockingCiContractJob).includes("propagate policy-check failures")) {
+  fail("Dependabot policy mutation self-test did not reject an escaped job continue-on-error key");
+}
+const conditionalCiContractJob = requiredWorkflow.replace(
+  "  ci-contract:\n",
+  "  ci-contract:\n    if: false\n",
+);
+if (!dependabotPolicyWorkflowProblem(conditionalCiContractJob).includes("run unconditionally")) {
+  fail("Dependabot policy mutation self-test did not reject a conditional ci-contract job");
+}
+const shellStartupHookWorkflow = requiredWorkflow.replace(
+  "env:\n",
+  "env:\n  BASH_ENV: /tmp/ci-contract-startup.sh\n",
+);
+if (!dependabotPolicyWorkflowProblem(shellStartupHookWorkflow).includes("shell/runtime startup hooks")) {
+  fail("Dependabot policy mutation self-test did not reject a workflow-level BASH_ENV hook");
+}
+const inheritedShellStartupHookWorkflow = requiredWorkflow.replace(
+  "      - name: Validate bounded Dependabot update policy\n",
+  "      - name: Prepare an unsafe inherited shell hook\n        run: printf 'BASH_ENV=/tmp/ci-contract-startup.sh' >> \"$GITHUB_ENV\"\n      - name: Validate bounded Dependabot update policy\n",
+);
+if (!dependabotPolicyWorkflowProblem(inheritedShellStartupHookWorkflow).includes("must not write inherited environment")) {
+  fail("Dependabot policy mutation self-test did not reject an earlier GITHUB_ENV write");
+}
+const hiddenEnvironmentDependabotStep = requiredWorkflow.replace(
+  "      - name: Validate bounded Dependabot update policy\n",
+  "      - name: Validate bounded Dependabot update policy\n        env:\n          RUBYOPT: -e 'exit 0'\n",
+);
+if (!dependabotPolicyWorkflowProblem(hiddenEnvironmentDependabotStep).includes("only its name, shell, and run")) {
+  fail("Dependabot policy mutation self-test did not reject hidden step environment overrides");
+}
 const duplicateDependabotPolicyStep = requiredWorkflow.replace(
   "      # The release manifest for a revision is NOT written here.",
-  "      - name: Validate bounded Dependabot update policy\n        shell: bash\n        run: |\n          ruby tooling/check-dependabot-config.rb --self-test\n          ruby tooling/check-dependabot-config.rb\n      # The release manifest for a revision is NOT written here.",
+  "      - name: \"Validate bounded Dependabot update policy\"\n        shell: bash\n        run: |\n          set -euo pipefail\n          ruby tooling/check-dependabot-config.rb --self-test\n          ruby tooling/check-dependabot-config.rb\n      # The release manifest for a revision is NOT written here.",
 );
 if (!dependabotPolicyWorkflowProblem(duplicateDependabotPolicyStep).includes("exactly one")) {
   fail("Dependabot policy mutation self-test did not reject duplicate steps");
+}
+const escapedDuplicatePolicyKey = requiredWorkflow.replace(
+  "        shell: bash\n",
+  "        \"s\\u0068ell\": bash\n        shell: bash\n",
+);
+if (!dependabotPolicyWorkflowProblem(escapedDuplicatePolicyKey).includes("duplicate workflow mapping key")) {
+  fail("Dependabot policy mutation self-test did not reject escaped duplicate YAML keys");
+}
+const ignoredFailureDependabotPolicyStep = requiredWorkflow.replace(
+  "          ruby tooling/check-dependabot-config.rb --self-test\n",
+  "          ruby tooling/check-dependabot-config.rb --self-test || true\n",
+);
+if (!dependabotPolicyWorkflowProblem(ignoredFailureDependabotPolicyStep).includes("exact fail-fast")) {
+  fail("Dependabot policy mutation self-test did not reject an ignored command failure");
+}
+for (const [before, after, reason] of [
+  [
+    "          ruby tooling/check-dependabot-config.rb --self-test\n",
+    "          set +e\n          ruby tooling/check-dependabot-config.rb --self-test\n",
+    "a shell that disables fail-fast behavior",
+  ],
+  [
+    "          ruby tooling/check-dependabot-config.rb --self-test\n",
+    "          exit 0\n          ruby tooling/check-dependabot-config.rb --self-test\n",
+    "an early successful exit",
+  ],
+]) {
+  if (!dependabotPolicyWorkflowProblem(requiredWorkflow.replace(before, after)).includes("exact fail-fast")) {
+    fail(`Dependabot policy mutation self-test did not reject ${reason}`);
+  }
 }
 
 function impactWorkflowProblem(workflow, {
