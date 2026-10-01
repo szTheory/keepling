@@ -74,27 +74,61 @@ const privacySelfTest = spawnSync(privacyPath, ["--self-test"], {
 });
 if (privacySelfTest.status !== 0) fail("privacy verifier self-test failed");
 
+for (const [name, args] of [
+  ["PR impact classifier", ["tooling/classify-pr-impact.mjs", "--self-test"]],
+  ["CI result summary", ["tooling/check-ci-results.mjs", "--self-test"]],
+]) {
+  const selfTest = spawnSync(process.execPath, args, {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+  });
+  if (selfTest.status !== 0) {
+    fail(`${name} self-test failed: ${selfTest.stderr || selfTest.stdout}`);
+  }
+}
+
+const summaryCliSelfTest = spawnSync(process.execPath, [
+  "tooling/check-ci-results.mjs",
+  "--impact-job=pr-impact",
+  "--always=cheap",
+  "--conditional=heavy",
+], {
+  cwd: repositoryRoot,
+  encoding: "utf8",
+  env: {
+    ...process.env,
+    NEEDS_CONTEXT: JSON.stringify({
+      "pr-impact": { result: "success", outputs: { run_heavy: "true" } },
+      cheap: { result: "success" },
+      heavy: { result: "success" },
+    }),
+  },
+});
+if (summaryCliSelfTest.status !== 0) {
+  fail(`CI result summary CLI self-test failed: ${summaryCliSelfTest.stderr || summaryCliSelfTest.stdout}`);
+}
+
 const requiredWorkflowPath = path.join(
   repositoryRoot,
   ".github/workflows/repository-integrity.yml",
 );
-const desktopWorkflowPath = path.join(
-  repositoryRoot,
-  ".github/workflows/desktop.yml",
-);
+const desktopWorkflowPath = path.join(repositoryRoot, ".github/workflows/desktop.yml");
+const iosWorkflowPath = path.join(repositoryRoot, ".github/workflows/ios.yml");
 const recoveryWorkflowPath = path.join(
   repositoryRoot,
   ".github/workflows/recovery-drills.yml",
 );
 let requiredWorkflow;
 let desktopWorkflow;
+let iosWorkflow;
 let recoveryWorkflow;
 try {
   requiredWorkflow = readFileSync(requiredWorkflowPath, "utf8");
   desktopWorkflow = readFileSync(desktopWorkflowPath, "utf8");
+  iosWorkflow = readFileSync(iosWorkflowPath, "utf8");
   recoveryWorkflow = readFileSync(recoveryWorkflowPath, "utf8");
 } catch {
-  fail("required, desktop, or scheduled workflow is missing");
+  fail("required, desktop, iOS, or scheduled workflow is missing");
 }
 
 for (const lane of requiredLanes.slice(0, -1)) {
@@ -113,15 +147,11 @@ if (requiredWorkflow.includes("paths-ignore:") || requiredWorkflow.includes("pat
   fail("shared-input fan-out is narrowed by a path filter");
 }
 
-// D-15(a)/(b): a skipped required job reads to GitHub branch protection as
-// satisfied, indistinguishable from a passing one. The only required check
-// must be a single aggregator (`all-required-passed`) that explicitly
-// asserts every dependency's result -- so an `if:` on any OTHER required
-// job (which can make that job report "skipped" instead of "success" or
-// "failure") is banned outright. The aggregator itself is the sole
-// exception: it MUST carry `if: always()` so it still runs -- and can still
-// fail the check -- when an upstream job fails.
+// A skipped job reads to GitHub branch protection as satisfied. Only the
+// fail-closed impact gates may skip expensive lanes, and each workflow's
+// always-run summary must prove the skip was caused by the docs-only classifier.
 const AGGREGATOR_JOB_NAME = "all-required-passed";
+const IMPACT_GATE = "always() && (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false')";
 const jobsBlockStart = requiredWorkflow.indexOf("\njobs:");
 if (jobsBlockStart === -1) fail("required workflow has no jobs: block");
 const jobsSource = requiredWorkflow.slice(jobsBlockStart);
@@ -138,18 +168,144 @@ for (const block of jobBlocks) {
     if (!block.includes("needs")) fail(`${AGGREGATOR_JOB_NAME} must reference the needs context`);
     continue;
   }
+  if (["phase2-linux", "phase2-runtime", "phase2-verified-image", "image-compose-deploy"].includes(jobName)) {
+    const normalized = block.replace(/\s+/g, " ");
+    if (!block.includes("needs: [pr-impact]")) {
+      fail(`required job ${jobName} must depend on pr-impact`);
+    }
+    if (!normalized.includes(IMPACT_GATE)) {
+      fail(`required job ${jobName} must run full checks unless docs-only impact succeeded`);
+    }
+    continue;
+  }
   if (/\n {4}if:\s*/.test(block)) {
     fail(`required job ${jobName} carries a job-level if: key -- a skipped required job must never read as satisfied`);
   }
 }
 if (!foundAggregator) fail(`required workflow is missing the ${AGGREGATOR_JOB_NAME} aggregator job`);
 
-function gateBJobBlock(workflow) {
-  const start = workflow.indexOf("\n  image-compose-deploy:\n");
+function workflowJobBlock(workflow, name) {
+  const start = workflow.indexOf(`\n  ${name}:\n`);
   if (start < 0) return "";
   const rest = workflow.slice(start);
   const nextJob = rest.slice(1).search(/\n  [A-Za-z0-9_-]+:\n/);
   return nextJob < 0 ? rest : rest.slice(0, nextJob + 1);
+}
+
+function impactWorkflowProblem(workflow, {
+  name,
+  conditionalJobs,
+  summaryConditionalJobs = conditionalJobs,
+  summaryJob,
+  summaryName,
+}) {
+  const trigger = workflow.slice(0, workflow.indexOf("\njobs:"));
+  if (!trigger.includes("pull_request:") || !trigger.includes("push:")) {
+    return `${name} workflow must run on pull requests and main pushes`;
+  }
+  if (/^\s{2}paths(?:-ignore)?\s*:/m.test(trigger)) {
+    return `${name} workflow triggers must remain unfiltered`;
+  }
+
+  const classifier = workflowJobBlock(workflow, "pr-impact");
+  if (!classifier.includes("pull-requests: read") || !classifier.includes("classify-pr-impact.mjs")) {
+    return `${name} workflow must classify PR paths with read-only pull request access`;
+  }
+
+  for (const jobName of conditionalJobs) {
+    const block = workflowJobBlock(workflow, jobName);
+    const normalized = block.replace(/\s+/g, " ");
+    if (!block.includes("needs: [pr-impact") || !normalized.includes(IMPACT_GATE)) {
+      return `${name} job ${jobName} must run unless a successful classifier proves docs-only impact`;
+    }
+  }
+
+  const summary = workflowJobBlock(workflow, summaryJob);
+  if (
+    !summary.includes(`name: ${summaryName}`) ||
+    !/\n {4}if:\s*always\(\)/.test(summary) ||
+    !summary.includes("check-ci-results.mjs") ||
+    !summary.includes("needs:") ||
+    !summary.includes("pr-impact")
+  ) {
+    return `${name} workflow is missing its always-run fail-closed summary check (${summaryName})`;
+  }
+  for (const jobName of summaryConditionalJobs) {
+    if (!summary.includes(jobName)) return `${summaryJob} must account for ${jobName}`;
+  }
+  return "";
+}
+
+const impactWorkflowProblems = [
+  impactWorkflowProblem(requiredWorkflow, {
+    name: "repository-integrity",
+    conditionalJobs: ["phase2-linux", "phase2-runtime", "phase2-verified-image", "image-compose-deploy"],
+    summaryJob: "all-required-passed",
+    summaryName: "All required checks passed",
+  }),
+  impactWorkflowProblem(desktopWorkflow, {
+    name: "desktop",
+    conditionalJobs: ["desktop-units", "desktop-package", "desktop-packaged", "desktop-e2e", "desktop-macos-integration", "mcp-phase-non-model"],
+    summaryConditionalJobs: ["desktop-units", "desktop-package", "desktop-packaged", "desktop-e2e", "desktop-macos-integration", "mcp-phase-non-model", "desktop-promote"],
+    summaryJob: "desktop-required",
+    summaryName: "Desktop checks passed",
+  }),
+  impactWorkflowProblem(iosWorkflow, {
+    name: "iOS",
+    conditionalJobs: ["ios-simulator"],
+    summaryJob: "ios-required-passed",
+    summaryName: "iOS simulator checks passed",
+  }),
+].filter(Boolean);
+for (const problem of impactWorkflowProblems) fail(problem);
+
+const ungatedRequiredWorkflow = requiredWorkflow.replace(IMPACT_GATE, "always()");
+if (
+  !impactWorkflowProblem(ungatedRequiredWorkflow, {
+    name: "repository-integrity",
+    conditionalJobs: ["phase2-linux", "phase2-runtime", "phase2-verified-image", "image-compose-deploy"],
+    summaryJob: "all-required-passed",
+    summaryName: "All required checks passed",
+  }).includes("phase2-linux")
+) {
+  fail("impact-gate mutation self-test did not reject an ungated expensive lane");
+}
+
+const missingDesktopSummary = desktopWorkflow.replace(
+  "name: Desktop checks passed",
+  "name: Desktop summary renamed",
+);
+if (
+  !impactWorkflowProblem(missingDesktopSummary, {
+    name: "desktop",
+    conditionalJobs: ["desktop-units", "desktop-package", "desktop-packaged", "desktop-e2e", "desktop-macos-integration", "mcp-phase-non-model"],
+    summaryConditionalJobs: ["desktop-units", "desktop-package", "desktop-packaged", "desktop-e2e", "desktop-macos-integration", "mcp-phase-non-model", "desktop-promote"],
+    summaryJob: "desktop-required",
+    summaryName: "Desktop checks passed",
+  }).includes("always-run fail-closed summary")
+) {
+  fail("desktop summary mutation self-test did not reject a missing required context");
+}
+
+const desktopPromotion = workflowJobBlock(desktopWorkflow, "desktop-promote").replace(/\s+/g, " ");
+for (const marker of [
+  "needs: [pr-impact, desktop-units, desktop-package, desktop-packaged, desktop-e2e, desktop-macos-integration, mcp-phase-non-model]",
+  "needs.pr-impact.result == 'success'",
+  "needs.pr-impact.outputs.run_heavy != 'false'",
+  "needs.desktop-units.result == 'success'",
+  "needs.desktop-package.result == 'success'",
+  "needs.desktop-packaged.result == 'success'",
+  "needs.desktop-e2e.result == 'success'",
+  "needs.desktop-macos-integration.result == 'success'",
+  "needs.mcp-phase-non-model.result == 'success'",
+]) {
+  if (!desktopPromotion.includes(marker)) {
+    fail(`desktop promotion must remain success-gated: missing ${marker}`);
+  }
+}
+
+function gateBJobBlock(workflow) {
+  return workflowJobBlock(workflow, "image-compose-deploy");
 }
 
 function gateBWorkflowProblem(workflow) {
@@ -175,8 +331,12 @@ function gateBWorkflowProblem(workflow) {
   if (/secrets\.|(?:^|\s)(?:ssh|tofu|terraform|hcloud|cloudflare)(?:\s|$)/i.test(block)) {
     return "image-compose-deploy must not access protected credentials or infrastructure";
   }
-  if (/^\s{4}(?:if|continue-on-error)\s*:/m.test(block)) {
-    return "image-compose-deploy must not be skipped or ignore a failed route";
+  if (/^\s{4}continue-on-error\s*:/m.test(block)) {
+    return "image-compose-deploy must not ignore a failed route";
+  }
+  const normalized = block.replace(/\s+/g, " ");
+  if (!block.includes("needs: [pr-impact]") || !normalized.includes(IMPACT_GATE)) {
+    return "image-compose-deploy must use the fail-closed docs-only impact gate";
   }
   const uploads = block.match(/uses: actions\/upload-artifact@/g) ?? [];
   if (uploads.length !== 1) return "image-compose-deploy must upload exactly one sanitized artifact";
@@ -268,7 +428,7 @@ for (const marker of [
   "[ \"$source_revision\" = \"$GITHUB_SHA\" ]",
   "export-verified-image-archive.sh",
   "--resolve-image-archive",
-  "[ \"$archive_bytes\" -le 1073741824 ]",
+  "if [ \"$archive_bytes\" -le 0 ] || [ \"$archive_bytes\" -gt 1073741824 ]; then",
   "image_manifest_digest",
   "run_attempt",
   "name: phase2-verified-image",
@@ -296,6 +456,10 @@ for (const marker of [
   "tooling/runtime-versions.env",
   "apps/server/mix.lock",
   "pnpm-lock.yaml",
+  "version=1.7.12",
+  "actionlint_${version}_linux_amd64.tar.gz",
+  "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8",
+  "run: actionlint -color",
   "actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809",
   "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
   "-timing",
@@ -320,6 +484,17 @@ for (const marker of [
   "verify-privacy.sh",
 ]) {
   if (!recoveryWorkflow.includes(marker)) fail(`recovery workflow omits ${marker}`);
+}
+
+if (
+  !recoveryWorkflow.includes(
+    "if: github.event_name == 'workflow_dispatch' && inputs.drill == 'host-replacement'",
+  )
+) {
+  fail("protected host replacement must require explicit workflow_dispatch");
+}
+if (recoveryWorkflow.includes('cron: "30 6 1 1,4,7,10 *"')) {
+  fail("protected host replacement must not run on a recurring schedule");
 }
 
 for (const marker of [
@@ -400,15 +575,6 @@ if (upgradeTest.includes("secrets.")) {
   fail("packaged-upgrade test must not read or depend on real credential secrets");
 }
 
-if (recoveryWorkflow.includes('cron: "30 6 1 1,4,7,10 *"')) {
-  fail('recovery workflow must not schedule the sealed host-replacement gate');
-}
-if (!recoveryWorkflow.includes(
-  "if: github.event_name == 'workflow_dispatch' && inputs.drill == 'host-replacement'",
-)) {
-  fail('host-replacement gate must require an explicit workflow dispatch');
-}
-
 console.log(
-  `CI contract passed: lanes=${requiredLanes.length} pins=full-sha caches=exact scheduled=non-vacuous desktop_upgrade=main-only privacy_self_test=passed`,
+  `CI contract passed: lanes=${requiredLanes.length} pins=full-sha caches=exact scheduled=non-vacuous desktop_upgrade=main-only privacy_self_test=passed pr_impact=fail-closed actionlint=1.7.12`,
 );

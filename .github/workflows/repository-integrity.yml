@@ -13,6 +13,25 @@ env:
   KEEPLING_FLAKE_POLICY: "no-retry; quarantine-requires-owner-issue-expiry"
 
 jobs:
+  pr-impact:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    outputs:
+      run_heavy: ${{ steps.classify.outputs.run_heavy }}
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Classify changed paths; uncertainty selects the full suite
+        id: classify
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node tooling/classify-pr-impact.mjs
+
   ci-contract:
     runs-on: ubuntu-24.04
     timeout-minutes: 3
@@ -21,8 +40,26 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24.7.0
+      - name: Download and verify pinned actionlint
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=1.7.12
+          archive="$RUNNER_TEMP/actionlint_${version}_linux_amd64.tar.gz"
+          curl --fail --location --silent --show-error \
+            "https://github.com/rhysd/actionlint/releases/download/v${version}/actionlint_${version}_linux_amd64.tar.gz" \
+            --output "$archive"
+          printf '%s  %s\n' \
+            '8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8' \
+            "$archive" | sha256sum --check --status
+          mkdir -p "$RUNNER_TEMP/actionlint"
+          tar -xzf "$archive" -C "$RUNNER_TEMP/actionlint"
+          "$RUNNER_TEMP/actionlint/actionlint" -version | grep -F '1.7.12'
+          echo "$RUNNER_TEMP/actionlint" >> "$GITHUB_PATH"
+      - name: Lint GitHub Actions workflows, expressions, and embedded shell
+        run: actionlint -color
       - name: Verify committed CI contract and lane inventory
-        run: ./tooling/check-ci-contract.mjs && ./tooling/test-phase-2.sh --list
+        run: node tooling/check-ci-contract.mjs && ./tooling/test-phase-2.sh --list
       # The release manifest for a revision is NOT written here. This job knows
       # the result of exactly one lane -- its own -- so any manifest it could
       # fabricate would name a single lane and omit the rest, and an omitted
@@ -106,6 +143,8 @@ jobs:
 
   phase2-linux:
     name: phase2-${{ matrix.lane }}
+    needs: [pr-impact]
+    if: always() && (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
@@ -166,6 +205,8 @@ jobs:
 
   phase2-runtime:
     name: phase2-${{ matrix.lane }}
+    needs: [pr-impact]
+    if: always() && (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -217,6 +258,8 @@ jobs:
           retention-days: 14
 
   phase2-verified-image:
+    needs: [pr-impact]
+    if: always() && (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -248,7 +291,10 @@ jobs:
           ./tooling/verify-host-replacement.sh --resolve-image-archive "$archive" "$contract" >/dev/null
           jq -e --arg revision "$source_revision" '.version == 2 and .revision == $revision and .architecture == "amd64" and .os == "linux" and (.archive_sha256 | test("^[0-9a-f]{64}$")) and (.manifest_digest | test("^sha256:[0-9a-f]{64}$")) and (.rootfs_diff_ids | type == "array" and length > 0)' "$contract" >/dev/null
           archive_bytes=$(stat -c '%s' "$archive")
-          [ "$archive_bytes" -gt 0 ] && [ "$archive_bytes" -le 1073741824 ] || { echo "::error::verified image archive is outside the 1 GiB artifact limit"; exit 1; }
+          if [ "$archive_bytes" -le 0 ] || [ "$archive_bytes" -gt 1073741824 ]; then
+            echo "::error::verified image archive is outside the 1 GiB artifact limit" >&2
+            exit 1
+          fi
           jq -n \
             --arg run_id "$GITHUB_RUN_ID" \
             --arg run_attempt "$GITHUB_RUN_ATTEMPT" \
@@ -277,6 +323,8 @@ jobs:
 
 
   image-compose-deploy:
+    needs: [pr-impact]
+    if: always() && (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false')
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -309,13 +357,10 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  # D-15(a)/(b): this is the ONLY job branch protection should require.
-  # `if: always()` is the sole exception to the job-level `if:` ban --
-  # without it, this job itself would be skipped the moment any dependency
-  # fails, and a skipped required check reads to GitHub as satisfied. A
-  # dependency reporting anything other than `success` (including
-  # `skipped`, which `check-ci-contract.mjs` bans on every OTHER required
-  # job) fails this job explicitly.
+  # D-15(a)/(b): this is the required repository summary. `if: always()`
+  # keeps the check present when dependencies fail. The result verifier only
+  # accepts skips for the gated heavy jobs after a successful docs-only
+  # classification; every always-run dependency must still succeed.
   export-reader:
     # D-07 lane 3. The independent export reader has existed and passed
     # locally since 06-08, and was BLOCKED in both release candidates for one
@@ -348,23 +393,14 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     needs:
-      [ci-contract, repository-integrity, phase2-linux, phase2-runtime, phase2-verified-image, image-compose-deploy, opentofu-host-fixtures, export-reader]
+      [pr-impact, ci-contract, repository-integrity, phase2-linux, phase2-runtime, phase2-verified-image, image-compose-deploy, opentofu-host-fixtures, export-reader]
     if: always()
     steps:
-      - name: Assert every required dependency succeeded
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - name: Assert required checks succeeded or approved documentation skips were recorded
         env:
           NEEDS_CONTEXT: ${{ toJSON(needs) }}
-        run: |
-          node -e '
-            const needs = JSON.parse(process.env.NEEDS_CONTEXT);
-            let failed = false;
-            for (const [job, info] of Object.entries(needs)) {
-              const result = info.result;
-              console.log("needs job=" + job + " result=" + result);
-              if (result !== "success") {
-                console.error("required job " + job + " did not succeed (result=" + result + ")");
-                failed = true;
-              }
-            }
-            if (failed) process.exit(1);
-          '
+        run: >-
+          node tooling/check-ci-results.mjs --impact-job=pr-impact
+          --always=ci-contract,repository-integrity,opentofu-host-fixtures,export-reader
+          --conditional=phase2-linux,phase2-runtime,phase2-verified-image,image-compose-deploy
