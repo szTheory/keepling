@@ -16,7 +16,28 @@ env:
   KEEPLING_DESKTOP_ARTIFACT_ROOT: keepling-desktop-package
 
 jobs:
+  pr-impact:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    outputs:
+      run_heavy: ${{ steps.classify.outputs.run_heavy }}
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Classify changed paths; uncertainty selects the full suite
+        id: classify
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node tooling/classify-pr-impact.mjs
+
   desktop-units:
+    needs: [pr-impact]
+    if: always() && (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false')
     runs-on: macos-15
     timeout-minutes: 15
     steps:
@@ -41,6 +62,8 @@ jobs:
   # distinct directory rather than rebuilding. Promotion (below) accepts
   # only the digest this job recorded.
   desktop-package:
+    needs: [pr-impact]
+    if: always() && (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false')
     runs-on: macos-15
     timeout-minutes: 20
     outputs:
@@ -86,7 +109,13 @@ jobs:
           security import "$RUNNER_TEMP/devid.p12" -k "$keychain" -P "$APPLE_DEVELOPER_ID_CERT_PASSWORD" -T /usr/bin/codesign
           rm -f "$RUNNER_TEMP/devid.p12"
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain" >/dev/null
-          security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+          existing_keychains=()
+          while IFS= read -r existing_keychain; do
+            existing_keychain="${existing_keychain#\"}"
+            existing_keychain="${existing_keychain%\"}"
+            [ -n "$existing_keychain" ] && existing_keychains+=("$existing_keychain")
+          done < <(security list-keychains -d user)
+          security list-keychains -d user -s "$keychain" "${existing_keychains[@]}"
           fingerprint="$(security find-identity -v -p codesigning "$keychain" | awk '/Developer ID Application:/ { print $2; exit }')"
           if [ -z "$fingerprint" ]; then
             echo "The imported certificate is not a usable Developer ID Application codesigning identity." >&2
@@ -148,7 +177,11 @@ jobs:
   # (the build job's paths are ephemeral to its own runner and never exist
   # on a different runner).
   desktop-packaged:
-    needs: [desktop-package]
+    needs: [pr-impact, desktop-package]
+    if: >-
+      always() &&
+      (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false') &&
+      needs.desktop-package.result == 'success'
     runs-on: macos-15
     timeout-minutes: 30
     permissions:
@@ -305,6 +338,8 @@ jobs:
   # is the pre-existing daily-loop/lifecycle/hostile-boundary evidence, kept
   # in this workflow so the required job set is complete in one place.
   desktop-e2e:
+    needs: [pr-impact]
+    if: always() && (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false')
     runs-on: macos-15
     timeout-minutes: 20
     steps:
@@ -368,7 +403,11 @@ jobs:
   # job: it downloads the exact bytes `desktop-package` produced and NEVER
   # rebuilds.
   desktop-macos-integration:
-    needs: [desktop-package]
+    needs: [pr-impact, desktop-package]
+    if: >-
+      always() &&
+      (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false') &&
+      needs.desktop-package.result == 'success'
     runs-on: macos-15
     timeout-minutes: 30
     steps:
@@ -479,7 +518,11 @@ jobs:
   # CROSS_ADAPTER_SUMMARY and CROSS_ADAPTER_SCENARIO lines into the same
   # artifact, so nothing that entry vouched for stopped being recorded.
   mcp-phase-non-model:
-    needs: [desktop-package]
+    needs: [pr-impact, desktop-package]
+    if: >-
+      always() &&
+      (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false') &&
+      needs.desktop-package.result == 'success'
     # macos-26, NOT macos-15 like every other job in this file, and the reason
     # is a hard toolchain floor rather than a preference. apps/ios/Package.swift
     # declares `// swift-tools-version: 6.3`, and the macos-15 image's default
@@ -706,7 +749,16 @@ jobs:
   # promotion attempt for the same digest and refuses a manifest missing any
   # required digest field.
   desktop-promote:
-    needs: [desktop-units, desktop-package, desktop-packaged, desktop-e2e, desktop-macos-integration, mcp-phase-non-model]
+    needs: [pr-impact, desktop-units, desktop-package, desktop-packaged, desktop-e2e, desktop-macos-integration, mcp-phase-non-model]
+    if: >-
+      always() && needs.pr-impact.result == 'success' &&
+      needs.pr-impact.outputs.run_heavy != 'false' &&
+      needs.desktop-units.result == 'success' &&
+      needs.desktop-package.result == 'success' &&
+      needs.desktop-packaged.result == 'success' &&
+      needs.desktop-e2e.result == 'success' &&
+      needs.desktop-macos-integration.result == 'success' &&
+      needs.mcp-phase-non-model.result == 'success'
     runs-on: macos-15
     timeout-minutes: 20
     # D-22/T-06-10-03: id-token/attestations are granted at JOB level only,
@@ -845,3 +897,21 @@ jobs:
             ${{ runner.temp }}/${{ env.KEEPLING_DESKTOP_ARTIFACT_ROOT }}/RELEASE-BODY.md
           if-no-files-found: error
           retention-days: 14
+
+  desktop-required:
+    name: Desktop checks passed
+    needs: [pr-impact, desktop-units, desktop-package, desktop-packaged, desktop-e2e, desktop-macos-integration, mcp-phase-non-model, desktop-promote]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Require every desktop lane, or an explicitly classified docs-only skip
+        env:
+          NEEDS_CONTEXT: ${{ toJSON(needs) }}
+        run: >-
+          node tooling/check-ci-results.mjs --impact-job=pr-impact
+          --conditional=desktop-units,desktop-package,desktop-packaged,desktop-e2e,desktop-macos-integration,mcp-phase-non-model,desktop-promote

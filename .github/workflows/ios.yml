@@ -24,7 +24,28 @@ permissions:
   contents: read
 
 jobs:
+  pr-impact:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    outputs:
+      run_heavy: ${{ steps.classify.outputs.run_heavy }}
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Classify changed paths; uncertainty selects the full suite
+        id: classify
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node tooling/classify-pr-impact.mjs
+
   ios-simulator:
+    needs: [pr-impact]
+    if: always() && (needs.pr-impact.result != 'success' || needs.pr-impact.outputs.run_heavy != 'false')
     # macos-26, NOT macos-15, for the same hard toolchain floor the
     # cross-adapter job documents: apps/ios/Package.swift declares
     # `// swift-tools-version: 6.3` and the macos-15 image's default Xcode
@@ -203,7 +224,7 @@ jobs:
                 process.exit(1);
               }
             }
-            console.log(`PII pattern scan passed: files=${files.length}`);
+            console.log("PII pattern scan passed: files=" + files.length);
           ' "$RUNNER_TEMP/ios-simulator.txt" "$RUNNER_TEMP/failed-xcode-results"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -216,3 +237,19 @@ jobs:
           if-no-files-found: error
           include-hidden-files: true
           retention-days: 90
+
+  ios-required-passed:
+    name: iOS simulator checks passed
+    needs: [pr-impact, ios-simulator]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24.7.0
+      - name: Require the simulator lane, or an explicitly classified docs-only skip
+        env:
+          NEEDS_CONTEXT: ${{ toJSON(needs) }}
+        run: node tooling/check-ci-results.mjs --impact-job=pr-impact --conditional=ios-simulator

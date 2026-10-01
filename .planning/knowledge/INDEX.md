@@ -25,6 +25,11 @@ This is the durable entry point for Keepling's retained second brain. GSD lifecy
 | `.planning/knowledge/snapshots/` | Dated raw/high-signal exploration | Preserve; supersede explicitly rather than edit away |
 | `.planning/knowledge/provenance/` | Original prompts and migration records | Immutable historical context |
 
+## Engineering practice references
+
+- `snapshots/2026-10-01-oss-project-dna-ci-cd.md` records a portfolio scan and a focused comparison of first-party project CI/CD practices, with evidence scope, limitations, and Keepling recommendations.
+- `templates/PROJECT-DNA-FANOUT.prompt.txt` is the reusable adversarial, role-based research prompt for future cross-project reviews.
+
 ## Snapshot catalog
 
 | Snapshot | Status | Primary use |
@@ -34,6 +39,7 @@ This is the durable entry point for Keepling's retained second brain. GSD lifecy
 | `2026-08-28-deployment-and-recovery.md` | Current working view | Hetzner reference topology and recovery contract |
 | `2026-08-28-mcp-agent-safety-and-evals.md` | Research snapshot | MCP surface, authorization, safety, eval ladder |
 | `2026-08-28-viability-and-open-source-operations.md` | Research snapshot | Market position, OSS model, hosted gates |
+| `2026-10-01-oss-project-dna-ci-cd.md` | Current engineering-practice snapshot | Portfolio evidence and CI/CD recommendations for Keepling |
 | `2026-08-28-brand-and-naming-brief.md` | Superseded in part | Naming criteria; Keepling is now selected |
 
 ## Provenance convention
@@ -45,4 +51,3 @@ Source-derived claims in retained snapshots use explicit dispositions:
 - **abstain/unresolved** — evidence is insufficient or the choice remains a product decision.
 
 "No result found" never means legal clearance. Dated web claims must be rechecked when a phase depends on them.
-
