@@ -147,7 +147,7 @@ for (const block of jobBlocks) {
     if (!block.includes("needs")) fail(`${AGGREGATOR_JOB_NAME} must reference the needs context`);
     continue;
   }
-  if (["phase2-linux", "phase2-runtime", "phase2-verified-image", "image-compose-deploy"].includes(jobName)) {
+  if (["phase2-linux", "phase2-runtime", "image-compose-deploy"].includes(jobName)) {
     const normalized = block.replace(/\s+/g, " ");
     if (!block.includes("needs: [pr-impact]")) {
       fail(`required job ${jobName} must depend on pr-impact`);
@@ -218,7 +218,7 @@ function impactWorkflowProblem(workflow, {
 const impactWorkflowProblems = [
   impactWorkflowProblem(requiredWorkflow, {
     name: "repository-integrity",
-    conditionalJobs: ["phase2-linux", "phase2-runtime", "phase2-verified-image", "image-compose-deploy"],
+    conditionalJobs: ["phase2-linux", "phase2-runtime", "image-compose-deploy"],
     summaryJob: "all-required-passed",
     summaryName: "All required checks passed",
   }),
@@ -242,7 +242,7 @@ const ungatedRequiredWorkflow = requiredWorkflow.replace(IMPACT_GATE, "always()"
 if (
   !impactWorkflowProblem(ungatedRequiredWorkflow, {
     name: "repository-integrity",
-    conditionalJobs: ["phase2-linux", "phase2-runtime", "phase2-verified-image", "image-compose-deploy"],
+    conditionalJobs: ["phase2-linux", "phase2-runtime", "image-compose-deploy"],
     summaryJob: "all-required-passed",
     summaryName: "All required checks passed",
   }).includes("phase2-linux")
@@ -375,7 +375,7 @@ if (gateBScript.includes("GATE_B_PASSED")) fail("local route readiness must not 
 
 // Caching stays available to test-only lanes; an artifact-producing job
 // restoring a cache could serve stale bytes as if they were freshly built.
-const ARTIFACT_PRODUCING_JOB_NAMES = ["ci-contract", "image-compose-deploy", "phase2-verified-image"];
+const ARTIFACT_PRODUCING_JOB_NAMES = ["ci-contract", "image-compose-deploy"];
 for (const block of jobBlocks) {
   const jobNameMatch = block.match(/^\n? {2}([A-Za-z0-9_-]+):/);
   const jobName = jobNameMatch ? jobNameMatch[1] : "unknown";
@@ -396,39 +396,6 @@ for (const [name, source] of [
   if (/continue-on-error\s*:|max-attempts\s*:|\bretry\s*:/i.test(source)) {
     fail(`${name} workflow contains blind retry or ignored-failure behavior`);
   }
-}
-
-const imageArtifactJob = jobBlocks.find((block) => /^\n? {2}phase2-verified-image:/.test(block));
-if (!imageArtifactJob) fail("required workflow is missing the phase2-verified-image job");
-for (const marker of [
-  "KEEPLING_IMAGE_TAG: keepling-server:plan-02-09-amd64",
-  "Export exact tested Phase 2 image and contract",
-  "source_revision=$(git rev-parse HEAD)",
-  "[ \"$source_revision\" = \"$GITHUB_SHA\" ]",
-  "export-verified-image-archive.sh",
-  "--resolve-image-archive",
-  "[ \"$archive_bytes\" -le 1073741824 ]",
-  "image_manifest_digest",
-  "run_attempt",
-  "name: phase2-verified-image",
-  "image-contract.json",
-  "run-binding.json",
-  "if-no-files-found: error",
-  "retention-days: 14",
-  "compression-level: 0",
-]) {
-  if (!imageArtifactJob.includes(marker)) {
-    fail(`image CI artifact job omits exact tested-image binding marker: ${marker}`);
-  }
-}
-const imageTestIndex = imageArtifactJob.indexOf("Run exact image, Compose, and deploy lane");
-const exportImageIndex = imageArtifactJob.indexOf("Export exact tested Phase 2 image and contract");
-const uploadImageIndex = imageArtifactJob.indexOf("name: phase2-verified-image");
-if (!(imageTestIndex >= 0 && imageTestIndex < exportImageIndex && exportImageIndex < uploadImageIndex)) {
-  fail("verified image artifact must be exported and uploaded only after the exact image lane");
-}
-if (!/all-required-passed:[\s\S]*?needs:[\s\S]*?phase2-verified-image/.test(requiredWorkflow)) {
-  fail("all-required-passed must continue requiring phase2-verified-image");
 }
 
 for (const marker of [
