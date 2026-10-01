@@ -67,6 +67,7 @@ jobs:
           node --check tooling/test-phase-2-environment-preflight.mjs
           ./tooling/test-phase-2-environment-preflight.sh
       - name: Validate bounded Dependabot update policy
+        shell: bash
         run: |
           ruby tooling/check-dependabot-config.rb --self-test
           ruby tooling/check-dependabot-config.rb
