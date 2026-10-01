@@ -10,7 +10,7 @@ The local `~/projects` scan found 29 repository/worktree directories with GitHub
 
 The rest of the portfolio received a discovery-level workflow-marker scan, not a line-by-line audit. Pattern counts only located candidates; a marker such as `continue-on-error`, `--admin`, or `if: always()` is not itself a finding. ExifCleaner, LatticeStripe, Threadline, Rendro, and Rulestead workflow files were clean in their local worktrees during review. Sigra's local workflow had a cache-version change; its HEAD retained the aggregate gate. Keepling and Crosswake worktrees had workflow edits, so their local working copies were not treated as pristine evidence.
 
-GitHub configuration is external state. For Keepling, the live `main` protection was inspected separately from YAML and changed on 2026-10-01. The protected deployment environment was also checked: its custom branch allow-list contains only `main`; its required reviewer is the repository owner, with self-review allowed; and it contains zero secrets. This review inspected only secret names/count, never values.
+GitHub configuration is external state. For Keepling, live `main` protection was inspected separately from YAML and changed on 2026-10-01. After PR #4, the required contexts are the stable repository, desktop, and iOS workflow summaries listed below. The protected deployment environment was also checked: its custom branch allow-list contains only `main`; its required reviewer is the repository owner, with self-review allowed; and it contains zero secrets. The follow-up preflight inspected only secret names/count, never values.
 
 ## Reference projects
 
@@ -60,26 +60,25 @@ This applies Keepling's existing automation-first verification policy to reposit
 
 ## Keepling state and immediate adoption
 
-On 2026-10-01, `main` already blocked force pushes and deletion and enforced branch protection for admins, but it did not require PRs or status checks. PR #3 had all relevant desktop, iOS, and repository checks green. The live classic branch rule now requires a pull request, an up-to-date branch, and these nine checks from the GitHub Actions app (ID 15368):
+On 2026-10-01, `main` already blocked force pushes and deletion and enforced branch protection for admins, but it did not require PRs or status checks. PR #3 had all relevant desktop, iOS, and repository checks green. PR #4 then made the branch rule require a pull request, an up-to-date branch, and these three stable summaries from the GitHub Actions app (ID 15368):
 
 - `All required checks passed`
-- `desktop-units`, `desktop-package`, `desktop-packaged`, `desktop-e2e`, `desktop-macos-integration`, `mcp-phase-non-model`, and `desktop-promote`
-- `ios-simulator`
+- `Desktop checks passed`
+- `iOS simulator checks passed`
 
 The rule requires zero reviewer approvals so Jon can merge his own PR after the checks pass. Admin enforcement and no-force-push/no-deletion settings remain enabled. This converts the intended PR discipline into an enforced GitHub rule; a direct push to `main` will be rejected.
 
-The next source-level improvement is to give the desktop and iOS workflows always-run summaries that account for every required job, then reduce branch settings to one stable required context per workflow. The current per-lane settings cover checks already reported on PR #3; they must be updated alongside any required-check rename or workflow split. Do not add a skipped-success shortcut to a summary.
+PR #4 added always-run desktop and iOS summaries that account for their required jobs and fail closed when a lane is missing, skipped, cancelled, or failed. It also added a path classifier that takes the docs-only fast path only for explicitly recognized documentation paths; unknown paths run the full suite. Branch settings now require one stable context per workflow. Do not add a skipped-success shortcut to a summary.
 
 The current Phase 2 protected Environment has a required reviewer (the repository owner, with self-review allowed), a custom policy limited to `main`, and zero secrets. The merge rule removes the source-on-trusted-main ambiguity; it does not provision provider authority. Before protected live acceptance, provide the required secrets through their approved external source. Keep values out of PR code and diagnostic output.
 
 ## Ranked Keepling actions
 
-1. **Applied — protect `main` with PR + CI.** Require the current nine known-green GitHub Actions contexts, require an up-to-date PR branch, preserve admin enforcement and no-force-push/no-delete, and require zero approvals. Verify this after workflow renames or splits.
-2. **Next code change — add stable summaries and a docs-only fast path.** Make each workflow expose an always-run fail-closed summary. For the desktop summary, require every applicable desktop job, including promotion, to end `success`. Add an impact classifier that skips platform lanes only when every changed path is explicitly documentation/planning-only; unknown paths run the full suite. Give the iOS workflow the same summary behavior. Extend `check-ci-contract.mjs` with self-tests for applicable, non-applicable, unknown, and failed-lane cases. Then reduce branch settings to three stable gates: repository, desktop, and iOS.
-3. **Before protected live acceptance — add a cheap readiness preflight.** Check the selected trusted source, the `main` environment rule, the required reviewer policy, and that each required secret is available to the live job before the first provider command. Emit symbolic missing names only. The local protected environment currently has zero secrets, so acceptance remains blocked until those values are provisioned from their approved source.
-4. **Keep full evidence for code changes.** Reuse existing package artifacts and dependency caches; move a platform/recovery lane to a less frequent trigger only when a distinct proof remains at merge time and evidence supports the change.
-5. **Automate upkeep — create grouped Dependabot PRs for Actions and dependencies.** Let required CI decide merge eligibility. Consider narrowly scoped auto-merge only after the rule has been exercised; never grant an admin bypass.
-6. **Make policy inspectable.** Threadline keeps a branch ruleset as JSON in the repository and runs a separate scheduled/post-CI verifier for branch and environment settings. Keepling's newly enforced rule is classic branch protection, which is not yet represented as a repository-owned ruleset. Migrate it to a committed ruleset contract with an independent verifier; during migration, compare both live policies and remove the duplicate only after the ruleset is verified. Do not put a repository-admin PAT into ordinary PR CI. The Actions token has no permission for enumerating environment secrets, so verify secret availability at the protected job boundary or through an operator-side preflight.
+1. **Applied — protect `main` with PR + CI.** Require an up-to-date PR branch and the three fail-closed GitHub Actions summaries, preserve admin enforcement and no-force-push/no-delete, and require zero approvals. Verify this after workflow renames or splits.
+2. **Next — make live-operation readiness cheap and explicit.** Run a local, authenticated, read-only preflight before the protected workflow can be dispatched. It checks the trusted `main` policy, required reviewer, and symbolic secret-name inventory; it never reads values or performs a mutation. The protected environment currently has zero secrets, so acceptance remains blocked until values are provisioned through approved sources. Keep fresh exact-run owner authorization as a separate gate.
+3. **Keep full evidence for code changes.** Reuse existing package artifacts and dependency caches; move a platform/recovery lane to a less frequent trigger only when a distinct proof remains at merge time and evidence supports the change.
+4. **Automate upkeep — create grouped Dependabot PRs for Actions and dependencies.** Let required CI decide merge eligibility. Consider narrowly scoped auto-merge only after the rule has been exercised; never grant an admin bypass.
+5. **Make policy inspectable.** Threadline keeps a branch ruleset as JSON in the repository and runs a separate scheduled/post-CI verifier for branch and environment settings. Keepling's current rule is classic branch protection, which is not yet represented as a repository-owned ruleset. Migrate it to a committed ruleset contract with an independent verifier; during migration, compare both live policies and remove the duplicate only after the ruleset is verified. Do not put a repository-admin PAT into ordinary PR CI. The Actions token cannot enumerate environment secrets, so keep secret availability checks at a protected job boundary or through an operator-side preflight.
 
 ### One-shot recommendation
 
