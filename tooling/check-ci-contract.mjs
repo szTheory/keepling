@@ -131,16 +131,6 @@ try {
   fail("required, desktop, iOS, or scheduled workflow is missing");
 }
 
-for (const marker of [
-  "name: Validate bounded Dependabot update policy",
-  "ruby tooling/check-dependabot-config.rb --self-test",
-  "ruby tooling/check-dependabot-config.rb",
-]) {
-  if (!requiredWorkflow.includes(marker)) {
-    fail(`required workflow omits ${marker}`);
-  }
-}
-
 for (const lane of requiredLanes.slice(0, -1)) {
   if (!requiredWorkflow.includes(`--lane ${lane}`) && !requiredWorkflow.includes("matrix.lane")) {
     fail(`required workflow omits exact ${lane} lane command`);
@@ -200,6 +190,63 @@ function workflowJobBlock(workflow, name) {
   const rest = workflow.slice(start);
   const nextJob = rest.slice(1).search(/\n  [A-Za-z0-9_-]+:\n/);
   return nextJob < 0 ? rest : rest.slice(0, nextJob + 1);
+}
+
+function workflowNamedStepBlock(workflow, jobName, stepName) {
+  const job = workflowJobBlock(workflow, jobName);
+  if (!job) return "";
+  const lines = job.split(/\r?\n/);
+  const start = lines.findIndex((line) =>
+    /^ {6}- name: /.test(line) && line.slice(8).trim() === `name: ${stepName}`,
+  );
+  if (start < 0) return "";
+  let end = start + 1;
+  while (end < lines.length && !/^ {6}- /.test(lines[end])) end += 1;
+  return lines.slice(start, end).join("\n");
+}
+
+function workflowStepRunLines(stepBlock) {
+  if (!stepBlock) return [];
+  const lines = stepBlock.split(/\r?\n/);
+  const runStart = lines.findIndex((line) => /^ {8}run:\s*\|\s*$/.test(line));
+  if (runStart < 0) return [];
+  const commands = [];
+  for (const line of lines.slice(runStart + 1)) {
+    if (!line.trim()) continue;
+    if (!/^ {10}\S/.test(line)) break;
+    commands.push(line.slice(10).trimEnd());
+  }
+  return commands;
+}
+
+const dependabotPolicyStep = workflowNamedStepBlock(
+  requiredWorkflow,
+  "ci-contract",
+  "Validate bounded Dependabot update policy",
+);
+const dependabotPolicyCommands = workflowStepRunLines(dependabotPolicyStep);
+for (const command of [
+  "ruby tooling/check-dependabot-config.rb --self-test",
+  "ruby tooling/check-dependabot-config.rb",
+]) {
+  if (!dependabotPolicyCommands.includes(command)) {
+    fail(`ci-contract must execute ${command} in its Dependabot policy step`);
+  }
+}
+const commentOnlyDependabotStep = [
+  "jobs:",
+  "  ci-contract:",
+  "    steps:",
+  "      # - name: Validate bounded Dependabot update policy",
+  "      #   run: |",
+  "      #     ruby tooling/check-dependabot-config.rb --self-test",
+].join("\n");
+if (workflowNamedStepBlock(
+  commentOnlyDependabotStep,
+  "ci-contract",
+  "Validate bounded Dependabot update policy",
+)) {
+  fail("Dependabot policy workflow contract must ignore comments");
 }
 
 function impactWorkflowProblem(workflow, {

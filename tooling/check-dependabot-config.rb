@@ -41,7 +41,14 @@ EXPECTED_UPDATES = [
     "directory" => "/",
     "day" => "wednesday",
     "time" => "03:00",
-    "files" => ["package.json", "pnpm-lock.yaml"],
+    "files" => [
+      "package.json",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+      "apps/desktop/package.json",
+      "apps/web/package.json",
+      "packages/web-ui/package.json",
+    ],
   },
   {
     "ecosystem" => "mix",
@@ -110,6 +117,10 @@ end
 
 def parse_yaml(source)
   syntax_tree = Psych.parse_stream(source)
+  unless syntax_tree.children.length == 1
+    return [nil, ["expected exactly one YAML document, found #{syntax_tree.children.length}"]]
+  end
+
   duplicates = duplicate_mapping_keys(syntax_tree)
   return [nil, duplicates] unless duplicates.empty?
 
@@ -203,15 +214,36 @@ def validate_config(config, repository_root: REPOSITORY_ROOT, check_files: true)
       end
     end
 
-    if check_files
-      expected["files"].each do |relative_path|
+  if check_files
+    expected["files"].each do |relative_path|
         absolute_path = File.join(repository_root, relative_path)
         exists = relative_path == ".github/workflows" ?
           Dir.glob(File.join(absolute_path, "*.{yml,yaml}")).any? :
           File.file?(absolute_path)
-        errors << "#{label} has no checked-in manifest/lockfile at #{relative_path}" unless exists
+      errors << "#{label} has no checked-in manifest/lockfile at #{relative_path}" unless exists
+    end
+    if identity == ["npm", "/"]
+      workspace_path = File.join(repository_root, "pnpm-workspace.yaml")
+      workspace_source = File.read(workspace_path)
+      workspace_config, workspace_parse_errors = parse_yaml(workspace_source)
+      errors.concat(workspace_parse_errors.map { |message| "pnpm-workspace.yaml: #{message}" })
+      unless workspace_config.is_a?(Hash) && workspace_config["packages"] == %w[apps/* packages/*]
+        errors << "pnpm-workspace.yaml packages must remain apps/* and packages/*"
+      end
+
+      expected_workspace_manifests = %w[
+        apps/desktop/package.json
+        apps/web/package.json
+        packages/web-ui/package.json
+      ]
+      actual_workspace_manifests = %w[apps packages].flat_map do |workspace_root|
+        Dir.glob(File.join(repository_root, workspace_root, "*", "package.json"))
+      end.map { |absolute_path| absolute_path.delete_prefix("#{repository_root}/") }.sort
+      unless actual_workspace_manifests == expected_workspace_manifests.sort
+        errors << "pnpm workspace package manifests drifted: #{actual_workspace_manifests.join(', ')}"
       end
     end
+  end
   end
 
   repeated = actual_identities.group_by(&:itself).select { |_identity, items| items.length > 1 }.keys
@@ -254,7 +286,16 @@ def expected_configuration
 end
 
 def deep_copy(value)
-  Marshal.load(Marshal.dump(value))
+  case value
+  when Hash
+    value.each_with_object({}) do |(key, child), copy|
+      copy[key] = deep_copy(child)
+    end
+  when Array
+    value.map { |child| deep_copy(child) }
+  else
+    value
+  end
 end
 
 def self_test
@@ -291,10 +332,12 @@ def self_test
   raise "invalid YAML was not rejected" if invalid_errors.empty?
   _duplicate, duplicate_errors = parse_yaml("version: 2\nversion: 2\nupdates: []\n")
   raise "duplicate YAML keys were not rejected" if duplicate_errors.empty?
+  _multiple, multiple_document_errors = parse_yaml("version: 2\nupdates: []\n---\nversion: 2\nupdates: []\n")
+  raise "multiple YAML documents were not rejected" if multiple_document_errors.empty?
   _alias, alias_errors = parse_yaml("defaults: &defaults {version: 2}\ncopy: *defaults\n")
   raise "YAML aliases were not rejected" if alias_errors.empty?
 
-  puts "Dependabot policy self-test passed: valid=1 refusals=#{cases.length + 3}"
+  puts "Dependabot policy self-test passed: valid=1 refusals=#{cases.length + 4}"
 end
 
 def main
