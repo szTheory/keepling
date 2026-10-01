@@ -396,6 +396,7 @@ jobs:
       [pr-impact, ci-contract, repository-integrity, phase2-linux, phase2-runtime, phase2-verified-image, image-compose-deploy, opentofu-host-fixtures, export-reader]
     if: always()
     steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Assert required checks succeeded or approved documentation skips were recorded
         env:
           NEEDS_CONTEXT: ${{ toJSON(needs) }}
