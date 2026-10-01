@@ -131,6 +131,16 @@ try {
   fail("required, desktop, iOS, or scheduled workflow is missing");
 }
 
+for (const marker of [
+  "name: Validate bounded Dependabot update policy",
+  "ruby tooling/check-dependabot-config.rb --self-test",
+  "ruby tooling/check-dependabot-config.rb",
+]) {
+  if (!requiredWorkflow.includes(marker)) {
+    fail(`required workflow omits ${marker}`);
+  }
+}
+
 for (const lane of requiredLanes.slice(0, -1)) {
   if (!requiredWorkflow.includes(`--lane ${lane}`) && !requiredWorkflow.includes("matrix.lane")) {
     fail(`required workflow omits exact ${lane} lane command`);
@@ -576,5 +586,5 @@ if (upgradeTest.includes("secrets.")) {
 }
 
 console.log(
-  `CI contract passed: lanes=${requiredLanes.length} pins=full-sha caches=exact scheduled=non-vacuous desktop_upgrade=main-only privacy_self_test=passed pr_impact=fail-closed actionlint=1.7.12`,
+  `CI contract passed: lanes=${requiredLanes.length} pins=full-sha caches=exact scheduled=non-vacuous desktop_upgrade=main-only privacy_self_test=passed pr_impact=fail-closed dependabot_policy=required actionlint=1.7.12`,
 );

@@ -66,6 +66,10 @@ jobs:
           node --check tooling/check-phase-2-environment.mjs
           node --check tooling/test-phase-2-environment-preflight.mjs
           ./tooling/test-phase-2-environment-preflight.sh
+      - name: Validate bounded Dependabot update policy
+        run: |
+          ruby tooling/check-dependabot-config.rb --self-test
+          ruby tooling/check-dependabot-config.rb
       # The release manifest for a revision is NOT written here. This job knows
       # the result of exactly one lane -- its own -- so any manifest it could
       # fabricate would name a single lane and omit the rest, and an omitted
