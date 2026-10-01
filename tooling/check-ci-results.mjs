@@ -91,7 +91,8 @@ function runSelfTest() {
 }
 
 function parseListArgument(name) {
-  const value = process.argv.find((argument) => argument.startsWith(`${name}=`))?.slice(name.length + 1);
+  const prefix = `${name}=`;
+  const value = process.argv.find((argument) => argument.startsWith(prefix))?.slice(prefix.length);
   if (value === undefined || value.length === 0) return [];
   return value.split(",").filter(Boolean);
 }
@@ -108,8 +109,8 @@ if (process.argv.includes("--self-test")) {
     const passed = verifyJobResults({
       needs,
       impactJob,
-      alwaysJobs: parseListArgument("--always="),
-      conditionalJobs: parseListArgument("--conditional="),
+      alwaysJobs: parseListArgument("--always"),
+      conditionalJobs: parseListArgument("--conditional"),
     });
     if (!passed) process.exitCode = 1;
   } catch (error) {

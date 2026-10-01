@@ -87,6 +87,27 @@ for (const [name, args] of [
   }
 }
 
+const summaryCliSelfTest = spawnSync(process.execPath, [
+  "tooling/check-ci-results.mjs",
+  "--impact-job=pr-impact",
+  "--always=cheap",
+  "--conditional=heavy",
+], {
+  cwd: repositoryRoot,
+  encoding: "utf8",
+  env: {
+    ...process.env,
+    NEEDS_CONTEXT: JSON.stringify({
+      "pr-impact": { result: "success", outputs: { run_heavy: "true" } },
+      cheap: { result: "success" },
+      heavy: { result: "success" },
+    }),
+  },
+});
+if (summaryCliSelfTest.status !== 0) {
+  fail(`CI result summary CLI self-test failed: ${summaryCliSelfTest.stderr || summaryCliSelfTest.stdout}`);
+}
+
 const requiredWorkflowPath = path.join(
   repositoryRoot,
   ".github/workflows/repository-integrity.yml",
