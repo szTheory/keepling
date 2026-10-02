@@ -15,11 +15,12 @@ sha2=$(printf '%064d' 0 | tr 0 b)
 source_sha=$(printf '%040d' 0 | tr 0 a)
 tree_sha=$(printf '%040d' 0 | tr 0 b)
 now=$(date +%s)
+today_utc=$(date -u +%F)
 hosted='{"version":1,"dns_zone_id":"fixture-zone","dns_record_name":"tasks.example.invalid","server_image_id":"12345","admin_source_cidrs":["192.0.2.10/32"],"candidate_source":"rebuilt-archive","recovery_source":"same-run-synthetic-capture","login_source":"same-run-synthetic-capture","b2_primary_endpoint":"https://s3.us-west-004.backblazeb2.com","b2_primary_region":"us-west-004","b2_primary_bucket":"fixture-bucket"}'
 hosted_sha=$(printf '%s' "$hosted" | shasum -a 256 | awk '{print $1}')
-python3 - "$fixture/authorization.json" "$source_sha" "$tree_sha" "$sha" "$sha2" "$now" "$hosted_sha" <<'PY'
+python3 - "$fixture/authorization.json" "$source_sha" "$tree_sha" "$sha" "$sha2" "$now" "$hosted_sha" "$today_utc" <<'PY'
 import json, sys
-path, source, tree, a, b, now, hosted_sha = sys.argv[1:]
+path, source, tree, a, b, now, hosted_sha, today_utc = sys.argv[1:]
 actions = [
     "provider-apply", "provider-inventory", "console-marker", "current-ed25519-host-key",
     "ssh-bootstrap", "image-transfer", "credentialed-restore", "sync-epoch",
@@ -31,7 +32,7 @@ document = {
     "logical_run_id": "phase2-run-20260930-a1b2c3d4",
     "owner_actor": "jon",
     "issued_at": int(now),
-    "change_trigger": "reviewed-phase2-acceptance-2026-09-30",
+    "change_trigger": f"reviewed-phase2-acceptance-{today_utc}",
     "upstream": {"run_id": 123456, "run_attempt": 1, "artifact_id": 654321, "artifact_digest": "sha256:" + a},
     "source": {
         "commit_sha": source, "tree_sha": tree, "context_tar_sha256": a, "platform": "linux/amd64",
