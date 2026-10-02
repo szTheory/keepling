@@ -278,6 +278,32 @@ The resulting candidate selection is run-bound, archive-verified, and already
 shaped for `phase-2-live-setup.sh`. Keep the directory private and outside the
 repository. This read-only artifact step is still not provider/DNS approval.
 
+## Sanitized OpenTofu and provider inputs
+
+The live lane requires explicit absolute `TOFU_BIN` and
+`HCLOUD_PROVIDER_PLUGIN_DIR` values. Every sanitized child must forward both
+values; neither may fall back to `PATH` or a global provider cache. The
+source-owned entry runs `--toolchain-preflight` before it reports
+`LIVE_ACCEPTANCE_STATUS=ATTEMPTED`, and the credentialed command repeats that
+local gate before provider access. It checks OpenTofu 1.12.6, agreement between
+the tracked provider constraint and lockfile, and an executable hcloud plugin
+from the locked version. This check makes no provider, SSH, or DNS calls.
+
+Use this same read-only check inside the sanitized environment that will start
+the live lane:
+
+```sh
+env -i PATH="$PATH" HOME="$HOME" TMPDIR="${TMPDIR:-/tmp}" \
+  TOFU_BIN='/absolute/path/to/tofu' \
+  HCLOUD_PROVIDER_PLUGIN_DIR='/absolute/path/to/pinned/hcloud/plugins' \
+  ./tooling/verify-host-replacement.sh --toolchain-preflight
+```
+
+`phase-2-live-setup.sh` explicitly forwards these variables through `env -i`;
+the required `opentofu-host-fixtures` lane also tests the positive delivery and
+the absent, relative, symlinked, non-executable, and wrong-version refusals in
+a sanitized child.
+
 ## Private orchestration bundle
 
 Do not copy or hand-author an orchestration file. Once the materialized
