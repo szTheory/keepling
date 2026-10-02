@@ -131,7 +131,7 @@ function makeBase() {
       status: "completed",
       conclusion: "success",
       workflow_id: 3344,
-      path: `${workflowPath}@main`,
+      path: workflowPath,
       pull_requests: [],
     },
     workflow: { id: 3344, path: workflowPath, state: "active" },

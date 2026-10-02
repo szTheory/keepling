@@ -90,7 +90,7 @@ function validateRun(run, repository, runId, expectedSha) {
     refuse("run_head_repository_mismatch");
   }
   if (!Number.isSafeInteger(run.workflow_id) || run.workflow_id <= 0) refuse("run_workflow_id_missing");
-  if (![`${WORKFLOW_PATH}@main`, `${WORKFLOW_PATH}@refs/heads/main`].includes(run.path)) {
+  if (![WORKFLOW_PATH, `${WORKFLOW_PATH}@main`, `${WORKFLOW_PATH}@refs/heads/main`].includes(run.path)) {
     refuse("run_workflow_path_mismatch");
   }
 }
