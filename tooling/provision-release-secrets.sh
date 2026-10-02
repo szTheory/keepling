@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 # Move every credential the protected release lanes need from 1Password into the
 # right GitHub environment, in one command.
 #
@@ -20,6 +20,7 @@ set -eu
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
 map_file=tooling/release-secrets.map
+local_ssh_ref_name=KEEPLING_SSH_PRIVATE_KEY_OP_REF
 
 # Vaults discovery must never read. Employer-owned; see the note above.
 excluded_vaults="Squad"
@@ -212,12 +213,46 @@ b2_s3_region() {
     });'
 }
 
+# Read one 1Password reference from root .env.local as inert text. The local
+# file must be ignored by Git; its other contents are never emitted or parsed.
+local_ssh_reference() {
+  local_file=.env.local
+  [ -f "$local_file" ] && [ ! -L "$local_file" ] && [ -r "$local_file" ] || return 1
+  git check-ignore -q -- "$local_file" || return 1
+
+  LC_ALL=C awk -v name="$local_ssh_ref_name" '
+    index($0, name) {
+      count++
+      prefix = name "=op://"
+      if (index($0, prefix) != 1) bad = 1
+      value = substr($0, length(name) + 2)
+      if (value !~ /^op:\/\// || value ~ /[^ -~]/ || value ~ /[[:space:]]/) bad = 1
+      path = substr(value, 6)
+      parts = split(path, segment, "/")
+      if (parts != 3 || segment[1] == "" || segment[1] ~ /[^A-Za-z0-9_.-]/ ||
+          length(segment[2]) != 26 ||
+          segment[2] ~ /[^a-z0-9]/ || segment[3] == "" ||
+          segment[3] ~ /[^A-Za-z0-9_-]/) bad = 1
+      if (bad) next
+      reference = value
+    }
+    END {
+      if (count != 1 || bad) exit 1
+      print reference
+    }
+  ' "$local_file" 2>/dev/null
+}
+
 # Resolve one map reference to its value on stdout. Callers pipe this straight
 # into `gh secret set`; it is never assigned to a variable that outlives the
 # pipe and never printed.
 resolve_reference() {
   case "$1" in
     op://*/*/*) op read --no-newline "$1" ;;
+    env-local:KEEPLING_SSH_PRIVATE_KEY_OP_REF)
+      local_reference=$(local_ssh_reference) || return 1
+      op read --no-newline "$local_reference" 2>/dev/null
+      ;;
     derive:b2-s3-endpoint) b2_s3_endpoint ;;
     derive:b2-s3-region) b2_s3_region ;;
     *) return 1 ;;
@@ -232,7 +267,7 @@ echo "Resolving $(read_map | wc -l | tr -d '[:space:]') credential(s) declared i
 echo
 while IFS="$(printf '\t')" read -r environment secret reference requirement; do
   case "$reference" in
-    op://*/*/*|derive:b2-s3-endpoint|derive:b2-s3-region) ;;
+    op://*/*/*|derive:b2-s3-endpoint|derive:b2-s3-region|env-local:KEEPLING_SSH_PRIVATE_KEY_OP_REF) ;;
     *) die "$secret has an unrecognised source: $reference" ;;
   esac
   # `op read` accepts only its own reference grammar and rejects anything else
@@ -255,8 +290,15 @@ while IFS="$(printf '\t')" read -r environment secret reference requirement; do
     resolvable=$((resolvable + 1))
   else
     printf '  NOT FOUND  %s\n' "$secret"
-    printf '             source: %s\n' "$reference"
-    printf '%s\n' "$failure" | sed -e '/^[[:space:]]*$/d' -e 's/^/             /' | head -4
+    case "$reference" in
+      env-local:KEEPLING_SSH_PRIVATE_KEY_OP_REF)
+        printf '             source: local-ssh-reference-invalid-or-unavailable\n'
+        ;;
+      *)
+        printf '             source: %s\n' "$reference"
+        printf '%s\n' "$failure" | sed -e '/^[[:space:]]*$/d' -e 's/^/             /' | head -4
+        ;;
+    esac
     [ "$requirement" = required ] && missing_required=$((missing_required + 1))
   fi
 done <<MAP_ENTRIES
@@ -300,7 +342,8 @@ while IFS="$(printf '\t')" read -r environment secret reference requirement; do
   # earlier form discarded both and could only ever say "failed", which is not
   # a diagnosis.
   if failure=$(
-    { resolve_reference "$reference" |
+    { set -o pipefail
+      resolve_reference "$reference" |
       gh secret set "$secret" --env "$environment" --repo "$repository"; } 2>&1 >/dev/null
   ); then
     echo "set $environment/$secret"
