@@ -279,9 +279,12 @@ local_ssh_key_path() {
     "$repository_root"|"$repository_root"/*) return 1 ;;
   esac
 
-  key_owner=$(stat -f '%u' "$key_path" 2>/dev/null || stat -c '%u' "$key_path" 2>/dev/null) || return 1
+  # GNU stat must be tried first: GNU accepts `-f` too, but interprets it as
+  # filesystem metadata instead of BSD's format option and can exit successfully
+  # with the wrong value. On macOS `-c` is rejected and the BSD form is used.
+  key_owner=$(stat -c '%u' "$key_path" 2>/dev/null || stat -f '%u' "$key_path" 2>/dev/null) || return 1
   [ "$key_owner" = "$(id -u)" ] || return 1
-  key_mode=$(stat -f '%Lp' "$key_path" 2>/dev/null || stat -c '%a' "$key_path" 2>/dev/null) || return 1
+  key_mode=$(stat -c '%a' "$key_path" 2>/dev/null || stat -f '%Lp' "$key_path" 2>/dev/null) || return 1
   case "$key_mode" in
     ''|*[!0-7]*) return 1 ;;
   esac

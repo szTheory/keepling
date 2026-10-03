@@ -90,7 +90,9 @@ check_refused_without_disclosure() {
 }
 
 write_path "$key_file"
-valid_output=$(cd "$fixture_root" && ./tooling/provision-release-secrets.sh --check-ssh-key 2>&1)
+if ! valid_output=$(cd "$fixture_root" && ./tooling/provision-release-secrets.sh --check-ssh-key 2>&1); then
+  fail 'valid ED25519 key source was refused'
+fi
 printf '%s\n' "$valid_output" | grep -Fq 'The local SSH key source resolves' || fail 'valid ED25519 key did not resolve'
 case "$valid_output" in *"$temporary_root"*|*'PRIVATE KEY'*) fail 'key check disclosed its path or contents' ;; esac
 [ ! -e "$GH_CALL_LOG" ] && [ ! -e "$OP_CALL_LOG" ] || fail 'local key check invoked GitHub or 1Password'
@@ -124,7 +126,9 @@ write_path "$temporary_root/rsa-key"
 check_refused_without_disclosure 'local-ssh-key-file-invalid-or-unavailable'
 
 write_path "$key_file"
-apply_output=$(cd "$fixture_root" && ./tooling/provision-release-secrets.sh --apply-ssh-key 2>&1)
+if ! apply_output=$(cd "$fixture_root" && ./tooling/provision-release-secrets.sh --apply-ssh-key 2>&1); then
+  fail 'SSH-only upload failed despite passing the protected-Environment fixture'
+fi
 cmp -s "$key_file" "$GH_SECRET_CAPTURE" || fail 'GitHub did not receive the exact private-key bytes on stdin'
 printf '%s\n' "$apply_output" | grep -Fq 'Uploaded the SSH key only; no 1Password value was read.' || fail 'SSH-only upload did not report its scope'
 case "$apply_output" in *"$temporary_root"*|*'PRIVATE KEY'*) fail 'SSH-only upload disclosed its path or contents' ;; esac
