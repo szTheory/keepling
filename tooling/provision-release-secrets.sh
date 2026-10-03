@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
-# Move every credential the protected release lanes need from 1Password into the
-# right GitHub environment, in one command.
+# Move every credential the protected release lanes need into the right GitHub
+# environment, in one command. Most sources are 1Password references; the
+# disposable SSH key is read from a protected local file outside the checkout.
 #
 #   ./tooling/provision-release-secrets.sh --check      report only
 #   ./tooling/provision-release-secrets.sh --discover   suggest op:// references
 #   ./tooling/provision-release-secrets.sh --apply      read and upload
+#   ./tooling/provision-release-secrets.sh --check-ssh-key  validate local key only
+#   ./tooling/provision-release-secrets.sh --apply-ssh-key  upload local key only
 #
 # DESIGN NOTES, because this handles credentials:
-#   * Secret VALUES never touch the filesystem, never reach a shell argument
-#     (which is world-readable in `ps`), and are never echoed. They move through
-#     a pipe from `op read` into `gh secret set`, which reads stdin when no
-#     --body is given, and nowhere else.
+#   * Secret VALUES are never echoed or passed as shell arguments. 1Password
+#     values move through a pipe from `op read`; the private SSH key moves from
+#     its external local file through a pipe. Both go directly to `gh secret
+#     set` stdin, and nowhere else.
 #   * The map file names locations, never values, so it is safe to commit.
 #   * The Squad vault is excluded from discovery unconditionally. It is an
 #     employer vault and nothing in this repository may read it.
@@ -20,16 +23,16 @@ set -eu
 repository_root=$(CDPATH='' cd -P "$(dirname "$0")/.." && pwd)
 cd "$repository_root"
 map_file=tooling/release-secrets.map
-local_ssh_ref_name=KEEPLING_SSH_PRIVATE_KEY_OP_REF
+local_ssh_key_path_name=KEEPLING_SSH_PRIVATE_KEY_FILE
 
 # Vaults discovery must never read. Employer-owned; see the note above.
 excluded_vaults="Squad"
 
 mode=--check
 case "${1:-}" in
-  --check|--discover|--fields|--apply) mode=$1 ;;
+  --check|--discover|--fields|--apply|--check-ssh-key|--apply-ssh-key) mode=$1 ;;
   "") mode=--check ;;
-  *) echo "usage: $0 [--check|--discover|--fields|--apply]" >&2; exit 2 ;;
+  *) echo "usage: $0 [--check|--discover|--fields|--apply|--check-ssh-key|--apply-ssh-key]" >&2; exit 2 ;;
 esac
 
 die() { echo "provision-release-secrets: $*" >&2; exit 1; }
@@ -38,20 +41,38 @@ require_command() {
   command -v "$1" >/dev/null 2>&1 || die "required command '$1' is unavailable$2"
 }
 
-require_command gh " -- install with 'brew install gh', then 'gh auth login'"
-require_command op " -- install with 'brew install 1password-cli', then enable the CLI in 1Password > Settings > Developer"
+case "$mode" in
+  --check-ssh-key)
+    require_command ssh-keygen " -- install the OpenSSH client tools"
+    ;;
+  *)
+    require_command gh " -- install with 'brew install gh', then 'gh auth login'"
+    gh auth status >/dev/null 2>&1 || die "gh is not authenticated; run 'gh auth login'"
+    ;;
+esac
+case "$mode" in
+  --check-ssh-key|--apply-ssh-key) ;;
+  *) require_command op " -- install with 'brew install 1password-cli', then enable the CLI in 1Password > Settings > Developer" ;;
+esac
 
-gh auth status >/dev/null 2>&1 || die "gh is not authenticated; run 'gh auth login'"
 [ -r "$map_file" ] || die "$map_file is missing"
 
 # Probe with real work rather than with `op whoami`. Under desktop-app
 # integration the session is established lazily by the first command that
 # actually needs it, so `op whoami` reports "not signed in" on a perfectly
 # usable install -- and would turn a working setup into a false failure here.
-op vault list --format=json >/dev/null 2>&1 ||
-  die "1Password is unavailable; unlock the desktop app (Settings > Developer > Integrate with 1Password CLI), or run 'op signin'"
+case "$mode" in
+  --check-ssh-key|--apply-ssh-key) ;;
+  *)
+    op vault list --format=json >/dev/null 2>&1 ||
+      die "1Password is unavailable; unlock the desktop app (Settings > Developer > Integrate with 1Password CLI), or run 'op signin'"
+    ;;
+esac
 
-repository=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+case "$mode" in
+  --check-ssh-key) repository="" ;;
+  *) repository=$(gh repo view --json nameWithOwner --jq .nameWithOwner) ;;
+esac
 
 # ---------------------------------------------------------------- discovery --
 non_excluded_vaults() {
@@ -213,34 +234,68 @@ b2_s3_region() {
     });'
 }
 
-# Read one 1Password reference from root .env.local as inert text. The local
-# file must be ignored by Git; its other contents are never emitted or parsed.
-local_ssh_reference() {
+# Read the external private-key path from root .env.local as inert text. The
+# local configuration must be ignored by Git; its other contents are never
+# emitted or parsed. The key itself must be a user-owned, mode-0600, unencrypted
+# ED25519 file outside this checkout: the protected workflow starts ssh-agent
+# non-interactively and expects exactly one ED25519 identity.
+local_ssh_key_path() {
   local_file=.env.local
   [ -f "$local_file" ] && [ ! -L "$local_file" ] && [ -r "$local_file" ] || return 1
   git check-ignore -q -- "$local_file" || return 1
 
-  LC_ALL=C awk -v name="$local_ssh_ref_name" '
-    index($0, name) {
-      count++
-      prefix = name "=op://"
-      if (index($0, prefix) != 1) bad = 1
-      value = substr($0, length(name) + 2)
-      if (value !~ /^op:\/\// || value ~ /[^ -~]/ || value ~ /[[:space:]]/) bad = 1
-      path = substr(value, 6)
-      parts = split(path, segment, "/")
-      if (parts != 3 || segment[1] == "" || segment[1] ~ /[^A-Za-z0-9_.-]/ ||
-          length(segment[2]) != 26 ||
-          segment[2] ~ /[^a-z0-9]/ || segment[3] == "" ||
-          segment[3] ~ /[^A-Za-z0-9_-]/) bad = 1
-      if (bad) next
-      reference = value
+  key_path=$(LC_ALL=C awk -v name="$local_ssh_key_path_name" '
+    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
+    {
+      trimmed = $0
+      sub(/^[[:space:]]+/, "", trimmed)
+      if (index(trimmed, name) == 1) {
+        count++
+        if ($0 != trimmed || substr($0, 1, length(name) + 1) != name "=") {
+          bad = 1
+          next
+        }
+        value = substr($0, length(name) + 2)
+        if (value == "" || value !~ /^\// || value ~ /[[:cntrl:]]/ ||
+            value ~ /^ / || value ~ / $/) {
+          bad = 1
+          next
+        }
+        path = value
+      }
     }
     END {
-      if (count != 1 || bad) exit 1
-      print reference
+      if (count != 1 || bad || path == "") exit 1
+      print path
     }
-  ' "$local_file" 2>/dev/null
+  ' "$local_file" 2>/dev/null) || return 1
+
+  [ -n "$key_path" ] && [ "${key_path#/}" != "$key_path" ] || return 1
+  [ -f "$key_path" ] && [ ! -L "$key_path" ] && [ -r "$key_path" ] || return 1
+
+  key_directory=$(CDPATH='' cd -P "$(dirname "$key_path")" 2>/dev/null && pwd -P) || return 1
+  key_path="$key_directory/$(basename "$key_path")"
+  case "$key_path" in
+    "$repository_root"|"$repository_root"/*) return 1 ;;
+  esac
+
+  key_owner=$(stat -f '%u' "$key_path" 2>/dev/null || stat -c '%u' "$key_path" 2>/dev/null) || return 1
+  [ "$key_owner" = "$(id -u)" ] || return 1
+  key_mode=$(stat -f '%Lp' "$key_path" 2>/dev/null || stat -c '%a' "$key_path" 2>/dev/null) || return 1
+  case "$key_mode" in
+    ''|*[!0-7]*) return 1 ;;
+  esac
+  [ $((8#$key_mode & 077)) -eq 0 ] || return 1
+
+  command -v ssh-keygen >/dev/null 2>&1 || return 1
+  public_identity=$(ssh-keygen -y -f "$key_path" </dev/null 2>/dev/null) || return 1
+  case "$public_identity" in
+    'ssh-ed25519 '*) ;;
+    *) unset public_identity; return 1 ;;
+  esac
+  unset public_identity
+
+  printf '%s\n' "$key_path"
 }
 
 # Resolve one map reference to its value on stdout. Callers pipe this straight
@@ -249,15 +304,84 @@ local_ssh_reference() {
 resolve_reference() {
   case "$1" in
     op://*/*/*) op read --no-newline "$1" ;;
-    env-local:KEEPLING_SSH_PRIVATE_KEY_OP_REF)
-      local_reference=$(local_ssh_reference) || return 1
-      op read --no-newline "$local_reference" 2>/dev/null
+    env-local-file:KEEPLING_SSH_PRIVATE_KEY_FILE)
+      local_key_path=$(local_ssh_key_path) || return 1
+      cat "$local_key_path" 2>/dev/null
       ;;
     derive:b2-s3-endpoint) b2_s3_endpoint ;;
     derive:b2-s3-region) b2_s3_region ;;
     *) return 1 ;;
   esac
 }
+
+# These narrow modes let an operator validate or upload only the disposable
+# SSH key without opening 1Password. The apply path rechecks the protected
+# Environment policy immediately before writing; it never creates or weakens
+# that policy.
+if [ "$mode" = --check-ssh-key ] || [ "$mode" = --apply-ssh-key ]; then
+  [ "$mode" != --apply-ssh-key ] || require_command ssh-keygen " -- install the OpenSSH client tools"
+  ssh_entry=$(read_map | awk -F '\t' '$2 == "KEEPLING_SSH_PRIVATE_KEY" { count++; entry = $0 } END { if (count == 1) print entry; else exit 1 }') ||
+    die "$map_file must contain exactly one KEEPLING_SSH_PRIVATE_KEY entry"
+  IFS="$(printf '\t')" read -r ssh_environment ssh_secret ssh_reference ssh_requirement <<SSH_ENTRY
+$ssh_entry
+SSH_ENTRY
+  [ "$ssh_environment" = phase-2-protected-environment ] &&
+    [ "$ssh_secret" = KEEPLING_SSH_PRIVATE_KEY ] &&
+    [ "$ssh_reference" = env-local-file:KEEPLING_SSH_PRIVATE_KEY_FILE ] &&
+    [ "$ssh_requirement" = required ] ||
+    die "$map_file has an unexpected KEEPLING_SSH_PRIVATE_KEY mapping"
+
+  if failure=$(resolve_reference "$ssh_reference" 2>&1 >/dev/null); then
+    :
+  else
+    echo "SSH key source: local-ssh-key-file-invalid-or-unavailable" >&2
+    die "could not validate the local SSH key file; see the protected Environment setup instructions"
+  fi
+
+  if [ "$mode" = --check-ssh-key ]; then
+    echo "The local SSH key source resolves; no GitHub secret was changed."
+    exit 0
+  fi
+
+  require_command node " -- Node.js is required to inspect the GitHub Environment policy"
+  preflight_report=$(mktemp "${TMPDIR:-/tmp}/keepling-environment-preflight.XXXXXX") ||
+    die "could not create a private temporary preflight report"
+  if node tooling/check-phase-2-environment.mjs --repo "$repository" --output "$preflight_report" >/dev/null 2>&1; then
+    :
+  else
+    preflight_status=$?
+    # Exit 1 means policy checks ran and one or more secret names are still
+    # absent; that is expected while provisioning the Environment.
+    if [ "$preflight_status" -ne 1 ]; then
+      rm -f "$preflight_report"
+      die "GitHub protected-Environment preflight failed; no secret was changed"
+    fi
+  fi
+  if [ ! -r "$preflight_report" ]; then
+    rm -f "$preflight_report"
+    die "GitHub protected-Environment preflight report is unavailable; no secret was changed"
+  fi
+  if ! grep -Fqx 'required_reviewer: PASS' "$preflight_report" ||
+     ! grep -Fqx 'main_only_deployment_policy: PASS' "$preflight_report" ||
+     ! grep -Fqx 'stable_main_protection: PASS' "$preflight_report"; then
+    rm -f "$preflight_report"
+    die "GitHub protected-Environment policy is not ready; no secret was changed"
+  fi
+  rm -f "$preflight_report"
+
+  if failure=$(
+    { set -o pipefail
+      resolve_reference "$ssh_reference" |
+      gh secret set "$ssh_secret" --env "$ssh_environment" --repo "$repository"; } 2>&1 >/dev/null
+  ); then
+    echo "set $ssh_environment/$ssh_secret"
+    echo "Uploaded the SSH key only; no 1Password value was read."
+    exit 0
+  else
+    printf '%s\n' "$failure" | sed -e '/^[[:space:]]*$/d' -e 's/^/  /' >&2
+    die "failed to set $ssh_environment/$ssh_secret"
+  fi
+fi
 
 # --------------------------------------------------------------- the report --
 missing_required=0
@@ -267,7 +391,7 @@ echo "Resolving $(read_map | wc -l | tr -d '[:space:]') credential(s) declared i
 echo
 while IFS="$(printf '\t')" read -r environment secret reference requirement; do
   case "$reference" in
-    op://*/*/*|derive:b2-s3-endpoint|derive:b2-s3-region|env-local:KEEPLING_SSH_PRIVATE_KEY_OP_REF) ;;
+    op://*/*/*|derive:b2-s3-endpoint|derive:b2-s3-region|env-local-file:KEEPLING_SSH_PRIVATE_KEY_FILE) ;;
     *) die "$secret has an unrecognised source: $reference" ;;
   esac
   # `op read` accepts only its own reference grammar and rejects anything else
@@ -291,8 +415,8 @@ while IFS="$(printf '\t')" read -r environment secret reference requirement; do
   else
     printf '  NOT FOUND  %s\n' "$secret"
     case "$reference" in
-      env-local:KEEPLING_SSH_PRIVATE_KEY_OP_REF)
-        printf '             source: local-ssh-reference-invalid-or-unavailable\n'
+      env-local-file:KEEPLING_SSH_PRIVATE_KEY_FILE)
+        printf '             source: local-ssh-key-file-invalid-or-unavailable\n'
         ;;
       *)
         printf '             source: %s\n' "$reference"
@@ -308,7 +432,8 @@ echo
 
 if [ "$missing_required" -gt 0 ]; then
   echo "$missing_required required credential(s) could not be resolved." >&2
-  echo "Run '$0 --discover' and '$0 --fields' to find the right references, then edit $map_file." >&2
+  echo "For the SSH key, set KEEPLING_SSH_PRIVATE_KEY_FILE in the ignored root .env.local to an absolute path outside the checkout." >&2
+  echo "For other credentials, use the mapped 1Password references in $map_file." >&2
   [ "$mode" = --apply ] && die "refusing to upload a partial credential set"
   exit 1
 fi

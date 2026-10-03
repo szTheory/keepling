@@ -121,7 +121,10 @@ count_tests() {
   grep -rnE '^[[:space:]]*(test|property) "' "$@" | wc -l | tr -d '[:space:]'
 }
 
-lane_repository_integrity() { ./tooling/check-repository-integrity.sh; }
+lane_repository_integrity() {
+  ./tooling/check-repository-integrity.sh
+  ./tooling/test-provision-release-secrets.sh
+}
 lane_server() {
   MIX_ENV=test ./tooling/runtime-preflight.sh --exec -- sh -c \
     'cd apps/server && mix ecto.migrate && mix compile --warnings-as-errors && mix test --seed "$1"' sh "$phase_seed"
@@ -244,9 +247,9 @@ run_lanes() {
 
   case "$selected_lane" in
     all | repository-integrity)
-      run_lane repository-integrity none 3 \
-        'AGENTS.md,docs/architecture/REPOSITORY.md,tooling/check-repository-integrity.sh' \
-        './tooling/check-repository-integrity.sh' lane_repository_integrity ;;
+      run_lane repository-integrity none 12 \
+        'AGENTS.md,docs/architecture/REPOSITORY.md,tooling/check-repository-integrity.sh,tooling/test-provision-release-secrets.sh,tooling/provision-release-secrets.sh,tooling/release-secrets.map,tooling/check-phase-2-environment.mjs' \
+        './tooling/check-repository-integrity.sh && ./tooling/test-provision-release-secrets.sh' lane_repository_integrity ;;
   esac
   case "$selected_lane" in
     all | server)
