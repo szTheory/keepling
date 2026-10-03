@@ -109,6 +109,28 @@ The closed hosted object contains `version: 1`, `dns_zone_id`, `dns_record_name`
 
 Configure these environment secrets before requesting a run: `HCLOUD_TOKEN`, `CLOUDFLARE_API_TOKEN`, `KEEPLING_BACKUP_PRIMARY_ACCESS_KEY`, `KEEPLING_BACKUP_PRIMARY_SECRET_KEY`, `KEEPLING_BACKUP_MIRROR_ACCESS_KEY`, `KEEPLING_BACKUP_MIRROR_SECRET_KEY`, `KEEPLING_BACKUP_MIRROR_ENDPOINT`, `KEEPLING_BACKUP_MIRROR_REGION`, `KEEPLING_BACKUP_MIRROR_BUCKET`, `KEEPLING_TOFU_STATE_ACCESS_KEY`, `KEEPLING_TOFU_STATE_SECRET_KEY`, `KEEPLING_TOFU_STATE_ENDPOINT`, `KEEPLING_TOFU_STATE_REGION`, `KEEPLING_TOFU_STATE_BUCKET`, `KEEPLING_BACKUP_CIPHER_PASSPHRASE`, and the disposable-run `KEEPLING_SSH_PRIVATE_KEY`. Never put secret values in dispatch inputs. The runner starts one private agent after authorization, requires exactly one ED25519 identity matching the authorized fingerprint, and writes only its public identity to the private setup directory.
 
+The provisioning helper reads the SSH secret from a local key file path in the ignored repository-root `.env.local`; it does not use 1Password for this key. Keep the key itself outside the checkout. Use a dedicated disposable ED25519 key with no passphrase because the hosted workflow loads it into `ssh-agent` without an interactive prompt:
+
+```sh
+mkdir -p "$HOME/.ssh"
+ssh-keygen -t ed25519 -N '' -C 'keepling-phase2-disposable' -f "$HOME/.ssh/keepling-phase2"
+```
+
+Add one unquoted assignment to `.env.local`, using the absolute path for your account:
+
+```sh
+KEEPLING_SSH_PRIVATE_KEY_FILE=/absolute/path/to/.ssh/keepling-phase2
+```
+
+The helper rejects keys that are missing, linked, inside the checkout, not owned by the current user, readable by group/other, encrypted, or not ED25519. It streams the key file directly to `gh secret set`; the path stays local. Validate and upload just this key without a 1Password session:
+
+```sh
+./tooling/provision-release-secrets.sh --check-ssh-key
+./tooling/provision-release-secrets.sh --apply-ssh-key
+```
+
+The upload mode rechecks the configured reviewer, main-only deployment policy, and stable `main` protection before writing the secret, and refuses if the protected Environment is not already configured. The remaining protected secrets still use the 1Password references in `tooling/release-secrets.map`, so provisioning the full environment still requires an available 1Password CLI session.
+
 The materializer creates an external mode-0700 directory with five mode-0600 provider credential JSON files, `replacement-run.pub`, `backup-cipher.key`, and the exact seven-line `env.sh` consumed by setup. The same job binds candidate selection to its rebuilt archive, generates and validates a synthetic deploy/recovery capture, and prepares the orchestration bundle. Diagnostics remain private and are deleted by the same-job cleanup trap. Uploaded status is sanitized and emitted only after private cleanup; refusal status contains a bounded reason and does not include secret values, raw identifiers, or private paths. Local fixture success is preparation evidence only. DATA-03, OPS-02, and OPS-03 remain non-passing pending Plans 02-25 through 02-27 and their human-gated live evidence.
 
 ## Local secret boundary
