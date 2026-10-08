@@ -48,13 +48,13 @@ defmodule Keepling.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 1.0"},
       {:jason, "~> 1.2"},
-      {:dns_cluster, "~> 0.2.0"},
+      {:dns_cluster, "~> 0.3.1"},
       {:bandit, "~> 1.5"},
       {:argon2_elixir, "== 4.1.3"},
-      {:tzdata, "== 1.1.5"},
-      {:hammer, "== 7.4.1"},
+      {:tzdata, "== 1.2.2"},
+      {:hammer, "== 7.5.0"},
       {:stream_data, "== 1.4.0", only: :test},
-      {:sbom, "~> 0.10.0", only: :dev, runtime: false}
+      {:sbom, "~> 0.11.0", only: :dev, runtime: false}
     ]
   end
 
