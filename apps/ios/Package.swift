@@ -32,8 +32,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/groue/GRDB.swift.git", exact: "7.11.1"),
-        .package(url: "https://github.com/apple/swift-openapi-runtime.git", exact: "1.12.1"),
-        .package(url: "https://github.com/apple/swift-openapi-urlsession.git", exact: "1.3.1"),
+        .package(url: "https://github.com/apple/swift-openapi-runtime.git", exact: "1.12.2"),
+        .package(url: "https://github.com/apple/swift-openapi-urlsession.git", exact: "1.3.2"),
     ],
     targets: [
         // KeeplingCore is deliberately pure Swift: no UIKit, no SwiftUI.
