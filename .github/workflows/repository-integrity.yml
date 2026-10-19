@@ -150,7 +150,7 @@ jobs:
           set -o pipefail
           ./tooling/test-phase-2.sh --lane repository-integrity | tee "$RUNNER_TEMP/repository-integrity.txt"
           ./tooling/verify-privacy.sh "$RUNNER_TEMP/repository-integrity.txt"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: repository-integrity-timing
           path: ${{ runner.temp }}/repository-integrity.txt
@@ -212,7 +212,7 @@ jobs:
           set -o pipefail
           ./tooling/test-phase-2.sh --lane "${{ matrix.lane }}" | tee "$RUNNER_TEMP/${{ matrix.lane }}.txt"
           ./tooling/verify-privacy.sh "$RUNNER_TEMP/${{ matrix.lane }}.txt"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: phase2-${{ matrix.lane }}-timing
           path: ${{ runner.temp }}/${{ matrix.lane }}.txt
@@ -266,7 +266,7 @@ jobs:
           set -o pipefail
           ./tooling/test-phase-2.sh --lane "${{ matrix.lane }}" | tee "$RUNNER_TEMP/${{ matrix.lane }}.txt"
           ./tooling/verify-privacy.sh "$RUNNER_TEMP/${{ matrix.lane }}.txt"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: phase2-${{ matrix.lane }}-timing
           path: ${{ runner.temp }}/${{ matrix.lane }}.txt
@@ -320,7 +320,7 @@ jobs:
             '{version:1,run_id:$run_id,run_attempt:$run_attempt,source_revision:$source_revision,archive_sha256:$archive_sha256,image_manifest_digest:$image_manifest_digest}' \
             > "$binding"
           chmod 600 "$binding"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: phase2-verified-image
           path: |
@@ -330,7 +330,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: image-compose-deploy-timing
           path: ${{ runner.temp }}/image-compose-deploy.txt
@@ -349,7 +349,7 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Run source-bound native x64 image, reload, deploy, and synthetic recovery proof
         run: ./tooling/verify-phase-2-gate-b.sh "$RUNNER_TEMP/phase-2-gate-b.json"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: phase-2-gate-b-route-evidence
           path: ${{ runner.temp }}/phase-2-gate-b.json
@@ -366,7 +366,7 @@ jobs:
           set -o pipefail
           ./tooling/test-phase-2.sh --lane opentofu-host-fixtures | tee "$RUNNER_TEMP/opentofu-host-fixtures.txt"
           ./tooling/verify-privacy.sh "$RUNNER_TEMP/opentofu-host-fixtures.txt"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: opentofu-host-fixtures-timing
           path: ${{ runner.temp }}/opentofu-host-fixtures.txt
@@ -397,7 +397,7 @@ jobs:
           set -o pipefail
           node tooling/verify-export-reader.mjs --golden | tee "$RUNNER_TEMP/export-reader.txt"
           ./tooling/verify-privacy.sh "$RUNNER_TEMP/export-reader.txt"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: export-reader-timing
           path: ${{ runner.temp }}/export-reader.txt

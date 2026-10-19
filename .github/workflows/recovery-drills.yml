@@ -70,7 +70,7 @@ jobs:
           elapsed=$(( $(date +%s) - started ))
           jq -n --arg revision "$GITHUB_SHA" --argjson elapsed "$elapsed" '{version:1,fixture:"${{ matrix.fixture }}",result:"PASS",revision:$revision,elapsed_seconds:$elapsed,semantic:"complete"}' >"$evidence"
           ./tooling/verify-privacy.sh "$evidence"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: recovery-${{ matrix.fixture }}-bounded
@@ -120,7 +120,7 @@ jobs:
           elapsed=$(( $(date +%s) - started ))
           jq -n --arg revision "$GITHUB_SHA" --argjson elapsed "$elapsed" '{version:1,fixture:"historical-pitr",result:"PASS",revision:$revision,elapsed_seconds:$elapsed,seed:20260901,semantic:"complete"}' >"$evidence"
           ./tooling/verify-privacy.sh "$evidence"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: recovery-historical-pitr-bounded
@@ -158,7 +158,7 @@ jobs:
           set -eu -o pipefail
           ./tooling/test-host-replacement-sequence.sh | tee "$RUNNER_TEMP/host-replacement-lane.txt"
           ./tooling/verify-privacy.sh "$RUNNER_TEMP/host-replacement-lane.txt"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: host-replacement-lane
@@ -194,7 +194,7 @@ jobs:
           ./tooling/verify-privacy.sh "$evidence"
           echo 'live-host-dns-acceptance remains NON_PASSING: the billable apply is sealed in code, not merely uncredentialed.'
           exit 1
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: host-replacement-non-passing
